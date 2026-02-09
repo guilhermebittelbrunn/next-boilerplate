@@ -1,41 +1,26 @@
 "use client";
 
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@repo/design-system/components/ui/form";
-import { Input } from "@repo/design-system/components/ui/input";
-import { useAuth } from "@repo/auth/provider";
-import { signIn, signInWithGoogle } from "@repo/auth/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import {
+  HookFormInput,
+  HookFormInputPassword,
+} from "@repo/design-system/components/form/hookform";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
 import Link from "next/link";
-import { Alert, AlertDescription } from "@repo/design-system/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-
-const signInSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-});
-
-type SignInFormValues = z.infer<typeof signInSchema>;
-
+import { useForm } from "react-hook-form";
+import { useAuth } from "@/shared/hooks/useAuth";
+import {
+  type SignInFormValues,
+  signInSchema,
+} from "../validations/signInSchema";
 
 export const SignInFormClient = () => {
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const {dictionary, locale} = getDictionary();
-  const { user, loading: authLoading } = useAuth();
+  const { dictionary, locale } = getDictionary();
+  const { user, authLoading, signIn, signInWithGoogle } = useAuth();
 
+  const isLoading = signIn.isPending || signInWithGoogle.isPending;
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -45,43 +30,6 @@ export const SignInFormClient = () => {
     },
   });
 
-  // // Redirect if already logged in (only after auth state is loaded)
-  // useEffect(() => {
-  //   if (!authLoading && user) {
-  //     router.push(`/${locale}`);
-  //   }
-  // }, [user, authLoading, router, locale]);
-
-  const onSubmit = async (data: SignInFormValues) => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      await signIn(data.email, data.password);
-      // Redirect after successful login
-      // router.push(`/${locale}`);
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      await signInWithGoogle();
-      // Redirect after successful login
-      // router.push(`/${locale}`);
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-    }
-  };
-
-  // If user is already logged in, redirect (will redirect via useEffect)
-  // But still show the form briefly to avoid flash
   if (user && !authLoading) {
     return null;
   }
@@ -90,61 +38,42 @@ export const SignInFormClient = () => {
     <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center py-20">
       <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">{dictionary.apps.web.pages.signIn.meta.title}</h1>
+          <h1 className="font-bold text-3xl">
+            {dictionary.apps.web.pages.signIn.meta.title}
+          </h1>
           <p className="text-muted-foreground text-sm">
             {dictionary.apps.web.pages.signIn.enterWithYourAccount}
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
         <Form {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-            <FormField
-              control={form.control}
+          <form
+            className="space-y-4"
+            onSubmit={form.handleSubmit((data) =>
+              signIn.mutate({ ...data })
+            )}
+          >
+            <HookFormInput
+              label="Email"
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="seu@email.com"
-                      {...field}
-                      disabled={loading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="seu@email.com"
+              type="email"
             />
 
-            <FormField
-              control={form.control}
+            <HookFormInputPassword
+              label={
+                dictionary.apps.web.pages.signIn.form.password
+              }
               name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dictionary.apps.web.pages.signIn.form.password}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      {...field}
-                      disabled={loading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
             />
 
-            <Button className="w-full" disabled={loading} type="submit">
-              {loading ? "Entrando..." : dictionary.apps.web.pages.signIn.form.submit}
+            <Button
+              className="w-full"
+              disabled={isLoading}
+              loading={isLoading}
+              type="submit"
+            >
+              {dictionary.apps.web.pages.signIn.form.submit}
             </Button>
           </form>
         </Form>
@@ -162,12 +91,17 @@ export const SignInFormClient = () => {
 
         <Button
           className="w-full"
-          disabled={loading}
-          onClick={handleGoogleSignIn}
+          disabled={isLoading}
+          onClick={() => signInWithGoogle.mutate()}
           type="button"
           variant="outline"
         >
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+          {/* biome-ignore lint/a11y/noSvgWithoutTitle: ícone decorativo do Google, texto no botão */}
+          <svg
+            aria-hidden
+            className="mr-2 h-4 w-4"
+            viewBox="0 0 24 24"
+          >
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -189,8 +123,13 @@ export const SignInFormClient = () => {
         </Button>
 
         <div className="text-center text-sm">
-          <span className="text-muted-foreground">{dictionary.apps.web.pages.signIn.noAccount}</span>
-          <Link className="text-primary hover:underline" href={`/${locale}/sign-up`}>
+          <span className="text-muted-foreground">
+            {dictionary.apps.web.pages.signIn.noAccount}
+          </span>
+          <Link
+            className="text-primary hover:underline"
+            href={`/${locale}/sign-up`}
+          >
             {dictionary.apps.web.pages.signIn.signUp}
           </Link>
         </div>
@@ -198,4 +137,3 @@ export const SignInFormClient = () => {
     </div>
   );
 };
-

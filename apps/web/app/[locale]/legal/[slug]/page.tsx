@@ -7,7 +7,7 @@ import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Sidebar } from "@/components/sidebar";
+import { Sidebar } from "@/shared/components/sidebar";
 
 type LegalPageProperties = {
   readonly params: Promise<{

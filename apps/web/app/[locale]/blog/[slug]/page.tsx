@@ -10,8 +10,8 @@ import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Sidebar } from "@/components/sidebar";
 import { env } from "@/env";
+import { Sidebar } from "@/shared/components/sidebar";
 
 const protocol = env.VERCEL_PROJECT_PRODUCTION_URL?.startsWith("https")
   ? "https"
@@ -72,7 +72,10 @@ const BlogPost = async ({ params }: BlogPostProperties) => {
                 description: page.description,
                 mainEntityOfPage: {
                   "@type": "WebPage",
-                  "@id": new URL(`/blog/${page._slug}`, url).toString(),
+                  "@id": new URL(
+                    `/blog/${page._slug}`,
+                    url
+                  ).toString(),
                 },
                 headline: page._title,
                 image: page.image.url,
@@ -111,9 +114,17 @@ const BlogPost = async ({ params }: BlogPostProperties) => {
                     <div className="mx-auto max-w-prose">
                       <Body
                         components={{
-                          pre: ({ code, language }) => (
+                          pre: ({
+                            code,
+                            language,
+                          }) => (
                             <CodeBlock
-                              snippets={[{ code, language }]}
+                              snippets={[
+                                {
+                                  code,
+                                  language,
+                                },
+                              ]}
                               theme="vesper"
                             />
                           ),
@@ -127,7 +138,11 @@ const BlogPost = async ({ params }: BlogPostProperties) => {
                   <Sidebar
                     date={new Date(page.date)}
                     readingTime={`${page.body.readingTime} min read`}
-                    toc={<TableOfContents data={page.body.json.toc} />}
+                    toc={
+                      <TableOfContents
+                        data={page.body.json.toc}
+                      />
+                    }
                   />
                 </div>
               </div>

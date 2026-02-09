@@ -6,6 +6,7 @@ import { featuresTranslations } from "./features";
 import { heroTranslations } from "./hero";
 import { homeTranslations } from "./home/home";
 import { signInTranslations } from "./signIn";
+import { signUpTranslations } from "./signUp";
 import { statsTranslations } from "./stats";
 
 export const pagesTranslations = {
@@ -14,6 +15,7 @@ export const pagesTranslations = {
         contact: contactTranslations["pt-br"],
         home: homeTranslations["pt-br"],
         signIn: signInTranslations["pt-br"],
+        signUp: signUpTranslations["pt-br"],
         cta: ctaTranslations["pt-br"],
         faq: faqTranslations["pt-br"],
         features: featuresTranslations["pt-br"],
@@ -25,17 +27,19 @@ export const pagesTranslations = {
         contact: contactTranslations.en,
         home: homeTranslations.en,
         signIn: signInTranslations.en,
+        signUp: signUpTranslations.en,
         cta: ctaTranslations.en,
         faq: faqTranslations.en,
         features: featuresTranslations.en,
         hero: heroTranslations.en,
         stats: statsTranslations.en,
-        },
+    },
     es: {
         blog: blogTranslations.es,
         contact: contactTranslations.es,
         home: homeTranslations.es,
         signIn: signInTranslations.es,
+        signUp: signUpTranslations.es,
         cta: ctaTranslations.es,
         faq: faqTranslations.es,
         features: featuresTranslations.es,

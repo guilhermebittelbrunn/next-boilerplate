@@ -10,25 +10,23 @@ import { getDictionary } from "@repo/internationalization/server";
 
 
 export const generateMetadata = async (): Promise<Metadata> => {
-  const {dictionary} = await getDictionary();
+  const { dictionary } = await getDictionary();
   return {
     title: dictionary.apps.web.pages.home.meta.title,
     description: dictionary.apps.web.pages.home.meta.description,
   };
 };
 
-const Home =  () => {
+export default async function Home() {
   return (
     <>
-     <Hero />
+      <Hero />
       <Cases />
       <Features />
       <Stats />
       <Testimonials />
       <FAQ />
-      <CTA /> 
+      <CTA />
     </>
   );
 };
-
-export default Home;

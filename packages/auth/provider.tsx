@@ -1,7 +1,13 @@
 "use client";
 
-import { type ReactNode, createContext, useContext, useEffect, useState } from "react";
-import { type User } from "firebase/auth";
+import type { User } from "firebase/auth";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { subscribeToAuthState } from "./client";
 
 type AuthContextType = {
@@ -14,9 +20,9 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
+
+const AUTH_LOADING_TIMEOUT = 2000;
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -28,13 +34,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    
+
     // Set a timeout to ensure loading doesn't stay true forever
     timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 2000);
+    }, AUTH_LOADING_TIMEOUT);
 
-    const unsubscribe = subscribeToAuthState((user) => {
+    // biome-ignore lint/nursery/noShadow: <explanation>
+    const unsubscribe = subscribeToAuthState((user: User | null) => {
       clearTimeout(timeoutId);
       setUser(user);
       setLoading(false);
@@ -52,4 +59,3 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     </AuthContext.Provider>
   );
 };
-

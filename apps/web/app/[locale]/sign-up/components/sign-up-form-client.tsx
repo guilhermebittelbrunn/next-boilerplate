@@ -1,48 +1,28 @@
 "use client";
 
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@repo/design-system/components/ui/form";
-import { Input } from "@repo/design-system/components/ui/input";
-import { useAuth } from "@repo/auth/provider";
-import { signUp, signInWithGoogle } from "@repo/auth/client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { getDictionary, getDefaultLocale } from "@repo/internationalization/client";
+import {
+  HookFormInput,
+  HookFormInputPassword,
+} from "@repo/design-system/components/form/hookform";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Form } from "@repo/design-system/components/ui/form";
+import { getDictionary } from "@repo/internationalization/client";
 import Link from "next/link";
-import { Alert, AlertDescription } from "@repo/design-system/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-
-const signUpSchema = z
-  .object({
-    email: z.string().email("Email inválido"),
-    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "As senhas não coincidem",
-    path: ["confirmPassword"],
-  });
-
-type SignUpFormValues = z.infer<typeof signUpSchema>;
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import useAlert from "@/shared/hooks/useAlert";
+import { useAuth } from "@/shared/hooks/useAuth";
+import { useHealthCheck } from "@/shared/hooks/useHealthCheck";
+import { type SignUpFormValues, signUpSchema } from "../validations/signUp";
 
 export const SignUpFormClient = () => {
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const params = useParams();
-  const locale = (params?.locale as string) || getDefaultLocale();
-  const dictionary = getDictionary(locale);
-  const { user, loading: authLoading } = useAuth();
+  const { dictionary, locale } = getDictionary();
+  const { signUp, signInWithGoogle, authLoading, user } = useAuth();
+  const { data, refetch } = useHealthCheck();
+  const { infoAlert } = useAlert();
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -60,32 +40,12 @@ export const SignUpFormClient = () => {
     }
   }, [user, authLoading, router, locale]);
 
-  const onSubmit = async (data: SignUpFormValues) => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      await signUp(data.email, data.password);
-      // Redirect after successful signup
-      router.push(`/${locale}`);
-    } catch (err: any) {
-      setError(err.message || dictionary.global.signUpError);
-      setLoading(false);
-    }
+  const onSubmit = (data: SignUpFormValues) => {
+    signUp.mutate({ email: data.email, password: data.password });
   };
 
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      await signInWithGoogle();
-      // Redirect after successful login
-      router.push(`/${locale}`);
-    } catch (err: any) {
-      setError(err.message || dictionary.global.googleSignInError);
-      setLoading(false);
-    }
+  const handleGoogleSignIn = () => {
+    signInWithGoogle.mutate();
   };
 
   // If user is already logged in, redirect (will redirect via useEffect)
@@ -98,80 +58,64 @@ export const SignUpFormClient = () => {
     <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center py-20">
       <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">{dictionary.header.signUp}</h1>
+          <h1 className="font-bold text-3xl">
+            {dictionary.apps.web.pages.signUp.meta.title}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Crie sua conta para começar
+            {dictionary.apps.web.pages.signUp.enterWithYourAccount}
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
         <Form {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-            <FormField
-              control={form.control}
+          <form
+            className="space-y-4"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
+            <HookFormInput
+              label={dictionary.apps.web.pages.signUp.form.email}
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="seu@email.com"
-                      {...field}
-                      disabled={loading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="seu@email.com"
+              type="email"
             />
 
-            <FormField
-              control={form.control}
+            <HookFormInputPassword
+              label={
+                dictionary.apps.web.pages.signUp.form.password
+              }
               name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Senha</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      {...field}
-                      disabled={loading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="••••••••"
+              type="password"
             />
 
-            <FormField
-              control={form.control}
+            <HookFormInputPassword
+              label={
+                dictionary.apps.web.pages.signUp.form
+                  .confirmPassword
+              }
               name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirmar Senha</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      {...field}
-                      disabled={loading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="••••••••"
+              type="password"
             />
 
-            <Button className="w-full" disabled={loading} type="submit">
-              {loading ? "Criando conta..." : dictionary.header.signUp}
+            <Button
+              className="w-full"
+              disabled={signUp.isPending}
+              type="submit"
+            >
+              {dictionary.apps.web.pages.signUp.form.submit}
+            </Button>
+
+            <Button
+              className="w-full"
+              disabled={signUp.isPending}
+              onClick={() => {
+                refetch();
+                infoAlert(JSON.stringify(data));
+              }}
+              type="submit"
+              variant={"destructive"}
+            >
+              test
             </Button>
           </form>
         </Form>
@@ -182,18 +126,19 @@ export const SignUpFormClient = () => {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              Ou continue com
+              {dictionary.apps.web.pages.signUp.orContinueWith}
             </span>
           </div>
         </div>
 
         <Button
           className="w-full"
-          disabled={loading}
+          disabled={signInWithGoogle.isPending}
           onClick={handleGoogleSignIn}
           type="button"
           variant="outline"
         >
+          {/* biome-ignore lint/a11y/noSvgWithoutTitle: ícone decorativo do Google, texto no botão */}
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -212,17 +157,21 @@ export const SignUpFormClient = () => {
               fill="#EA4335"
             />
           </svg>
-          Continuar com Google
+          {dictionary.apps.web.pages.signUp.googleSignIn}
         </Button>
 
         <div className="text-center text-sm">
-          <span className="text-muted-foreground">Já tem uma conta? </span>
-          <Link className="text-primary hover:underline" href={`/${locale}/sign-in`}>
-            {dictionary.header.signIn}
+          <span className="text-muted-foreground">
+            {dictionary.apps.web.pages.signUp.noAccount}
+          </span>
+          <Link
+            className="text-primary hover:underline"
+            href={`/${locale}/sign-in`}
+          >
+            {dictionary.apps.web.pages.signUp.signIn}
           </Link>
         </div>
       </div>
     </div>
   );
 };
-

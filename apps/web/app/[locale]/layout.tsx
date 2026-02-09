@@ -1,12 +1,14 @@
 import "./styles.css";
+import { AuthProvider } from "@repo/auth/provider";
 import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
-import { AuthProvider } from "@repo/auth/provider";
+import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
+import { ToastContainer } from "react-toastify";
+import { QueryProvider } from "@/shared/providers/query-provider";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
-import { getDictionary } from "@repo/internationalization/server";
 
 type RootLayoutProperties = {
   readonly children: ReactNode;
@@ -23,11 +25,14 @@ const RootLayout = async ({ children }: RootLayoutProperties) => {
     >
       <body>
         <DesignSystemProvider>
-          <AuthProvider>
-            <Header />
-            {children}
-            <Footer />
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ToastContainer className="scale-90 md:scale-100" />
+              <Header />
+              {children}
+              <Footer />
+            </AuthProvider>
+          </QueryProvider>
         </DesignSystemProvider>
       </body>
     </html>
