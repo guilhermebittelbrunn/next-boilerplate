@@ -22,7 +22,7 @@ export const contact = async (
   error?: string;
 }> => {
   try {
-    if (!env.RESEND_FROM || !env.RESEND_TOKEN) {
+    if (!(env.RESEND_FROM && env.RESEND_TOKEN)) {
       throw new Error("Resend environment variables not configured.");
     }
 
@@ -31,7 +31,9 @@ export const contact = async (
       to: env.RESEND_FROM,
       subject: "Contact form submission",
       replyTo: email,
-      react: <ContactTemplate email={email} message={message} name={name} />,
+      react: (
+        <ContactTemplate email={email} message={message} name={name} />
+      ),
     });
 
     return {};

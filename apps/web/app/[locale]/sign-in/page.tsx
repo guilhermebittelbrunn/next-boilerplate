@@ -1,16 +1,15 @@
 import { getDictionary } from "@repo/internationalization/server";
+import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
 import { SignInForm } from "./components/sign-in-form";
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { dictionary } = await getDictionary();
 
-  return {
-    title: dictionary.apps.web.pages.signIn.meta.title,
-    description: dictionary.apps.web.pages.signIn.meta.description,
-  };
+  return createMetadata(dictionary.apps.web.pages.signIn.meta);
 };
 
-const SignIn = async () => <SignInForm />;
+export default function SignIn() {
+  return <SignInForm />;
+}
 
-export default SignIn;

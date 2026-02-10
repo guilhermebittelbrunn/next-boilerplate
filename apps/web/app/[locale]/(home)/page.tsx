@@ -1,3 +1,5 @@
+import { getDictionary } from "@repo/internationalization/server";
+import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
 import { Cases } from "./components/cases";
 import { CTA } from "./components/cta";
@@ -6,18 +8,13 @@ import { Features } from "./components/features";
 import { Hero } from "./components/hero";
 import { Stats } from "./components/stats";
 import { Testimonials } from "./components/testimonials";
-import { getDictionary } from "@repo/internationalization/server";
-
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { dictionary } = await getDictionary();
-  return {
-    title: dictionary.apps.web.pages.home.meta.title,
-    description: dictionary.apps.web.pages.home.meta.description,
-  };
+  return createMetadata(dictionary.apps.web.pages.home.meta);
 };
 
-export default async function Home() {
+export default function Home() {
   return (
     <>
       <Hero />
@@ -29,4 +26,4 @@ export default async function Home() {
       <CTA />
     </>
   );
-};
+}

@@ -27,7 +27,7 @@ const RootLayout = async ({ children }: RootLayoutProperties) => {
         <DesignSystemProvider>
           <QueryProvider>
             <AuthProvider>
-              <ToastContainer className="scale-90 md:scale-100" />
+              <ToastContainer />
               <Header />
               {children}
               <Footer />

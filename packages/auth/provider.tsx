@@ -1,7 +1,8 @@
 "use client";
 
 import type { User } from "firebase/auth";
-import {
+// biome-ignore lint: React required in scope for classic JSX runtime
+import React, {
   createContext,
   type ReactNode,
   useContext,
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setLoading(false);
     }, AUTH_LOADING_TIMEOUT);
 
-    // biome-ignore lint/nursery/noShadow: <explanation>
+    // biome-ignore lint/nursery/noShadow: callback param name matches domain (auth user)
     const unsubscribe = subscribeToAuthState((user: User | null) => {
       clearTimeout(timeoutId);
       setUser(user);

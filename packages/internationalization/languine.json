@@ -1,0 +1,11 @@
+{
+  "locale": {
+    "source": "en",
+    "targets": ["es", "pt-br"]
+  },
+  "files": {
+    "json": {
+      "include": ["./translations/global.ts"]
+    }
+  }
+}

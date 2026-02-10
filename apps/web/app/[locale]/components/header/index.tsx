@@ -1,8 +1,7 @@
 "use client";
 
-import { ModeToggle } from "@repo/design-system/components/ui/mode-toggle";
-import { useMediaQuery } from "@repo/design-system/hooks/useMediaQuery";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ModeToggle } from "@repo/design-system/components/ui/mode-toggle";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -11,21 +10,21 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@repo/design-system/components/ui/navigation-menu";
+import { useMediaQuery } from "@repo/design-system/hooks/useMediaQuery";
+import { getDictionary } from "@repo/internationalization/client";
 import { Menu, MoveRight, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import { env } from "@/env";
 import { LanguageSwitcher } from "./language-switcher";
-import { getDictionary } from "@repo/internationalization/client";
 
 export const Header = () => {
-  const {dictionary, locale} = getDictionary();
-  const medias =  useMediaQuery()
+  const { dictionary, locale } = getDictionary();
+  const medias = useMediaQuery();
 
-  console.log('medias :>> ', medias);
+  console.log("medias :>> ", medias);
 
-  const { isLargeDesktop } = medias
+  const { isLargeDesktop } = medias;
 
   const navigationItems = [
     {
@@ -65,7 +64,7 @@ export const Header = () => {
 
   const [isOpen, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 left-0 z-40 px-4 w-full border-b bg-background md:px-2">
+    <header className="sticky top-0 left-0 z-40 w-full border-b bg-background px-4 md:px-2">
       <div className="container relative mx-auto flex min-h-20 flex-row items-center gap-4 lg:grid lg:grid-cols-3">
         <div className="hidden flex-row items-center justify-start gap-4 lg:flex">
           <NavigationMenu className="flex items-start justify-start">
@@ -73,9 +72,11 @@ export const Header = () => {
               {navigationItems.map((item) => (
                 <NavigationMenuItem key={item.title}>
                   {item.href ? (
-                    <NavigationMenuLink asChild>
-                      <Button asChild variant="ghost">
-                        <Link href={item.href}>{item.title}</Link>
+                    <NavigationMenuLink>
+                      <Button variant="ghost">
+                        <Link href={item.href}>
+                          {item.title}
+                        </Link>
                       </Button>
                     </NavigationMenuLink>
                   ) : (
@@ -87,28 +88,45 @@ export const Header = () => {
                         <div className="flex grid-cols-2 flex-col gap-4 lg:grid">
                           <div className="flex h-full flex-col justify-between">
                             <div className="flex flex-col">
-                              <p className="text-base">{item.title}</p>
+                              <p className="text-base">
+                                {item.title}
+                              </p>
                               <p className="text-muted-foreground text-sm">
-                                {item.description}
+                                {
+                                  item.description
+                                }
                               </p>
                             </div>
-                            <Button asChild className="mt-10" size="sm">
-                              <Link href={`/${locale}/contact`}>
+                            <Button
+                              className="mt-10"
+                              size="sm"
+                            >
+                              <Link
+                                href={`/${locale}/contact`}
+                              >
                                 CTA
                               </Link>
                             </Button>
                           </div>
                           <div className="flex h-full flex-col justify-end text-sm">
-                            {item.items?.map((subItem, idx) => (
-                              <NavigationMenuLink
-                                className="flex flex-row items-center justify-between rounded px-4 py-2 hover:bg-muted"
-                                href={subItem.href}
-                                key={idx}
-                              >
-                                <span>{subItem.title}</span>
-                                <MoveRight className="h-4 w-4 text-muted-foreground" />
-                              </NavigationMenuLink>
-                            ))}
+                            {item.items?.map(
+                              (subItem, idx) => (
+                                <NavigationMenuLink
+                                  className="flex flex-row items-center justify-between rounded px-4 py-2 hover:bg-muted"
+                                  href={
+                                    subItem.href
+                                  }
+                                  key={idx}
+                                >
+                                  <span>
+                                    {
+                                      subItem.title
+                                    }
+                                  </span>
+                                  <MoveRight className="h-4 w-4 text-muted-foreground" />
+                                </NavigationMenuLink>
+                              )
+                            )}
                           </div>
                         </div>
                       </NavigationMenuContent>
@@ -133,7 +151,9 @@ export const Header = () => {
               fill="currentColor"
             />
           </svg>
-          <p className="whitespace-nowrap font-semibold">next-forge</p>
+          <p className="whitespace-nowrap font-semibold">
+            next-forge
+          </p>
         </div>
 
         <div className="flex w-full justify-end gap-4">
@@ -147,22 +167,26 @@ export const Header = () => {
           </div>
           <div className="hidden border-r md:inline" />
           <div className="flex flex-row gap-2">
-          <Button  className="hidden md:inline" variant="outline">
-            <Link href={`/${locale}/sign-in`}>
-              {dictionary.components.header.signIn}
-            </Link>
-          </Button>
-          <Button >
-            <Link href={`/${locale}/sign-up`}>
-              {dictionary.components.header.signUp}
-            </Link>
-          </Button>
+            <Button className="hidden md:inline" variant="outline">
+              <Link href={`/${locale}/sign-in`}>
+                {dictionary.components.header.signIn}
+              </Link>
+            </Button>
+            <Button>
+              <Link href={`/${locale}/sign-up`}>
+                {dictionary.components.header.signUp}
+              </Link>
+            </Button>
           </div>
         </div>
-        
+
         <div className="flex w-12 shrink items-end justify-end lg:hidden">
           <Button onClick={() => setOpen(!isOpen)} variant="ghost">
-            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
           {isOpen && (
             <div className="container absolute top-20 right-0 flex w-full flex-col gap-8 border-t bg-background py-4 shadow-lg">
@@ -179,14 +203,20 @@ export const Header = () => {
                             : undefined
                         }
                         target={
-                          item.href.startsWith("http") ? "_blank" : undefined
+                          item.href.startsWith("http")
+                            ? "_blank"
+                            : undefined
                         }
                       >
-                        <span className="text-lg">{item.title}</span>
+                        <span className="text-lg">
+                          {item.title}
+                        </span>
                         <MoveRight className="h-4 w-4 stroke-1 text-muted-foreground" />
                       </Link>
                     ) : (
-                      <p className="text-lg">{item.title}</p>
+                      <p className="text-lg">
+                        {item.title}
+                      </p>
                     )}
                     {item.items?.map((subItem) => (
                       <Link

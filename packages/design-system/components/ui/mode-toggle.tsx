@@ -21,7 +21,7 @@ export const ModeToggle = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger >
         <Button
           className="shrink-0 text-foreground"
           size="icon"

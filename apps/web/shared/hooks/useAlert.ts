@@ -12,6 +12,7 @@ export const useAlert = () => {
         toast[type](message, {
             position: "top-right",
             autoClose: 3000,
+            className: "z-[9999] scale-90 md:scale-100 bg-background",
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
