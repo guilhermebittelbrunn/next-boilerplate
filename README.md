@@ -48,24 +48,17 @@ next-forge comes with batteries included:
 
 ### Packages
 
-- **Authentication** — Powered by [Clerk](https://clerk.com)
+- **Authentication** — Powered by [Firebase]
 - **Database** — Type-safe ORM with migrations
 - **Design System** — Comprehensive component library with dark mode
 - **Payments** — Subscription management via [Stripe](https://stripe.com)
 - **Email** — Transactional emails via [Resend](https://resend.com)
-- **Analytics** — Web ([Google Analytics](https://developers.google.com/analytics)) and product ([Posthog](https://posthog.com))
-- **Observability** — Error tracking ([Sentry](https://sentry.io)), logging, and uptime monitoring ([BetterStack](https://betterstack.com))
+- **Analytics** — Web ([Google Analytics](https://developers.google.com/analytics))
 - **Security** — Application security ([Arcjet](https://arcjet.com)), rate limiting, and secure headers
-- **CMS** — Type-safe content management for blogs and documentation
 - **SEO** — Metadata management, sitemaps, and JSON-LD
-- **AI** — AI integration utilities
-- **Webhooks** — Inbound and outbound webhook handling
-- **Collaboration** — Real-time features with avatars and live cursors
-- **Feature Flags** — Feature flag management
 - **Cron** — Scheduled job management
 - **Storage** — File upload and management
 - **Internationalization** — Multi-language support
-- **Notifications** — In-app notification system
 
 ## Getting Started
 

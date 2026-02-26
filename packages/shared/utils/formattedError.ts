@@ -53,7 +53,7 @@ const FIREBASE_AUTH_MESSAGES: Record<string, string> = {
     "auth/cancelled-popup-request": "Login cancelado.",
 };
 
-export default class FormattedError {
+export class FormattedError {
     message: string;
     status: number;
 

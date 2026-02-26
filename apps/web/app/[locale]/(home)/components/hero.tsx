@@ -12,10 +12,9 @@ export const Hero = async () => {
       <div className="container mx-auto">
         <div className="flex flex-col items-center justify-center gap-8 py-20 lg:py-40">
           <div>
-            <Button className="gap-4" size="sm" variant="secondary">
+            <Button className="gap-4" size="sm" variant="secondary" icon={<MoveRight />}>
               <Link href={`/${locale}/blog/example-post`}>
                 {dictionary.apps.web.pages.hero.announcement}{" "}
-                <MoveRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -32,13 +31,12 @@ export const Hero = async () => {
             </p>
           </div>
           <div className="flex flex-row gap-3">
-            <Button className="gap-4" size="lg" variant="outline">
+            <Button className="gap-4" size="lg" variant="outline" icon={<PhoneCall />}>
               <Link href={`/${locale}/contact`}>
                 {dictionary.apps.web.pages.cta.primaryCta}{" "}
-                <PhoneCall className="h-4 w-4" />
               </Link>
             </Button>
-            <Button className="gap-4" size="lg">
+            <Button className="gap-4" size="lg" icon={<MoveRight />}>
               <Link
                 href={
                   env.NEXT_PUBLIC_APP_URL ||
@@ -46,7 +44,6 @@ export const Hero = async () => {
                 }
               >
                 {dictionary.apps.web.pages.cta.secondaryCta}{" "}
-                <MoveRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>

@@ -10,15 +10,15 @@ import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { useAuth } from "@/shared/hooks/useAuth";
 import {
   type SignInFormValues,
   signInSchema,
 } from "../validations/signInSchema";
+import useAuth from "@repo/auth/provider";
 
 export const SignInFormClient = () => {
   const { dictionary, locale } = getDictionary();
-  const { user, authLoading, signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
 
   const isLoading = signIn.isPending || signInWithGoogle.isPending;
 

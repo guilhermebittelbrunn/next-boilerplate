@@ -13,6 +13,7 @@ import {
     signOut,
     type User,
 } from "firebase/auth";
+import type { SignInDTO, SignUpDTO } from "./types";
 
 let firebaseApp: FirebaseApp | undefined;
 let firebaseAuth: Auth | undefined;
@@ -105,10 +106,6 @@ export const getAuthClient = () => {
     return firebaseAuth;
 };
 
-export type SignInDTO = {
-    email: string;
-    password: string;
-};
 /**
  * Sign in with email and password
  */
@@ -124,11 +121,6 @@ export const signInWithGoogle = () => {
     const auth = getAuthClient();
     const provider = new GoogleAuthProvider();
     return signInWithPopup(auth, provider);
-};
-
-export type SignUpDTO = {
-    email: string;
-    password: string;
 };
 
 /**
@@ -153,4 +145,14 @@ export const logout = () => {
 export const subscribeToAuthState = (callback: (user: User | null) => void) => {
     const auth = getAuthClient();
     return onAuthStateChanged(auth, callback);
+};
+
+/**
+ * Get current ID token (for setting session cookie via API)
+ */
+export const getIdToken = async (): Promise<string | null> => {
+    const auth = getAuthClient();
+    const user = auth.currentUser;
+    if (!user) return null;
+    return user.getIdToken();
 };

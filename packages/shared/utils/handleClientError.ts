@@ -1,4 +1,4 @@
-import FormattedError, { isHttpErrorResponse } from "./formattedError";
+import { FormattedError, isHttpErrorResponse } from "./formattedError";
 
 export function handleClientError(error: unknown): string {
     if (error instanceof FormattedError) {

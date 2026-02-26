@@ -42,6 +42,7 @@ export interface ButtonProps
   extends React.ComponentProps<"button">,
   VariantProps<typeof buttonVariants> {
   loading?: boolean;
+  icon?: React.ReactNode;
 }
 
 export function Button({
@@ -49,6 +50,7 @@ export function Button({
   variant = "default",
   size = "default",
   loading = false,
+  icon,
   children,
   ...props
 }: ButtonProps) {
@@ -62,7 +64,12 @@ export function Button({
       {...props}
     >
       {
-        loading ? <Spinner /> : children
+        loading ? <Spinner /> : (
+          <div className="flex items-center gap-2">
+            {icon && icon}
+            {children}
+          </div>
+        )
       }
     </button>
   );

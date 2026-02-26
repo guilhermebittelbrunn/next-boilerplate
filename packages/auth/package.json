@@ -6,12 +6,17 @@
     "./keys": "./keys.ts",
     "./server": "./server.ts",
     "./client": "./client.ts",
+    "./client-ui": "./client-ui.tsx",
     "./middleware": "./middleware.ts",
-    "./provider": "./provider.tsx"
+    "./provider": "./provider.tsx",
+    "./components/sign-in": "./components/sign-in.tsx",
+    "./components/sign-up": "./components/sign-up.tsx"
   },
-  "dependencies": {
+"dependencies": {
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",
+    "next": "15.1.3",
+    "@tanstack/react-query": "^5.90.20",
     "react": "19.2.0",
     "zod": "^4.1.12"
   },

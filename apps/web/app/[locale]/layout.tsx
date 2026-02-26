@@ -24,16 +24,16 @@ const RootLayout = async ({ children }: RootLayoutProperties) => {
       suppressHydrationWarning
     >
       <body>
-        <DesignSystemProvider>
-          <QueryProvider>
+        <QueryProvider>
+          <DesignSystemProvider>
             <AuthProvider>
               <ToastContainer />
               <Header />
               {children}
               <Footer />
             </AuthProvider>
-          </QueryProvider>
-        </DesignSystemProvider>
+          </DesignSystemProvider>
+        </QueryProvider>
       </body>
     </html>
   );

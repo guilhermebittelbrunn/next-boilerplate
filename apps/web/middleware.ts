@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
-import { handleClientError } from "./shared/utils/helpers/handleClientError";
+import { handleClientError } from "@repo/shared/utils";
 
 export const config = {
     // matcher tells Next.js which routes to run the middleware on. This runs the

@@ -14,6 +14,7 @@ export const headerTranslations = {
     googlgSignIn: "Continuar com Google",
     orContinueWith: "Ou continue com",
     noAccount: "Não tem uma conta? ",
+    signOut: "Sair",
   },
   en: {
     home: "Home",
@@ -30,6 +31,7 @@ export const headerTranslations = {
     googleSignIn: "Continue with Google",
     orContinueWith: "Or continue with",
     noAccount: "Don't have an account? ",
+    signOut: "Sign Out",
   },
   es: {
     home: "Inicio",
@@ -46,6 +48,7 @@ export const headerTranslations = {
     googlgSignIn: "Continuar con Google",
     orContinueWith: "O continuar con",
     noAccount: "No tienes una cuenta? ",
+    signOut: "Cerrar sesión",
   },
 };
 

@@ -1,16 +1,23 @@
 "use client";
 
 import { logout, signIn, signInWithGoogle, signUp } from "@repo/auth/client";
-import { useAuth as useAuthContext } from "@repo/auth/provider";
-import { getDictionary } from "@repo/internationalization/client";
-import { useMutation } from "@tanstack/react-query";
+import { type UseMutationResult, useMutation } from "@tanstack/react-query";
+import type { User } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { handleClientError } from "../utils/helpers/handleClientError";
-import useAlert from "./useAlert";
+import { getDictionary } from "../internationalization/client";
+import type { SignInDTO, SignUpDTO } from "./types";
+
+type AuthContextType = {
+    user: User | null;
+    loading: boolean;
+    signIn: UseMutationResult<void, Error, SignInDTO>;
+    signUp: UseMutationResult<void, Error, SignUpDTO, unknown>;
+    signInWithGoogle: () => void;
+    signOut: () => void;
+};
 
 export function useAuth() {
     const { errorAlert } = useAlert();
-    const { user, loading } = useAuthContext();
     const router = useRouter();
     const { locale } = getDictionary();
 
@@ -39,8 +46,6 @@ export function useAuth() {
     });
 
     return {
-        user,
-        authLoading: loading,
         signIn: signInMutation,
         signUp: signUpMutation,
         signInWithGoogle: signInWithGoogleMutation,

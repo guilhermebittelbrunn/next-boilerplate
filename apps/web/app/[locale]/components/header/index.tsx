@@ -17,12 +17,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { env } from "@/env";
 import { LanguageSwitcher } from "./language-switcher";
+import useAuth from "@repo/auth/provider";
 
 export const Header = () => {
   const { dictionary, locale } = getDictionary();
   const medias = useMediaQuery();
-
-  console.log("medias :>> ", medias);
+  const { user, signOut, loading } = useAuth();
 
   const { isLargeDesktop } = medias;
 
@@ -63,6 +63,7 @@ export const Header = () => {
   }
 
   const [isOpen, setOpen] = useState(false);
+
   return (
     <header className="sticky top-0 left-0 z-40 w-full border-b bg-background px-4 md:px-2">
       <div className="container relative mx-auto flex min-h-20 flex-row items-center gap-4 lg:grid lg:grid-cols-3">
@@ -166,18 +167,29 @@ export const Header = () => {
             <ModeToggle />
           </div>
           <div className="hidden border-r md:inline" />
-          <div className="flex flex-row gap-2">
-            <Button className="hidden md:inline" variant="outline">
-              <Link href={`/${locale}/sign-in`}>
-                {dictionary.components.header.signIn}
-              </Link>
-            </Button>
-            <Button>
-              <Link href={`/${locale}/sign-up`}>
-                {dictionary.components.header.signUp}
-              </Link>
-            </Button>
-          </div>
+          {!loading && (
+            <div className="flex flex-row gap-2">
+              {user ? (
+                <Button className="hidden md:inline" variant="outline" onClick={() => signOut.mutate()}>
+                  {dictionary.components.header.signOut}
+                </Button>
+              ) : (
+                <>
+                  <Button className="hidden md:inline" variant="outline">
+                    <Link href={`/${locale}/sign-in`}>
+                      {dictionary.components.header.signIn}
+                    </Link>
+                  </Button>
+                  <Button>
+                    <Link href={`/${locale}/sign-up`}>
+                      {dictionary.components.header.signUp}
+                    </Link>
+                  </Button>
+                </>
+              )}
+
+            </div>
+          )}
         </div>
 
         <div className="flex w-12 shrink items-end justify-end lg:hidden">
