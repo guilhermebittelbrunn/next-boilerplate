@@ -1,5 +1,6 @@
 "use client";
 
+import useAuth from "@repo/auth/provider";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ModeToggle } from "@repo/design-system/components/ui/mode-toggle";
 import {
@@ -17,7 +18,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { env } from "@/env";
 import { LanguageSwitcher } from "./language-switcher";
-import useAuth from "@repo/auth/provider";
 
 export const Header = () => {
   const { dictionary, locale } = getDictionary();
@@ -170,24 +170,36 @@ export const Header = () => {
           {!loading && (
             <div className="flex flex-row gap-2">
               {user ? (
-                <Button className="hidden md:inline" variant="outline" onClick={() => signOut.mutate()}>
+                <Button
+                  className="hidden md:inline"
+                  onClick={() => signOut.mutate()}
+                  variant="outline"
+                >
                   {dictionary.components.header.signOut}
                 </Button>
               ) : (
                 <>
-                  <Button className="hidden md:inline" variant="outline">
+                  <Button
+                    className="hidden md:inline"
+                    variant="outline"
+                  >
                     <Link href={`/${locale}/sign-in`}>
-                      {dictionary.components.header.signIn}
+                      {
+                        dictionary.components.header
+                          .signIn
+                      }
                     </Link>
                   </Button>
                   <Button>
                     <Link href={`/${locale}/sign-up`}>
-                      {dictionary.components.header.signUp}
+                      {
+                        dictionary.components.header
+                          .signUp
+                      }
                     </Link>
                   </Button>
                 </>
               )}
-
             </div>
           )}
         </div>

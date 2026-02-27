@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/nursery/noShadow: <explanation> */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,13 +9,11 @@ import {
 } from "@repo/design-system/components/form/hookform";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
-import { useAlert } from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useHealthCheck } from "@/shared/hooks/useHealthCheck";
 import { FcGoogle } from "react-icons/fc";
 
 import { type SignUpFormValues, signUpSchema } from "../validations/signUp";
@@ -23,8 +22,6 @@ export const SignUpFormClient = () => {
   const router = useRouter();
   const { dictionary, locale } = getDictionary();
   const { signUp, signInWithGoogle, loading: authLoading, user } = useAuth();
-  const { data, refetch } = useHealthCheck();
-  const { infoAlert, successAlert } = useAlert();
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -35,7 +32,6 @@ export const SignUpFormClient = () => {
     },
   });
 
-  // Redirect if already logged in (only after auth state is loaded)
   useEffect(() => {
     if (!authLoading && user) {
       router.push(`/${locale}`);

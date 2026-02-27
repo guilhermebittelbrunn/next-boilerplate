@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "turbo build",
+    "build:packages": "turbo build --filter=packages/*",
     "dev": "turbo dev",
     "check": "npx ultracite@latest check",
     "fix": "npx ultracite@latest fix",

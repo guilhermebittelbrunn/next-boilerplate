@@ -1,15 +1,26 @@
 "use client";
 
-import { getIdToken, logout, signIn, signInWithGoogle, signUp, subscribeToAuthState } from "@repo/auth/client";
+import {
+  getIdToken,
+  logout,
+  signIn,
+  signInWithGoogle,
+  signUp,
+  subscribeToAuthState,
+} from "@repo/auth/client";
+import useAlert from "@repo/design-system/hooks/useAlert";
+import { getDictionary } from "@repo/internationalization/client";
+import FormattedError from "@repo/shared/utils/helpers/formattedError";
+import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { type UseMutationResult, useMutation } from "@tanstack/react-query";
-import type { User, UserCredential } from "firebase/auth";
+import type { UserCredential } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import React, { createContext, useContext, useEffect, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
-import type { SignInDTO, SignUpDTO } from "./types";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { SignInDTO, SignUpDTO, UserDTO } from "./types";
 
 type AuthContextType = {
-  user: User | null;
+  user: UserDTO | null;
   loading: boolean;
   signIn: UseMutationResult<UserCredential, Error, SignInDTO>;
   signUp: UseMutationResult<UserCredential, Error, SignUpDTO, unknown>;
@@ -36,12 +47,18 @@ export type AuthProviderProps = {
   getRedirectPath?: () => string;
 };
 
-export function AuthProvider({ children, onError, getRedirectPath }: AuthProviderProps): ReactElement {
+export function AuthProvider({
+  children,
+  getRedirectPath,
+}: AuthProviderProps): ReactElement {
+  const { errorAlert, successAlert } = useAlert();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const redirectPath = () => getRedirectPath?.() ?? "/";
+  const { dictionary, locale } = getDictionary();
+
+  const redirectPath = () => getRedirectPath?.() ?? `/${locale}`;
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthState((u) => {
@@ -52,37 +69,44 @@ export function AuthProvider({ children, onError, getRedirectPath }: AuthProvide
   }, []);
 
   const onSuccess = async () => {
+
     const token = await getIdToken();
-    if (token) await setSessionCookie(token);
+    if (token) {
+      await setSessionCookie(token);
+
+      successAlert(dictionary.packages.auth.provider.onSuccess);
+    }
     router.push(redirectPath());
   };
 
   const signInMutation = useMutation({
     mutationFn: signIn,
-    onError: (error) => (onError ? onError(error) : console.error(error)),
+    onError: (error) =>
+      errorAlert(handleClientError(new FormattedError(error))),
     onSuccess,
   });
 
   const signUpMutation = useMutation({
     mutationFn: signUp,
-    onError: (error) => (onError ? onError(error) : console.error(error)),
+    onError: (error) => errorAlert(handleClientError(error)),
     onSuccess,
   });
 
   const signInWithGoogleMutation = useMutation({
     mutationFn: signInWithGoogle,
-    onError: (error) => (onError ? onError(error) : console.error(error)),
+    onError: (error) => errorAlert(handleClientError(error)),
     onSuccess,
   });
 
   const clearSessionCookie = async () => {
-    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const base =
+      typeof window !== "undefined" ? window.location.origin : "";
     await fetch(`${base}/api/auth/session`, { method: "DELETE" });
   };
 
   const signOutMutation = useMutation({
     mutationFn: logout,
-    onError: (error) => (onError ? onError(error) : console.error(error)),
+    onError: (error) => errorAlert(handleClientError(error)),
     onSuccess: async () => {
       await clearSessionCookie();
       router.push(redirectPath());

@@ -246,6 +246,12 @@ importers:
       '@repo/next-config':
         specifier: workspace:*
         version: link:../../packages/next-config
+      '@repo/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@repo/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@t3-oss/env-nextjs':
         specifier: ^0.13.8
         version: 0.13.8(arktype@2.1.20)(typescript@5.9.3)(zod@4.1.12)
@@ -615,6 +621,19 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/sdk:
+    dependencies:
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../shared
+      axios:
+        specifier: ^1.13.5
+        version: 1.13.5
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.2
+        version: 19.2.13
 
   packages/security:
     dependencies:
@@ -4003,6 +4022,9 @@ packages:
     resolution: {integrity: sha512-zJAaP9zxTcvTHRlejau3ZOY4V7SRpiByf3/dxx2uyKxxor19tpmpV2QRsTKikckwhaPmr2dVpxxMr7jOCYVp5g==}
     engines: {node: '>=6.0.0'}
 
+  axios@1.13.5:
+    resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
+
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
@@ -4897,6 +4919,15 @@ packages:
   fix-dts-default-cjs-exports@1.0.1:
     resolution: {integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==}
 
+  follow-redirects@1.15.11:
+    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+
   for-each@0.3.5:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
@@ -4912,8 +4943,8 @@ packages:
     resolution: {integrity: sha512-jqdObeR2rxZZbPSGL+3VckHMYtu+f9//KXBsVny6JSX/pa38Fy+bGjuG8eW/H6USNQWhLi8Num++cU2yOCNz4A==}
     engines: {node: '>= 0.12'}
 
-  form-data@4.0.4:
-    resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
+  form-data@4.0.5:
+    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
     engines: {node: '>= 6'}
 
   formdata-node@4.4.1:
@@ -11220,7 +11251,7 @@ snapshots:
   '@types/node-fetch@2.6.12':
     dependencies:
       '@types/node': 24.9.1
-      form-data: 4.0.4
+      form-data: 4.0.5
 
   '@types/node@18.19.87':
     dependencies:
@@ -11308,7 +11339,7 @@ snapshots:
     dependencies:
       '@types/node': 24.9.1
       tapable: 2.2.1
-      webpack: 5.98.0(esbuild@0.25.10)
+      webpack: 5.98.0(esbuild@0.25.2)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -11669,6 +11700,14 @@ snapshots:
       possible-typed-array-names: 1.1.0
 
   await-to-js@3.0.0: {}
+
+  axios@1.13.5:
+    dependencies:
+      follow-redirects: 1.15.11
+      form-data: 4.0.5
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
 
   balanced-match@1.0.2: {}
 
@@ -12733,6 +12772,8 @@ snapshots:
       mlly: 1.7.4
       rollup: 4.38.0
 
+  follow-redirects@1.15.11: {}
+
   for-each@0.3.5:
     dependencies:
       is-callable: 1.2.7
@@ -12754,7 +12795,7 @@ snapshots:
       safe-buffer: 5.2.1
     optional: true
 
-  form-data@4.0.4:
+  form-data@4.0.5:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
@@ -15421,16 +15462,16 @@ snapshots:
       ansi-escapes: 4.3.2
       supports-hyperlinks: 2.3.0
 
-  terser-webpack-plugin@5.3.13(esbuild@0.25.10)(webpack@5.98.0(esbuild@0.25.2)):
+  terser-webpack-plugin@5.3.13(esbuild@0.25.2)(webpack@5.98.0(esbuild@0.25.10)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.0
       serialize-javascript: 6.0.2
       terser: 5.39.0
-      webpack: 5.98.0(esbuild@0.25.10)
+      webpack: 5.98.0(esbuild@0.25.2)
     optionalDependencies:
-      esbuild: 0.25.10
+      esbuild: 0.25.2
 
   terser@5.39.0:
     dependencies:
@@ -15931,7 +15972,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack@5.98.0(esbuild@0.25.10):
+  webpack@5.98.0(esbuild@0.25.2):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.7
@@ -15953,7 +15994,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.13(esbuild@0.25.10)(webpack@5.98.0(esbuild@0.25.2))
+      terser-webpack-plugin: 5.3.13(esbuild@0.25.2)(webpack@5.98.0(esbuild@0.25.10))
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     transitivePeerDependencies:

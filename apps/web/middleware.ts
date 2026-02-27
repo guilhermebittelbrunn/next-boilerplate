@@ -2,11 +2,10 @@
 
 import { getDefaultLocale, locales } from "@repo/internationalization/utils";
 import { secure } from "@repo/security";
+import { handleClientError } from "@repo/shared/utils";
 import { cookies } from "next/headers";
-
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
-import { handleClientError } from "@repo/shared/utils";
 
 export const config = {
     // matcher tells Next.js which routes to run the middleware on. This runs the

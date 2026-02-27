@@ -12,7 +12,8 @@
     "./components/sign-in": "./components/sign-in.tsx",
     "./components/sign-up": "./components/sign-up.tsx"
   },
-"dependencies": {
+  "dependencies": {
+    "@repo/shared": "workspace:*",
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",
     "next": "15.1.3",
