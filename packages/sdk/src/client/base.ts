@@ -33,8 +33,16 @@ export default class BaseClient {
 
     async request<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
         try {
+            // console.log("config :>> ", config);
+
+            // console.log(
+            //     "this.restClient.defaults.headers.common :>> ",
+            //     this.restClient.defaults.headers.common
+            // );
+
             return await this.restClient.request<T>(config);
         } catch (error) {
+            console.log("request error :>> ", new FormattedError(error));
             throw new FormattedError(error);
         }
     }
@@ -68,6 +76,10 @@ export default class BaseClient {
                 this.setHeader(header, headers[header]);
             }
         }
+    }
+
+    setAuthorizationHeader(token: string): void {
+        this.setHeader("Authorization", `Bearer ${token}`);
     }
 
     removeHeader(key: string): void {

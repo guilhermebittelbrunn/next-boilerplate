@@ -20,14 +20,25 @@ export const CTA = async () => {
             </p>
           </div>
           <div className="flex flex-row gap-4">
-            <Button className="gap-4" variant="outline" icon={<PhoneCall />}>
+            <Button
+              className="gap-4"
+              icon={<PhoneCall />}
+              variant="outline"
+            >
               <Link href={`/${locale}/contact`}>
                 {dictionary.apps.web.pages.cta.primaryCta}{" "}
               </Link>
             </Button>
             <Button className="gap-4" icon={<MoveRight />}>
-              <Link href={env.NEXT_PUBLIC_APP_URL || `/${locale}/sign-up`}>
-                {dictionary.apps.web.pages.cta.secondaryCta}{" "}
+              <Link
+                href={
+                  env.NEXT_PUBLIC_APP_URL ||
+                  `/${locale}/sign-up`
+                }
+              >
+                {
+                  dictionary.apps.web.pages.cta.secondaryCta
+                }{" "}
               </Link>
             </Button>
           </div>

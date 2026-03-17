@@ -9,11 +9,14 @@ const firebaseAuthKeysSchema = z.object({
 
 /**
  * Server-side only keys for Firebase Admin
- * Client-side should use NEXT_PUBLIC_FIREBASE_* environment variables
+ * Client-side should use NEXT_PUBLIC_FIREBASE_* environment variables.
+ * FIREBASE_ADMIN_PROJECT_ID can be omitted if NEXT_PUBLIC_FIREBASE_PROJECT_ID is set (same project).
  */
 export const keys = () => {
     const env = {
-        FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
+        FIREBASE_ADMIN_PROJECT_ID:
+            process.env.FIREBASE_ADMIN_PROJECT_ID ??
+            process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
         FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
         FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
     };

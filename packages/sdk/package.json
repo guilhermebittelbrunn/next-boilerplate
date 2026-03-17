@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@repo/shared": "workspace:*",
+    "react": "19.2.0",
     "axios": "^1.13.5"
   },
   "devDependencies": {

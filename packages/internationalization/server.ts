@@ -10,6 +10,11 @@ import {
 
 type Locale = (typeof locales)[number];
 
+// biome-ignore lint/suspicious/useAwait: <explanation>
+export async function getTranslations(locale: Locale) {
+    return globalTranslations[locale];
+}
+
 export async function getDictionary(): Promise<IGetDictionaryResponse> {
     const cookieStore = await cookies();
     const localeCookie = cookieStore.get("x-locale")?.value;

@@ -1,17 +1,16 @@
-import { blogTranslations } from "./blog";
 import { contactTranslations } from "./contact/contact";
 import { ctaTranslations } from "./cta";
 import { faqTranslations } from "./faq";
 import { featuresTranslations } from "./features";
 import { heroTranslations } from "./hero";
 import { homeTranslations } from "./home/home";
+import { pricingTranslations } from "./pricing";
 import { signInTranslations } from "./signIn";
 import { signUpTranslations } from "./signUp";
 import { statsTranslations } from "./stats";
 
 export const pagesTranslations = {
     "pt-br": {
-        blog: blogTranslations["pt-br"],
         contact: contactTranslations["pt-br"],
         home: homeTranslations["pt-br"],
         signIn: signInTranslations["pt-br"],
@@ -21,9 +20,9 @@ export const pagesTranslations = {
         features: featuresTranslations["pt-br"],
         hero: heroTranslations["pt-br"],
         stats: statsTranslations["pt-br"],
+        pricing: pricingTranslations["pt-br"],
     },
     en: {
-        blog: blogTranslations.en,
         contact: contactTranslations.en,
         home: homeTranslations.en,
         signIn: signInTranslations.en,
@@ -33,9 +32,9 @@ export const pagesTranslations = {
         features: featuresTranslations.en,
         hero: heroTranslations.en,
         stats: statsTranslations.en,
+        pricing: pricingTranslations.en,
     },
     es: {
-        blog: blogTranslations.es,
         contact: contactTranslations.es,
         home: homeTranslations.es,
         signIn: signInTranslations.es,
@@ -45,5 +44,6 @@ export const pagesTranslations = {
         features: featuresTranslations.es,
         hero: heroTranslations.es,
         stats: statsTranslations.es,
+        pricing: pricingTranslations.es,
     },
 };

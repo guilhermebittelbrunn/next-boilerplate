@@ -19,8 +19,6 @@ const handleCheckoutSessionCompleted = async (
 
     // Example: Get user from Firebase using customerId
     // const user = await getFirebaseUserByCustomerId(customerId);
-
-    console.log("Checkout session completed for customer:", customerId);
 };
 
 const handleSubscriptionScheduleCanceled = async (
@@ -33,8 +31,6 @@ const handleSubscriptionScheduleCanceled = async (
 
     const customerId =
         typeof data.customer === "string" ? data.customer : data.customer.id;
-
-    console.log("Subscription canceled for customer:", customerId);
 };
 
 export const POST = async (request: Request): Promise<Response> => {

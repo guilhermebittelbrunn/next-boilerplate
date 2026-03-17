@@ -7,6 +7,7 @@ import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
 import { QueryProvider } from "@/shared/providers/query-provider";
+import ClientLayout from "./clientLayout";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
 
@@ -29,7 +30,7 @@ const RootLayout = async ({ children }: RootLayoutProperties) => {
             <AuthProvider>
               <ToastContainer />
               <Header />
-              {children}
+              <ClientLayout> {children} </ClientLayout>
               <Footer />
             </AuthProvider>
           </DesignSystemProvider>

@@ -1,23 +1,23 @@
 import "server-only";
 import { type App, cert, getApps, initializeApp } from "firebase-admin/app";
 import { type Auth, getAuth } from "firebase-admin/auth";
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { keys } from "./keys";
 
 /** Clerk-style auth return type for compatibility */
 export type AuthResult = {
-  userId: string | null;
-  orgId: string | null;
-  redirectToSignIn: () => never;
+    userId: string | null;
+    orgId: string | null;
+    redirectToSignIn: () => never;
 };
 
 /** Clerk-style current user for compatibility (Firebase UserRecord mapped) */
 export type CurrentUser = {
-  id: string;
-  fullName: string | null;
-  imageUrl: string | null;
-  emailAddresses: { emailAddress: string }[];
+    id: string;
+    fullName: string | null;
+    imageUrl: string | null;
+    emailAddresses: { emailAddress: string }[];
 };
 
 let firebaseAdminApp: App | undefined;
@@ -127,7 +127,9 @@ export async function currentUser(): Promise<CurrentUser | null> {
         const cookieStore = await cookies();
         const token = cookieStore.get("firebase-token")?.value ?? null;
         const userRecord = await getCurrentUser(token);
-        if (!userRecord) return null;
+        if (!userRecord) {
+            return null;
+        }
         return {
             id: userRecord.uid,
             fullName: userRecord.displayName ?? null,

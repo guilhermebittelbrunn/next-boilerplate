@@ -1,44 +1,30 @@
 /** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: <explanation> */
+
+import { globalTranslations } from "@repo/internationalization/translations/global";
+import type { Locale } from "@repo/internationalization/utils";
 import axios from "axios";
 import { HTTP_STATUS } from "./httpStatus";
-
-const FIREBASE_AUTH_MESSAGES: Record<string, string> = {
-    "auth/email-already-in-use": "Este e-mail já está em uso.",
-    "auth/invalid-email": "E-mail inválido.",
-    "auth/operation-not-allowed": "Operação não permitida.",
-    "auth/weak-password": "A senha é muito fraca.",
-    "auth/user-disabled": "Esta conta foi desativada.",
-    "auth/user-not-found": "Usuário não encontrado.",
-    "auth/wrong-password": "Senha incorreta.",
-    "auth/invalid-credential":
-        "Credenciais inválidas. Verifique e-mail e senha.",
-    "auth/too-many-requests": "Muitas tentativas. Tente novamente mais tarde.",
-    "auth/network-request-failed": "Erro de conexão. Verifique sua internet.",
-    "auth/popup-closed-by-user": "Login cancelado.",
-    "auth/cancelled-popup-request": "Login cancelado.",
-};
 
 /**
  * Se houver alguma outra forma de error serem disparados devemos adicionar aqui
  */
 export default class FormattedError {
     message: string;
-
     status: number;
+    translations: (typeof globalTranslations)[keyof typeof globalTranslations];
 
-    constructor(error: unknown) {
+    constructor(error: unknown, locale: Locale = "pt-br") {
+        this.translations = globalTranslations[locale];
         this.message = this.formatMessage(error);
         this.status = this.formatStatus(error);
     }
 
     formatMessage(error: unknown): string {
-        const fallbackMessage = "Um erro inesperado aconteceu";
+        const fallbackMessage =
+            this.translations?.packages.utils.error.unexpected ??
+            "Um erro inesperado aconteceu";
 
         if (error) {
-            if (this.isFirebaseAuthError(error)) {
-                return FIREBASE_AUTH_MESSAGES[error.code] || error.message;
-            }
-
             if (axios.isAxiosError(error) && error.response) {
                 const responseError = error.response;
 
@@ -47,6 +33,12 @@ export default class FormattedError {
                 }
 
                 return `${responseError.status} - ${responseError.statusText}`;
+            }
+
+            if (this.isFirebaseAuthError(error)) {
+                return this.translations?.packages.auth.provider.firebase.error[
+                    error.code as keyof typeof this.translations.packages.auth.provider.firebase.error
+                ];
             }
 
             if (error instanceof Error) {

@@ -1,5 +1,5 @@
 import { cn } from "@repo/design-system/lib/utils";
-import type * as React from "react";
+
 import { Label } from "./label";
 
 export interface InputProps extends React.ComponentProps<"input"> {

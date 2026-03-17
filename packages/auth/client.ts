@@ -106,6 +106,11 @@ export const getAuthClient = () => {
     return firebaseAuth;
 };
 
+// export const decodeToken = (token: string) => {
+//     const auth = getAuthClient();
+//     return auth;
+// }
+
 /**
  * Sign in with email and password
  */
@@ -150,9 +155,12 @@ export const subscribeToAuthState = (callback: (user: User | null) => void) => {
 /**
  * Get current ID token (for setting session cookie via API)
  */
-export const getIdToken = async (): Promise<string | null> => {
+export const getIdToken = (): Promise<string | null> => {
     const auth = getAuthClient();
     const user = auth.currentUser;
-    if (!user) return null;
+
+    if (!user) {
+        return Promise.resolve(null);
+    }
     return user.getIdToken();
 };

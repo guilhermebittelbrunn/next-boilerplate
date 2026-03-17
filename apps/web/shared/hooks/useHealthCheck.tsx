@@ -26,6 +26,7 @@ export function useHealthCheck() {
         error,
         data,
         isPending: isLoading,
+        ...rest
     } = useQuery({
         queryKey: [HEALTH_QUERY_KEY],
         queryFn: getApplicationHealthCheck,
@@ -38,10 +39,13 @@ export function useHealthCheck() {
     }, [isSuccess, data, successAlert]);
 
     useEffect(() => {
+
+
+        console.log('error :>> ', error);
         if (isError && error) {
             errorAlert(handleClientError(error));
         }
     }, [isError, error, errorAlert]);
 
-    return { data, isLoading, error };
+    return { ...rest, data, isLoading, error };
 }

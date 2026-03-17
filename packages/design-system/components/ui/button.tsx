@@ -1,6 +1,6 @@
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
+
 import { Spinner } from "./spinner";
 
 export const buttonVariants = cva(

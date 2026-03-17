@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: <explanation> */
 "use client";
 
 import useAuth from "@repo/auth/provider";
@@ -11,25 +12,25 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@repo/design-system/components/ui/navigation-menu";
-import { useMediaQuery } from "@repo/design-system/hooks/useMediaQuery";
+import { useIsLargeDesktop } from "@repo/design-system/hooks/useMediaQuery";
 import { getDictionary } from "@repo/internationalization/client";
 import { Menu, MoveRight, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { env } from "@/env";
+import { apiClient } from "@/shared/lib/client";
+import { WEB_PATHS } from "../../paths";
 import { LanguageSwitcher } from "./language-switcher";
 
 export const Header = () => {
   const { dictionary, locale } = getDictionary();
-  const medias = useMediaQuery();
+  const isLargeDesktop = useIsLargeDesktop();
   const { user, signOut, loading } = useAuth();
-
-  const { isLargeDesktop } = medias;
 
   const navigationItems = [
     {
       title: dictionary.components.header.home,
-      href: `/${locale}`,
+      href: `/${locale}${WEB_PATHS.home}`,
       description: "",
     },
     {
@@ -38,18 +39,13 @@ export const Header = () => {
       items: [
         {
           title: dictionary.components.header.product.pricing,
-          href: `/${locale}/pricing`,
+          href: `/${locale}${WEB_PATHS.pricing}`,
         },
       ],
     },
     {
-      title: dictionary.components.header.blog,
-      href: `/${locale}/blog`,
-      description: "",
-    },
-    {
       title: dictionary.components.header.contact,
-      href: `/${locale}/contact`,
+      href: `/${locale}${WEB_PATHS.contact}`,
       description: "",
     },
   ];
@@ -172,7 +168,14 @@ export const Header = () => {
               {user ? (
                 <Button
                   className="hidden md:inline"
-                  onClick={() => signOut.mutate()}
+                  onClick={() =>
+                    signOut.mutate(undefined, {
+                      onSuccess: () =>
+                        apiClient.removeHeader(
+                          "Authorization"
+                        ),
+                    })
+                  }
                   variant="outline"
                 >
                   {dictionary.components.header.signOut}

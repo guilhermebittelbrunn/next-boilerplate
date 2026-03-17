@@ -11,13 +11,6 @@ export const Hero = async () => {
     <div className="w-full">
       <div className="container mx-auto">
         <div className="flex flex-col items-center justify-center gap-8 py-20 lg:py-40">
-          <div>
-            <Button className="gap-4" size="sm" variant="secondary" icon={<MoveRight />}>
-              <Link href={`/${locale}/blog/example-post`}>
-                {dictionary.apps.web.pages.hero.announcement}{" "}
-              </Link>
-            </Button>
-          </div>
           <div className="flex flex-col gap-4">
             <h1 className="max-w-2xl text-center font-regular text-5xl tracking-tighter md:text-7xl">
               {
@@ -31,19 +24,30 @@ export const Hero = async () => {
             </p>
           </div>
           <div className="flex flex-row gap-3">
-            <Button className="gap-4" size="lg" variant="outline" icon={<PhoneCall />}>
+            <Button
+              className="gap-4"
+              icon={<PhoneCall />}
+              size="lg"
+              variant="outline"
+            >
               <Link href={`/${locale}/contact`}>
                 {dictionary.apps.web.pages.cta.primaryCta}{" "}
               </Link>
             </Button>
-            <Button className="gap-4" size="lg" icon={<MoveRight />}>
+            <Button
+              className="gap-4"
+              icon={<MoveRight />}
+              size="lg"
+            >
               <Link
                 href={
                   env.NEXT_PUBLIC_APP_URL ||
                   `/${locale}/sign-up`
                 }
               >
-                {dictionary.apps.web.pages.cta.secondaryCta}{" "}
+                {
+                  dictionary.apps.web.pages.cta.secondaryCta
+                }{" "}
               </Link>
             </Button>
           </div>

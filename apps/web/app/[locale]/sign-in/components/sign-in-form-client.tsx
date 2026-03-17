@@ -8,11 +8,12 @@ import {
 } from "@repo/design-system/components/form/hookform";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
-import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
+import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
+import { apiClient } from "@/shared/lib/client";
 import {
   type SignInFormValues,
   signInSchema,
@@ -20,7 +21,6 @@ import {
 
 export const SignInFormClient = () => {
   const { dictionary, locale } = getDictionary();
-  const { successAlert } = useAlert();
   const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
 
   const isLoading = signIn.isPending || signInWithGoogle.isPending;
@@ -33,27 +33,12 @@ export const SignInFormClient = () => {
     },
   });
 
-  const onSubmit = (data: SignInFormValues) => {
-    signIn.mutate(
-      { ...data },
-      {
-        onSuccess: (data) => {
-          console.log("data :>> ", data);
+  const handleSuccessSignIn = async (credentials: UserCredential) => {
+    const accessToken = await credentials.user.getIdToken();
 
-          successAlert(JSON.stringify(data));
-        },
-      }
-    );
-  };
-
-  const handleGoogleSignIn = () => {
-    signInWithGoogle.mutate(undefined, {
-      onSuccess: (data) => {
-        console.log("data :>> ", data);
-
-        successAlert(JSON.stringify(data));
-      },
-    });
+    if (accessToken) {
+      apiClient.setAuthorizationHeader(accessToken);
+    }
   };
 
   if (user && !authLoading) {
@@ -76,7 +61,10 @@ export const SignInFormClient = () => {
           <form
             className="space-y-4"
             onSubmit={form.handleSubmit((data) =>
-              signIn.mutate({ ...data })
+              signIn.mutate(
+                { ...data },
+                { onSuccess: handleSuccessSignIn }
+              )
             )}
           >
             <HookFormInput
@@ -118,7 +106,11 @@ export const SignInFormClient = () => {
         <Button
           className="w-full"
           disabled={isLoading}
-          onClick={handleGoogleSignIn}
+          onClick={() =>
+            signInWithGoogle.mutate(undefined, {
+              onSuccess: handleSuccessSignIn,
+            })
+          }
           type="button"
           variant="outline"
         >

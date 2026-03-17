@@ -26,20 +26,30 @@ export const FAQ = async () => {
                 </p>
               </div>
               <div className="">
-                <Button className="gap-4" variant="outline">
+                <Button
+                  className="gap-4"
+                  icon={<PhoneCall />}
+                  variant="outline"
+                >
                   <Link href={`/${locale}/contact`}>
                     {dictionary.apps.web.pages.faq.cta}{" "}
-                    <PhoneCall className="h-4 w-4" />
                   </Link>
                 </Button>
               </div>
             </div>
           </div>
           <Accordion className="w-full" collapsible type="single">
-            {dictionary.apps.web.pages.faq.items.map((item, index) => (
-              <AccordionItem key={index} value={`index-${index}`}>
-                <AccordionTrigger>{item.question}</AccordionTrigger>
-                <AccordionContent>{item.answer}</AccordionContent>
+            {dictionary.apps.web.pages.faq.items.map((item) => (
+              <AccordionItem
+                key={item.question}
+                value={item.question}
+              >
+                <AccordionTrigger>
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent>
+                  {item.answer}
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>

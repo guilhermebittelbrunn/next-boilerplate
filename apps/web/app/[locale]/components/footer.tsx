@@ -1,12 +1,9 @@
-import { env } from "@/env";
 import { getDictionary } from "@repo/internationalization/server";
 import Link from "next/link";
+import { env } from "@/env";
 
-
-export async function Footer () {
-  const {dictionary, locale} = await getDictionary();
-
-
+export async function Footer() {
+  const { dictionary, locale } = await getDictionary();
 
   const navigationItems = [
     {
@@ -19,16 +16,16 @@ export async function Footer () {
       description: dictionary.components.header.product.description,
       items: [
         {
-          title: dictionary.components.header.blog,
-          href: `/${locale}/blog`,
+          title: dictionary.components.header.product.pricing,
+          href: `/${locale}/pricing`,
         },
         ...(env.NEXT_PUBLIC_DOCS_URL
           ? [
-              {
-                  title: dictionary.components.header.docs,
-                  href: env.NEXT_PUBLIC_DOCS_URL,
-              },
-            ]
+            {
+              title: dictionary.components.header.docs,
+              href: env.NEXT_PUBLIC_DOCS_URL,
+            },
+          ]
           : []),
       ],
     },
@@ -55,12 +52,15 @@ export async function Footer () {
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div className="flex flex-col items-start gap-8">
               <div className="flex flex-col gap-2">
-                    <h2 className="max-w-xl text-left font-regular text-3xl tracking-tighter md:text-5xl">
-                      next-boilerplate
-                    </h2>
-                    <p className="max-w-lg text-left text-foreground/75 text-lg leading-relaxed tracking-tight">
-                      {dictionary.apps.web.pages.home.meta.description}
-                    </p>
+                <h2 className="max-w-xl text-left font-regular text-3xl tracking-tighter md:text-5xl">
+                  next-boilerplate
+                </h2>
+                <p className="max-w-lg text-left text-foreground/75 text-lg leading-relaxed tracking-tight">
+                  {
+                    dictionary.apps.web.pages.home.meta
+                      .description
+                  }
+                </p>
               </div>
             </div>
             <div className="grid items-start gap-10 lg:grid-cols-3">
@@ -80,13 +80,19 @@ export async function Footer () {
                             : undefined
                         }
                         target={
-                          item.href.includes("http") ? "_blank" : undefined
+                          item.href.includes("http")
+                            ? "_blank"
+                            : undefined
                         }
                       >
-                        <span className="text-xl">{item.title}</span>
+                        <span className="text-xl">
+                          {item.title}
+                        </span>
                       </Link>
                     ) : (
-                      <p className="text-xl">{item.title}</p>
+                      <p className="text-xl">
+                        {item.title}
+                      </p>
                     )}
                     {item.items?.map((subItem) => (
                       <Link
@@ -94,12 +100,18 @@ export async function Footer () {
                         href={subItem.href}
                         key={subItem.title}
                         rel={
-                          subItem.href.includes("http")
+                          subItem.href.includes(
+                            "http"
+                          )
                             ? "noopener noreferrer"
                             : undefined
                         }
                         target={
-                          subItem.href.includes("http") ? "_blank" : undefined
+                          subItem.href.includes(
+                            "http"
+                          )
+                            ? "_blank"
+                            : undefined
                         }
                       >
                         <span className="text-foreground/75">
@@ -116,4 +128,4 @@ export async function Footer () {
       </div>
     </section>
   );
-};
+}

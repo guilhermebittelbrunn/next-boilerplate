@@ -22,73 +22,130 @@ const Pricing = async () => {
           <div className="grid w-full grid-cols-3 divide-x pt-20 text-left lg:grid-cols-4">
             <div className="col-span-3 lg:col-span-1" />
             <div className="flex flex-col gap-2 px-3 py-1 md:px-6 md:py-4">
-              <p className="text-2xl">Startup</p>
+              <p className="text-2xl">
+                {
+                  dictionary.apps.web.pages.pricing.items[0]
+                    .title
+                }
+              </p>
               <p className="text-muted-foreground text-sm">
-                Our goal is to streamline SMB trade, making it
-                easier and faster than ever for everyone and
-                everywhere.
+                {
+                  dictionary.apps.web.pages.pricing.items[0]
+                    .description
+                }
               </p>
               <p className="mt-8 flex flex-col gap-2 text-xl lg:flex-row lg:items-center">
-                <span className="text-4xl">$40</span>
+                <span className="text-4xl">
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[0].price
+                  }
+                </span>
                 <span className="text-muted-foreground text-sm">
                   {" "}
-                  / month
+                  /{" "}
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[0].pricePeriod
+                  }
                 </span>
               </p>
-              <Button className="mt-8 gap-4" variant="outline">
+              <Button
+                className="mt-8 gap-4"
+                icon={<MoveRight />}
+                variant="outline"
+              >
                 <Link
                   href={
                     env.NEXT_PUBLIC_APP_URL ||
                     `/${locale}/sign-up`
                   }
                 >
-                  Try it <MoveRight className="h-4 w-4" />
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[0].linkButton
+                  }
                 </Link>
               </Button>
             </div>
             <div className="flex flex-col gap-2 px-3 py-1 md:px-6 md:py-4">
-              <p className="text-2xl">Growth</p>
+              <p className="text-2xl">
+                {
+                  dictionary.apps.web.pages.pricing.items[1]
+                    .title
+                }
+              </p>
               <p className="text-muted-foreground text-sm">
-                Our goal is to streamline SMB trade, making it
-                easier and faster than ever for everyone and
-                everywhere.
+                {
+                  dictionary.apps.web.pages.pricing.items[1]
+                    .description
+                }
               </p>
               <p className="mt-8 flex flex-col gap-2 text-xl lg:flex-row lg:items-center">
-                <span className="text-4xl">$40</span>
+                <span className="text-4xl">
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[1].price
+                  }
+                </span>
                 <span className="text-muted-foreground text-sm">
                   {" "}
-                  / month
+                  /{" "}
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[1].pricePeriod
+                  }
                 </span>
               </p>
-              <Button className="mt-8 gap-4">
+              <Button className="mt-8 gap-4" icon={<MoveRight />}>
                 <Link
                   href={
                     env.NEXT_PUBLIC_APP_URL ||
                     `/${locale}/sign-up`
                   }
                 >
-                  Try it <MoveRight className="h-4 w-4" />
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[1].linkButton
+                  }
                 </Link>
               </Button>
             </div>
             <div className="flex flex-col gap-2 px-3 py-1 md:px-6 md:py-4">
-              <p className="text-2xl">Enterprise</p>
+              <p className="text-2xl">
+                {
+                  dictionary.apps.web.pages.pricing.items[2]
+                    .title
+                }
+              </p>
               <p className="text-muted-foreground text-sm">
-                Our goal is to streamline SMB trade, making it
-                easier and faster than ever for everyone and
-                everywhere.
+                {
+                  dictionary.apps.web.pages.pricing.items[2]
+                    .description
+                }
               </p>
               <p className="mt-8 flex flex-col gap-2 text-xl lg:flex-row lg:items-center">
-                <span className="text-4xl">$40</span>
+                <span className="text-4xl">
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[2].price
+                  }
+                </span>
                 <span className="text-muted-foreground text-sm">
                   {" "}
-                  / month
+                  /{" "}
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[2].pricePeriod
+                  }
                 </span>
               </p>
-              <Button className="mt-8 gap-4" variant="outline">
+              <Button className="mt-8 gap-4" icon={<PhoneCall />} variant="outline">
                 <Link href={`/${locale}/contact`}>
-                  {dictionary.apps.web.pages.cta.primaryCta}{" "}
-                  <PhoneCall className="h-4 w-4" />
+                  {
+                    dictionary.apps.web.pages.pricing
+                      .items[2].linkButton
+                  }
                 </Link>
               </Button>
             </div>
@@ -139,16 +196,33 @@ const Pricing = async () => {
             </div>
             {/* New Line */}
             <div className="col-span-3 px-3 py-4 lg:col-span-1 lg:px-6">
-              Members
+              {
+                dictionary.apps.web.pages.pricing.items[0]
+                  .membersText
+              }
             </div>
             <div className="flex justify-center px-3 py-1 md:px-6 md:py-4">
               <p className="text-muted-foreground text-sm">
-                5 members
+                {
+                  dictionary.apps.web.pages.pricing.items[0]
+                    .membersQtd
+                }{" "}
+                {
+                  dictionary.apps.web.pages.pricing.items[0]
+                    .membersText
+                }
               </p>
             </div>
             <div className="flex justify-center px-3 py-1 md:px-6 md:py-4">
               <p className="text-muted-foreground text-sm">
-                25 members
+                {
+                  dictionary.apps.web.pages.pricing.items[1]
+                    .membersQtd
+                }{" "}
+                {
+                  dictionary.apps.web.pages.pricing.items[1]
+                    .membersText
+                }
               </p>
             </div>
             <div className="flex justify-center px-3 py-1 md:px-6 md:py-4">

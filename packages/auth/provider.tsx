@@ -21,6 +21,7 @@ import type { SignInDTO, SignUpDTO, UserDTO } from "./types";
 
 type AuthContextType = {
   user: UserDTO | null;
+  accessToken: string | null;
   loading: boolean;
   signIn: UseMutationResult<UserCredential, Error, SignInDTO>;
   signUp: UseMutationResult<UserCredential, Error, SignUpDTO, unknown>;
@@ -55,7 +56,7 @@ export function AuthProvider({
   const router = useRouter();
   const [user, setUser] = useState<UserDTO | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const { dictionary, locale } = getDictionary();
 
   const redirectPath = () => getRedirectPath?.() ?? `/${locale}`;
@@ -69,11 +70,10 @@ export function AuthProvider({
   }, []);
 
   const onSuccess = async () => {
-
     const token = await getIdToken();
     if (token) {
       await setSessionCookie(token);
-
+      setAccessToken(token);
       successAlert(dictionary.packages.auth.provider.onSuccess);
     }
     router.push(redirectPath());
@@ -82,19 +82,21 @@ export function AuthProvider({
   const signInMutation = useMutation({
     mutationFn: signIn,
     onError: (error) =>
-      errorAlert(handleClientError(new FormattedError(error))),
+      errorAlert(handleClientError(new FormattedError(error, locale))),
     onSuccess,
   });
 
   const signUpMutation = useMutation({
     mutationFn: signUp,
-    onError: (error) => errorAlert(handleClientError(error)),
+    onError: (error) =>
+      errorAlert(handleClientError(new FormattedError(error, locale))),
     onSuccess,
   });
 
   const signInWithGoogleMutation = useMutation({
     mutationFn: signInWithGoogle,
-    onError: (error) => errorAlert(handleClientError(error)),
+    onError: (error) =>
+      errorAlert(handleClientError(new FormattedError(error, locale))),
     onSuccess,
   });
 
@@ -106,7 +108,8 @@ export function AuthProvider({
 
   const signOutMutation = useMutation({
     mutationFn: logout,
-    onError: (error) => errorAlert(handleClientError(error)),
+    onError: (error) =>
+      errorAlert(handleClientError(new FormattedError(error, locale))),
     onSuccess: async () => {
       await clearSessionCookie();
       router.push(redirectPath());
@@ -118,6 +121,7 @@ export function AuthProvider({
       value={{
         user,
         loading,
+        accessToken,
         signIn: signInMutation,
         signUp: signUpMutation,
         signInWithGoogle: signInWithGoogleMutation,

@@ -2,6 +2,8 @@ import type { globalTranslations } from "./translations/global";
 
 export const locales = ["pt-br", "en", "es"] as const;
 
+export type Locale = (typeof locales)[number];
+
 export type IGetDictionaryResponse = {
     dictionary: (typeof globalTranslations)[keyof typeof globalTranslations];
     locale: (typeof locales)[number];
