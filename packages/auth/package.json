@@ -4,6 +4,7 @@
   "private": true,
   "exports": {
     "./keys": "./keys.ts",
+    "./types": "./types.ts",
     "./server": "./server.ts",
     "./client": "./client.ts",
     "./client-ui": "./client-ui.tsx",
@@ -13,6 +14,7 @@
     "./components/sign-up": "./components/sign-up.tsx"
   },
   "dependencies": {
+    "@repo/internationalization": "workspace:*",
     "@repo/shared": "workspace:*",
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",

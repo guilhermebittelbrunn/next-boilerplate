@@ -125,7 +125,7 @@ export const createCustomToken = async (
 export async function currentUser(): Promise<CurrentUser | null> {
     try {
         const cookieStore = await cookies();
-        const token = cookieStore.get("firebase-token")?.value ?? null;
+        const token = cookieStore.get("access-token")?.value ?? null;
         const userRecord = await getCurrentUser(token);
         if (!userRecord) {
             return null;

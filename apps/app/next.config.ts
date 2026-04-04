@@ -1,17 +1,24 @@
-import { withToolbar } from "@repo/feature-flags/lib/toolbar";
 import { config, withAnalyzer } from "@repo/next-config";
-import { withLogging, withSentry } from "@repo/observability/next-config";
 import type { NextConfig } from "next";
-import { env } from "@/env";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-let nextConfig: NextConfig = withToolbar(withLogging(config));
+const monorepoRoot = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "..",
+    ".."
+);
 
-if (env.VERCEL) {
-  nextConfig = withSentry(nextConfig);
-}
+let nextConfig: NextConfig = {
+    ...config,
+    turbopack: {
+        ...config.turbopack,
+        root: monorepoRoot,
+    },
+};
 
-if (env.ANALYZE === "true") {
-  nextConfig = withAnalyzer(nextConfig);
+if (process.env.ANALYZE === "true") {
+    nextConfig = withAnalyzer(nextConfig);
 }
 
 export default nextConfig;

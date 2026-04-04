@@ -4,10 +4,13 @@ import { z } from "zod";
 export const keys = () =>
     createEnv({
         client: {
-            NEXT_PUBLIC_GA_MEASUREMENT_ID: z
-                .string()
-                .startsWith("G-")
-                .optional(),
+            NEXT_PUBLIC_GA_MEASUREMENT_ID: z.preprocess((val) => {
+                if (typeof val !== "string") {
+                    return;
+                }
+                const id = val.trim();
+                return id.startsWith("G-") ? id : undefined;
+            }, z.string().optional()),
         },
         runtimeEnv: {
             NEXT_PUBLIC_GA_MEASUREMENT_ID:

@@ -8,6 +8,7 @@ import {
     GoogleAuthProvider,
     getAuth,
     onAuthStateChanged,
+    onIdTokenChanged,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
@@ -129,7 +130,8 @@ export const signInWithGoogle = () => {
 };
 
 /**
- * Create a new user with email and password
+ * Create a new user with email and password.
+ * `role` is not sent to Firebase client Auth; pass it to the session API after sign-up (see AuthProvider).
  */
 export const signUp = ({ email, password }: SignUpDTO) => {
     const auth = getAuthClient();
@@ -153,14 +155,27 @@ export const subscribeToAuthState = (callback: (user: User | null) => void) => {
 };
 
 /**
+ * Fires on sign-in, sign-out, and when the ID token is refreshed — use to keep
+ * the httpOnly session cookie in sync with Firebase.
+ */
+export const subscribeToIdTokenState = (
+    callback: (user: User | null) => void
+) => {
+    const auth = getAuthClient();
+    return onIdTokenChanged(auth, callback);
+};
+
+/**
  * Get current ID token (for setting session cookie via API)
  */
-export const getIdToken = (): Promise<string | null> => {
+export const getIdToken = (
+    forceRefresh?: boolean
+): Promise<string | null> => {
     const auth = getAuthClient();
     const user = auth.currentUser;
 
     if (!user) {
         return Promise.resolve(null);
     }
-    return user.getIdToken();
+    return user.getIdToken(forceRefresh);
 };

@@ -1,43 +1,8 @@
 import "server-only";
 
-import admin from "firebase-admin";
-import { keys } from "./keys";
+import { getDb } from "./firestore-db";
 
 const PAGE_COLLECTION = "pages";
-
-let _db: admin.firestore.Firestore | null = null;
-
-function getDb(): admin.firestore.Firestore {
-  if (_db) {
-    return _db;
-  }
-
-  const k = keys();
-  if (
-    !(
-      k.FIREBASE_PROJECT_ID &&
-      k.FIREBASE_CLIENT_EMAIL &&
-      k.FIREBASE_PRIVATE_KEY
-    )
-  ) {
-    throw new Error(
-      "Firebase is not configured. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY."
-    );
-  }
-
-  if (admin.apps.length === 0) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: k.FIREBASE_PROJECT_ID,
-        clientEmail: k.FIREBASE_CLIENT_EMAIL,
-        privateKey: k.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-      }),
-    });
-  }
-
-  _db = admin.firestore();
-  return _db;
-}
 
 export type Page = {
   id: string;
@@ -79,3 +44,12 @@ export const database = {
     },
   },
 };
+
+export { getDb, isFirestoreConfigured } from "./firestore-db";
+export {
+  userRepository,
+  profileToDTO,
+  type UserProfile,
+  type UserProfileDTO,
+  type UserProfileRole,
+} from "./repositories/user.repository";

@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/style/noEnum: <explanation> */
+/** biome-ignore-all lint/style/noEnum: enums for role */
 import type { User } from "firebase/auth";
 
 export enum UserRoleLevel {
@@ -6,7 +6,16 @@ export enum UserRoleLevel {
     COMMON = "common",
 }
 
-export interface UserDTO extends User {}
+/** Firestore-backed profile from `/api/users/me`. */
+export type UserProfile = {
+    uid: string;
+    email: string | null;
+    role: UserRoleLevel;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type UserDTO = User;
 
 export type SignInDTO = {
     email: string;
@@ -17,3 +26,26 @@ export type SignUpDTO = {
     email: string;
     password: string;
 };
+
+export function parseUserProfileResponse(data: unknown): UserProfile | null {
+    if (!data || typeof data !== "object") {
+        return null;
+    }
+    const o = data as Record<string, unknown>;
+    if (typeof o.uid !== "string") {
+        return null;
+    }
+    if (o.role !== UserRoleLevel.ADMIN && o.role !== UserRoleLevel.COMMON) {
+        return null;
+    }
+    if (typeof o.createdAt !== "string" || typeof o.updatedAt !== "string") {
+        return null;
+    }
+    return {
+        uid: o.uid,
+        email: typeof o.email === "string" ? o.email : null,
+        role: o.role,
+        createdAt: o.createdAt,
+        updatedAt: o.updatedAt,
+    };
+}

@@ -140,7 +140,11 @@ const Pricing = async () => {
                   }
                 </span>
               </p>
-              <Button className="mt-8 gap-4" icon={<PhoneCall />} variant="outline">
+              <Button
+                className="mt-8 gap-4"
+                icon={<PhoneCall />}
+                variant="outline"
+              >
                 <Link href={`/${locale}/contact`}>
                   {
                     dictionary.apps.web.pages.pricing

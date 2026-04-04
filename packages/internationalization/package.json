@@ -6,7 +6,8 @@
     ".": "./index.ts",
     "./keys": "./keys.ts",
     "./server": "./server.ts",
-    "./client": "./client.ts"
+    "./client": "./client.ts",
+    "./utils": "./utils.ts"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

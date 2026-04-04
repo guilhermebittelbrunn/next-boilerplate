@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNestedTernary: <explanation> */
 import { type NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "./server";
 
@@ -40,7 +41,7 @@ export function authMiddleware(
         }
 
         const token =
-            request.cookies.get("firebase-token")?.value ||
+            request.cookies.get("access-token")?.value ||
             request.headers.get("authorization")?.replace("Bearer ", "");
 
         try {

@@ -20,7 +20,9 @@ export function authGuard(handler: Handler) {
         const token = authHeader.replace("Bearer ", "");
 
         try {
-            const decoded = (await getCurrentUser(token)) as UserDTO | null;
+            const decoded = (await getCurrentUser(
+                token
+            )) as unknown as UserDTO | null;
 
             const context = {
                 user: decoded,

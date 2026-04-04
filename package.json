@@ -41,7 +41,8 @@
   },
   "pnpm": {
     "overrides": {
-      "parse5": "^7.2.1"
+      "parse5": "^7.2.1",
+      "zod": "4.1.12"
     }
   },
   "type": "module"

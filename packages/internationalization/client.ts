@@ -1,26 +1,43 @@
 "use client";
 
 import { globalTranslations } from "./translations/global";
-import { getDefaultLocale, type IGetDictionaryResponse } from "./utils";
+import {
+    getDefaultLocale,
+    locales as appLocales,
+    type IGetDictionaryResponse,
+    type Locale,
+} from "./utils";
 import { getCookie } from "./utils/cookies";
 
-const locales = ["pt-br", "en", "es"] as const;
-type Locale = (typeof locales)[number];
-
-export function getDictionary(): IGetDictionaryResponse {
-    const localeCookie = getCookie("x-locale");
-
-    if (locales.includes(localeCookie as Locale)) {
-        return {
-            dictionary: globalTranslations[localeCookie as Locale],
-            locale: localeCookie as Locale,
-        };
+function resolveLocale(locale: string | null | undefined): Locale {
+    if (locale && appLocales.includes(locale as Locale)) {
+        return locale as Locale;
     }
 
-    const defaultLocale = getDefaultLocale();
+    const fallback = getDefaultLocale();
+    if (
+        typeof fallback === "string" &&
+        appLocales.includes(fallback as Locale)
+    ) {
+        return fallback as Locale;
+    }
 
+    return appLocales[0];
+}
+
+export function getDictionary(): IGetDictionaryResponse {
+    const l = resolveLocale(getCookie("x-locale"));
     return {
-        dictionary: globalTranslations[defaultLocale as Locale],
-        locale: defaultLocale as Locale,
+        dictionary: globalTranslations[l],
+        locale: l,
+    };
+}
+
+/** Prefer this when the active locale comes from the URL ([locale] segment). */
+export function getDictionaryForLocale(locale: string): IGetDictionaryResponse {
+    const l = resolveLocale(locale);
+    return {
+        dictionary: globalTranslations[l],
+        locale: l,
     };
 }

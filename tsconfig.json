@@ -19,5 +19,10 @@
     "strictNullChecks": true
   },
   "exclude": ["node_modules"],
-  "include": []
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx"
+  ]
 }

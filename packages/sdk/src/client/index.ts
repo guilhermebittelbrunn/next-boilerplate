@@ -2,14 +2,17 @@
 
 import { UserRoleLevel } from "../../../auth/types";
 import ApplicationActions from "../actions/application/application";
+import UserActions from "../actions/user/user/action";
 import BaseClient, { type Config } from "./base";
 
 export class Client extends BaseClient {
     application!: ApplicationActions;
+    user!: UserActions;
 
     constructor(config: Config) {
         super(config);
         this.application = new ApplicationActions(this);
+        this.user = new UserActions(this);
     }
 
     get isAdminContext(): boolean {

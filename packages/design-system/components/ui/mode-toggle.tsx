@@ -16,12 +16,16 @@ const themes = [
   { label: "System", value: "system" },
 ];
 
-export const ModeToggle = () => {
+type ModeToggleProps = {
+  triggerProps?: React.ComponentProps<typeof Button>;
+};
+
+export const ModeToggle = ({ triggerProps }: ModeToggleProps) => {
   const { setTheme } = useTheme();
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger >
+      <DropdownMenuTrigger {...triggerProps}>
         <Button
           className="shrink-0 text-foreground"
           size="icon"

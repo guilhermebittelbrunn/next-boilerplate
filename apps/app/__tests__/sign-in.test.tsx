@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { expect, test } from "vitest";
-import Page from "../app/(unauthenticated)/sign-in/[[...sign-in]]/page";
+import Page from "../app/[locale]/(unauthenticated)/sign-in-1/[[...sign-in]]/page";
 
 test("Sign In Page", () => {
   const { container } = render(<Page />);

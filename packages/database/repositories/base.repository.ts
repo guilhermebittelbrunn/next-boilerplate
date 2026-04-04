@@ -1,10 +1,10 @@
 import admin from "firebase-admin";
-import { keys } from "@/keys";
+import { keys } from "../keys";
 
 let _db: admin.firestore.Firestore | null = null;
 
-export class BaseRepository<Domain> {
-    // biome-ignore lint/style/noParameterProperties: <explanation>
+export class BaseRepository<Domain extends { id: string }> {
+    // biome-ignore lint/style/noParameterProperties: required by current class shape
     constructor(private readonly collection: string) {}
 
     getDb(): admin.firestore.Firestore {
@@ -43,19 +43,21 @@ export class BaseRepository<Domain> {
     async findMany(): Promise<Domain[]> {
         const store = this.getDb();
         const snap = await store.collection(this.collection).get();
-        return snap.docs.map(
-            (d: admin.firestore.QueryDocumentSnapshot<Domain>) => ({
-                id: d.id,
-                ...d.data(),
-            })
-        );
+        return snap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<Domain, "id">),
+        })) as Domain[];
     }
 
-    async create(data: Domain): Promise<Domain> {
+    async create(data: Omit<Domain, "id">): Promise<Domain> {
         const store = this.getDb();
-        const ref = await store.collection(this.collection).add(data);
+        const ref = await store
+            .collection(this.collection)
+            .add(
+                data as admin.firestore.WithFieldValue<admin.firestore.DocumentData>
+            );
         const doc = await ref.get();
-        return { id: doc.id, ...doc.data() } as Domain;
+        return { id: doc.id, ...(doc.data() as Omit<Domain, "id">) } as Domain;
     }
 
     async delete(id: string): Promise<void> {
