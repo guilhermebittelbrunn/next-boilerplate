@@ -1,0 +1,28 @@
+---
+description: API Next (`apps/api`) — rotas, validação, auth na borda
+globs: apps/api/**/*
+alwaysApply: false
+---
+
+# API (`apps/api`)
+
+## Rotas
+
+- Handlers em `app/(routes)/...` (ou estrutura equivalente do projeto). Um arquivo por responsabilidade HTTP clara (REST-ish).
+- Validar input na borda (ex.: Zod); responder com códigos HTTP corretos e corpos consistentes.
+
+## Camadas
+
+- **Guards** (`(guards)` ou middleware): auth/session antes da lógica.
+- **Repositórios / adapters**: isolam persistência; tipos de domínio não vazam como detalhe de DB nos handlers se puder mapear.
+- **Mappers**: DTO de API ≠ modelo interno quando isso evitar acoplamento.
+
+## Segurança e i18n
+
+- Repetir checagens de permissão mesmo que o front já restrinja rotas.
+- Mensagens de erro para o cliente: genéricas ou chaveadas para tradução no app; evitar stack traces em produção.
+
+## Compartilhamento
+
+- Código usado só pela API fica em `apps/api/(shared)/...` ou pacote `@repo/*` se for útil a outros apps.
+- Não importar componentes React de `apps/app` na API.

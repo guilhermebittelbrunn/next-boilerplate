@@ -30,14 +30,19 @@ export const Container = ({
     };
 
     return (
-        <div className={cn("flex flex-1 flex-col gap-4 p-4 pt-0", className)}>
+        <div
+            className={cn(
+                "flex max-w-full flex-1 flex-col gap-4 p-4 pt-0",
+                className
+            )}
+        >
             {loading ? (
                 <div className="flex min-h-screen w-full flex-1 items-center justify-center rounded-xl bg-muted/50 p-4 md:min-h-min">
                     <Spinner className="size-10" />
                 </div>
             ) : (
                 <>
-                    <div className="flex min-h-screen w-full flex-1 flex-col items-center justify-center rounded-xl bg-muted/50 p-4 md:min-h-min">
+                    <div className="flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-auto rounded-xl bg-muted/50 p-4 md:min-h-min">
                         {children}
                     </div>
                     {footer && (

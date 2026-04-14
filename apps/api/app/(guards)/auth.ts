@@ -1,38 +1,34 @@
 import { getCurrentUser } from "@repo/auth/server";
-import type { UserDTO } from "@repo/auth/types";
+import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 
 type Handler = (
     req: NextRequest,
-    ctx: { user: UserDTO | null }
+    ctx: { user: UserRecord }
 ) => Promise<Response>;
 
 export function authGuard(handler: Handler) {
     return async (req: NextRequest) => {
         const authHeader = req.headers.get("authorization");
 
-        if (!authHeader) {
-            return new Response(JSON.stringify({ message: "Missing token" }), {
-                status: 401,
-            });
+        if (!authHeader?.startsWith("Bearer ")) {
+            return new Response(
+                JSON.stringify({ message: "Missing bearer token" }),
+                {
+                    status: 401,
+                }
+            );
         }
 
-        const token = authHeader.replace("Bearer ", "");
+        const token = authHeader.slice("Bearer ".length).trim();
+        const userRecord = await getCurrentUser(token);
 
-        try {
-            const decoded = (await getCurrentUser(
-                token
-            )) as unknown as UserDTO | null;
-
-            const context = {
-                user: decoded,
-            };
-
-            return handler(req, context);
-        } catch {
+        if (!userRecord) {
             return new Response(JSON.stringify({ message: "Invalid token" }), {
                 status: 401,
             });
         }
+
+        return handler(req, { user: userRecord });
     };
 }

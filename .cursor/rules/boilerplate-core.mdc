@@ -1,0 +1,28 @@
+---
+description: Princípios do boilerplate — fork-friendly, sem domínio único em packages
+alwaysApply: true
+---
+
+# Boilerplate: núcleo
+
+## Objetivo
+
+Código reutilizável entre forks: **módulos genéricos**, fácil de copiar e estender. Não codifique fluxos, entidades ou copy específicos de um único produto dentro de `packages/*` salvo quando o pacote for explicitamente de integração (auth, email, payments).
+
+## Separação
+
+- **`packages/`**: infraestrutura transversal, UI base, SDK, i18n, auth. APIs estáveis, poucas dependências entre pacotes; preferir composição no app.
+- **`apps/app`**: rotas Next, layouts por área (público, autenticado, admin), colocation de hooks/schemas só daquela feature.
+- **`apps/api`**: handlers HTTP, guards, mapeamento request/response. Persistência e regras fortes de domínio: manter finas na API ou extrair para módulos nomeados pelo domínio no fork, não “genérico demais” no SDK.
+
+## Qualidade
+
+- Nomes descritivos em inglês para código (pastas, arquivos, variáveis), a menos que o projeto já use outro padrão numa área.
+- Mudanças mínimas: não refatorar arquivos não relacionados à tarefa.
+- Respeitar Biome/Ultracite do repo (`pnpm check` / `pnpm fix`).
+
+## Anti-padrões
+
+- Hardcode de URLs da API no front fora do SDK ou env tipado.
+- Textos de UI soltos sem passar pelo sistema de traduções.
+- Lógica de autorização só no cliente; espelhar na API.

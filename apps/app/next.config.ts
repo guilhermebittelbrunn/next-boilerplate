@@ -1,7 +1,7 @@
-import { config, withAnalyzer } from "@repo/next-config";
-import type { NextConfig } from "next";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { config, withAnalyzer } from "@repo/next-config";
+import type { NextConfig } from "next";
 
 const monorepoRoot = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -14,6 +14,15 @@ let nextConfig: NextConfig = {
     turbopack: {
         ...config.turbopack,
         root: monorepoRoot,
+    },
+    images: {
+        domains: ["lh3.googleusercontent.com"],
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "lh3.googleusercontent.com",
+            },
+        ],
     },
 };
 

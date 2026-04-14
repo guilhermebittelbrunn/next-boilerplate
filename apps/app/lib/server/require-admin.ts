@@ -1,21 +1,21 @@
+import { redirect } from "next/navigation";
+import type { AppSessionUser } from "@/lib/server/auth-session";
+import { getAppSessionUser } from "@/lib/server/auth-session";
+
+export type { AppSessionUser } from "@/lib/server/auth-session";
+
 /**
- * Server-only: requires valid session and Firestore `users/{uid}.role === "admin"`.
+ * Requires a valid session and Firestore `type === "admin"`.
+ * Common users are sent to the locale home (`/`).
  */
-export async function requireAdmin(locale: string): Promise<void> {
-    // if (!isFirebaseAuthConfigured()) {
-    //     return;
-    // }
-    // if (!userRepository.isConfigured()) {
-    //     return;
-    // }
-    // const cookieStore = await cookies();
-    // const token = cookieStore.get("access-token")?.value ?? null;
-    // const user = await getCurrentUser(token);
-    // if (!user) {
-    //     redirect(`/${locale}/sign-in`);
-    // }
-    // const profile = await userRepository.getByUid(user.uid);
-    // if (!profile || profile.role !== "admin") {
-    //     redirect(`/${locale}`);
-    // }
+export async function requireAdmin(locale: string): Promise<AppSessionUser> {
+    const user = await getAppSessionUser();
+
+    if (!user) {
+        redirect(`/${locale}/sign-in`);
+    }
+    if (user.type !== "admin") {
+        redirect(`/${locale}`);
+    }
+    return user;
 }

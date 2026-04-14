@@ -214,3 +214,109 @@
     --tw-prose-invert-th-borders: var(--color-border);
     --tw-prose-invert-td-borders: var(--color-border);
 }
+
+/*
+ * Ant Design deriva colorText em rgba no CSS-in-JS após a hidratação, o que
+ * sobrescreve o primeiro paint que vinha das variáveis do tema. Prefixo
+ * `html` aumenta a especificidade face às classes com hash do cssinjs.
+ */
+html .ant-dropdown .ant-dropdown-menu,
+html .ant-dropdown-menu-submenu .ant-dropdown-menu {
+    color: var(--color-foreground);
+}
+
+html .ant-dropdown .ant-dropdown-menu-item,
+html .ant-dropdown .ant-dropdown-menu-submenu-title {
+    color: var(--color-foreground);
+}
+
+html .ant-dropdown .ant-dropdown-menu-item .ant-dropdown-menu-title-content {
+    color: inherit;
+}
+
+html .ant-dropdown .ant-dropdown-menu-item-danger,
+html
+    .ant-dropdown
+    .ant-dropdown-menu-item-danger
+    .ant-dropdown-menu-title-content {
+    color: var(--color-destructive);
+}
+
+/* Ícones @ant-design/icons usam .anticon; cor própria do Ant pode ficar errada no dark */
+html .ant-dropdown
+    .ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger)
+    .anticon {
+    color: var(--color-foreground);
+}
+
+html .ant-dropdown .ant-dropdown-menu-item-danger .anticon {
+    color: var(--color-destructive);
+}
+
+html .ant-pagination,
+html .ant-pagination .ant-pagination-total-text,
+html .ant-pagination-options,
+html .ant-pagination-simple-pager {
+    color: var(--color-foreground);
+}
+
+html .ant-pagination .ant-pagination-item a,
+html .ant-pagination .ant-pagination-item button,
+html .ant-pagination-prev .ant-pagination-item-link,
+html .ant-pagination-next .ant-pagination-item-link,
+html .ant-pagination-jump-prev .ant-pagination-item-container,
+html .ant-pagination-jump-next .ant-pagination-item-container {
+    color: var(--color-foreground);
+}
+
+html .ant-pagination .ant-pagination-item-active a {
+    color: var(--color-primary);
+}
+
+html .ant-table,
+html .ant-table-thead > tr > th,
+html .ant-table-tbody > tr > td,
+html .ant-table tfoot > tr > th,
+html .ant-table tfoot > tr > td {
+    color: var(--color-foreground);
+}
+
+html .ant-popconfirm .ant-popover-inner,
+html .ant-popconfirm .ant-popover-message-title,
+html .ant-popconfirm .ant-popover-inner-content {
+    color: var(--color-foreground);
+}
+
+html .ant-modal .ant-modal-title,
+html .ant-modal .ant-modal-body,
+html .ant-modal .ant-modal-confirm-title,
+html .ant-modal .ant-modal-confirm-content {
+    color: var(--color-foreground);
+}
+
+/* Sidebar (shadcn): evita que regras globais do Ant em controles vazem cor */
+html [data-slot="sidebar-menu-sub-button"],
+html [data-slot="sidebar-menu-button"] {
+    color: var(--color-sidebar-foreground);
+}
+
+/* Breadcrumb: reforça tokens após estilos do Ant (links herdavam cor errada) */
+html [data-slot="breadcrumb"] [data-slot="breadcrumb-link"] {
+    color: var(--color-muted-foreground);
+}
+
+html [data-slot="breadcrumb"] [data-slot="breadcrumb-link"]:hover {
+    color: var(--color-foreground);
+}
+
+html [data-slot="breadcrumb"] [data-slot="breadcrumb-page"] {
+    color: var(--color-foreground);
+}
+
+html [data-slot="breadcrumb"] [data-slot="breadcrumb-separator"] {
+    color: var(--color-muted-foreground);
+}
+
+html [data-slot="breadcrumb"] [data-slot="breadcrumb-separator"] svg {
+    color: inherit;
+}

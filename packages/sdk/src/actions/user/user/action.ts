@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/style/noParameterProperties: <explanation> */
-import type { UserDTO } from "src/types";
+import type { UserDTO, UserWithAuthDTO } from "src/types";
 import type { Client } from "../../../client";
 import type { Response } from "../../../client/type";
 
@@ -8,17 +8,19 @@ export default class UserActions {
         this.client = client;
     }
 
-    async list(): Promise<UserDTO[]> {
-        const { data } = await this.client.request<Response<UserDTO[]>>({
-            url: "/users",
-            method: "GET",
-        });
+    async list(): Promise<UserWithAuthDTO[]> {
+        const { data } = await this.client.request<Response<UserWithAuthDTO[]>>(
+            {
+                url: "/users",
+                method: "GET",
+            }
+        );
 
         return data.data;
     }
 
-    async findById(id: string): Promise<UserDTO> {
-        const { data } = await this.client.request<Response<UserDTO>>({
+    async findById(id: string): Promise<UserWithAuthDTO> {
+        const { data } = await this.client.request<Response<UserWithAuthDTO>>({
             url: `/users/${id}`,
             method: "GET",
         });

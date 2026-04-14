@@ -6,11 +6,25 @@ import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
 
+type PublicRoute = {
+    path: string;
+    whenAuthenticated: "next" | "redirect";
+    isPrefix?: boolean;
+};
+
+export const publicRoutes: PublicRoute[] = [
+    { path: "/", whenAuthenticated: "next" },
+    { path: "/sign-in", whenAuthenticated: "redirect" },
+    { path: "/sign-up", whenAuthenticated: "redirect" },
+];
+
 export const config = {
     // matcher tells Next.js which routes to run the proxy on. This runs on all
     // routes except for static assets and API routes. Proxy always runs on Node.
     matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
 };
+
+const PUBLIC_REDIRECT_URL_WHEN_AUTHENTICATED = "/";
 
 const arcjetMiddleware = async (request: NextRequest) => {
     if (!env.ARCJET_KEY) {
@@ -63,16 +77,26 @@ export default async function proxy(request: NextRequest) {
 
     const enforceAuth = isAuthenticatedAreaPath(appPath);
 
+    const publicRoute = publicRoutes.find((route) => route.path === appPath);
+
+    const token = request.cookies.get("access-token")?.value ?? null;
+
     if (enforceAuth) {
-        const token = request.cookies.get("access-token")?.value ?? null;
         const user = await getCurrentUser(token);
 
-        if (!user) {
+        if (!user && enforceAuth) {
             const url = request.nextUrl.clone();
             url.pathname = `/${currentLocale}/sign-in`;
             url.searchParams.set("redirect", pathname);
             return NextResponse.redirect(url);
         }
+    }
+
+    if (token && publicRoute && publicRoute.whenAuthenticated === "redirect") {
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = PUBLIC_REDIRECT_URL_WHEN_AUTHENTICATED;
+
+        return NextResponse.redirect(redirectUrl);
     }
 
     const arcjetResponse = await arcjetMiddleware(request);

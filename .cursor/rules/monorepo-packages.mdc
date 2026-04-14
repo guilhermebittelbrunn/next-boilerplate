@@ -1,0 +1,34 @@
+---
+description: Convenções para packages do monorepo (@repo/*)
+globs: packages/**/*
+alwaysApply: false
+---
+
+# Packages (`packages/*`)
+
+## Dependências
+
+- Pacotes **não** devem depender de `apps/*`.
+- Evite ciclos: se dois pacotes precisam um do outro, extraia tipos/utilitário mínimo para `@repo/shared` ou inverta a dependência.
+
+## `@repo/sdk`
+
+- Funções por recurso (ex.: `actions/user/...`) com tipos exportados do mesmo módulo.
+- Sem hooks React com estado pesado aqui, salvo thin wrappers se já for padrão do repo.
+- Erros: propagar de forma que o app possa mapear para toast/i18n sem acoplar strings de produto no SDK.
+
+## `@repo/design-system`
+
+- Componentes presentacionais; variantes via props e tokens CSS existentes.
+- Sem fetch, sem session; quem compõe dados é o app.
+
+## `@repo/internationalization`
+
+- Chaves estáveis (`ui.table.empty`); valores em pt/en/etc. como exemplos neutros.
+- Exportar apenas o necessário para apps; não importar rotas Next.
+
+## Novos pacotes
+
+- `package.json` com `"private": true` se for interno.
+- Estender `@repo/typescript-config` como nos demais pacotes.
+- README só se for pacote publicável ou integração complexa; caso contrário, comentários breves no código bastam.

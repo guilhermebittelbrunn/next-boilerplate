@@ -8,6 +8,7 @@ export enum UserRoleLevel {
 
 /** Firestore-backed profile from `/api/users/me`. */
 export type UserProfile = {
+    id: string;
     uid: string;
     email: string | null;
     role: UserRoleLevel;

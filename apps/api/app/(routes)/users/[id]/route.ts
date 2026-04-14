@@ -1,37 +1,36 @@
 import type { NextRequest } from "next/server";
-import { userRepository } from "@/(shared)/repositories/user";
+import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
+import { userRepository } from "@/(shared)/repositories/user.repository";
 
-export const GET = async ({ params }: { params: { id: string } }) => {
-    const user = await userRepository.findById(params.id);
+type Ctx = { params: Promise<{ id: string }> };
 
-    if (!user) {
-        return new Response(JSON.stringify({ error: "User not found" }), {
-            status: 404,
-        });
+export async function GET(_req: NextRequest, ctx: Ctx) {
+    const { id } = await ctx.params;
+
+    const merged = await getMergedUserByUid(id);
+    if (merged) {
+        return Response.json({ data: merged });
     }
 
-    return new Response(JSON.stringify({ data: user }), { status: 200 });
-};
+    const user = await userRepository.findById(id);
+    if (!user) {
+        return Response.json({ error: "User not found" }, { status: 404 });
+    }
 
-export const PUT = async ({
-    request,
-    params,
-}: {
-    request: Request;
-    params: { id: string };
-}) => {
-    const body = await request.json();
-    const id = params.id;
+    return Response.json({ data: user });
+}
 
+export async function PUT(req: NextRequest, ctx: Ctx) {
+    const { id } = await ctx.params;
+    const body = await req.json();
     const updatedId = await userRepository.update({ ...body, id });
 
-    return new Response(JSON.stringify({ data: updatedId }), { status: 200 });
-};
+    return Response.json({ data: updatedId });
+}
 
-export const DELETE = async (_: NextRequest, { params }) => {
-    const { id } = await params;
-
+export async function DELETE(_req: NextRequest, ctx: Ctx) {
+    const { id } = await ctx.params;
     await userRepository.delete(id);
 
-    return new Response(undefined, { status: 204 });
-};
+    return new Response(null, { status: 204 });
+}

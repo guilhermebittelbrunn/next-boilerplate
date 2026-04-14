@@ -1,13 +1,13 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
-
 import { AuthProvider } from "@repo/auth/provider";
-import { useAlert } from "./hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
 import { handleClientError } from "@repo/shared/utils";
+import type { ComponentProps, ReactNode } from "react";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { useAlert } from "./hooks/useAlert";
+import { AntdAppProvider } from "./providers/antd-app";
 import { ThemeProvider } from "./providers/theme";
 
 type DesignSystemProviderProperties = ComponentProps<typeof ThemeProvider>;
@@ -17,8 +17,8 @@ function AuthProviderWithAlerts({ children }: { children: ReactNode }) {
   const getRedirectPath = () => `/${getDictionary().locale}`;
   return (
     <AuthProvider
-      onError={(error) => errorAlert(handleClientError(error))}
       getRedirectPath={getRedirectPath}
+      onError={(error) => errorAlert(handleClientError(error))}
     >
       {children}
     </AuthProvider>
@@ -30,11 +30,11 @@ export const DesignSystemProvider = ({
   ...properties
 }: DesignSystemProviderProperties) => (
   <ThemeProvider {...properties}>
-    <AuthProviderWithAlerts >
-      <TooltipProvider>{children}</TooltipProvider>
-      <Toaster />
-    </AuthProviderWithAlerts>
+    <AntdAppProvider>
+      <AuthProviderWithAlerts>
+        <TooltipProvider>{children}</TooltipProvider>
+        <Toaster />
+      </AuthProviderWithAlerts>
+    </AntdAppProvider>
   </ThemeProvider>
 );
-
-

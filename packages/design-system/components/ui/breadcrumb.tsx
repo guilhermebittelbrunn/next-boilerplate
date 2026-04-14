@@ -42,7 +42,10 @@ function BreadcrumbLink({
 
   return (
     <Comp
-      className={cn("transition-colors hover:text-foreground", className)}
+      className={cn(
+        "text-muted-foreground transition-colors hover:text-foreground",
+        className,
+      )}
       data-slot="breadcrumb-link"
       {...props}
     />
@@ -69,7 +72,10 @@ function BreadcrumbSeparator({
   return (
     <li
       aria-hidden="true"
-      className={cn("[&>svg]:size-3.5", className)}
+      className={cn(
+        "text-muted-foreground [&>svg]:size-3.5 [&>svg]:shrink-0",
+        className,
+      )}
       data-slot="breadcrumb-separator"
       role="presentation"
       {...props}
