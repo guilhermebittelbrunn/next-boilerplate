@@ -28,7 +28,7 @@ const PageBreadcrumb: React.FC<BreadcrumbProps> = ({
                             className="inline-flex items-center gap-1.5"
                             href="/painel"
                         >
-                            Ínicio
+                            Início
                             <svg
                                 className="stroke-current"
                                 fill="none"

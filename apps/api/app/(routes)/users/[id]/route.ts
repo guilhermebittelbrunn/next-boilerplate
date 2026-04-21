@@ -1,5 +1,4 @@
 import { getAuthInstance } from "@repo/auth/server";
-import type { NextRequest } from "next/server";
 import {
     getMergedUserByFirestoreDocId,
     getMergedUserByUid,
@@ -8,10 +7,15 @@ import { userRepository } from "@/(shared)/repositories/user.repository";
 import { parseAdminUpdateUserInput } from "@/(shared)/validation/user-admin.schema";
 import { requireAdminApi } from "@/app/(guards)/admin";
 
-type Ctx = { params: Promise<{ id: string }> };
+type Ctx = { params: { id: string } | Promise<{ id: string }> };
+
+async function resolveIdFromContext(ctx: Ctx): Promise<string> {
+    const resolvedParams = await ctx.params;
+    return resolvedParams.id;
+}
 
 export const GET = requireAdminApi(async (_req, ctx) => {
-    const { id } = await ctx.params;
+    const id = await resolveIdFromContext(ctx);
 
     let merged = await getMergedUserByFirestoreDocId(id);
     if (!merged) {
@@ -29,7 +33,7 @@ export const GET = requireAdminApi(async (_req, ctx) => {
 });
 
 export const PUT = requireAdminApi(async (req, ctx) => {
-    const { id } = await ctx.params;
+    const id = await resolveIdFromContext(ctx);
     const profile = await userRepository.findById(id);
 
     if (!profile) {
@@ -70,7 +74,7 @@ export const PUT = requireAdminApi(async (req, ctx) => {
 });
 
 export const DELETE = requireAdminApi(async (_req, ctx) => {
-    const { id } = await ctx.params;
+    const id = await resolveIdFromContext(ctx);
     const profile = await userRepository.findById(id);
 
     if (!profile) {

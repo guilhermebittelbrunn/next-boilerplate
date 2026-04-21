@@ -1,6 +1,6 @@
 export const adminRoutesTranslations = {
     "pt-br": {
-        administration: "Administracao",
+        administration: "Início",
         platform: {
             title: "Platforma",
             users: {
@@ -16,7 +16,7 @@ export const adminRoutesTranslations = {
         },
     },
     en: {
-        administration: "Administration",
+        administration: "Home",
         platform: {
             title: "Platform",
             users: {
@@ -32,7 +32,7 @@ export const adminRoutesTranslations = {
         },
     },
     es: {
-        administration: "Administración",
+        administration: "Inicio",
         platform: {
             title: "Platforma",
             users: {

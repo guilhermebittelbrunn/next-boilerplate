@@ -1,7 +1,7 @@
 import { getDictionary } from "@repo/internationalization/server";
 import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
-import { SignUpForm } from "./components/sign-up-form";
+import SignUpFormClient from "./components/SignUpFormClient";
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { dictionary } = await getDictionary();
@@ -10,5 +10,5 @@ export const generateMetadata = async (): Promise<Metadata> => {
 };
 
 export default function SignUp() {
-  return <SignUpForm />;
+  return <SignUpFormClient />;
 }

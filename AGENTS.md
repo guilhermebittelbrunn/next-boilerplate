@@ -20,6 +20,11 @@ Este repositório é um **boilerplate full stack** em monorepo (`pnpm` + `turbo`
 3. **i18n em dois lados** — mensagens de API alinhadas a locale quando fizer sentido; UI sempre via pacote de internacionalização.
 4. **Responsivo e tema** — layout e componentes base devem funcionar em mobile e desktop; dark mode via design system / tokens existentes.
 
+## Convenções de implementação
+
+- **Locale no app**: para resolver locale atual, prefira `getDictionary()` (client/server) ou `getDictionaryForLocale(...)` quando a rota já fornece `[locale]`. Esses helpers já aplicam fallback/default e cookie (`x-locale`) automaticamente.
+- **Nomenclatura de arquivos**: componentes React em **TitleCase** (ex.: `PanelNavbarControls.tsx`); hooks em **camelCase** (ex.: `useListUsers.ts`).
+
 ## Regras Cursor
 
 Detalhes acionáveis estão em `.cursor/rules/*.mdc` (regras por glob + uma regra núcleo com `alwaysApply`).

@@ -1,8 +1,8 @@
 /** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: <explanation> */
 
-import { globalTranslations } from "@repo/internationalization/translations/global";
 import type { Locale } from "@repo/internationalization/utils";
 import axios from "axios";
+import { globalTranslations } from "../../../internationalization/translations/global";
 import { HTTP_STATUS } from "./httpStatus";
 
 /**
@@ -27,9 +27,29 @@ export default class FormattedError {
         if (error) {
             if (axios.isAxiosError(error) && error.response) {
                 const responseError = error.response;
+                const data = responseError.data as
+                    | { error?: { code?: string }; message?: string }
+                    | undefined;
 
-                if (responseError.data?.message) {
-                    return responseError.data.message;
+                const apiCode =
+                    data &&
+                    typeof data === "object" &&
+                    data.error &&
+                    typeof data.error.code === "string"
+                        ? data.error.code
+                        : null;
+
+                if (apiCode) {
+                    const apiErrors = this.translations?.packages.utils
+                        .apiErrors as Record<string, string> | undefined;
+                    const mapped = apiErrors?.[apiCode];
+                    if (mapped) {
+                        return mapped;
+                    }
+                }
+
+                if (data?.message && typeof data.message === "string") {
+                    return data.message;
                 }
 
                 return `${responseError.status} - ${responseError.statusText}`;

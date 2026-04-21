@@ -9,7 +9,7 @@ export const COMMON_ROUTES = (
 
     return {
         root: {
-            label: dictionary?.apps.app.pages.common.routes.platform.title,
+            label: dictionary?.apps.app.pages.common.routes.home,
             url: buildPath("/"),
         },
         playground: {

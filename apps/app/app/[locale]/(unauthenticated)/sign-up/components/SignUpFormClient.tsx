@@ -19,11 +19,11 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
-import { postAuthRedirectTarget } from "@/shared/lib/auth-redirect";
-import { signInWithGoogleViaApi } from "@/shared/lib/google-sign-in-api";
+import { postAuthRedirectTarget } from "@/shared/lib/authRedirect";
+import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
 import { type SignUpFormValues, signUpSchema } from "../validations/signUp";
 
-export const SignUpFormClient = () => {
+export default function SignUpFormClient() {
     const router = useRouter();
     const { dictionary, locale } = getDictionary();
     const { errorAlert, successAlert } = useAlert();
@@ -39,8 +39,8 @@ export const SignUpFormClient = () => {
             const raw =
                 typeof window !== "undefined"
                     ? new URLSearchParams(window.location.search).get(
-                          "redirect"
-                      )
+                        "redirect"
+                    )
                     : null;
             router.push(postAuthRedirectTarget(raw, fallback));
         },
@@ -166,4 +166,4 @@ export const SignUpFormClient = () => {
             </div>
         </div>
     );
-};
+}

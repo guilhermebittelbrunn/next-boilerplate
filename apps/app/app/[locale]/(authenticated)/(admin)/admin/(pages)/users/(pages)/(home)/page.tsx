@@ -6,28 +6,23 @@ import {
   Table,
 } from "@repo/design-system/components/ui";
 import ResponsiveImage from "@repo/design-system/components/ui/responsive-image";
-import {
-  getDictionaryForLocale,
-} from "@repo/internationalization/client";
+import { getDictionary } from "@repo/internationalization/client";
 import { UserType, type UserWithAuthDTO } from "@repo/sdk/src/types";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { ADMIN_ROUTES } from "../../../../paths";
 import { useListUsers } from "../../(hooks)/useListUsers";
 import { useUserCrud } from "../../(hooks)/useUserCrud";
 
-export const UsersPage = () => {
+export default function UsersPage() {
   const { data: users, isLoading, refetch, isFetching } = useListUsers();
   const router = useRouter();
-  const params = useParams();
-  const locale =
-    typeof params.locale === "string" ? params.locale : "pt-br";
-  const { dictionary } = getDictionaryForLocale(locale);
+  const { dictionary, locale } = getDictionary();
+  const { deleteUserMutation } = useUserCrud();
+
   const routes = ADMIN_ROUTES(dictionary, locale);
   const adminUsersList = dictionary.apps.app.pages.admin.users.list;
-
-  const { deleteUserMutation } = useUserCrud();
 
   const typeLabel = (type: UserType) =>
     type === UserType.ADMIN
@@ -121,5 +116,3 @@ export const UsersPage = () => {
     </>
   );
 };
-
-export default UsersPage;

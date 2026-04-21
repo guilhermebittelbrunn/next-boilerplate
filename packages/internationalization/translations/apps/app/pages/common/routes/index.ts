@@ -1,5 +1,6 @@
 export const commonRoutesTranslations = {
     "pt-br": {
+        home: "Início",
         platform: {
             title: "Plataforma",
             playground: "Playground",
@@ -8,6 +9,7 @@ export const commonRoutesTranslations = {
         },
     },
     en: {
+        home: "Home",
         platform: {
             title: "Platform",
             playground: "Playground",
@@ -16,6 +18,7 @@ export const commonRoutesTranslations = {
         },
     },
     es: {
+        home: "Inicio",
         platform: {
             title: "Plataforma",
             playground: "Playground",
