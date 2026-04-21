@@ -24,7 +24,6 @@ export const config = {
     matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
 };
 
-const PUBLIC_REDIRECT_URL_WHEN_AUTHENTICATED = "/";
 
 const arcjetMiddleware = async (request: NextRequest) => {
     if (!env.ARCJET_KEY) {
@@ -93,10 +92,13 @@ export default async function proxy(request: NextRequest) {
     }
 
     if (token && publicRoute && publicRoute.whenAuthenticated === "redirect") {
-        const redirectUrl = request.nextUrl.clone();
-        redirectUrl.pathname = PUBLIC_REDIRECT_URL_WHEN_AUTHENTICATED;
+        const signedInUser = await getCurrentUser(token);
+        if (signedInUser) {
+            const redirectUrl = request.nextUrl.clone();
+            redirectUrl.pathname = `/${currentLocale}`;
 
-        return NextResponse.redirect(redirectUrl);
+            return NextResponse.redirect(redirectUrl);
+        }
     }
 
     const arcjetResponse = await arcjetMiddleware(request);

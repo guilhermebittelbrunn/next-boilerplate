@@ -1,17 +1,20 @@
-/** biome-ignore-all lint/complexity/noUselessConstructor: <explanation> */
+/** biome-ignore-all lint/complexity/noUselessConstructor: subclasses wire action modules */
 
-import { UserRoleLevel } from "../../../auth/types";
+import { UserRoleLevel } from "@repo/auth/types";
 import ApplicationActions from "../actions/application/application";
+import AuthActions from "../actions/auth/action";
 import UserActions from "../actions/user/user/action";
 import BaseClient, { type Config } from "./base";
 
 export class Client extends BaseClient {
     application!: ApplicationActions;
+    authApi!: AuthActions;
     user!: UserActions;
 
     constructor(config: Config) {
         super(config);
         this.application = new ApplicationActions(this);
+        this.authApi = new AuthActions(this);
         this.user = new UserActions(this);
     }
 

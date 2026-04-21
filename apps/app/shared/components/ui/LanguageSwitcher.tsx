@@ -48,6 +48,7 @@ export const LanguageSwitcher = ({
   triggerProps,
   icon = false,
 }: LanguageSwitcherProps) => {
+  const trigger = triggerProps ?? {};
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
@@ -71,14 +72,16 @@ export const LanguageSwitcher = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger {...triggerProps}>
+      <DropdownMenuTrigger asChild>
         <Button
+          {...trigger}
           className={cn(
             "bg shrink-0 rounded-full text-foreground",
-            icon && "m-0 h-9 w-9 bg-sidebar-border p-0"
+            icon && "m-0 h-9 w-9 bg-sidebar-border p-0",
+            trigger.className
           )}
-          size="sm"
-          variant="ghost"
+          size={trigger.size ?? "sm"}
+          variant={trigger.variant ?? "ghost"}
         >
           <span className="text-lg">{currentLanguage.flag}</span>
           {!icon && showLabel && (

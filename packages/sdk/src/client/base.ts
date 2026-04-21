@@ -1,14 +1,14 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: <explanation> */
+/** biome-ignore-all lint/suspicious/noExplicitAny: Axios interceptor typing */
 
+import type { IAuthContextProps } from "@repo/auth/types";
 import { HTTP_STATUS } from "@repo/shared/utils";
+import { AUTH_REQUEST_HEADER } from "@repo/shared/utils/helpers/auth-request-headers";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import axios, {
     type AxiosInstance,
     type AxiosRequestConfig,
     type AxiosResponse,
 } from "axios";
-import ClientAuth from "./auth";
-
 export type Project = "app" | "web" | "api";
 export type Context = "common" | "admin";
 
@@ -23,12 +23,47 @@ export default class BaseClient {
 
     restClient: AxiosInstance;
 
-    auth: ClientAuth;
-
     constructor(config: Config) {
         this.config = config;
-        this.auth = new ClientAuth();
         this.restClient = axios.create({ baseURL: this.config.url });
+    }
+
+    setAuthRequestContext(props: IAuthContextProps): void {
+        this.setOptionalHeader(
+            AUTH_REQUEST_HEADER.USER_ID,
+            props.userId ?? undefined
+        );
+        this.setOptionalHeader(
+            AUTH_REQUEST_HEADER.REQUEST_USER_ID,
+            props.requestUserId ?? undefined
+        );
+        this.setOptionalHeader(
+            AUTH_REQUEST_HEADER.USER_ROLE,
+            props.userRole ?? undefined
+        );
+        this.setOptionalHeader(
+            AUTH_REQUEST_HEADER.REQUEST_ROLE,
+            props.requestRole ?? undefined
+        );
+        if (props.requestRole) {
+            this.setHeader("x-role", props.requestRole);
+        }
+    }
+
+    clearAuthRequestContext(): void {
+        this.removeHeader(AUTH_REQUEST_HEADER.USER_ID);
+        this.removeHeader(AUTH_REQUEST_HEADER.REQUEST_USER_ID);
+        this.removeHeader(AUTH_REQUEST_HEADER.USER_ROLE);
+        this.removeHeader(AUTH_REQUEST_HEADER.REQUEST_ROLE);
+        this.removeHeader("x-role");
+    }
+
+    private setOptionalHeader(key: string, value: string | undefined): void {
+        if (value === undefined || value === "") {
+            this.removeHeader(key);
+        } else {
+            this.setHeader(key, value);
+        }
     }
 
     async request<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
@@ -42,7 +77,6 @@ export default class BaseClient {
 
             return await this.restClient.request<T>(config);
         } catch (error) {
-            console.log("request error :>> ", new FormattedError(error));
             throw new FormattedError(error);
         }
     }

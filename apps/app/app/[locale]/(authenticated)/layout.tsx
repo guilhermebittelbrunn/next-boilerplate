@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { requireSession } from "@/lib/server/auth-session";
+import { requireSession } from "@/lib/server/authSession";
 
 type Props = {
     readonly children: ReactNode;

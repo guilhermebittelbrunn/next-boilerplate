@@ -27,6 +27,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+const SIDEBAR_LOCALSTORAGE_KEY = "sidebar_open"
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
@@ -71,8 +72,22 @@ function SidebarProvider({
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = useState(defaultOpen)
+  const [_open, _setOpen] = useState(() => {
+    if (openProp !== undefined) {
+      return defaultOpen
+    }
+    try {
+      const raw = window.localStorage.getItem(SIDEBAR_LOCALSTORAGE_KEY)
+      if (raw === null) {
+        return defaultOpen
+      }
+      return raw === "true"
+    } catch {
+      return defaultOpen
+    }
+  })
   const open = openProp ?? _open
+
   const setOpen = useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
@@ -84,6 +99,13 @@ function SidebarProvider({
 
       // This sets the cookie to keep the sidebar state.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+
+      // Persist in localStorage so refresh/navigation keeps the state.
+      try {
+        window.localStorage.setItem(SIDEBAR_LOCALSTORAGE_KEY, String(openState))
+      } catch {
+        // ignore
+      }
     },
     [setOpenProp, open]
   )

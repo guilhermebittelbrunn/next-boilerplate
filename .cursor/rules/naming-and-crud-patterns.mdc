@@ -1,0 +1,49 @@
+---
+description: Nomenclatura (i18n, hooks, CRUD) e padrões de tabela/formulário no app
+globs: apps/app/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Nomenclatura e padrões CRUD
+
+## Dicionário / traduções
+
+- Não use variáveis de uma letra para trechos do dictionary (`t`, `d`). Prefira nomes descritivos: `adminUsersList`, `adminUsersForm`, `translation`, `messages`, etc.
+
+## Funções locais
+
+- Evite criar uma função nomeada de **uma linha** usada **uma única vez**; prefira callback inline (`mutate(x, { onSuccess: () => { … } })`) quando o objetivo for só legibilidade/encadeamento.
+
+## Hooks que chamam a API
+
+- Listagens: prefixo **`useList`** + recurso no plural quando fizer sentido, ex.: `useListUsers`.
+- Busca por identificador: prefixo **`useFind`** + recurso + **`By`** + parâmetro, ex.: `useFindUserById`. Para vários filtros, mantenha `useList…` com query params no `queryKey`.
+- No cliente, use nomes de domínio genéricos (`id`, `userId`); **não** use termos de infraestrutura (`firestoreId`, `docId`) salvo em código exclusivo de infraestrutura da API.
+
+## Tabelas e listas
+
+- Busca em memória sobre `dataSource` e botão de atualizar lista: use o **`Table`** do design system com `searchFields`, `onRefresh` e `refreshLoading` em vez de duplicar toolbar + `useMemo` filter em cada página.
+- Para refresh isolado fora do `Table`, use **`TableRefreshButton`** (mesmo pacote que exporta `Table`).
+
+## Formulários com ações no rodapé
+
+- Evite `form="…"` em botões fora do `<form>`. Use **`Footer`** (`apps/app/shared/components/ui/Footer.tsx`) **dentro** do `<form>`: `showBack` (padrão `true`, `router.back()`), `onBack`/`backLabel` opcionais; primário é `type="submit"` se `onConfirm` estiver ausente, senão `type="button"`. Props genéricas: `isLoading`, `disabled`.
+- Layout de campos em grelha: **`FormContainer`** (`formContainer.tsx`) — 1 coluna no mobile, 2 no `md+`; filhos com `display: contents` (ex.: wrapper em `userFormFields.tsx`) para cada campo ocupar uma célula.
+- Páginas de formulário: `Container` com **`contentOnly`** + painel `bg-muted/50`. Erro de carga: prop **`loadError`** (string) para renderizar **`LoadErrorState`** em vez do conteúdo principal.
+
+## Erros e fluxo
+
+- Evite `try` / `catch` vazios. Para mutations, use `mutate(data, { onSuccess, onError })` ou trate o erro de forma explícita (ex.: log + fallback), alinhado ao `onError` já definido no hook.
+- Na página, passe o **payload completo** do formulário para a mutation quando o hook já fizer o mapeamento para a API (`mutate(values)`), evitando objeto intermediário redundante.
+
+## Arquivos “só reexport”
+
+- Evite arquivos que apenas reexportam um único símbolo; importe do módulo concreto (ex.: `userFormFields.tsx`) salvo quando o barrel for padrão estabelecido do pacote.
+
+## Nomes de arquivos (`apps/app`)
+
+- Preferir **camelCase** para módulos de feature (ex.: `userFormFields.tsx`). Componentes React continuam em **PascalCase** no export (`UserFormFields`).
+
+## 404
+
+- UI de rota não encontrada: **`NotFoundPage`** (RSC, `notFoundPage.tsx`) + `app/not-found.tsx` e `app/[locale]/not-found.tsx`; textos em `apps.app.pages.common.notFound`; botão “início” com `href` resolvido no servidor (`resolveNotFoundHomePath`: comum → `/{locale}`, admin → `/{locale}/admin`).

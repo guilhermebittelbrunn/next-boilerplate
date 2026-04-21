@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import type { AppSessionUser } from "@/lib/server/auth-session";
-import { getAppSessionUser } from "@/lib/server/auth-session";
+import type { AppSessionUser } from "@/lib/server/authSession";
+import { getAppSessionUser } from "@/lib/server/authSession";
 
-export type { AppSessionUser } from "@/lib/server/auth-session";
+export type { AppSessionUser } from "@/lib/server/authSession";
 
 /**
  * Requires a valid session and Firestore `type === "admin"`.

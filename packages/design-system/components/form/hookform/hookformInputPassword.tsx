@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/noUselessFragments: <explanation> */
 import { Button } from "@base-ui/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
@@ -16,17 +17,23 @@ interface HookFormInputPasswordProps<T extends FieldValues> extends InputProps {
     control?: Control<T>;
     name: Path<T>;
     label: string;
+    required?: boolean;
     controllerProps?: Omit<ControllerProps<T>, "name" | "control" | "render">;
+    hidden?: boolean;
 }
 
 export function HookFormInputPassword<T extends FieldValues>(
     props: HookFormInputPasswordProps<T>
-): React.ReactElement {
-    const { control, name, label, controllerProps, ...rest } = props;
+) {
+    const { control, name, label, controllerProps, required = false, hidden = false, ...rest } = props;
     const { formState } = useFormContext();
     const [showPassword, setShowPassword] = useState(false);
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
+
+    if (hidden) {
+        return <></>;
+    }
 
     return (
         <Controller
@@ -41,10 +48,16 @@ export function HookFormInputPassword<T extends FieldValues>(
                             className={errorMessage ? "text-destructive" : ""}
                         >
                             {label}
+                            {required ? (
+                                <span aria-hidden="true" className="text-destructive">
+                                    {" *"}
+                                </span>
+                            ) : null}
                         </FormLabel>
                         <FormControl>
                             <div className="relative">
                                 <Input
+                                    aria-required={required}
                                     className={
                                         errorMessage ? "border-destructive" : ""
                                     }

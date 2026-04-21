@@ -1,7 +1,79 @@
+import { getAuthInstance } from "@repo/auth/server";
+import {
+    IdentityToolkitError,
+    identitySignUp,
+} from "@/(shared)/lib/firebase-identity-toolkit";
+import { mapIdentityToolkitMessageToCode } from "@/(shared)/lib/toolkit-error-codes";
+import { getMergedUserByFirestoreDocId } from "@/(shared)/lib/user-merge";
 import { userRepository } from "@/(shared)/repositories/user.repository";
-import { authGuard } from "@/app/(guards)/auth";
+import { adminCreateUserSchema } from "@/(shared)/validation/user-admin.schema";
+import { requireAdminApi } from "@/app/(guards)/admin";
 
-export const GET = authGuard(async () => {
+export const GET = requireAdminApi(async (_req, _ctx) => {
     const users = await userRepository.list();
     return Response.json({ data: users });
+});
+
+export const POST = requireAdminApi(async (req, _ctx) => {
+    let body: unknown;
+    try {
+        body = await req.json();
+    } catch {
+        return Response.json(
+            { error: { code: "VALIDATION_FAILED" } },
+            {
+                status: 400,
+            }
+        );
+    }
+
+    const parsed = adminCreateUserSchema.safeParse(body);
+    if (!parsed.success) {
+        return Response.json(
+            { error: { code: "VALIDATION_FAILED" } },
+            {
+                status: 400,
+            }
+        );
+    }
+
+    const input = parsed.data;
+    let localId: string;
+
+    try {
+        const session = await identitySignUp(input.email, input.password);
+        localId = session.localId;
+    } catch (e) {
+        if (e instanceof IdentityToolkitError) {
+            const code = mapIdentityToolkitMessageToCode(e.message);
+            return Response.json({ error: { code } }, { status: 400 });
+        }
+        throw e;
+    }
+
+    try {
+        await userRepository.create({
+            reference_id: localId,
+            type: input.type,
+        });
+    } catch (profileErr) {
+        await getAuthInstance().deleteUser(localId);
+        console.error(profileErr);
+        return Response.json(
+            { error: { code: "USERS_PROFILE_CREATE_FAILED" } },
+            { status: 500 }
+        );
+    }
+
+    const displayName = input.displayName?.trim();
+    if (displayName) {
+        await getAuthInstance().updateUser(localId, { displayName });
+    }
+
+    const created = await userRepository.findByReferenceId(localId);
+    const merged = created
+        ? await getMergedUserByFirestoreDocId(created.id)
+        : null;
+
+    return Response.json({ data: merged }, { status: 201 });
 });

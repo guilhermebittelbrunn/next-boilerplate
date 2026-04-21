@@ -53,3 +53,13 @@ export function ensureDefaultUserProfile(uid: string, dto?: Partial<UserDTO>) {
 
     return userRepository.create({ ...defaultProps });
 }
+
+export async function getMergedUserByFirestoreDocId(
+    firestoreDocId: string
+): Promise<Record<string, unknown> | null> {
+    const profile = await userRepository.findById(firestoreDocId);
+    if (!profile) {
+        return null;
+    }
+    return getMergedUserByUid(profile.reference_id);
+}

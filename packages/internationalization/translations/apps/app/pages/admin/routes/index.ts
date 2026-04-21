@@ -40,7 +40,11 @@ export const adminRoutesTranslations = {
                 create: "Crear Usuario",
                 update: "Editar Usuario",
             },
-            settings: "Configuración",
+            settings: {
+                list: "Configuración",
+                create: "Crear configuración",
+                update: "Editar configuración",
+            },
         },
     },
 };

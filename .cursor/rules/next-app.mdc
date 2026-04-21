@@ -19,7 +19,12 @@ alwaysApply: false
 ## i18n e a11y
 
 - Strings visíveis via helpers do pacote de internacionalização, não literais em JSX salvo debug temporário.
+- Variáveis que guardam trechos do dictionary devem ter **nomes descritivos** (nunca `t` ou `d` como alias genérico). Ver `.cursor/rules/naming-and-crud-patterns.mdc`.
 - Layouts responsivos: mobile primeiro, breakpoints consistentes com o design system.
+
+## Tabelas e formulários admin
+
+- Listagens com busca/refetch: props do **`Table`** (`searchFields`, `onRefresh`, …). Formulários: **`Footer`** + **`FormContainer`** + `Container` (`contentOnly`, `loadError` quando aplicável). Detalhes em `naming-and-crud-patterns.mdc`.
 
 ## Estilo
 

@@ -4,6 +4,7 @@
 import useAuth from "@repo/auth/provider";
 import { useEffect } from "react";
 import { apiClient } from "@/shared/lib/client";
+import { AuthRequestPanelProvider } from "@/shared/providers/AuthRequestPanelContext";
 
 type ClientLayoutProps = {
     children: React.ReactNode;
@@ -16,9 +17,18 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         (async () => {
             const token = await user?.getIdToken();
 
-            token && apiClient.setAuthorizationHeader(token);
+            if (token) {
+                apiClient.setAuthorizationHeader(token);
+            } else {
+                apiClient.removeHeader("Authorization");
+                apiClient.clearAuthRequestContext();
+            }
         })();
     }, [user]);
 
-    return <div>{children}</div>;
+    return (
+        <AuthRequestPanelProvider>
+            <div>{children}</div>
+        </AuthRequestPanelProvider>
+    );
 }

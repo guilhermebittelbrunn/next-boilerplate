@@ -6,6 +6,7 @@ import {
     type DocumentData,
     doc,
     type Firestore,
+    getDoc,
     getDocs,
     query,
     updateDoc,
@@ -45,22 +46,18 @@ export class BaseRepository<DTO> {
     }
 
     async findById(id: string): Promise<DTO | null> {
-        const usersCollectionRef = collection(this.db, this.table);
-        const querySnapshot = await getDocs(
-            query(
-                usersCollectionRef,
-                where("id", "==", id),
-                where("deletedAt", "==", null)
-            )
-        );
-
-        if (querySnapshot.docs.length === 0) {
+        const docRef = doc(this.db, this.table, id);
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) {
             return null;
         }
-
+        const raw = snap.data() as DocumentData & { deletedAt?: unknown };
+        if (raw.deletedAt != null) {
+            return null;
+        }
         return {
-            id: querySnapshot.docs[0].id,
-            ...(querySnapshot.docs[0].data() as DTO),
+            ...(snap.data() as DTO),
+            id: snap.id,
         };
     }
 

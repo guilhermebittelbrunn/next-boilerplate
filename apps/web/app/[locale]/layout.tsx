@@ -6,7 +6,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
-import { QueryProvider } from "@/shared/providers/query-provider";
+import { QueryProvider } from "../../../app/shared/providers/QueryProvider";
 import ClientLayout from "./clientLayout";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";

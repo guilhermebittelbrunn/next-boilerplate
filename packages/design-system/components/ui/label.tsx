@@ -1,22 +1,20 @@
-"use client";
+import { cn } from '@repo/design-system/lib/utils';
+import React, { ReactNode } from 'react';
 
-import { cn } from "@repo/design-system/lib/utils";
-import { Label as LabelPrimitive } from "radix-ui";
-
-function Label({
-  className,
-  ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
-  return (
-    <LabelPrimitive.Root
-      className={cn(
-        "flex select-none items-center gap-2 font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50",
-        className
-      )}
-      data-slot="label"
-      {...props}
-    />
-  );
+interface LabelProps {
+    htmlFor?: string;
+    children: ReactNode;
+    className?: string;
+    required?: boolean;
 }
 
-export { Label };
+export function Label({ htmlFor, children, className, required }: LabelProps): React.ReactElement {
+    return (
+        <label
+            htmlFor={htmlFor}
+            className={cn('mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400', className)}
+        >
+            {children} {required && <span className="text-error-500">*</span>}
+        </label>
+    );
+}

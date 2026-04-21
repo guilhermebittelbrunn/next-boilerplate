@@ -13,6 +13,19 @@ export type UserDTO = {
     deletedAt: Date | null;
 };
 
+export type AdminCreateUserRequest = {
+    email: string;
+    password: string;
+    type: UserType;
+    displayName?: string;
+};
+
+export type AdminUpdateUserRequest = {
+    id: string;
+    type?: UserType;
+    displayName?: string | null;
+};
+
 export type UserWithAuthDTO = UserDTO & {
     uid: string;
     email: string | null;

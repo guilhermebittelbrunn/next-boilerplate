@@ -23,8 +23,8 @@ export default function ProfileDropdown() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger>
-                <div className="flex w-full max-w-56 items-center gap-4 truncate">
-                    <Avatar className="h-8 w-8">
+                <div className="flex w-full max-w-56 items-center gap-3 truncate">
+                    <Avatar className="h-9 w-9">
                         <AvatarImage src={user?.photoURL ?? ""} />
                         <AvatarFallback>
                             {user?.displayName?.slice(0, 2) ??

@@ -1,36 +1,86 @@
+import { getAuthInstance } from "@repo/auth/server";
 import type { NextRequest } from "next/server";
-import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
+import {
+    getMergedUserByFirestoreDocId,
+    getMergedUserByUid,
+} from "@/(shared)/lib/user-merge";
 import { userRepository } from "@/(shared)/repositories/user.repository";
+import { parseAdminUpdateUserInput } from "@/(shared)/validation/user-admin.schema";
+import { requireAdminApi } from "@/app/(guards)/admin";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: NextRequest, ctx: Ctx) {
+export const GET = requireAdminApi(async (_req, ctx) => {
     const { id } = await ctx.params;
 
-    const merged = await getMergedUserByUid(id);
-    if (merged) {
-        return Response.json({ data: merged });
+    let merged = await getMergedUserByFirestoreDocId(id);
+    if (!merged) {
+        merged = await getMergedUserByUid(id);
     }
 
-    const user = await userRepository.findById(id);
-    if (!user) {
-        return Response.json({ error: "User not found" }, { status: 404 });
+    if (!merged) {
+        return Response.json(
+            { error: { code: "USERS_NOT_FOUND" } },
+            { status: 404 }
+        );
     }
 
-    return Response.json({ data: user });
-}
+    return Response.json({ data: merged });
+});
 
-export async function PUT(req: NextRequest, ctx: Ctx) {
+export const PUT = requireAdminApi(async (req, ctx) => {
     const { id } = await ctx.params;
-    const body = await req.json();
-    const updatedId = await userRepository.update({ ...body, id });
+    const profile = await userRepository.findById(id);
 
-    return Response.json({ data: updatedId });
-}
+    if (!profile) {
+        return Response.json(
+            { error: { code: "USERS_NOT_FOUND" } },
+            { status: 404 }
+        );
+    }
 
-export async function DELETE(_req: NextRequest, ctx: Ctx) {
+    let body: unknown;
+    try {
+        body = await req.json();
+    } catch {
+        return Response.json(
+            { error: { code: "VALIDATION_FAILED" } },
+            { status: 400 }
+        );
+    }
+
+    const parsed = parseAdminUpdateUserInput(body);
+    if (!parsed.ok) {
+        return parsed.response;
+    }
+
+    if (parsed.value.type !== undefined) {
+        await userRepository.update({ id, type: parsed.value.type });
+    }
+
+    if (parsed.value.displayName !== undefined) {
+        await getAuthInstance().updateUser(profile.reference_id, {
+            displayName: parsed.value.displayName || undefined,
+        });
+    }
+
+    const merged = await getMergedUserByFirestoreDocId(id);
+
+    return Response.json({ data: merged });
+});
+
+export const DELETE = requireAdminApi(async (_req, ctx) => {
     const { id } = await ctx.params;
+    const profile = await userRepository.findById(id);
+
+    if (!profile) {
+        return Response.json(
+            { error: { code: "USERS_NOT_FOUND" } },
+            { status: 404 }
+        );
+    }
+
     await userRepository.delete(id);
 
     return new Response(null, { status: 204 });
-}
+});

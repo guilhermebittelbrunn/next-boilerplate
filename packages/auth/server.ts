@@ -79,6 +79,27 @@ export const getFirestoreAdmin = (): Firestore => {
     return firebaseFirestore;
 };
 
+/** Firebase Admin verifyIdToken failures that mean "no session", not a server bug */
+const benignIdTokenVerifyCodes = new Set([
+    "auth/argument-error",
+    "auth/id-token-expired",
+    "auth/invalid-id-token",
+    "auth/session-cookie-revoked",
+    "auth/user-disabled",
+]);
+
+function firebaseAuthErrorCode(error: unknown): string | null {
+    if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        typeof (error as { code: unknown }).code === "string"
+    ) {
+        return (error as { code: string }).code;
+    }
+    return null;
+}
+
 /**
  * Get the current user from the request
  * @param token - Firebase ID token from the request
@@ -95,6 +116,10 @@ export const getCurrentUser = async (token: string | null) => {
         const user = await authInstance.getUser(decodedToken.uid);
         return user;
     } catch (error) {
+        const code = firebaseAuthErrorCode(error);
+        if (code && benignIdTokenVerifyCodes.has(code)) {
+            return null;
+        }
         console.error("Error verifying token:", error);
         return null;
     }

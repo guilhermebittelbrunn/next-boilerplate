@@ -1,6 +1,7 @@
 "use client";
 
 import { MoonIcon, SunIcon } from "@radix-ui/react-icons";
+import { cn } from "@repo/design-system/lib/utils";
 import { useTheme } from "next-themes";
 import { Button } from "./button";
 import {
@@ -22,14 +23,16 @@ type ModeToggleProps = {
 
 export const ModeToggle = ({ triggerProps }: ModeToggleProps) => {
   const { setTheme } = useTheme();
+  const trigger = triggerProps ?? {};
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger {...triggerProps}>
+      <DropdownMenuTrigger asChild>
         <Button
-          className="shrink-0 text-foreground"
-          size="icon"
-          variant="ghost"
+          {...trigger}
+          className={cn("shrink-0 text-foreground", trigger.className)}
+          size={trigger.size ?? "icon"}
+          variant={trigger.variant ?? "ghost"}
         >
           <SunIcon className="dark:-rotate-90 h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:scale-0" />
           <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

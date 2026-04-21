@@ -1,20 +1,12 @@
-import type { Metadata } from "next";
+/** biome-ignore-all lint/complexity/noUselessFragments: <explanation> */
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 
-const title = "Acme Inc";
-const description = "My application.";
-
-export const metadata: Metadata = {
-  title,
-  description,
-};
-
-const App = () => (
-  <>
-    <Header page="Home" />
-    <Container>Home</Container>
-  </>
-);
-
-export default App;
+export default function AdminHome() {
+  return (
+    <>
+      <Header page="Home" />
+      <Container><></></Container>
+    </>
+  );
+}

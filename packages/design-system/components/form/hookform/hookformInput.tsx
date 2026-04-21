@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/noUselessFragments: <explanation> */
 import type { HTMLInputTypeAttribute } from "react";
 import {
     type Control,
@@ -16,14 +17,21 @@ interface HookFormInputProps<T extends FieldValues> extends InputProps {
     label: string;
     placeholder?: string;
     type?: HTMLInputTypeAttribute;
+    /** When true, shows a required indicator (*) next to the label. */
+    required?: boolean;
     controllerProps?: Omit<ControllerProps<T>, "name" | "control" | "render">;
+    hidden?: boolean;
 }
 
 export function HookFormInput<T extends FieldValues>(
     props: HookFormInputProps<T>
 ): React.ReactElement {
-    const { control, name, label, controllerProps, ...rest } = props;
+    const { control, name, label, controllerProps, required = false, hidden = false, ...rest } = props;
     const { formState } = useFormContext();
+
+    if (hidden) {
+        return <></>;
+    }
 
     return (
         <Controller
@@ -38,9 +46,15 @@ export function HookFormInput<T extends FieldValues>(
                             className={errorMessage ? "text-destructive" : ""}
                         >
                             {label}
+                            {required ? (
+                                <span aria-hidden="true" className="text-destructive">
+                                    {" *"}
+                                </span>
+                            ) : null}
                         </FormLabel>
                         <FormControl>
                             <Input
+                                aria-required={required}
                                 className={
                                     errorMessage ? "border-destructive" : ""
                                 }

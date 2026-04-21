@@ -25,3 +25,7 @@ Este repositório é um **boilerplate full stack** em monorepo (`pnpm` + `turbo`
 Detalhes acionáveis estão em `.cursor/rules/*.mdc` (regras por glob + uma regra núcleo com `alwaysApply`).
 
 Ao implementar uma feature nova: leia a regra do escopo (`next-app`, `api-app`, `monorepo-packages`) e a regra núcleo `boilerplate-core`.
+
+Para textos de interface e erros de API: `.cursor/rules/i18n-user-facing.mdc`.
+
+Para nomenclatura (hooks `useList` / `useFind…By…`), tabela com busca/refetch, `Footer` / `FormContainer` / `Container.loadError` e 404 (`NotFoundPage`): `.cursor/rules/naming-and-crud-patterns.mdc`.
