@@ -4,6 +4,11 @@ export const commonRoutesTranslations = {
         platform: {
             title: "Plataforma",
             playground: "Playground",
+            entities: {
+                list: "Entidades",
+                create: "Nova entidade",
+                update: "Editar entidade",
+            },
             documentation: "Documentação",
             settings: "Configurações",
         },
@@ -13,6 +18,11 @@ export const commonRoutesTranslations = {
         platform: {
             title: "Platform",
             playground: "Playground",
+            entities: {
+                list: "Entities",
+                create: "New entity",
+                update: "Edit entity",
+            },
             documentation: "Documentation",
             settings: "Settings",
         },
@@ -22,6 +32,11 @@ export const commonRoutesTranslations = {
         platform: {
             title: "Plataforma",
             playground: "Playground",
+            entities: {
+                list: "Entidades",
+                create: "Nueva entidad",
+                update: "Editar entidad",
+            },
             documentation: "Documentación",
             settings: "Configuración",
         },

@@ -28,15 +28,23 @@ export function QueryProvider({ children }: QueryProviderProps) {
     );
 
     const updateDataInCache = (data: any, key: string) => {
-        client.setQueryData([key], (old: any[]) =>
-            old.map((oldUser) => (oldUser.id === data.id ? data : oldUser))
-        );
+        client.setQueryData([key], (old: any[] | undefined) => {
+            if (!Array.isArray(old)) {
+                return old;
+            }
+            return old.map((item) =>
+                item.id === data.id ? data : item
+            );
+        });
     };
 
     const removeDataFromCache = (id: string, key: string) => {
-        client.setQueryData([key], (old: any[]) =>
-            old.filter((it) => it.id !== id)
-        );
+        client.setQueryData([key], (old: any[] | undefined) => {
+            if (!Array.isArray(old)) {
+                return old;
+            }
+            return old.filter((it) => it.id !== id);
+        });
     };
 
     return (
@@ -50,11 +58,11 @@ export function QueryProvider({ children }: QueryProviderProps) {
     );
 }
 
-export function useQuery() {
+export function useQueryCache() {
     const context = useContext(QueryContext);
 
     if (!context) {
-        throw new Error("useQuery must be used within a QueryProvider");
+        throw new Error("useQueryCache must be used within a QueryProvider");
     }
 
     return context;

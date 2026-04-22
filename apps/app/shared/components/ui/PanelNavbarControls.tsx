@@ -100,6 +100,14 @@ export default function PanelNavbarControls() {
         return impersonationOptions[0].value;
     }, [impersonatedFirebaseUid, impersonationOptions]);
 
+    const handleImpersonatedUserChange = useCallback(
+        (value: string) => {
+            setImpersonatedUser(value);
+            window.location.reload();
+        },
+        [setImpersonatedUser]
+    );
+
     const handleEnvironmentChange = useCallback(
         (value: string) => {
             const nextRole = value as UserRoleLevel;
@@ -172,7 +180,7 @@ export default function PanelNavbarControls() {
                                 <div className="mt-2">
                                     <Select
                                         disabled={loadingCommonUsers}
-                                        onValueChange={setImpersonatedUser}
+                                        onValueChange={handleImpersonatedUserChange}
                                         options={impersonationOptions}
                                         placeholder={
                                             navbarCopy.selectUserPlaceholder
@@ -206,7 +214,7 @@ export default function PanelNavbarControls() {
                 {showImpersonationSelect ? (
                     <Select
                         disabled={loadingCommonUsers}
-                        onValueChange={setImpersonatedUser}
+                        onValueChange={handleImpersonatedUserChange}
                         options={impersonationOptions}
                         placeholder={navbarCopy.selectUserPlaceholder}
                         value={impersonatedFirebaseUid ?? undefined}

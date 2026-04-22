@@ -25,7 +25,7 @@ export default function ResponsiveImage({
     const [hasError, setHasError] = useState(false);
 
     if (!src) {
-        return <></>
+        return <></>;
     }
 
     return (

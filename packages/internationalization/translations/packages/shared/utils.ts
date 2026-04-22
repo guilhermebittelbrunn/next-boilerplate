@@ -26,6 +26,10 @@ export const sharedUtilsTranslations = {
             USERS_AUTH_SIGN_UP_FAILED: "Não foi possível criar o usuário.",
             USERS_PROFILE_CREATE_FAILED:
                 "Não foi possível salvar o perfil do usuário.",
+            COMMON_PANEL_FORBIDDEN: "Esta ação não está disponível para o seu perfil.",
+            ENTITY_NOT_FOUND: "Entidade não encontrada.",
+            ENTITY_CREATE_FAILED:
+                "Não foi possível concluir o cadastro da entidade.",
         },
     },
     en: {
@@ -53,6 +57,9 @@ export const sharedUtilsTranslations = {
             USERS_AUTH_RATE_LIMITED: "Too many attempts. Try again shortly.",
             USERS_AUTH_SIGN_UP_FAILED: "Could not create the user.",
             USERS_PROFILE_CREATE_FAILED: "Could not save the user profile.",
+            COMMON_PANEL_FORBIDDEN: "This action is not available for your account.",
+            ENTITY_NOT_FOUND: "Entity not found.",
+            ENTITY_CREATE_FAILED: "Could not finish creating the entity.",
         },
     },
     es: {
@@ -82,6 +89,10 @@ export const sharedUtilsTranslations = {
             USERS_AUTH_SIGN_UP_FAILED: "No se pudo crear el usuario.",
             USERS_PROFILE_CREATE_FAILED:
                 "No se pudo guardar el perfil del usuario.",
+            COMMON_PANEL_FORBIDDEN: "Esta acción no está disponible para tu cuenta.",
+            ENTITY_NOT_FOUND: "Entidad no encontrada.",
+            ENTITY_CREATE_FAILED:
+                "No se pudo completar el registro de la entidad.",
         },
     },
 };

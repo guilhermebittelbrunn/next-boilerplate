@@ -25,6 +25,7 @@ alwaysApply: false
 ## Tabelas e formulários admin
 
 - Listagens com busca/refetch: props do **`Table`** (`searchFields`, `onRefresh`, …). Formulários: **`Footer`** + **`FormContainer`** + `Container` (`contentOnly`, `loadError` quando aplicável). Detalhes em `naming-and-crud-patterns.mdc`.
+- **Campos compostos**: preferir **`HookFormTextarea`**, **`HookFormRadioGroup`**, **`HookFormDateInput`**, **`HookFormSwitch`** de `@repo/design-system/components/form/hookform`; tipos como **`RadioOption`** de `@repo/design-system/components/ui/radio-group-input` (ou barrel `@repo/design-system/components/ui`). Textos do dictionary para **`label`** / **`description`** quando existirem. Padrões completos (data com Popover+Calendar, `error` vs `errorMessage`, exports) em **`AGENTS.md`** e **`.cursor/rules/monorepo-packages.mdc`** (`@repo/design-system`).
 
 ## Estilo
 

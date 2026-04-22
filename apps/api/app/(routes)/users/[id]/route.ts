@@ -1,4 +1,9 @@
 import { getAuthInstance } from "@repo/auth/server";
+import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
+import {
+    type RouteIdParamsContext,
+    resolveIdFromContext,
+} from "@/(shared)/lib/resolve-route-id";
 import {
     getMergedUserByFirestoreDocId,
     getMergedUserByUid,
@@ -7,14 +12,7 @@ import { userRepository } from "@/(shared)/repositories/user.repository";
 import { parseAdminUpdateUserInput } from "@/(shared)/validation/user-admin.schema";
 import { requireAdminApi } from "@/app/(guards)/admin";
 
-type Ctx = { params: { id: string } | Promise<{ id: string }> };
-
-async function resolveIdFromContext(ctx: Ctx): Promise<string> {
-    const resolvedParams = await ctx.params;
-    return resolvedParams.id;
-}
-
-export const GET = requireAdminApi(async (_req, ctx) => {
+export const GET = requireAdminApi<RouteIdParamsContext>(async (_req, ctx) => {
     const id = await resolveIdFromContext(ctx);
 
     let merged = await getMergedUserByFirestoreDocId(id);
@@ -32,7 +30,7 @@ export const GET = requireAdminApi(async (_req, ctx) => {
     return Response.json({ data: merged });
 });
 
-export const PUT = requireAdminApi(async (req, ctx) => {
+export const PUT = requireAdminApi<RouteIdParamsContext>(async (req, ctx) => {
     const id = await resolveIdFromContext(ctx);
     const profile = await userRepository.findById(id);
 
@@ -43,17 +41,12 @@ export const PUT = requireAdminApi(async (req, ctx) => {
         );
     }
 
-    let body: unknown;
-    try {
-        body = await req.json();
-    } catch {
-        return Response.json(
-            { error: { code: "VALIDATION_FAILED" } },
-            { status: 400 }
-        );
+    const parsedBody = await parseRequestJson(req);
+    if (!parsedBody.ok) {
+        return parsedBody.response;
     }
 
-    const parsed = parseAdminUpdateUserInput(body);
+    const parsed = parseAdminUpdateUserInput(parsedBody.value);
     if (!parsed.ok) {
         return parsed.response;
     }
@@ -73,18 +66,20 @@ export const PUT = requireAdminApi(async (req, ctx) => {
     return Response.json({ data: merged });
 });
 
-export const DELETE = requireAdminApi(async (_req, ctx) => {
-    const id = await resolveIdFromContext(ctx);
-    const profile = await userRepository.findById(id);
+export const DELETE = requireAdminApi<RouteIdParamsContext>(
+    async (_req, ctx) => {
+        const id = await resolveIdFromContext(ctx);
+        const profile = await userRepository.findById(id);
 
-    if (!profile) {
-        return Response.json(
-            { error: { code: "USERS_NOT_FOUND" } },
-            { status: 404 }
-        );
+        if (!profile) {
+            return Response.json(
+                { error: { code: "USERS_NOT_FOUND" } },
+                { status: 404 }
+            );
+        }
+
+        await userRepository.delete(id);
+
+        return new Response(null, { status: 204 });
     }
-
-    await userRepository.delete(id);
-
-    return new Response(null, { status: 204 });
-});
+);

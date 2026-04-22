@@ -73,11 +73,20 @@ export type AuthProviderProps = {
   onError?: (error: unknown) => void;
   /** Return the path to redirect to after sign in/up (e.g. `/${locale}`). Defaults to "/". */
   getRedirectPath?: () => string;
+  /**
+   * When the URL has no safe `redirect` query, resolves the default post-login path
+   * (e.g. admin home vs common home). Return `null` to use `getRedirectPath` fallback.
+   */
+  resolveDefaultPostLoginPath?: (args: {
+    idToken: string;
+    locale: string;
+  }) => Promise<string | null>;
 };
 
 export function AuthProvider({
   children,
   getRedirectPath,
+  resolveDefaultPostLoginPath,
 }: AuthProviderProps): ReactElement {
   const { errorAlert, successAlert } = useAlert();
   const router = useRouter();
@@ -88,13 +97,20 @@ export function AuthProvider({
 
   const redirectPath = () => getRedirectPath?.() ?? `/${locale}`;
 
-  const postLoginPath = () => {
+  const resolvePostLoginPath = async (idToken: string) => {
     const fallback = redirectPath();
     if (typeof window === "undefined") {
       return fallback;
     }
     const raw = new URLSearchParams(window.location.search).get("redirect");
-    return postAuthRedirectTarget(raw, fallback);
+    if (raw) {
+      return postAuthRedirectTarget(raw, fallback);
+    }
+    const resolved = await resolveDefaultPostLoginPath?.({
+      idToken,
+      locale,
+    });
+    return resolved ?? fallback;
   };
 
   const syncSessionCookie = useCallback(async (idToken: string | null) => {
@@ -153,7 +169,7 @@ export function AuthProvider({
       setAccessToken(token);
       await syncSessionCookie(token);
       successAlert(dictionary.packages.auth.provider.onSuccess);
-      router.push(postLoginPath());
+      router.push(await resolvePostLoginPath(token));
     } catch {
       errorAlert(
         handleClientError(

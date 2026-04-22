@@ -1,5 +1,6 @@
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
 
 import { Spinner } from "./spinner";
 
@@ -45,32 +46,40 @@ export interface ButtonProps
   icon?: React.ReactNode;
 }
 
-export function Button({
-  className,
-  variant = "default",
-  size = "default",
-  loading = false,
-  icon,
-  children,
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      className={cn(buttonVariants({ variant, size, className }))}
-      data-size={size}
-      data-slot="button"
-      data-variant={variant}
-      disabled={loading}
-      {...props}
-    >
-      {
-        loading ? <Spinner /> : (
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    {
+      className,
+      variant = "default",
+      size = "default",
+      loading = false,
+      icon,
+      children,
+      ...props
+    },
+    ref
+  ) {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        data-size={size}
+        data-slot="button"
+        data-variant={variant}
+        disabled={loading}
+        ref={ref}
+        {...props}
+      >
+        {loading ? (
+          <Spinner />
+        ) : (
           <div className="flex items-center gap-2">
             {icon && icon}
             {children}
           </div>
-        )
-      }
-    </button>
-  );
-}
+        )}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button";

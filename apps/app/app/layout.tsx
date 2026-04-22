@@ -1,12 +1,12 @@
 import { QueryProvider } from "@/shared/providers/QueryProvider";
 import "./styles.css";
 import { AnalyticsProvider } from "@repo/analytics/provider";
-import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
+import { AppDesignProvider } from "@/shared/providers/AppDesignProvider";
 import ClientLayout from "./[locale]/clientLayout";
 
 type RootLayoutProps = {
@@ -25,10 +25,10 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             <body>
                 <QueryProvider>
                     <AnalyticsProvider>
-                        <DesignSystemProvider>
+                        <AppDesignProvider>
                             <ToastContainer />
                             <ClientLayout>{children}</ClientLayout>
-                        </DesignSystemProvider>
+                        </AppDesignProvider>
                     </AnalyticsProvider>
                 </QueryProvider>
             </body>

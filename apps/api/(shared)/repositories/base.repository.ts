@@ -1,5 +1,6 @@
 /** biome-ignore-all lint/style/noParameterProperties: <explanation> */
 /** biome-ignore-all lint/nursery/noShadow: <explanation> */
+import Mapper from "@/(shared)/mappers/Mapper";
 import {
     addDoc,
     collection,
@@ -14,12 +15,12 @@ import {
     where,
 } from "firebase/firestore";
 
-type CreateRequest<DTO> = Omit<
+export type CreateRequest<DTO> = Omit<
     DTO,
     "id" | "createdAt" | "updatedAt" | "deletedAt"
 >;
 
-type UpdateRequest<DTO> = Omit<
+export type UpdateRequest<DTO> = Omit<
     Partial<DTO>,
     "createdAt" | "updatedAt" | "deletedAt"
 > & {
@@ -27,11 +28,19 @@ type UpdateRequest<DTO> = Omit<
     deletedAt?: Date;
 };
 
+/** Persisted document merged with id (mapper input shape). */
+export type FirestoreDocumentRow = Record<string, unknown> & { id: string };
+
 export class BaseRepository<DTO> {
     constructor(
         protected readonly db: Firestore,
-        protected readonly table: string
+        protected readonly table: string,
+        protected readonly rowMapper?: Mapper<FirestoreDocumentRow, DTO>
     ) {}
+
+    protected toEntity(id: string, raw: Record<string, unknown>): FirestoreDocumentRow {
+        return { id, ...raw };
+    }
 
     async findAll(): Promise<DTO[]> {
         const usersCollectionRef = collection(this.db, this.table);
@@ -55,6 +64,11 @@ export class BaseRepository<DTO> {
         if (raw.deletedAt != null) {
             return null;
         }
+        if (this.rowMapper) {
+            return this.rowMapper.toDTO(
+                this.toEntity(snap.id, raw as Record<string, unknown>)
+            );
+        }
         return {
             ...(snap.data() as DTO),
             id: snap.id,
@@ -73,10 +87,15 @@ export class BaseRepository<DTO> {
 
         const docRef = await addDoc(usersCollectionRef, dataToCreate);
 
-        return {
+        const created = {
             id: docRef.id,
             ...dataToCreate,
         } as DTO;
+
+        if (this.rowMapper) {
+            return this.rowMapper.toDTO(created as unknown as FirestoreDocumentRow);
+        }
+        return created;
     }
 
     async createBulk(data: CreateRequest<DTO>[]): Promise<DTO[]> {

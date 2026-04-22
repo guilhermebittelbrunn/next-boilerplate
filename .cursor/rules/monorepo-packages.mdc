@@ -22,6 +22,23 @@ alwaysApply: false
 - Componentes presentacionais; variantes via props e tokens CSS existentes.
 - Sem fetch, sem session; quem compõe dados é o app.
 
+### Inputs compostos (`components/ui/`)
+
+- **Nomes**: `TextareaInput`, `RadioGroupInput`, `DateInput` — **sem** prefixo `Labeled`. `RadioGroupInput` exporta **`RadioOption`** (`value` + `label`) no mesmo módulo.
+- **Label**: prop **`label` opcional**; renderizar `Label` só se existir, no mesmo espírito de `input.tsx` (`htmlFor` + `id` quando aplicável).
+- **Validação na UI**: prop **`error`** (string), alinhada ao `Input`, não `errorMessage`.
+- **`DateInput`**: **`Popover`** + **`Calendar`** + trigger (`Button`); valor string **`YYYY-MM-DD`**. Não usar `<input type="date">` nativo como padrão do design system.
+- **`Switch`**: prop opcional **`label`** ao lado do toggle (`Label` + `id` / `htmlFor`).
+
+### React Hook Form (`components/form/hookform/`)
+
+- Componentes **`HookForm*`** estendem o UI base com `Omit<…>` sobre props que o controller gere (`value`, `onChange`, `error`, …); repassar **`{...rest}`**.
+- **`HookFormSwitch`**: um único **`Switch`** dentro de **`FormControl`**; **`FormLabel`** opcional ao lado; sem aninhar dois `Switch` nem `switchSlot`. **`FormDescription`** / **`FormMessage`** quando necessário.
+
+### Barrel `components/ui/index.ts`
+
+- Qualquer componente ou tipo novo em `components/ui/*.tsx` deve ser **exportado** em **`components/ui/index.ts`**.
+
 ## `@repo/internationalization`
 
 - Chaves estáveis (`ui.table.empty`); valores em pt/en/etc. como exemplos neutros.

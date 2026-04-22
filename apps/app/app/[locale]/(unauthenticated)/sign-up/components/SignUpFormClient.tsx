@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
-import { postAuthRedirectTarget } from "@/shared/lib/authRedirect";
+import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
 import { type SignUpFormValues, signUpSchema } from "../validations/signUp";
 
@@ -33,16 +33,14 @@ export default function SignUpFormClient() {
         mutationFn: signInWithGoogleViaApi,
         onError: (error) =>
             errorAlert(handleClientError(new FormattedError(error, locale))),
-        onSuccess: () => {
+        onSuccess: async (result) => {
             successAlert(dictionary.packages.auth.provider.onSuccess);
-            const fallback = `/${locale}`;
-            const raw =
-                typeof window !== "undefined"
-                    ? new URLSearchParams(window.location.search).get(
-                        "redirect"
-                    )
-                    : null;
-            router.push(postAuthRedirectTarget(raw, fallback));
+            const path = await resolveAppPostLoginPath({
+                idToken: result.session.idToken,
+                locale,
+                fallbackPath: `/${locale}`,
+            });
+            router.push(path);
         },
     });
 
@@ -57,7 +55,15 @@ export default function SignUpFormClient() {
 
     useEffect(() => {
         if (!authLoading && user) {
-            router.push(`/${locale}`);
+            (async () => {
+                const token = await user.getIdToken();
+                const path = await resolveAppPostLoginPath({
+                    idToken: token,
+                    locale,
+                    fallbackPath: `/${locale}`,
+                });
+                router.push(path);
+            })();
         }
     }, [user, authLoading, router, locale]);
 

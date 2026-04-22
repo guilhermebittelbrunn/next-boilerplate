@@ -1,7 +1,12 @@
 "use client";
 
 import { getDictionaryForLocale } from "@repo/internationalization/client";
-import { BookOpenIcon, Settings2Icon, SquareTerminalIcon } from "lucide-react";
+import {
+    BookOpenIcon,
+    LayersIcon,
+    Settings2Icon,
+    SquareTerminalIcon,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import type { NavItem } from "@/shared/components/ui/Sidebar";
@@ -20,6 +25,13 @@ export function useCommonNavRoutes(): NavItem[] {
                     .playground,
                 url: routes.playground.url,
                 icon: SquareTerminalIcon,
+                isActive: true,
+            },
+            {
+                title: dictionary.apps.app.pages.common.routes.platform.entities
+                    .list,
+                url: routes.entities.list.url,
+                icon: LayersIcon,
                 isActive: true,
             },
             {

@@ -1,4 +1,5 @@
 import { getAuthInstance } from "@repo/auth/server";
+import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import {
     IdentityToolkitError,
     identitySignUp,
@@ -15,19 +16,12 @@ export const GET = requireAdminApi(async (_req, _ctx) => {
 });
 
 export const POST = requireAdminApi(async (req, _ctx) => {
-    let body: unknown;
-    try {
-        body = await req.json();
-    } catch {
-        return Response.json(
-            { error: { code: "VALIDATION_FAILED" } },
-            {
-                status: 400,
-            }
-        );
+    const parsedBody = await parseRequestJson(req);
+    if (!parsedBody.ok) {
+        return parsedBody.response;
     }
 
-    const parsed = adminCreateUserSchema.safeParse(body);
+    const parsed = adminCreateUserSchema.safeParse(parsedBody.value);
     if (!parsed.success) {
         return Response.json(
             { error: { code: "VALIDATION_FAILED" } },
