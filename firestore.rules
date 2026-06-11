@@ -1,0 +1,53 @@
+rules_version = '2';
+
+// =============================================================================
+// Firestore Security Rules — boilerplate (next-forge fork)
+//
+// MODELO DE ACESSO
+//   Todo acesso ao Firestore passa pela apps/api (guards no servidor →
+//   repositórios). Nenhum cliente (browser) deve acessar o Firestore direto:
+//   o front fala só com a API via @repo/sdk. Por isso a postura padrão aqui é
+//   NEGAR todo acesso direto de clientes.
+//
+// ⚠️ PRÉ-REQUISITO ANTES DO DEPLOY DESTAS REGRAS
+//   A apps/api precisa acessar o Firestore via firebase-admin
+//   (getFirestoreAdmin() de @repo/auth/server), que roda como serviço
+//   confiável e IGNORA estas regras. HOJE a API usa o client SDK NÃO
+//   autenticado (apps/api/(shared)/infra/dabatase.ts). Se você publicar estas
+//   regras com a API ainda no client SDK, a API perde acesso e quebra.
+//   Faça primeiro a migração descrita em docs/SECURITY.md.
+//
+// Deploy: `npx -y firebase-tools@latest deploy --only firestore:rules`
+// =============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Negação padrão: nenhum cliente lê/escreve diretamente.
+    // O backend (firebase-admin) ignora estas regras e continua operando.
+    // -------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // ALTERNATIVA (NÃO ativa) — só se um dia expor coleções direto ao cliente.
+    //
+    // ATENÇÃO ao modelo de dados: `entity.userId` guarda o ID do documento de
+    // perfil do usuário (coleção `user`), NÃO o UID do Firebase Auth. A ponte
+    // UID → perfil é resolvida na API (userRepository.findByReferenceId(uid)),
+    // então regras "por dono" no cliente exigiriam ler o perfil aqui (custoso)
+    // ou trocar o modelo. Por isso o acesso direto de cliente NÃO é recomendado.
+    //
+    // Exemplo ilustrativo (assumindo entity.userId == request.auth.uid):
+    //   function isSignedIn() { return request.auth != null; }
+    //   function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    //   match /entity/{entityId} {
+    //     allow read, update, delete: if isOwner(resource.data.userId);
+    //     allow create: if isSignedIn()
+    //       && request.resource.data.userId == request.auth.uid;
+    //   }
+    // -------------------------------------------------------------------------
+  }
+}
