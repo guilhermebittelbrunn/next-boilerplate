@@ -27,16 +27,14 @@ Quando a API passar a responder um `error.code` novo:
 2. Adicione a chave (ex.: `PRODUCT_NOT_FOUND`) dentro de `apiErrors` nos **3 idiomas**.
 3. O app mapeia `code` → texto via `FormattedError` / `handleClientError`. Não precisa mudar o app se a chave existir aqui.
 
-## Validar paridade (auditoria)
-Para flagrar chaves presentes num idioma e ausentes em outro, rode uma checagem rápida (ajuste o caminho do arquivo):
+## Validar paridade (determinístico)
+Há um teste que compara recursivamente o conjunto de chaves dos 3 idiomas em `globalTranslations` **e** em `apiErrors`. Rode sempre após mexer em traduções:
 
 ```bash
-node -e '
-const m = require("./packages/internationalization/translations/packages/shared/utils.ts");
-' 2>/dev/null || echo "use ts: importe e compare Object.keys de cada locale"
+pnpm --filter @repo/internationalization test
 ```
 
-Na prática, abra a folha e compare visualmente que `Object.keys(obj["pt-br"])`, `obj.en` e `obj.es` têm o **mesmo conjunto de chaves** (recursivamente). Reporte divergências antes de concluir.
+O teste (`packages/internationalization/__tests__/parity.test.ts`) falha listando exatamente as chaves faltantes/sobrando por idioma. Também roda em `pnpm test` (turbo) e em CI. Se falhar, ajuste a folha para que `pt-br`/`en`/`es` tenham as mesmas chaves antes de concluir.
 
 ## Checklist final
 - [ ] Chave existe em `pt-br`, `en` e `es` com estrutura idêntica.

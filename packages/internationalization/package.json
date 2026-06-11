@@ -9,6 +9,9 @@
     "./client": "./client.ts",
     "./utils": "./utils.ts"
   },
+  "scripts": {
+    "test": "NODE_ENV=test vitest run"
+  },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^24.9.1",
