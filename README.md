@@ -1,133 +1,82 @@
-# ▲ / next-forge
+# Boilerplate MVP — monorepo full-stack
 
-**Production-grade Turborepo template for Next.js apps.**
+Boilerplate em **monorepo** (Turborepo + pnpm) para gerar rapidamente **MVPs** coringa. Fork customizado do [next-forge](https://github.com/vercel/next-forge), com stack escolhida para **começar de graça e escalar**: Next.js na Vercel, Firebase (Auth + Firestore), Stripe, Resend e i18n próprio.
 
-<div>
-  <img src="https://img.shields.io/npm/dy/next-forge" alt="" />
-  <img src="https://img.shields.io/npm/v/next-forge" alt="" />
-  <img src="https://img.shields.io/github/license/vercel/next-forge" alt="" />
-</div>
+> 📐 Arquitetura: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · 🤖 Desenvolvimento com IA: [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) · 📋 Convenções: [`AGENTS.md`](AGENTS.md) + `CLAUDE.md` aninhados por escopo · 🧭 Mapa rápido: [`CLAUDE.md`](CLAUDE.md)
 
-## Overview
+## Filosofia
 
-[next-forge](https://github.com/vercel/next-forge) is a production-grade [Turborepo](https://turborepo.com) template for [Next.js](https://nextjs.org/) apps. It's designed to be a comprehensive starting point for building SaaS applications, providing a solid, opinionated foundation with minimal configuration required.
+- **Genérico no pacote, específico no app** — `packages/*` é infraestrutura reutilizável entre forks; o domínio de cada produto vive em `apps/*`.
+- **Grátis para começar** — Vercel, Firebase (Spark), Stripe (sem custo fixo), Resend (free tier).
+- **Global por padrão** — multi-idioma (pt-br/en/es) sem serviço de terceiros, tema light/dark/system, responsivo mobile-first.
+- **Type-safe de ponta a ponta** — o front fala com a API só por um SDK tipado.
 
-Built on a decade of experience building web applications, next-forge balances speed and quality to help you ship thoroughly-built products faster.
+## Apps
 
-### Philosophy
+| App | Porta | Papel |
+|-----|-------|-------|
+| `apps/web` | 3001 | Landing/CTA pública — marketing, SEO, pricing, FAQ, contato. |
+| `apps/app` | 3000 | Aplicação do usuário — dashboard, cadastro, assinaturas e **área admin** (gestão de usuários + impersonação). |
+| `apps/api` | 3002 | API HTTP (Next no servidor) — guards → repositórios Firestore → DTOs. |
+| `apps/email` | 3003 | Preview/dev dos templates de e-mail (React Email). |
 
-next-forge is built around five core principles:
+## Packages
 
-- **Fast** — Quick to build, run, deploy, and iterate on
-- **Cheap** — Free to start with services that scale with you
-- **Opinionated** — Integrated tooling designed to work together
-- **Modern** — Latest stable features with healthy community support
-- **Safe** — End-to-end type safety and robust security posture
+- **`@repo/sdk`** — fachada (axios) de chamada à API; única porta do front.
+- **`@repo/design-system`** — UI compartilhada (shadcn), tema (light/dark/system via tokens CSS), componentes `HookForm*` (RHF).
+- **`@repo/internationalization`** — dicionário pt-br/en/es, sem terceiros.
+- **`@repo/auth`** — Firebase (Admin no servidor + client), API estilo Clerk.
+- **`@repo/payments`** — Stripe (planos, checkout, webhooks).
+- **`@repo/email`** — templates + envio via Resend.
+- **`@repo/shared`** — utils transversais (`HTTP_STATUS`, `FormattedError`, normalização de datas).
+- **`@repo/analytics` · `@repo/security` (Arcjet) · `@repo/seo` · `@repo/next-config` · `@repo/typescript-config`** — integrações e config.
 
-## Demo
+## Começando
 
-Experience next-forge in action:
+### Pré-requisitos
+- Node `22.12.0` (ver [`.nvmrc`](.nvmrc))
+- [pnpm](https://pnpm.io) `10.19.0`
+- Conta Firebase (Auth + Firestore), Stripe e Resend
+- [Stripe CLI](https://docs.stripe.com/stripe-cli) para webhooks locais
 
-- [Web](https://demo.next-forge.com) — Marketing website
-- [App](https://app.demo.next-forge.com) — Main application
-- [Storybook](https://storybook.demo.next-forge.com) — Component library
-- [API](https://api.demo.next-forge.com/health) — API health check
+### Instalação
+```sh
+pnpm install
+```
 
-## Features
+### Variáveis de ambiente
+Cada app tem um `.env.example` — copie para `.env` e preencha:
+- **Firebase Admin** (`apps/api`): `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY`.
+- **Firebase client** (`apps/app`, `apps/web`): chaves `NEXT_PUBLIC_FIREBASE_*`.
+- **API URL** (front): `NEXT_PUBLIC_API_URL`.
+- **Stripe** / **Resend** conforme os `.env.example`.
 
-next-forge comes with batteries included:
+### Rodando
+```sh
+pnpm dev                       # sobe todos os apps via turbo
+pnpm --filter app dev          # ou só um app (app | web | api | email)
+pnpm --filter api dev:with-stripe   # API + encaminhamento de webhooks Stripe
+```
 
-### Apps
-
-- **Web** — Marketing site built with Tailwind CSS and TWBlocks
-- **App** — Main application with authentication and database integration
-- **API** — RESTful API with health checks and monitoring
-- **Docs** — Documentation site powered by Mintlify
-- **Email** — Email templates with React Email
-- **Storybook** — Component development environment
-
-### Packages
-
-- **Authentication** — Powered by [Firebase]
-- **Database** — Type-safe ORM with migrations
-- **Design System** — Comprehensive component library with dark mode
-- **Payments** — Subscription management via [Stripe](https://stripe.com)
-- **Email** — Transactional emails via [Resend](https://resend.com)
-- **Analytics** — Web ([Google Analytics](https://developers.google.com/analytics))
-- **Security** — Application security ([Arcjet](https://arcjet.com)), rate limiting, and secure headers
-- **SEO** — Metadata management, sitemaps, and JSON-LD
-- **Cron** — Scheduled job management
-- **Storage** — File upload and management
-- **Internationalization** — Multi-language support
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- [pnpm](https://pnpm.io) (or npm/yarn/bun)
-- [Stripe CLI](https://docs.stripe.com/stripe-cli) for local webhook testing
-
-### Installation
-
-Create a new next-forge project:
+## Comandos
 
 ```sh
-npx next-forge@latest init
+pnpm check       # lint/format check (Ultracite/Biome)
+pnpm fix         # auto-fix de lint/format
+pnpm test        # Vitest em todos os workspaces
+pnpm build       # build de produção (depende de test)
+pnpm bump-ui     # re-sincroniza componentes shadcn no design-system
+pnpm --filter <app> typecheck   # tsc --noEmit de um workspace
 ```
 
-### Setup
+## CRUD de referência
 
-1. Configure your environment variables
-2. Set up required service accounts (Clerk, Stripe, Resend, etc.)
-3. Run the development server
+O recurso `entity` implementa um CRUD vertical completo (SDK → API → app → i18n) e serve como **template vivo** para novos recursos — veja a skill `/new-crud` em [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md).
 
-For detailed setup instructions, read the [documentation](https://www.next-forge.com/docs).
+## Deploy
 
-## Structure
+Cada app é independente e pensado para a **Vercel** (a API roda Next no servidor). Ver `vercel.json` em cada app.
 
-next-forge uses a monorepo structure managed by Turborepo:
+## Licença
 
-```
-next-forge/
-├── apps/           # Deployable applications
-│   ├── web/        # Marketing website (port 3001)
-│   ├── app/        # Main application (port 3000)
-│   ├── api/        # API server
-│   ├── docs/       # Documentation
-│   ├── email/      # Email templates
-│   └── storybook/  # Component library
-└── packages/       # Shared packages
-    ├── design-system/
-    ├── database/
-    ├── auth/
-    └── ...
-```
-
-Each app is self-contained and independently deployable. Packages are shared across apps for consistency and maintainability.
-
-## Documentation
-
-Full documentation is available at [next-forge.com/docs](https://www.next-forge.com/docs), including:
-
-- Detailed setup guides
-- Package documentation
-- Migration guides for swapping providers
-- Deployment instructions
-- Examples and recipes
-
-## Contributing
-
-We welcome contributions! See the [contributing guide](https://github.com/vercel/next-forge/blob/main/.github/CONTRIBUTING.md) for details.
-
-## Contributors
-
-<a href="https://github.com/vercel/next-forge/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=vercel/next-forge" />
-</a>
-
-Made with [contrib.rocks](https://contrib.rocks).
-
-## License
-
-MIT
+MIT — ver [`license.md`](license.md).

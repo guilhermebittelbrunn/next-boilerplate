@@ -278,3 +278,10 @@ packages/database/generated
 .contentlayer
 .content-collections
 .source
+
+# Claude Code / skills
+# Lockfile do `npx skills` — as skills são versionadas diretamente em .claude/skills/,
+# então o lock (que aponta para o layout .agents/) não é necessário e ficaria desatualizado.
+skills-lock.json
+# Settings locais/pessoais do Claude Code (settings.json compartilhado é versionado)
+.claude/settings.local.json
