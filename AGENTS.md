@@ -25,15 +25,16 @@ Este repositório é um **boilerplate full stack** em monorepo (`pnpm` + `turbo`
 - **Locale no app**: para resolver locale atual, prefira `getDictionary()` (client/server) ou `getDictionaryForLocale(...)` quando a rota já fornece `[locale]`. Esses helpers já aplicam fallback/default e cookie (`x-locale`) automaticamente.
 - **Nomenclatura de arquivos**: componentes React em **TitleCase** (ex.: `PanelNavbarControls.tsx`); hooks em **camelCase** (ex.: `useListUsers.ts`).
 
-## Regras Cursor
+## Regras por escopo (`CLAUDE.md` aninhados)
 
-Detalhes acionáveis estão em `.cursor/rules/*.mdc` (regras por glob + uma regra núcleo com `alwaysApply`).
+As regras acionáveis por área vivem em `CLAUDE.md` aninhados, **carregados automaticamente** pelo Claude Code ao trabalhar em cada pasta (equivalente nativo às antigas regras por glob do Cursor). A regra núcleo (fork-friendly, anti-padrões) está no [`CLAUDE.md`](CLAUDE.md) raiz, sempre carregado.
 
-Ao implementar uma feature nova: leia a regra do escopo (`next-app`, `api-app`, `monorepo-packages`) e a regra núcleo `boilerplate-core`. Para **inputs compostos, `Switch`, `DateInput` e `HookForm*`**, use também a secção **Design system — inputs e formulários (RHF)** neste ficheiro e as subsecções de `@repo/design-system` em `monorepo-packages.mdc`.
+- `apps/app` (rotas, UI, hooks, i18n front, nomenclatura, CRUD): [`apps/app/CLAUDE.md`](apps/app/CLAUDE.md).
+- `apps/web` (landing, SEO, i18n front): [`apps/web/CLAUDE.md`](apps/web/CLAUDE.md).
+- `apps/api` (rotas, guards, repos, `error.code`/i18n): [`apps/api/CLAUDE.md`](apps/api/CLAUDE.md).
+- `packages/*` (SDK, design system, i18n): [`packages/CLAUDE.md`](packages/CLAUDE.md).
 
-Para textos de interface e erros de API: `.cursor/rules/i18n-user-facing.mdc`.
-
-Para nomenclatura (hooks `useList` / `useFind…By…`), tabela com busca/refetch, `Footer` / `FormContainer` / `Container.loadError` e 404 (`NotFoundPage`): `.cursor/rules/naming-and-crud-patterns.mdc`.
+Para **inputs compostos, `Switch`, `DateInput` e `HookForm*`**, use a secção **Design system — inputs e formulários (RHF)** neste ficheiro e as subsecções de `@repo/design-system` em [`packages/CLAUDE.md`](packages/CLAUDE.md).
 
 ## Padrões API e app (CRUD, cache, auth)
 

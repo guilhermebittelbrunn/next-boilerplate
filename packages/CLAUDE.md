@@ -1,10 +1,6 @@
----
-description: Convenções para packages do monorepo (@repo/*)
-globs: packages/**/*
-alwaysApply: false
----
-
 # Packages (`packages/*`)
+
+Regras de escopo para os pacotes compartilhados `@repo/*`. O Claude carrega este arquivo automaticamente ao trabalhar em `packages/`. Veja também o [`CLAUDE.md`](../CLAUDE.md) raiz e o [`AGENTS.md`](../AGENTS.md). Princípio mestre: **genérico no pacote, específico no app** — não codifique fluxos/entidades/copy de um único produto aqui, salvo pacotes de integração (`auth`, `email`, `payments`).
 
 ## Dependências
 
@@ -13,22 +9,21 @@ alwaysApply: false
 
 ## `@repo/sdk`
 
-- Funções por recurso (ex.: `actions/user/...`) com tipos exportados do mesmo módulo.
+- Funções por recurso (ex.: `actions/<recurso>/...`) com tipos exportados do mesmo módulo. Registre a action no `Client` (`src/client/index.ts`).
 - Sem hooks React com estado pesado aqui, salvo thin wrappers se já for padrão do repo.
 - Erros: propagar de forma que o app possa mapear para toast/i18n sem acoplar strings de produto no SDK.
 
 ## `@repo/design-system`
 
-- Componentes presentacionais; variantes via props e tokens CSS existentes.
-- Sem fetch, sem session; quem compõe dados é o app.
+- Componentes presentacionais; variantes via props e tokens CSS existentes. **Sem fetch, sem session** — quem compõe dados é o app.
 
 ### Inputs compostos (`components/ui/`)
 
 - **Nomes**: `TextareaInput`, `RadioGroupInput`, `DateInput` — **sem** prefixo `Labeled`. `RadioGroupInput` exporta **`RadioOption`** (`value` + `label`) no mesmo módulo.
-- **Label**: prop **`label` opcional**; renderizar `Label` só se existir, no mesmo espírito de `input.tsx` (`htmlFor` + `id` quando aplicável).
-- **Validação na UI**: prop **`error`** (string), alinhada ao `Input`, não `errorMessage`.
-- **`DateInput`**: **`Popover`** + **`Calendar`** + trigger (`Button`); valor string **`YYYY-MM-DD`**. Não usar `<input type="date">` nativo como padrão do design system.
-- **`Switch`**: prop opcional **`label`** ao lado do toggle (`Label` + `id` / `htmlFor`).
+- **Label**: prop **`label` opcional**; renderizar `Label` só se existir (`htmlFor` + `id` quando aplicável), no mesmo espírito de `input.tsx`.
+- **Validação na UI**: prop **`error`** (string), alinhada ao `Input`, **não** `errorMessage`.
+- **`DateInput`**: **`Popover`** + **`Calendar`** + trigger (`Button`); valor string **`YYYY-MM-DD`**. Não usar `<input type="date">` nativo como padrão.
+- **`Switch`**: prop opcional **`label`** ao lado do toggle (`Label` + `id`/`htmlFor`).
 
 ### React Hook Form (`components/form/hookform/`)
 
@@ -37,11 +32,11 @@ alwaysApply: false
 
 ### Barrel `components/ui/index.ts`
 
-- Qualquer componente ou tipo novo em `components/ui/*.tsx` deve ser **exportado** em **`components/ui/index.ts`**.
+- Qualquer componente ou tipo novo em `components/ui/*.tsx` deve ser **reexportado** em `components/ui/index.ts`.
 
 ## `@repo/internationalization`
 
-- Chaves estáveis (`ui.table.empty`); valores em pt/en/etc. como exemplos neutros.
+- Chaves estáveis (`ui.table.empty`); valores em pt-br/en/es como exemplos neutros.
 - Exportar apenas o necessário para apps; não importar rotas Next.
 
 ## Novos pacotes
