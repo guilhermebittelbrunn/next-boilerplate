@@ -84,7 +84,9 @@ Skills do projeto (digite `/` para invocar) e o agente revisor estão documentad
 
 - **`/new-crud`** — scaffold de um CRUD vertical completo (SDK → API → app → i18n), seguindo o padrão `entity`.
 - **`/new-api-route`** — cria rota na `apps/api` (validação, guard, repo+mapper, `error.code`).
-- **`/i18n-sync`** — adiciona/valida chaves nos 3 idiomas + `apiErrors`.
+- **`/i18n-sync`** — adiciona/valida chaves nos 3 idiomas + `apiErrors` (com teste de paridade determinístico).
+- **`/payments-flow`** — fluxo de assinatura Stripe (planos, checkout, portal, webhook). Ver [`docs/PAYMENTS.md`](docs/PAYMENTS.md).
+- **`/write-tests`** — testes Vitest (schema, mapper, rota, hook, componente) no setup do repo.
 - **`agent-browser`** — automação de browser para **validar layouts e fluxos** (QA/dogfooding). **Obrigatório** em fluxos de front-end e antes de entregas (ver regra de ouro 11).
 - **`vercel-react-best-practices`** — guia de performance React/Next (auto-aciona ao escrever/refatorar componentes, data fetching, bundle).
 - **`frontend-design`** — direção de design visual ao criar/reformular UI (útil principalmente na `apps/web`).

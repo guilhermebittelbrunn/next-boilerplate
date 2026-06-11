@@ -29,7 +29,7 @@ process.stdin.on('end', () => {
 [ -f "$file" ] || exit 0
 
 case "$file" in
-  *.ts | *.tsx | *.js | *.jsx | *.mjs | *.cjs | *.json | *.jsonc)
+  *.ts | *.tsx | *.mts | *.cts | *.js | *.jsx | *.mjs | *.cjs | *.json | *.jsonc)
     cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
     pnpm exec biome check --write --no-errors-on-unmatched "$file" >/dev/null 2>&1
     ;;

@@ -2,7 +2,7 @@
 
 Boilerplate em **monorepo** (Turborepo + pnpm) para gerar rapidamente **MVPs** coringa. Fork customizado do [next-forge](https://github.com/vercel/next-forge), com stack escolhida para **começar de graça e escalar**: Next.js na Vercel, Firebase (Auth + Firestore), Stripe, Resend e i18n próprio.
 
-> 📐 Arquitetura: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · 🤖 Desenvolvimento com IA: [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) · 📋 Convenções: [`AGENTS.md`](AGENTS.md) + `CLAUDE.md` aninhados por escopo · 🧭 Mapa rápido: [`CLAUDE.md`](CLAUDE.md)
+> 📐 [Arquitetura](docs/ARCHITECTURE.md) · ⚙️ [Setup & env](docs/SETUP.md) · 🔒 [Segurança](docs/SECURITY.md) · 💳 [Pagamentos](docs/PAYMENTS.md) · 🤖 [Workflow com IA](docs/AI-WORKFLOW.md) · 📋 Convenções: [`AGENTS.md`](AGENTS.md) + `CLAUDE.md` aninhados · 🧭 [Mapa rápido](CLAUDE.md)
 
 ## Filosofia
 
@@ -45,7 +45,7 @@ pnpm install
 ```
 
 ### Variáveis de ambiente
-Cada app tem um `.env.example` — copie para `.env` e preencha:
+Referência autoritativa (as vars reais, por serviço): [`docs/SETUP.md`](docs/SETUP.md). Resumo:
 - **Firebase Admin** (`apps/api`): `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADMIN_PRIVATE_KEY`.
 - **Firebase client** (`apps/app`, `apps/web`): chaves `NEXT_PUBLIC_FIREBASE_*`.
 - **API URL** (front): `NEXT_PUBLIC_API_URL`.

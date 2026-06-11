@@ -6,9 +6,10 @@ Este repositório vem integrado com o **Claude Code**. Este guia explica o que e
 
 | Artefato | Caminho | Para quê |
 |----------|---------|----------|
-| Memória do projeto | [`CLAUDE.md`](../CLAUDE.md) | Lido automaticamente pelo Claude. Mapa do repo, comandos, regras de ouro e ponteiros. **Curto** — referencia `AGENTS.md` e as cursor rules. |
+| Memória do projeto | [`CLAUDE.md`](../CLAUDE.md) | Lido automaticamente pelo Claude. Mapa do repo, comandos, regras de ouro e ponteiros. **Curto** — referencia `AGENTS.md` e os `CLAUDE.md` aninhados. |
 | Convenções completas | [`AGENTS.md`](../AGENTS.md) | Fonte de verdade detalhada (API, app, design system/RHF). |
 | Regras por escopo | `apps/*/CLAUDE.md`, `packages/CLAUDE.md` | `CLAUDE.md` aninhados, **auto-carregados** ao trabalhar em cada pasta (equivalente nativo às antigas regras por glob do Cursor). |
+| Documentação | [`docs/`](.) | `ARCHITECTURE`, `SETUP` (env), `SECURITY`, `PAYMENTS`, este `AI-WORKFLOW`. |
 | Skills do projeto | `.claude/skills/*` | Procedimentos invocáveis com `/`. |
 | Agente revisor | `.claude/agents/code-reviewer.md` | Revisão afinada às convenções. |
 | Harness | `.claude/settings.json` + `.claude/hooks/` | Permissões (menos prompts) + auto-format ao editar. |
@@ -21,7 +22,9 @@ Digite `/` no Claude Code para invocar. Cada skill encapsula o passo a passo já
 
 - **`/new-crud`** — scaffold de um **CRUD vertical completo** (SDK → API → hooks → UI → i18n), seguindo o recurso de referência `entity`. Use para "criar o recurso X de ponta a ponta".
 - **`/new-api-route`** — cria uma **rota HTTP** em `apps/api` (validação Zod, guard, repositório+mapper Firestore, `error.code` traduzível). Use para endpoints isolados.
-- **`/i18n-sync`** — adiciona/valida **chaves de tradução** nos 3 idiomas (pt-br/en/es) + `apiErrors`. Use sempre que criar texto de UI ou um código de erro novo.
+- **`/i18n-sync`** — adiciona/valida **chaves de tradução** nos 3 idiomas (pt-br/en/es) + `apiErrors`, com teste de paridade determinístico (`pnpm --filter @repo/internationalization test`). Use sempre que criar texto de UI ou um código de erro novo.
+- **`/payments-flow`** — implementa/estende o **fluxo de assinatura Stripe** (planos, checkout, portal de cobrança, webhook). Ver [`PAYMENTS.md`](PAYMENTS.md).
+- **`/write-tests`** — escreve **testes Vitest** (schema, mapper, rota da API, hook, componente) no setup do repo, com mocks de SDK/Firebase.
 
 `new-crud` compõe `new-api-route` e `i18n-sync` automaticamente nas etapas correspondentes.
 
