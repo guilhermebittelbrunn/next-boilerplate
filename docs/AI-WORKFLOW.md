@@ -37,6 +37,10 @@ Instaladas via `npx skills add ...` e **movidas para `.claude/skills/`** para o 
 - **`frontend-design`** — direção de design visual (paleta, tipografia, layout) para UI distintiva, não-templated. Mais útil na `apps/web` e em telas novas.
 - **`web-design-guidelines`** — revisão de código de UI contra Web Interface Guidelines (acessibilidade, UX). Use em "revise minha UI / cheque acessibilidade".
 - **`copywriting`** — escrita/melhoria de copy de marketing (hero, headline, CTA, pricing) — landing/CTA da `apps/web`.
+- **`brainstorming`** — transforma uma ideia em design/spec via diálogo, **antes** de codar. Tem um `HARD-GATE`: não implementa nada até apresentar o design e você aprovar. Use ao iniciar features/componentes novos. Inclui scripts próprios (`scripts/`) e um companion visual.
+- **`ui-ux-pro-max`** — base de design UI/UX consultável (50+ estilos, paletas, pares de fonte, guidelines de UX, tipos de gráfico) com recomendações por stack (React/Next/shadcn etc.). Os dados ficam em `data/*.csv` e a busca em `scripts/*.py`. Complementa `frontend-design` (direção) com referência estruturada.
+- **`seo-audit`** — auditoria de SEO técnico/on-page (meta tags, Core Web Vitals, indexação, queda de tráfego). Voltada à `apps/web`. Lê contexto opcional de `.agents/product-marketing.md`/`.claude/product-marketing.md` se existir.
+- **`ai-seo`** — otimização para **AI search** (AEO/GEO/LLMO): ser citado por AI Overviews, ChatGPT, Perplexity, Claude, Gemini. Complementa `seo-audit` (SEO tradicional) e `copywriting`. Também lê o contexto opcional de product-marketing.
 
 > Para atualizar/baixar mais skills da comunidade: rode `npx skills add <repo> --skill <nome>` e **mova a pasta resultante de `.agents/skills/<nome>` para `.claude/skills/<nome>`** (é lá que o Claude Code descobre skills do projeto). Veja também as locations pessoais (`~/.claude/skills/`).
 

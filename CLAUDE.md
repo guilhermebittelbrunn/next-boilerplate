@@ -92,5 +92,9 @@ Skills do projeto (digite `/` para invocar) e o agente revisor estão documentad
 - **`frontend-design`** — direção de design visual ao criar/reformular UI (útil principalmente na `apps/web`).
 - **`web-design-guidelines`** — revisão de UI contra guidelines de interface/acessibilidade.
 - **`copywriting`** — copy de marketing (landing/CTA da `apps/web`).
+- **`brainstorming`** — explora intenção/requisitos e gera o design **antes** de implementar (gate de aprovação para features/componentes novos).
+- **`ui-ux-pro-max`** — base de design UI/UX (estilos, paletas, tipografia, guidelines) ao criar/refatorar telas.
+- **`seo-audit`** — auditoria de SEO técnico/on-page (útil na `apps/web`).
+- **`ai-seo`** — otimização de conteúdo para AI search / citação por LLMs (AEO/GEO), na `apps/web`.
 - Agente **`code-reviewer`** — revisão afinada às convenções deste repo, **com validação visual via `agent-browser`** em diffs de front-end (invoque via Task ou peça "revise o diff").
 - Skills globais úteis: `/code-review`, `/security-review`, `/verify`.
