@@ -9,7 +9,7 @@ export const adminUsersPageTranslations = {
                 name: "Nome",
                 email: "E-mail",
                 type: "Tipo",
-                status: "Status",
+                status: "Ativo",
                 actions: "Ações",
             },
             typeLabels: {
@@ -53,7 +53,7 @@ export const adminUsersPageTranslations = {
                 name: "Name",
                 email: "Email",
                 type: "Type",
-                status: "Status",
+                status: "Active",
                 actions: "Actions",
             },
             typeLabels: {
@@ -97,7 +97,7 @@ export const adminUsersPageTranslations = {
                 name: "Nombre",
                 email: "Correo",
                 type: "Tipo",
-                status: "Estado",
+                status: "Activo",
                 actions: "Acciones",
             },
             typeLabels: {

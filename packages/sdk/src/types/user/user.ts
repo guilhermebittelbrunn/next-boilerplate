@@ -24,6 +24,7 @@ export type AdminUpdateUserRequest = {
     id: string;
     type?: UserType;
     displayName?: string | null;
+    disabled?: boolean;
 };
 
 export type UserWithAuthDTO = UserDTO & {

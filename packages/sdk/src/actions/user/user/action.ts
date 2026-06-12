@@ -1,11 +1,12 @@
 /** biome-ignore-all lint/style/noParameterProperties: <explanation> */
+
+import type { Client } from "../../../client";
+import type { Response } from "../../../client/type";
 import type {
     AdminCreateUserRequest,
     AdminUpdateUserRequest,
     UserWithAuthDTO,
-} from "src/types";
-import type { Client } from "../../../client";
-import type { Response } from "../../../client/type";
+} from "../../../types";
 
 export default class UserActions {
     constructor(private readonly client: Client) {

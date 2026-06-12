@@ -6,8 +6,14 @@ export const signInTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "seu@email.com",
             password: "Senha",
+            passwordPlaceholder: "••••••••",
             submit: "Entrar",
+        },
+        validation: {
+            emailInvalid: "Email inválido",
+            passwordMin: "A senha deve ter pelo menos 6 caracteres",
         },
         signIn: "Entrar",
         enterWithYourAccount: "Entre com sua conta para continuar",
@@ -29,8 +35,14 @@ export const signInTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "you@email.com",
             password: "Password",
+            passwordPlaceholder: "••••••••",
             submit: "Sign In",
+        },
+        validation: {
+            emailInvalid: "Invalid email",
+            passwordMin: "Password must be at least 6 characters",
         },
         signIn: "Sign In",
         enterWithYourAccount: "Enter with your account to continue",
@@ -52,8 +64,14 @@ export const signInTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "tu@email.com",
             password: "Contraseña",
+            passwordPlaceholder: "••••••••",
             submit: "Iniciar sesión",
+        },
+        validation: {
+            emailInvalid: "Email no válido",
+            passwordMin: "La contraseña debe tener al menos 6 caracteres",
         },
         signIn: "Iniciar sesión",
         enterWithYourAccount: "Inicia sesión en tu cuenta para continuar",

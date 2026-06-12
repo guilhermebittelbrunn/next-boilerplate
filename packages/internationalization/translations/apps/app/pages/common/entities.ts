@@ -26,12 +26,13 @@ export const commonEntitiesPageTranslations = {
             description: "Descrição",
             type: "Tipo",
             photo: "Foto (URL)",
+            photoPlaceholder: "https://",
             photoHint:
                 "Informe a URL pública da imagem. Em produção, substitua por upload para storage.",
             genre: "Gênero",
             genreUnset: "Não informar",
             birthdate: "Data de nascimento",
-            enabled: "Habilitado",
+            enabled: "Ativo",
             createdAt: "Criado em",
             save: "Salvar",
             genreOptions: {
@@ -66,7 +67,7 @@ export const commonEntitiesPageTranslations = {
                 photo: "Photo",
                 name: "Name",
                 type: "Type",
-                enabled: "Enabled",
+                enabled: "Active",
                 createdAt: "Created",
                 actions: "Actions",
             },
@@ -85,12 +86,13 @@ export const commonEntitiesPageTranslations = {
             description: "Description",
             type: "Type",
             photo: "Photo (URL)",
+            photoPlaceholder: "https://",
             photoHint:
                 "Enter a public image URL. In production, replace with storage upload.",
             genre: "Gender",
             genreUnset: "Prefer not to say",
             birthdate: "Birth date",
-            enabled: "Enabled",
+            enabled: "Active",
             createdAt: "Created at",
             save: "Save",
             genreOptions: {
@@ -144,12 +146,13 @@ export const commonEntitiesPageTranslations = {
             description: "Descripción",
             type: "Tipo",
             photo: "Foto (URL)",
+            photoPlaceholder: "https://",
             photoHint:
                 "Indica la URL pública de la imagen. En producción, sustituye por subida a almacenamiento.",
             genre: "Género",
             genreUnset: "Prefiero no decir",
             birthdate: "Fecha de nacimiento",
-            enabled: "Habilitado",
+            enabled: "Activo",
             createdAt: "Creado el",
             save: "Guardar",
             genreOptions: {

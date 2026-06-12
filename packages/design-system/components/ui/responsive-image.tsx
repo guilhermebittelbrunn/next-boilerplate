@@ -29,9 +29,12 @@ export default function ResponsiveImage({
     }
 
     return (
-        <div className={cn(`relative w-${width} h-${height} rounded-full overflow-hidden`, className)}>
+        <div
+            className={cn('relative overflow-hidden rounded-full', className)}
+            style={{ width, height }}
+        >
             {isLoading && (
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse" />
+                <div className="absolute inset-0 animate-pulse bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700" />
             )}
 
             {hasError && (

@@ -131,6 +131,7 @@ export function Table<T extends Record<string, unknown>>({
         columns={columnsWithKey}
         dataSource={filteredDataSource}
         onChange={onChange}
+        scroll={{ x: "max-content" }}
         {...rest}
       />
     </div>

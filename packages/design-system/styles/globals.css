@@ -281,6 +281,27 @@ html .ant-table tfoot > tr > td {
     color: var(--color-foreground);
 }
 
+/*
+ * Fundo das células segue o tema. O Ant calcula o hover em CSS-in-JS e, sem um
+ * ConfigProvider sincronizado com o next-themes, a linha fica escura no light
+ * mode. Forçamos os tokens (que trocam via classe `.dark`).
+ */
+html .ant-table,
+html .ant-table-tbody > tr > td,
+html .ant-table-tbody > tr.ant-table-placeholder > td {
+    background: transparent !important;
+}
+
+html .ant-table-thead > tr > th {
+    background: var(--color-muted) !important;
+}
+
+/* `!important` beats Ant's `.ant-table-wrapper`-prefixed CSS-in-JS hover rule. */
+html .ant-table-tbody > tr.ant-table-row:hover > td,
+html .ant-table-tbody > tr > td.ant-table-cell-row-hover {
+    background: var(--color-accent) !important;
+}
+
 html .ant-popconfirm .ant-popover-inner,
 html .ant-popconfirm .ant-popover-message-title,
 html .ant-popconfirm .ant-popover-inner-content {
