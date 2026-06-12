@@ -6,12 +6,11 @@ import { handleClientError } from "@repo/shared/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { apiClient } from "@/shared/lib/client";
+import { queryKeys } from "@/shared/lib/queryKeys";
 
 function getApplicationHealthCheck(): Promise<HealthResponse> {
     return apiClient.application.health.check();
 }
-
-export const HEALTH_QUERY_KEY = "health";
 
 /**
  * Exemplo de custom hook que chama a API do próprio app (ex.: health check).
@@ -28,7 +27,7 @@ export function useHealthCheck() {
         isPending: isLoading,
         ...rest
     } = useQuery({
-        queryKey: [HEALTH_QUERY_KEY],
+        queryKey: queryKeys.health(),
         queryFn: getApplicationHealthCheck,
     });
 

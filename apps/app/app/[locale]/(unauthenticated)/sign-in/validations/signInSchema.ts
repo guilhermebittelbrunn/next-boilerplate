@@ -1,12 +1,17 @@
+import type { globalTranslations } from "@repo/internationalization/translations/global";
 import { z } from "zod";
+
+type Dictionary = (typeof globalTranslations)[keyof typeof globalTranslations];
 
 const MIN_PASSWORD_LENGTH = 6;
 
-export const signInSchema = z.object({
-    email: z.string().email("Email inválido"),
-    password: z
-        .string()
-        .min(MIN_PASSWORD_LENGTH, "A senha deve ter pelo menos 6 caracteres"),
-});
+export function buildSignInSchema(dictionary: Dictionary) {
+    const validation = dictionary.apps.app.pages.signIn.validation;
 
-export type SignInFormValues = z.infer<typeof signInSchema>;
+    return z.object({
+        email: z.string().email(validation.emailInvalid),
+        password: z.string().min(MIN_PASSWORD_LENGTH, validation.passwordMin),
+    });
+}
+
+export type SignInFormValues = z.infer<ReturnType<typeof buildSignInSchema>>;

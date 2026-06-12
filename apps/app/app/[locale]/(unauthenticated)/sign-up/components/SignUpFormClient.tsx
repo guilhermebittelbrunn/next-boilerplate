@@ -16,12 +16,16 @@ import { handleClientError } from "@repo/shared/utils/helpers/handleClientError"
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
-import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
+import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
-import { type SignUpFormValues, signUpSchema } from "../validations/signUp";
+import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
+import {
+    buildSignUpSchema,
+    type SignUpFormValues,
+} from "../validations/signUpSchema";
 
 export default function SignUpFormClient() {
     const router = useRouter();
@@ -44,8 +48,10 @@ export default function SignUpFormClient() {
         },
     });
 
+    const schema = useMemo(() => buildSignUpSchema(dictionary), [dictionary]);
+
     const form = useForm<SignUpFormValues>({
-        resolver: zodResolver(signUpSchema),
+        resolver: zodResolver(schema),
         defaultValues: {
             email: "",
             password: "",
@@ -54,18 +60,34 @@ export default function SignUpFormClient() {
     });
 
     useEffect(() => {
-        if (!authLoading && user) {
-            (async () => {
-                const token = await user.getIdToken();
-                const path = await resolveAppPostLoginPath({
-                    idToken: token,
-                    locale,
-                    fallbackPath: `/${locale}`,
-                });
-                router.push(path);
-            })();
+        if (authLoading || !user) {
+            return;
         }
-    }, [user, authLoading, router, locale]);
+        let cancelled = false;
+        (async () => {
+            const token = await user.getIdToken();
+            await fetch("/api/auth/session", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken: token }),
+            }).catch(() => null);
+            if (cancelled) {
+                return;
+            }
+            const path = await resolveAppPostLoginPath({
+                idToken: token,
+                locale,
+                fallbackPath: `/${locale}`,
+            });
+            if (!cancelled) {
+                window.location.replace(path);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [user, authLoading, locale]);
 
     const onSubmit = (data: SignUpFormValues) => {
         signUp.mutate({
@@ -74,15 +96,15 @@ export default function SignUpFormClient() {
         });
     };
 
-    // If user is already logged in, redirect (will redirect via useEffect)
-    // But still show the form briefly to avoid flash
-    if (user && !authLoading) {
-        return null;
+    // Already authenticated or still resolving the session: show a loader and let
+    // the effect redirect, instead of flashing the sign-up form.
+    if (authLoading || user) {
+        return <FullScreenLoader />;
     }
 
     return (
         <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center py-20">
-            <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
+            <div className="w-full max-w-md space-y-8 rounded-xl border bg-card p-8 shadow-sm">
                 <div className="space-y-2 text-center">
                     <h1 className="font-bold text-3xl">
                         {dictionary.apps.app.pages.signUp.meta.title}
@@ -100,7 +122,10 @@ export default function SignUpFormClient() {
                         <HookFormInput
                             label={dictionary.apps.app.pages.signUp.form.email}
                             name="email"
-                            placeholder="seu@email.com"
+                            placeholder={
+                                dictionary.apps.app.pages.signUp.form
+                                    .emailPlaceholder
+                            }
                             type="email"
                         />
 
@@ -109,7 +134,10 @@ export default function SignUpFormClient() {
                                 dictionary.apps.app.pages.signUp.form.password
                             }
                             name="password"
-                            placeholder="••••••••"
+                            placeholder={
+                                dictionary.apps.app.pages.signUp.form
+                                    .passwordPlaceholder
+                            }
                             type="password"
                         />
 
@@ -119,7 +147,10 @@ export default function SignUpFormClient() {
                                     .confirmPassword
                             }
                             name="confirmPassword"
-                            placeholder="••••••••"
+                            placeholder={
+                                dictionary.apps.app.pages.signUp.form
+                                    .passwordPlaceholder
+                            }
                             type="password"
                         />
 

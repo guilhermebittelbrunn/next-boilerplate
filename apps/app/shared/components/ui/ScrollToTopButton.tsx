@@ -2,6 +2,7 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
+import { getDictionary } from "@repo/internationalization/client";
 import { ArrowUpIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -9,6 +10,7 @@ const SCROLL_TO_TOP_THRESHOLD = 300;
 
 export function ScrollToTopButton(props: { className?: string }) {
     const { className } = props;
+    const { dictionary } = getDictionary();
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -26,7 +28,7 @@ export function ScrollToTopButton(props: { className?: string }) {
 
     return (
         <Button
-            aria-label="Scroll to top"
+            aria-label={dictionary.components.scrollToTop.ariaLabel}
             className={cn(
                 "fixed right-4 bottom-4 z-50 h-11 w-11 rounded-full shadow-md",
                 className
@@ -40,4 +42,3 @@ export function ScrollToTopButton(props: { className?: string }) {
         </Button>
     );
 }
-

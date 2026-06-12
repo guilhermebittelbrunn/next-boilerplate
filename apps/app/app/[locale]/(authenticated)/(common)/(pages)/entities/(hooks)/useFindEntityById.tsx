@@ -2,8 +2,7 @@
 import type { EntityDTO } from "@repo/sdk/src/types";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/lib/client";
-
-export const FIND_ENTITY_BY_ID_QUERY_KEY = "find-entity-by-id";
+import { queryKeys } from "@/shared/lib/queryKeys";
 
 export async function findEntityById(
     id: string | undefined
@@ -16,7 +15,7 @@ export async function findEntityById(
 
 export function useFindEntityById(id: string | undefined) {
     const { data, isLoading, isError } = useQuery({
-        queryKey: [FIND_ENTITY_BY_ID_QUERY_KEY, id],
+        queryKey: queryKeys.entities.detail(id ?? ""),
         queryFn: () => findEntityById(id),
         enabled: Boolean(id),
     });

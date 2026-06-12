@@ -15,7 +15,7 @@ import { getDictionaryForLocale } from "@repo/internationalization/client";
 import { UserType, type UserWithAuthDTO } from "@repo/sdk/src/types";
 import { ChevronDownIcon, ShieldCheckIcon, UserIcon } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useListUsers } from "@/shared/hooks/useListUsers";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 
@@ -32,6 +32,7 @@ export default function PanelNavbarControls() {
         profileKind,
         panelRequestRole,
         impersonatedFirebaseUid,
+        impersonatedLabel,
         setPanelEnvironment,
         setImpersonatedUser,
     } = useAuthRequestPanel();
@@ -85,9 +86,34 @@ export default function PanelNavbarControls() {
         }));
     }, [commonUsers]);
 
+    // Show the persisted choice (id + label) immediately, before the user list
+    // finishes loading; merge with the loaded options once available.
+    const selectOptions = useMemo(() => {
+        if (
+            impersonatedFirebaseUid &&
+            impersonatedLabel &&
+            !impersonationOptions.some(
+                (option) => option.value === impersonatedFirebaseUid
+            )
+        ) {
+            return [
+                { value: impersonatedFirebaseUid, label: impersonatedLabel },
+                ...impersonationOptions,
+            ];
+        }
+        return impersonationOptions;
+    }, [impersonatedFirebaseUid, impersonatedLabel, impersonationOptions]);
+
+    const labelForUid = useCallback(
+        (uid: string | null) =>
+            selectOptions.find((option) => option.value === uid)?.label ?? null,
+        [selectOptions]
+    );
+
     const resolveImpersonatedUserForCommonMode = useCallback(() => {
         if (impersonationOptions.length === 0) {
-            return null;
+            // Keep the persisted choice until the list loads.
+            return impersonatedFirebaseUid;
         }
         const hasSavedUserInCurrentOptions =
             impersonatedFirebaseUid &&
@@ -102,10 +128,10 @@ export default function PanelNavbarControls() {
 
     const handleImpersonatedUserChange = useCallback(
         (value: string) => {
-            setImpersonatedUser(value);
+            setImpersonatedUser(value, labelForUid(value));
             window.location.reload();
         },
-        [setImpersonatedUser]
+        [setImpersonatedUser, labelForUid]
     );
 
     const handleEnvironmentChange = useCallback(
@@ -114,18 +140,43 @@ export default function PanelNavbarControls() {
             if (nextRole === UserRoleLevel.COMMON) {
                 const nextImpersonatedUser =
                     resolveImpersonatedUserForCommonMode();
-                setImpersonatedUser(nextImpersonatedUser);
-            } else {
-                setImpersonatedUser(null);
+                setImpersonatedUser(
+                    nextImpersonatedUser,
+                    labelForUid(nextImpersonatedUser)
+                );
             }
+            // Switching to ADMIN clears impersonation inside setPanelEnvironment.
             setPanelEnvironment(nextRole);
         },
         [
             resolveImpersonatedUserForCommonMode,
             setImpersonatedUser,
             setPanelEnvironment,
+            labelForUid,
         ]
     );
+
+    // In the COMMON (impersonation) panel the select must never be empty: default
+    // to the first available user as soon as the list is known.
+    useEffect(() => {
+        if (!showImpersonationSelect || impersonationOptions.length === 0) {
+            return;
+        }
+        const hasValidSelection =
+            impersonatedFirebaseUid &&
+            impersonationOptions.some(
+                (option) => option.value === impersonatedFirebaseUid
+            );
+        if (!hasValidSelection) {
+            const first = impersonationOptions[0];
+            setImpersonatedUser(first.value, first.label);
+        }
+    }, [
+        showImpersonationSelect,
+        impersonationOptions,
+        impersonatedFirebaseUid,
+        setImpersonatedUser,
+    ]);
 
     if (!canSwitchEnvironment) {
         return null;
@@ -180,8 +231,10 @@ export default function PanelNavbarControls() {
                                 <div className="mt-2">
                                     <Select
                                         disabled={loadingCommonUsers}
-                                        onValueChange={handleImpersonatedUserChange}
-                                        options={impersonationOptions}
+                                        onValueChange={
+                                            handleImpersonatedUserChange
+                                        }
+                                        options={selectOptions}
                                         placeholder={
                                             navbarCopy.selectUserPlaceholder
                                         }
@@ -215,7 +268,7 @@ export default function PanelNavbarControls() {
                     <Select
                         disabled={loadingCommonUsers}
                         onValueChange={handleImpersonatedUserChange}
-                        options={impersonationOptions}
+                        options={selectOptions}
                         placeholder={navbarCopy.selectUserPlaceholder}
                         value={impersonatedFirebaseUid ?? undefined}
                     />

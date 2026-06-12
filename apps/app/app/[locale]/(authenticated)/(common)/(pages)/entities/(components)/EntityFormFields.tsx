@@ -14,7 +14,10 @@ import { getDictionary } from "@repo/internationalization/client";
 import { EntityType } from "@repo/sdk/src/types";
 import { useMemo } from "react";
 import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
-import { entityGenreUnset, entityGenreValues } from "../(validations)/entityFormSchema";
+import {
+    entityGenreUnset,
+    entityGenreValues,
+} from "../(validations)/entityFormSchema";
 
 type EntityFormFieldsProps = {
     mode: "create" | "update";
@@ -106,7 +109,7 @@ export function EntityFormFields({
                 <HookFormInput
                     label={entitiesForm.photo}
                     name="photo"
-                    placeholder="https://"
+                    placeholder={entitiesForm.photoPlaceholder}
                     type="url"
                 />
                 <p className="mt-1 text-muted-foreground text-xs">

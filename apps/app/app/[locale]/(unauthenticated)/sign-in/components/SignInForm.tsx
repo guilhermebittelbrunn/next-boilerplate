@@ -16,14 +16,16 @@ import { useMutation } from "@tanstack/react-query";
 import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
+import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import { apiClient } from "@/shared/lib/client";
-import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
+import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
 import {
+    buildSignInSchema,
     type SignInFormValues,
-    signInSchema,
 } from "../validations/signInSchema";
 
 export const SignInForm = () => {
@@ -49,8 +51,10 @@ export const SignInForm = () => {
 
     const isLoading = signIn.isPending || googleSignIn.isPending;
 
+    const schema = useMemo(() => buildSignInSchema(dictionary), [dictionary]);
+
     const form = useForm<SignInFormValues>({
-        resolver: zodResolver(signInSchema),
+        resolver: zodResolver(schema),
         defaultValues: {
             email: "",
             password: "",
@@ -65,13 +69,46 @@ export const SignInForm = () => {
         }
     };
 
-    if (user && !authLoading) {
-        return null;
+    // Already authenticated (e.g. persisted session): refresh the session cookie,
+    // then redirect. Refreshing first avoids the proxy bouncing the destination
+    // back to sign-in (redirect loop) when the httpOnly cookie has expired.
+    useEffect(() => {
+        if (authLoading || !user) {
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            const token = await user.getIdToken();
+            await fetch("/api/auth/session", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ idToken: token }),
+            }).catch(() => null);
+            if (cancelled) {
+                return;
+            }
+            const path = await resolveAppPostLoginPath({
+                idToken: token,
+                locale,
+                fallbackPath: `/${locale}`,
+            });
+            if (!cancelled) {
+                window.location.replace(path);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [user, authLoading, locale]);
+
+    if (authLoading || user) {
+        return <FullScreenLoader />;
     }
 
     return (
         <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center py-20">
-            <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
+            <div className="w-full max-w-md space-y-8 rounded-xl border bg-card p-8 shadow-sm">
                 <div className="space-y-2 text-center">
                     <h1 className="font-bold text-3xl">
                         {dictionary.apps.app.pages.signIn.meta.title}
@@ -92,9 +129,12 @@ export const SignInForm = () => {
                         )}
                     >
                         <HookFormInput
-                            label="Email"
+                            label={dictionary.apps.app.pages.signIn.form.email}
                             name="email"
-                            placeholder="seu@email.com"
+                            placeholder={
+                                dictionary.apps.app.pages.signIn.form
+                                    .emailPlaceholder
+                            }
                             type="email"
                         />
 
@@ -103,6 +143,10 @@ export const SignInForm = () => {
                                 dictionary.apps.app.pages.signIn.form.password
                             }
                             name="password"
+                            placeholder={
+                                dictionary.apps.app.pages.signIn.form
+                                    .passwordPlaceholder
+                            }
                         />
 
                         <Button

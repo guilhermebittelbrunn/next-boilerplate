@@ -31,11 +31,11 @@ export function UserFormFields({ mode }: UserFormFieldsProps) {
         <div className="contents">
             <div className="col-span-1 md:col-span-2">
                 <HookFormInput
-                    hidden={mode === "update"}
+                    disabled={mode === "update"}
                     label={adminUsers.form.email}
                     name="email"
                     placeholder={adminUsers.form.email}
-                    required
+                    required={mode === "create"}
                     type="email"
                 />
                 <HookFormInputPassword

@@ -1,243 +1,170 @@
 "use client";
 
 import useAuth from "@repo/auth/provider";
-import { type IAuthContextProps, UserRoleLevel } from "@repo/auth/types";
-import { UserType } from "@repo/sdk/src/types";
+import { UserRoleLevel } from "@repo/auth/types";
 import type { User } from "firebase/auth";
 import { useParams, useRouter } from "next/navigation";
+import { type ReactNode, useCallback, useEffect } from "react";
 import {
-    createContext,
-    type ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
+    deriveAuthRequestProps,
+    mapMeTypeToProfileKind,
+    type ProfileKind,
+} from "@/shared/lib/authRequestHeaders";
 import { apiClient } from "@/shared/lib/client";
 import { withLocalePath } from "@/shared/lib/localePath";
-
-const PANEL_STORAGE_KEY = "bp:panel-request-role";
-const IMP_STORAGE_KEY = "bp:impersonate-firebase-uid";
-
-export type ProfileKind = "admin" | "common";
+import { usePanelStore } from "@/shared/stores/panelStore";
 
 export type AuthRequestPanelContextValue = {
     profileKind: ProfileKind | null;
     panelRequestRole: UserRoleLevel;
     impersonatedFirebaseUid: string | null;
+    impersonatedLabel: string | null;
     setPanelEnvironment: (role: UserRoleLevel) => void;
-    setImpersonatedUser: (firebaseUid: string | null) => void;
+    setImpersonatedUser: (
+        firebaseUid: string | null,
+        label?: string | null
+    ) => void;
 };
 
-const AuthRequestPanelContext =
-    createContext<AuthRequestPanelContextValue | null>(null);
-
-export function useAuthRequestPanel(): AuthRequestPanelContextValue {
-    const ctx = useContext(AuthRequestPanelContext);
-    if (!ctx) {
-        throw new Error(
-            "useAuthRequestPanel must be used within AuthRequestPanelProvider"
-        );
-    }
-    return ctx;
-}
-
-function mapMeTypeToProfileKind(type?: string): ProfileKind {
-    if (type === UserType.ADMIN || type === "admin") {
-        return "admin";
-    }
-    return "common";
-}
-
-function readAdminPanelFromStorage(): UserRoleLevel {
-    const stored = sessionStorage.getItem(PANEL_STORAGE_KEY);
-    if (stored === UserRoleLevel.COMMON || stored === UserRoleLevel.ADMIN) {
-        return stored;
-    }
-    return UserRoleLevel.ADMIN;
-}
-
-function readImpersonationFromStorage(): string | null {
-    const stored = sessionStorage.getItem(IMP_STORAGE_KEY);
-    return stored && stored.length > 0 ? stored : null;
-}
-
-type HydrationOutcome =
-    | { status: "aborted" }
-    | { status: "common" }
-    | {
-        status: "admin";
-        panel: UserRoleLevel;
-        impersonated: string | null;
-    };
-
-async function hydrateFromRemoteUser(user: User): Promise<HydrationOutcome> {
+/** Resolve `profileKind` from `/auth/me` and normalize panel state per role. */
+async function hydrateProfileKind(
+    user: User,
+    isCancelled: () => boolean
+): Promise<void> {
     const token = await user.getIdToken();
-    if (!token) {
-        return { status: "aborted" };
+    if (!token || isCancelled()) {
+        return;
     }
     apiClient.setAuthorizationHeader(token);
-    let me: { uid: string; type?: string };
+
     try {
-        me = await apiClient.authApi.me();
+        const me = await apiClient.authApi.me();
+        if (isCancelled()) {
+            return;
+        }
+        const store = usePanelStore.getState();
+        const kind = mapMeTypeToProfileKind(me.type);
+        store.setProfileKind(kind);
+        if (kind === "common") {
+            store.setPanelRequestRole(UserRoleLevel.COMMON);
+            store.setImpersonatedFirebaseUid(null);
+        }
+        store.markHydrated();
     } catch {
-        return { status: "aborted" };
+        // Keep the prior state; the next auth change will retry.
     }
-    if (mapMeTypeToProfileKind(me.type) === "common") {
-        return { status: "common" };
-    }
-    return {
-        status: "admin",
-        panel: readAdminPanelFromStorage(),
-        impersonated: readImpersonationFromStorage(),
-    };
 }
 
+/** Apply the SDK auth-request headers for the current session + panel state. */
+function applyPanelHeaders(user: User): void {
+    const state = usePanelStore.getState();
+    if (!state.profileKind) {
+        return;
+    }
+    // Avoid applying admin headers before the panel preference is known.
+    if (state.profileKind === "admin" && !state.hydrated) {
+        return;
+    }
+    const { props, context } = deriveAuthRequestProps({
+        uid: user.uid,
+        profileKind: state.profileKind,
+        panelRole: state.panelRequestRole,
+        impersonatedUid: state.impersonatedFirebaseUid,
+    });
+    if (context === "admin") {
+        apiClient.changeToAdminContext();
+    } else {
+        apiClient.changeToCommonContext();
+    }
+    apiClient.setAuthRequestContext(props);
+}
+
+/**
+ * Thin provider: state lives in `usePanelStore`, so this only re-renders when the
+ * Firebase `user` changes — never on panel toggles. It hydrates `profileKind`
+ * and applies the SDK headers via a store subscription (no re-render fanout).
+ *
+ * Note: routing admins to `/admin` is done server-side in the common layout
+ * (loop-free), not here — a client redirect can ping-pong with the proxy.
+ */
 export function AuthRequestPanelProvider({
     children,
 }: {
     readonly children: ReactNode;
 }) {
     const { user } = useAuth();
-    const router = useRouter();
-    const params = useParams();
-    const locale = typeof params.locale === "string" ? params.locale : "pt-br";
-
-    const [profileKind, setProfileKind] = useState<ProfileKind | null>(null);
-    const [panelRequestRole, setPanelRequestRoleState] =
-        useState<UserRoleLevel>(UserRoleLevel.COMMON);
-    const [impersonatedFirebaseUid, setImpersonatedFirebaseUidState] = useState<
-        string | null
-    >(null);
-    const [hydratedPanel, setHydratedPanel] = useState(false);
 
     useEffect(() => {
+        if (!user) {
+            usePanelStore.getState().resetPanel();
+            apiClient.clearAuthRequestContext();
+            return;
+        }
         let cancelled = false;
-        const run = async () => {
-            if (!user) {
-                setProfileKind(null);
-                setHydratedPanel(false);
-                apiClient.clearAuthRequestContext();
-                return;
-            }
-            const outcome = await hydrateFromRemoteUser(user);
-            if (cancelled) {
-                return;
-            }
-            if (outcome.status === "aborted") {
-                return;
-            }
-            if (outcome.status === "common") {
-                setProfileKind("common");
-                setPanelRequestRoleState(UserRoleLevel.COMMON);
-                setImpersonatedFirebaseUidState(null);
-                setHydratedPanel(true);
-                return;
-            }
-            setProfileKind("admin");
-            setPanelRequestRoleState(outcome.panel);
-            setImpersonatedFirebaseUidState(outcome.impersonated);
-            setHydratedPanel(true);
-        };
-        run();
+        hydrateProfileKind(user, () => cancelled);
         return () => {
             cancelled = true;
         };
     }, [user]);
 
-    const applySdkHeaders = useCallback(() => {
-        if (!(user && profileKind)) {
-            apiClient.clearAuthRequestContext();
-            return;
-        }
-        const uid = user.uid;
-        let props: IAuthContextProps;
-        if (profileKind === "common") {
-            props = {
-                userId: uid,
-                requestUserId: uid,
-                userRole: UserRoleLevel.COMMON,
-                requestRole: UserRoleLevel.COMMON,
-            };
-            apiClient.changeToCommonContext();
-        } else if (
-            panelRequestRole === UserRoleLevel.COMMON &&
-            impersonatedFirebaseUid
-        ) {
-            props = {
-                userId: uid,
-                requestUserId: impersonatedFirebaseUid,
-                userRole: UserRoleLevel.ADMIN,
-                requestRole: UserRoleLevel.COMMON,
-            };
-            apiClient.changeToCommonContext();
-        } else {
-            props = {
-                userId: uid,
-                requestUserId: uid,
-                userRole: UserRoleLevel.ADMIN,
-                requestRole: UserRoleLevel.ADMIN,
-            };
-            apiClient.changeToAdminContext();
-        }
-        apiClient.setAuthRequestContext(props);
-    }, [user, profileKind, panelRequestRole, impersonatedFirebaseUid]);
-
     useEffect(() => {
-        if (!(user && profileKind)) {
+        if (!user) {
             return;
         }
-        if (profileKind === "admin" && !hydratedPanel) {
-            return;
-        }
-        applySdkHeaders();
-    }, [user, profileKind, hydratedPanel, applySdkHeaders]);
+        const apply = () => applyPanelHeaders(user);
+        apply();
+        return usePanelStore.subscribe(apply);
+    }, [user]);
+
+    return <>{children}</>;
+}
+
+/**
+ * Reads panel state from the store and wraps the env/impersonation actions with
+ * navigation. Public API is unchanged from the previous Context implementation.
+ */
+export function useAuthRequestPanel(): AuthRequestPanelContextValue {
+    const router = useRouter();
+    const params = useParams();
+    const locale = typeof params.locale === "string" ? params.locale : "pt-br";
+
+    const profileKind = usePanelStore((s) => s.profileKind);
+    const panelRequestRole = usePanelStore((s) => s.panelRequestRole);
+    const impersonatedFirebaseUid = usePanelStore(
+        (s) => s.impersonatedFirebaseUid
+    );
+    const impersonatedLabel = usePanelStore((s) => s.impersonatedLabel);
+    const setPanelRequestRole = usePanelStore((s) => s.setPanelRequestRole);
+    const setImpersonatedFirebaseUid = usePanelStore(
+        (s) => s.setImpersonatedFirebaseUid
+    );
 
     const setPanelEnvironment = useCallback(
         (role: UserRoleLevel) => {
-            sessionStorage.setItem(PANEL_STORAGE_KEY, role);
-            setPanelRequestRoleState(role);
+            setPanelRequestRole(role);
             if (role === UserRoleLevel.ADMIN) {
-                sessionStorage.removeItem(IMP_STORAGE_KEY);
-                setImpersonatedFirebaseUidState(null);
+                setImpersonatedFirebaseUid(null);
                 router.push(withLocalePath(locale, "/admin"));
             } else {
                 router.push(withLocalePath(locale, "/"));
             }
         },
-        [locale, router]
+        [locale, router, setPanelRequestRole, setImpersonatedFirebaseUid]
     );
 
-    const setImpersonatedUser = useCallback((firebaseUid: string | null) => {
-        if (firebaseUid) {
-            sessionStorage.setItem(IMP_STORAGE_KEY, firebaseUid);
-        } else {
-            sessionStorage.removeItem(IMP_STORAGE_KEY);
-        }
-        setImpersonatedFirebaseUidState(firebaseUid);
-    }, []);
-
-    const value = useMemo(
-        (): AuthRequestPanelContextValue => ({
-            profileKind,
-            panelRequestRole,
-            impersonatedFirebaseUid,
-            setPanelEnvironment,
-            setImpersonatedUser,
-        }),
-        [
-            profileKind,
-            panelRequestRole,
-            impersonatedFirebaseUid,
-            setPanelEnvironment,
-            setImpersonatedUser,
-        ]
+    const setImpersonatedUser = useCallback(
+        (firebaseUid: string | null, label?: string | null) => {
+            setImpersonatedFirebaseUid(firebaseUid, label);
+        },
+        [setImpersonatedFirebaseUid]
     );
 
-    return (
-        <AuthRequestPanelContext.Provider value={value}>
-            {children}
-        </AuthRequestPanelContext.Provider>
-    );
+    return {
+        profileKind,
+        panelRequestRole,
+        impersonatedFirebaseUid,
+        impersonatedLabel,
+        setPanelEnvironment,
+        setImpersonatedUser,
+    };
 }

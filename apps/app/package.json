@@ -15,12 +15,13 @@
     "@repo/auth": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
-    "@repo/sdk": "workspace:*",
-    "@repo/shared": "workspace:*",
     "@repo/next-config": "workspace:*",
+    "@repo/sdk": "workspace:*",
     "@repo/security": "workspace:*",
     "@repo/seo": "workspace:*",
+    "@repo/shared": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
+    "@tanstack/react-query": "^5.90.20",
     "fuse.js": "^7.1.0",
     "import-in-the-middle": "^2.0.0",
     "lucide-react": "^0.548.0",
@@ -32,7 +33,8 @@
     "react-icons": "5.5.0",
     "react-toastify": "^11.0.5",
     "require-in-the-middle": "7.5.2",
-    "zod": "^4.1.12"
+    "zod": "^4.1.12",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

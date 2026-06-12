@@ -10,14 +10,20 @@ import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/shared/lib/client";
+import { queryKeys } from "@/shared/lib/queryKeys";
 import {
     type EntityFormValues,
     entityGenreUnset,
 } from "../(validations)/entityFormSchema";
-import { FIND_ENTITY_BY_ID_QUERY_KEY } from "./useFindEntityById";
-import { LIST_ENTITIES_QUERY_KEY } from "./useListEntities";
 
 type UpdateEntityMutationInput = EntityFormValues & { id: string };
+
+type ToggleEntityStatusInput = { id: string; enabled: boolean };
+
+type ToggleEntityStatusContext = {
+    previousList?: EntityDTO[];
+    previousDetail?: EntityDTO;
+};
 
 export const useEntityCrud = () => {
     const { successAlert, errorAlert } = useAlert();
@@ -46,7 +52,7 @@ export const useEntityCrud = () => {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: [LIST_ENTITIES_QUERY_KEY],
+                queryKey: queryKeys.entities.list(),
             });
             successAlert(messages.created);
         },
@@ -71,38 +77,69 @@ export const useEntityCrud = () => {
         },
         onSuccess: async (_data, variables) => {
             await queryClient.invalidateQueries({
-                queryKey: [LIST_ENTITIES_QUERY_KEY],
+                queryKey: queryKeys.entities.list(),
             });
             await queryClient.invalidateQueries({
-                queryKey: [FIND_ENTITY_BY_ID_QUERY_KEY, variables.id],
+                queryKey: queryKeys.entities.detail(variables.id),
             });
             successAlert(messages.updated);
         },
         onError: (error) => errorAlert(formatClientError(error)),
     });
 
+    // Optimistic toggle: flip the UI immediately, roll back on error.
+    // No invalidateQueries (per repo rule for `enabled` toggles).
     const toggleEntityStatusMutation = useMutation({
-        mutationFn: (input: { id: string; enabled: boolean }) =>
+        mutationFn: (input: ToggleEntityStatusInput) =>
             apiClient.entity.update(input.id, { enabled: input.enabled }),
-        onSuccess: (_data, variables) => {
-            queryClient.setQueryData(
-                [LIST_ENTITIES_QUERY_KEY],
-                (old: EntityDTO[] | undefined) =>
+        onMutate: async (
+            input: ToggleEntityStatusInput
+        ): Promise<ToggleEntityStatusContext> => {
+            await queryClient.cancelQueries({
+                queryKey: queryKeys.entities.list(),
+            });
+            await queryClient.cancelQueries({
+                queryKey: queryKeys.entities.detail(input.id),
+            });
+
+            const previousList = queryClient.getQueryData<EntityDTO[]>(
+                queryKeys.entities.list()
+            );
+            const previousDetail = queryClient.getQueryData<EntityDTO>(
+                queryKeys.entities.detail(input.id)
+            );
+
+            queryClient.setQueryData<EntityDTO[]>(
+                queryKeys.entities.list(),
+                (old) =>
                     old?.map((row) =>
-                        row.id === variables.id
-                            ? { ...row, enabled: variables.enabled }
+                        row.id === input.id
+                            ? { ...row, enabled: input.enabled }
                             : row
                     )
             );
-            queryClient.setQueryData(
-                [FIND_ENTITY_BY_ID_QUERY_KEY, variables.id],
-                (old: EntityDTO | undefined) =>
-                    old
-                        ? { ...old, enabled: variables.enabled }
-                        : old
+            queryClient.setQueryData<EntityDTO>(
+                queryKeys.entities.detail(input.id),
+                (old) => (old ? { ...old, enabled: input.enabled } : old)
             );
+
+            return { previousList, previousDetail };
         },
-        onError: (error) => errorAlert(formatClientError(error)),
+        onError: (error, input, context) => {
+            if (context?.previousList) {
+                queryClient.setQueryData(
+                    queryKeys.entities.list(),
+                    context.previousList
+                );
+            }
+            if (context?.previousDetail) {
+                queryClient.setQueryData(
+                    queryKeys.entities.detail(input.id),
+                    context.previousDetail
+                );
+            }
+            errorAlert(formatClientError(error));
+        },
     });
 
     const deleteEntityMutation = useMutation({
@@ -112,10 +149,10 @@ export const useEntityCrud = () => {
         },
         onSuccess: async (id: string) => {
             await queryClient.invalidateQueries({
-                queryKey: [LIST_ENTITIES_QUERY_KEY],
+                queryKey: queryKeys.entities.list(),
             });
             await queryClient.invalidateQueries({
-                queryKey: [FIND_ENTITY_BY_ID_QUERY_KEY, id],
+                queryKey: queryKeys.entities.detail(id),
             });
             successAlert(messages.deleted);
         },

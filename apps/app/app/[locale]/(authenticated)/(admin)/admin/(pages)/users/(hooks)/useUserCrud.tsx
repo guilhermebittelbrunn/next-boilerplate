@@ -1,18 +1,27 @@
 import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
-import type { AdminUpdateUserRequest } from "@repo/sdk/src/types";
+import type {
+    AdminUpdateUserRequest,
+    UserWithAuthDTO,
+} from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/shared/lib/client";
+import { queryKeys } from "@/shared/lib/queryKeys";
 import type {
     CreateUserFormValues,
     UpdateUserFormValues,
 } from "../(validations)/userFormSchema";
-import { FIND_USER_BY_ID_QUERY_KEY } from "./useFindUserById";
-import { LIST_USERS_QUERY_KEY } from "./useListUsers";
 
 type UpdateUserMutationInput = UpdateUserFormValues & { id: string };
+
+type ToggleUserStatusInput = { id: string; disabled: boolean };
+
+type ToggleUserStatusContext = {
+    previousList?: UserWithAuthDTO[];
+    previousDetail?: UserWithAuthDTO;
+};
 
 export const useUserCrud = () => {
     const { successAlert, errorAlert } = useAlert();
@@ -33,7 +42,7 @@ export const useUserCrud = () => {
             }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: [LIST_USERS_QUERY_KEY],
+                queryKey: queryKeys.users.list(),
             });
             successAlert(messages.created);
         },
@@ -54,14 +63,68 @@ export const useUserCrud = () => {
         },
         onSuccess: async (_data, variables) => {
             await queryClient.invalidateQueries({
-                queryKey: [LIST_USERS_QUERY_KEY],
+                queryKey: queryKeys.users.list(),
             });
             await queryClient.invalidateQueries({
-                queryKey: [FIND_USER_BY_ID_QUERY_KEY, variables.id],
+                queryKey: queryKeys.users.detail(variables.id),
             });
             successAlert(messages.updated);
         },
         onError: (error) => errorAlert(formatClientError(error)),
+    });
+
+    // Optimistic status toggle (active = !disabled). No invalidateQueries.
+    const toggleUserStatusMutation = useMutation({
+        mutationFn: (input: ToggleUserStatusInput) =>
+            apiClient.user.update({ id: input.id, disabled: input.disabled }),
+        onMutate: async (
+            input: ToggleUserStatusInput
+        ): Promise<ToggleUserStatusContext> => {
+            await queryClient.cancelQueries({
+                queryKey: queryKeys.users.list(),
+            });
+            await queryClient.cancelQueries({
+                queryKey: queryKeys.users.detail(input.id),
+            });
+
+            const previousList = queryClient.getQueryData<UserWithAuthDTO[]>(
+                queryKeys.users.list()
+            );
+            const previousDetail = queryClient.getQueryData<UserWithAuthDTO>(
+                queryKeys.users.detail(input.id)
+            );
+
+            queryClient.setQueryData<UserWithAuthDTO[]>(
+                queryKeys.users.list(),
+                (old) =>
+                    old?.map((row) =>
+                        row.id === input.id
+                            ? { ...row, disabled: input.disabled }
+                            : row
+                    )
+            );
+            queryClient.setQueryData<UserWithAuthDTO>(
+                queryKeys.users.detail(input.id),
+                (old) => (old ? { ...old, disabled: input.disabled } : old)
+            );
+
+            return { previousList, previousDetail };
+        },
+        onError: (error, input, context) => {
+            if (context?.previousList) {
+                queryClient.setQueryData(
+                    queryKeys.users.list(),
+                    context.previousList
+                );
+            }
+            if (context?.previousDetail) {
+                queryClient.setQueryData(
+                    queryKeys.users.detail(input.id),
+                    context.previousDetail
+                );
+            }
+            errorAlert(formatClientError(error));
+        },
     });
 
     const deleteUserMutation = useMutation({
@@ -71,15 +134,20 @@ export const useUserCrud = () => {
         },
         onSuccess: async (id: string) => {
             await queryClient.invalidateQueries({
-                queryKey: [LIST_USERS_QUERY_KEY],
+                queryKey: queryKeys.users.list(),
             });
             await queryClient.invalidateQueries({
-                queryKey: [FIND_USER_BY_ID_QUERY_KEY, id],
+                queryKey: queryKeys.users.detail(id),
             });
             successAlert(messages.deleted);
         },
         onError: (error) => errorAlert(formatClientError(error)),
     });
 
-    return { createUserMutation, updateUserMutation, deleteUserMutation };
+    return {
+        createUserMutation,
+        updateUserMutation,
+        toggleUserStatusMutation,
+        deleteUserMutation,
+    };
 };

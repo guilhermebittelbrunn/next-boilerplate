@@ -1,19 +1,15 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: <explanation> */
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createContext, type ReactNode, useContext, useState } from "react";
+import { type ReactNode, useState } from "react";
+
+const STALE_TIME_MS = 60_000; // 1 minute — avoids refetching on every mount
+const GC_TIME_MS = 300_000; // 5 minutes
+const MAX_QUERY_RETRIES = 1;
 
 type QueryProviderProps = {
     children: ReactNode;
 };
-
-type QueryContextType = {
-    removeDataFromCache: (id: string, key: string) => void;
-    updateDataInCache: (data: any, key: string) => void;
-};
-
-const QueryContext = createContext<QueryContextType>({} as QueryContextType);
 
 export function QueryProvider({ children }: QueryProviderProps) {
     const [client] = useState(
@@ -21,49 +17,16 @@ export function QueryProvider({ children }: QueryProviderProps) {
             new QueryClient({
                 defaultOptions: {
                     queries: {
+                        staleTime: STALE_TIME_MS,
+                        gcTime: GC_TIME_MS,
+                        retry: MAX_QUERY_RETRIES,
                         refetchOnWindowFocus: false,
                     },
                 },
             })
     );
 
-    const updateDataInCache = (data: any, key: string) => {
-        client.setQueryData([key], (old: any[] | undefined) => {
-            if (!Array.isArray(old)) {
-                return old;
-            }
-            return old.map((item) =>
-                item.id === data.id ? data : item
-            );
-        });
-    };
-
-    const removeDataFromCache = (id: string, key: string) => {
-        client.setQueryData([key], (old: any[] | undefined) => {
-            if (!Array.isArray(old)) {
-                return old;
-            }
-            return old.filter((it) => it.id !== id);
-        });
-    };
-
     return (
-        <QueryClientProvider client={client}>
-            <QueryContext.Provider
-                value={{ removeDataFromCache, updateDataInCache }}
-            >
-                {children}
-            </QueryContext.Provider>
-        </QueryClientProvider>
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
     );
-}
-
-export function useQueryCache() {
-    const context = useContext(QueryContext);
-
-    if (!context) {
-        throw new Error("useQueryCache must be used within a QueryProvider");
-    }
-
-    return context;
 }

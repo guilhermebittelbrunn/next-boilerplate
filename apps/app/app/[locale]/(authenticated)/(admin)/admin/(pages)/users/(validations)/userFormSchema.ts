@@ -34,6 +34,8 @@ export type CreateUserFormValues = z.infer<
 
 export function buildUpdateUserFormSchema(_dictionary: Dictionary) {
     return z.object({
+        // Read-only in the form (shown for context); never sent to the API.
+        email: z.string().optional(),
         displayName: z
             .string()
             .trim()

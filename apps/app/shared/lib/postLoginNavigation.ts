@@ -1,6 +1,7 @@
 "use client";
 
 import { UserType } from "@repo/sdk/src/types";
+import { apiClient } from "@/shared/lib/client";
 import { postAuthRedirectTarget } from "./authRedirect";
 
 /**
@@ -10,21 +11,15 @@ export async function resolveDefaultPostLoginForApp(args: {
     idToken: string;
     locale: string;
 }): Promise<string | null> {
-    const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-    if (!base) {
+    apiClient.setAuthorizationHeader(args.idToken);
+
+    let type: string | undefined;
+    try {
+        const me = await apiClient.authApi.me();
+        type = me.type;
+    } catch {
         return null;
     }
-
-    const response = await fetch(`${base}/auth/me`, {
-        headers: { Authorization: `Bearer ${args.idToken}` },
-    });
-
-    if (!response.ok) {
-        return null;
-    }
-
-    const payload = (await response.json()) as { data?: { type?: string } };
-    const type = payload?.data?.type;
 
     if (type === UserType.ADMIN) {
         return `/${args.locale}/admin`;

@@ -40,6 +40,7 @@ export default function EditUserPage() {
     const form = useForm<UpdateUserFormValues>({
         resolver: zodResolver(schema),
         defaultValues: {
+            email: "",
             displayName: "",
             type: UserType.COMMON,
         },
@@ -48,6 +49,7 @@ export default function EditUserPage() {
     useEffect(() => {
         if (user) {
             form.reset({
+                email: user.email ?? "",
                 displayName: user.displayName ?? "",
                 type: user.type as UserType,
             });
@@ -68,7 +70,10 @@ export default function EditUserPage() {
             <Header
                 breadcrumbs={[
                     { label: routes.root.label, href: routes.root.url },
-                    { label: routes.users.list.label, href: routes.users.list.url },
+                    {
+                        label: routes.users.list.label,
+                        href: routes.users.list.url,
+                    },
                 ]}
                 page={routes.users.update(id).label}
             />
@@ -92,7 +97,9 @@ export default function EditUserPage() {
                                 confirmLabel={adminUsersForm.save}
                                 disabled={updateUserMutation.isPending || !user}
                                 isLoading={updateUserMutation.isPending}
-                                onBack={() => router.push(routes.users.list.url)}
+                                onBack={() =>
+                                    router.push(routes.users.list.url)
+                                }
                             />
                         </form>
                     </Form>

@@ -1,12 +1,21 @@
+import type { UserWithAuthDTO } from "@repo/sdk/src/types";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/lib/client";
+import { queryKeys } from "@/shared/lib/queryKeys";
 
-export const FIND_USER_BY_ID_QUERY_KEY = "find-user-by-id";
+export async function findUserById(
+    id: string | undefined
+): Promise<UserWithAuthDTO | undefined> {
+    if (!id) {
+        return;
+    }
+    return await apiClient.user.findById(id);
+}
 
 export function useFindUserById(id: string | undefined) {
     const { data, isLoading, isError } = useQuery({
-        queryKey: [FIND_USER_BY_ID_QUERY_KEY, id],
-        queryFn: () => id ? apiClient.user.findById(id) : undefined,
+        queryKey: queryKeys.users.detail(id ?? ""),
+        queryFn: () => findUserById(id),
         enabled: Boolean(id),
     });
 
