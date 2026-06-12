@@ -18,6 +18,7 @@ const adminUpdateUserSchema = z.object({
     displayName: z
         .union([z.string().trim().max(MAX_DISPLAY_NAME_LENGTH), z.null()])
         .optional(),
+    disabled: z.boolean().optional(),
 });
 
 export type AdminUpdateUserInput = z.infer<typeof adminUpdateUserSchema>;
@@ -39,7 +40,8 @@ export function parseAdminUpdateUserInput(
     }
     if (
         parsed.data.type === undefined &&
-        parsed.data.displayName === undefined
+        parsed.data.displayName === undefined &&
+        parsed.data.disabled === undefined
     ) {
         return {
             ok: false,

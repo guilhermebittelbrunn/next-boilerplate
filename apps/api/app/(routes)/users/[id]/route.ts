@@ -55,10 +55,16 @@ export const PUT = requireAdminApi<RouteIdParamsContext>(async (req, ctx) => {
         await userRepository.update({ id, type: parsed.value.type });
     }
 
+    // displayName + disabled both live in Firebase Auth — update them in one call.
+    const authUpdate: { displayName?: string; disabled?: boolean } = {};
     if (parsed.value.displayName !== undefined) {
-        await getAuthInstance().updateUser(profile.reference_id, {
-            displayName: parsed.value.displayName || undefined,
-        });
+        authUpdate.displayName = parsed.value.displayName || undefined;
+    }
+    if (parsed.value.disabled !== undefined) {
+        authUpdate.disabled = parsed.value.disabled;
+    }
+    if (Object.keys(authUpdate).length > 0) {
+        await getAuthInstance().updateUser(profile.reference_id, authUpdate);
     }
 
     const merged = await getMergedUserByFirestoreDocId(id);
