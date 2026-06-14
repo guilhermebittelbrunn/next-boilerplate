@@ -1,17 +1,18 @@
 import { getDictionary } from "@repo/internationalization/server";
 import type { Metadata } from "next";
 import { buildLocaleMetadata } from "@/shared/lib/seo";
-import { SignInForm } from "./components/sign-in-form";
+import { LegalDocument } from "../components/legal-document";
 
 export const generateMetadata = async (): Promise<Metadata> => {
     const { dictionary, locale } = await getDictionary();
     return buildLocaleMetadata({
-        meta: dictionary.apps.web.pages.signIn.meta,
+        meta: dictionary.apps.web.pages.legal.terms.meta,
         locale,
-        path: "/sign-in",
+        path: "/legal/terms",
     });
 };
 
-export default function SignIn() {
-    return <SignInForm />;
+export default async function TermsPage() {
+    const { dictionary } = await getDictionary();
+    return <LegalDocument doc={dictionary.apps.web.pages.legal.terms} />;
 }

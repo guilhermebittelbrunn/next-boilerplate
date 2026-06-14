@@ -8,10 +8,11 @@ import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
 
 export const config = {
-    // matcher tells Next.js which routes to run the middleware on. This runs the
-    // middleware on all routes except for static assets and API routes
-    matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
-    runtime: "nodejs",
+    // matcher tells Next.js which routes to run the proxy on. This runs on all
+    // routes except for static assets and API routes. Proxy always runs on Node.
+    matcher: [
+        "/((?!_next/static|_next/image|favicon.ico|api|robots.txt|sitemap.xml).*)",
+    ],
 };
 
 // Custom middleware for Arcjet security checks

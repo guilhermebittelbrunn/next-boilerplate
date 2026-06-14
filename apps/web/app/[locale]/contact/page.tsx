@@ -1,14 +1,17 @@
 import { getDictionary } from "@repo/internationalization/server";
-import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
+import { buildLocaleMetadata } from "@/shared/lib/seo";
 import { ContactForm } from "./components/contact-form";
 
 export const generateMetadata = async (): Promise<Metadata> => {
-  const { dictionary } = await getDictionary();
-  return createMetadata(dictionary.apps.web.pages.contact.meta);
+    const { dictionary, locale } = await getDictionary();
+    return buildLocaleMetadata({
+        meta: dictionary.apps.web.pages.contact.meta,
+        locale,
+        path: "/contact",
+    });
 };
 
 export default function Contact() {
-  return <ContactForm />;
+    return <ContactForm />;
 }
-

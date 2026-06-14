@@ -6,7 +6,9 @@ export const signInTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "seu@email.com",
             password: "Senha",
+            passwordPlaceholder: "••••••••",
             submit: "Entrar",
         },
         signIn: "Entrar",
@@ -23,7 +25,9 @@ export const signInTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "you@email.com",
             password: "Password",
+            passwordPlaceholder: "••••••••",
             submit: "Sign In",
         },
         signIn: "Sign In",
@@ -40,7 +44,9 @@ export const signInTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "tu@email.com",
             password: "Contraseña",
+            passwordPlaceholder: "••••••••",
             submit: "Iniciar sesión",
         },
         signIn: "Iniciar sesión",

@@ -34,6 +34,14 @@ export const pricingTranslations = {
                 linkButton: "Testar",
             },
         ],
+        featuresTable: {
+            heading: "Recursos",
+            sso: "SSO",
+            aiAssistant: "Assistente de IA",
+            versionControl: "Controle de versão",
+            multiplayerMode: "Modo multiusuário",
+            orchestration: "Orquestração",
+        },
     },
     en: {
         title: "Pricing",
@@ -73,6 +81,14 @@ export const pricingTranslations = {
                 linkButton: "Try it",
             },
         ],
+        featuresTable: {
+            heading: "Features",
+            sso: "SSO",
+            aiAssistant: "AI Assistant",
+            versionControl: "Version Control",
+            multiplayerMode: "Multiplayer Mode",
+            orchestration: "Orchestration",
+        },
     },
     es: {
         title: "Precios",
@@ -109,5 +125,13 @@ export const pricingTranslations = {
                 linkButton: "Probar",
             },
         ],
+        featuresTable: {
+            heading: "Funcionalidades",
+            sso: "SSO",
+            aiAssistant: "Asistente de IA",
+            versionControl: "Control de versiones",
+            multiplayerMode: "Modo multijugador",
+            orchestration: "Orquestación",
+        },
     },
 };

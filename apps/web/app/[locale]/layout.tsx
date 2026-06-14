@@ -12,32 +12,34 @@ import { Footer } from "./components/footer";
 import { Header } from "./components/header";
 
 type RootLayoutProperties = {
-  readonly children: ReactNode;
+    readonly children: ReactNode;
 };
 
 const RootLayout = async ({ children }: RootLayoutProperties) => {
-  const { locale } = await getDictionary();
+    const { locale } = await getDictionary();
 
-  return (
-    <html
-      className={cn(fonts, "scroll-smooth")}
-      lang={locale || "pt-br"}
-      suppressHydrationWarning
-    >
-      <body>
-        <QueryProvider>
-          <DesignSystemProvider>
-            <AuthProvider>
-              <ToastContainer />
-              <Header />
-              <ClientLayout> {children} </ClientLayout>
-              <Footer />
-            </AuthProvider>
-          </DesignSystemProvider>
-        </QueryProvider>
-      </body>
-    </html>
-  );
+    return (
+        <html
+            className={cn(fonts, "scroll-smooth")}
+            lang={locale || "pt-br"}
+            suppressHydrationWarning
+        >
+            <body>
+                <QueryProvider>
+                    <DesignSystemProvider>
+                        <AuthProvider>
+                            <ToastContainer />
+                            <Header />
+                            <main>
+                                <ClientLayout> {children} </ClientLayout>
+                            </main>
+                            <Footer />
+                        </AuthProvider>
+                    </DesignSystemProvider>
+                </QueryProvider>
+            </body>
+        </html>
+    );
 };
 
 export default RootLayout;

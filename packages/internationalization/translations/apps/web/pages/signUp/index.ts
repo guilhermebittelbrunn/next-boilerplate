@@ -6,7 +6,9 @@ export const signUpTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "seu@email.com",
             password: "Senha",
+            passwordPlaceholder: "••••••••",
             confirmPassword: "Confirmar senha",
             submit: "Cadastrar",
         },
@@ -24,8 +26,10 @@ export const signUpTranslations = {
         },
         form: {
             email: "Email",
+            emailPlaceholder: "you@email.com",
             password: "Password",
-            confirmPassword: "Confirmar contraseña",
+            passwordPlaceholder: "••••••••",
+            confirmPassword: "Confirm password",
             submit: "Sign Up",
         },
         signUp: "Sign Up",
@@ -42,8 +46,10 @@ export const signUpTranslations = {
         },
         form: {
             email: "Email",
-            confirmPassword: "Confirmar contraseña",
+            emailPlaceholder: "tu@email.com",
             password: "Contraseña",
+            passwordPlaceholder: "••••••••",
+            confirmPassword: "Confirmar contraseña",
             submit: "Registrarse",
         },
         signUp: "Registrarse",
