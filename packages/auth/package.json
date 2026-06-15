@@ -6,6 +6,8 @@
     "./keys": "./keys.ts",
     "./types": "./types.ts",
     "./server": "./server.ts",
+    "./session": "./session.ts",
+    "./session-routes": "./session-routes.ts",
     "./client": "./client.ts",
     "./client-ui": "./client-ui.tsx",
     "./middleware": "./middleware.ts",

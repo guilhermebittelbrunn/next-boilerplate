@@ -9,6 +9,7 @@ import {
     getAuth,
     onAuthStateChanged,
     onIdTokenChanged,
+    signInWithCustomToken,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
@@ -147,6 +148,16 @@ export const logout = () => {
 };
 
 /**
+ * Bootstrap the client SDK session from a custom token (cross-app SSO): the
+ * server mints it from the shared session cookie so this origin gets a Firebase
+ * user and can emit ID tokens for API calls.
+ */
+export const loginWithCustomToken = (customToken: string) => {
+    const auth = getAuthClient();
+    return signInWithCustomToken(auth, customToken);
+};
+
+/**
  * Subscribe to auth state changes
  */
 export const subscribeToAuthState = (callback: (user: User | null) => void) => {
@@ -168,9 +179,7 @@ export const subscribeToIdTokenState = (
 /**
  * Get current ID token (for setting session cookie via API)
  */
-export const getIdToken = (
-    forceRefresh?: boolean
-): Promise<string | null> => {
+export const getIdToken = (forceRefresh?: boolean): Promise<string | null> => {
     const auth = getAuthClient();
     const user = auth.currentUser;
 

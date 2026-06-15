@@ -1,6 +1,6 @@
-import { getCurrentUser } from "@repo/auth/server";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
+import { resolveApiActor } from "@/(shared)/lib/resolve-api-actor";
 
 type Handler = (
     req: NextRequest,
@@ -9,19 +9,7 @@ type Handler = (
 
 export function authGuard(handler: Handler) {
     return async (req: NextRequest) => {
-        const authHeader = req.headers.get("authorization");
-
-        if (!authHeader?.startsWith("Bearer ")) {
-            return new Response(
-                JSON.stringify({ message: "Missing bearer token" }),
-                {
-                    status: 401,
-                }
-            );
-        }
-
-        const token = authHeader.slice("Bearer ".length).trim();
-        const userRecord = await getCurrentUser(token);
+        const userRecord = await resolveApiActor(req);
 
         if (!userRecord) {
             return new Response(JSON.stringify({ message: "Invalid token" }), {

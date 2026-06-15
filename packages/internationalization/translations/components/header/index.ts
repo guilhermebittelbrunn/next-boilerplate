@@ -14,6 +14,7 @@ export const headerTranslations = {
         orContinueWith: "Ou continue com",
         noAccount: "Não tem uma conta? ",
         signOut: "Sair",
+        goToPanel: "Ir para o painel",
     },
     en: {
         home: "Home",
@@ -30,6 +31,7 @@ export const headerTranslations = {
         orContinueWith: "Or continue with",
         noAccount: "Don't have an account? ",
         signOut: "Sign Out",
+        goToPanel: "Go to panel",
     },
     es: {
         home: "Inicio",
@@ -46,5 +48,6 @@ export const headerTranslations = {
         orContinueWith: "O continuar con",
         noAccount: "No tienes una cuenta? ",
         signOut: "Cerrar sesión",
+        goToPanel: "Ir al panel",
     },
 };

@@ -84,7 +84,15 @@ const benignIdTokenVerifyCodes = new Set([
     "auth/argument-error",
     "auth/id-token-expired",
     "auth/invalid-id-token",
+    "auth/user-disabled",
+]);
+
+/** verifySessionCookie failures that mean "no/expired session", not a server bug */
+const benignSessionCookieCodes = new Set([
+    "auth/argument-error",
+    "auth/session-cookie-expired",
     "auth/session-cookie-revoked",
+    "auth/invalid-session-cookie",
     "auth/user-disabled",
 ]);
 
@@ -155,13 +163,69 @@ export const createCustomToken = async (
 };
 
 /**
+ * Exchange a Firebase ID token for a long-lived session cookie (Admin SDK).
+ * `expiresInMs` must be between 5 minutes and 2 weeks per Firebase.
+ */
+export const createSessionCookie = async (
+    idToken: string,
+    expiresInMs: number
+): Promise<string> => {
+    const authInstance = getAuthInstance();
+    return await authInstance.createSessionCookie(idToken, {
+        expiresIn: expiresInMs,
+    });
+};
+
+/**
+ * Resolve the user from a Firebase session cookie (the cross-app credential).
+ * Verifies with `checkRevoked: true` so disabling/revoking a user takes effect.
+ * Returns null on any benign "no session" reason.
+ */
+export const getUserFromSessionCookie = async (
+    sessionCookie: string | null
+) => {
+    if (!sessionCookie) {
+        return null;
+    }
+
+    try {
+        const authInstance = getAuthInstance();
+        const decoded = await authInstance.verifySessionCookie(
+            sessionCookie,
+            true
+        );
+        return await authInstance.getUser(decoded.uid);
+    } catch (error) {
+        const code = firebaseAuthErrorCode(error);
+        if (code && benignSessionCookieCodes.has(code)) {
+            return null;
+        }
+        console.error("Error verifying session cookie:", error);
+        return null;
+    }
+};
+
+/**
+ * Revoke all refresh tokens for a user (sign-out propagation across origins:
+ * other front-ends' next ID-token refresh fails and the session cookie is rejected).
+ */
+export const revokeUserSessions = async (uid: string): Promise<void> => {
+    try {
+        await getAuthInstance().revokeRefreshTokens(uid);
+    } catch (error) {
+        console.error("Error revoking user sessions:", error);
+    }
+};
+
+/**
  * Get current user from request (cookies). Clerk-style API for server components.
+ * The `access-token` cookie holds a Firebase session cookie (not a raw ID token).
  */
 export async function currentUser(): Promise<CurrentUser | null> {
     try {
         const cookieStore = await cookies();
         const token = cookieStore.get("access-token")?.value ?? null;
-        const userRecord = await getCurrentUser(token);
+        const userRecord = await getUserFromSessionCookie(token);
         if (!userRecord) {
             return null;
         }

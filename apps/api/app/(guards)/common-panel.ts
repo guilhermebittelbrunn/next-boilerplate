@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@repo/auth/server";
 import { type UserDTO, UserType } from "@repo/sdk/src/types";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
@@ -6,6 +5,7 @@ import {
     type ResolvedAuthRequestContext,
     resolveAuthRequestContext,
 } from "@/(shared)/lib/auth-request-context";
+import { resolveApiActor } from "@/(shared)/lib/resolve-api-actor";
 import { userRepository } from "@/(shared)/repositories/user.repository";
 
 export type CommonPanelAuthContext = {
@@ -29,17 +29,7 @@ export function requireCommonPanelApi<
     TRouteContext extends RouteContext = undefined,
 >(handler: CommonPanelHandler<TRouteContext>) {
     return async (req: NextRequest, routeContext?: TRouteContext) => {
-        const authHeader = req.headers.get("authorization");
-
-        if (!authHeader?.startsWith("Bearer ")) {
-            return Response.json(
-                { error: { code: "AUTH_MISSING_BEARER" } },
-                { status: 401 }
-            );
-        }
-
-        const token = authHeader.slice("Bearer ".length).trim();
-        const userRecord = await getCurrentUser(token);
+        const userRecord = await resolveApiActor(req);
 
         if (!userRecord) {
             return Response.json(

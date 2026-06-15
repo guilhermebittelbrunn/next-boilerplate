@@ -1,18 +1,18 @@
 import type { NextRequest } from "next/server";
-import { getMergedUserFromIdToken } from "@/(shared)/lib/user-merge";
+import { resolveApiActor } from "@/(shared)/lib/resolve-api-actor";
+import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
 
 export async function GET(req: NextRequest) {
-    const authHeader = req.headers.get("authorization");
+    const actor = await resolveApiActor(req);
 
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (!actor) {
         return Response.json(
-            { message: "Missing bearer token" },
+            { message: "Invalid or expired token" },
             { status: 401 }
         );
     }
 
-    const token = authHeader.slice("Bearer ".length).trim();
-    const user = await getMergedUserFromIdToken(token);
+    const user = await getMergedUserByUid(actor.uid);
 
     if (!user) {
         return Response.json(

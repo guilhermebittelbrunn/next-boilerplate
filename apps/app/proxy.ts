@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@repo/auth/server";
+import { getUserFromSessionCookie } from "@repo/auth/server";
 import { getDefaultLocale, locales } from "@repo/internationalization/utils";
 import { secure } from "@repo/security";
 import { handleClientError } from "@repo/shared/utils";
@@ -23,7 +23,6 @@ export const config = {
     // routes except for static assets and API routes. Proxy always runs on Node.
     matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
 };
-
 
 const arcjetMiddleware = async (request: NextRequest) => {
     if (!env.ARCJET_KEY) {
@@ -81,7 +80,7 @@ export default async function proxy(request: NextRequest) {
     const token = request.cookies.get("access-token")?.value ?? null;
 
     if (enforceAuth) {
-        const user = await getCurrentUser(token);
+        const user = await getUserFromSessionCookie(token);
 
         if (!user && enforceAuth) {
             const url = request.nextUrl.clone();
@@ -92,7 +91,7 @@ export default async function proxy(request: NextRequest) {
     }
 
     if (token && publicRoute && publicRoute.whenAuthenticated === "redirect") {
-        const signedInUser = await getCurrentUser(token);
+        const signedInUser = await getUserFromSessionCookie(token);
         if (signedInUser) {
             const redirectUrl = request.nextUrl.clone();
             redirectUrl.pathname = `/${currentLocale}`;

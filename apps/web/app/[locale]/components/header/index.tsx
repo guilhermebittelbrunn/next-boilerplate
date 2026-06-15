@@ -14,6 +14,7 @@ import {
 } from "@repo/design-system/components/ui/navigation-menu";
 import { useIsLargeDesktop } from "@repo/design-system/hooks/useMediaQuery";
 import { getDictionary } from "@repo/internationalization/client";
+import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import { Menu, MoveRight, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -28,6 +29,14 @@ export const Header = () => {
     const appName = getAppName();
     const isLargeDesktop = useIsLargeDesktop();
     const { user, signOut, loading } = useAuth();
+
+    // Cross-app link: in subscription mode an authenticated user can jump to the
+    // app panel (the shared session keeps them logged in there). Full-page nav so
+    // the panel's proxy + custom-token bootstrap run.
+    const panelUrl = env.NEXT_PUBLIC_APP_URL
+        ? `${env.NEXT_PUBLIC_APP_URL}/${locale}`
+        : null;
+    const showPanelLink = isSubscriptionMode() && panelUrl;
 
     const navigationItems = [
         {
@@ -171,20 +180,35 @@ export const Header = () => {
                     {!loading && (
                         <div className="flex flex-row gap-2">
                             {user ? (
-                                <Button
-                                    className="hidden md:inline"
-                                    onClick={() =>
-                                        signOut.mutate(undefined, {
-                                            onSuccess: () =>
-                                                apiClient.removeHeader(
-                                                    "Authorization"
-                                                ),
-                                        })
-                                    }
-                                    variant="outline"
-                                >
-                                    {dictionary.components.header.signOut}
-                                </Button>
+                                <>
+                                    {showPanelLink && (
+                                        <Button className="hidden md:inline">
+                                            <a
+                                                href={panelUrl}
+                                                rel="noopener noreferrer"
+                                            >
+                                                {
+                                                    dictionary.components.header
+                                                        .goToPanel
+                                                }
+                                            </a>
+                                        </Button>
+                                    )}
+                                    <Button
+                                        className="hidden md:inline"
+                                        onClick={() =>
+                                            signOut.mutate(undefined, {
+                                                onSuccess: () =>
+                                                    apiClient.removeHeader(
+                                                        "Authorization"
+                                                    ),
+                                            })
+                                        }
+                                        variant="outline"
+                                    >
+                                        {dictionary.components.header.signOut}
+                                    </Button>
+                                </>
                             ) : (
                                 <>
                                     <Button
