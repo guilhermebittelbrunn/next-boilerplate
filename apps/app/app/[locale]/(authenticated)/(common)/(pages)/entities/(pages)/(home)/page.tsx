@@ -4,7 +4,7 @@ import {
     QueryClient,
 } from "@tanstack/react-query";
 import { getServerApiClient } from "@/lib/server/apiServerClient";
-import { isImpersonating } from "@/lib/server/prefetch";
+import { isImpersonating } from "@/lib/server/panelSnapshot";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { EntitiesListClient } from "./EntitiesListClient";
 
