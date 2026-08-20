@@ -1,8 +1,8 @@
 "use client";
 
+import { postAuthRedirectTarget } from "@repo/auth/redirect";
 import { UserType } from "@repo/sdk/src/types";
 import { apiClient } from "@/shared/lib/client";
-import { postAuthRedirectTarget } from "./authRedirect";
 
 /**
  * When there is no `redirect` query, admins default to `/{locale}/admin` so the first screen matches the panel toggle.
