@@ -1,13 +1,11 @@
-import { UserRoleLevel } from "@repo/auth/types";
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar";
 import { secure } from "@repo/security";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { env } from "@/env";
-import { getAppSessionUser } from "@/lib/server/authSession";
+import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
 import Navbar from "@/shared/components/ui/Navbar";
-import { PANEL_ROLE_COOKIE } from "@/shared/lib/authRequestHeaders";
+import { isImpersonatingSnapshot } from "@/shared/lib/panelState";
 import { SidebarCommon } from "./sidebar";
 
 type AppLayoutProperties = {
@@ -20,17 +18,18 @@ const AppLayout = async ({ children, params }: AppLayoutProperties) => {
         await secure(["CATEGORY:PREVIEW"]);
     }
 
-    // Admins belong on /admin; they only stay on the common area when their panel
-    // preference is COMMON (impersonating). Done server-side (one hop, loop-free)
-    // instead of a client redirect that can ping-pong with the proxy.
+    // Admins belong on /admin; they only stay in the common area while actually acting
+    // as a common user. A COMMON panel without a target is not impersonation — the API
+    // would reject every request — so it lands here as "not impersonating" and bounces.
+    // Done server-side (one hop, loop-free) instead of a client redirect that can
+    // ping-pong with the proxy.
     const { locale } = await params;
-    const user = await getAppSessionUser();
-    if (user?.type === "admin") {
-        const cookieStore = await cookies();
-        const panelRole = cookieStore.get(PANEL_ROLE_COOKIE)?.value;
-        if (panelRole !== UserRoleLevel.COMMON) {
-            redirect(`/${locale}/admin`);
-        }
+    const snapshot = await resolvePanelSnapshot();
+    if (
+        snapshot.profileKind === "admin" &&
+        !isImpersonatingSnapshot(snapshot)
+    ) {
+        redirect(`/${locale}/admin`);
     }
 
     return (
