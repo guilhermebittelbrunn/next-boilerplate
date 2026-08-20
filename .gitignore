@@ -285,3 +285,12 @@ packages/database/generated
 skills-lock.json
 # Settings locais/pessoais do Claude Code (settings.json compartilhado é versionado)
 .claude/settings.local.json
+# Credenciais de DEV usadas na validação e2e — nunca versionar credenciais
+.claude/dev-credentials.local.md
+
+# Conductor: settings.toml (compartilhado) é versionado; o .local é pessoal
+.conductor/settings.local.toml
+
+# Nota: `docs/features/` (plano, handoff, review, critérios de aceite, screenshots) é
+# VERSIONADO de propósito — é o histórico de como cada feature foi construída.
+# Ver docs/TASK-PIPELINE.md.
