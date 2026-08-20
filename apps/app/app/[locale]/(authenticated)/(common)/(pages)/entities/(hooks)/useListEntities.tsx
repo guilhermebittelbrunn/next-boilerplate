@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/style/useFilenamingConvention: matches admin users colocated modules */
 import type { EntityDTO } from "@repo/sdk/src/types";
-import { useQuery } from "@tanstack/react-query";
+import { useAuthorizedQuery } from "@/shared/hooks/useAuthorizedQuery";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 
@@ -9,7 +9,7 @@ export function fetchEntitiesList(): Promise<EntityDTO[]> {
 }
 
 export const useListEntities = () => {
-    const { data, isLoading, error, refetch, isFetching } = useQuery({
+    const { data, isLoading, error, refetch, isFetching } = useAuthorizedQuery({
         queryKey: queryKeys.entities.list(),
         queryFn: fetchEntitiesList,
     });

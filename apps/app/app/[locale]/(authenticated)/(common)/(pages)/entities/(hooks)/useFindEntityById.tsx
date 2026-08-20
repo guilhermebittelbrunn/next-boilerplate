@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/style/useFilenamingConvention: matches admin users colocated modules */
 import type { EntityDTO } from "@repo/sdk/src/types";
-import { useQuery } from "@tanstack/react-query";
+import { useAuthorizedQuery } from "@/shared/hooks/useAuthorizedQuery";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 
@@ -14,7 +14,7 @@ export async function findEntityById(
 }
 
 export function useFindEntityById(id: string | undefined) {
-    const { data, isLoading, isError } = useQuery({
+    const { data, isLoading, isError } = useAuthorizedQuery({
         queryKey: queryKeys.entities.detail(id ?? ""),
         queryFn: () => findEntityById(id),
         enabled: Boolean(id),

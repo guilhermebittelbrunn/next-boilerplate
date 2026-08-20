@@ -1,7 +1,7 @@
 import { UserRoleLevel } from "@repo/auth/types";
 import { UserType } from "@repo/sdk/src/types";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { queryKeys } from "@/shared/lib/queryKeys";
@@ -44,12 +44,13 @@ beforeEach(() => {
     });
     listMock.mockReset();
     // An admin in the admin panel is the context in which the unscoped listing is
-    // legitimate.
+    // legitimate, and the SDK already carries the token.
     panelStore = createPanelStore({
         profileKind: "admin",
         panelRequestRole: UserRoleLevel.ADMIN,
         impersonatedFirebaseUid: null,
     });
+    panelStore.getState().setSdkAuthorized(true);
 });
 
 describe("useListUsers", () => {
@@ -112,17 +113,29 @@ describe("useListUsers", () => {
         expect(result.current.isPending).toBe(true);
     });
 
-    it("does not query without a session", () => {
+    /**
+     * A request that leaves before the bearer token is applied comes back 401, and React
+     * Query caches that failure — which left the impersonation picker permanently empty
+     * and therefore permanently disabled.
+     */
+    it("waits for the SDK to carry the token before querying", async () => {
         listMock.mockResolvedValue(allUsers);
         panelStore = createPanelStore({
-            profileKind: null,
-            panelRequestRole: UserRoleLevel.COMMON,
+            profileKind: "admin",
+            panelRequestRole: UserRoleLevel.ADMIN,
             impersonatedFirebaseUid: null,
         });
 
-        renderHook(() => useListUsers(), { wrapper });
-
+        const { result, rerender } = renderHook(() => useListUsers(), {
+            wrapper,
+        });
         expect(listMock).not.toHaveBeenCalled();
+
+        act(() => panelStore.getState().setSdkAuthorized(true));
+        rerender();
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+        expect(listMock).toHaveBeenCalledTimes(1);
     });
 
     it("narrows to common users while impersonating, whatever was asked for", async () => {
@@ -132,6 +145,7 @@ describe("useListUsers", () => {
             panelRequestRole: UserRoleLevel.COMMON,
             impersonatedFirebaseUid: "target-1",
         });
+        panelStore.getState().setSdkAuthorized(true);
 
         const { result } = renderHook(() => useListUsers(), { wrapper });
 

@@ -2,7 +2,7 @@
 
 import { UserRoleLevel } from "@repo/auth/types";
 import { UserType, type UserWithAuthDTO } from "@repo/sdk/src/types";
-import { useQuery } from "@tanstack/react-query";
+import { useAuthorizedQuery } from "@/shared/hooks/useAuthorizedQuery";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { usePanelState } from "@/shared/stores/panelStore";
@@ -24,17 +24,14 @@ export function fetchUsersList(type?: UserType): Promise<UserWithAuthDTO[]> {
  */
 export function useListUsers(params?: UseListUsersParams) {
     const { enabled = true, type } = params ?? {};
-    const profileKind = usePanelState((state) => state.profileKind);
     const panelRequestRole = usePanelState((state) => state.panelRequestRole);
 
     const effectiveType =
         panelRequestRole === UserRoleLevel.COMMON ? UserType.COMMON : type;
 
-    return useQuery({
+    return useAuthorizedQuery({
         queryKey: queryKeys.users.list(effectiveType),
         queryFn: () => fetchUsersList(effectiveType),
-        // No session, no listing. The headers themselves are guaranteed by the provider,
-        // which applies them during render before any child can mount.
-        enabled: enabled && profileKind !== null,
+        enabled,
     });
 }
