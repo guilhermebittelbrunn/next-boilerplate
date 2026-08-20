@@ -6,6 +6,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
+import { getAppSessionUser } from "@/lib/server/authSession";
+import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
 import { AppDesignProvider } from "@/shared/providers/AppDesignProvider";
 import ClientLayout from "./[locale]/clientLayout";
 
@@ -14,7 +16,17 @@ type RootLayoutProps = {
 };
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-    const { locale } = await getDictionary();
+    const [{ locale }, sessionUser, panelSnapshot] = await Promise.all([
+        getDictionary(),
+        getAppSessionUser(),
+        resolvePanelSnapshot(),
+    ]);
+
+    // Resolved on the server so the panel is already correct on the first paint.
+    const initialPanel = {
+        snapshot: panelSnapshot,
+        actorUid: sessionUser?.uid ?? null,
+    };
 
     return (
         <html
@@ -27,7 +39,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                     <AnalyticsProvider>
                         <AppDesignProvider>
                             <ToastContainer />
-                            <ClientLayout>{children}</ClientLayout>
+                            <ClientLayout initialPanel={initialPanel}>
+                                {children}
+                            </ClientLayout>
                         </AppDesignProvider>
                     </AnalyticsProvider>
                 </QueryProvider>
