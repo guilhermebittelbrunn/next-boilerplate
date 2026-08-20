@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { env } from "@/env";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
+import { resolveSidebarDefaultOpen } from "@/lib/server/sidebarState";
 import Navbar from "@/shared/components/ui/Navbar";
 import { isImpersonatingSnapshot } from "@/shared/lib/panelState";
 import { SidebarCommon } from "./sidebar";
@@ -33,7 +34,7 @@ const AppLayout = async ({ children, params }: AppLayoutProperties) => {
     }
 
     return (
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={await resolveSidebarDefaultOpen()}>
             <SidebarCommon>
                 <Navbar />
                 {children}
