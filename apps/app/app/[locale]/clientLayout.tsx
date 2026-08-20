@@ -1,8 +1,5 @@
 "use client";
 
-import useAuth from "@repo/auth/provider";
-import { useEffect } from "react";
-import { apiClient } from "@/shared/lib/client";
 import {
     AuthRequestPanelProvider,
     type InitialPanel,
@@ -13,31 +10,17 @@ type ClientLayoutProps = {
     readonly initialPanel: InitialPanel;
 };
 
+/**
+ * Deliberately does not touch the SDK headers. `AuthRequestPanelProvider` is the single
+ * authority over them — token included. This component used to set the bearer token and,
+ * on the branch where the token was not resolved yet, clear the request-context headers;
+ * because React runs child effects before the parent's, that clear wiped the headers the
+ * provider had just applied and impersonated requests went out unscoped.
+ */
 export default function ClientLayout({
     children,
     initialPanel,
 }: ClientLayoutProps) {
-    const { user } = useAuth();
-
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            const token = await user?.getIdToken();
-            if (cancelled) {
-                return;
-            }
-            if (token) {
-                apiClient.setAuthorizationHeader(token);
-            } else {
-                apiClient.removeHeader("Authorization");
-                apiClient.clearAuthRequestContext();
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [user]);
-
     return (
         <AuthRequestPanelProvider initialPanel={initialPanel}>
             <div>{children}</div>

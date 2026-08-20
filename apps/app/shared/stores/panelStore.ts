@@ -16,8 +16,15 @@ import {
 export type PanelState = PanelSnapshot & {
     /** Display name of the impersonated user. Client-only; the server never knows it. */
     impersonatedLabel: string | null;
+    /**
+     * Whether the SDK currently carries a bearer token. Data hooks gate on it: a request
+     * that goes out before the token is applied comes back 401, and React Query caches
+     * that failure.
+     */
+    sdkAuthorized: boolean;
     /** Loads the display label from localStorage. Client-only, after mount. */
     hydrateLabelFromMirror: () => void;
+    setSdkAuthorized: (authorized: boolean) => void;
     setPanelRequestRole: (role: UserRoleLevel) => void;
     setImpersonatedUser: (uid: string | null, label?: string | null) => void;
     resetPanel: () => void;
@@ -37,6 +44,9 @@ export function createPanelStore(snapshot: PanelSnapshot) {
     return createStore<PanelState>()((set, get) => ({
         ...snapshot,
         impersonatedLabel: null,
+        sdkAuthorized: false,
+
+        setSdkAuthorized: (authorized) => set({ sdkAuthorized: authorized }),
 
         hydrateLabelFromMirror: () => {
             const { impersonatedFirebaseUid, impersonatedLabel } = get();
@@ -89,6 +99,7 @@ export function createPanelStore(snapshot: PanelSnapshot) {
                 panelRequestRole: UserRoleLevel.COMMON,
                 impersonatedFirebaseUid: null,
                 impersonatedLabel: null,
+                sdkAuthorized: false,
             });
         },
     }));

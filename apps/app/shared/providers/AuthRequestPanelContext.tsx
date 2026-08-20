@@ -1,5 +1,6 @@
 "use client";
 
+import useAuth from "@repo/auth/provider";
 import { UserRoleLevel } from "@repo/auth/types";
 import { resolveBrowserTimeZone } from "@repo/shared/utils/helpers/auth-request-headers";
 import { useQueryClient } from "@tanstack/react-query";
@@ -47,8 +48,20 @@ export type InitialPanel = {
     actorUid: string | null;
 };
 
-/** Applies the SDK auth-request headers for the current session + panel state. */
-function applyPanelHeaders(store: PanelStore, actorUid: string): void {
+/**
+ * Applies every auth header the SDK needs: the bearer token and the request-context
+ * `x-*` pair, in one pass.
+ *
+ * They are written together on purpose. Splitting the ownership between two components is
+ * what used to break impersonation: the child applied the `x-*` during render, then the
+ * parent's effect ran with the token still unresolved and cleared them, and nothing
+ * re-applied them once the token arrived. One owner, one write.
+ */
+function applyAuthHeaders(
+    store: PanelStore,
+    actorUid: string,
+    token: string | null
+): void {
     // `apiClient` is a module singleton shared by the whole process. Writing a visitor's
     // identity into it while rendering on the server would leak that identity into other
     // concurrent requests, so headers are only ever applied in the browser. Server
@@ -59,6 +72,9 @@ function applyPanelHeaders(store: PanelStore, actorUid: string): void {
     const state = store.getState();
     if (!state.profileKind) {
         return;
+    }
+    if (token) {
+        apiClient.setAuthorizationHeader(token);
     }
     const { props, context } = deriveAuthRequestProps({
         uid: actorUid,
@@ -76,14 +92,17 @@ function applyPanelHeaders(store: PanelStore, actorUid: string): void {
 }
 
 /**
- * Owns the per-request panel store and keeps the SDK headers in sync with it.
+ * Owns the per-request panel store and is the **single authority** over the SDK's auth
+ * headers — bearer token included. Nothing else may write or clear them.
  *
- * The store is created from the server snapshot and the headers are applied
- * **synchronously on the first render**, before any child mounts: a child's `useQuery`
- * fires in its own effect, which React runs before the parent's, so applying headers in
- * an effect here would let the first request go out with the wrong subject. Both happen
- * inside a `useState` initializer, so they run once per mount and are harmless if the
- * render is discarded or double-invoked under StrictMode.
+ * The `x-*` pair is applied **synchronously on the first render**, before any child
+ * mounts: a child's `useQuery` fires in its own effect, and React runs child effects
+ * before the parent's, so applying them in an effect here would let the first request go
+ * out with the wrong subject. The token can only arrive asynchronously, so `sdkAuthorized`
+ * tells data hooks when it is safe to query.
+ *
+ * Headers are cleared only when the **server** reports no session (`actorUid === null`),
+ * never while the token is merely still resolving.
  *
  * There is no client-side `/auth/me` round trip — `profileKind` comes from the snapshot,
  * which is what keeps the panel controls stable across a reload.
@@ -99,11 +118,12 @@ export function AuthRequestPanelProvider({
     readonly children: ReactNode;
 }) {
     const { snapshot, actorUid } = initialPanel;
+    const { accessToken } = useAuth();
 
     const [store] = useState(() => {
         const created = createPanelStore(snapshot);
         if (actorUid) {
-            applyPanelHeaders(created, actorUid);
+            applyAuthHeaders(created, actorUid, accessToken);
         }
         return created;
     });
@@ -112,13 +132,20 @@ export function AuthRequestPanelProvider({
         if (!actorUid) {
             store.getState().resetPanel();
             apiClient.clearAuthRequestContext();
+            apiClient.removeHeader("Authorization");
             return;
         }
         store.getState().hydrateLabelFromMirror();
-        const apply = () => applyPanelHeaders(store, actorUid);
+        const apply = () => applyAuthHeaders(store, actorUid, accessToken);
         apply();
+        // Written here and never from inside `apply`: `apply` runs as a store subscriber,
+        // so writing state from it re-enters the notification it is handling and updates
+        // get swallowed.
+        store.getState().setSdkAuthorized(Boolean(accessToken));
+        // Re-subscribing when the token refreshes is what keeps the panel subscription's
+        // closure from applying a stale one.
         return store.subscribe(apply);
-    }, [actorUid, store]);
+    }, [actorUid, accessToken, store]);
 
     return (
         <PanelStoreContext.Provider value={store}>
@@ -147,14 +174,19 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
      * fetched, so switching subject invalidates all of it at once. Dropping the cache is
      * not an optimization — without it the previous user's rows stay on screen until a
      * manual refresh.
+     *
+     * Navigation is the caller's job: a `refresh` and a `push` fired in the same tick
+     * cancel each other out, so whoever switches picks exactly one.
      */
     const switchSubject = useCallback(
         (apply: () => void) => {
             apply();
-            queryClient.clear();
-            router.refresh();
+            // `resetQueries`, not `clear`: both discard the previous subject's data, but
+            // only this one refetches the queries that are on screen. `clear` left the
+            // table empty until the user pressed refresh by hand.
+            queryClient.resetQueries();
         },
-        [queryClient, router]
+        [queryClient]
     );
 
     const profileKind = usePanelState((state) => state.profileKind);
@@ -184,6 +216,8 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
                 // switching to ADMIN clears impersonation on its own.
                 store.getState().setPanelRequestRole(role);
             });
+            // The push already re-runs the Server Components for the new route, so no
+            // refresh here.
             router.push(
                 withLocalePath(
                     locale,
@@ -199,8 +233,10 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
             switchSubject(() =>
                 store.getState().setImpersonatedUser(firebaseUid, label)
             );
+            // Same route, new subject: only the Server Components need to re-run.
+            router.refresh();
         },
-        [store, switchSubject]
+        [router, store, switchSubject]
     );
 
     return {
