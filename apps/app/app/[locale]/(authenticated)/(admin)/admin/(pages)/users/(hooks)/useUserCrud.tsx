@@ -41,8 +41,10 @@ export const useUserCrud = () => {
                 displayName: values.displayName?.trim() || undefined,
             }),
         onSuccess: async () => {
+            // Prefix invalidation: the listing is cached per scope (all / common),
+            // and a new user can belong to either.
             await queryClient.invalidateQueries({
-                queryKey: queryKeys.users.list(),
+                queryKey: queryKeys.users.all,
             });
             successAlert(messages.created);
         },
@@ -61,12 +63,11 @@ export const useUserCrud = () => {
             };
             return apiClient.user.update(body);
         },
-        onSuccess: async (_data, variables) => {
+        onSuccess: async () => {
+            // Covers every list scope plus the detail entries — a `type` change moves
+            // the user between scopes.
             await queryClient.invalidateQueries({
-                queryKey: queryKeys.users.list(),
-            });
-            await queryClient.invalidateQueries({
-                queryKey: queryKeys.users.detail(variables.id),
+                queryKey: queryKeys.users.all,
             });
             successAlert(messages.updated);
         },
@@ -132,12 +133,9 @@ export const useUserCrud = () => {
             await apiClient.user.delete(id);
             return id;
         },
-        onSuccess: async (id: string) => {
+        onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: queryKeys.users.list(),
-            });
-            await queryClient.invalidateQueries({
-                queryKey: queryKeys.users.detail(id),
+                queryKey: queryKeys.users.all,
             });
             successAlert(messages.deleted);
         },

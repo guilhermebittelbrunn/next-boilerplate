@@ -17,8 +17,10 @@ export const queryKeys = {
     },
     users: {
         all: ["users"] as const,
-        // Single cached list; callers filter by `type` in memory via `select`.
-        list: () => [...queryKeys.users.all, "list"] as const,
+        // `type` is part of the key because the API scopes the listing server-side —
+        // the admin list and the impersonation (common-only) list are different data.
+        list: (type?: string) =>
+            [...queryKeys.users.all, "list", type ?? "all"] as const,
         detail: (id: string) => [...queryKeys.users.all, "detail", id] as const,
     },
     health: () => ["health"] as const,
