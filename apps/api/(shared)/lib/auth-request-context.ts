@@ -1,6 +1,9 @@
 import { UserRoleLevel } from "@repo/auth/types";
 import { type UserDTO, UserType } from "@repo/sdk/src/types";
-import { AUTH_REQUEST_HEADER } from "@repo/shared/utils/helpers/auth-request-headers";
+import {
+    AUTH_REQUEST_HEADER,
+    isValidIanaTimeZone,
+} from "@repo/shared/utils/helpers/auth-request-headers";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
@@ -12,6 +15,8 @@ export type ResolvedAuthRequestContext = {
     userRole: UserRoleLevel;
     requestRole: UserRoleLevel;
     isImpersonating: boolean;
+    /** Caller's IANA time zone, or null when absent/invalid. Formatting only — never authorization. */
+    userTimezone: string | null;
 };
 
 function forbidden(code: string) {
@@ -124,6 +129,8 @@ export async function resolveAuthRequestContext(
         return { ok: false, response: profileError };
     }
 
+    const headerTimezone = req.headers.get(AUTH_REQUEST_HEADER.USER_TIMEZONE);
+
     return {
         ok: true,
         data: {
@@ -132,6 +139,9 @@ export async function resolveAuthRequestContext(
             userRole,
             requestRole,
             isImpersonating: requestUserId !== uid,
+            userTimezone: isValidIanaTimeZone(headerTimezone)
+                ? headerTimezone
+                : null,
         },
     };
 }
