@@ -341,17 +341,24 @@ export function Select({
                 {filteredOptions.length > 0 ? (
                     filteredOptions.map((option) => (
                         <SelectItem
+                            // Truncation needs `min-w-0` on every flex ancestor,
+                            // including the item text wrapper Radix renders.
+                            className="min-w-0 [&>span:last-child]:min-w-0"
                             key={option.value}
                             onKeyDown={handleOptionKeyDown}
                             value={option.value}
                         >
-                            <span className="inline-flex items-center gap-2">
+                            {/* A long label truncates instead of widening the list; the
+                                native title reveals it on hover. */}
+                            <span className="inline-flex min-w-0 items-center gap-2">
                                 {option.icon ? (
-                                    <span className="inline-flex size-4 items-center justify-center">
+                                    <span className="inline-flex size-4 shrink-0 items-center justify-center">
                                         {option.icon}
                                     </span>
                                 ) : null}
-                                <span>{option.label}</span>
+                                <span className="truncate" title={option.label}>
+                                    {option.label}
+                                </span>
                             </span>
                         </SelectItem>
                     ))

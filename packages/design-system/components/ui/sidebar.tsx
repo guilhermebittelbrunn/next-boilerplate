@@ -25,9 +25,8 @@ import {
 } from "@repo/design-system/components/ui/tooltip"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
-const SIDEBAR_COOKIE_NAME = "sidebar_state"
+export const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_LOCALSTORAGE_KEY = "sidebar_open"
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
@@ -54,6 +53,19 @@ function useSidebar() {
   return context
 }
 
+function readSidebarCookie(): boolean | undefined {
+  if (typeof document === "undefined") {
+    return undefined
+  }
+  const entry = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
+  if (!entry) {
+    return undefined
+  }
+  return entry.slice(SIDEBAR_COOKIE_NAME.length + 1) === "true"
+}
+
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -72,20 +84,15 @@ function SidebarProvider({
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = useState(() => {
-    if (openProp !== undefined) {
-      return defaultOpen
-    }
-    try {
-      const raw = window.localStorage.getItem(SIDEBAR_LOCALSTORAGE_KEY)
-      if (raw === null) {
-        return defaultOpen
-      }
-      return raw === "true"
-    } catch {
-      return defaultOpen
-    }
-  })
+  //
+  // State lives in the `sidebar_state` cookie, read here on the client and passed in as
+  // `defaultOpen` by the server. Both sides read the same cookie, so the first render
+  // agrees and the state survives a remount on navigation.
+  //
+  // Reading `localStorage` instead is what used to break this: the server cannot see it,
+  // so it rendered the default while the client rendered the stored value — a hydration
+  // mismatch that flashed the sidebar open before snapping it back.
+  const [_open, _setOpen] = useState(() => readSidebarCookie() ?? defaultOpen)
   const open = openProp ?? _open
 
   const setOpen = useCallback(
@@ -99,13 +106,6 @@ function SidebarProvider({
 
       // This sets the cookie to keep the sidebar state.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
-
-      // Persist in localStorage so refresh/navigation keeps the state.
-      try {
-        window.localStorage.setItem(SIDEBAR_LOCALSTORAGE_KEY, String(openState))
-      } catch {
-        // ignore
-      }
     },
     [setOpenProp, open]
   )
