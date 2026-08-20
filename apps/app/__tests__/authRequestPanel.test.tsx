@@ -83,6 +83,8 @@ describe("useAuthRequestPanel", () => {
         expect(queryClient.getQueryData(STALE_KEY)).toBeUndefined();
         expect(panelStore.getState().impersonatedFirebaseUid).toBeNull();
         expect(pushMock).toHaveBeenCalledWith("/pt-br/admin");
+        // A refresh fired in the same tick cancels the push and the route never changes.
+        expect(refreshMock).not.toHaveBeenCalled();
     });
 
     it("drops cached data when entering the common panel as a user", () => {
@@ -101,6 +103,7 @@ describe("useAuthRequestPanel", () => {
         expect(queryClient.getQueryData(STALE_KEY)).toBeUndefined();
         expect(panelStore.getState().impersonatedFirebaseUid).toBe("target-9");
         expect(pushMock).toHaveBeenCalledWith("/pt-br");
+        expect(refreshMock).not.toHaveBeenCalled();
     });
 
     it("keeps the cache when the common panel has no user to act as", () => {
