@@ -1,6 +1,6 @@
 "use client";
 
-import { canSwitchPanelEnvironment, UserRoleLevel } from "@repo/auth/types";
+import { UserRoleLevel } from "@repo/auth/types";
 import { Select } from "@repo/design-system/components/ui";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -17,6 +17,10 @@ import { ChevronDownIcon, ShieldCheckIcon, UserIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo } from "react";
 import { useListUsers } from "@/shared/hooks/useListUsers";
+import {
+    shouldRenderImpersonationPicker,
+    shouldRenderPanelControls,
+} from "@/shared/lib/panelState";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 
 const REFERENCE_ID_PREVIEW_LENGTH = 8;
@@ -37,11 +41,13 @@ export default function PanelNavbarControls() {
         setImpersonatedUser,
     } = useAuthRequestPanel();
 
-    const canSwitchEnvironment =
-        profileKind === "admin" &&
-        canSwitchPanelEnvironment(UserRoleLevel.ADMIN);
-    const showImpersonationSelect =
-        profileKind === "admin" && panelRequestRole === UserRoleLevel.COMMON;
+    // Pure, snapshot-driven: the server seeds the panel state, so these are already
+    // correct on the first paint and never flip while a request is in flight.
+    const canSwitchEnvironment = shouldRenderPanelControls(profileKind);
+    const showImpersonationSelect = shouldRenderImpersonationPicker(
+        profileKind,
+        panelRequestRole
+    );
 
     const environmentOptions = useMemo(
         () => [
@@ -110,26 +116,23 @@ export default function PanelNavbarControls() {
         [selectOptions]
     );
 
-    const resolveImpersonatedUserForCommonMode = useCallback(() => {
-        if (impersonationOptions.length === 0) {
-            // Keep the persisted choice until the list loads.
-            return impersonatedFirebaseUid;
-        }
-        const hasSavedUserInCurrentOptions =
-            impersonatedFirebaseUid &&
-            impersonationOptions.some(
-                (option) => option.value === impersonatedFirebaseUid
-            );
-        if (hasSavedUserInCurrentOptions) {
-            return impersonatedFirebaseUid;
-        }
-        return impersonationOptions[0].value;
+    /**
+     * The saved choice when it is still a valid option, otherwise the first common user.
+     * Business rule: the impersonation picker is never empty.
+     */
+    const resolveImpersonationTarget = useCallback(() => {
+        const savedOption = impersonationOptions.find(
+            (option) => option.value === impersonatedFirebaseUid
+        );
+        const target = savedOption ?? impersonationOptions[0];
+        return target ? { uid: target.value, label: target.label } : null;
     }, [impersonatedFirebaseUid, impersonationOptions]);
 
     const handleImpersonatedUserChange = useCallback(
         (value: string) => {
+            // `setImpersonatedUser` updates the cookies and calls `router.refresh()`, so
+            // the Server Components re-run with the new subject without a full reload.
             setImpersonatedUser(value, labelForUid(value));
-            window.location.reload();
         },
         [setImpersonatedUser, labelForUid]
     );
@@ -137,36 +140,26 @@ export default function PanelNavbarControls() {
     const handleEnvironmentChange = useCallback(
         (value: string) => {
             const nextRole = value as UserRoleLevel;
-            if (nextRole === UserRoleLevel.COMMON) {
-                const nextImpersonatedUser =
-                    resolveImpersonatedUserForCommonMode();
-                setImpersonatedUser(
-                    nextImpersonatedUser,
-                    labelForUid(nextImpersonatedUser)
-                );
-            }
-            // Switching to ADMIN clears impersonation inside setPanelEnvironment.
-            setPanelEnvironment(nextRole);
+            setPanelEnvironment(
+                nextRole,
+                nextRole === UserRoleLevel.COMMON
+                    ? (resolveImpersonationTarget() ?? undefined)
+                    : undefined
+            );
         },
-        [
-            resolveImpersonatedUserForCommonMode,
-            setImpersonatedUser,
-            setPanelEnvironment,
-            labelForUid,
-        ]
+        [resolveImpersonationTarget, setPanelEnvironment]
     );
 
-    // In the COMMON (impersonation) panel the select must never be empty: default
-    // to the first available user as soon as the list is known.
+    // The picker must never be empty in the common panel: as soon as the list is known,
+    // fall back to the first user. `setImpersonatedUser` refreshes the Server Components
+    // so the server resolves the same subject the client just picked.
     useEffect(() => {
         if (!showImpersonationSelect || impersonationOptions.length === 0) {
             return;
         }
-        const hasValidSelection =
-            impersonatedFirebaseUid &&
-            impersonationOptions.some(
-                (option) => option.value === impersonatedFirebaseUid
-            );
+        const hasValidSelection = impersonationOptions.some(
+            (option) => option.value === impersonatedFirebaseUid
+        );
         if (!hasValidSelection) {
             const first = impersonationOptions[0];
             setImpersonatedUser(first.value, first.label);
@@ -181,6 +174,13 @@ export default function PanelNavbarControls() {
     if (!canSwitchEnvironment) {
         return null;
     }
+
+    // Entering the common panel requires a target, so block the switch while the list is
+    // in flight or empty — otherwise the click is a silent no-op.
+    const environmentDisabled =
+        loadingCommonUsers ||
+        (panelRequestRole === UserRoleLevel.ADMIN &&
+            impersonationOptions.length === 0);
 
     const currentEnvironmentOption =
         environmentOptions.find(
@@ -215,6 +215,7 @@ export default function PanelNavbarControls() {
                         </DropdownMenuLabel>
                         <div className="mt-2">
                             <Select
+                                disabled={environmentDisabled}
                                 onValueChange={handleEnvironmentChange}
                                 options={environmentOptions}
                                 searchable={false}
@@ -256,6 +257,7 @@ export default function PanelNavbarControls() {
         <div className="flex flex-wrap items-center gap-3 pl-2">
             <div>
                 <Select
+                    disabled={environmentDisabled}
                     onValueChange={handleEnvironmentChange}
                     options={environmentOptions}
                     searchable={false}
