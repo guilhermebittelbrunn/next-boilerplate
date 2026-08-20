@@ -1,17 +1,33 @@
 import { getAuthInstance } from "@repo/auth/server";
-import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
+import { UserRoleLevel } from "@repo/auth/types";
+import { UserType } from "@repo/sdk/src/types";
 import {
     IdentityToolkitError,
     identitySignUp,
 } from "@/(shared)/lib/firebase-identity-toolkit";
+import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import { mapIdentityToolkitMessageToCode } from "@/(shared)/lib/toolkit-error-codes";
 import { getMergedUserByFirestoreDocId } from "@/(shared)/lib/user-merge";
 import { userRepository } from "@/(shared)/repositories/user.repository";
 import { adminCreateUserSchema } from "@/(shared)/validation/user-admin.schema";
 import { requireAdminApi } from "@/app/(guards)/admin";
 
-export const GET = requireAdminApi(async (_req, _ctx) => {
-    const users = await userRepository.list();
+function parseUserTypeFilter(value: string | null): UserType | undefined {
+    return value === UserType.ADMIN || value === UserType.COMMON
+        ? value
+        : undefined;
+}
+
+export const GET = requireAdminApi(async (req, ctx) => {
+    // An admin operating inside the common panel (impersonation) must never receive
+    // admin profiles, whatever `?type=` asks for. The scope comes from the request
+    // context, not from client input.
+    const scopedToCommon = ctx.authRequest.requestRole === UserRoleLevel.COMMON;
+    const type = scopedToCommon
+        ? UserType.COMMON
+        : parseUserTypeFilter(new URL(req.url).searchParams.get("type"));
+
+    const users = await userRepository.list(type ? { type } : undefined);
     return Response.json({ data: users });
 });
 

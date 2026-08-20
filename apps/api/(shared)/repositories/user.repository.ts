@@ -1,5 +1,5 @@
 import { getAuthInstance } from "@repo/auth/server";
-import type { UserDTO } from "@repo/sdk/src/types";
+import type { UserDTO, UserType } from "@repo/sdk/src/types";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import db from "../infra/dabatase";
 import {
@@ -33,18 +33,37 @@ class UserRepository extends BaseRepository<UserDTO> {
         };
     }
 
-    async list(): Promise<UserDTO[]> {
+    async list(options?: { type?: UserType }): Promise<UserDTO[]> {
         const users = await this.findAll();
+        const scoped = options?.type
+            ? users.filter((user) => user.type === options.type)
+            : users;
 
-        const results: Record<string, unknown>[] = [];
+        const merged = await Promise.all(
+            scoped.map((user) => this.mergeWithAuthUser(user))
+        );
 
-        for (const user of users) {
+        return merged.filter((user): user is UserDTO => user !== null);
+    }
+
+    /**
+     * A profile whose Firebase Auth account was deleted outside the app would otherwise
+     * reject the whole listing, so it is dropped from the result instead.
+     *
+     * Only that specific case is swallowed: a transient Admin SDK failure must surface,
+     * because silently hiding records from a management screen is worse than failing.
+     */
+    private async mergeWithAuthUser(user: UserDTO): Promise<UserDTO | null> {
+        const profile = serializeFirestoreData(user);
+        try {
             const authUser = await getAuthInstance().getUser(user.reference_id);
-            const profile = serializeFirestoreData(user);
-            results.push(mergeAuthAndFirestore(authUser, profile));
+            return mergeAuthAndFirestore(authUser, profile) as UserDTO;
+        } catch (error) {
+            if ((error as { code?: string }).code === "auth/user-not-found") {
+                return null;
+            }
+            throw error;
         }
-
-        return results as UserDTO[];
     }
 }
 

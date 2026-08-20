@@ -1,4 +1,6 @@
+import { UserRoleLevel } from "@repo/auth/types";
 import { UserType } from "@repo/sdk/src/types";
+import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 import {
@@ -56,6 +58,16 @@ export function requireAdminApi<TRouteContext extends RouteContext = undefined>(
         );
         if (!resolved.ok) {
             return resolved.response;
+        }
+
+        // An admin acting as a common user must not reach admin endpoints at all. Scoping
+        // only the reads would still let them create, edit or delete records while
+        // declaring the common panel — the write side has to refuse too.
+        if (resolved.data.requestRole !== UserRoleLevel.ADMIN) {
+            return Response.json(
+                { error: { code: "AUTH_REQUEST_PANEL_FORBIDDEN" } },
+                { status: HTTP_STATUS.FORBIDDEN }
+            );
         }
 
         const enrichedContext = {
