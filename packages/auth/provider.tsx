@@ -10,10 +10,13 @@ import {
 } from "@repo/auth/client";
 import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
-import { locales } from "@repo/internationalization/utils";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
-import { type UseMutationResult, useMutation } from "@tanstack/react-query";
+import {
+    type UseMutationResult,
+    useMutation,
+    useQueryClient,
+} from "@tanstack/react-query";
 import type { User, UserCredential } from "firebase/auth";
 import { useRouter } from "next/navigation";
 // biome-ignore lint/correctness/noUnusedImports: classic `jsx: "react"` needs React in scope
@@ -27,35 +30,8 @@ import React, {
     useRef,
     useState,
 } from "react";
+import { postAuthRedirectTarget } from "./redirect";
 import type { SignInDTO, SignUpDTO, UserDTO } from "./types";
-
-/**
- * Uses the `redirect` query param set by the proxy (same-origin paths only).
- */
-function postAuthRedirectTarget(
-    rawRedirect: string | null,
-    fallback: string
-): string {
-    if (!rawRedirect) {
-        return fallback;
-    }
-    let path: string;
-    try {
-        path = decodeURIComponent(rawRedirect.trim());
-    } catch {
-        return fallback;
-    }
-    if (!(path.startsWith("/") && !path.startsWith("//"))) {
-        return fallback;
-    }
-    if (path.includes("//")) {
-        return fallback;
-    }
-    const isLocalePrefixed = locales.some(
-        (l) => path === `/${l}` || path.startsWith(`/${l}/`)
-    );
-    return isLocalePrefixed ? path : fallback;
-}
 
 type AuthContextType = {
     user: UserDTO | null;
@@ -92,6 +68,7 @@ export function AuthProvider({
 }: AuthProviderProps): ReactElement {
     const { errorAlert, successAlert } = useAlert();
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [user, setUser] = useState<UserDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -265,6 +242,9 @@ export function AuthProvider({
             errorAlert(handleClientError(new FormattedError(error, locale))),
         onSuccess: async () => {
             await syncSessionCookie(null);
+            // Drop every cached query: the next user signing in on this browser must not
+            // see the previous one's data while a refetch is in flight.
+            queryClient.clear();
             router.push(redirectPath());
         },
     });
