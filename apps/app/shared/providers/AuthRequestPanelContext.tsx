@@ -2,6 +2,7 @@
 
 import { UserRoleLevel } from "@repo/auth/types";
 import { resolveBrowserTimeZone } from "@repo/shared/utils/helpers/auth-request-headers";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import {
@@ -139,6 +140,22 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
     const params = useParams();
     const locale = typeof params.locale === "string" ? params.locale : "pt-br";
     const store = usePanelStoreApi();
+    const queryClient = useQueryClient();
+
+    /**
+     * Every cached query in the panel belongs to the subject that was active when it was
+     * fetched, so switching subject invalidates all of it at once. Dropping the cache is
+     * not an optimization — without it the previous user's rows stay on screen until a
+     * manual refresh.
+     */
+    const switchSubject = useCallback(
+        (apply: () => void) => {
+            apply();
+            queryClient.clear();
+            router.refresh();
+        },
+        [queryClient, router]
+    );
 
     const profileKind = usePanelState((state) => state.profileKind);
     const panelRequestRole = usePanelState((state) => state.panelRequestRole);
@@ -152,17 +169,21 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
             role: UserRoleLevel,
             target?: { uid: string; label: string | null }
         ) => {
-            if (role === UserRoleLevel.COMMON) {
-                if (!target) {
-                    // No common user to act as — the mode is unreachable, so stay put
-                    // instead of navigating into an area every request would reject.
-                    return;
-                }
-                store.getState().setImpersonatedUser(target.uid, target.label);
+            if (role === UserRoleLevel.COMMON && !target) {
+                // No common user to act as — the mode is unreachable, so stay put
+                // instead of navigating into an area every request would reject.
+                return;
             }
-            // Set the target before the role: the store normalizes the pair, and
-            // switching to ADMIN clears impersonation on its own.
-            store.getState().setPanelRequestRole(role);
+            switchSubject(() => {
+                if (target) {
+                    store
+                        .getState()
+                        .setImpersonatedUser(target.uid, target.label);
+                }
+                // Set the target before the role: the store normalizes the pair, and
+                // switching to ADMIN clears impersonation on its own.
+                store.getState().setPanelRequestRole(role);
+            });
             router.push(
                 withLocalePath(
                     locale,
@@ -170,15 +191,16 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
                 )
             );
         },
-        [locale, router, store]
+        [locale, router, store, switchSubject]
     );
 
     const setImpersonatedUser = useCallback(
         (firebaseUid: string | null, label?: string | null) => {
-            store.getState().setImpersonatedUser(firebaseUid, label);
-            router.refresh();
+            switchSubject(() =>
+                store.getState().setImpersonatedUser(firebaseUid, label)
+            );
         },
-        [router, store]
+        [store, switchSubject]
     );
 
     return {
