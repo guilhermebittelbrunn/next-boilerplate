@@ -55,11 +55,16 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 - Na página, passe o **payload completo** do formulário para a mutation quando o hook já fizer o mapeamento para a API (`mutate(values)`), evitando objeto intermediário redundante.
 - Evite criar função nomeada de **uma linha** usada **uma única vez**; prefira callback inline quando o objetivo for só legibilidade.
 
-## Autenticação / admin
+## Autenticação / admin / contexto de painel
 
-- Guards no servidor (layouts/loaders) alinhados a `@repo/auth` / helpers em `lib/server`. Nunca confiar só em UI oculta para "área admin".
-- **Impersonação**: ao mudar o utilizador visualizado em `PanelNavbarControls`, após `setImpersonatedUser` faça `window.location.reload()`.
-- **Pós-login (admin vs comum)**: `AppDesignProvider` passa `resolveDefaultPostLoginPath`; Google/sign-up usam `resolveAppPostLoginPath` (ex.: admin → `/{locale}/admin` quando não há query `redirect`).
+> 📖 **Regra de negócio completa: [`docs/AUTH-PANEL.md`](../../docs/AUTH-PANEL.md)** — matriz papel × painel × rota, contrato de headers, códigos de erro, ciclo de vida do estado. Leia antes de mexer em qualquer coisa de auth.
+
+- Guards no servidor (proxy → `requireSession` → `requireAdmin` → guard da API). Nunca confiar só em UI oculta para "área admin".
+- **O estado de painel é semeado pelo servidor.** `app/layout.tsx` resolve o snapshot (`lib/server/panelSnapshot.ts`) e injeta via `initialPanel`; o store é inicializado sincronamente no render. **Não** reintroduza descoberta de contexto por rede no cliente (`/auth/me` para saber o próprio papel) — é o que fazia os controles de painel desaparecerem durante o reload.
+- **Cookie manda, localStorage espelha**: cookies `bp:panel-request-role` / `bp:impersonate-firebase-uid` são a autoridade (Server Components leem); o localStorage guarda o mesmo + o nome de exibição.
+- **Troca de contexto usa `router.refresh()`**, nunca `window.location.reload()`.
+- **Lógica pura em `shared/lib/panelState.ts`** (normalização, visibilidade dos controles, espelhos) — é onde os testes de regressão batem. Visibilidade nunca depende de estado assíncrono.
+- **Pós-login (admin vs comum)**: `AppDesignProvider` passa `resolveDefaultPostLoginPath`; Google/sign-up usam `resolveAppPostLoginPath`. O sanitizador de `?redirect=` é `postAuthRedirectTarget` de `@repo/auth/redirect` (guard de open-redirect — não duplique).
 
 ## Nomes de arquivos e estilo
 
