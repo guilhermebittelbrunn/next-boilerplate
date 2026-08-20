@@ -11,10 +11,16 @@ export enum UserRoleLevel {
  * Sent as headers by the SDK and validated on the API.
  */
 export type IAuthContextProps = {
+    /** The authenticated actor. Cross-checked against the token's uid on the API. */
     userId: string | undefined;
+    /** The user whose data the request targets — differs from `userId` under impersonation. */
     requestUserId: string | undefined;
+    /** The actor's real role, from their persisted profile. */
     userRole: UserRoleLevel | undefined;
+    /** The effective panel the actor is operating in. */
     requestRole: UserRoleLevel | undefined;
+    /** IANA time zone of the caller, for date formatting/auditing. Never used for authorization. */
+    userTimezone: string | undefined;
 };
 
 /** Whether the UI should offer switching to a subordinate panel (e.g. admin → common). */
