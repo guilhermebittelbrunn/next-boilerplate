@@ -253,29 +253,31 @@ export default function PanelNavbarControls() {
         );
     }
 
+    // Fixed widths, never content-driven: the trigger defaults to `w-fit`, so a long
+    // display name used to stretch the navbar until the layout broke on narrow viewports
+    // with the sidebar open. The value line-clamps inside the fixed box, and the open list
+    // truncates each option with the full name on hover.
     return (
-        <div className="flex flex-wrap items-center gap-3 pl-2">
-            <div>
-                <Select
-                    disabled={environmentDisabled}
-                    onValueChange={handleEnvironmentChange}
-                    options={environmentOptions}
-                    searchable={false}
-                    value={panelRequestRole}
-                />
-            </div>
+        <div className="flex min-w-0 items-center gap-2 pl-2">
+            <Select
+                disabled={environmentDisabled}
+                onValueChange={handleEnvironmentChange}
+                options={environmentOptions}
+                searchable={false}
+                triggerClassName="w-[11rem] shrink-0"
+                value={panelRequestRole}
+            />
 
-            <div>
-                {showImpersonationSelect ? (
-                    <Select
-                        disabled={loadingCommonUsers}
-                        onValueChange={handleImpersonatedUserChange}
-                        options={selectOptions}
-                        placeholder={navbarCopy.selectUserPlaceholder}
-                        value={impersonatedFirebaseUid ?? undefined}
-                    />
-                ) : null}
-            </div>
+            {showImpersonationSelect ? (
+                <Select
+                    disabled={loadingCommonUsers}
+                    onValueChange={handleImpersonatedUserChange}
+                    options={selectOptions}
+                    placeholder={navbarCopy.selectUserPlaceholder}
+                    triggerClassName="w-[15rem] max-w-[45vw]"
+                    value={impersonatedFirebaseUid ?? undefined}
+                />
+            ) : null}
         </div>
     );
 }
