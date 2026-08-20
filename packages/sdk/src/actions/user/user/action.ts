@@ -5,6 +5,7 @@ import type { Response } from "../../../client/type";
 import type {
     AdminCreateUserRequest,
     AdminUpdateUserRequest,
+    UserType,
     UserWithAuthDTO,
 } from "../../../types";
 
@@ -13,11 +14,16 @@ export default class UserActions {
         this.client = client;
     }
 
-    async list(): Promise<UserWithAuthDTO[]> {
+    /**
+     * `type` narrows the listing. The API also scopes it by request context: an admin
+     * operating the common panel only ever receives common users.
+     */
+    async list(params?: { type?: UserType }): Promise<UserWithAuthDTO[]> {
         const { data } = await this.client.request<Response<UserWithAuthDTO[]>>(
             {
                 url: "/users",
                 method: "GET",
+                params: params?.type ? { type: params.type } : undefined,
             }
         );
 
