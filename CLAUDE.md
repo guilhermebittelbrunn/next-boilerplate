@@ -53,7 +53,7 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 4. **Autorização espelhada na API.** Guards no servidor sempre (`requireCommonPanelApi`/`requireAdminApi`); UI oculta nunca é a única proteção.
 5. **Firestore via repositório + mapper.** Estenda `BaseRepository<DTO>` e passe o mapper no `super` (`super(db, "tabela", mapper)`); normalize `Timestamp`→ISO no mapper, não no handler.
 6. **Validação na borda da API** com Zod (`parseCreateX`/`parseUpdateX`) + helpers `parseRequestJson`, `omitUndefined`, `resolveIdFromContext`.
-7. **Formulários e tabelas** usam o design system: `HookFormInput/Textarea/Select/Switch/DateInput/RadioGroup`, `Footer`, `FormContainer`, `Container`, `Table` (com `searchFields`/`onRefresh`). Não reinvente primitivos.
+7. **Formulários e tabelas** usam os componentes compartilhados: `HookFormInput/Textarea/Select/Switch/DateInput/RadioGroup` e `Table` (com `searchFields`/`onRefresh`) do `@repo/design-system`; `Container`, `FormContainer` e `Footer` de `apps/app/shared/components/ui/`. Prop de erro é `error`, nunca `errorMessage`. Não reinvente primitivos.
 8. **Hooks de dados**: listas `useListX` + `fetchXList`; por id `useFindXById` + `findXById` no mesmo arquivo, com `enabled` coerente. Toggle de `enabled` só faz `setQueryData` (sem `invalidateQueries`).
 9. **Nomes de arquivo (apps/app)**: módulos de feature em camelCase (`userFormFields.tsx`); componente React exportado em PascalCase. Variáveis de dictionary com nome descritivo (nunca `t`/`d`).
 10. **Mudanças mínimas + Server Components por padrão.** `"use client"` só com estado/eventos/browser API. Não refatore arquivos fora da tarefa. Rode `pnpm check` antes de concluir.
@@ -76,11 +76,36 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 | `apps/api` (rotas, guards, repos) | [`apps/api/CLAUDE.md`](apps/api/CLAUDE.md) |
 | `packages/*` | [`packages/CLAUDE.md`](packages/CLAUDE.md) |
 | Design system / formulários RHF | seção "Design system — inputs e formulários" em [`AGENTS.md`](AGENTS.md) |
-| Qualquer coisa | este `CLAUDE.md` (sempre carregado) |
+| Revisar um diff | [`docs/review-checklist.md`](docs/review-checklist.md) (fonte única das invariantes) |
+| Planejar/analisar uma tarefa | [`docs/feature-analysis-guide.md`](docs/feature-analysis-guide.md) |
+| Qualquer coisa | este `CLAUDE.md` (sempre carregado) + `.claude/rules/*` |
 
 ## Trabalhando com IA neste repo
 
-Skills do projeto (digite `/` para invocar) e o agente revisor estão documentados em [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md):
+Hub do ferramental: [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md).
+
+### Pipeline de tarefas — [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md)
+
+```
+/analyze  →  /develop  →  /review  →  /test        (+ opcionais: /observe · /mediate)
+planejar     implementar   revisar     QA
+```
+
+Cada comando roda no loop principal (pergunta antes de decidir) e aciona um subagent
+(`planejador-tarefa`, `desenvolvedor`, `revisor-codigo`, `analista-qa`). O estado da tarefa vive em
+`docs/features/<slug>/` (versionado — é o histórico de como a feature foi construída): `STATE.md` é o gate,
+e cada etapa deixa um handoff conciso para a seguinte. Gate sequencial com bypass via `--force`.
+
+Apoio: [`docs/feature-analysis-guide.md`](docs/feature-analysis-guide.md) (roteiro de análise + formato dos
+critérios de aceite) · [`docs/review-checklist.md`](docs/review-checklist.md) (**fonte única** do que a
+revisão cobra) · [`docs/GLOSSARY.md`](docs/GLOSSARY.md) (vocabulário do boilerplate).
+
+Regras sempre em contexto: [`.claude/rules/git-commits.md`](.claude/rules/git-commits.md) (⛔ nunca commitar
+em `main`/`production`; só o `revisor-codigo` cria branch; push só com seu "sim") e
+[`.claude/rules/code-comments.md`](.claude/rules/code-comments.md) (o padrão é **não** comentar; nunca citar
+os artefatos do fluxo no código).
+
+### Skills do projeto (digite `/` para invocar)
 
 - **`/new-crud`** — scaffold de um CRUD vertical completo (SDK → API → app → i18n), seguindo o padrão `entity`.
 - **`/new-api-route`** — cria rota na `apps/api` (validação, guard, repo+mapper, `error.code`).
@@ -96,5 +121,5 @@ Skills do projeto (digite `/` para invocar) e o agente revisor estão documentad
 - **`ui-ux-pro-max`** — base de design UI/UX (estilos, paletas, tipografia, guidelines) ao criar/refatorar telas.
 - **`seo-audit`** — auditoria de SEO técnico/on-page (útil na `apps/web`).
 - **`ai-seo`** — otimização de conteúdo para AI search / citação por LLMs (AEO/GEO), na `apps/web`.
-- Agente **`code-reviewer`** — revisão afinada às convenções deste repo, **com validação visual via `agent-browser`** em diffs de front-end (invoque via Task ou peça "revise o diff").
+- Agente **`code-reviewer`** — revisão **read-only** avulsa, afinada às convenções deste repo, **com validação visual via `agent-browser`** em diffs de front-end (peça "revise o diff"). Aplica o mesmo checklist do `revisor-codigo`, mas não edita arquivos nem toca na branch.
 - Skills globais úteis: `/code-review`, `/security-review`, `/verify`.

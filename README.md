@@ -2,7 +2,11 @@
 
 Boilerplate em **monorepo** (Turborepo + pnpm) para gerar rapidamente **MVPs** coringa. Fork customizado do [next-forge](https://github.com/vercel/next-forge), com stack escolhida para **começar de graça e escalar**: Next.js na Vercel, Firebase (Auth + Firestore), Stripe, Resend e i18n próprio.
 
-> 📐 [Arquitetura](docs/ARCHITECTURE.md) · ⚙️ [Setup & env](docs/SETUP.md) · 🔒 [Segurança](docs/SECURITY.md) · 💳 [Pagamentos](docs/PAYMENTS.md) · 🤖 [Workflow com IA](docs/AI-WORKFLOW.md) · 📋 Convenções: [`AGENTS.md`](AGENTS.md) + `CLAUDE.md` aninhados · 🧭 [Mapa rápido](CLAUDE.md)
+> 📐 [Arquitetura](docs/ARCHITECTURE.md) · ⚙️ [Setup & env](docs/SETUP.md) · 🔒 [Segurança](docs/SECURITY.md) · 💳 [Pagamentos](docs/PAYMENTS.md) · 🔑 [SSO](docs/AUTH-SSO.md) · 👤 [Auth & painéis](docs/AUTH-PANEL.md) · 📖 [Glossário](docs/GLOSSARY.md)
+>
+> 🤖 IA: [Ferramental](docs/AI-WORKFLOW.md) · [Pipeline de tarefas](docs/TASK-PIPELINE.md) · [Guia de análise](docs/feature-analysis-guide.md) · [Checklist de revisão](docs/review-checklist.md)
+>
+> 📋 Convenções: [`AGENTS.md`](AGENTS.md) + `CLAUDE.md` aninhados · 🧭 [Mapa rápido](CLAUDE.md)
 
 ## Filosofia
 
@@ -72,6 +76,25 @@ pnpm --filter <app> typecheck   # tsc --noEmit de um workspace
 ## CRUD de referência
 
 O recurso `entity` implementa um CRUD vertical completo (SDK → API → app → i18n) e serve como **template vivo** para novos recursos — veja a skill `/new-crud` em [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md).
+
+## Convenções de branch e commit
+
+Não há linter de commit instalado — o padrão é convenção do time. Especificação completa em
+[`.claude/rules/git-commits.md`](.claude/rules/git-commits.md).
+
+- **Branch**: `<project>/<type>/<title>` (ex.: `api/feat/entity-soft-delete`)
+- **Commit**: `type(project): short description` · **PR**: `type(project): title`
+- **`type`**: `feat` / `fix` / `style` / `chore` / `ci` / `refactor` / `perf` / `test` / `docs`
+- **`project`**: pasta em `apps/` (`app`, `web`, `api`, `email`) ou pacote sem `@repo/` (`sdk`,
+  `design-system`, `internationalization`, …); vários pacotes → `packages`
+- **Em inglês**; um commit por app/pacote, na ordem `sdk` → `api` → `app`/`web` → `internationalization`
+- ⛔ **Nunca commite em `main`/`master`/`production`** — sempre branch de feature + Pull Request
+
+## Desenvolvimento com IA
+
+O repo vem com Claude Code configurado: pipeline de tarefas (`/analyze → /develop → /review → /test`),
+subagents, skills de scaffolding e validação visual obrigatória de front-end.
+Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md).
 
 ## Deploy
 

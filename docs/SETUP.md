@@ -2,7 +2,7 @@
 
 Como subir o boilerplate do zero e o mapa **real** das variáveis de ambiente. A fonte de verdade de cada var é o `keys.ts` do pacote correspondente (validado por `@t3-oss/env-nextjs`) e o `env.ts` de cada app.
 
-> ⚠️ **Os arquivos `.env.example` estão desatualizados** — herdaram chaves do upstream next-forge (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub) que **não são usadas** neste fork. Use este documento como referência; ignore as chaves abaixo que não aparecem aqui. (Limpar os `.env.example` é uma tarefa recomendada — veja "Pendências de higiene".)
+> Os `.env.example` de `apps/{api,app,web}` já refletem **apenas** as vars usadas por este fork (agrupadas e comentadas). Copie o de cada app para `.env` (ou `.env.local`) e preencha. Este documento detalha **como obter/usar cada uma**. As chaves do upstream next-forge não usadas (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub) foram removidas.
 
 ## Pré-requisitos
 
@@ -20,7 +20,7 @@ pnpm install
 Cada var é lida pelo `keys.ts` indicado. Copie o `.env.example` de cada app para `.env.local` (ou `.env`) e preencha **apenas** o que está abaixo.
 
 ### Firebase — Auth (Admin, server) · pacote `@repo/auth` (`packages/auth/keys.ts`)
-Usado pela `apps/api` (guards verificam o ID token) e onde houver auth no servidor.
+Usado pelos **três** apps: `apps/api` (guards verificam o ID token), e `apps/app` + `apps/web` (proxy/SSR verificam a sessão **e mintam** o session cookie compartilhado + custom tokens da SSO cross-app — ver [`docs/AUTH-SSO.md`](AUTH-SSO.md)). Cada app precisa do service account.
 
 | Var | Obrigatória | Onde obter |
 |-----|-------------|-----------|
@@ -38,11 +38,27 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 
 > ⚠️ Em desenvolvimento, o client cai num app "mock" se faltar config (não quebra), mas auth real exige essas vars.
 
-### SDK / API URL — front
+### URLs entre apps
 | Var | App | Para quê |
 |-----|-----|----------|
-| `NEXT_PUBLIC_API_URL` | `app`, `web` | Base URL do `@repo/sdk` (`apps/app/shared/lib/client.ts`). Em dev: `http://localhost:3002`. **Sem isto o front não fala com a API.** |
-| `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_WEB_URL` | todos | URLs cruzadas entre apps. |
+| `NEXT_PUBLIC_API_URL` | `app`, `web`, `api` | Base URL do `@repo/sdk`. Em dev: `http://localhost:3002`. **Sem isto o front não fala com a API.** |
+| `NEXT_PUBLIC_APP_URL` | todos | URL do painel. Link "Ir para o painel" (web, modo subscription), redirect comum→painel, e **base das URLs de retorno do Stripe checkout/portal** (api). |
+| `NEXT_PUBLIC_WEB_URL` | todos | URL da web. Redirect do comum → web no modo `simple`. |
+| `NEXT_PUBLIC_DOCS_URL` | `app`, `web` | Link de Documentação no header (opcional; oculto se vazio). |
+| `CORS_ORIGIN` | `api` | Origem permitida nas respostas da API (`Access-Control-Allow-Origin`). Default `*`; em prod, sua origem web/app. |
+
+### Modo de produto e sessão · `@repo/next-config` (`packages/next-config/keys.ts`) + `@repo/auth/session`
+| Var | App | Para quê |
+|-----|-----|----------|
+| `NEXT_PUBLIC_PRODUCT_MODE` | `app`, `web` | `subscription` (usuário opera no painel; assinatura Stripe) \| `simple` (usuário opera na web; painel admin-only). Default `subscription`. Dirige roteamento/navbar/áreas — ver [`docs/AUTH-SSO.md`](AUTH-SSO.md) e [`docs/PAYMENTS.md`](PAYMENTS.md). |
+| `SESSION_COOKIE_DOMAIN` | `app`, `web` | **Vazio em dev** (cookie host-only em `localhost`, compartilhado entre portas). Em prod: domínio registrável pai (`example.com`) para `app.example.com` + `example.com` compartilharem a sessão. Nunca um public suffix (`vercel.app`). |
+| `SESSION_COOKIE_MAX_AGE_DAYS` | `app`, `web` | Duração da sessão em dias (Firebase: ~0.0035–14). Default 5. |
+
+### SEO (apenas `apps/web`) · `@repo/seo`
+Identidade da marca para metadata/Open Graph/JSON-LD. Todas opcionais (defaults neutros): `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_AUTHOR`, `NEXT_PUBLIC_APP_AUTHOR_URL`, `NEXT_PUBLIC_TWITTER_HANDLE`.
+
+### i18n · `@repo/internationalization`
+`NEXT_PUBLIC_DEFAULT_LOCALE` (`pt-br` | `en` | `es`, default `pt-br`) — locale usado quando a URL não traz prefixo de idioma.
 
 ### Stripe — pagamentos · pacote `@repo/payments` (`packages/payments/keys.ts`)
 | Var | Obrigatória | Onde obter |
@@ -59,7 +75,7 @@ Se `STRIPE_SECRET_KEY` não estiver setada, a validação é pulada (o app sobe 
 `ARCJET_KEY` (opcional para dev; recomendado em produção).
 
 ### Analytics (opcional) · `@repo/analytics`
-`NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`.
+`NEXT_PUBLIC_GA_MEASUREMENT_ID` (Google Analytics). Opcional; deixe vazio para desligar.
 
 ## Rodando
 
@@ -71,6 +87,27 @@ pnpm --filter api dev:with-stripe # API (3002) + encaminhamento de webhooks Stri
 
 Portas: `app` 3000 · `web` 3001 · `api` 3002 · `email` 3003.
 
+## Conductor (workspaces paralelos)
+
+O repo traz [`.conductor/settings.toml`](../.conductor/settings.toml), então cada workspace novo já nasce
+pronto para os agents rodarem typecheck, testes, lint e subir os apps:
+
+| Config | Efeito |
+|--------|--------|
+| `file_include_globs` | Copia os gitignored necessários para o workspace: `apps/*/.env`, `.env` da raiz e os arquivos locais do Claude. **Sem os `.env`, o front não fala com a API e o Firebase não inicializa.** |
+| `scripts.setup` | `pnpm install` na criação do workspace (root + `apps/*` + `packages/*`). |
+| `scripts.archive` | Remove todo `node_modules` do worktree antes de arquivar (~2 GB por workspace). |
+| `scripts.run_mode` | `nonconcurrent`: as portas são fixas nos scripts `dev` e os apps se referenciam por `NEXT_PUBLIC_*_URL`, então **um workspace roda de cada vez**. |
+| `scripts.run.*` | Botão Run: `dev` (todos), `app`, `web`, `api`, `test`, `check`. |
+
+⚠️ Conductor só passa a refletir o `settings.toml` **depois que ele chega à branch default no remoto**
+(`origin/main`). Antes disso, para valer já: copie o arquivo para `.conductor/settings.local.toml` no
+diretório raiz do repositório (`~/next-boilerplate/`) — essa cópia é pessoal, não versionada, e tem
+precedência. **Apague-a depois do merge**, ou ela continuará sobrepondo o arquivo compartilhado.
+
+Para rodar dois workspaces em paralelo seria preciso parametrizar as portas (`$CONDUCTOR_PORT`) nos
+scripts `dev` **e** nas URLs cruzadas de cada `.env` — hoje não é suportado.
+
 ## Firestore
 
 - O modelo de dados (coleções `user`, `entity`, …) é acessado pela API. As **regras de segurança** vivem em [`firestore.rules`](../firestore.rules) — leia [`docs/SECURITY.md`](SECURITY.md) **antes de fazer deploy das regras** (há uma dependência arquitetural importante).
@@ -78,5 +115,4 @@ Portas: `app` 3000 · `web` 3001 · `api` 3002 · `email` 3003.
 
 ## Pendências de higiene (recomendadas)
 
-- **Limpar os `.env.example`** de `apps/{api,app,web}` para refletir só as vars acima (remover Clerk/`DATABASE_URL`/BetterStack/Svix/Knock/Liveblocks/BaseHub).
-- **`apps/api/(shared)/infra/dabatase.ts`** tem a config Firebase **hardcoded** (apiKey/projectId no código). Mover para `NEXT_PUBLIC_FIREBASE_*` evita divergência entre ambientes/forks. Ver [`docs/SECURITY.md`](SECURITY.md).
+- **`apps/api/(shared)/infra/dabatase.ts`** tem a config Firebase **hardcoded** (apiKey/projectId no código). Mover para `NEXT_PUBLIC_FIREBASE_*` (já presentes no `.env.example` da api) evita divergência entre ambientes/forks. Ver [`docs/SECURITY.md`](SECURITY.md).
