@@ -118,12 +118,43 @@ de UI sobrevivem.
    anterior permanecem na tela até um refresh manual da tabela. Vale para trocar o usuário de contexto
    **e** para entrar/sair do painel comum.
 
-### Hooks de dados dependem do painel
+### Um dono só para os headers de auth
 
-Um hook que lê dados escopados por usuário só pode consultar **depois** que o painel está conhecido —
-senão a request sai antes dos headers e a API resolve o **ator** em vez do **sujeito**. O padrão é
-`enabled: enabled && initialized` (ver `useListUsers`), e a `queryKey` tem de descrever o escopo que a API
-vai realmente devolver: em painel comum a listagem é forçada a `common`, então a chave também.
+`AuthRequestPanelProvider` é a **única** autoridade sobre os headers do `apiClient` — token **e** `x-*`,
+escritos juntos na mesma passada. Nada mais pode escrever ou limpar.
+
+> ⛔ **Não divida essa propriedade.** O `ClientLayout` já foi dono do token e, no branch "token ainda não
+> resolvido", chamava `clearAuthRequestContext()`. Como o React roda efeito de filho **antes** do de pai,
+> aquela limpeza apagava os `x-*` que o provider tinha acabado de aplicar, e nada os reaplicava quando o
+> token chegava: toda request de impersonação saía sem sujeito e a API respondia
+> **403 `COMMON_PANEL_FORBIDDEN`**. Travado por `apps/app/__tests__/authHeaderOwnership.test.tsx`, que
+> renderiza a composição real.
+
+Limpeza acontece **só** quando o servidor reporta ausência de sessão (`actorUid === null`) — nunca porque
+o token está em trânsito.
+
+### Hooks de dados: `useAuthorizedQuery`, não `useQuery`
+
+Uma request que sai antes do token volta **401**, e o React Query **cacheia a falha** — foi assim que o
+seletor de impersonação ficou permanentemente vazio e, por consequência, permanentemente desabilitado.
+
+Todo hook que lê dado autenticado usa **`useAuthorizedQuery`** (`shared/hooks/useAuthorizedQuery.ts`), que
+segura a query até `sdkAuthorized`. Gatear um hook na mão não basta: quando só o `useListUsers` tinha o
+gate, o `/entities` continuava disparando 401 em carga fria.
+
+A `queryKey` também tem de descrever o escopo que a API vai realmente devolver: em painel comum a listagem
+é forçada a `common`, então a chave também.
+
+### Trocar de sujeito: `resetQueries`, e uma navegação só
+
+- **`queryClient.resetQueries()`**, não `clear()`. Os dois descartam o dado do sujeito anterior, mas só o
+  primeiro **refaz** as queries que estão na tela; com `clear()` a tabela ficava vazia até o usuário
+  clicar em atualizar.
+- **Uma navegação por troca.** `router.refresh()` e `router.push()` no mesmo tick se cancelam e a rota não
+  muda: trocar de painel faz `push` (a rota muda), trocar de usuário faz `refresh` (a rota é a mesma).
+- **Não escreva no store de dentro de uma subscription dele.** `applyAuthHeaders` roda como subscriber;
+  escrever estado ali re-entra na notificação que está sendo tratada e as atualizações são engolidas — era
+  o que impedia o refetch depois da troca.
 
 ## 6. Contrato de headers (SDK → API)
 
