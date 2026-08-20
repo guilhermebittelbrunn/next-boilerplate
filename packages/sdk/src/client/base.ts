@@ -45,16 +45,19 @@ export default class BaseClient {
             AUTH_REQUEST_HEADER.REQUEST_ROLE,
             props.requestRole ?? undefined
         );
+        this.setOptionalHeader(
+            AUTH_REQUEST_HEADER.USER_TIMEZONE,
+            props.userTimezone ?? undefined
+        );
         if (props.requestRole) {
             this.setHeader("x-role", props.requestRole);
         }
     }
 
     clearAuthRequestContext(): void {
-        this.removeHeader(AUTH_REQUEST_HEADER.USER_ID);
-        this.removeHeader(AUTH_REQUEST_HEADER.REQUEST_USER_ID);
-        this.removeHeader(AUTH_REQUEST_HEADER.USER_ROLE);
-        this.removeHeader(AUTH_REQUEST_HEADER.REQUEST_ROLE);
+        for (const header of Object.values(AUTH_REQUEST_HEADER)) {
+            this.removeHeader(header);
+        }
         this.removeHeader("x-role");
     }
 
@@ -117,6 +120,6 @@ export default class BaseClient {
     }
 
     removeHeader(key: string): void {
-        this.restClient.defaults.headers.common[key] = undefined;
+        delete this.restClient.defaults.headers.common[key];
     }
 }
