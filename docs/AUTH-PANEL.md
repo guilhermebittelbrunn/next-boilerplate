@@ -46,10 +46,13 @@ proxy.ts                  default-deny: tudo exige sessão, exceto /sign-in e /s
   Caminho terminado em extensão de arquivo passa direto (`isStaticAssetPath`), senão um arquivo de
   `public/` seria redirecionado para o sign-in. A checagem fica no corpo do proxy, não no `matcher`: o
   Next compila matchers com path-to-regexp, onde um lookahead ancorado não se comporta como regex puro.
-- **Admin impersonando não entra na área admin.** O guard `requireAdminApi` rejeita
-  `requestRole === common` (`AUTH_REQUEST_PANEL_FORBIDDEN`) e o `(admin)/admin/layout.tsx` espelha isso
-  redirecionando para a área comum. Sem isso o admin poderia **escrever** (criar/editar/apagar usuários)
-  declarando painel comum, mesmo com a leitura já escopada.
+- **Admin impersonando não escreve na área admin.** O guard `requireAdminApi` rejeita
+  `requestRole === common` em métodos **mutantes** (`AUTH_REQUEST_PANEL_FORBIDDEN`) e o
+  `(admin)/admin/layout.tsx` espelha isso redirecionando para a área comum. Sem isso o admin poderia
+  criar/editar/apagar usuários declarando painel comum, mesmo com a leitura já escopada.
+  ⚠️ **Leituras seguem abertas de propósito**: o próprio seletor de impersonação é alimentado por
+  `GET /users`. Fechar a leitura tranca o admin no primeiro usuário que ele acessou, sem volta — e a
+  listagem já vem restrita a usuários comuns pelo contexto da request, então nada de admin vaza.
 - **UI oculta nunca é proteção.** Cada camada acima é redundante de propósito; a última palavra é sempre
   o guard da API, que revalida papel e alvo a cada request.
 - O proxy **não** conhece o papel (ele está no Firestore, não no cookie de sessão): resolver isso ali
@@ -110,6 +113,10 @@ de UI sobrevivem.
 7. Trocar para o painel comum **sem alvo disponível** é impossível, então o seletor de ambiente fica
    **desabilitado** enquanto a lista carrega ou quando não há nenhum usuário comum — em vez de o clique
    virar um no-op silencioso.
+8. **Trocar de sujeito descarta o cache de queries** (`queryClient.clear()` + `router.refresh()`). Todo
+   dado em cache pertence ao sujeito que estava ativo quando foi buscado; sem isso as linhas do usuário
+   anterior permanecem na tela até um refresh manual da tabela. Vale para trocar o usuário de contexto
+   **e** para entrar/sair do painel comum.
 
 ### Hooks de dados dependem do painel
 

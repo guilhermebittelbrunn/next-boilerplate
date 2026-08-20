@@ -64,6 +64,8 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 - **Cookie manda, localStorage espelha**: cookies `bp:panel-request-role` / `bp:impersonate-firebase-uid` são a autoridade (Server Components leem); o localStorage guarda o mesmo + o nome de exibição.
 - **Troca de contexto usa `router.refresh()`**, nunca `window.location.reload()`.
 - **Lógica pura em `shared/lib/panelState.ts`** (normalização, visibilidade dos controles, espelhos) — é onde os testes de regressão batem. Visibilidade nunca depende de estado assíncrono.
+- **Trocar de sujeito (usuário de contexto ou painel) descarta o cache do React Query** — o dado em cache pertence ao sujeito anterior.
+- **Estado de UI persistido no browser tem de ser resolvido no servidor.** Ler `localStorage`/cookie dentro de um `useState` de componente cliente roda no SSR também, onde o valor não existe: o servidor renderiza o default, o cliente o valor salvo, e o resultado é mismatch de hidratação + "pisca" na tela. Padrão: um helper em `lib/server/` lê o cookie e o layout passa como prop (ex.: `resolveSidebarDefaultOpen` → `SidebarProvider defaultOpen`).
 - **Pós-login (admin vs comum)**: `AppDesignProvider` passa `resolveDefaultPostLoginPath`; Google/sign-up usam `resolveAppPostLoginPath`. O sanitizador de `?redirect=` é `postAuthRedirectTarget` de `@repo/auth/redirect` (guard de open-redirect — não duplique).
 
 ## Nomes de arquivos e estilo
