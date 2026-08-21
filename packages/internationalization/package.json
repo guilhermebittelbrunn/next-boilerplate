@@ -1,0 +1,28 @@
+{
+  "name": "@repo/internationalization",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./keys": "./keys.ts",
+    "./server": "./server.ts",
+    "./client": "./client.ts",
+    "./utils": "./utils.ts"
+  },
+  "scripts": {
+    "test": "NODE_ENV=test vitest run"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^24.9.1",
+    "react": "19.2.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "next": "16.0.0",
+    "zod": "^4.1.12"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
+}

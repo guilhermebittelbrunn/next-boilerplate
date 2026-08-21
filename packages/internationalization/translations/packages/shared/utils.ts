@@ -1,0 +1,121 @@
+export const sharedUtilsTranslations = {
+    "pt-br": {
+        error: {
+            unexpected: "Um erro inesperado aconteceu",
+        },
+        apiErrors: {
+            AUTH_MISSING_BEARER: "Token de autenticação ausente.",
+            AUTH_INVALID_TOKEN: "Sessão inválida ou expirada.",
+            ADMIN_FORBIDDEN: "Você não tem permissão para esta ação.",
+            AUTH_REQUEST_USER_ID_MISMATCH: "Contexto da requisição inválido.",
+            AUTH_REQUEST_USER_ROLE_MISMATCH: "Contexto da requisição inválido.",
+            AUTH_REQUEST_PANEL_FORBIDDEN:
+                "Painel não permitido para este usuário.",
+            AUTH_REQUEST_IMPERSONATION_FORBIDDEN:
+                "Não é possível atuar como outro usuário.",
+            AUTH_REQUEST_ADMIN_TARGET_INVALID:
+                "Contexto da requisição inválido.",
+            AUTH_REQUEST_IMPERSONATION_REQUIRED:
+                "Selecione um usuário para este painel.",
+            AUTH_REQUEST_IMPERSONATION_TARGET_INVALID:
+                "Usuário inválido para atuação.",
+            AUTH_MISSING_TOKEN: "Token de autenticação ausente.",
+            AUTH_FORBIDDEN_ORIGIN: "Origem da requisição não permitida.",
+            AUTH_NO_SESSION: "Nenhuma sessão ativa.",
+            USERS_NOT_FOUND: "Usuário não encontrado.",
+            USERS_NOTHING_TO_UPDATE: "Nenhum dado para atualizar.",
+            VALIDATION_FAILED: "Dados inválidos.",
+            USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este e-mail já está em uso.",
+            USERS_AUTH_WEAK_PASSWORD: "Senha muito fraca.",
+            USERS_AUTH_INVALID_EMAIL: "E-mail inválido.",
+            USERS_AUTH_RATE_LIMITED:
+                "Muitas tentativas. Tente novamente em instantes.",
+            USERS_AUTH_SIGN_UP_FAILED: "Não foi possível criar o usuário.",
+            USERS_PROFILE_CREATE_FAILED:
+                "Não foi possível salvar o perfil do usuário.",
+            COMMON_PANEL_FORBIDDEN:
+                "Esta ação não está disponível para o seu perfil.",
+            ENTITY_NOT_FOUND: "Entidade não encontrada.",
+            ENTITY_CREATE_FAILED:
+                "Não foi possível concluir o cadastro da entidade.",
+        },
+    },
+    en: {
+        error: {
+            unexpected: "An unexpected error occurred",
+        },
+        apiErrors: {
+            AUTH_MISSING_BEARER: "Missing authentication token.",
+            AUTH_INVALID_TOKEN: "Invalid or expired session.",
+            ADMIN_FORBIDDEN: "You do not have permission for this action.",
+            AUTH_REQUEST_USER_ID_MISMATCH: "Invalid request context.",
+            AUTH_REQUEST_USER_ROLE_MISMATCH: "Invalid request context.",
+            AUTH_REQUEST_PANEL_FORBIDDEN:
+                "This panel is not allowed for your account.",
+            AUTH_REQUEST_IMPERSONATION_FORBIDDEN:
+                "You cannot act as another user.",
+            AUTH_REQUEST_ADMIN_TARGET_INVALID: "Invalid request context.",
+            AUTH_REQUEST_IMPERSONATION_REQUIRED:
+                "Select a user for this panel.",
+            AUTH_REQUEST_IMPERSONATION_TARGET_INVALID:
+                "Invalid user for impersonation.",
+            AUTH_MISSING_TOKEN: "Missing authentication token.",
+            AUTH_FORBIDDEN_ORIGIN: "Request origin not allowed.",
+            AUTH_NO_SESSION: "No active session.",
+            USERS_NOT_FOUND: "User not found.",
+            USERS_NOTHING_TO_UPDATE: "Nothing to update.",
+            VALIDATION_FAILED: "Invalid data.",
+            USERS_AUTH_EMAIL_ALREADY_IN_USE: "This email is already in use.",
+            USERS_AUTH_WEAK_PASSWORD: "Password is too weak.",
+            USERS_AUTH_INVALID_EMAIL: "Invalid email.",
+            USERS_AUTH_RATE_LIMITED: "Too many attempts. Try again shortly.",
+            USERS_AUTH_SIGN_UP_FAILED: "Could not create the user.",
+            USERS_PROFILE_CREATE_FAILED: "Could not save the user profile.",
+            COMMON_PANEL_FORBIDDEN:
+                "This action is not available for your account.",
+            ENTITY_NOT_FOUND: "Entity not found.",
+            ENTITY_CREATE_FAILED: "Could not finish creating the entity.",
+        },
+    },
+    es: {
+        error: {
+            unexpected: "Ocurrió un error inesperado",
+        },
+        apiErrors: {
+            AUTH_MISSING_BEARER: "Falta el token de autenticación.",
+            AUTH_INVALID_TOKEN: "Sesión inválida o expirada.",
+            ADMIN_FORBIDDEN: "No tienes permiso para esta acción.",
+            AUTH_REQUEST_USER_ID_MISMATCH: "Contexto de solicitud no válido.",
+            AUTH_REQUEST_USER_ROLE_MISMATCH: "Contexto de solicitud no válido.",
+            AUTH_REQUEST_PANEL_FORBIDDEN:
+                "Este panel no está permitido para tu cuenta.",
+            AUTH_REQUEST_IMPERSONATION_FORBIDDEN:
+                "No puedes actuar como otro usuario.",
+            AUTH_REQUEST_ADMIN_TARGET_INVALID:
+                "Contexto de solicitud no válido.",
+            AUTH_REQUEST_IMPERSONATION_REQUIRED:
+                "Selecciona un usuario para este panel.",
+            AUTH_REQUEST_IMPERSONATION_TARGET_INVALID:
+                "Usuario no válido para la suplantación.",
+            AUTH_MISSING_TOKEN: "Falta el token de autenticación.",
+            AUTH_FORBIDDEN_ORIGIN: "Origen de la solicitud no permitido.",
+            AUTH_NO_SESSION: "No hay sesión activa.",
+            USERS_NOT_FOUND: "Usuario no encontrado.",
+            USERS_NOTHING_TO_UPDATE: "No hay datos para actualizar.",
+            VALIDATION_FAILED: "Datos no válidos.",
+            USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este correo ya está en uso.",
+            USERS_AUTH_WEAK_PASSWORD: "La contraseña es demasiado débil.",
+            USERS_AUTH_INVALID_EMAIL: "Correo no válido.",
+            USERS_AUTH_RATE_LIMITED:
+                "Demasiados intentos. Inténtalo de nuevo en unos momentos.",
+            USERS_AUTH_SIGN_UP_FAILED: "No se pudo crear el usuario.",
+            USERS_PROFILE_CREATE_FAILED:
+                "No se pudo guardar el perfil del usuario.",
+            COMMON_PANEL_FORBIDDEN:
+                "Esta acción no está disponible para tu cuenta.",
+            ENTITY_NOT_FOUND: "Entidad no encontrada.",
+            ENTITY_CREATE_FAILED:
+                "No se pudo completar el registro de la entidad.",
+        },
+    },
+};

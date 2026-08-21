@@ -1,0 +1,46 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+# Arquivos gitignored copiados para todo workspace novo.
+# Sem os `.env` de cada app o front não fala com a API e o Firebase não inicializa — nenhum agent
+# consegue subir e validar a aplicação. Os `.env.example` são versionados e já vêm com o worktree.
+file_include_globs = ".env\n.env.local\napps/*/.env\napps/*/.env.local\n.claude/settings.local.json\n.claude/dev-credentials.local.md\n"
+
+[scripts]
+# Criação do workspace: instala as dependências do monorepo (root + apps/* + packages/*), para que os
+# agents possam rodar typecheck, testes, lint e subir os apps sem passo manual.
+# O fallback cobre o caso de o lockfile estar dessincronizado do package.json.
+setup = "pnpm install --frozen-lockfile || pnpm install"
+
+# Antes de arquivar: remove todo node_modules do worktree (root, apps/*, packages/*).
+# São ~2 GB por workspace — sem isso cada workspace arquivado deixa esse peso no disco.
+archive = "find . -name node_modules -type d -prune -exec rm -rf '{}' +"
+
+# As portas são fixas nos scripts `dev` de cada app (app 3000 · web 3001 · api 3002 · email 3003) e os
+# apps se referenciam por `NEXT_PUBLIC_*_URL`. Dois workspaces rodando ao mesmo tempo colidiriam de
+# porta, então só um roda por vez.
+run_mode = "nonconcurrent"
+
+[scripts.run.dev]
+command = "pnpm dev"
+default = true
+icon = "play"
+
+[scripts.run.app]
+command = "pnpm --filter app dev"
+icon = "monitor"
+
+[scripts.run.web]
+command = "pnpm --filter web dev"
+icon = "globe"
+
+[scripts.run.api]
+command = "pnpm --filter api dev"
+icon = "server"
+
+[scripts.run.test]
+command = "pnpm test"
+icon = "test-tube"
+
+[scripts.run.check]
+command = "pnpm check"
+icon = "wrench"

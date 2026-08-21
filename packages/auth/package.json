@@ -1,0 +1,35 @@
+{
+  "name": "@repo/auth",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./keys": "./keys.ts",
+    "./types": "./types.ts",
+    "./server": "./server.ts",
+    "./session": "./session.ts",
+    "./session-routes": "./session-routes.ts",
+    "./client": "./client.ts",
+    "./client-ui": "./client-ui.tsx",
+    "./middleware": "./middleware.ts",
+    "./provider": "./provider.tsx",
+    "./redirect": "./redirect.ts",
+    "./components/sign-in": "./components/sign-in.tsx",
+    "./components/sign-up": "./components/sign-up.tsx"
+  },
+  "dependencies": {
+    "@repo/internationalization": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "firebase": "^11.1.0",
+    "firebase-admin": "^13.0.2",
+    "next": "15.1.3",
+    "@tanstack/react-query": "^5.90.20",
+    "react": "19.2.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.2.13",
+    "typescript": "^5.9.3"
+  }
+}

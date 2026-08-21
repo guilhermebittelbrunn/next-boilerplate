@@ -1,0 +1,20 @@
+{
+  "extends": ["@repo/typescript-config/nextjs.json"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@repo/*": ["../../packages/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../../packages/shared/utils/helpers/cookies.ts",
+    "../../packages/shared/utils/helpers/formattedError.ts",
+    "../../packages/shared/utils/helpers/handleClientError.ts"
+  ]
+}
