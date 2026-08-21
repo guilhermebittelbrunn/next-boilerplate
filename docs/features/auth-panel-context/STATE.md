@@ -34,21 +34,19 @@ updated: 2026-08-20 17:10
   dispensa login: sign-in/sign-up em light/dark/mobile e todos os gates anônimos do proxy default-deny.
 - **Fora dos commits, por decisão do usuário**: `docs/AUTH-SSO.md` e `docs/PAYMENTS.md` seguem
   modificados no working tree — descrevem código que não existe em nenhuma branch. Limpeza planejada.
-- **Push pendente**: os 21 commits estão locais, aguardando confirmação explícita.
-- **Bloqueio do `/test` (2 defeitos, mesma causa raiz)** — os 4 bugs relatados pelo usuário foram
-  verificados e **não reproduzem**; estes são novos, achados dirigindo o app:
-  1. `clientLayout.tsx` chama `apiClient.clearAuthRequestContext()` no branch "token ainda não
-     resolvido". O efeito do pai roda **depois** do provider filho, que aplica os `x-*` no render — a
-     ordem inverteu com esta feature e os headers de contexto são destruídos. Enquanto o admin
-     impersona, `GET`/`POST /entities` respondem 403 `COMMON_PANEL_FORBIDDEN`. A linha é anterior ao
-     diff, mas era inofensiva quando o contexto vinha por rede.
-  2. A query do seletor (`/users?type=common`) sai antes do `Authorization` (definido em efeito async) →
-     401 → com `retry: 1` + `staleTime: 60s` a lista fica vazia e o seletor de ambiente fica
-     **permanentemente desabilitado** (3/3 em carga fria). O gate `enabled` conhece o painel, não o token.
-  Menores: 403 renderizado como "Nenhuma entidade cadastrada." e submit sem feedback de erro; aviso
-  `Select is changing from uncontrolled to controlled` (`resolveSelectValue` descarta valor válido
-  enquanto `options` está vazio).
-- **Testes criados pelo `/test`** (no working tree, não commitados): `apps/api/__tests__/usersRoute.test.ts`,
-  `apps/api/__tests__/userRepositoryList.test.ts`, `apps/app/__tests__/proxy.test.ts`,
-  `apps/app/__tests__/authRequestTimeZone.test.ts`. Total 116 → **144**.
+- **Os 4 bugs relatados pelo usuário foram verificados dirigindo o app e não reproduzem.**
+- **O `/test` achou 2 bloqueantes novos e corrigi-los revelou 4 derivados — todos resolvidos.** Detalhe
+  de cada um em `test/report.md` (seção "Resolução"). Em uma linha: a propriedade dos headers de auth
+  estava dividida entre dois componentes, e a ordem em que React roda efeitos de pai e filho fazia um
+  apagar o que o outro acabara de aplicar. Hoje o `AuthRequestPanelProvider` é o dono único.
+- **Regras que nasceram desses defeitos** (documentadas em `docs/AUTH-PANEL.md` e `apps/app/CLAUDE.md`):
+  dono único dos headers · `useAuthorizedQuery` em todo hook autenticado · `resetQueries` (não `clear`) e
+  **uma** navegação por troca de sujeito · nunca escrever no store de dentro de uma subscription dele.
+- **Cobertura**: 116 → **148** testes. O guard de regressão do defeito principal
+  (`apps/app/__tests__/authHeaderOwnership.test.tsx`) foi verificado contra o código antigo — ele falha
+  lá, então não é tautologia.
+- **Pendente**: mobile no fluxo de impersonação (o `agent-browser` instalado não expõe comando de
+  viewport) · credencial de usuário **comum** (esse papel só tem cobertura unit) · modo de produto
+  `simple` não exercitado · dois defeitos menores de UI conhecidos e **não** corrigidos (erro de carga
+  renderizado como estado vazio; submit sem feedback de erro).
 - **Nenhum dado de dev criado ou apagado** (as tentativas de criar entidade retornaram 403).
