@@ -2,11 +2,14 @@
 
 Como o fluxo de assinatura funciona neste boilerplate e o que falta implementar em cada fork. Para o passo a passo de implementação, use a skill `/payments-flow`. Aspectos de segurança em [`docs/SECURITY.md`](SECURITY.md).
 
-## Estado atual
+## Estado atual (implementado)
 
 - `@repo/payments` expõe o cliente `stripe` (server-only) e um `paymentsAgentToolkit` (`@repo/payments/ai`) para criar produtos/preços/payment links.
-- A `apps/api` tem **só o webhook** (`app/(routes)/webhooks/payments/route.ts`), com a **assinatura verificada** mas os handlers de negócio em **TODO**.
-- **Ainda não há** rotas de checkout/portal, listagem de planos nem persistência de assinatura. A skill `/payments-flow` cria essas peças.
+- **Rotas** em `apps/api`: `GET /payments/plans` (público; `prices.list` → `PlanDTO`), `POST /payments/checkout` e `POST /payments/portal` (`requireCommonPanelApi`). O **webhook** trata `checkout.session.completed` e `customer.subscription.updated|deleted`.
+- **Persistência**: `UserDTO.subscription` (`stripeCustomerId`, `status`, `priceId`, `currentPeriodEnd`) no doc `user`, via `userRepository.updateSubscriptionByReferenceId`. O customer é criado no 1º checkout com `metadata.firebaseUid` + `client_reference_id`, e o webhook reconcilia por esse UID.
+- **SDK**: `apiClient.payments.{listPlans,createCheckout,createPortal}`.
+- **UI**: "Minha assinatura" em `apps/app` (área comum, **modo `subscription`** — sidebar `Assinatura`) liga checkout/portal; os CTAs do pricing (`apps/web`) apontam para essa área no modo subscription.
+- **Falta por fork**: criar os produtos/preços no Stripe e ajustar a política de reembolso/copy. A skill `/payments-flow` ajuda a estender. **Idempotência**: os handlers de webhook relêem o estado do objeto Stripe a cada evento (sem dedup por `event.id`), e o checkout não deduplica `customers` por `metadata.firebaseUid` antes de criar — suficiente para começar; endureça (store de `event.id` processado + busca de customer) conforme o volume.
 
 ## Fluxo alvo (ponta a ponta)
 

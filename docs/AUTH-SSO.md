@@ -41,7 +41,16 @@ limpamos o cookie passivamente, ou o 2º app deslogaria o usuário ao abrir.
 ## Modo de produto
 
 `NEXT_PUBLIC_PRODUCT_MODE` (`subscription` | `simple`, default `subscription`) +
-`getProductMode()` ([packages/next-config/product-mode.ts](../packages/next-config/product-mode.ts)). Hoje controla o link "Ir para o painel" no header da web (modo subscription). As UIs completas por modo (área operacional na web no modo `simple`; assinatura no modo `subscription`) são o próximo passo.
+`getProductMode()`/`isSubscriptionMode()`/`commonUserUsesPanel()` ([packages/next-config/product-mode.ts](../packages/next-config/product-mode.ts)). Lido server+client; define todo o roteamento/navegação:
+
+| | `subscription` | `simple` |
+|---|---|---|
+| Usuário comum opera em | painel (`apps/app`) | web (`apps/web`) |
+| Painel (`apps/app`) | comum + admin | **só admin** (comum redirecionado p/ web) |
+| Navbar da web (logado) | link "Ir para o painel" | dropdown de **Áreas** (`/dashboard`, scaffold) |
+| Assinatura | "Minha assinatura" no painel (Stripe) | — (monetização simples) |
+
+Enforcement server-side: o layout `(common)` do app redireciona comum→web no `simple` ([(common)/layout.tsx](<../apps/app/app/[locale]/(authenticated)/(common)/layout.tsx>)); o grupo `(authenticated)` da web redireciona →app no `subscription` ([(authenticated)/layout.tsx](<../apps/web/app/[locale]/(authenticated)/layout.tsx>), com `requireSession` espelhando `apps/app`). Em `simple`, exige `NEXT_PUBLIC_WEB_URL`/`NEXT_PUBLIC_APP_URL` para os redirects cross-app. Assinatura: ver [docs/PAYMENTS.md](PAYMENTS.md).
 
 ## Fallback: domínios registráveis distintos
 
