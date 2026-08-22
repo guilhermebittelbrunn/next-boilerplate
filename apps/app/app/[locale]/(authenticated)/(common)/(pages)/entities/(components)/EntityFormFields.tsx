@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/useFilenamingConvention: matches admin users colocated modules */
 "use client";
 
 import {

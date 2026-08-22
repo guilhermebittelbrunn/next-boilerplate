@@ -1,4 +1,3 @@
-/** biome-ignore lint/style/useFilenamingConvention: project uses camelCase component filenames */
 /** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: <explanation> */
 /** biome-ignore-all lint/style/noNonNullAssertion: <explanation> */
 /** biome-ignore-all lint/complexity/useIndexOf: <explanation> */
