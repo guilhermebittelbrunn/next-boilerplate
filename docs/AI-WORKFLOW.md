@@ -4,8 +4,9 @@ Este repositório vem integrado com o **Claude Code**. Este guia é o **hub**: o
 quando usar cada coisa. O objetivo é que cada fork já nasça com uma base sólida para desenvolvimento
 assistido por IA.
 
-> **Vai executar uma tarefa?** O fluxo de trabalho (`/analyze → /develop → /review → /test`) está em
-> [`TASK-PIPELINE.md`](TASK-PIPELINE.md). Este documento cobre o **ferramental**.
+> **Vai executar uma tarefa?** O fluxo de trabalho (`/spec → /analyze → /develop → /review → /test`,
+> fechando com `/spec --sync`) está em [`TASK-PIPELINE.md`](TASK-PIPELINE.md). Este documento cobre o
+> **ferramental**.
 
 ## O que está configurado
 
@@ -16,10 +17,11 @@ assistido por IA.
 | Regras por escopo | `apps/*/CLAUDE.md`, `packages/CLAUDE.md` | `CLAUDE.md` aninhados, **auto-carregados** ao trabalhar em cada pasta. |
 | Regras globais de conduta | `.claude/rules/*.md` | Sempre em contexto: commits/branches e comentários no código. |
 | Pipeline de tarefas | [`TASK-PIPELINE.md`](TASK-PIPELINE.md) | Comandos, subagents, `STATE.md`, gates, épicos. |
+| Backlog de funcionalidades | [`specs/`](../specs/README.md) | O que **ainda falta** no core, com evidência de mercado e status auditado contra o código. Entrada do ciclo — a spec entregue **sai daqui** e é arquivada em `docs/features/<slug>/spec.md`. |
 | Roteiro de análise | [`feature-analysis-guide.md`](feature-analysis-guide.md) | Checklist de tech lead + formato dos critérios de aceite (§9.1). |
 | Checklist de revisão | [`review-checklist.md`](review-checklist.md) | **Fonte única** das invariantes que uma revisão cobra. |
 | Glossário | [`GLOSSARY.md`](GLOSSARY.md) | Vocabulário do boilerplate (guard, subject, DTO/mapper, slice, modo de produto…). |
-| Slash commands | `.claude/commands/*` | `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate`. |
+| Slash commands | `.claude/commands/*` | `/spec`, `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate`. |
 | Subagents | `.claude/agents/*` | Os motores do pipeline + o `code-reviewer` read-only. |
 | Skills do projeto | `.claude/skills/*` | Procedimentos invocáveis com `/`. |
 | Harness | `.claude/settings.json` + `.claude/hooks/` | Permissões, auto-format ao editar, bloqueio de commit em branch protegida. |
@@ -31,6 +33,7 @@ Documentação de produto/infra: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`SETUP
 
 | Agent | Papel |
 |-------|-------|
+| `estrategista-produto` | Descobre e especifica o que vale construir → `specs/<id>.md` + `specs/BACKLOG.md`. |
 | `planejador-tarefa` | Analisa e planeja (PO + Tech Lead) → `analyze/plan.md`. |
 | `desenvolvedor` | Implementa o slice vertical → `develop/handoff.md`. |
 | `revisor-codigo` | Revisa e corrige o diff, **dono da branch**, propõe os commits → `review/review.md`. |
@@ -45,6 +48,16 @@ diferença é que o primeiro só relata e o segundo corrige, resolve a branch e 
 ## Skills do projeto
 
 Digite `/` no Claude Code para invocar. Cada skill encapsula o passo a passo já alinhado às convenções.
+
+### Criadas para este repo (descoberta)
+
+- **`/market-research`** — pesquisa de mercado **com fontes** para decidir se uma feature merece entrar no
+  core: hierarquia de fontes (lei/regulador > doc de provedor > página do produto > blog **nunca**),
+  **prevalência** medida sobre um painel declarado ("7 de 11"), ceticismo sobre hype e **custo herdado por
+  todo fork**. Grava nota citável em `specs/research/<topico>.md` com `collected`/`revalidate_after`.
+- **`/spec-audit`** — reconcilia `specs/` com a realidade do **código** (não com o `status` gravado):
+  confere o corte de MVP de cada spec, cruza com `docs/features/*/STATE.md`, aplica transições, detecta
+  **deriva** e regressão, e regrava o `BACKLOG.md`. É o motor do `/spec --sync` — o passo que fecha o loop.
 
 ### Criadas para este repo (scaffolding)
 
@@ -158,7 +171,7 @@ Estes arquivos são carregados em toda sessão — por isso são curtos:
 ## Fluxo recomendado para uma feature
 
 Formal, com rastreio em disco → use o [pipeline](TASK-PIPELINE.md):
-`/analyze → /develop → /review → /test` (+ `/observe`).
+`/spec → /analyze → /develop → /review → /test` (+ `/observe`), fechando com `/spec --sync`.
 
 Informal, para mudanças pequenas:
 
@@ -174,6 +187,11 @@ Informal, para mudanças pequenas:
 
 ## Mantendo a base de IA saudável
 
+- **Rode `/spec --sync` ao fim de cada entrega.** É o passo que impede o backlog de virar ficção: ele
+  confere no código o que foi entregue, em vez de acreditar no `status` gravado. Backlog que ninguém audita
+  é pior que backlog nenhum, porque parece confiável.
+- Nota de pesquisa vencida (`revalidate_after`) → revalide **só o que mudou** (preço, versão, prevalência),
+  não a nota inteira.
 - Atualize o `CLAUDE.md` (regras de ouro / mapa) quando uma convenção mudar — mas mantenha-o **curto**,
   deixando o detalhe em `AGENTS.md` e nos `CLAUDE.md` aninhados.
 - Invariante nova que a revisão deve cobrar → entra em [`review-checklist.md`](review-checklist.md)

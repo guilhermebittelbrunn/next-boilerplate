@@ -94,8 +94,22 @@ exemplos de `entity`).
 
 ## Fluxo de trabalho
 
-- **`STATE.md`** — índice + gate do pipeline de uma tarefa, em `docs/features/<slug>/`. Ver
-  [`TASK-PIPELINE.md`](TASK-PIPELINE.md).
+- **Spec** — a ficha de uma funcionalidade **candidata**, em `specs/<id>.md`: problema, evidência de
+  mercado, corte de MVP e riscos. Responde **o quê** e **por quê**; o **como** é do `analyze/plan.md`. Uma
+  spec não contém pseudo-diff nem nome de arquivo a criar. Ver [`specs/README.md`](../specs/README.md).
+- **Arquivar uma spec** — tirá-la de `specs/` e guardá-la junto da feature que a implementou, quando o
+  `/spec --sync` confirma a entrega **no código**. É o que mantém `specs/` significando "o que falta".
+  Regra e exceções: [`specs/README.md`](../specs/README.md).
+- **Backlog** — `specs/BACKLOG.md`, o índice priorizado das specs. É a **fonte da ordem**; o arquivo da
+  spec é a fonte do conteúdo.
+- **Nota de pesquisa** — `specs/research/<topico>.md`: o levantamento de mercado com fontes, `collected` e
+  `revalidate_after`. As specs **citam** a nota em vez de recopiar os argumentos.
+- **Prevalência** — quantas referências de um painel declarado entregam um recurso por padrão ("7 de 11").
+  É o dado que sustenta "isso é padrão de mercado"; impressão não é.
+- **Deriva** — quando o corte de MVP de uma spec foi implementado, mas **diferente** do especificado.
+  Detectada pelo `/spec --sync`; significa que ou a spec estava errada, ou a implementação desviou.
+- **`STATE.md`** — índice + gate do pipeline de uma tarefa, em `docs/features/<slug>/`. Quando a tarefa
+  nasceu de uma spec, o frontmatter traz `spec: <id>`. Ver [`TASK-PIPELINE.md`](TASK-PIPELINE.md).
 - **Handoff** — o resumo conciso que uma etapa deixa para a próxima (`develop/handoff.md`,
   `review/review.md`), para que ela não precise reler o plano e o diff inteiros.
 - **Validação visual** — subir o app e percorrer o fluxo com a skill `agent-browser`, conferindo
