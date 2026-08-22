@@ -64,8 +64,8 @@ Verifique **apenas o que o diff toca**. Cite sempre `arquivo:linha` e a regra vi
 - [ ] Defaults de campo opcional (`?? null`, `?? true`) aplicados no handler.
 - [ ] Header customizado novo foi adicionado em `allowHeaders` do CORS em `apps/api/proxy.ts`.
 - [ ] Não importa componente React de `apps/app`.
-- [ ] ⚠️ Não use `app/(routes)/auth/*` nem `(guards)/auth.ts` como modelo — são legados
-      (`req.json()` sem validação, `{ error: "string" }`). O modelo é `entities/`.
+- [ ] ⚠️ Não use `app/(routes)/auth/*` como modelo — é legado (`req.json()` sem validação,
+      `{ error: "string" }`). O modelo é `entities/`.
 
 ## 2. `apps/app`
 
@@ -107,7 +107,9 @@ Verifique **apenas o que o diff toca**. Cite sempre `arquivo:linha` e a regra vi
 - [ ] `@repo/sdk`: `export default class XActions` recebendo o `Client`; chamadas via
       `this.client.request<Response<T>>({...})` retornando `data.data`; tipos exportados do mesmo módulo
       ou de `src/types/<recurso>/`; **action registrada no `Client`** (`src/client/index.ts`); sem string
-      de produto acoplada; erro propaga (o app mapeia para toast/i18n).
+      de produto acoplada; **o erro propaga cru** — nunca embrulhe em `FormattedError` dentro do SDK: só a
+      tela conhece o locale, e um erro pré-formatado chega ao `new FormattedError(error, locale)` do app
+      como um objeto que ele não sabe ler, derrubando **todo** `error.code` no texto genérico.
 - [ ] `@repo/design-system`: presentacional — **sem fetch, sem sessão**. Componente/tipo novo em
       `components/ui/*` reexportado em `components/ui/index.ts`. `HookForm*` = `Omit<...>` das props
       geridas pelo RHF + `{...rest}` repassado ao componente base; `HookFormSwitch` tem **um único**

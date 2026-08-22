@@ -113,6 +113,29 @@ scripts `dev` **e** nas URLs cruzadas de cada `.env` — hoje não é suportado.
 - O modelo de dados (coleções `user`, `entity`, …) é acessado pela API. As **regras de segurança** vivem em [`firestore.rules`](../firestore.rules) — leia [`docs/SECURITY.md`](SECURITY.md) **antes de fazer deploy das regras** (há uma dependência arquitetural importante).
 - Provisione o Firestore no Firebase Console (modo de produção) e faça deploy das regras com a Firebase CLI (`npx -y firebase-tools@latest deploy --only firestore:rules`) ou via Firebase MCP.
 
+## Primeiro admin (bootstrap de desenvolvimento)
+
+O cadastro público cria sempre um usuário **comum**, e a rota que cria admin exige um admin autenticado —
+então o primeiro admin de um ambiente novo não nasce pelo produto. Para criá-lo:
+
+```bash
+pnpm --filter api create-dev-admin <email> <senha>
+# ou: DEV_ADMIN_EMAIL=... DEV_ADMIN_PASSWORD=... pnpm --filter api create-dev-admin
+```
+
+O script usa as `FIREBASE_ADMIN_*` do `apps/api/.env`, cria (ou reaproveita) o usuário no Firebase Auth e
+grava/promove o documento correspondente na coleção `user` com `type: "admin"`. A senha vem por argumento
+ou variável de ambiente e **nunca** é gravada em arquivo nem impressa pelo script.
+
+É **idempotente e serve para recuperar acesso**: se o e-mail já existir, o script define a senha informada
+nessa conta e promove o perfil a admin. Rodar de novo é a forma de voltar a entrar quando a senha se perdeu.
+
+> Prefira a forma com variável de ambiente: o `pnpm` ecoa a linha de comando que executa, então a senha
+> passada por argumento aparece no terminal e no histórico do shell.
+
+> ⚠️ É ferramenta de **desenvolvimento**. Ela fala com o projeto Firebase configurado no `.env`: apontada
+> para produção, cria um administrador real — e redefine a senha de uma conta existente.
+
 ## Pendências de higiene (recomendadas)
 
 - **`apps/api/(shared)/infra/dabatase.ts`** tem a config Firebase **hardcoded** (apiKey/projectId no código). Mover para `NEXT_PUBLIC_FIREBASE_*` (já presentes no `.env.example` da api) evita divergência entre ambientes/forks. Ver [`docs/SECURITY.md`](SECURITY.md).

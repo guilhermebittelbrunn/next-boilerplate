@@ -60,6 +60,5 @@ não pôde ser feita — não trate como aprovada.
 - Se nada for bloqueante, **diga claramente**.
 - **Não invente problemas**: só reporte o que conseguir confirmar lendo o código.
 - Distinga **violação de regra do repo** (com a regra citada) de **preferência sua** (marque como nit).
-- Não cobre padrão dos arquivos legados como se fosse o alvo: `apps/api/app/(routes)/auth/*` e
-  `(guards)/auth.ts` não seguem o padrão atual — se o diff **os toca**, aponte; se apenas **os vizinha**,
-  não trate como regressão nova.
+- Não cobre padrão dos arquivos legados como se fosse o alvo: `apps/api/app/(routes)/auth/*` não segue o
+  padrão atual — se o diff **os toca**, aponte; se apenas **os vizinha**, não trate como regressão nova.
