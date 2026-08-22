@@ -19,6 +19,8 @@ export const sharedUtilsTranslations = {
                 "Selecione um usuário para este painel.",
             AUTH_REQUEST_IMPERSONATION_TARGET_INVALID:
                 "Usuário inválido para atuação.",
+            AUTH_REQUEST_IMPERSONATION_READ_ONLY:
+                "Somente leitura: você está atuando como outro usuário.",
             AUTH_MISSING_TOKEN: "Token de autenticação ausente.",
             AUTH_FORBIDDEN_ORIGIN: "Origem da requisição não permitida.",
             AUTH_NO_SESSION: "Nenhuma sessão ativa.",
@@ -59,6 +61,8 @@ export const sharedUtilsTranslations = {
                 "Select a user for this panel.",
             AUTH_REQUEST_IMPERSONATION_TARGET_INVALID:
                 "Invalid user for impersonation.",
+            AUTH_REQUEST_IMPERSONATION_READ_ONLY:
+                "Read-only: you are acting as another user.",
             AUTH_MISSING_TOKEN: "Missing authentication token.",
             AUTH_FORBIDDEN_ORIGIN: "Request origin not allowed.",
             AUTH_NO_SESSION: "No active session.",
@@ -97,6 +101,8 @@ export const sharedUtilsTranslations = {
                 "Selecciona un usuario para este panel.",
             AUTH_REQUEST_IMPERSONATION_TARGET_INVALID:
                 "Usuario no válido para la suplantación.",
+            AUTH_REQUEST_IMPERSONATION_READ_ONLY:
+                "Solo lectura: estás actuando como otro usuario.",
             AUTH_MISSING_TOKEN: "Falta el token de autenticación.",
             AUTH_FORBIDDEN_ORIGIN: "Origen de la solicitud no permitido.",
             AUTH_NO_SESSION: "No hay sesión activa.",

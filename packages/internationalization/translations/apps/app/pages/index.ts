@@ -1,5 +1,6 @@
 import { adminTranslations } from "./admin";
 import { commonTranslations } from "./common";
+import { impersonationTranslations } from "./impersonation";
 import { navbarTranslations } from "./navbar";
 import { signInTranslations } from "./signIn";
 import { signUpTranslations } from "./signUp";
@@ -11,6 +12,7 @@ export const pagesTranslations = {
         common: commonTranslations["pt-br"],
         admin: adminTranslations["pt-br"],
         navbar: navbarTranslations["pt-br"],
+        impersonation: impersonationTranslations["pt-br"],
     },
     en: {
         signIn: signInTranslations.en,
@@ -18,6 +20,7 @@ export const pagesTranslations = {
         common: commonTranslations.en,
         admin: adminTranslations.en,
         navbar: navbarTranslations.en,
+        impersonation: impersonationTranslations.en,
     },
     es: {
         signIn: signInTranslations.es,
@@ -25,5 +28,6 @@ export const pagesTranslations = {
         common: commonTranslations.es,
         admin: adminTranslations.es,
         navbar: navbarTranslations.es,
+        impersonation: impersonationTranslations.es,
     },
 };
