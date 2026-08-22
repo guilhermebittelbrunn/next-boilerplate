@@ -1,16 +1,13 @@
-import { UserRoleLevel } from "@repo/auth/types";
 import { UserType } from "@repo/sdk/src/types";
-import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 import {
     type ResolvedAuthRequestContext,
     resolveAuthRequestContext,
 } from "@/(shared)/lib/auth-request-context";
+import { assertReadOnlyWhileImpersonating } from "@/(shared)/lib/impersonation-read-only";
 import { resolveApiActor } from "@/(shared)/lib/resolve-api-actor";
 import { userRepository } from "@/(shared)/repositories/user.repository";
-
-const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 export type AdminAuthContext = {
     user: UserRecord;
@@ -62,21 +59,12 @@ export function requireAdminApi<TRouteContext extends RouteContext = undefined>(
             return resolved.response;
         }
 
-        // An admin acting as a common user must not *mutate* through admin endpoints:
-        // the panel they declared says they are operating as someone else.
-        //
-        // Reads stay open on purpose. The impersonation picker itself is fed by
-        // `GET /users`, so refusing reads would lock the admin into the first user they
-        // switched to, with no way back. The listing is already narrowed to common users
-        // by the request context, so nothing admin-only leaks.
-        if (
-            resolved.data.requestRole !== UserRoleLevel.ADMIN &&
-            !SAFE_METHODS.has(req.method)
-        ) {
-            return Response.json(
-                { error: { code: "AUTH_REQUEST_PANEL_FORBIDDEN" } },
-                { status: HTTP_STATUS.FORBIDDEN }
-            );
+        const readOnlyRefusal = assertReadOnlyWhileImpersonating(
+            req,
+            resolved.data
+        );
+        if (readOnlyRefusal) {
+            return readOnlyRefusal;
         }
 
         const enrichedContext = {

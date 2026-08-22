@@ -5,6 +5,7 @@ import {
     type ResolvedAuthRequestContext,
     resolveAuthRequestContext,
 } from "@/(shared)/lib/auth-request-context";
+import { assertReadOnlyWhileImpersonating } from "@/(shared)/lib/impersonation-read-only";
 import { resolveApiActor } from "@/(shared)/lib/resolve-api-actor";
 import { userRepository } from "@/(shared)/repositories/user.repository";
 
@@ -56,6 +57,14 @@ export function requireCommonPanelApi<
         );
         if (!resolved.ok) {
             return resolved.response;
+        }
+
+        const readOnlyRefusal = assertReadOnlyWhileImpersonating(
+            req,
+            resolved.data
+        );
+        if (readOnlyRefusal) {
+            return readOnlyRefusal;
         }
 
         const subjectProfile = await userRepository.findByReferenceId(
