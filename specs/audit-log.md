@@ -9,15 +9,20 @@ area: [apps/api, apps/app, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-08-21
+updated: 2026-08-22
 ---
 
 # Trilha de auditoria de ações sensíveis
 
+> **Nota de auditoria (2026-08-22):** a parte de **autorização** que esta spec citava como buraco aberto —
+> mutação pelas rotas comuns durante impersonação — foi fechada em
+> `docs/features/impersonation-read-only/`. O corte de MVP daqui (o **registro**) segue integralmente
+> pendente.
+
 ## Problema
 
-Um administrador deste boilerplate pode assumir a identidade de qualquer usuário comum, navegar como ele e
-agir em nome dele — e nada disso deixa rastro. Também não fica registro de quem excluiu um usuário, de quem
+Um administrador deste boilerplate pode assumir a identidade de qualquer usuário comum e ver tudo o que ele
+vê — e nada disso deixa rastro. Também não fica registro de quem excluiu um usuário, de quem
 alterou um perfil, nem de quem entrou em qual conta e quando. Se um cliente perguntar "quem mexeu nos meus
 dados?", ou se a autoridade perguntar depois de um incidente, a resposta hoje é: não sabemos. É o recurso de
 suporte mais poderoso do produto operando sem contrapartida.
@@ -29,12 +34,15 @@ suporte mais poderoso do produto operando sem contrapartida.
   (`apps/app/shared/lib/panelState.ts:18-19`), acionado pela UI em
   `apps/app/shared/components/ui/PanelNavbarControls.tsx`; na API,
   `apps/api/(shared)/lib/auth-request-context.ts:83-147` valida o contexto e expõe `isImpersonating` (`:141`).
-- **Mitigação parcial que já existe:** `apps/api/app/(guards)/admin.ts:13,72-80` recusa métodos não seguros
-  quando o admin opera no painel comum — personificando, ele não muta pelos **endpoints admin**.
-- **Mas o buraco continua aberto:** `apps/api/app/(guards)/common-panel.ts:28-84` **não tem** essa
-  restrição — o mesmo admin cria, edita e exclui dados do usuário pelas **rotas comuns**
-  (`apps/api/app/(routes)/entities/[id]/route.ts:27,60`), sem registro; e
-  `apps/api/app/(routes)/users/[id]/route.ts:75-91` exclui um usuário devolvendo 204, também sem registro.
+- **Mutação sob impersonação já está fechada nos dois painéis:**
+  `apps/api/(shared)/lib/impersonation-read-only.ts:19-31` recusa métodos não seguros quando
+  `isImpersonating`, chamado por `apps/api/app/(guards)/admin.ts:62` e
+  `apps/api/app/(guards)/common-panel.ts:62`. Personificando, o admin **lê** e não escreve em rota alguma —
+  isso é **autorização**, e foi entregue fora desta spec (`docs/features/impersonation-read-only/`).
+- **O que continua sem rastro:** a impersonação em si não é registrada — ninguém sabe quem entrou na conta
+  de quem, quando entrou nem quando saiu. E as ações do admin **como ele mesmo** também não deixam registro:
+  `apps/api/app/(routes)/users/[id]/route.ts:75-91` exclui um usuário devolvendo 204 e `:54-68` altera
+  perfil e credencial de Auth, ambos em silêncio.
 - **Nenhuma trilha existe:** só há os repositórios `base`, `entity` e `user`
   (`apps/api/(shared)/repositories/`), e varrer "audit" no código retorna apenas três comentários
   (`packages/shared/utils/helpers/auth-request-headers.ts:12`, `packages/auth/types.ts:22`,
@@ -102,7 +110,8 @@ nem mensagem de commit deste repo.
 - Exportar a trilha e expurgo automático — dependem de decisão de prazo por fork.
 - Alerta em tempo real sobre ação sensível — depende de `observability-logging`.
 - Auditar toda escrita de qualquer recurso: começa caro, envelhece mal e gera ruído.
-- Bloquear mutações da impersonação nas rotas comuns: é **autorização**, não auditoria (ver perguntas).
+- Bloquear mutações da impersonação nas rotas comuns: era **autorização**, não auditoria — **já entregue**
+  em `docs/features/impersonation-read-only/`, fora desta spec.
 
 ## Impacto por camada
 
@@ -142,6 +151,6 @@ nem mensagem de commit deste repo.
   (Res. CD/ANPD nº 15/2024, art. 10).
 - Registrar leituras ou só escritas + impersonação? — **recomendação:** só escritas + impersonação; auditar
   leitura multiplica volume e custo.
-- Fechar as mutações de impersonação nas rotas comuns (hoje `common-panel.ts:28-84` permite)? —
-  **recomendação:** sim, como tarefa de autorização própria; embutir mudança de comportamento numa entrega
-  de registro esconde o risco.
+- ~~Fechar as mutações de impersonação nas rotas comuns?~~ **Resolvida** — foi feito como tarefa de
+  autorização própria, exatamente como recomendado aqui. Esta spec deixa de carregar a pergunta e passa a
+  cobrir só o **registro**.

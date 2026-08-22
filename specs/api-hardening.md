@@ -1,7 +1,7 @@
 ---
 id: api-hardening
 title: "Endurecimento da borda da API: headers/CSP, rate limit e CORS"
-status: proposed
+status: approved
 value: alto
 effort: M
 audience: confianca
@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/security, packages/internationaliz
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-21
+updated: 2026-08-22
 ---
 
 # Endurecimento da borda da API: headers/CSP, rate limit e CORS

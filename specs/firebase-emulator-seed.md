@@ -9,10 +9,15 @@ area: [raiz, apps/api, apps/app, packages/auth]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-08-21
+updated: 2026-08-22
 ---
 
 # Emulador do Firebase, seed e primeiro admin
+
+> **Nota de auditoria (2026-08-22):** 1 dos 5 itens do corte foi entregue **por fora desta spec** — o
+> bootstrap do primeiro admin (`apps/api/scripts/create-dev-admin.mjs`, vindo de
+> `docs/features/impersonation-read-only/`), e só contra projeto real. Entrega parcial órfã: o restante do
+> corte (emulador, seed, reset, `docs/SETUP.md`) segue pendente.
 
 ## Problema
 
@@ -38,10 +43,17 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
   O próprio arquivo avisa (12-18) que publicar essa regra com a API no client SDK derruba a API.
 - **O impasse do primeiro admin, em código:** `apps/api/app/(routes)/auth/sign-up/route.ts:34` cria o
   perfil com `type: UserType.COMMON` fixo; e a única rota que cria usuário com outro tipo,
-  `apps/api/app/(routes)/users/route.ts:34`, está atrás de `requireAdminApi`. Ou seja: **para criar um
-  admin é preciso já ser admin.**
+  `apps/api/app/(routes)/users/route.ts:34`, está atrás de `requireAdminApi`. Ou seja: **pelo produto, para
+  criar um admin é preciso já ser admin.**
+- **Bootstrap do primeiro admin: entregue, mas só contra projeto real.**
+  `apps/api/scripts/create-dev-admin.mjs` (idempotente: `ensureAuthUser` `:48-67`,
+  `ensureAdminProfile` `:69-97`), exposto em `apps/api/package.json:11`. Foi entregue por fora desta spec,
+  em `docs/features/impersonation-read-only/`. **Exige credenciais `FIREBASE_ADMIN_*` de service account
+  reais** (`:31-46`) e não conhece emulador — o item do corte que pede "executável tanto no emulador quanto
+  num projeto real" está **metade feito**.
 - `packages/sdk/src/types/user/user.ts:2-5` — os dois tipos (`admin`, `common`) existem no contrato.
-- **Lacuna:** nenhum ambiente local isolado, nenhum estado inicial, nenhum caminho para o primeiro admin.
+- **Lacuna:** nenhum ambiente local isolado, nenhum estado inicial, e o caminho do primeiro admin existe
+  só para quem já tem projeto real provisionado.
 
 ## Evidência de mercado
 
@@ -62,7 +74,8 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
 - [ ] Um comando popula o ambiente emulado com um estado inicial conhecido: um usuário admin, ao menos um
       usuário comum e alguns registros do recurso de referência `entity`, com credenciais documentadas.
 - [ ] Existe um caminho **de código** para criar o primeiro admin, executável tanto no emulador quanto num
-      projeto real recém-criado, sem editar documento à mão no console.
+      projeto real recém-criado, sem editar documento à mão no console. — **metade feito:** o script existe
+      (`apps/api/scripts/create-dev-admin.mjs`) e cobre o projeto real; falta o caminho pelo emulador.
 - [ ] O ambiente emulado é redefinível: um comando devolve o estado inicial após um teste destrutivo.
 - [ ] `docs/SETUP.md` passa a ter o caminho local (emulador) como padrão, e o projeto real como o caminho
       de quem vai publicar.

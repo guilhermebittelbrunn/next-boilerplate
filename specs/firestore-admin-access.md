@@ -1,15 +1,15 @@
 ---
 id: firestore-admin-access
 title: Acesso ao Firestore via Admin SDK e security rules aplicáveis
-status: proposed
+status: in-progress
 value: alto
 effort: M
 audience: confianca
 area: [apps/api, packages/auth, raiz]
 mode: ambos
 depends_on: []
-feature: -
-updated: 2026-08-21
+feature: firestore-admin-access
+updated: 2026-08-22
 ---
 
 # Acesso ao Firestore via Admin SDK e security rules aplicáveis

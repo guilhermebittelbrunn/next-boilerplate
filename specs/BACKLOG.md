@@ -6,31 +6,47 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue** — spec concluída é arquivada junto da feature e passa a
 constar na seção **Entregues** abaixo. Ciclo de vida: [`README.md`](README.md).
 
-> **Última auditoria:** 2026-08-21 · **rodada de origem:** semeadura inicial.
-> Esta primeira rodada é maior que uma descoberta normal (o `README.md` calibra 6–12 specs): ela cataloga o
+> **Última auditoria:** 2026-08-22 (`/spec --sync`) · **rodada de origem:** semeadura inicial (2026-08-21).
+> A semeadura foi maior que uma descoberta normal (o `README.md` calibra 6–12 specs): ela catalogou o
 > acúmulo de um boilerplate inteiro. As próximas devem ser incrementais.
 >
-> Nenhuma spec foi aprovada ainda — **todas estão `proposed`**, à espera de triagem. Rode `/spec` para
-> revisar e aprovar, ou `/spec --next` para uma recomendação com justificativa.
+> **Resultado da auditoria de 2026-08-22:** as 19 specs foram conferidas item a item contra o código.
+> **Nenhuma transição de status** — nada foi entregue, nenhuma spec foi arquivada. Uma **entrega parcial
+> órfã** foi encontrada (`firebase-emulator-seed`, 1 de 5 itens) e três specs tiveram o texto corrigido por
+> deriva. Detalhe em [Deriva corrigida nesta auditoria](#deriva-corrigida-nesta-auditoria).
+>
+> **Triagem de 2026-08-22:** as três specs sem dependência que desbloqueiam o resto foram aprovadas —
+> [`firestore-admin-access`](firestore-admin-access.md), [`ci-pipeline`](ci-pipeline.md) e
+> [`api-hardening`](api-hardening.md). [`teams-organizations`](teams-organizations.md) virou `deferred`
+> (motivo na própria spec: adiar a implementação, **não** a decisão). As 15 restantes seguem `proposed`.
+>
+> **Em execução:** [`firestore-admin-access`](firestore-admin-access.md) entrou no pipeline em 2026-08-22
+> (`in-progress` · [`docs/features/firestore-admin-access/`](../docs/features/firestore-admin-access/STATE.md)).
 
 ## Contadores
 
 | status | qtd |
 |--------|-----|
-| `proposed` | 19 |
-| `approved` | 0 |
-| `in-progress` | 0 |
+| `proposed` | 15 |
+| `approved` | 2 |
+| `in-progress` | 1 |
 | `done` | 0 |
-| `deferred` | 0 |
+| `deferred` | 1 |
 | `rejected` | 0 |
 | `superseded` | 0 |
 
 **Por audiência:** `produto` 8 · `dx` 5 · `confianca` 6.
 **Por esforço:** P 0 · M 16 · G 3.
 
+**Fila de execução:** `firestore-admin-access` (**`in-progress`**) → `ci-pipeline` → `api-hardening`.
+Nenhuma das três tem `depends_on`, então as duas restantes podem começar em paralelo — mas **não**
+paralelize nada que toque `apps/api/(shared)/repositories/` enquanto a primeira estiver aberta.
+
 ## Ordem recomendada
 
-A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica mais caro depois**.
+A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica mais caro depois**. A #1 está
+**em execução**; a #2 e a #3 estão **`approved`** e podem ir para o `/analyze` já; as demais seguem
+`proposed`. `teams-organizations` saiu da fila — está `deferred` (ver [Fora da fila ativa](#fora-da-fila-ativa)).
 
 | # | id | por que agora |
 |---|----|---------------|
@@ -40,8 +56,8 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 | 4 | [`transactional-emails`](transactional-emails.md) | Um único template, em inglês literal, fora do dicionário. Desbloqueia recuperação de senha e convites. |
 | 5 | [`auth-recovery-verification`](auth-recovery-verification.md) | Commodity absoluta (10/10 no painel) e ausente. Um fork não pode ir a produção sem "esqueci minha senha". |
 | 6 | [`cursor-pagination`](cursor-pagination.md) | Todo fork herda "ler a coleção inteira" por construção. Depois de haver dados em produção, a correção quebra contrato do SDK. |
-| 7 | [`firebase-emulator-seed`](firebase-emulator-seed.md) | Sem emulador não há teste de rules — e sem seed, todo fork começa criando o primeiro admin na mão, no console. |
-| 8 | [`audit-log`](audit-log.md) | O painel **já tem impersonação** e nada registra quem entrou na conta de quem. É o recurso de maior risco do repo, hoje sem trilha. |
+| 7 | [`firebase-emulator-seed`](firebase-emulator-seed.md) | Sem emulador não há teste de rules — e sem seed, todo fork começa criando o primeiro admin na mão, no console. **1 de 5 itens já entregue por fora** (script de bootstrap do admin), só contra projeto real. |
+| 8 | [`audit-log`](audit-log.md) | O painel **já tem impersonação** e nada registra quem entrou na conta de quem. A mutação sob impersonação já foi bloqueada (autorização); o **registro** continua inexistente. |
 | 9 | [`cookie-consent`](cookie-consent.md) | O Google Analytics carrega hoje **sem qualquer consentimento prévio**. |
 | 10 | [`file-upload-storage`](file-upload-storage.md) | Nenhuma integração de storage existe; desbloqueia avatar e anexos. |
 | 11 | [`account-settings`](account-settings.md) | A sidebar tem 4 links de Settings apontando para `#`, e **todas** as rotas de usuário são admin-only: ninguém consegue editar a si mesmo. |
@@ -52,7 +68,15 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 | 16 | [`dashboard-home`](dashboard-home.md) | As duas homes do painel estão literalmente vazias — é a primeira tela de todo fork. |
 | 17 | [`e2e-testing`](e2e-testing.md) | Rede de segurança automatizada. Só faz sentido com CI e emulador prontos. |
 | 18 | [`account-security-mfa`](account-security-mfa.md) | Prevalência baixa (MFA 3/10, sessões 1/10). Valor médio, mas fecha a superfície de autenticação. |
-| 19 | [`teams-organizations`](teams-organizations.md) | **Decisão estratégica, não fila.** Ver a nota abaixo — o esforço é G, mas a *decisão* deveria ser tomada agora. |
+
+## Fora da fila ativa
+
+Specs que não entram na ordem acima. Ficam em `specs/` como memória institucional — é o que impede o
+`/spec` de repropor a mesma coisa na rodada seguinte.
+
+| id | status | motivo |
+|----|--------|--------|
+| [`teams-organizations`](teams-organizations.md) | `deferred` (2026-08-22) | Esforço G e nenhum fork pediu escopo por organização. **A implementação foi adiada; a decisão, não** — ver a seção abaixo e o motivo registrado na spec. Reabrir exige argumento novo, tipicamente o primeiro fork B2B real. |
 
 ## Todas as specs
 
@@ -60,11 +84,11 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 |----|--------|-----------|-------|---------|--------|------------|
 | [`account-security-mfa`](account-security-mfa.md) | MFA, sessões ativas e política de senha | confianca | médio | M | `proposed` | `account-settings` |
 | [`account-settings`](account-settings.md) | Área de conta e preferências do usuário | produto | alto | M | `proposed` | `auth-recovery-verification`, `file-upload-storage` |
-| [`api-hardening`](api-hardening.md) | Endurecimento da borda da API: headers/CSP, rate limit e CORS | confianca | alto | M | `proposed` | — |
+| [`api-hardening`](api-hardening.md) | Endurecimento da borda da API: headers/CSP, rate limit e CORS | confianca | alto | M | `approved` | — |
 | [`audit-log`](audit-log.md) | Trilha de auditoria de ações sensíveis | confianca | alto | M | `proposed` | `firestore-admin-access` |
 | [`auth-recovery-verification`](auth-recovery-verification.md) | Recuperação de senha e verificação de e-mail | produto | alto | M | `proposed` | `transactional-emails` |
 | [`billing-subscription`](billing-subscription.md) | Assinatura Stripe de ponta a ponta | produto | alto | M | `proposed` | — |
-| [`ci-pipeline`](ci-pipeline.md) | Pipeline de CI no GitHub Actions | dx | alto | M | `proposed` | — |
+| [`ci-pipeline`](ci-pipeline.md) | Pipeline de CI no GitHub Actions | dx | alto | M | `approved` | — |
 | [`cookie-consent`](cookie-consent.md) | Consentimento de cookies e Consent Mode | confianca | alto | M | `proposed` | — |
 | [`cursor-pagination`](cursor-pagination.md) | Paginação por cursor no BaseRepository e no SDK | dx | alto | M | `proposed` | `firestore-admin-access` |
 | [`dashboard-home`](dashboard-home.md) | Home do painel com widgets | produto | médio | M | `proposed` | — |
@@ -72,10 +96,10 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 | [`e2e-testing`](e2e-testing.md) | Testes E2E e acessibilidade automatizada | dx | médio | G | `proposed` | `ci-pipeline`, `firebase-emulator-seed` |
 | [`file-upload-storage`](file-upload-storage.md) | Upload de arquivos e storage | produto | alto | M | `proposed` | — |
 | [`firebase-emulator-seed`](firebase-emulator-seed.md) | Emulador do Firebase, seed e primeiro admin | dx | alto | M | `proposed` | `firestore-admin-access` |
-| [`firestore-admin-access`](firestore-admin-access.md) | Acesso ao Firestore via Admin SDK e security rules aplicáveis | confianca | alto | M | `proposed` | — |
+| [`firestore-admin-access`](firestore-admin-access.md) | Acesso ao Firestore via Admin SDK e security rules aplicáveis | confianca | alto | M | `in-progress` | — |
 | [`observability-logging`](observability-logging.md) | Observabilidade: erros, tracing e logs estruturados | dx | alto | M | `proposed` | — |
 | [`onboarding-flow`](onboarding-flow.md) | Onboarding pós-cadastro | produto | alto | M | `proposed` | — |
-| [`teams-organizations`](teams-organizations.md) | Organizações, membros e convites | produto | alto | G | `proposed` | `transactional-emails` |
+| [`teams-organizations`](teams-organizations.md) | Organizações, membros e convites | produto | alto | G | `deferred` | `transactional-emails` |
 | [`transactional-emails`](transactional-emails.md) | E-mails transacionais traduzidos | produto | alto | M | `proposed` | — |
 
 ## Entregues
@@ -87,6 +111,26 @@ mostre entregue e pendente lado a lado.
 |----|-------------|----------------|
 | — | — | _nenhuma ainda_ |
 
+As duas features já concluídas em `docs/features/` — `auth-panel-context` e `impersonation-read-only` —
+**não nasceram de spec** e por isso não constam aqui: a primeira é correção de bug anterior à existência
+desta pasta; a segunda saiu de um achado 🔴 desta mesma tabela de achados (já removido dela). O `spec: -`
+no `STATE.md` das duas está correto — não é vínculo faltando.
+
+## Deriva corrigida nesta auditoria
+
+**Deriva** = o mundo mudou embaixo da spec. Nos três casos abaixo a **spec estava desatualizada** (a
+implementação não desviou de plano nenhum), então o texto da spec foi corrigido para refletir o código.
+
+| id | o que a spec afirmava | o que o código mostra | ação |
+|----|----------------------|------------------------|------|
+| [`audit-log`](audit-log.md) | `common-panel.ts` não bloqueia mutação sob impersonação; item em "Fora do corte" e pergunta em aberto sobre fechar isso | `apps/api/(shared)/lib/impersonation-read-only.ts:19-31` chamado pelos **dois** guards (`admin.ts:62`, `common-panel.ts:62`) | spec atualizada: o buraco de **autorização** está fechado; o corte de MVP (o **registro**) segue 100% pendente |
+| [`firebase-emulator-seed`](firebase-emulator-seed.md) | não existe caminho de código para o primeiro admin | `apps/api/scripts/create-dev-admin.mjs` existe e é idempotente, mas **exige service account real** (`:31-46`) e não conhece emulador | item marcado como parcial; **entrega parcial órfã** sinalizada |
+| [`teams-organizations`](teams-organizations.md) | `app/(guards)/` tem três arquivos, incluindo `auth.ts` | `auth.ts` foi removido em `e45669a`; sobraram `admin.ts:27` e `common-panel.ts:29` | referências corrigidas |
+
+Verificado e **mantido**: o predicado de posse `row.userId !== ctx.subjectProfile.id` continua repetido
+**3 vezes no mesmo arquivo** (`apps/api/app/(routes)/entities/[id]/route.ts:16,32,65`) — o refactor dos
+guards passou ao lado da contrapartida (2) recomendada abaixo.
+
 ## A decisão que não pode esperar a fila
 
 `teams-organizations` é a única spec cuja **decisão** custa mais que a implementação. A pesquisa é
@@ -94,10 +138,15 @@ categórica: retrofitar escopo por organização é **reescrita, não refactor**
 G, "a decisão mais cara de postergar"). A evidência local confirma — o predicado de posse
 `row.userId !== subjectProfile.id` já aparece **3 vezes em um único arquivo**, para **um** recurso.
 
-Recomendação: **adiar a implementação, tomar a decisão agora**, com duas contrapartidas de esforço P que
-tornam o adiamento honesto — (1) escrever se este core é B2B ou B2C por padrão; (2) parar de espalhar o
-predicado de posse por handler, concentrando-o num ponto único de escopo. Sem elas, adiar é só acumular
-juros. Detalhes e alternativas na própria spec.
+**Decidido em 2026-08-22:** a spec foi para `deferred` — adiar a implementação, **não** a decisão. O que
+torna o adiamento honesto são duas contrapartidas de esforço P, que **não** dependem desta spec e valem
+como tarefa direta no `/analyze`:
+
+1. escrever em `docs/ARCHITECTURE.md` se este core é **B2B ou B2C por padrão** — hoje a resposta está
+   implícita no código e ninguém a declarou;
+2. concentrar o predicado de posse num ponto único de escopo, tirando-o dos handlers.
+
+Sem as duas, adiar é só acumular juros. Detalhes e alternativas na própria spec.
 
 ## Achados da varredura que não viraram spec
 
@@ -108,20 +157,23 @@ passar por spec.
 Os três primeiros são de **segurança** e foram confirmados diretamente no código — valem revisão antes de
 qualquer spec.
 
+> **Reconferidos um a um em 2026-08-22:** os 16 achados **seguem válidos**; nenhum foi corrigido de
+> tabela. As referências `arquivo:linha` foram reconferidas contra o `e45669a` e as imprecisas, ajustadas.
+
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🔴 **Revogar sessão não derruba o ID token.** `verifyIdToken(token)` é chamado **sem o argumento de revogação** (`packages/auth/server.ts:123`), e `resolve-api-actor.ts:24` tenta o bearer ID token **antes** do cookie — que, esse sim, usa `verifySessionCookie(..., true)` (`:193`) | `packages/auth/server.ts` · `apps/api/(shared)/lib/resolve-api-actor.ts` | Depois de revogar as sessões, um ID token já emitido continua passando no guard da API até expirar (1 hora). A base está metade correta — e é a metade errada que vem primeiro. |
 | 🔴 **`CORS_ORIGIN` fora do env tipado, com coringa por padrão** — lido direto de `process.env` e caindo em `"*"` | `apps/api/proxy.ts:15` (`apps/api/env.ts` declara `server: {}`) | Viola a regra de env tipado do repo, e é a causa de o coringa sobreviver em produção sem ninguém notar. |
 | 🟡 **O código trata `isRateLimit()` sem que nenhuma regra de rate limit seja registrada** | `packages/security/index.ts:44` | Dá a impressão de já limitar. Some-se a isso: `apps/api` **não declara** `@repo/security` como dependência, e `sign-in`/`sign-up` são `POST` sem guard nem limite. |
-| 🟡 Helper de cookie grava `SameSite=Lax` **sem a flag `Secure`**; `isSameOriginRequest` **retorna `true` quando não há header `Origin`** | `packages/shared/utils/helpers/cookies.ts:13` · `packages/auth/session.ts:66-68` | ASVS 5.0 L1 (3.3.1) exige `Secure`. O guard de origem é defesa em profundidade declarada, mas a porta aberta merece decisão explícita. |
-| ⚠️ Documentação descreve como **implementado** um fluxo de pagamentos que **não existe** (rotas `/payments/*`, `UserDTO.subscription`, tela "Minha assinatura") | `docs/PAYMENTS.md` | É a pior classe de erro de documentação: mente com aparência de autoridade. Corrigir a doc **independe** de implementar a spec. |
-| `delete()` herdado por todo repositório é **soft delete**: grava `deletedAt` e nada mais | `apps/api/(shared)/repositories/base.repository.ts:134` | O único "excluir" que existe não exclui: a conta no Firebase Auth sobrevive e o e-mail continua ocupado. |
-| Webhook da Stripe roteia eventos diferentes dos que a doc afirma, e os dois handlers são stubs vazios com `// TODO` | `apps/api/app/(routes)/webhooks/payments/route.ts` | Assinatura é validada, mas nada é persistido. |
+| 🟡 Helper de cookie grava `SameSite=Lax` **sem a flag `Secure`**; `isSameOriginRequest` **retorna `true` quando não há header `Origin`** | `packages/shared/utils/helpers/cookies.ts:13` · `packages/auth/session.ts:66-70` | ASVS 5.0 L1 (3.3.1) exige `Secure`. Escopo do primeiro: o helper hoje só grava `x-locale` (`LanguageSwitcher.tsx:64`), **não** o cookie de sessão — severidade menor que a citação sugere. O guard de origem é defesa em profundidade declarada, mas a porta aberta merece decisão explícita. |
+| ⚠️ Documentação descreve como **implementado** um fluxo de pagamentos que **não existe**: rotas `/payments/*`, `UserDTO.subscription`, `userRepository.updateSubscriptionByReferenceId`, `apiClient.payments.*`, tela "Minha assinatura" e eventos de webhook que o código não roteia | `docs/PAYMENTS.md:8-12` (`docs/SECURITY.md:51` diz o **oposto**, e está certo) | É a pior classe de erro de documentação: mente com aparência de autoridade. Dos **6 itens** da seção "Estado atual (implementado)", só o **primeiro** (`:7`, o client `stripe` + `paymentsAgentToolkit`) é verdadeiro. Corrigir a doc **independe** de implementar a spec. |
+| `delete()` herdado por todo repositório é **soft delete**: grava `deletedAt` e nada mais | `apps/api/(shared)/repositories/base.repository.ts:134-136` | O único "excluir" que existe não exclui: a conta no Firebase Auth sobrevive e o e-mail continua ocupado. |
+| Webhook da Stripe roteia `subscription_schedule.canceled` (a doc afirma `customer.subscription.updated\|deleted`), os dois handlers são stubs `// TODO` e o `customerId` extraído é variável morta | `apps/api/app/(routes)/webhooks/payments/route.ts:8-22,24-34,57,61` | Assinatura é validada (`:50`), nada é persistido. A variável morta escapando do `noUnusedVariables: error` (`biome.jsonc:20`) sugere que o arquivo não é coberto pelo lint. |
 | `package.json` exporta `./client-ui` apontando para arquivo **inexistente** | `packages/auth` | Export quebrado. |
 | Referencia chaves PostHog que não existem em `keys.ts`, com dependência **não instalada** | `packages/analytics/server.ts` | Código morto que não compila se for chamado. |
 | `chart.tsx` é código morto — `recharts` pesa no bundle sem nenhum uso real | `packages/design-system` | Custo sem contrapartida. |
-| `findAll()` ignora o `rowMapper`, enquanto `findById()` o aplica | `apps/api/(shared)/repositories/base.repository.ts` | As duas rotas de leitura produzem formatos diferentes. |
-| `photo` é `z.string().trim().max(2048)` — qualquer texto passa, não é URL validada | `apps/api/(shared)/validation/entity.schema.ts` | Bug latente, não flexibilidade. |
+| `findAll()` ignora o `rowMapper`, enquanto `findById()` e `create()` o aplicam | `apps/api/(shared)/repositories/base.repository.ts:45-54` (vs `:67-71`, `:95`) | As duas rotas de leitura produzem formatos diferentes. |
+| `photo` é `z.string().trim().max(2048)` — qualquer texto passa, não é URL validada, nos **dois** schemas (create e update). O front **valida** como URL (`entityFormSchema.ts:48-59`), a API não | `apps/api/(shared)/validation/entity.schema.ts:23,34` | Bug latente, não flexibilidade — e validação que só existe no navegador é exatamente o anti-padrão que a regra de ouro 4 proíbe. |
 | String `"Home"` literal fora do dicionário nas duas home pages | `apps/app/.../(pages)/page.tsx` | Viola a regra de ouro 2. |
 | `useHealthCheck` usa `useQuery` direto, contra a convenção do escopo | `apps/app/shared/hooks/useHealthCheck.ts` | Viola `apps/app/CLAUDE.md`. |
 | Arquivo órfão sem exports | `apps/app/midd_teste.ts` | Resíduo. Agora é a **única** violação de `useFilenamingConvention` no repo. |

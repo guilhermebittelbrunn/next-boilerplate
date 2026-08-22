@@ -1,7 +1,7 @@
 ---
 id: teams-organizations
 title: Organizações, membros e convites
-status: proposed
+status: deferred
 value: alto
 effort: G
 audience: produto
@@ -9,10 +9,24 @@ area: [apps/api, apps/app, packages/sdk, packages/auth, packages/internationaliz
 mode: ambos
 depends_on: [transactional-emails]
 feature: -
-updated: 2026-08-21
+updated: 2026-08-22
 ---
 
 # Organizações, membros e convites
+
+> **`deferred` em 2026-08-22 — motivo.** A **implementação** fica adiada: esforço G, e nenhum fork atual
+> pediu escopo por organização. O que **não** fica adiado é a decisão, porque ela encarece a cada recurso
+> novo que nasce escopado por usuário. Duas contrapartidas de esforço P tornam o adiamento honesto, e
+> valem como tarefa direta (não precisam desta spec):
+>
+> 1. escrever, em `docs/ARCHITECTURE.md`, se este core é **B2B ou B2C por padrão** — hoje a resposta está
+>    implícita no código e ninguém a declarou;
+> 2. concentrar o predicado de posse num ponto único de escopo. Hoje ele está copiado **3 vezes** em
+>    `apps/api/app/(routes)/entities/[id]/route.ts:16,32,65` — para **um** recurso. Com o predicado num só
+>    lugar, trocar "dono = usuário" por "dono = organização" deixa de ser reescrita.
+>
+> Sem essas duas, adiar é só acumular juros. Reabrir esta spec exige argumento novo — tipicamente o
+> primeiro fork B2B real.
 
 ## Problema
 
@@ -35,8 +49,8 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   O papel é **global**, não relativo a um grupo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
   (`:27`) trata `ADMIN` como papel de plataforma.
-- `apps/api/app/(guards)/` — três arquivos: `auth.ts`, `admin.ts` (`requireAdminApi`, `:30`) e
-  `common-panel.ts` (`requireCommonPanelApi`, `:28`). Nenhum resolve "pertence a este grupo".
+- `apps/api/app/(guards)/` — dois arquivos: `admin.ts` (`requireAdminApi`, `:27`) e `common-panel.ts`
+  (`requireCommonPanelApi`, `:29`). Nenhum resolve "pertence a este grupo".
 - **A posse é por usuário, repetida em cada handler**:
   `apps/api/app/(routes)/entities/[id]/route.ts:16`, `:32` e `:65` — o mesmo
   `row.userId !== ctx.subjectProfile.id` → 404, três vezes, num único arquivo de um único recurso.

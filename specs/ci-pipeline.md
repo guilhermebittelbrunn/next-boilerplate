@@ -1,7 +1,7 @@
 ---
 id: ci-pipeline
 title: Pipeline de CI no GitHub Actions
-status: proposed
+status: approved
 value: alto
 effort: M
 audience: dx
@@ -9,7 +9,7 @@ area: [raiz, apps/api, apps/app, apps/web, packages/internationalization]
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-21
+updated: 2026-08-22
 ---
 
 # Pipeline de CI no GitHub Actions
