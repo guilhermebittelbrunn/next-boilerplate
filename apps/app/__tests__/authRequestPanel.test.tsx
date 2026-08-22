@@ -66,6 +66,38 @@ beforeEach(() => {
  * refresh — which is exactly the bug this guards against.
  */
 describe("useAuthRequestPanel", () => {
+    /**
+     * The read-only UI hangs off this flag, so it has to track the store instead of being
+     * recombined by each consumer.
+     */
+    it("exposes impersonation while an admin acts as a common user", () => {
+        const { result } = renderHook(() => useAuthRequestPanel(), { wrapper });
+
+        expect(result.current.isImpersonating).toBe(true);
+    });
+
+    it("does not report impersonation in the admin panel", () => {
+        panelStore = createPanelStore({
+            profileKind: "admin",
+            panelRequestRole: UserRoleLevel.ADMIN,
+            impersonatedFirebaseUid: null,
+        });
+        const { result } = renderHook(() => useAuthRequestPanel(), { wrapper });
+
+        expect(result.current.isImpersonating).toBe(false);
+    });
+
+    it("does not report impersonation for a common user", () => {
+        panelStore = createPanelStore({
+            profileKind: "common",
+            panelRequestRole: UserRoleLevel.COMMON,
+            impersonatedFirebaseUid: null,
+        });
+        const { result } = renderHook(() => useAuthRequestPanel(), { wrapper });
+
+        expect(result.current.isImpersonating).toBe(false);
+    });
+
     it("drops cached data when the impersonated user changes", () => {
         const { result } = renderHook(() => useAuthRequestPanel(), { wrapper });
 
