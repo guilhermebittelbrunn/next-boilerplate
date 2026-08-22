@@ -5,7 +5,7 @@ task: -
 spec: -
 branch: api/fix/impersonation-read-only
 epic: -
-updated: 2026-08-22 10:31
+updated: 2026-08-22 10:47
 ---
 
 # Pipeline — Impersonação é somente leitura em todos os painéis
@@ -14,7 +14,7 @@ updated: 2026-08-22 10:31
 |---------|---------|------------------|-----------------|------------------|
 | analyze | done    | 2026-08-22 08:33 | analyze/plan.md | Plano consolidado com as 7 decisões do usuário: helper `assertReadOnlyWhileImpersonating` nos dois guards + `error.code` novo + teste de varredura de guards + espelho de UI em `entities` + bootstrap do admin de DEV |
 | develop | done    | 2026-08-22 09:21 | develop/handoff.md | Helper `assertReadOnlyWhileImpersonating` nos dois guards + `error.code` novo ×3 idiomas, `authGuard` removido, sinal `isImpersonating` + aviso + 5 afordâncias suprimidas em `entities`, script `create-dev-admin.mjs`; 45 testes na api / 120 na app, fluxo validado no browser (light+dark+mobile) e o 403 provado por `curl` |
-| review  | in-progress | 2026-08-22 10:31 | review/review.md | Equivalência do guard admin e ordem do `common-panel` verificadas, fail-closed sem furo, visual em light+dark+mobile; correções: senha descartada em silêncio no script de DEV, docstring falsa, ponteiros para o guard deletado, 🔴 do BACKLOG fechado — e, por decisão do usuário, o **`FormattedError`** (SDK parou de embrulhar): o 403 agora exibe a copy traduzida no locale ativo, com sign-in/sign-up revalidados e `apiErrorCopy.test.ts` travando a regressão; `pnpm test` 173 |
+| review  | done    | 2026-08-22 10:47 | review/review.md | Equivalência do guard admin e ordem do `common-panel` verificadas, fail-closed sem furo, visual em light+dark+mobile; correções: senha descartada em silêncio no script de DEV, docstring falsa, ponteiros para o guard deletado, 🔴 do BACKLOG fechado — e, por decisão do usuário, o **`FormattedError`** (SDK parou de embrulhar): o 403 agora exibe a copy traduzida no locale ativo, com sign-in/sign-up revalidados e `apiErrorCopy.test.ts` travando a regressão; `pnpm test` 173 |
 | test    | pending | -                | -               | -                |
 | observe | pending | -                | -               | - (opcional)     |
 

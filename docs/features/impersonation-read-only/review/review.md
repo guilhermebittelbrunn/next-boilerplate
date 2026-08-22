@@ -296,4 +296,30 @@ Depois do último commit aprovado, o `/review` deve **perguntar** antes de `git 
 
 ## Commits realizados
 
-*(preenchido pelo orquestrador do `/review` após a aprovação bloco a bloco)*
+Plano de 13 blocos aprovado integralmente pelo usuário, executado na branch
+`api/fix/impersonation-read-only` (criada a partir de `casablanca`, que segue intacta).
+
+| # | hash | mensagem |
+|---|------|----------|
+| 1 | `8028703` | `fix(packages): let the API error code reach the user in the active locale` |
+| 2 | `774c619` | `test(app): cover the API error code to user copy chain` |
+| 3 | `e1c7cf3` | `fix(api): make impersonation read-only across every panel guard` |
+| 4 | `a020828` | `test(api): cover read-only impersonation on both panel guards` |
+| 5 | `147ecf2` | `chore(api): drop the unused context-less auth guard` |
+| 6 | `efda9c0` | `chore(api): add a development bootstrap for the first admin` |
+| 7 | `7de1fef` | `feat(internationalization): add the read-only impersonation copy` |
+| 8 | `97a334b` | `feat(app): hide mutating actions while acting as another user` |
+| 9 | `612d03c` | `test(app): cover the read-only impersonation UI` |
+| 10 | `970976b` | `chore(repo): let the filename rule accept the repository naming convention` |
+| 11 | `ec757b9` | `docs: record impersonation as read-only and the dev admin bootstrap` |
+| 12 | `13f8299` | `docs(specs): close the impersonation finding and log the hydration one` |
+| 13 | `ac43bd9` | `docs(features): impersonation-read-only` |
+
+Antes do bloco 13 os artefatos foram varridos por credencial (senha, token, chave privada, strings
+longas): nada encontrado — só menções ao *assunto* senha, nunca a um valor.
+
+**Enviados ao remoto**: sim, com o "sim" do usuário —
+`git push -u origin api/fix/impersonation-read-only`. Nenhuma PR foi aberta.
+
+Suíte re-executada com a árvore limpa após o último commit: **173 testes verdes** (api 45 · app 126 ·
+internationalization 2).
