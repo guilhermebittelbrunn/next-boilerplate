@@ -10,6 +10,7 @@
     "analyze": "ANALYZE=true npm run build",
     "test": "NODE_ENV=test vitest run",
     "stripe": "stripe listen --forward-to localhost:3002/webhooks/payments",
+    "create-dev-admin": "node --env-file-if-exists=.env scripts/create-dev-admin.mjs",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
@@ -35,6 +36,7 @@
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
     "concurrently": "^9.2.1",
+    "firebase-admin": "^13.0.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.3"
   }

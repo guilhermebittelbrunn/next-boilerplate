@@ -103,7 +103,7 @@ describe("requireAdminApi", () => {
             expect(handler).not.toHaveBeenCalled();
             expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
             expect(await response.json()).toEqual({
-                error: { code: "AUTH_REQUEST_PANEL_FORBIDDEN" },
+                error: { code: "AUTH_REQUEST_IMPERSONATION_READ_ONLY" },
             });
         }
     });

@@ -19,6 +19,16 @@
         "noUnusedImports": "error",
         "noUnusedVariables": "error"
       },
+      "style": {
+        // O repositório nomeia módulos em camelCase e componentes React em
+        // PascalCase; o padrão kebab-case da regra reprovaria a convenção inteira.
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["camelCase", "PascalCase", "kebab-case"]
+          }
+        }
+      },
       "suspicious": {
         "noConsole": {
           "level": "error",

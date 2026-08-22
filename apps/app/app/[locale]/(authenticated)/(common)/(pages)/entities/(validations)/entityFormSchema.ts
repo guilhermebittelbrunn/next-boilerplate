@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/useFilenamingConvention: matches admin users colocated modules */
 import type { globalTranslations } from "@repo/internationalization/translations/global";
 import { EntityType } from "@repo/sdk/src/types";
 import { z } from "zod";

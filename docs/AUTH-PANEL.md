@@ -46,10 +46,12 @@ proxy.ts                  default-deny: tudo exige sessão, exceto /sign-in e /s
   Caminho terminado em extensão de arquivo passa direto (`isStaticAssetPath`), senão um arquivo de
   `public/` seria redirecionado para o sign-in. A checagem fica no corpo do proxy, não no `matcher`: o
   Next compila matchers com path-to-regexp, onde um lookahead ancorado não se comporta como regex puro.
-- **Admin impersonando não escreve na área admin.** O guard `requireAdminApi` rejeita
-  `requestRole === common` em métodos **mutantes** (`AUTH_REQUEST_PANEL_FORBIDDEN`) e o
-  `(admin)/admin/layout.tsx` espelha isso redirecionando para a área comum. Sem isso o admin poderia
-  criar/editar/apagar usuários declarando painel comum, mesmo com a leitura já escopada.
+- **Admin impersonando não escreve em nenhum painel.** Os dois guards (`requireAdminApi` e
+  `requireCommonPanelApi`) chamam o mesmo `assertReadOnlyWhileImpersonating`
+  (`apps/api/(shared)/lib/impersonation-read-only.ts`), que rejeita métodos **mutantes** enquanto
+  `isImpersonating` com `AUTH_REQUEST_IMPERSONATION_READ_ONLY`; o `(admin)/admin/layout.tsx` espelha
+  isso redirecionando para a área comum. Sem isso o admin poderia criar/editar/apagar dados — dele ou
+  do usuário personificado — declarando painel comum, mesmo com a leitura já escopada.
   ⚠️ **Leituras seguem abertas de propósito**: o próprio seletor de impersonação é alimentado por
   `GET /users`. Fechar a leitura tranca o admin no primeiro usuário que ele acessou, sem volta — e a
   listagem já vem restrita a usuários comuns pelo contexto da request, então nada de admin vaza.
@@ -117,6 +119,12 @@ de UI sobrevivem.
    dado em cache pertence ao sujeito que estava ativo quando foi buscado; sem isso as linhas do usuário
    anterior permanecem na tela até um refresh manual da tabela. Vale para trocar o usuário de contexto
    **e** para entrar/sair do painel comum.
+9. **Impersonação é somente leitura.** Enquanto atua como outro usuário, o admin só executa `GET`,
+   `HEAD` e `OPTIONS` — em qualquer painel, sem exceção por rota. Escrita de suporte não é uma escrita
+   comum disfarçada de usuário: é um endpoint admin sob `requireAdminApi`, usado no painel admin, onde o
+   admin assina o ato como ele mesmo. A UI espelha a regra: `isImpersonating` do
+   `useAuthRequestPanel()` desabilita as ações mutantes e o `ImpersonationReadOnlyNotice`
+   (`apps/app/shared/components/ui/`) explica o motivo nas telas que as têm.
 
 ### Um dono só para os headers de auth
 
@@ -197,6 +205,7 @@ Definições: `AUTH_REQUEST_HEADER` (`packages/shared/utils/helpers/auth-request
 | `AUTH_REQUEST_ADMIN_TARGET_INVALID` | 403 | painel admin com alvo ≠ ele mesmo |
 | `AUTH_REQUEST_IMPERSONATION_REQUIRED` | 403 | admin no painel comum sem alvo |
 | `AUTH_REQUEST_IMPERSONATION_TARGET_INVALID` | 403 | alvo inexistente ou não-comum |
+| `AUTH_REQUEST_IMPERSONATION_READ_ONLY` | 403 | método mutante enquanto o admin atua como outro usuário (qualquer painel) |
 
 Todo código tem copy nos 3 idiomas em `translations/packages/shared/utils.ts` (`apiErrors`) — o teste de
 paridade falha se faltar. Use `/i18n-sync`.
@@ -227,9 +236,13 @@ a resposta inteira.
 | `apps/app/shared/components/ui/PanelNavbarControls.tsx` | UI do seletor |
 | `apps/api/app/(guards)/{admin,common-panel}.ts` | guards |
 | `apps/api/(shared)/lib/auth-request-context.ts` | validação dos headers |
+| `apps/api/(shared)/lib/impersonation-read-only.ts` | a regra de somente leitura, consumida pelos dois guards |
+| `apps/app/shared/components/ui/ImpersonationReadOnlyNotice.tsx` | aviso nas telas com ação mutante |
 
 Testes: `apps/app/__tests__/panel*.test.ts(x)`, `deriveAuthRequestProps.test.ts`,
-`postAuthRedirectTarget.test.ts`, `serverGuards.test.ts` · `apps/api/__tests__/authRequestContext.test.ts`.
+`postAuthRedirectTarget.test.ts`, `serverGuards.test.ts`, `entitiesListReadOnly.test.tsx` ·
+`apps/api/__tests__/authRequestContext.test.ts`, `adminGuard.test.ts`, `commonPanelGuard.test.ts`,
+`impersonationReadOnly.test.ts` (este último falha se um guard novo esquecer a regra de somente leitura).
 
 **Ao mudar qualquer regra desta página, atualize esta página.** É o que impede a regra de negócio de
 existir só na cabeça de quem escreveu o código.

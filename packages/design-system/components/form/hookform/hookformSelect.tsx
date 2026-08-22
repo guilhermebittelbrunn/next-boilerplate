@@ -1,4 +1,3 @@
-/** biome-ignore lint/style/useFilenamingConvention: project uses camelCase component filenames */
 /** biome-ignore-all lint/complexity/noUselessFragments: <explanation> */
 "use client";
 

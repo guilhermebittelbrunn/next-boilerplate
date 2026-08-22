@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/useFilenamingConvention: matches admin users colocated modules */
 import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
 import type {

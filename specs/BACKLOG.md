@@ -105,12 +105,11 @@ Defeitos e inconsistências encontrados durante a descoberta. **Não são funcio
 pontuais, algumas de minutos. Registrados aqui para não se perderem; viram tarefa direta no `/analyze`, sem
 passar por spec.
 
-Os quatro primeiros são de **segurança** e foram confirmados diretamente no código — valem revisão antes de
+Os três primeiros são de **segurança** e foram confirmados diretamente no código — valem revisão antes de
 qualquer spec.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🔴 **A proibição de mutar durante impersonação só vale nos endpoints admin.** `admin.ts:13,74` recusa métodos não seguros; `common-panel.ts` **não tem verificação alguma de método ou de impersonação** | `apps/api/app/(guards)/common-panel.ts` | O admin personificando cria, edita e exclui dados do usuário pelas **rotas comuns** — sem bloqueio e sem registro. A assimetria com o `admin.ts` mostra que a intenção existia e não foi aplicada dos dois lados. É **autorização**, não auditoria: não espera a spec `audit-log`. |
 | 🔴 **Revogar sessão não derruba o ID token.** `verifyIdToken(token)` é chamado **sem o argumento de revogação** (`packages/auth/server.ts:123`), e `resolve-api-actor.ts:24` tenta o bearer ID token **antes** do cookie — que, esse sim, usa `verifySessionCookie(..., true)` (`:193`) | `packages/auth/server.ts` · `apps/api/(shared)/lib/resolve-api-actor.ts` | Depois de revogar as sessões, um ID token já emitido continua passando no guard da API até expirar (1 hora). A base está metade correta — e é a metade errada que vem primeiro. |
 | 🔴 **`CORS_ORIGIN` fora do env tipado, com coringa por padrão** — lido direto de `process.env` e caindo em `"*"` | `apps/api/proxy.ts:15` (`apps/api/env.ts` declara `server: {}`) | Viola a regra de env tipado do repo, e é a causa de o coringa sobreviver em produção sem ninguém notar. |
 | 🟡 **O código trata `isRateLimit()` sem que nenhuma regra de rate limit seja registrada** | `packages/security/index.ts:44` | Dá a impressão de já limitar. Some-se a isso: `apps/api` **não declara** `@repo/security` como dependência, e `sign-in`/`sign-up` são `POST` sem guard nem limite. |
@@ -125,7 +124,8 @@ qualquer spec.
 | `photo` é `z.string().trim().max(2048)` — qualquer texto passa, não é URL validada | `apps/api/(shared)/validation/entity.schema.ts` | Bug latente, não flexibilidade. |
 | String `"Home"` literal fora do dicionário nas duas home pages | `apps/app/.../(pages)/page.tsx` | Viola a regra de ouro 2. |
 | `useHealthCheck` usa `useQuery` direto, contra a convenção do escopo | `apps/app/shared/hooks/useHealthCheck.ts` | Viola `apps/app/CLAUDE.md`. |
-| Arquivo órfão sem exports | `apps/app/midd_teste.ts` | Resíduo. |
+| Arquivo órfão sem exports | `apps/app/midd_teste.ts` | Resíduo. Agora é a **única** violação de `useFilenamingConvention` no repo. |
+| 🟡 `hydration mismatch` num `id` gerado pelo Radix (`DropdownMenuTrigger`) + aviso "Select is changing from uncontrolled to controlled" | `apps/app/.../PanelNavbarControls.tsx` | Aparecem no console já em `/pt-br/admin`, sem interação. Contradizem a regra do escopo de resolver no servidor todo estado de UI persistido no browser. |
 | Typo no nome do arquivo de infraestrutura (`dabatase.ts`) | `apps/api/(shared)/infra/` | Será renomeado junto com `firestore-admin-access`. |
 
 ## Lacunas avaliadas e **não** especificadas

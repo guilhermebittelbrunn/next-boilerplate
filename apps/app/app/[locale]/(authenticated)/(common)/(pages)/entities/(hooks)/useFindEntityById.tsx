@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/useFilenamingConvention: matches admin users colocated modules */
 import type { EntityDTO } from "@repo/sdk/src/types";
 import { useAuthorizedQuery } from "@/shared/hooks/useAuthorizedQuery";
 import { apiClient } from "@/shared/lib/client";

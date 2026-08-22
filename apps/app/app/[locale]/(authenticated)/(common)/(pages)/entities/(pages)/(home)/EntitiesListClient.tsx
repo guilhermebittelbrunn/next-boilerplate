@@ -12,7 +12,9 @@ import { type EntityDTO, EntityType } from "@repo/sdk/src/types";
 import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
+import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
 import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
+import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../paths";
 import { useEntityCrud } from "../../(hooks)/useEntityCrud";
 import { useListEntities } from "../../(hooks)/useListEntities";
@@ -25,6 +27,7 @@ export function EntitiesListClient() {
         isFetching,
     } = useListEntities();
     const router = useRouter();
+    const { isImpersonating } = useAuthRequestPanel();
     const { dictionary, locale } = getDictionary();
     const { deleteEntityMutation, toggleEntityStatusMutation } =
         useEntityCrud();
@@ -85,9 +88,10 @@ export function EntitiesListClient() {
                     <Switch
                         checked={value}
                         disabled={
-                            toggleEntityStatusMutation.isPending &&
-                            toggleEntityStatusMutation.variables?.id ===
-                                record.id
+                            isImpersonating ||
+                            (toggleEntityStatusMutation.isPending &&
+                                toggleEntityStatusMutation.variables?.id ===
+                                    record.id)
                         }
                         onCheckedChange={(checked) => {
                             if (checked === value) {
@@ -108,7 +112,11 @@ export function EntitiesListClient() {
             align: "center" as const,
             render: (_: unknown, record: EntityDTO) => (
                 <ActionsMenu
-                    onDelete={() => deleteEntityMutation.mutate(record.id)}
+                    onDelete={
+                        isImpersonating
+                            ? undefined
+                            : () => deleteEntityMutation.mutate(record.id)
+                    }
                     onEdit={() =>
                         router.push(routes.entities.update(record.id).url)
                     }
@@ -126,12 +134,14 @@ export function EntitiesListClient() {
                 page={routes.entities.list.label}
                 sideElement={
                     <AddButton
+                        disabled={isImpersonating}
                         onClick={() => router.push(routes.entities.create.url)}
                     />
                 }
             />
             <Container loading={isLoading}>
                 <div className="mx-auto flex w-full flex-col gap-4">
+                    <ImpersonationReadOnlyNotice />
                     <Table<EntityDTO>
                         columns={columns}
                         dataSource={entities ?? []}

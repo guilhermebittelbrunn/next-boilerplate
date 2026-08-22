@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: <explanation> */
-
 import type { Locale } from "@repo/internationalization/utils";
 import axios from "axios";
 import { globalTranslations } from "../../../internationalization/translations/global";
@@ -24,49 +22,62 @@ export default class FormattedError {
             this.translations?.packages.utils.error.unexpected ??
             "Um erro inesperado aconteceu";
 
-        if (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                const responseError = error.response;
-                const data = responseError.data as
-                    | { error?: { code?: string }; message?: string }
-                    | undefined;
+        if (!error) {
+            return fallbackMessage;
+        }
 
-                const apiCode =
-                    data &&
-                    typeof data === "object" &&
-                    data.error &&
-                    typeof data.error.code === "string"
-                        ? data.error.code
-                        : null;
+        const apiMessage = this.apiResponseMessage(error);
+        if (apiMessage) {
+            return apiMessage;
+        }
 
-                if (apiCode) {
-                    const apiErrors = this.translations?.packages.utils
-                        .apiErrors as Record<string, string> | undefined;
-                    const mapped = apiErrors?.[apiCode];
-                    if (mapped) {
-                        return mapped;
-                    }
-                }
+        const firebaseMessage = this.firebaseAuthMessage(error);
+        if (firebaseMessage) {
+            return firebaseMessage;
+        }
 
-                if (data?.message && typeof data.message === "string") {
-                    return data.message;
-                }
+        // A request that never got a response carries an internal axios message
+        // ("Network Error", "timeout of 0ms exceeded"), which is not user-facing copy.
+        if (axios.isAxiosError(error)) {
+            return fallbackMessage;
+        }
 
-                return `${responseError.status} - ${responseError.statusText}`;
-            }
-
-            if (this.isFirebaseAuthError(error)) {
-                return this.translations?.packages.auth.provider.firebase.error[
-                    error.code as keyof typeof this.translations.packages.auth.provider.firebase.error
-                ];
-            }
-
-            if (error instanceof Error) {
-                return error.message;
-            }
+        if (error instanceof Error) {
+            return error.message;
         }
 
         return fallbackMessage;
+    }
+
+    /** Copy for a response the API actually sent: `error.code` first, then its own message. */
+    private apiResponseMessage(error: unknown): string | null {
+        if (!(axios.isAxiosError(error) && error.response)) {
+            return null;
+        }
+
+        const response = error.response;
+        const data = response.data as
+            | { error?: { code?: string }; message?: string }
+            | undefined;
+
+        const apiCode =
+            typeof data?.error?.code === "string" ? data.error.code : null;
+
+        if (apiCode) {
+            const apiErrors = this.translations?.packages.utils.apiErrors as
+                | Record<string, string>
+                | undefined;
+            const mapped = apiErrors?.[apiCode];
+            if (mapped) {
+                return mapped;
+            }
+        }
+
+        if (typeof data?.message === "string" && data.message) {
+            return data.message;
+        }
+
+        return `${response.status} - ${response.statusText}`;
     }
 
     private isUploadRequest(error: unknown): boolean {
@@ -95,17 +106,25 @@ export default class FormattedError {
         );
     }
 
-    private isFirebaseAuthError(
-        error: unknown
-    ): error is { code: string; message: string } {
-        return (
-            typeof error === "object" &&
-            error !== null &&
-            "code" in error &&
-            typeof (error as { code: unknown }).code === "string" &&
-            "message" in error &&
-            typeof (error as { message: unknown }).message === "string"
-        );
+    /**
+     * Matches on a code the Firebase dictionary actually knows, never on the shape alone:
+     * an `AxiosError` also carries `code` + `message` (`ERR_NETWORK`, `ECONNABORTED`) and
+     * would otherwise be answered with an undefined translation.
+     */
+    private firebaseAuthMessage(error: unknown): string | null {
+        if (
+            typeof error !== "object" ||
+            error === null ||
+            !("code" in error) ||
+            typeof (error as { code: unknown }).code !== "string"
+        ) {
+            return null;
+        }
+
+        const firebaseErrors = this.translations?.packages.auth.provider
+            .firebase.error as Record<string, string> | undefined;
+
+        return firebaseErrors?.[(error as { code: string }).code] ?? null;
     }
 
     formatStatus(error: unknown): number {

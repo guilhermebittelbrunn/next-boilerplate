@@ -11,6 +11,8 @@ import { Container } from "@/shared/components/ui/Container";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { Header } from "@/shared/components/ui/Header";
+import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../paths";
 import { EntityFormFields } from "../../(components)/EntityFormFields";
 import { useEntityCrud } from "../../(hooks)/useEntityCrud";
@@ -22,6 +24,7 @@ import {
 
 export default function CreateEntityPage() {
     const router = useRouter();
+    const { isImpersonating } = useAuthRequestPanel();
     const { dictionary, locale } = getDictionary();
     const routes = COMMON_ROUTES(dictionary, locale);
     const entitiesForm = dictionary.apps.app.pages.common.entities.form;
@@ -69,13 +72,15 @@ export default function CreateEntityPage() {
                         className="flex min-h-[50vh] w-full flex-1 flex-col"
                         onSubmit={form.handleSubmit(onSubmit)}
                     >
-                        <Container className="p-0">
+                        <Container className="flex flex-col gap-4 p-0">
+                            <ImpersonationReadOnlyNotice />
                             <FormContainer>
                                 <EntityFormFields mode="create" />
                             </FormContainer>
                         </Container>
                         <Footer
                             confirmLabel={entitiesForm.save}
+                            disabled={isImpersonating}
                             isLoading={createEntityMutation.isPending}
                             onBack={() => router.push(routes.entities.list.url)}
                             showBack
