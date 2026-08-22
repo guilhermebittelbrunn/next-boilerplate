@@ -100,4 +100,7 @@ critérios e o relatório ficam em `docs/features/<slug>/test/` para o usuário 
 Critérios e resultados já estão salvos e o `STATE.md` marca `test = done`. Pode `/compact`/`/clear` ao
 concluir, ou seguir para `/observe` (opcional) para gerar a observação final não-técnica.
 
+Se o `STATE.md` tiver `spec: <id>`, **sugira rodar `/spec --sync`** para fechar o ciclo: ele confere no
+código o que foi entregue e move a spec para `done`. Sem esse passo, o backlog em `specs/` passa a mentir.
+
 Mantenha tudo em português e em Markdown estruturado.
