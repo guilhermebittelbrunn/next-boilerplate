@@ -69,19 +69,13 @@ export default class BaseClient {
         }
     }
 
-    async request<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-        try {
-            // console.log("config :>> ", config);
-
-            // console.log(
-            //     "this.restClient.defaults.headers.common :>> ",
-            //     this.restClient.defaults.headers.common
-            // );
-
-            return await this.restClient.request<T>(config);
-        } catch (error) {
-            throw new FormattedError(error);
-        }
+    /**
+     * The axios error is propagated untouched: only the caller knows the active locale,
+     * and it is the caller that turns `error.code` into copy. Formatting here would fix
+     * the language at import time and hide the response from whoever needs it.
+     */
+    request<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+        return this.restClient.request<T>(config);
     }
 
     setInterceptorError(callback: (error: FormattedError) => void) {
