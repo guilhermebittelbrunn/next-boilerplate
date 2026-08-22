@@ -1,7 +1,6 @@
 import { getAuthInstance } from "@repo/auth/server";
 import type { UserDTO, UserType } from "@repo/sdk/src/types";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import db from "../infra/dabatase";
+import db from "../infra/database";
 import {
     mergeAuthAndFirestore,
     serializeFirestoreData,
@@ -14,14 +13,11 @@ class UserRepository extends BaseRepository<UserDTO> {
     }
 
     async findByReferenceId(referenceId: string): Promise<UserDTO | null> {
-        const usersCollectionRef = collection(this.db, this.table);
-        const querySnapshot = await getDocs(
-            query(
-                usersCollectionRef,
-                where("reference_id", "==", referenceId),
-                where("deletedAt", "==", null)
-            )
-        );
+        const querySnapshot = await this.db
+            .collection(this.table)
+            .where("reference_id", "==", referenceId)
+            .where("deletedAt", "==", null)
+            .get();
 
         if (querySnapshot.docs.length === 0) {
             return null;

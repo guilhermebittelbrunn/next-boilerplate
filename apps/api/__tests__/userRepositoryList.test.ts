@@ -8,7 +8,7 @@ vi.mock("@repo/auth/server", () => ({
     getCurrentUser: vi.fn(),
 }));
 
-vi.mock("@/(shared)/infra/dabatase", () => ({ default: {} }));
+vi.mock("@/(shared)/infra/database", () => ({ default: {} }));
 
 const { userRepository } = await import(
     "@/(shared)/repositories/user.repository"

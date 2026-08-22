@@ -1,19 +1,7 @@
-/** biome-ignore-all lint/style/noParameterProperties: <explanation> */
-/** biome-ignore-all lint/nursery/noShadow: <explanation> */
-import Mapper from "@/(shared)/mappers/Mapper";
-import {
-    addDoc,
-    collection,
-    type DocumentData,
-    doc,
-    type Firestore,
-    getDoc,
-    getDocs,
-    query,
-    updateDoc,
-    type WithFieldValue,
-    where,
-} from "firebase/firestore";
+/** biome-ignore-all lint/style/noParameterProperties: the constructor args are the repository's configuration */
+
+import type { DocumentData, Firestore } from "firebase-admin/firestore";
+import type Mapper from "@/(shared)/mappers/Mapper";
 
 export type CreateRequest<DTO> = Omit<
     DTO,
@@ -38,26 +26,31 @@ export class BaseRepository<DTO> {
         protected readonly rowMapper?: Mapper<FirestoreDocumentRow, DTO>
     ) {}
 
-    protected toEntity(id: string, raw: Record<string, unknown>): FirestoreDocumentRow {
+    protected toEntity(
+        id: string,
+        raw: Record<string, unknown>
+    ): FirestoreDocumentRow {
         return { id, ...raw };
     }
 
     async findAll(): Promise<DTO[]> {
-        const usersCollectionRef = collection(this.db, this.table);
-        const querySnapshot = await getDocs(
-            query(usersCollectionRef, where("deletedAt", "==", null))
-        );
+        const querySnapshot = await this.db
+            .collection(this.table)
+            .where("deletedAt", "==", null)
+            .get();
 
-        return querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...(doc.data() as DTO),
-        }));
+        return querySnapshot.docs.map((docSnap) => {
+            const raw = docSnap.data() as Record<string, unknown>;
+            if (this.rowMapper) {
+                return this.rowMapper.toDTO(this.toEntity(docSnap.id, raw));
+            }
+            return { id: docSnap.id, ...(raw as DTO) };
+        });
     }
 
     async findById(id: string): Promise<DTO | null> {
-        const docRef = doc(this.db, this.table, id);
-        const snap = await getDoc(docRef);
-        if (!snap.exists()) {
+        const snap = await this.db.collection(this.table).doc(id).get();
+        if (!snap.exists) {
             return null;
         }
         const raw = snap.data() as DocumentData & { deletedAt?: unknown };
@@ -76,16 +69,14 @@ export class BaseRepository<DTO> {
     }
 
     async create(data: CreateRequest<DTO>): Promise<DTO> {
-        const usersCollectionRef = collection(this.db, this.table);
-
         const dataToCreate = {
             ...data,
             createdAt: new Date(),
             updatedAt: new Date(),
             deletedAt: null,
-        } as WithFieldValue<DocumentData>;
+        } as DocumentData;
 
-        const docRef = await addDoc(usersCollectionRef, dataToCreate);
+        const docRef = await this.db.collection(this.table).add(dataToCreate);
 
         const created = {
             id: docRef.id,
@@ -93,7 +84,9 @@ export class BaseRepository<DTO> {
         } as DTO;
 
         if (this.rowMapper) {
-            return this.rowMapper.toDTO(created as unknown as FirestoreDocumentRow);
+            return this.rowMapper.toDTO(
+                created as unknown as FirestoreDocumentRow
+            );
         }
         return created;
     }
@@ -107,18 +100,18 @@ export class BaseRepository<DTO> {
     }
 
     async update(data: UpdateRequest<DTO>): Promise<string> {
-        const usersCollectionRef = doc(this.db, this.table, data.id);
+        const docRef = this.db.collection(this.table).doc(data.id);
         const currentData = await this.findById(data.id);
 
         const updated = {
             ...currentData,
             ...data,
             updatedAt: new Date(),
-        } as WithFieldValue<DocumentData>;
+        } as DocumentData;
 
         const { id, ...dataToUpdate } = updated;
 
-        await updateDoc(usersCollectionRef, dataToUpdate);
+        await docRef.update(dataToUpdate);
 
         return id;
     }
