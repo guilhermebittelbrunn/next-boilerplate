@@ -12,7 +12,10 @@ import {
 } from "@/shared/lib/authRequestHeaders";
 import { apiClient } from "@/shared/lib/client";
 import { withLocalePath } from "@/shared/lib/localePath";
-import type { PanelSnapshot } from "@/shared/lib/panelState";
+import {
+    isImpersonatingSnapshot,
+    type PanelSnapshot,
+} from "@/shared/lib/panelState";
 import {
     createPanelStore,
     type PanelStore,
@@ -24,6 +27,8 @@ import {
 export type AuthRequestPanelContextValue = {
     profileKind: ProfileKind | null;
     panelRequestRole: UserRoleLevel;
+    /** Admin acting as a common user: the API refuses every write in this state. */
+    isImpersonating: boolean;
     impersonatedFirebaseUid: string | null;
     impersonatedLabel: string | null;
     /**
@@ -191,6 +196,8 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
 
     const profileKind = usePanelState((state) => state.profileKind);
     const panelRequestRole = usePanelState((state) => state.panelRequestRole);
+    // The very function the server uses, so the client cannot drift from it.
+    const isImpersonating = usePanelState(isImpersonatingSnapshot);
     const impersonatedFirebaseUid = usePanelState(
         (state) => state.impersonatedFirebaseUid
     );
@@ -242,6 +249,7 @@ export function useAuthRequestPanel(): AuthRequestPanelContextValue {
     return {
         profileKind,
         panelRequestRole,
+        isImpersonating,
         impersonatedFirebaseUid,
         impersonatedLabel,
         setPanelEnvironment,
