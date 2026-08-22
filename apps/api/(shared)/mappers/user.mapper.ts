@@ -58,5 +58,5 @@ export function mergeAuthAndFirestore(
     if (!firestoreData || Object.keys(firestoreData).length === 0) {
         return auth;
     }
-    return { ...firestoreData, ...auth };
+    return { ...serializeFirestoreData(firestoreData), ...auth };
 }
