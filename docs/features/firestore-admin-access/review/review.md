@@ -265,3 +265,54 @@ Depois do último commit aprovado, **perguntar** ao usuário antes de
 
 **Antes do commit 9**: a pasta `docs/features/firestore-admin-access/` foi conferida — nenhum segredo nos
 artefatos, nenhuma PII nos prints (filtro `qa-` aplicado), nenhuma senha gravada.
+
+---
+
+## Fechamento — commits realizados (2026-08-22 19:20)
+
+Branch **`api/refactor/firestore-admin-access`**, criada a partir de `iniciar-specs-individualmente` (que
+estava exatamente em `origin/main`, sem commits próprios). O usuário aprovou o plano de 9 commits e dispensou
+a confirmação bloco a bloco.
+
+| # | hash | mensagem |
+|---|------|----------|
+| 1 | `8c33eb3` | `fix(auth): reject a partial Firebase Admin credential set` |
+| 2 | `ce8503e` | `chore(api): promote firebase-admin to a runtime dependency` |
+| 3 | `5b4688e` | `refactor(api): read and write Firestore through the Admin SDK` |
+| 4 | `84201b6` | `fix(api): serialize the Firestore side when merging the user profile` |
+| 5 | `fd66999` | `feat(api): require Firebase service-account credentials at startup` |
+| 6 | `84e3402` | `chore: version the Firestore index and make the deny-all rules publishable` |
+| 7 | `4742d9b` | `docs: record the Admin SDK access model and the unpublished-rules state` |
+| 8 | `0a9185f` | `docs(specs): reconcile the backlog and triage the queue` |
+| 9 | `5a04e94` | `docs(features): firestore-admin-access` |
+
+56 arquivos, +2264/−258. Working tree limpo. **Enviados ao remoto**: sim,
+`git push -u origin api/refactor/firestore-admin-access`. PR **não** aberta.
+
+Gate reconferido no estado commitado: `pnpm test` **209 verdes** (api 72 · app 135 · i18n 2), typecheck
+`api`/`app`/`web` limpos, `pnpm check` 192/37 (baseline 197/39).
+
+### Decisões do usuário aplicadas nesta etapa
+
+1. **Achado 1 corrigido** — `mergeAuthAndFirestore` passou a serializar o lado Firestore
+   (`user.mapper.ts:61`), em commit próprio (`84201b6`). Alinha o detalhe com a listagem em 7 endpoints.
+   Typecheck limpo e 72/72 depois da mudança. **Falta a prova em runtime**: a medição do "depois" nos 7
+   endpoints não foi refeita (exige sessão autenticada) — é a lacuna 6, e cabe ao `/test`.
+2. **Exigência das três vars no `build` mantida**, coerente com o "falha cedo" da spec. Se a
+   `specs/ci-pipeline` precisar buildar sem segredos, a saída registrada é `skipValidation` cobrindo
+   `!!process.env.CI`.
+3. **`specs/` em commit próprio na mesma branch** (`0a9185f`), escopo `specs`.
+4. **Commits 3 e 4 do plano original fundidos** em `5b4688e`; a mensagem cita as duas mudanças.
+
+### P7 — segue pendente, e agora com uma tentativa registrada
+
+Um servidor MCP do Firebase ficou disponível na sessão e foi testado como alternativa ao CLI. **Não
+resolve**: lê o mesmo cofre de credencial (`firebase_get_environment` → `Authenticated User: <NONE>`), e
+tanto `firebase_validate_security_rules` quanto `firebase_deploy` recusam sem login. O `firebase_login`
+dispararia OAuth interativo, incompatível com a sessão.
+
+Efeito colateral positivo: o MCP confirmou que o `.firebaserc` commitado funciona —
+`Active Project ID: next-boilerplate-576d0 (alias: default)`.
+
+**Enquanto o P7 não rodar, a base segue legível/gravável pela chave pública** e os sinais de pronto `:111`
+e `:113` da spec continuam abertos. É a metade da entrega que depende de credencial humana.
