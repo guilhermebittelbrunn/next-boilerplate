@@ -323,3 +323,120 @@ longas): nada encontrado — só menções ao *assunto* senha, nunca a um valor.
 
 Suíte re-executada com a árvore limpa após o último commit: **173 testes verdes** (api 45 · app 126 ·
 internationalization 2).
+
+---
+
+# Adendo — 2ª rodada de review (artefatos de QA)
+
+**Escopo**: só o que o `/test` deixou no working tree — 3 arquivos de teste novos, os artefatos de
+`test/` e a linha `test` do `STATE.md`. O código da feature (14 commits, já no remoto) **não** foi
+re-revisado. Branch inalterada: `api/fix/impersonation-read-only`.
+
+**Sem validação visual nesta rodada**, deliberadamente: o diff não tem superfície de runtime — são
+arquivos de teste e documentação. A UI já foi dirigida três vezes (develop, review 1, test), com 30
+screenshots somados.
+
+## 1. Os testes provam o que dizem provar
+
+As duas mutações declaradas pelo QA foram **reproduzidas**, e uma terceira foi acrescentada:
+
+| Mutação aplicada no código de produção | Efeito observado |
+|---|---|
+| `common-panel.ts`: chamada de `assertReadOnlyWhileImpersonating` neutralizada | **5 de 11** casos de `entitiesRouteImpersonation.test.ts` caem (create · update · delete · toggle · recusa antes do corpo). Os 2 casos de leitura e os 4 do titular seguem verdes — o arquivo não é um "tudo 403". Fora dele caem mais 3 (guard comum, simetria entre painéis, varredura) |
+| `create/page.tsx`: `disabled={isImpersonating}` removido | Cai exatamente 1 caso, o correspondente |
+| `ImpersonationReadOnlyNotice.tsx`: fallback `?? ""` trocado por interpolação | Cai o caso "não imprime placeholder" — ele não é vazio |
+
+Código de produção restaurado nas três (`git checkout --`), árvore conferida depois.
+
+**Nível de mock — a afirmação se confirma.** `entitiesRouteImpersonation.test.ts` importa os handlers
+reais de `entities` e `entities/[id]`, que são embrulhados pelo `requireCommonPanelApi` **real**. Só
+são mockados `resolveApiActor` (verificação do token no Firebase) e os dois repositórios. Ficam no
+caminho de execução, sem mock: `resolveAuthRequestContext` (validação dos headers de painel, mismatch
+de uid/papel, alvo de impersonação) e `assertReadOnlyWhileImpersonating`. A mutação prova isso por
+observação, não por leitura.
+
+## 2. Achados
+
+| Sev | Onde | Problema | Ação |
+|---|---|---|---|
+| 🟡 | screenshot do e2e da lista admin sem filtro | Trazia **dados pessoais reais** — nomes, e-mails e fotos de perfil. Não é credencial, mas é PII entrando num boilerplate feito para ser forkado | **Corrigido** — arquivo descartado por decisão do usuário; o critério B5 segue evidenciado pelo print da mesma tela com o filtro aplicado, que só exibe a conta `@example.com` |
+| 🟡 | `impersonationReadOnlyNotice.test.tsx:58` | Copy pt-br literal (`"Modo somente leitura"`) na asserção: quebra numa reescrita de texto e assume que o locale default é pt-br | Corrigido — passa a ler o dicionário |
+| 🟡 | `entityFormsReadOnly.test.tsx:140` | "still loads the record" só afirmava que o *stub* dos campos renderizou. Como o caso 3 do mesmo describe já exige o `<form>`, ele era um subconjunto estrito: não podia falhar sozinho | Corrigido — passou a afirmar o valor carregado |
+| 🔵 | `entitiesRouteImpersonation.test.ts:55-72` | `OWNER_UID`/`OWNER_PROFILE` e o ramo correspondente do mock nunca são exercitados; sugerem um terceiro ator que não existe | Corrigido — removidos |
+| 🔵 | `entitiesRouteImpersonation.test.ts` "refuses the enabled toggle" | Idêntico em execução a "refuses to update": o guard recusa antes de ler o corpo, então o corpo não distingue os dois | **Mantido** de propósito (item 5) |
+| 🔵 | `impersonationReadOnlyNotice` × `entitiesListReadOnly` | O caso do uid truncado existe nos dois | **Mantido**: um é unidade, o outro integração, e o novo é o mais forte dos dois |
+
+Sem achados de fragilidade: nenhum `waitFor` sem asserção, nenhum snapshot, nenhuma dependência de
+ordem entre casos (todo estado passa por `mockReset` + `cleanup` no `beforeEach`) e nenhum timer.
+
+## 3. Correções aplicadas
+
+- **`apps/app/__tests__/impersonationReadOnlyNotice.test.tsx`** — a asserção de copy passou a vir de
+  `getDictionary()`, a mesma resolução que o componente usa; agora prova que a chave lida é
+  `pages.impersonation.readOnly` (e cobre também a `description`, que não era verificada) em vez de
+  fixar o texto pt-br.
+- **`apps/app/__tests__/entityFormsReadOnly.test.tsx`** — o stub de `EntityFormFields` passou a
+  espelhar o valor que o formulário segura (`watch("name")`), e o caso afirma
+  `textContent === ENTITY.name`. Verificado por mutação: anulando o `form.reset` do
+  `EditEntityClient` o caso agora falha, e antes passava.
+- **`apps/api/__tests__/entitiesRouteImpersonation.test.ts`** — fixtures do ator inexistente removidas;
+  o mock de perfil ficou na mesma forma de duas linhas já usada em `impersonationReadOnly.test.ts`.
+
+## 4. Artefatos de `test/`
+
+- **Credenciais: nenhuma.** `report.md` e `criterios-aceite.md` só mencionam senha como *assunto* —
+  o roteiro usa o placeholder `DEV_ADMIN_PASSWORD=<senha>` e manda explicitamente não gravá-la. A
+  senha do `dev-admin` não aparece em nenhum artefato, nem em print.
+- **15 PNGs conferidos um a um.** Nenhum devtools aberto, nenhum token, nenhum campo de senha, nenhuma
+  tela de login. 14 são inócuos (contas `@example.com`, entidades fictícias). O 08 é a exceção do
+  item 2.
+- **Regra de comentários**: os 3 arquivos de teste não citam plano, handoff, `STATE.md`, número de
+  critério nem autoria de etapa. Os comentários que têm explicam risco (por que a live region existe,
+  por que o toggle tem caso próprio, por que os campos são stub) — cabem nas exceções legítimas.
+
+## 5. Decisões — resolvidas
+
+1. **PII no screenshot da lista admin sem filtro** — o usuário decidiu **descartar o arquivo**, como
+   recomendado. O critério B5 ("as afordâncias voltam ao sair") continua evidenciado pelo print da mesma
+   tela **com o filtro de busca aplicado**, que exibe só `readonly-check@example.com`: a perda de
+   evidência é pequena perto de versionar nome, e-mail e foto de pessoas reais num repositório-modelo.
+   As referências ao arquivo foram removidas deste documento e do `STATE.md`.
+2. **"refuses the enabled toggle"** — recomendo **manter**, mesmo sendo hoje um duplicado exato de
+   "refuses to update". Ele e "refuses before validating the body" são o par que falha se alguém mover
+   a checagem de somente-leitura para depois do parse do corpo, que é a regressão plausível.
+
+## 6. Lacuna apontada (para uma próxima rodada, não corrigida aqui)
+
+O critério A3 afirma duas coisas — 403 em vez de 400 (corpo malformado) e 403 em vez de 404 (recurso
+inexistente). Só a primeira tem caso automatizado. A segunda decorre da ordem do guard e está coberta
+estruturalmente, mas um `findById` devolvendo `null` sob impersonação fecharia o critério por
+execução. Não acrescentei: criar caso de teste é do `/test`.
+
+## 7. Validações
+
+| Comando | Resultado |
+|---|---|
+| `pnpm --filter api test` | ✅ 56 |
+| `pnpm --filter app test` | ✅ 135 |
+| `pnpm --filter @repo/internationalization test` | ✅ 2 |
+| `pnpm test` (root) | ✅ 3/3 tasks — **193** |
+| `pnpm --filter api typecheck` · `app` | ✅ ✅ |
+| `pnpm check` | 197 erros / 39 avisos — **igual à baseline** |
+| `biome check` nos 3 arquivos | ✅ zero dívida, inclusive depois das correções |
+
+## 8. Plano de commits proposto (2ª rodada)
+
+Branch `api/fix/impersonation-read-only`, já no remoto. Ordem: api → app → docs.
+
+| # | mensagem | arquivos |
+|---|----------|----------|
+| 1 | `test(api): cover read-only impersonation on the entities routes` | `apps/api/__tests__/entitiesRouteImpersonation.test.ts` |
+| 2 | `test(app): cover the read-only notice and the entity form submits` | `apps/app/__tests__/impersonationReadOnlyNotice.test.tsx`, `apps/app/__tests__/entityFormsReadOnly.test.tsx` |
+| 3 | `docs(features): record the QA of impersonation-read-only` | `docs/features/impersonation-read-only/STATE.md`, `docs/features/impersonation-read-only/review/review.md`, `docs/features/impersonation-read-only/test/**` — **bloqueado pela decisão 1** |
+
+Os dois arquivos da `app` vão juntos por serem a mesma unidade de mudança (a UI de somente leitura em
+`entities`); separá-los daria dois commits de um arquivo cada, sem ganho de leitura.
+
+## 9. Commits realizados (2ª rodada)
+
+_A preencher pelo orquestrador._

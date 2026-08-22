@@ -5,7 +5,7 @@ task: -
 spec: -
 branch: api/fix/impersonation-read-only
 epic: -
-updated: 2026-08-22 10:47
+updated: 2026-08-22 11:41
 ---
 
 # Pipeline — Impersonação é somente leitura em todos os painéis
@@ -14,8 +14,8 @@ updated: 2026-08-22 10:47
 |---------|---------|------------------|-----------------|------------------|
 | analyze | done    | 2026-08-22 08:33 | analyze/plan.md | Plano consolidado com as 7 decisões do usuário: helper `assertReadOnlyWhileImpersonating` nos dois guards + `error.code` novo + teste de varredura de guards + espelho de UI em `entities` + bootstrap do admin de DEV |
 | develop | done    | 2026-08-22 09:21 | develop/handoff.md | Helper `assertReadOnlyWhileImpersonating` nos dois guards + `error.code` novo ×3 idiomas, `authGuard` removido, sinal `isImpersonating` + aviso + 5 afordâncias suprimidas em `entities`, script `create-dev-admin.mjs`; 45 testes na api / 120 na app, fluxo validado no browser (light+dark+mobile) e o 403 provado por `curl` |
-| review  | done    | 2026-08-22 10:47 | review/review.md | Equivalência do guard admin e ordem do `common-panel` verificadas, fail-closed sem furo, visual em light+dark+mobile; correções: senha descartada em silêncio no script de DEV, docstring falsa, ponteiros para o guard deletado, 🔴 do BACKLOG fechado — e, por decisão do usuário, o **`FormattedError`** (SDK parou de embrulhar): o 403 agora exibe a copy traduzida no locale ativo, com sign-in/sign-up revalidados e `apiErrorCopy.test.ts` travando a regressão; `pnpm test` 173 |
-| test    | pending | -                | -               | -                |
+| review  | done    | 2026-08-22 10:47 | review/review.md | Equivalência do guard admin e ordem do `common-panel` verificadas, fail-closed sem furo, visual em light+dark+mobile; correções: senha descartada em silêncio no script de DEV, docstring falsa, ponteiros para o guard deletado, 🔴 do BACKLOG fechado — e, por decisão do usuário, o **`FormattedError`** (SDK parou de embrulhar): o 403 agora exibe a copy traduzida no locale ativo, com sign-in/sign-up revalidados e `apiErrorCopy.test.ts` travando a regressão; `pnpm test` 173 — **2ª rodada (11:41)**: revisão dos artefatos de QA, mocks e mutações reproduzidos (guard real confirmado), 3 correções nos testes, PII num print pendente de decisão; adendo no fim do `review/review.md` |
+| test    | done    | 2026-08-22 11:12 | test/criterios-aceite.md | 23 critérios (autorização + espelho de UI + copy de erro), todos **PASS**; suíte **193** verdes (api 56 · app 135 · i18n 2 — +20 em 3 arquivos novos, verificados por mutação), typecheck api/app/web ok e `pnpm check` na baseline 197/39; e2e provou o que faltava — 403 traduzido em **es**, caminho feliz do titular ponta a ponta (201→200→200→204) e admin no painel admin intacto (`PUT /users` 200) |
 | observe | pending | -                | -               | - (opcional)     |
 
 ## Notas
@@ -62,3 +62,8 @@ updated: 2026-08-22 10:47
   feature — pedem commit próprio. Detalhe em `develop/handoff.md`.
 - **Achado registrado, fora de escopo**: `hydration mismatch` do `PanelNavbarControls` foi adicionado à
   tabela de achados do `specs/BACKLOG.md` (decisão do usuário: vira tarefa própria).
+- ✅ **PII resolvida antes do commit**: um screenshot do e2e mostrava a lista admin com nome, e-mail e
+  foto de **pessoas reais**. Não era credencial, mas é dado pessoal que não entra num repositório feito
+  para ser forkado. Por decisão do usuário o arquivo foi **descartado** — o critério B5 (as afordâncias
+  voltam ao sair da impersonação) continua evidenciado pelo print da mesma tela com o filtro de busca
+  aplicado, que só exibe a conta `@example.com` de teste.
