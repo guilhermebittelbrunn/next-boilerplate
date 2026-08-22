@@ -5,19 +5,21 @@ rules_version = '2';
 //
 // MODELO DE ACESSO
 //   Todo acesso ao Firestore passa pela apps/api (guards no servidor →
-//   repositórios). Nenhum cliente (browser) deve acessar o Firestore direto:
-//   o front fala só com a API via @repo/sdk. Por isso a postura padrão aqui é
-//   NEGAR todo acesso direto de clientes.
+//   repositórios), que se autentica com uma service account via firebase-admin
+//   (getFirestoreAdmin() de @repo/auth/server). Como serviço confiável, ela
+//   IGNORA estas regras — publicar a negação abaixo não afeta a API.
+//   Nenhum cliente (browser) acessa o Firestore direto: o front fala só com a
+//   API via @repo/sdk. Por isso a postura padrão aqui é NEGAR todo acesso
+//   direto de clientes.
 //
-// ⚠️ PRÉ-REQUISITO ANTES DO DEPLOY DESTAS REGRAS
-//   A apps/api precisa acessar o Firestore via firebase-admin
-//   (getFirestoreAdmin() de @repo/auth/server), que roda como serviço
-//   confiável e IGNORA estas regras. HOJE a API usa o client SDK NÃO
-//   autenticado (apps/api/(shared)/infra/dabatase.ts). Se você publicar estas
-//   regras com a API ainda no client SDK, a API perde acesso e quebra.
-//   Faça primeiro a migração descrita em docs/SECURITY.md.
+// ⚠️ ORDEM AO MIGRAR UM FORK QUE AINDA USE O CLIENT SDK NA API
+//   Publique estas regras DEPOIS de a API rodar no Admin SDK; o inverso deixa
+//   a API sem acesso. E o rollback correto é reverter o código da API primeiro:
+//   republicar regras permissivas sem reverter reexpõe a base inteira.
 //
-// Deploy: `npx -y firebase-tools@latest deploy --only firestore:rules`
+// Deploy: `npx -y firebase-tools@latest deploy --only firestore:rules,firestore:indexes`
+//   (o projeto alvo vem do .firebaserc; um fork usa --project <id> para não
+//    reescrever esse arquivo versionado — ver docs/SETUP.md)
 // =============================================================================
 
 service cloud.firestore {
