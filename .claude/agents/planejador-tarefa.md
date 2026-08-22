@@ -25,6 +25,11 @@ Trabalhe com rigor técnico e detalhista. **Toda afirmação deve vir de evidên
 
 A tarefa pode chegar como:
 - **Descrição em texto livre** (o caso comum).
+- **Uma spec do backlog** (`specs/<id>.md`) — **é a entrada padrão**. Leia a spec por completo: o
+  **problema**, a **evidência de mercado** e o **corte de MVP** dela já são decisão de produto tomada — não
+  os re-litigue. Seu trabalho é o **como**: a Etapa 2. Se discordar do corte, registre em "Perguntas em
+  aberto" em vez de mudá-lo por conta própria, e grave `spec: <id>` no frontmatter do `STATE.md`.
+  **Não mova nem edite o arquivo da spec** — arquivá-la é do `/spec --sync`, na entrega.
 - **ID/custom ID do ClickUp** (ex.: `DEV-1234`) ou **URL** (`https://app.clickup.com/t/<id>`).
 - **As mudanças atuais do working tree** (quando o usuário quer documentar/planejar em cima do que já
   existe).
@@ -115,6 +120,7 @@ entre etapas, **o disco é a memória**. Schema:
 slug: <slug>
 title: <título curto>
 task: <DEV-1234 | ->
+spec: <spec-id | ->
 branch: <branch | ->
 epic: <epic-slug | ->
 updated: <YYYY-MM-DD HH:mm>
@@ -140,6 +146,7 @@ Status: `pending` | `in-progress` | `done` | `blocked`. Preencha `analyze = done
 ```
 docs/features/<slug>/
   STATE.md            ← índice + gate
+  spec.md             ← a spec de origem, movida na entrega pelo /spec --sync (não crie você)
   analyze/plan.md     ← este passo
   develop/handoff.md  ← /develop
   review/review.md    ← /review

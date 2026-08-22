@@ -26,8 +26,9 @@ responsabilidade de quem escreve a mensagem.
 - `type` ∈ `feat` / `fix` / `style` / `chore` / `ci` / `refactor` / `perf` / `test` / `docs`.
 - `project` = pasta em `apps/` (`app`, `web`, `api`, `email`) **ou** nome do pacote sem `@repo/`
   (`sdk`, `design-system`, `internationalization`, `auth`, `payments`, `shared`, …). Vários pacotes no
-  mesmo commit → `packages`. Tooling de IA → `claude`. Vários apps num commit único → omita o escopo
-  (`feat: …`) ou concatene com hífen — mas prefira **separar em commits** (regra abaixo).
+  mesmo commit → `packages`. Tooling de IA → `claude`. Backlog de funcionalidades (`specs/`) → `specs`.
+  Vários apps num commit único → omita o escopo (`feat: …`) ou concatene com hífen — mas prefira
+  **separar em commits** (regra abaixo).
 - **Idioma — sempre em inglês:** nomes de branch e mensagens de commit/PR são escritos **em inglês**.
   Use o idioma de origem **apenas** para nome próprio ou termo sem equivalente direto (ex.: `Pix`,
   `Boleto`, `CNPJ`).

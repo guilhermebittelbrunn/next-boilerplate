@@ -9,12 +9,19 @@ Tudo em português; código e mensagens de commit em inglês.
 ## O pipeline
 
 ```
-Planejar  → Desenvolver → Revisar → QA        (+ opcional)
-/analyze  → /develop    → /review → /test      /observe · /mediate
+Descobrir → Planejar  → Desenvolver → Revisar → QA        (+ opcional)
+/spec     → /analyze  → /develop    → /review → /test      /observe · /mediate
+   ↑                                                  │
+   └────────────── /spec --sync fecha o ciclo ────────┘
 ```
 
 Cada papel é um **slash command** (interativo, roda no loop principal e **pergunta antes de decidir**)
 apoiado por um **subagent** (o motor autônomo que faz o trabalho pesado).
+
+O ciclo é fechado de propósito. O `/spec` alimenta o pipeline a partir do backlog em
+[`specs/`](../specs/README.md); no fim, `/spec --sync` **audita o backlog contra o código** e recomeça com
+ele limpo. Sem esse retorno, o backlog vira lista de desejos — e uma lista de desejos que ninguém confere é
+pior que nenhuma, porque parece confiável.
 
 > Por que comandos e não só agents? Subagents rodam de forma autônoma e **não pausam para perguntar**. Os
 > comandos rodam no loop principal, então conseguem usar `AskUserQuestion` (dúvidas de produto, gate de
@@ -27,7 +34,8 @@ deixou, sem depender da conversa.
 
 | Comando | Papel | O que faz |
 |---------|-------|-----------|
-| `/analyze [descrição ou ID/link ClickUp]` | PO + Tech Lead | Busca o contexto, analisa o código e salva **o plano** em `analyze/plan.md` + inicializa o `STATE.md`. Pergunta o que for ambíguo. |
+| `/spec [ideia \| --sync \| --next]` | Estrategista de Produto | Varre o repo, confronta com padrões de mercado (**com fontes**) e escreve/atualiza as specs em `specs/`. `--sync` reconcilia o backlog com o código **e arquiva as specs entregues**; `--next` recomenda a próxima. |
+| `/analyze <nome-da-spec>` | PO + Tech Lead | **O argumento padrão é o nome de uma spec** (`/analyze audit-log`). Também aceita descrição livre ou ID/link do ClickUp; vazio, oferece as specs aprovadas do backlog. Salva **o plano** em `analyze/plan.md` + inicializa o `STATE.md`. |
 | `/develop [slug? / --force]` | Desenvolvedor | Lê o plano e **implementa** o slice vertical (SDK → API → app/web → i18n); valida visualmente; escreve `develop/handoff.md`. Não cria branch nem commita. |
 | `/review [foco? / --force]` | Revisor | Revisa o diff contra [`review-checklist.md`](review-checklist.md), valida visualmente, aplica correções, **resolve a branch**, escreve `review/review.md`, **pede aprovação antes de commitar** e, ao final, pergunta se deve dar **push**. |
 | `/test [foco? / manual / --force]` | QA | Gera os critérios de aceite (§9.1) **E** roda os testes Vitest dos workspaces afetados + `pnpm test` do root; cria os testes que faltam; dirige o app com `agent-browser`. |
@@ -36,6 +44,10 @@ deixou, sem depender da conversa.
 
 > ⚠️ **Colisão de nome**: existe também um `/review` global (revisão de PR do GitHub). O deste projeto tem
 > precedência. Para a revisão genérica de diff, use `/code-review`.
+
+> `/spec` **não** faz parte do gate sequencial: ele roda antes de existir tarefa e pode ser chamado a
+> qualquer momento. Uma tarefa não precisa nascer de spec — bug e ajuste pontual vão direto ao `/analyze`.
+> Funcionalidade nova genérica, idealmente, nasce.
 
 **Gate sequencial:** cada comando exige a etapa anterior concluída (`/develop`←`analyze`,
 `/review`←`develop`, `/test`←`review`). Se faltar, ele **para** e manda rodar a etapa anterior. Use
@@ -56,6 +68,9 @@ conciso** da etapa anterior — não o plano inteiro. É o ganho de tokens do pi
 
 Use via `@menção` para rodar isolado/em paralelo, ou deixe os comandos os acionarem.
 
+- **`estrategista-produto`** — inventaria o repo, pesquisa o mercado e escreve as specs em `specs/`;
+  reconcilia o backlog com o código; **não implementa nada**. Em `docs/features/` só toca para arquivar a
+  spec entregue (`spec.md` + o campo `spec:` no `STATE.md`).
 - **`planejador-tarefa`** — análise PO+TechLead; lê ClickUp/links; escreve `analyze/plan.md` + `STATE.md`;
   devolve blueprint + "Perguntas em aberto".
 - **`desenvolvedor`** — lê o plano, implementa na ordem SDK → API → app/web → i18n, valida visualmente,
@@ -107,6 +122,7 @@ colagem manual.
 ```
 docs/features/<slug>/          ← versionado: o histórico de como a feature foi construída
   STATE.md            ← índice + gate: status por etapa (pending/in-progress/done/blocked)
+  spec.md             ← a spec de origem, movida de specs/ na entrega   [/spec --sync]
   analyze/plan.md     ← blueprint (Etapa 1 + Etapa 2)              [/analyze]
   develop/handoff.md  ← blueprint→arquivos, desvios, pendências     [/develop]
   review/review.md    ← achados, correções, branch, commits         [/review]
@@ -114,6 +130,11 @@ docs/features/<slug>/          ← versionado: o histórico de como a feature fo
   observacao.md       ← resumo de negócio                           [/observe]
   pr-review/          ← triagem de comentários de PR                [/mediate]
 ```
+
+Com o `spec.md` ao lado do plano, a pasta da feature passa a contar a história inteira em ordem:
+**por que** (spec) → **como** (plano) → **o que saiu** (handoff) → **o que foi cobrado** (review) →
+**como foi provado** (test). Nem toda feature tem `spec.md` — bugs e ajustes pontuais entram direto pelo
+`/analyze`.
 
 O `STATE.md` é a **fonte da ordem** e o **breadcrumb** entre etapas: como o contexto é limpo (`/compact`,
 `/clear`) entre comandos, cada um lê esse arquivo pequeno para saber o que já rodou e onde estão os
@@ -147,9 +168,13 @@ Depois, **cada subtarefa roda o pipeline completo**: `/develop <subtask> → /re
 ## Exemplo de ponta a ponta
 
 ```text
-1. /analyze "área de notificações do usuário no painel"
-   → blueprint em docs/features/user-notifications/analyze/plan.md + STATE.md (analyze=done);
-     pergunta o corte de MVP e a área do painel.
+0. /spec                                                                    (opcional, mas é a entrada)
+   → varre o repo, pesquisa o mercado, propõe specs em specs/; você aprova "audit-log";
+     spec fica approved no specs/BACKLOG.md.
+1. /analyze audit-log                          ← o nome da spec é o argumento padrão
+   → lê specs/audit-log.md (problema, evidência, corte de MVP já decidido) e produz o blueprint em
+     docs/features/audit-log/analyze/plan.md + STATE.md (analyze=done, spec: audit-log);
+     a spec passa a in-progress e CONTINUA em specs/ durante todo o desenvolvimento.
 2. /develop
    → implementa SDK → API → app → i18n; typecheck + pnpm check + paridade de i18n;
      valida no browser (light/dark/mobile); escreve develop/handoff.md; develop=done.
@@ -162,6 +187,10 @@ Depois, **cada subtarefa roda o pipeline completo**: `/develop <subtask> → /re
      dirige o app e salva os prints em test/e2e/; test=done.
 5. /observe            (opcional)
    → observação de negócio pronta para colar no card.
+6. /spec --sync
+   → confere no código que o corte de MVP foi entregue; audit-log vira done e é MOVIDA
+     (git mv specs/audit-log.md docs/features/audit-log/spec.md);
+     o BACKLOG.md a registra em "Entregues" e specs/ volta a conter só o que falta.
 ```
 
 ## Skills usadas pelo pipeline

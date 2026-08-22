@@ -1,6 +1,6 @@
 ---
-description: Analisa e planeja uma tarefa como PO + Tech Lead (Etapa 1 + Etapa 2 do feature-analysis-guide) e salva o plano em docs/features/<slug>/analyze/plan.md. Aceita descrição livre ou ID/link do ClickUp; pergunta o que for ambíguo antes de decidir.
-argument-hint: "[descrição da tarefa ou ID/link do ClickUp — opcional: vazio usa as mudanças atuais]"
+description: Analisa e planeja uma tarefa como PO + Tech Lead (Etapa 1 + Etapa 2 do feature-analysis-guide) e salva o plano em docs/features/<slug>/analyze/plan.md. O argumento padrão é o nome de uma spec de specs/; também aceita descrição livre ou ID/link do ClickUp. Pergunta o que for ambíguo antes de decidir.
+argument-hint: "<nome-da-spec> (padrão) | descrição livre | ID/link do ClickUp | vazio escolhe do backlog"
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, ToolSearch
 ---
 
@@ -10,14 +10,46 @@ Tarefa a analisar: **$ARGUMENTS**
 
 Você é o orquestrador (loop principal) do papel **Planejador (PO + Tech Lead)**. Conduza assim:
 
-## Passo 1 — Identifique a entrada
+## Passo 1 — Resolva a entrada (spec é o padrão)
 
-- **Descrição em texto livre** → é o caso comum, siga direto.
-- **ID/custom ID do ClickUp** (ex.: `DEV-1234`) ou **URL** (`https://app.clickup.com/t/<id>`) → trate como
-  referência de tarefa do ClickUp.
-- **Vazio** → verifique se há mudanças no working tree (`git status -s`); se houver, pergunte
-  (`AskUserQuestion`) se deve planejar/documentar a feature a partir das **mudanças atuais** ou pedir uma
-  descrição. Sem mudanças, peça a descrição (ou o ID/link).
+**A entrada esperada é o nome de uma spec.** Resolva `$ARGUMENTS` nesta ordem — pare na primeira que casar:
+
+1. **Vazio** → leia `specs/BACKLOG.md` e ofereça as specs com status `approved` (e, se não houver, as
+   `proposed`) via `AskUserQuestion`, na ordem recomendada do backlog. Ofereça também "nenhuma — vou
+   descrever a tarefa" e "usar as mudanças atuais do working tree". Sem backlog, caia no comportamento
+   antigo: `git status -s` e, se houver mudanças, pergunte se deve planejar em cima delas.
+2. **ID/custom ID do ClickUp** (`DEV-1234`) ou **URL** (`https://app.clickup.com/t/<id>`) → modo ClickUp.
+3. **Parece nome de spec** — o caso padrão. O discriminador é a **forma**: um token único, sem espaço, em
+   kebab-case (aceite também os prefixos/sufixos `spec:`, `.md` e `specs/`, normalizando-os). Se a forma
+   casar, o usuário **quis dizer uma spec** — e a partir daqui o argumento nunca vira descrição livre:
+   - `specs/<id>.md` existe → **Modo spec** (abaixo);
+   - `docs/features/*/spec.md` tem esse `id` → a spec **já foi entregue e arquivada**. Diga isso, mostre a
+     feature, e pergunte se é para tratar como evolução/regressão daquilo;
+   - não achou em lugar nenhum → **é typo**. Liste os ids disponíveis em `specs/` e pergunte qual era.
+4. **Descrição em texto livre** (qualquer coisa com espaço) → modo descrição. Antes de seguir, **procure em
+   `specs/` uma spec que já cubra o assunto** (`grep` por palavras-chave nos títulos e no `id`). Se
+   encontrar, avise e pergunte se deve usá-la em vez da descrição solta — é o que evita planejar duas vezes
+   a mesma coisa.
+
+### Modo spec
+
+1. Leia `specs/<id>.md` **por completo**. O problema, a evidência e o **corte de MVP** são **decisão de
+   produto já tomada** — não as re-litigue no plano.
+2. Confira o `status` no frontmatter:
+   - `approved` → siga.
+   - `proposed` → **avise que ela ainda não foi triada** e pergunte (`AskUserQuestion`) se deve seguir
+     assim mesmo ou rodar `/spec` antes para aprovar.
+   - `in-progress` → já existe feature em andamento; mostre o `feature: <slug>` e pergunte se é para
+     continuar aquela ou abrir outra.
+   - `done` → estado inconsistente: entregue deveria ter sido arquivado. Pare e mande rodar
+     **`/spec --sync`**, que resolve o caso (arquiva se o código confirmar, ou reporta regressão).
+   - `deferred` / `rejected` → pare e pergunte. Reabrir exige decisão explícita.
+3. Verifique o `depends_on`: se alguma dependência **não** estiver entregue, avise antes de planejar.
+4. Repasse o conteúdo da spec ao `planejador-tarefa` e instrua-o a gravar `spec: <id>` no frontmatter do
+   `STATE.md`.
+5. Ao final, marque a spec como `status: in-progress`, `feature: <slug>` e `updated` de hoje.
+   **Não mova o arquivo** — arquivar é do `/spec --sync` (ciclo de vida em
+   [`specs/README.md`](../../specs/README.md)).
 
 > **Épico?** Se a tarefa tiver **subtarefas**, é um épico. Pergunte (`AskUserQuestion`) se deve
 > **aprofundar todas as subtarefas agora** ou montar só o `epic.md` (visão + sequenciamento) + stubs por
@@ -72,6 +104,13 @@ usuário quiser levar algo para o card, ele copia de lá.
 ## Passo 6 — Próximo passo
 
 Sugira rodar **`/develop`** para implementar o blueprint.
+
+Se a tarefa **não** veio de uma spec e é uma funcionalidade nova genérica (não um bug, nem ajuste pontual),
+mencione que **`/spec <ideia>`** teria confrontado a ideia com o que já existe e com o mercado antes do
+plano — útil na próxima.
+
+Se veio de uma spec, confirme que ela ficou `in-progress` com `feature: <slug>` apontando para a feature
+criada, e lembre o ciclo completo: `/develop → /review → /test → /spec --sync`.
 
 ## Estado do pipeline (`STATE.md`)
 

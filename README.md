@@ -6,6 +6,8 @@ Boilerplate em **monorepo** (Turborepo + pnpm) para gerar rapidamente **MVPs** c
 >
 > 🤖 IA: [Ferramental](docs/AI-WORKFLOW.md) · [Pipeline de tarefas](docs/TASK-PIPELINE.md) · [Guia de análise](docs/feature-analysis-guide.md) · [Checklist de revisão](docs/review-checklist.md)
 >
+> 🗺️ [Backlog de funcionalidades](specs/BACKLOG.md) — o que ainda falta no core, com evidência de mercado
+>
 > 📋 Convenções: [`AGENTS.md`](AGENTS.md) + `CLAUDE.md` aninhados · 🧭 [Mapa rápido](CLAUDE.md)
 
 ## Filosofia
@@ -92,8 +94,14 @@ Não há linter de commit instalado — o padrão é convenção do time. Especi
 
 ## Desenvolvimento com IA
 
-O repo vem com Claude Code configurado: pipeline de tarefas (`/analyze → /develop → /review → /test`),
-subagents, skills de scaffolding e validação visual obrigatória de front-end.
+O repo vem com Claude Code configurado: ciclo fechado de tarefas
+(`/spec → /analyze → /develop → /review → /test`, fechando com `/spec --sync`), subagents, skills de
+pesquisa e de scaffolding, e validação visual obrigatória de front-end.
+
+O ciclo começa no [backlog de funcionalidades](specs/README.md): o `/spec` varre o repositório, confronta
+com padrões de mercado **com fontes** e propõe o que falta no core; no fim da entrega, `/spec --sync`
+audita o backlog **contra o código**, para que ele não vire uma lista de desejos.
+
 Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md).
 
 ## Deploy

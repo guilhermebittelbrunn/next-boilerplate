@@ -30,6 +30,8 @@ Stack: Turborepo + pnpm + Next.js (App Router) · Firebase (Auth + Firestore) ·
 | `@repo/shared` | Utils transversais (`HTTP_STATUS`, `FormattedError`, mappers de data, etc.). |
 | `@repo/analytics` · `@repo/security` · `@repo/seo` · `@repo/next-config` · `@repo/typescript-config` | Integrações e config compartilhadas. |
 
+O que **ainda falta** no core está catalogado em [`specs/`](specs/README.md) — backlog de funcionalidades com evidência de mercado e status auditado contra o código.
+
 ## Comandos essenciais
 
 ```bash
@@ -78,6 +80,7 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 | Design system / formulários RHF | seção "Design system — inputs e formulários" em [`AGENTS.md`](AGENTS.md) |
 | Revisar um diff | [`docs/review-checklist.md`](docs/review-checklist.md) (fonte única das invariantes) |
 | Planejar/analisar uma tarefa | [`docs/feature-analysis-guide.md`](docs/feature-analysis-guide.md) |
+| Decidir **o que** construir | [`specs/README.md`](specs/README.md) + [`specs/BACKLOG.md`](specs/BACKLOG.md) (backlog de funcionalidades) |
 | Qualquer coisa | este `CLAUDE.md` (sempre carregado) + `.claude/rules/*` |
 
 ## Trabalhando com IA neste repo
@@ -87,12 +90,20 @@ Hub do ferramental: [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md).
 ### Pipeline de tarefas — [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md)
 
 ```
-/analyze  →  /develop  →  /review  →  /test        (+ opcionais: /observe · /mediate)
-planejar     implementar   revisar     QA
+/spec  →  /analyze  →  /develop  →  /review  →  /test     (+ opcionais: /observe · /mediate)
+descobrir  planejar     implementar   revisar     QA
+   ↑                                                └── /spec --sync fecha o ciclo
 ```
 
+O ciclo começa no **backlog de funcionalidades** ([`specs/`](specs/README.md)): o `/spec` varre o repo,
+confronta com padrões de mercado e escreve as specs; você aprova uma e roda **`/analyze <nome-da-spec>`**
+(o nome da spec é o argumento padrão). No fim, `/spec --sync` audita o backlog contra o código — é isso que
+faz disso um **loop**, e não uma lista de desejos. Spec responde *o quê/por quê*; o plano do `/analyze`
+responde *como*. **`specs/` contém só o que não foi entregue**; o ciclo de vida completo está em
+[`specs/README.md`](specs/README.md).
+
 Cada comando roda no loop principal (pergunta antes de decidir) e aciona um subagent
-(`planejador-tarefa`, `desenvolvedor`, `revisor-codigo`, `analista-qa`). O estado da tarefa vive em
+(`estrategista-produto`, `planejador-tarefa`, `desenvolvedor`, `revisor-codigo`, `analista-qa`). O estado da tarefa vive em
 `docs/features/<slug>/` (versionado — é o histórico de como a feature foi construída): `STATE.md` é o gate,
 e cada etapa deixa um handoff conciso para a seguinte. Gate sequencial com bypass via `--force`.
 
@@ -107,6 +118,8 @@ os artefatos do fluxo no código).
 
 ### Skills do projeto (digite `/` para invocar)
 
+- **`/market-research`** — pesquisa de mercado **com fontes** para decidir se uma feature merece entrar no core (prevalência entre starters, exigência de provedor/lei, custo herdado pelos forks); grava nota citável em `specs/research/`.
+- **`/spec-audit`** — reconcilia o backlog `specs/` com a realidade do código (fecha o loop; é o motor do `/spec --sync`).
 - **`/new-crud`** — scaffold de um CRUD vertical completo (SDK → API → app → i18n), seguindo o padrão `entity`.
 - **`/new-api-route`** — cria rota na `apps/api` (validação, guard, repo+mapper, `error.code`).
 - **`/i18n-sync`** — adiciona/valida chaves nos 3 idiomas + `apiErrors` (com teste de paridade determinístico).
