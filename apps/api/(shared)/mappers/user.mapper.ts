@@ -31,6 +31,12 @@ function serializeFirestoreValue(value: unknown): unknown {
     if (value instanceof Timestamp) {
         return value.toDate().toISOString();
     }
+    // A profile created within the request carries a plain Date, not a Timestamp:
+    // it never went through Firestore. Without this branch it reaches the generic
+    // object case below and serializes to {}, since a Date has no own keys.
+    if (value instanceof Date) {
+        return value.toISOString();
+    }
     if (value && typeof value === "object" && !Array.isArray(value)) {
         return serializeFirestoreData(value as DocumentData);
     }
