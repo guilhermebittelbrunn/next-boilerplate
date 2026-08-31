@@ -1,5 +1,6 @@
-import type { EntityDTO } from "@repo/sdk/src/types";
-import { EntityType } from "@repo/sdk/src/types";
+import type { EntityDTO, UserWithAuthDTO } from "@repo/sdk/src/types";
+import { EntityType, UserType } from "@repo/sdk/src/types";
+import { Timestamp } from "firebase-admin/firestore";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Row = Record<string, unknown>;
@@ -106,9 +107,11 @@ const { fakeDb } = vi.hoisted(() => {
     return { fakeDb: db };
 });
 
+const { getUserMock } = vi.hoisted(() => ({ getUserMock: vi.fn() }));
+
 vi.mock("@/(shared)/infra/database", () => ({ default: fakeDb }));
 vi.mock("@repo/auth/server", () => ({
-    getAuthInstance: () => ({ getUser: vi.fn() }),
+    getAuthInstance: () => ({ getUser: getUserMock }),
     getCurrentUser: vi.fn(),
 }));
 
@@ -150,8 +153,32 @@ function adminTimestamp(iso: string) {
     return { toDate: () => new Date(iso) };
 }
 
+function authRecord(uid: string) {
+    return {
+        uid,
+        email: `${uid}@example.com`,
+        emailVerified: true,
+        displayName: null,
+        photoURL: null,
+        phoneNumber: null,
+        disabled: false,
+        metadata: {
+            creationTime: "Mon, 01 Jan 2024 00:00:00 GMT",
+            lastSignInTime: null,
+            lastRefreshTime: null,
+        },
+        providerData: [],
+        customClaims: null,
+        tokensValidAfterTime: undefined,
+    };
+}
+
 beforeEach(() => {
     fakeDb.reset();
+    getUserMock.mockReset();
+    getUserMock.mockImplementation((uid: string) =>
+        Promise.resolve(authRecord(uid))
+    );
 });
 
 describe("BaseRepository.findById", () => {
@@ -358,6 +385,105 @@ describe("UserRepository.findByReferenceId", () => {
     it("returns null when no profile matches", async () => {
         await expect(
             userRepository.findByReferenceId("auth-uid-missing")
+        ).resolves.toBeNull();
+    });
+});
+
+describe("UserRepository.list over the Firestore driver", () => {
+    function seedProfile(id: string, referenceId: string, type: UserType) {
+        fakeDb.seed("user", id, {
+            reference_id: referenceId,
+            type,
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+    }
+
+    it("serializes the stored timestamps and merges the auth account", async () => {
+        seedProfile("p1", "auth-1", UserType.COMMON);
+
+        const [user] = (await userRepository.list()) as UserWithAuthDTO[];
+
+        expect(user.id).toBe("p1");
+        expect(user.email).toBe("auth-1@example.com");
+        expect(user.createdAt).toBe(CREATED_AT_ISO);
+        expect(JSON.stringify(user)).not.toContain("_seconds");
+    });
+
+    it("leaves out soft-deleted profiles", async () => {
+        seedProfile("p1", "auth-1", UserType.COMMON);
+        fakeDb.seed("user", "p2", {
+            reference_id: "auth-2",
+            type: UserType.COMMON,
+            deletedAt: Timestamp.fromDate(new Date("2024-04-01T00:00:00.000Z")),
+        });
+
+        const users = await userRepository.list();
+
+        expect(users.map((user) => user.id)).toEqual(["p1"]);
+    });
+
+    it("keeps only the requested type", async () => {
+        seedProfile("p1", "auth-1", UserType.COMMON);
+        seedProfile("p2", "auth-2", UserType.ADMIN);
+
+        const users = await userRepository.list({ type: UserType.ADMIN });
+
+        expect(users.map((user) => user.id)).toEqual(["p2"]);
+        expect(getUserMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("drops a profile whose auth account was deleted outside the app", async () => {
+        seedProfile("p1", "auth-1", UserType.COMMON);
+        seedProfile("p2", "auth-ghost", UserType.COMMON);
+        getUserMock.mockImplementation((uid: string) =>
+            uid === "auth-ghost"
+                ? Promise.reject(
+                      Object.assign(new Error("no user"), {
+                          code: "auth/user-not-found",
+                      })
+                  )
+                : Promise.resolve(authRecord(uid))
+        );
+
+        const users = await userRepository.list();
+
+        expect(users.map((user) => user.id)).toEqual(["p1"]);
+    });
+});
+
+describe("UserRepository.update and delete", () => {
+    function seedProfile() {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-1",
+            type: UserType.COMMON,
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+    }
+
+    it("keeps createdAt a Timestamp, since the repository has no mapper", async () => {
+        seedProfile();
+
+        await userRepository.update({ id: "p1", type: UserType.ADMIN });
+
+        const stored = fakeDb.read("user", "p1");
+        expect(stored?.type).toBe(UserType.ADMIN);
+        expect(stored?.createdAt).toBeInstanceOf(Timestamp);
+        expect(stored?.updatedAt).toBeInstanceOf(Date);
+    });
+
+    it("soft-deletes the profile instead of removing the document", async () => {
+        seedProfile();
+
+        await userRepository.delete("p1");
+
+        expect(fakeDb.read("user", "p1")?.deletedAt).toBeInstanceOf(Date);
+        await expect(userRepository.findById("p1")).resolves.toBeNull();
+        await expect(
+            userRepository.findByReferenceId("auth-1")
         ).resolves.toBeNull();
     });
 });
