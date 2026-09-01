@@ -2,7 +2,7 @@
 
 Como subir o boilerplate do zero e o mapa **real** das variáveis de ambiente. A fonte de verdade de cada var é o `keys.ts` do pacote correspondente (validado por `@t3-oss/env-nextjs`) e o `env.ts` de cada app.
 
-> Os `.env.example` de `apps/{api,app,web}` já refletem **apenas** as vars usadas por este fork (agrupadas e comentadas). Copie o de cada app para `.env` (ou `.env.local`) e preencha. Este documento detalha **como obter/usar cada uma**. As chaves do upstream next-forge não usadas (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub) foram removidas.
+> Os `.env.example` de `apps/{api,app,web}` refletem **apenas** as vars usadas por este fork (agrupadas e comentadas). Copie o de cada app para `.env` (ou `.env.local`) e preencha. Este documento detalha **como obter/usar cada uma**. As chaves herdadas do upstream next-forge e não usadas aqui — Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub, `FLAGS_SECRET` e PostHog — foram removidas.
 
 ## Pré-requisitos
 
