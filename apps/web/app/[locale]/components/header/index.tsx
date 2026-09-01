@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noArrayIndexKey: <explanation> */
 "use client";
 
 import useAuth from "@repo/auth/provider";
@@ -123,13 +122,15 @@ export const Header = () => {
                                                     </div>
                                                     <div className="flex h-full flex-col justify-end text-sm">
                                                         {item.items?.map(
-                                                            (subItem, idx) => (
+                                                            (subItem) => (
                                                                 <NavigationMenuLink
                                                                     className="flex flex-row items-center justify-between rounded px-4 py-2 hover:bg-muted"
                                                                     href={
                                                                         subItem.href
                                                                     }
-                                                                    key={idx}
+                                                                    key={
+                                                                        subItem.title
+                                                                    }
                                                                 >
                                                                     <span>
                                                                         {

@@ -9,11 +9,8 @@ import {
     type Path,
     useFormContext,
 } from "react-hook-form";
+import { DateInput, type DateInputProps } from "../../ui/date-input";
 import { FormItem, FormMessage } from "../../ui/form";
-import {
-    DateInput,
-    type DateInputProps,
-} from "../../ui/date-input";
 
 export type HookFormDateInputProps<T extends FieldValues> = Omit<
     DateInputProps,

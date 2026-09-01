@@ -4,7 +4,7 @@ Como o fluxo de assinatura funciona neste boilerplate e o que falta implementar 
 
 ## Estado atual (implementado)
 
-- `@repo/payments` expõe o cliente `stripe` (server-only) e um `paymentsAgentToolkit` (`@repo/payments/ai`) para criar produtos/preços/payment links.
+- `@repo/payments` expõe `getStripe()` (server-only), que constrói o cliente sob demanda e devolve `null` quando não há `STRIPE_SECRET_KEY` — por isso o build da API não quebra num ambiente sem chave. Toda rota que usa o cliente precisa tratar o `null`. Expõe também um `paymentsAgentToolkit` (`@repo/payments/ai`) para criar produtos/preços/payment links.
 - **Rotas** em `apps/api`: `GET /payments/plans` (público; `prices.list` → `PlanDTO`), `POST /payments/checkout` e `POST /payments/portal` (`requireCommonPanelApi`). O **webhook** trata `checkout.session.completed` e `customer.subscription.updated|deleted`.
 - **Persistência**: `UserDTO.subscription` (`stripeCustomerId`, `status`, `priceId`, `currentPeriodEnd`) no doc `user`, via `userRepository.updateSubscriptionByReferenceId`. O customer é criado no 1º checkout com `metadata.firebaseUid` + `client_reference_id`, e o webhook reconcilia por esse UID.
 - **SDK**: `apiClient.payments.{listPlans,createCheckout,createPortal}`.

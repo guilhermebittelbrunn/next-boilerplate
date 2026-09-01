@@ -10,7 +10,8 @@
     "./utils": "./utils.ts"
   },
   "scripts": {
-    "test": "NODE_ENV=test vitest run"
+    "test": "NODE_ENV=test vitest run",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

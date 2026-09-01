@@ -12,7 +12,7 @@ Compõe [`/new-api-route`](../new-api-route/SKILL.md) (rotas) e [`/i18n-sync`](.
 ## Pré-requisitos
 - `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` no ambiente da API (ver [`docs/SETUP.md`](../../../docs/SETUP.md)).
 - Produtos/preços criados no Stripe (Dashboard ou via `paymentsAgentToolkit` de `@repo/payments/ai`). Anote os `price_...`.
-- Cliente: `import { stripe } from "@repo/payments"` (server-only). **Nunca** use a secret key no front.
+- Cliente: `import { getStripe } from "@repo/payments"` (server-only) e `const stripe = getStripe()` dentro do handler. Devolve `null` sem `STRIPE_SECRET_KEY` — trate esse caso antes de usar (o webhook responde `Not configured`). **Nunca** use a secret key no front.
 
 ## Peças do fluxo (criar na ordem)
 

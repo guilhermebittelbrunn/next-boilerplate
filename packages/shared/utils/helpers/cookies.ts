@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/suspicious/noDocumentCookie: <explanation> */
+/** biome-ignore-all lint/suspicious/noDocumentCookie: a Cookie Store API sugerida pela regra não existe no Safari, e estes cookies precisam ser lidos pelo servidor em todo navegador suportado. */
 export const setCookie = (name: string, value: string, expiresIn: number) => {
     if (typeof window === "undefined") {
         return;
@@ -21,18 +21,11 @@ export const getCookie = (name: string): string | null => {
     const nameEQ = `${name}=`;
     const ca = document.cookie.split(";");
 
-    // biome-ignore lint/style/useForOf: <explanation>
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === " ") {
-            c = c.substring(1, c.length);
-        }
-        if (c.indexOf(nameEQ) === 0) {
-            return c.substring(nameEQ.length, c.length);
-        }
-    }
+    const entry = ca
+        .map((part) => part.trimStart())
+        .find((part) => part.startsWith(nameEQ));
 
-    return null;
+    return entry ? entry.slice(nameEQ.length) : null;
 };
 
 export const removeCookie = (name: string) => {

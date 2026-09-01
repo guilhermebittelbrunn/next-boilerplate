@@ -19,8 +19,7 @@ import {
 } from "@tanstack/react-query";
 import type { User, UserCredential } from "firebase/auth";
 import { useRouter } from "next/navigation";
-// biome-ignore lint/correctness/noUnusedImports: classic `jsx: "react"` needs React in scope
-import React, {
+import {
     createContext,
     type ReactElement,
     type ReactNode,

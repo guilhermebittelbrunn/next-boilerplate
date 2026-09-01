@@ -96,6 +96,54 @@ pnpm --filter api dev:with-stripe # API (3002) + encaminhamento de webhooks Stri
 
 Portas: `app` 3000 · `web` 3001 · `api` 3002 · `email` 3003.
 
+## CI — GitHub Actions
+
+O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). Um único job, `verify`.
+
+| Item | Valor |
+|------|-------|
+| Dispara em | toda `pull_request` (qualquer branch alvo) e todo `push` em `main` |
+| Executa | `pnpm install --frozen-lockfile` e depois `pnpm turbo run lint typecheck test` |
+| Node / pnpm | lidos do repositório: `.nvmrc` (`22.12.0`) e `packageManager` (`pnpm@10.19.0`) |
+| Cache | store do pnpm, via `actions/setup-node` com chave no `pnpm-lock.yaml` |
+| Secrets | **nenhum** |
+| Teto | `timeout-minutes: 15`; execuções concorrentes na mesma ref são canceladas |
+
+Três consequências que valem entender antes de mexer:
+
+- **O comando é o mesmo dos dois lados.** `pnpm turbo run lint typecheck test` roda igual no seu terminal e
+  no runner. Nada de lint só do diff no CI: isso reintroduz o "passa aqui, quebra lá".
+- **`build` está fora de propósito.** `apps/api` exige `FIREBASE_ADMIN_PROJECT_ID`, `_CLIENT_EMAIL` e
+  `_PRIVATE_KEY` para buildar; incluí-lo obrigaria a configurar segredos e um clone limpo deixaria de rodar
+  o pipeline. O build continua sendo verificado onde ele roda de verdade: localmente e na Vercel.
+- **`--frozen-lockfile` é um gate de graça.** Mexeu num `package.json` sem rodar `pnpm install`? A PR fica
+  vermelha na instalação. Commite o `pnpm-lock.yaml` junto.
+
+### Runbook — branch protection (ação manual no GitHub)
+
+Workflow é arquivo versionado; **required check não é**. Um fork clona `.github/workflows/` mas nasce sem
+nenhuma proteção — o CI apenas sinaliza, e nada impede um push direto em `main`. Para que a verificação
+bloqueie o merge, alguém precisa ligar isto **uma vez por repositório**:
+
+1. Abra uma PR qualquer e deixe o workflow rodar ao menos uma vez — o GitHub só lista um check depois de
+   tê-lo visto executar.
+2. `Settings` → `Branches` → `Add branch ruleset` (ou `Add rule` no modelo clássico), alvo `main`.
+3. Marque:
+   - **Require a pull request before merging** — é o que fecha o push direto em `main`.
+   - **Require status checks to pass before merging** e, na busca, selecione **`verify`** (o `name:` do
+     job). É o único check; se aparecerem outros com nome parecido, confira que veio do workflow `CI`.
+   - **Require branches to be up to date before merging** — evita o merge que passa isolado e quebra a
+     `main` combinado com outro PR.
+4. Deixe **Allow force pushes** e **Allow deletions** desmarcados.
+5. Se o repositório usa administradores que também abrem PR, marque **Do not allow bypassing the above
+   settings** — sem isso a proteção é uma sugestão.
+
+Confira ao final abrindo uma PR com um erro deliberado (um `console.log` basta, o Biome trata como erro):
+o botão de merge tem de ficar bloqueado.
+
+> Enquanto isso não estiver ligado, a regra de nunca commitar em `main` é garantida só pelo hook local
+> `.claude/hooks/block-protected-branch-write.sh`, que não existe num clone sem o ferramental de IA.
+
 ## Conductor (workspaces paralelos)
 
 O repo traz [`.conductor/settings.toml`](../.conductor/settings.toml), então cada workspace novo já nasce

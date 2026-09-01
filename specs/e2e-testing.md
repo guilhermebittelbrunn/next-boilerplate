@@ -9,7 +9,7 @@ area: [raiz, apps/app, apps/web, packages/design-system]
 mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 feature: -
-updated: 2026-08-21
+updated: 2026-09-01
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -32,13 +32,17 @@ alguém olhar.
 - A prova de que a prática é levada a sério: `docs/features/auth-panel-context/test/e2e/` guarda **22
   capturas de tela versionadas** (e mais 4 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
   incluindo o fluxo de impersonação.
-- Suíte automatizada atual: **23 arquivos Vitest**, todos de unidade/integração estreita — 5 em
-  `apps/api/__tests__`, 17 em `apps/app/__tests__`, 1 em `packages/internationalization/__tests__`.
-  Nenhum sobe um app de verdade, e nenhuma das três configs (`apps/app/vitest.config.mts`,
-  `apps/api/vitest.config.mts`, `packages/internationalization/vitest.config.mts`) declara **cobertura**:
-  não existe medida nem baseline para discutir.
-- `apps/web/package.json:4-11` — sem script de teste e sem nenhum teste: a landing pública não é
-  verificada por nada. Não há Playwright, Cypress nem `axe` em nenhum `package.json` do repositório.
+- Suíte automatizada atual (**medida em 2026-09-01**): **7 tasks de teste / 331 testes**, todos de
+  unidade/integração estreita — `apps/api` 118, `apps/app` 135, `@repo/auth` 29, `@repo/shared` 15,
+  `apps/web` 15, `@repo/internationalization` 11, `@repo/payments` 8. **Nenhum sobe um app de verdade**, e
+  **nenhuma** das sete configs declara **cobertura**: não existe medida nem baseline para discutir.
+- `apps/web` **entrou** na suíte (`package.json:10`, `vitest.config.mts` com `environment: "node"`,
+  `__tests__/seo.test.ts`), mas só com lógica pura de SEO — **nenhum componente da landing é renderizado
+  por teste**. Não há Playwright, Cypress nem `axe` em nenhum `package.json` do repositório.
+  > **Deriva corrigida (`/spec --sync`, 2026-09-01):** a redação original falava em 23 arquivos, três
+  > configs e `apps/web` sem script de teste. As entregas de `firestore-admin-access` e `ci-pipeline`
+  > mudaram isso. **O argumento da spec não muda** — a lacuna nunca foi o número de testes unitários, e sim
+  > que nada exercita um fluxo de ponta a ponta. Essa lacuna segue intacta.
 - **Lacuna:** a única garantia de que os fluxos principais funcionam é **humana e pontual**; nada a repete
   sozinho, e nada disso pode rodar como gate de merge.
 

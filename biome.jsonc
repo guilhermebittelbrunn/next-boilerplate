@@ -42,6 +42,9 @@
   "files": {
     "includes": [
       "**/*",
+      // Scripts vendorizados de skills de terceiros: são versionados só para a
+      // skill funcionar e ninguém aqui os edita.
+      "!.claude/skills",
       "!packages/design-system/components/ui",
       "!packages/design-system/lib",
       "!packages/design-system/hooks",

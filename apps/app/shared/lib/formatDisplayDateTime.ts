@@ -20,9 +20,7 @@ function localeToBcp47(locale: string): string {
 export function formatDisplayDateTime(input: string | Date | unknown): string {
     const { locale } = getDictionary();
     const iso =
-        typeof input === "string"
-            ? input
-            : normalizeFirestoreInstant(input);
+        typeof input === "string" ? input : normalizeFirestoreInstant(input);
     return new Intl.DateTimeFormat(localeToBcp47(locale), {
         dateStyle: "medium",
         timeStyle: "short",

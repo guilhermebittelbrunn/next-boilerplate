@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { GlobalSidebar } from "@/shared/components/ui/Sidebar";
 import { useCommonNavRoutes } from "./routes";
 
-
 type SidebarCommonProps = {
     readonly children: ReactNode;
 };

@@ -10,7 +10,7 @@ import {
 
 type Locale = (typeof locales)[number];
 
-// biome-ignore lint/suspicious/useAwait: <explanation>
+// biome-ignore lint/suspicious/useAwait: módulo "use server": o Next exige que toda função exportada seja async, mesmo quando o corpo é síncrono.
 export async function getTranslations(locale: Locale) {
     return globalTranslations[locale];
 }

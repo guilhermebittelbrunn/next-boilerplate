@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/style/noNestedTernary: <explanation> */
 import { type NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "./server";
 
@@ -9,6 +8,25 @@ type NextMiddleware = (
 type AuthMiddlewareOptions = {
     protectedRoutes?: string[];
     redirectTo?: string;
+};
+
+/**
+ * O segundo argumento aceita tanto um middleware quanto uma factory que o
+ * produz. A aridade desambigua os dois: uma função sem parâmetros é a factory,
+ * uma que recebe a request já é o próprio middleware.
+ */
+const resolveNextMiddleware = (
+    nextMiddleware?: NextMiddleware | (() => NextMiddleware)
+): NextMiddleware | undefined => {
+    if (typeof nextMiddleware !== "function") {
+        return nextMiddleware;
+    }
+
+    if (nextMiddleware.length === 0) {
+        return (nextMiddleware as () => NextMiddleware)();
+    }
+
+    return nextMiddleware as NextMiddleware;
 };
 
 /**
@@ -25,19 +43,24 @@ export function authMiddleware(
         redirectTo = "/sign-in",
     } = options ?? {};
 
+    const redirectToSignIn = (request: NextRequest) => {
+        const url = new URL(redirectTo, request.url);
+        url.searchParams.set("redirect", request.nextUrl.pathname);
+        return NextResponse.redirect(url);
+    };
+
+    const runNext = (request: NextRequest) => {
+        const next = resolveNextMiddleware(nextMiddleware);
+        return next ? next(request) : NextResponse.next();
+    };
+
     return async (request: NextRequest) => {
         const isProtectedRoute = protectedRoutes.some((route) =>
             request.nextUrl.pathname.startsWith(route)
         );
 
         if (!isProtectedRoute) {
-            const next =
-                typeof nextMiddleware === "function"
-                    ? nextMiddleware.length === 0
-                        ? (nextMiddleware as () => NextMiddleware)()
-                        : (nextMiddleware as NextMiddleware)
-                    : nextMiddleware;
-            return next ? next(request) : NextResponse.next();
+            return runNext(request);
         }
 
         const token =
@@ -48,24 +71,17 @@ export function authMiddleware(
             const user = await getCurrentUser(token || null);
 
             if (!user) {
-                const url = new URL(redirectTo, request.url);
-                url.searchParams.set("redirect", request.nextUrl.pathname);
-                return NextResponse.redirect(url);
+                return redirectToSignIn(request);
+            }
+
+            const next = resolveNextMiddleware(nextMiddleware);
+            if (next) {
+                return next(request);
             }
 
             const requestHeaders = new Headers(request.headers);
             requestHeaders.set("x-user-id", user.uid);
             requestHeaders.set("x-user-email", user.email ?? "");
-
-            const next =
-                typeof nextMiddleware === "function"
-                    ? nextMiddleware.length === 0
-                        ? (nextMiddleware as () => NextMiddleware)()
-                        : (nextMiddleware as NextMiddleware)
-                    : nextMiddleware;
-            if (next) {
-                return next(request);
-            }
 
             return NextResponse.next({
                 request: { headers: requestHeaders },
@@ -78,17 +94,10 @@ export function authMiddleware(
                 console.warn(
                     "Firebase Auth not configured, skipping authentication"
                 );
-                const next =
-                    typeof nextMiddleware === "function"
-                        ? nextMiddleware.length === 0
-                            ? (nextMiddleware as () => NextMiddleware)()
-                            : (nextMiddleware as NextMiddleware)
-                        : nextMiddleware;
-                return next ? next(request) : NextResponse.next();
+                return runNext(request);
             }
-            const url = new URL(redirectTo, request.url);
-            url.searchParams.set("redirect", request.nextUrl.pathname);
-            return NextResponse.redirect(url);
+
+            return redirectToSignIn(request);
         }
     };
 }

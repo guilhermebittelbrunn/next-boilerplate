@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/nursery/noShadow: <explanation> */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";

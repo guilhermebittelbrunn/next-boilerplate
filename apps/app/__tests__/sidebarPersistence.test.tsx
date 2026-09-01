@@ -57,7 +57,6 @@ describe("sidebar persistence", () => {
             media: query,
             addEventListener: vi.fn(),
             removeEventListener: vi.fn(),
-            // biome-ignore lint/suspicious/noExplicitAny: minimal jsdom stand-in
         })) as any;
     });
 

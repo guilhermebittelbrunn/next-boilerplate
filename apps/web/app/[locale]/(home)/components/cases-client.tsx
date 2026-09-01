@@ -9,6 +9,13 @@ import {
 import { getDictionary } from "@repo/internationalization/client";
 import { useEffect, useState } from "react";
 
+const CASE_LOGO_COUNT = 15;
+const CASE_LOGO_SLOTS = Array.from(
+    { length: CASE_LOGO_COUNT },
+    (_, index) => index + 1
+);
+const AUTO_ADVANCE_DELAY_MS = 1000;
+
 export const CasesClient = () => {
     const { dictionary } = getDictionary();
     const [api, setApi] = useState<CarouselApi>();
@@ -27,7 +34,7 @@ export const CasesClient = () => {
                 api.scrollNext();
                 setCurrent(current + 1);
             }
-        }, 1000);
+        }, AUTO_ADVANCE_DELAY_MS);
     }, [api, current]);
 
     return (
@@ -39,10 +46,10 @@ export const CasesClient = () => {
                     </h2>
                     <Carousel className="w-full" setApi={setApi}>
                         <CarouselContent>
-                            {Array.from({ length: 15 }).map((_, index) => (
+                            {CASE_LOGO_SLOTS.map((slot) => (
                                 <CarouselItem
                                     className="basis-1/4 lg:basis-1/6"
-                                    key={index}
+                                    key={slot}
                                 >
                                     <div className="flex aspect-square items-center justify-center rounded-md bg-muted p-6">
                                         <span className="text-sm">
@@ -50,7 +57,7 @@ export const CasesClient = () => {
                                                 dictionary.apps.web.pages.home
                                                     .cases.logoLabel
                                             }{" "}
-                                            {index + 1}
+                                            {slot}
                                         </span>
                                     </div>
                                 </CarouselItem>

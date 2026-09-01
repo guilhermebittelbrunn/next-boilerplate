@@ -7,6 +7,9 @@
     ".": "./utils/index.ts",
     "./utils": "./utils/index.ts"
   },
+  "scripts": {
+    "test": "NODE_ENV=test vitest run"
+  },
   "devDependencies": {
     "@types/react": "^19.2.2"
   },

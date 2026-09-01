@@ -1,6 +1,6 @@
-/** biome-ignore-all lint/suspicious/useAwait: <explanation> */
+/** biome-ignore-all lint/suspicious/useAwait: os handlers de evento são stubs aguardados pelo despacho abaixo; a assinatura async é o contrato que a persistência futura vai preencher. */
 import type { Stripe } from "@repo/payments";
-import { stripe } from "@repo/payments";
+import { getStripe } from "@repo/payments";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
@@ -13,12 +13,6 @@ const handleCheckoutSessionCompleted = async (
     if (!data.customer) {
         return;
     }
-
-    const customerId =
-        typeof data.customer === "string" ? data.customer : data.customer.id;
-
-    // Example: Get user from Firebase using customerId
-    // const user = await getFirebaseUserByCustomerId(customerId);
 };
 
 const handleSubscriptionScheduleCanceled = async (
@@ -28,13 +22,12 @@ const handleSubscriptionScheduleCanceled = async (
     if (!data.customer) {
         return;
     }
-
-    const customerId =
-        typeof data.customer === "string" ? data.customer : data.customer.id;
 };
 
 export const POST = async (request: Request): Promise<Response> => {
-    if (!env.STRIPE_WEBHOOK_SECRET) {
+    const stripe = getStripe();
+
+    if (!(stripe && env.STRIPE_WEBHOOK_SECRET)) {
         return NextResponse.json({ message: "Not configured", ok: false });
     }
 

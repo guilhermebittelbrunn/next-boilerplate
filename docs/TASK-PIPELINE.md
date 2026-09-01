@@ -98,6 +98,13 @@ que o `/analyze` preenche e do qual o `/test` deriva os critérios de aceite (fo
 `agent-browser`. É gate no `/develop`, no `/review` e no `/test`. Rode os comandos do `agent-browser`
 **estritamente em sequência**; confira **light + dark + mobile**.
 
+**O CI é o gate final, não o `/review`.** Toda PR roda `pnpm turbo run lint typecheck test` no GitHub
+Actions ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), então lint, tipos, testes e paridade
+de i18n deixam de depender de alguém lembrar de rodá-los. Isso não desobriga ninguém: rodar antes de
+commitar continua sendo mais rápido que descobrir na PR. O que muda é o **foco** — o `/review` e o `/test`
+passam a valer pelo que a máquina não vê (convenção de camada, autorização, copy errada nos 3 idiomas,
+comportamento na tela). ⚠️ O `build` **não** está no CI: `apps/api` exige as `FIREBASE_ADMIN_*`.
+
 **Comentários no código** ([`.claude/rules/code-comments.md`](../.claude/rules/code-comments.md)) — o padrão
 é **não comentar**; exceções só para regra de negócio não evidente ou trecho genuinamente difícil,
 explicando o *porquê*. E **nunca** referenciar o fluxo de agents (`docs/features/**`, `plan.md`,

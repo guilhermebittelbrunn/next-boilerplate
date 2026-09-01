@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/** biome-ignore-all lint/suspicious/noExplicitAny: <explanation> */
+/** biome-ignore-all lint/suspicious/noExplicitAny: o decorator envolve métodos de assinatura arbitrária; qualquer tipo mais estreito que any[] recusaria os métodos que ele existe para decorar. */
 
 import FormattedError from "../helpers/formattedError";
 

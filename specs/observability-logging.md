@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-31
+updated: 2026-09-01
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -29,9 +29,10 @@ invisível até alguém conferir a fatura.
   (`firestore-admin-access`): o `register()` roda no boot e resolve a instância do Firestore, para que a
   falta de credencial mate o processo em vez de degradar. Isso prova que o gancho funciona, mas **nenhuma
   observabilidade passa por ele** — nem logger, nem coletor de erro, nem tracing.
-  `apps/api/instrumentation-client.ts:1` continua sendo só um comentário, sem exportação.
-  **`apps/app` e `apps/web` não têm arquivo de instrumentação nenhum** — a busca no repositório retorna só
-  os dois de `apps/api`. Os apps que o usuário acessa não têm nem o gancho.
+  `apps/api/instrumentation-client.ts` **foi apagado** em 2026-09-01 pelo saneamento de `ci-pipeline` — era
+  um arquivo só com um comentário, sem exportação. **`apps/app` e `apps/web` não têm arquivo de
+  instrumentação nenhum**: hoje o repositório inteiro tem **um** gancho, `apps/api/instrumentation.ts`. Os
+  apps que o usuário acessa não têm nem isso.
 - Não há Sentry, OpenTelemetry, logger estruturado ou qualquer coleta de erro em nenhum `package.json`.
 - Registro de erro hoje é `console`, exatamente onde um incidente silencioso custa caro:
   `apps/api/app/(routes)/webhooks/payments/route.ts:66` (evento de pagamento não tratado) e `:72` (erro no
@@ -39,11 +40,12 @@ invisível até alguém conferir a fatura.
   (falha ao criar perfil).
 - `apps/api/app/(routes)/health/route.ts:3-4` — responde `{"message":"OK"}` fixo. **Não verifica nenhuma
   dependência** e não declara renderização dinâmica: responde OK mesmo com o Firestore fora do ar.
-- **Achado: `packages/analytics/server.ts` está quebrado.** A linha 2 importa `posthog-node`, que **não
-  está declarado** em `packages/analytics/package.json:9-16`; e as linhas 5-6 leem
-  `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` de `keys()`, mas `packages/analytics/keys.ts:6-18`
-  só declara `NEXT_PUBLIC_GA_MEASUREMENT_ID`. É código morto herdado do upstream que não compila se for
-  importado — e hoje ninguém importa. Deve ser removido ou consertado antes que um fork o descubra.
+- ✅ **Achado resolvido (`/spec --sync`, 2026-09-01): `packages/analytics/server.ts` foi apagado.** O
+  arquivo importava `posthog-node` (não declarado em `packages/analytics/package.json`) e lia chaves
+  PostHog que o `keys.ts` do pacote nunca declarou — código morto herdado do upstream que não compilava se
+  fosse importado. Removido pelo saneamento de `ci-pipeline` (decisão Q4 do usuário). **Efeito nesta
+  spec:** quando a observabilidade entrar, `@repo/analytics` está limpo — não há stub quebrado para
+  desfazer, e o `keys.ts` do pacote segue declarando **só** `NEXT_PUBLIC_GA_MEASUREMENT_ID`.
 - `packages/security/index.ts:16-18` — o padrão de referência do repo para integração opcional: sem a
   variável de ambiente, a função retorna sem fazer nada. É o critério que qualquer serviço novo deve seguir.
 - **Lacuna:** nenhum erro é coletado, nenhuma requisição é rastreável, nenhum log é consultável.
@@ -77,7 +79,9 @@ invisível até alguém conferir a fatura.
       respondem", e não é pré-renderizado.
 - [ ] Toda essa camada é **no-op quando a variável do serviço não existe** — um fork sem conta continua
       rodando, apenas sem coleta remota.
-- [ ] O código morto de analytics de servidor é removido ou consertado.
+- [x] O código morto de analytics de servidor é removido ou consertado. — **entregue por tabela** em
+      2026-09-01 pelo saneamento de `ci-pipeline`: `packages/analytics/server.ts` foi apagado. Item
+      cumprido fora desta spec; o restante do corte segue intacto.
 
 ### Fora do corte
 

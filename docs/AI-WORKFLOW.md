@@ -149,8 +149,11 @@ o diff é de front-end.
   qualquer `git push --force`. É rede de segurança para
   [`.claude/rules/git-commits.md`](../.claude/rules/git-commits.md), não substituto da verificação
   proativa.
-- **Typecheck**: não roda por hook (custo alto por edição). Rode `pnpm --filter <app> typecheck` e
-  `pnpm check` antes de concluir.
+- **Typecheck**: não roda por hook (custo alto por edição). Rode `pnpm turbo run lint typecheck test`
+  antes de concluir — os três gates de uma vez, cacheados, e é o que o CI vai rodar de qualquer jeito.
+- **Rede de segurança fora da máquina**: o hook de branch e a disciplina de rodar os comandos existem só no
+  clone com o ferramental de IA. Quem garante lint/tipos/testes em toda PR é o
+  [`ci.yml`](../.github/workflows/ci.yml) — inclusive num fork sem nada disso instalado.
 - `.claude/settings.local.json` é pessoal e **não** vai para o git.
 
 > ⚠️ Os dois hooks e todos os comandos `pnpm` dependem de `node_modules` **no workspace atual**. Em
@@ -178,9 +181,9 @@ Informal, para mudanças pequenas:
 1. Descreva o recurso. Se for CRUD, peça `/new-crud`.
 2. As regras do escopo (`apps/*/CLAUDE.md`, `packages/CLAUDE.md`) carregam automaticamente; aponte o
    recurso de referência `entity`.
-3. Ao concluir: `pnpm check`, `pnpm --filter <app> typecheck` e `pnpm test`
-   (⚠️ `turbo build` depende de `test`). Se tocou i18n:
-   `pnpm --filter @repo/internationalization test`.
+3. Ao concluir: `pnpm turbo run lint typecheck test` — é o mesmo comando que o CI roda em toda PR
+   ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), cobre lint, tipos, testes e a paridade de
+   i18n de uma vez, e é cacheado. (⚠️ `turbo build` depende de `test`, e o `build` **não** está no CI.)
 4. **Se tocou front-end**: valide visualmente com `agent-browser` (fluxos, screenshots, responsivo + tema).
 5. Passe o agente `code-reviewer` (ou `/code-review`) no diff. Para mudanças sensíveis (auth, pagamentos,
    dados), rode `/security-review`.

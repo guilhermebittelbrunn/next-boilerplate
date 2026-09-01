@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/complexity/noUselessFragments: <explanation> */
 "use client";
 
 import { cn } from "@repo/design-system/lib/utils";
@@ -53,7 +52,7 @@ export function HookFormSelect<T extends FieldValues>(
     } = props;
 
     if (hidden) {
-        return <></>;
+        return null;
     }
 
     return (
