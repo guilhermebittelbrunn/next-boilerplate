@@ -9,7 +9,7 @@ area: [raiz, apps/api, apps/app, packages/auth]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-08-22
+updated: 2026-08-31
 ---
 
 # Emulador do Firebase, seed e primeiro admin
@@ -36,11 +36,13 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
   código-fonte retorna apenas menções em notas de pesquisa e documentação de agents.
 - `docs/SETUP.md:111-114` — a seção "Firestore" instrui a provisionar no Firebase Console em **modo de
   produção** e fazer deploy das regras. Não menciona emulador, seed nem primeiro admin.
-- `apps/api/(shared)/infra/dabatase.ts:1-17` — a conexão usa o Firebase **client SDK** com configuração
-  pública **hardcoded** (chave, projeto, bucket). É por aqui que o emulador seria conectado, e
-  `docs/SETUP.md:120` já registra isso como dívida de higiene.
-- `firestore.rules:30-32` — negação total (`allow read, write: if false`), **nunca exercitada por teste**.
-  O próprio arquivo avisa (12-18) que publicar essa regra com a API no client SDK derruba a API.
+- `apps/api/(shared)/infra/database.ts:1-5` — desde 2026-08-31 (`firestore-admin-access`) a conexão é uma
+  única linha: `getFirestoreAdmin()` de `@repo/auth/server`, sem configuração hardcoded. **O ponto de
+  conexão do emulador ficou muito mais barato** — o Admin SDK lê `FIRESTORE_EMULATOR_HOST` do ambiente, o
+  que torna o "no-op quando a variável falta" quase gratuito, sem ramificação no código de infra.
+- `firestore.rules:32-34` — negação total (`allow read, write: if false`), **publicada em 2026-08-31** e
+  **nunca exercitada por teste**. O impasse que impedia publicá-la acabou; o que falta é o emulador para
+  provar que as regras fazem o que dizem, em vez de confiar num `curl` manual.
 - **O impasse do primeiro admin, em código:** `apps/api/app/(routes)/auth/sign-up/route.ts:34` cria o
   perfil com `type: UserType.COMMON` fixo; e a única rota que cria usuário com outro tipo,
   `apps/api/app/(routes)/users/route.ts:34`, está atrás de `requireAdminApi`. Ou seja: **pelo produto, para
@@ -110,9 +112,10 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
 - **Credencial de demonstração é armadilha de segurança**: um fork que rode o seed em produção cria um
   admin com senha conhecida. O bootstrap tem de ser inofensivo por padrão fora do ambiente local, e isso
   precisa estar escrito, não implícito.
-- **Dependência de `firestore-admin-access`:** o ponto de conexão é o mesmo arquivo que aquela spec
-  reescreve (`apps/api/(shared)/infra/dabatase.ts`), e o bootstrap de admin exige privilégio de serviço,
-  que só o Admin SDK dá. Resolver a conexão aqui seria refazer o trabalho lá.
+- ✅ **Dependência de `firestore-admin-access` satisfeita em 2026-08-31.** O arquivo de conexão foi
+  reescrito lá (`apps/api/(shared)/infra/database.ts`) e a API já roda com privilégio de serviço, que é o
+  que o bootstrap de admin exigia. **Esta spec está desbloqueada** — e o argumento a favor dela ficou mais
+  forte, não mais fraco: as rules agora estão publicadas em `deny-all` e ninguém as testa.
 - **Custo herdado por todo fork:** **zero em dinheiro** e nenhuma env obrigatória — a ausência da variável
   do emulador deve significar "usar o Firebase real", no mesmo no-op que `packages/security/index.ts:16-18`
   aplica ao `ARCJET_KEY`. Herda-se, isso sim, o runtime Java exigido pelos emuladores, que precisa entrar

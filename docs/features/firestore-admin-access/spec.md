@@ -1,7 +1,7 @@
 ---
 id: firestore-admin-access
 title: Acesso ao Firestore via Admin SDK e security rules aplicáveis
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: confianca
@@ -9,8 +9,13 @@ area: [apps/api, packages/auth, raiz]
 mode: ambos
 depends_on: []
 feature: firestore-admin-access
-updated: 2026-08-22
+updated: 2026-08-31
 ---
+
+> **Entregue em 2026-08-31** pela feature [`firestore-admin-access`](STATE.md), na branch
+> `api/refactor/firestore-admin-access`. Os cinco itens do corte de MVP foram conferidos no código pela
+> auditoria de 2026-08-31; o texto abaixo é o registro de **por que** a mudança foi feita e descreve o
+> repositório **antes** dela — não o estado atual.
 
 # Acesso ao Firestore via Admin SDK e security rules aplicáveis
 
@@ -46,7 +51,7 @@ opcional para quem quiser contorná-lo, e **todo fork nasce com o impasse herdad
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md)
+- Nota: [`specs/research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md)
 - A nota abre com este item como **bloqueador que precede tudo**: "a `apps/api` acessa o Firestore pelo
   **client SDK não autenticado**, com `firestore.rules` em `deny-all`. Enquanto isso não migrar para
   `firebase-admin`, **qualquer controle de autorização a mais é teatro**." A frase é geral — a nota não a
@@ -62,13 +67,23 @@ opcional para quem quiser contorná-lo, e **todo fork nasce com o impasse herdad
 
 ## Proposta — corte de MVP
 
-- [ ] A API passa a acessar o Firestore com identidade de serviço confiável, não com credencial pública.
-- [ ] O CRUD de referência (`entity`) e a gestão de usuários seguem funcionando igual, com a suíte verde.
-- [ ] As credenciais do projeto saem do código e passam pelo env tipado, falhando cedo quando ausentes.
-- [ ] As regras `deny-all` podem ser publicadas sem quebrar a aplicação, com o caminho de publicação
-      documentado.
-- [ ] Os índices exigidos pelas consultas atuais ficam versionados no repositório, em vez de nascerem
-      clicados no console.
+- [x] A API passa a acessar o Firestore com identidade de serviço confiável, não com credencial pública.
+      — `apps/api/(shared)/infra/database.ts:1-5` resolve a instância por `getFirestoreAdmin()`;
+      `base.repository.ts:3` tipa contra `firebase-admin/firestore` e não sobrou nenhum import
+      `firebase/*` na `apps/api`.
+- [x] O CRUD de referência (`entity`) e a gestão de usuários seguem funcionando igual, com a suíte verde.
+      — 105 testes verdes em `apps/api` (14 arquivos), fluxos percorridos no browser no `/develop`,
+      `/review` e `/test`.
+- [x] As credenciais do projeto saem do código e passam pelo env tipado, falhando cedo quando ausentes.
+      — `apps/api/env.ts:12-16` declara as três `FIREBASE_ADMIN_*` como obrigatórias,
+      `packages/auth/keys.ts:18-32` rejeita o conjunto parcial e `apps/api/instrumentation.ts:8-15`
+      transforma a ausência em falha de boot. Nenhuma config hardcoded restou.
+- [x] As regras `deny-all` podem ser publicadas sem quebrar a aplicação, com o caminho de publicação
+      documentado. — `firestore.rules:32-34` publicado em 2026-08-31; leitura REST direta com a chave
+      pública passou a responder **403** (respondia 200 com dado real em 2026-08-30) e a aplicação segue
+      funcionando ponta a ponta. Runbook em `docs/SETUP.md:127-139`.
+- [x] Os índices exigidos pelas consultas atuais ficam versionados no repositório, em vez de nascerem
+      clicados no console. — `firestore.indexes.json:2-11` versiona o índice de `findByReferenceId`.
 
 ### Fora do corte
 
@@ -114,11 +129,12 @@ opcional para quem quiser contorná-lo, e **todo fork nasce com o impasse herdad
 - Subir a API sem as credenciais de serviço falha de imediato, com mensagem clara, sem modo degradado.
 - Nenhuma chamada do app precisou mudar: o contrato exposto pelo SDK é o mesmo antes e depois.
 
-## Perguntas em aberto
+## Perguntas em aberto — decididas na entrega
 
-- Publicar as rules como parte da entrega ou deixar como passo manual de cada fork? — **recomendação:**
-  entregar o comando documentado e publicar no projeto de referência; o fork publica no dele.
-- Corrigir o nome do arquivo (`dabatase`) junto, ou manter para reduzir o diff? — **recomendação:** corrigir;
-  o raio de impacto são três imports, e o erro se propaga a todo fork.
-- Ativar os Data Access logs do Firestore (opt-in, segundo a nota) já aqui? — **recomendação:** não; é
-  configuração de projeto e pertence a `audit-log`.
+- Publicar as rules como parte da entrega ou deixar como passo manual de cada fork? — **decidido: as duas
+  coisas.** O comando ficou documentado (`docs/SETUP.md:127-139`) e as rules foram publicadas no projeto de
+  referência em 2026-08-31; cada fork publica no seu com `--project <id>`.
+- Corrigir o nome do arquivo (`dabatase`) junto, ou manter para reduzir o diff? — **decidido: corrigir.**
+  O arquivo virou `apps/api/(shared)/infra/database.ts`; nenhuma referência ao nome errado sobrou no código.
+- Ativar os Data Access logs do Firestore (opt-in, segundo a nota) já aqui? — **decidido: não.** Continua
+  pertencendo a `audit-log`.

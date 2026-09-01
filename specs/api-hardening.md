@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/security, packages/internationaliz
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-22
+updated: 2026-08-31
 ---
 
 # Endurecimento da borda da API: headers/CSP, rate limit e CORS
@@ -30,8 +30,14 @@ invadida.
   incluindo `x-role`, `x-locale` e os headers de contexto de auth (`:6-12`); preflight responde 204
   (`:22-25`) e o matcher cobre todas as rotas (`:34-36`). **Sem rate limit, sem Arcjet, sem nenhum
   cabeçalho de segurança.**
-- `CORS_ORIGIN` **não passa pelo env tipado**: `apps/api/env.ts:14-16` declara `server: {}` e o valor é lido
-  direto de `process.env`. Só existe documentado em `docs/SETUP.md:48`.
+- `CORS_ORIGIN` **não passa pelo env tipado**: `apps/api/proxy.ts:15` lê o valor direto de `process.env`.
+  Desde `firestore-admin-access` (2026-08-31) o `apps/api/env.ts:12-16` **deixou de ser vazio** — declara as
+  três `FIREBASE_ADMIN_*` como server vars obrigatórias —, então o lugar certo para a variável entrar já
+  existe; ela é que não entrou. Só existe documentada em `docs/SETUP.md:48`.
+- **Efeito colateral a considerar no escopo:** como `env.ts` é importado por
+  `app/(routes)/webhooks/payments/route.ts:6` e o `createEnv` valida eagerly, `pnpm --filter api build`
+  hoje **exige** as três `FIREBASE_ADMIN_*`. Declarar `CORS_ORIGIN` como obrigatória repetiria esse efeito
+  no build; declará-la opcional com default explícito, não.
 - `packages/security/index.ts:12-18` — `secure(...)` é **NO-OP quando `ARCJET_KEY` falta** (chave declarada
   opcional em `packages/security/keys.ts`). **É o padrão de opt-in do repositório e o precedente a seguir.**
   Registra shield + detecção de bot (`:26-36`) e trata `isRateLimit()` na decisão (`:44`), mas **nenhuma
