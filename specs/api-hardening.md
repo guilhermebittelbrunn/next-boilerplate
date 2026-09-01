@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/security, packages/internationaliz
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-31
+updated: 2026-09-01
 ---
 
 # Endurecimento da borda da API: headers/CSP, rate limit e CORS
@@ -103,7 +103,7 @@ invadida.
 ## Riscos e trade-offs
 
 - **Custo herdado por todo fork:** CSP quebra o que não estiver previsto. Hoje a Stripe é usada só no
-  servidor (`packages/payments/index.ts:2`) e não há script dela no cliente, mas quando
+  servidor (`packages/payments/index.ts:1`, `import "server-only"`) e não há script dela no cliente, mas quando
   `billing-subscription` levar o checkout ao navegador — e considerando PostHog/Vercel Analytics em
   `packages/analytics` — a política terá de liberar esses domínios. **A nota de conformidade não cobre esse
   detalhe**: é conclusão tirada do repositório, e o `/analyze` precisa levantar a lista real de origens.
@@ -113,9 +113,15 @@ invadida.
   contador precisar ser externo. Um fork sem esse serviço fica sem proteção — daí a exigência de NO-OP
   explícito, nunca de fallback em memória fingindo funcionar. E limite mal calibrado bloqueia usuário
   legítimo atrás de NAT/IP compartilhado: começar permissivo e apertar é mais barato que o contrário.
-- **Ordem importa:** enquanto `firestore-admin-access` não fechar, endurecer a borda é trancar a porta de
-  uma casa com a parede aberta — a base segue alcançável sem passar pela API. Isso não invalida esta spec
-  (o ganho de CSP/headers é P e real), mas define a prioridade entre as duas.
+- ✅ **Ordem — resolvida.** A redação original dizia: "enquanto `firestore-admin-access` não fechar,
+  endurecer a borda é trancar a porta de uma casa com a parede aberta". **`firestore-admin-access` fechou
+  em 2026-08-31** (rules `deny-all` publicadas, leitura REST direta → 403). A parede está de pé; trancar a
+  porta agora é o movimento certo, e não mais paliativo.
+- ✅ **Rede de segurança — nova.** Desde `ci-pipeline` existe um gate automático
+  (`.github/workflows/ci.yml`, `pnpm turbo run lint typecheck test`). Isso importa aqui mais do que para a
+  média das specs: CSP e CORS quebram **por regressão silenciosa**, num arquivo (`proxy.ts`) que ninguém
+  reabre. Uma suíte que roda a cada PR é o que impede o endurecimento de ser desfeito sem ninguém ver.
+  **Ressalva:** enquanto a branch protection não estiver ligada, o gate sinaliza e não bloqueia.
 
 ## Sinais de pronto
 
