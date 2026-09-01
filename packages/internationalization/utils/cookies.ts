@@ -1,14 +1,13 @@
 export const getCookie = (name: string): string | null => {
-    if (typeof window === 'undefined') return null;
-
-    const nameEQ = name + '=';
-    const ca = document.cookie.split(';');
-
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    if (typeof window === "undefined") {
+        return null;
     }
 
-    return null;
+    const prefix = `${name}=`;
+    const entry = document.cookie
+        .split(";")
+        .map((part) => part.trimStart())
+        .find((part) => part.startsWith(prefix));
+
+    return entry ? entry.slice(prefix.length) : null;
 };
