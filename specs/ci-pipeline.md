@@ -67,8 +67,11 @@ produção por um tipo ou uma chave de tradução faltando.
 > Marcação conferida **no código** em 2026-09-01 pelo `/spec --sync`, não no `status` gravado. Evidência
 > item a item em "Estado da entrega".
 
-- [x] Toda PR e todo push na branch principal disparam verificação automática, com resultado visível no
-      GitHub antes do merge. — *escrito e provado localmente; nunca executado no GitHub (nada commitado).*
+- [~] Toda PR e todo push na branch principal disparam verificação automática, com resultado visível no
+      GitHub antes do merge. — *escrito, commitado e publicado numa branch de feature; provado localmente
+      e dentro do `act`. Mas **nenhum resultado é visível no GitHub**: sem PR aberta o gatilho nunca
+      disparou, e `gh workflow list --all` volta **vazio** — a plataforma sequer enumera o workflow, porque
+      ele não está na branch padrão nem tem execução. Fecha junto com o item abaixo, ao abrir a PR.*
 - [~] A verificação cobre **lint/format** (Ultracite/Biome), **tipos** de todos os workspaces e **testes**,
       com falha bloqueando o merge. — *cobre os três e falha; **não bloqueia**: sem branch protection ligada,
       o CI sinaliza. Este item é o que impede a spec de fechar.*
@@ -118,20 +121,29 @@ produção por um tipo ou uma chave de tradução faltando.
   dos dois lados.
 - Um clone limpo do repositório, sem nenhum segredo configurado, consegue rodar o pipeline até o fim.
 
-## Estado da entrega — auditado em 2026-09-01
+## Estado da entrega — auditado em 2026-09-01 (2ª rodada, pós-commit)
 
 Feature: [`docs/features/ci-pipeline/`](../docs/features/ci-pipeline/) · branch `ci/feat/github-actions-pipeline`.
 O pipeline `/analyze → /develop → /review → /test` fechou as quatro etapas.
 
-**⚠️ O código não está commitado.** ~141 entradas no working tree, **zero commits** — o usuário aprova os
-commits ao final, por decisão dele. Toda a evidência abaixo foi conferida **no working tree**.
+**O código está commitado e publicado.** Os **29 commits** do plano do `/review` foram aplicados
+(`1b4ad2f`…`eed0fa2`, 196 arquivos, +6406/−2008), a branch `ci/feat/github-actions-pipeline` está
+**sincronizada com `origin`** (0 à frente, 0 atrás) e o working tree está **limpo**. O `ci.yml` entrou em
+`db53bcc`. Toda a evidência abaixo foi reconferida **em `eed0fa2`**, não no working tree — os gates foram
+re-executados nesta auditoria contra o estado commitado.
+
+**O que isso não muda:** o arquivo chegou ao remoto **numa branch de feature**, e o gatilho é
+`pull_request` + `push` para `main`. Push em branch de feature não dispara nada. Medido nesta auditoria:
+`gh run list` **vazio** e `gh workflow list --all` **vazio** — o GitHub sequer enumera o workflow, porque
+ele não está na branch padrão nem tem execução alguma. `git cat-file -e origin/main:.github/workflows/ci.yml`
+falha.
 
 ### Evidência por item do corte
 
 | item | evidência conferida | veredito |
 |------|---------------------|----------|
 | PR e push na principal disparam verificação | `.github/workflows/ci.yml:3-6` (`on: pull_request` + `push: branches: [main]`), job `verify` (`:13-14`) | implementado no código |
-| Cobre lint + tipos + testes | `ci.yml:33` → `pnpm turbo run lint typecheck test`. Medido nesta auditoria: `pnpm check` **392 arquivos, 0 erros / 0 warnings** · `turbo run lint typecheck test --force` **21/21** · `turbo run typecheck --force` **13/13** · `pnpm test` **7 tasks / 331 testes** | **parcial** — cobre e falha, mas **não bloqueia** |
+| Cobre lint + tipos + testes | `ci.yml:33` → `pnpm turbo run lint typecheck test`. Re-medido em `eed0fa2` nesta auditoria: `pnpm check` **392 arquivos, 0 erros / 0 warnings** · `turbo run lint typecheck test --force` **21/21** · `turbo run typecheck --force` **13/13** · `pnpm test` **7 tasks / 44 arquivos / 331 testes** (shared 15 · payments 8 · i18n 11 · auth 29 · app 135 · api 118 · web 15) | **parcial** — cobre e falha, mas **não bloqueia** |
 | `lint` e `typecheck` viram tasks do turbo | `turbo.json:7-10` (`//#lint`, task da raiz) e `:11-15` (`typecheck`, `dependsOn: []`), ambas `outputs: []` | implementado |
 | Envs das tasks declaradas | `env: []` em `//#lint` (`:9`), `typecheck` (`:14`) e `test` (`:28`); `globalDependencies` passa a incluir `**/.env` (`:3`) | **parcial** — `envMode: loose` (`:5`) segue global e `build` (`:16-25`) não declara env |
 | `apps/web` entra na suíte | `apps/web/package.json:10` (script `test`), `apps/web/vitest.config.mts` (`environment: "node"`), `apps/web/__tests__/seo.test.ts` — **15 testes verdes** | implementado |
@@ -146,26 +158,43 @@ commits ao final, por decisão dele. Toda a evidência abaixo foi conferida **no
 
 ### Por que a spec **não** foi para `done`
 
-Duas razões, nenhuma delas sobre a qualidade do que foi feito:
+Duas razões, nenhuma delas sobre a qualidade do que foi feito. **A re-auditoria de 2026-09-01 (segunda
+rodada, depois dos commits) reavaliou as duas: a primeira está intacta, a segunda encolheu mas não caiu.**
 
 1. **O mecanismo de bloqueio não está ligado.** O item 2 do corte diz "com falha **bloqueando o merge**".
    O que existe é um workflow que reporta e um **runbook** em `docs/SETUP.md:122-133` instruindo um humano
    a exigir o check `verify` no GitHub. Runbook é documentação, e documentação não é evidência de entrega.
    Marcar `done` afirmaria que merges são bloqueados quando nada bloqueia — a mesma classe de mentira que
    o backlog registra sobre o `docs/PAYMENTS.md`, cometida justamente na auditoria que existe para pegá-la.
-2. **Nada foi commitado.** Um `.github/workflows/ci.yml` que nunca chegou ao remoto nunca rodou no GitHub:
-   para a plataforma, o arquivo não existe. Enquanto o working tree não virar commit numa branch publicada,
-   os dois primeiros itens do corte são verdade sobre a máquina do autor, não sobre o repositório.
+   **Reconferido em `eed0fa2`:** `gh api repos/:owner/:repo/branches/main/protection` → **404 "Branch not
+   protected"**. Nenhum required check configurado. Razão **inalterada**.
+2. **O workflow nunca rodou no GitHub.** Esta razão era "nada foi commitado" e **mudou de forma**: os 29
+   commits existem e a branch está publicada. Mas o arquivo chegou ao remoto **numa branch de feature**, e
+   o gatilho (`pull_request` + `push` para `main`) não é sensível a isso. `gh run list` e
+   `gh workflow list --all` voltam **vazios**: para a aba Actions do repositório, o workflow ainda não
+   existe. "Existe no remoto" não é "roda no GitHub" — e é a execução, não o arquivo, que o item 1 do
+   corte promete tornar visível antes do merge.
 
 ### O que falta para fechar (tudo ação humana)
 
-1. Aprovar o plano de 29 commits do `/review` e commitar.
-2. `git push -u origin ci/feat/github-actions-pipeline` e abrir a PR.
-3. Ver o check `verify` aparecer vermelho/verde na PR (fecha o sinal de pronto 1 de ponta a ponta).
-4. Executar o runbook de `docs/SETUP.md:122-133`: exigir `verify` como status check obrigatório em `main`.
-5. Rodar `/spec --sync` de novo → `done` + arquivar em `docs/features/ci-pipeline/spec.md`.
+Commitar e publicar **já foi feito** (`eed0fa2`, sincronizado com `origin`). Restam **dois passos, e eles
+são encadeados** — a ordem não é preferência, é dependência técnica:
 
-Só o passo 4 transforma "sinaliza" em "bloqueia". Sem ele, o corte de MVP fica cumprido em 3 de 5 itens.
+1. **Abrir a PR** de `ci/feat/github-actions-pipeline` para `main`. É isto que faz o workflow rodar **pela
+   primeira vez**: o gatilho é `pull_request`, e nenhum push em branch de feature o dispara. A primeira
+   execução fecha o sinal de pronto 1 de ponta a ponta (ver o check `verify` vermelho/verde numa PR real).
+2. **Ligar a branch protection** pelo runbook de `docs/SETUP.md:122-133`, marcando **`verify`** como status
+   check obrigatório em `main`. **Na prática, depende do passo 1**: a busca de required checks da UI só
+   lista um check depois de tê-lo visto executar — é o que o passo 1 do runbook já adverte ("deixe o
+   workflow rodar ao menos uma vez"). *(A API REST aceita um contexto arbitrário por nome, sem execução
+   prévia; mas aí o nome é digitado sem conferência, e um `verify` com erro de digitação bloqueia todo
+   merge para sempre esperando um check que nunca chega. Pelo caminho do runbook, abrir a PR antes não é
+   zelo, é pré-requisito.)*
+
+Depois dos dois, rodar `/spec --sync` → `done` + arquivar em `docs/features/ci-pipeline/spec.md`.
+
+Só o passo 2 transforma "sinaliza" em "bloqueia". Sem os dois, o corte de MVP fica cumprido em **2 de 5
+itens**, com 3 parciais — e os três parciais dependem exatamente desses dois passos, não de mais código.
 
 ## Perguntas em aberto
 

@@ -6,27 +6,36 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue** — spec concluída é arquivada junto da feature e passa a
 constar na seção **Entregues** abaixo. Ciclo de vida: [`README.md`](README.md).
 
-> **Última auditoria:** 2026-09-01 (`/spec --sync`) · anterior: 2026-08-31 · **rodada de origem:**
-> semeadura inicial (2026-08-21).
+> **Última auditoria:** 2026-09-01, 2ª rodada (`/spec --sync`, pós-commit) · anterior: 2026-09-01, 1ª
+> rodada · 2026-08-31 · **rodada de origem:** semeadura inicial (2026-08-21).
 >
-> **Resultado da auditoria de 2026-09-01: nenhuma spec foi arquivada, e isso é a conclusão, não a falha.**
-> [`ci-pipeline`](ci-pipeline.md) passou por `/analyze → /develop → /review → /test` e **3 dos 5 itens do
-> corte de MVP estão cumpridos no código**, com os números reconferidos nesta auditoria (não copiados do
-> relatório): `pnpm check` **392 arquivos, 0 erros / 0 warnings** · `turbo run lint typecheck test --force`
-> **21/21** · `pnpm test` **7 tasks / 331 testes** · `turbo run typecheck --force` **13/13**.
+> **Resultado da 2ª rodada: nada material mudou, e esse é o resultado.** Entre as duas auditorias do dia
+> **nenhuma linha de código mudou** — o que mudou foi o **empacotamento**: os 29 commits do plano do
+> `/review` foram aplicados (`1b4ad2f`…`eed0fa2`, 196 arquivos, +6406/−2008), o working tree está **limpo**
+> e a branch `ci/feat/github-actions-pipeline` está **publicada e sincronizada** com `origin`. Os quatro
+> gates foram **re-executados contra `eed0fa2`** para que a evidência deixe de ser medição de working tree:
+> `pnpm check` **392 arquivos, 0/0** · `turbo run lint typecheck test --force` **21/21** · `pnpm test`
+> **7 tasks / 44 arquivos / 331 testes** · `turbo run typecheck --force` **13/13**. Números idênticos aos da
+> 1ª rodada.
 >
-> **A spec permanece `in-progress`.** Duas razões, detalhadas em
-> [Por que `ci-pipeline` não fechou](#por-que-ci-pipeline-não-fechou): o código **não está commitado** (~141
-> entradas no working tree, zero commits, por decisão do usuário de aprovar os commits no final) e, mais
-> importante, **o mecanismo de bloqueio não está ligado** — o item 2 do corte exige falha "bloqueando o
-> merge", e o que existe é um workflow que **sinaliza** mais um runbook instruindo um humano a ligar a
-> branch protection.
+> **A spec [`ci-pipeline`](ci-pipeline.md) permanece `in-progress`** — **2 dos 5 itens do corte cumpridos,
+> 3 parciais**. A 1ª rodada sustentou isso em duas razões; a 2ª reavaliou as duas e **manteve a decisão**:
+> o bloqueio de
+> merge continua inexistente (`gh api …/branches/main/protection` → **404 "Branch not protected"**) e o
+> workflow **nunca rodou** — o `ci.yml` chegou ao remoto, mas numa **branch de feature**, e o gatilho é
+> `pull_request` + `push` para `main`. `gh run list` e `gh workflow list --all` voltam **vazios**: a aba
+> Actions do repositório ainda não conhece o workflow. **"Existe no remoto" não é "roda no GitHub".** Ver
+> [Por que `ci-pipeline` não fechou](#por-que-ci-pipeline-não-fechou).
 >
-> A tabela de achados teve **4 entradas removidas** por resolução confirmada no código e **8 acrescentadas**
-> vindas do pipeline, todas reconferidas antes de serem escritas aqui. **Uma remoção é uma autocorreção
-> desta auditoria**: o achado do `docs/SETUP.md` estava marcado como "reconferido em 2026-08-31, segue
-> mentindo" e **não estava** — ver [Correção da auditoria anterior](#correção-da-auditoria-anterior).
-> Cinco specs tiveram o texto corrigido por deriva.
+> **A tabela de achados, a deriva e a ordem da fila não foram refeitas** — foram auditadas na 1ª rodada de
+> hoje e o código não mudou desde então. Os anchors mais carregados foram re-conferidos por amostragem e
+> seguem válidos. Da 1ª rodada: 4 achados removidos por resolução confirmada, 8 acrescentados vindos do
+> pipeline, 5 specs com texto corrigido por deriva, e **uma autocorreção** — ver
+> [Correção da auditoria anterior](#correção-da-auditoria-anterior).
+>
+> **Exceção — 1 achado resolvido nesta 2ª rodada:** o `permissions:` ausente no `ci.yml` foi **aplicado**
+> (`permissions: contents: read` no nível do workflow) e saiu da tabela. Foi feito **antes de a PR ser
+> aberta**, de propósito, para que a primeira execução do workflow já rode com o mínimo de privilégio.
 >
 > **Fila `approved`:** [`api-hardening`](api-hardening.md), sem `depends_on` e pronta para o `/analyze`.
 
@@ -48,12 +57,14 @@ Sobre as **18 specs que seguem em `specs/`** (a 19ª foi entregue e arquivada em
 **Por esforço (em `specs/`):** P 0 · M 15 · G 3.
 
 **Fila de execução:** `ci-pipeline` está **fora da fila do `/analyze`** — não porque acabou, mas porque o
-que falta nela é ação humana (commitar, abrir PR, ligar branch protection). A próxima a virar tarefa é
+que falta nela é ação humana no GitHub (abrir a PR, ligar a branch protection). A próxima a virar tarefa é
 `api-hardening`.
 
 ## Por que `ci-pipeline` não fechou
 
-O corte de MVP, conferido item a item **no working tree** (o `HEAD` não tem nada disso):
+O corte de MVP, conferido item a item **em `eed0fa2`** (na 1ª rodada de hoje a mesma conferência foi feita
+no working tree, porque nada estava commitado; agora o `HEAD` da branch contém tudo, e os números não
+mudaram):
 
 | item do corte | evidência | veredito |
 |---------------|-----------|----------|
@@ -72,17 +83,30 @@ bloqueia. Um runbook (`docs/SETUP.md:122-133`) é uma instrução para um humano
 "documentação não é evidência" é regra da própria `/spec-audit`. Seria exatamente a classe de mentira que
 a linha do `docs/PAYMENTS.md` nesta tabela de achados registra: um documento afirmando uma capacidade que
 o código não tem. Cometê-la no backlog, na auditoria cujo trabalho é pegá-la, tornaria o loop inútil.
-Some-se a isso que um `ci.yml` que nunca chegou ao remoto nunca rodou no GitHub — para a plataforma, o
-arquivo não existe.
 
-Isso **não** é um juízo sobre a qualidade do trabalho: a engenharia está feita e medida. É que a régua da
-própria spec tem dois passos restantes, os dois humanos.
+**Reavaliação da 2ª rodada (pós-commit).** A segunda razão da 1ª rodada era "nada foi commitado, e um
+`ci.yml` que nunca chegou ao remoto nunca rodou no GitHub". Metade disso caiu: o arquivo **chegou** ao
+remoto (`db53bcc`, na branch publicada). A conclusão, porém, não se move — o arquivo está numa **branch de
+feature**, e o gatilho é `pull_request` + `push` para `main`. Push em branch de feature não dispara nada.
+Medido: `gh run list` **vazio**, `gh workflow list --all` **vazio**, `git cat-file -e
+origin/main:.github/workflows/ci.yml` **falha**. O GitHub não apenas não executou o workflow: ele não o
+**enumera**, porque não está na branch padrão nem tem execução alguma. E a razão principal — a ausência de
+bloqueio — está **intacta**: `gh api repos/:owner/:repo/branches/main/protection` → **404 "Branch not
+protected"**.
 
-**O que fecha:** (1) aprovar os 29 commits e commitar · (2) `git push -u origin ci/feat/github-actions-pipeline`
-e abrir a PR · (3) ver o check `verify` vermelho/verde na PR · (4) executar o runbook de
-`docs/SETUP.md:122-133`, exigindo `verify` como status check obrigatório em `main` · (5) rodar `/spec --sync`
-de novo → `done` + arquivar em `docs/features/ci-pipeline/spec.md`. **Só o passo 4 troca "sinaliza" por
-"bloqueia".**
+Isso **não** é um juízo sobre a qualidade do trabalho: a engenharia está feita, medida e agora empacotada.
+É que a régua da própria spec tem dois passos restantes, os dois humanos.
+
+**O que fecha — dois passos, encadeados** (commitar e publicar já foi feito):
+
+1. **Abrir a PR** de `ci/feat/github-actions-pipeline` para `main`. É isto — e só isto — que faz o workflow
+   **rodar pela primeira vez** e o check `verify` aparecer vermelho/verde numa PR real.
+2. **Ligar a branch protection** (`docs/SETUP.md:122-133`), marcando `verify` como status check obrigatório
+   em `main`. **Só fica selecionável depois do passo 1**: o GitHub só oferece um check na busca depois de
+   tê-lo visto executar — o próprio runbook abre com essa advertência.
+
+Depois dos dois, `/spec --sync` → `done` + arquivar em `docs/features/ci-pipeline/spec.md`. **Só o passo 2
+troca "sinaliza" por "bloqueia".**
 
 ## Ordem recomendada
 
@@ -90,7 +114,7 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 
 | # | id | por que agora |
 |---|----|---------------|
-| — | [`ci-pipeline`](ci-pipeline.md) | 🚧 **`in-progress`, fora da fila do `/analyze`.** O que falta é humano, não técnico: commitar, abrir a PR e ligar a branch protection. Ver a seção acima. |
+| — | [`ci-pipeline`](ci-pipeline.md) | 🚧 **`in-progress`, fora da fila do `/analyze`.** Commitado e publicado (`eed0fa2`); o que falta é humano e acontece no GitHub: **abrir a PR** (faz o workflow rodar pela 1ª vez) e então **ligar a branch protection**. Ver a seção acima. |
 | 1 | [`api-hardening`](api-hardening.md) | Buraco aberto **hoje**, reconferido nesta auditoria: `apps/api/proxy.ts:15` responde `Access-Control-Allow-Origin` com `process.env.CORS_ORIGIN ?? "*"`, o CSP segue desligado (`packages/security/middleware.ts:14`), o middleware de headers **não é usado por nenhum app**, e a `apps/api` **sequer declara** `@repo/security`. Dois argumentos ficaram mais fortes: (a) `firestore-admin-access` fechou, então trancar a porta deixou de ser paliativo — a parede está de pé; (b) agora existe gate automático, e CSP/CORS são exatamente o tipo de coisa que regride em silêncio num arquivo que ninguém reabre. |
 | 2 | [`transactional-emails`](transactional-emails.md) | Um único template, em inglês literal, fora do dicionário. Desbloqueia recuperação de senha e convites. |
 | 3 | [`auth-recovery-verification`](auth-recovery-verification.md) | Commodity absoluta (10/10 no painel) e ausente. Um fork não pode ir a produção sem "esqueci minha senha". |
@@ -254,7 +278,6 @@ qualquer spec.
 | 🟡 **O código trata `isRateLimit()` sem que nenhuma regra de rate limit seja registrada** | `packages/security/index.ts:44` | Dá a impressão de já limitar. Some-se a isso: `apps/api` **não declara** `@repo/security` como dependência, e `sign-in`/`sign-up` são `POST` sem guard nem limite. |
 | 🟡 Helper de cookie grava `SameSite=Lax` **sem a flag `Secure`**; `isSameOriginRequest` **retorna `true` quando não há header `Origin`** | `packages/shared/utils/helpers/cookies.ts:13` · `packages/auth/session.ts:66-70` | ASVS 5.0 L1 (3.3.1) exige `Secure`. Escopo do primeiro: o helper hoje só grava `x-locale`, **não** o cookie de sessão — severidade menor que a citação sugere. O guard de origem é defesa em profundidade declarada, mas a porta aberta merece decisão explícita. |
 | 🟡 **O TTL de 180 dias do cookie `x-locale` é letra morta.** O cliente grava com `expires`, mas na requisição seguinte `apps/web/proxy.ts:56,60` e `apps/app/proxy.ts:83,87` fazem `cookieStore.set("x-locale", …)` **sem `maxAge`**, rebaixando-o a cookie de sessão | `apps/web/proxy.ts` · `apps/app/proxy.ts` · `packages/shared/utils/helpers/cookies.ts` | Confirmado no browser durante o `/develop` (`expires = -1`). O idioma escolhido **não sobrevive ao fechamento do navegador**, ao contrário do que o código do cliente promete. Bug de produto silencioso: ninguém reclama, todo mundo reescolhe o idioma. |
-| 🟡 **`permissions: contents: read` ausente no workflow** | `.github/workflows/ci.yml` | O `GITHUB_TOKEN` do job herda as permissões padrão do repositório em vez do mínimo necessário — o job só faz checkout e roda o gate. Recomendado pelo `/review` e reforçado pelo `/test`; **não aplicado** porque o YAML foi aprovado literalmente pelo usuário. 2 linhas de hardening num arquivo que **todo fork herda**. |
 | **`update()` do `BaseRepository` reescreve o documento inteiro e corrompe o tipo de `createdAt`.** `:102-117` faz read-modify-write: lê via `findById()` (que passa pelo mapper e devolve `createdAt` **serializado como string ISO**), faz spread sobre o payload e grava tudo de volta com `docRef.update()`. Depois do primeiro `PUT`, o campo deixa de ser `Timestamp` no Firestore e vira `String` | `apps/api/(shared)/repositories/base.repository.ts:102-117` | ⚠️ **Preservado de propósito** na entrega de `firestore-admin-access` (decisão do usuário: migração *contract-preserving*). **Dívida herdada, documentada e coberta por teste.** Consequências: consulta por range/`orderBy` em `createdAt` mistura tipos e o índice não ordena como se espera; e o `update()` custa uma leitura extra por escrita. Cruza diretamente com `cursor-pagination` (que precisa de `orderBy` estável). |
 | **`userRepository.list()` mente no tipo de retorno**: declara `Promise<UserDTO[]>` (`user.repository.ts:32`) mas devolve o merge com o Firebase Auth, que é `UserWithAuthDTO` — o cast acontece dentro de `mergeWithAuthUser` (`:56`, `as UserDTO`) | `apps/api/(shared)/repositories/user.repository.ts:32,52-63` | O SDK **já declara o tipo certo** (`packages/sdk/src/actions/user/user/action.ts:21` → `UserWithAuthDTO[]`), então a mentira está só no repositório — e obrigou o teste a fazer cast para ler o campo. Cast em teste para contornar tipo errado de produção é sintoma, não solução. |
 | `delete()` herdado por todo repositório é **soft delete**: grava `deletedAt` e nada mais | `apps/api/(shared)/repositories/base.repository.ts:128` | O único "excluir" que existe não exclui: a conta no Firebase Auth sobrevive e o e-mail continua ocupado. |
