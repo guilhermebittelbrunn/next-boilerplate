@@ -1,9 +1,18 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalDependencies": ["**/.env.*local"],
+  "globalDependencies": ["**/.env.*local", "**/.env"],
   "ui": "tui",
   "envMode": "loose",
   "tasks": {
+    "//#lint": {
+      "outputs": [],
+      "env": []
+    },
+    "typecheck": {
+      "dependsOn": [],
+      "outputs": [],
+      "env": []
+    },
     "build": {
       "dependsOn": ["^build", "test"],
       "outputs": [
@@ -15,7 +24,8 @@
       ]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^test"],
+      "env": []
     },
     "analyze": {
       "dependsOn": ["^analyze"]
