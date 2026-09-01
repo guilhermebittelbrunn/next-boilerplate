@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/style/noParameterProperties: <explanation> */
+/** biome-ignore-all lint/style/noParameterProperties: todas as actions do SDK recebem o Client por parameter property; manter o formato uniforme entre elas. */
 import type { Client } from "../../client";
 import type { HealthResponse } from "./types";
 
