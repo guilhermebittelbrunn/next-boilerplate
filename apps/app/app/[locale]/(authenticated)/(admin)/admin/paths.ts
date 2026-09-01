@@ -6,7 +6,7 @@ export const ADMIN_ROUTES = (
     locale: string
 ) => {
     const buildPath = (path: string) => withLocalePath(locale, path);
-    
+
     return {
         root: {
             label: dictionary?.apps.app.pages.admin.routes.administration,

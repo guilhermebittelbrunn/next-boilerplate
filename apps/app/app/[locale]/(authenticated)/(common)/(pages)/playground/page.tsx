@@ -263,7 +263,9 @@ export default function CommonPlaygroundClient() {
     return (
         <>
             <Header
-                breadcrumbs={[{ label: routes.root.label, href: routes.root.url }]}
+                breadcrumbs={[
+                    { label: routes.root.label, href: routes.root.url },
+                ]}
                 page="Playground"
             />
             <Container>

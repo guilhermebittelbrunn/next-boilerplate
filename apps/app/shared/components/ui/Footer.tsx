@@ -49,11 +49,7 @@ export function Footer({
             )}
         >
             {showBack || onBack ? (
-                <Button
-                    onClick={handleBack}
-                    type="button"
-                    variant="outline"
-                >
+                <Button onClick={handleBack} type="button" variant="outline">
                     {resolvedBackLabel}
                 </Button>
             ) : null}

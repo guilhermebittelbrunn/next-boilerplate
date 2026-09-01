@@ -1,9 +1,6 @@
 import type { EntityDTO, EntityType } from "@repo/sdk/src/types";
 import type { AllOptional } from "@repo/shared/utils";
-import {
-    normalizeFirestoreInstant,
-    stringIfExists,
-} from "@repo/shared/utils";
+import { normalizeFirestoreInstant, stringIfExists } from "@repo/shared/utils";
 import Mapper from "./Mapper";
 
 /** Firestore row merged with document id (no separate domain model). */

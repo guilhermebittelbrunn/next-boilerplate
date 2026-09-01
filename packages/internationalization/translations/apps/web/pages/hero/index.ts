@@ -1,11 +1,11 @@
 export const heroTranslations = {
     "pt-br": {
-        announcement: "Novo artigo publicado"
+        announcement: "Novo artigo publicado",
     },
     en: {
-        announcement: "New article published"
+        announcement: "New article published",
     },
     es: {
-        announcement: "Nuevo artículo publicado"
-    }
-}
+        announcement: "Nuevo artículo publicado",
+    },
+};

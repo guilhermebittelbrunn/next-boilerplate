@@ -2,8 +2,8 @@
 
 import { globalTranslations } from "./translations/global";
 import {
-    getDefaultLocale,
     locales as appLocales,
+    getDefaultLocale,
     type IGetDictionaryResponse,
     type Locale,
 } from "./utils";

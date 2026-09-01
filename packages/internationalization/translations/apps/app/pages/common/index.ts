@@ -1,6 +1,6 @@
+import { commonEntitiesPageTranslations } from "./entities";
 import { notFoundPageTranslations } from "./notFound";
 import { commonRoutesTranslations } from "./routes";
-import { commonEntitiesPageTranslations } from "./entities";
 
 export const commonTranslations = {
     "pt-br": {

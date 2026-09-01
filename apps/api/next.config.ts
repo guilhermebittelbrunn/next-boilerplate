@@ -5,7 +5,7 @@ let nextConfig: NextConfig = config;
 
 // Only use analyzer if explicitly set
 if (process.env.ANALYZE === "true") {
-  nextConfig = withAnalyzer(nextConfig);
+    nextConfig = withAnalyzer(nextConfig);
 }
 
 export default nextConfig;

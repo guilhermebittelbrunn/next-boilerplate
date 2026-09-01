@@ -53,7 +53,10 @@ export default function CreateUserPage() {
             <Header
                 breadcrumbs={[
                     { label: routes.root.label, href: routes.root.url },
-                    { label: routes.users.list.label, href: routes.users.list.url },
+                    {
+                        label: routes.users.list.label,
+                        href: routes.users.list.url,
+                    },
                 ]}
                 page={routes.users.create.label}
             />
