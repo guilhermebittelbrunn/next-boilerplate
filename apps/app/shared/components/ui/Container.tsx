@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
 
 type ContainerProps = {
-    children: React.ReactNode;
+    children?: React.ReactNode;
     className?: string;
     loading?: boolean;
     loadError?: string | null;
@@ -30,14 +30,18 @@ function LoadingPanel() {
     );
 }
 
-function contentOnlyLayout(props: {
-    body: React.ReactNode;
-    showGoBack?: boolean;
-} & StickyParts) {
+function contentOnlyLayout(
+    props: {
+        body: React.ReactNode;
+        showGoBack?: boolean;
+    } & StickyParts
+) {
     const { body, showGoBack, stickyBar, backButton } = props;
     return (
         <>
-            <div className="flex min-h-[50vh] w-full flex-1 flex-col">{body}</div>
+            <div className="flex min-h-[50vh] w-full flex-1 flex-col">
+                {body}
+            </div>
             {showGoBack ? stickyBar(backButton) : null}
         </>
     );

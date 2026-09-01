@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/a11y/noSvgWithoutTitle: <explanation> */
 import Link from "next/link";
 import type React from "react";
 
@@ -30,6 +29,7 @@ const PageBreadcrumb: React.FC<BreadcrumbProps> = ({
                         >
                             Início
                             <svg
+                                aria-hidden="true"
                                 className="stroke-current"
                                 fill="none"
                                 height="16"
@@ -55,6 +55,7 @@ const PageBreadcrumb: React.FC<BreadcrumbProps> = ({
                             >
                                 {item.label}
                                 <svg
+                                    aria-hidden="true"
                                     className="stroke-current"
                                     fill="none"
                                     height="16"
@@ -73,9 +74,7 @@ const PageBreadcrumb: React.FC<BreadcrumbProps> = ({
                             </Link>
                         </li>
                     ))}
-                    <li className="font-semibold text-sm">
-                        {pageTitle}
-                    </li>
+                    <li className="font-semibold text-sm">{pageTitle}</li>
                 </ol>
             </nav>
         </div>

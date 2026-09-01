@@ -15,7 +15,9 @@ import {
     writePanelMirror,
 } from "@/shared/lib/panelState";
 
-const FOURTEEN_DAYS_IN_SECONDS = 14 * 24 * 60 * 60;
+const DAYS_IN_PANEL_COOKIE_WINDOW = 14;
+const SECONDS_IN_A_DAY = 24 * 60 * 60;
+const FOURTEEN_DAYS_IN_SECONDS = DAYS_IN_PANEL_COOKIE_WINDOW * SECONDS_IN_A_DAY;
 
 function clearAllCookies() {
     for (const entry of document.cookie.split(";")) {
