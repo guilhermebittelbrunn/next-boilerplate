@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
 
+# The job only checks out the code and runs the gate, so it never needs write
+# access. Declaring it here also overrides whatever default the repository or
+# the organization grants, which a fork does not inherit.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
