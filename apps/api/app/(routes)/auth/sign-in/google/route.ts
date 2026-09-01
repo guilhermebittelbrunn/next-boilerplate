@@ -2,10 +2,7 @@ import {
     IdentityToolkitError,
     identitySignInWithGoogleIdToken,
 } from "@/(shared)/lib/firebase-identity-toolkit";
-import {
-    ensureDefaultUserProfile,
-    getMergedUserByUid,
-} from "@/(shared)/lib/user-merge";
+import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
 
 const DEFAULT_REQUEST_URI = "http://localhost:3000";
 
@@ -16,7 +13,6 @@ export async function POST(req: Request) {
 
     try {
         const session = await identitySignInWithGoogleIdToken(idToken, uri);
-        await ensureDefaultUserProfile(session.localId);
         const user = await getMergedUserByUid(session.localId);
 
         return Response.json({

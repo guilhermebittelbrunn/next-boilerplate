@@ -19,7 +19,7 @@ export async function getMergedUserByUid(
     let profile = await userRepository.findByReferenceId(uid);
 
     if (!profile) {
-        profile = await ensureDefaultUserProfile(uid);
+        profile = await createDefaultUserProfile(uid);
     }
 
     return mergeAuthAndFirestore(userRecord, profile);
@@ -38,13 +38,13 @@ export async function getMergedUserFromIdToken(
     let profile = await userRepository.findByReferenceId(authUser.uid);
 
     if (!profile) {
-        profile = await ensureDefaultUserProfile(authUser.uid);
+        profile = await createDefaultUserProfile(authUser.uid);
     }
 
     return mergeAuthAndFirestore(authUser, profile);
 }
 
-export function ensureDefaultUserProfile(uid: string, dto?: Partial<UserDTO>) {
+export function createDefaultUserProfile(uid: string, dto?: Partial<UserDTO>) {
     const defaultProps = {
         type: UserType.COMMON,
         reference_id: uid,
