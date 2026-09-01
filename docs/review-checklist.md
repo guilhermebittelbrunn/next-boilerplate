@@ -10,6 +10,26 @@ A fonte de verdade das convenções é o [`CLAUDE.md`](../CLAUDE.md) raiz + os `
 
 Verifique **apenas o que o diff toca**. Cite sempre `arquivo:linha` e a regra violada.
 
+## O que a máquina já cobre
+
+Toda PR roda `pnpm turbo run lint typecheck test` no GitHub Actions
+([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)). Estes três itens, portanto, **não precisam ser
+reexecutados à mão numa revisão**, e um "está verde" só vale como resposta a eles:
+
+| Coberto pelo CI | O que isso garante |
+|---|---|
+| `pnpm check` (Biome) | formatação, ordenação de imports/atributos, `console.log`, regras de lint |
+| `typecheck` nos workspaces que declaram o script | erro de tipo em qualquer app ou pacote |
+| `pnpm test` | as suítes Vitest, **inclusive a paridade pt-br/en/es** do `@repo/internationalization` |
+
+A consequência prática é onde a revisão humana precisa se concentrar — e é o resto deste arquivo:
+convenção de camada, autorização, ownership, escolha de `queryKey`, string de UI que existe nos 3 idiomas
+mas está **errada**, e validação visual. Nada disso um linter enxerga.
+
+⚠️ **O `build` não está no CI**: `apps/api` exige as `FIREBASE_ADMIN_*` para buildar. Mudança que pode
+quebrar o build (import em escopo de módulo que lê env, `next.config`, dependência nova) continua sendo
+responsabilidade da revisão e do deploy da Vercel.
+
 ---
 
 ## 0. Transversal
@@ -138,7 +158,8 @@ Verifique **apenas o que o diff toca**. Cite sempre `arquivo:linha` e a regra vi
 - [ ] Rota da API: mocka repositório **e** guard (passthrough injetando `ctx.subjectProfile`).
 - [ ] Cobre caminho feliz **e** cada caminho de erro (validação, não encontrado, sem permissão,
       ownership de terceiro).
-- [ ] ⚠️ `turbo build` depende de `test` — teste quebrado bloqueia build.
+- [ ] ⚠️ `turbo build` depende de `test` — teste quebrado bloqueia build. E o CI roda `test` em toda PR,
+      então teste quebrado também bloqueia o merge.
 
 ## 7. Validação visual (bloqueante em front-end)
 

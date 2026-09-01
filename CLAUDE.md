@@ -37,13 +37,21 @@ O que **ainda falta** no core está catalogado em [`specs/`](specs/README.md) �
 ```bash
 pnpm dev            # sobe todos os apps via turbo (3000/3001/3002/3003)
 pnpm --filter app dev   # sobe só um app (app | web | api | email)
-pnpm check          # lint/format check (Ultracite/Biome) — rode antes de finalizar
+pnpm check          # lint/format check (Biome fixado no lockfile) — rode antes de finalizar
 pnpm fix            # auto-fix de lint/format
 pnpm test           # Vitest em todos os workspaces (turbo)
 pnpm build          # build de produção (turbo; depende de test)
 pnpm --filter app typecheck   # tsc --noEmit de um workspace
 pnpm bump-ui        # re-sincroniza componentes shadcn no design-system
+
+pnpm turbo run lint typecheck test   # os 3 gates de uma vez — é o comando que o CI roda
 ```
+
+`lint`, `typecheck` e `test` são tasks do turbo: cacheadas, paralelas e com `env: []` (herméticas em
+relação a variáveis de ambiente). `lint` é task da **raiz** (`//#lint`) porque o Biome varre o repositório
+inteiro a partir de um único `biome.jsonc`. **O CI roda exatamente essa linha** — se passa no seu terminal,
+passa no GitHub Actions. O pipeline está em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e
+descrito em [`docs/SETUP.md`](docs/SETUP.md).
 
 Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe localmente com `pnpm --filter api dev:with-stripe`.
 

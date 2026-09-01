@@ -22,6 +22,19 @@ Regras de escopo para a landing/CTA pública — marketing, SEO, performance e c
 
 - Preferir componentes de `@repo/design-system` antes de duplicar primitives. Para copy de marketing, use a skill `copywriting`; para direção visual, `frontend-design` / `web-design-guidelines`.
 
+## Testes
+
+- A suíte fica em `apps/web/__tests__/`, roda com `pnpm --filter web test` e usa `environment: "node"`
+  (`vitest.config.mts`) — **sem jsdom e sem plugin do React**. É suíte de lógica pura: helpers de SEO,
+  metadata, sitemap. Componente renderizado é validado com `agent-browser`, não aqui.
+- Os aliases `@` e `@repo` estão declarados no `vitest.config.mts`; um import novo que fuja desses dois
+  prefixos precisa de alias próprio.
+- ⚠️ `turbo build` depende de `test`, então teste quebrado **bloqueia o build da web**. Mantenha a suíte
+  determinística e sem rede.
+- Não congele em teste as strings pt-br literais de `app/[locale]/sign-{in,up}/validations/`: elas são um
+  bug de i18n em aberto, e testá-las travaria o defeito em vez de expô-lo. O padrão do repo é a factory
+  `buildXFormSchema(dictionary)`.
+
 ## Validação visual
 
 - Toda mudança de UI/fluxo deve ser validada com a skill **`agent-browser`** antes de concluir (ver regra de ouro 11 no `CLAUDE.md` raiz), checando responsivo, tema e estados.
