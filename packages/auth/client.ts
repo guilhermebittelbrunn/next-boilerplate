@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: <explanation> */
 "use client";
 
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
@@ -20,83 +19,74 @@ import type { SignInDTO, SignUpDTO } from "./types";
 let firebaseApp: FirebaseApp | undefined;
 let firebaseAuth: Auth | undefined;
 
+type FirebaseClientConfig = {
+    apiKey?: string;
+    authDomain?: string;
+    projectId?: string;
+    storageBucket?: string;
+    messagingSenderId?: string;
+    appId?: string;
+    measurementId?: string;
+};
+
+const ENV_NAME_BY_REQUIRED_CONFIG_KEY = {
+    apiKey: "NEXT_PUBLIC_FIREBASE_API_KEY",
+    authDomain: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+    projectId: "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+    appId: "NEXT_PUBLIC_FIREBASE_APP_ID",
+} as const;
+
+const MOCK_CONFIG = {
+    apiKey: "mock",
+    authDomain: "mock",
+    projectId: "mock",
+    appId: "mock",
+};
+
+const readClientConfig = (): FirebaseClientConfig => ({
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+});
+
+const listMissingEnvNames = (config: FirebaseClientConfig) =>
+    Object.entries(ENV_NAME_BY_REQUIRED_CONFIG_KEY)
+        .filter(([key]) => !config[key as keyof FirebaseClientConfig])
+        .map(([, envName]) => envName);
+
+const initializeOnce = (config: FirebaseClientConfig) => {
+    firebaseApp = getApps()[0] ?? initializeApp(config);
+    return firebaseApp;
+};
+
 const getFirebaseApp = () => {
     if (firebaseApp) {
         return firebaseApp;
     }
 
-    // Get config from environment variables (client-side safe)
-    const config = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-    };
+    const config = readClientConfig();
+    const missing = listMissingEnvNames(config);
+    const isDevelopment = process.env.NODE_ENV === "development";
 
-    // Debug: log missing variables in development
-    if (process.env.NODE_ENV === "development") {
-        const missing: string[] = [];
-
-        if (!config.apiKey) {
-            missing.push("NEXT_PUBLIC_FIREBASE_API_KEY");
-        }
-        if (!config.authDomain) {
-            missing.push("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN");
-        }
-        if (!config.projectId) {
-            missing.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
-        }
-
-        if (!config.appId) {
-            missing.push("NEXT_PUBLIC_FIREBASE_APP_ID");
-        }
-
-        if (missing.length > 0) {
-            console.warn(
-                `⚠️  Firebase client not fully configured. Missing: ${missing.join(", ")}\n` +
-                    "Please create a .env.local file in apps/web/ with these variables."
-            );
-        }
+    if (missing.length === 0) {
+        return initializeOnce(config);
     }
 
-    if (
-        !(
-            config.apiKey &&
-            config.authDomain &&
-            config.projectId &&
-            config.appId
-        )
-    ) {
-        // In development, allow running without Firebase config
-        if (process.env.NODE_ENV === "development") {
-            // Return a mock app to prevent errors
-            if (getApps().length === 0) {
-                firebaseApp = initializeApp({
-                    apiKey: "mock",
-                    authDomain: "mock",
-                    projectId: "mock",
-                    appId: "mock",
-                });
-            } else {
-                firebaseApp = getApps()[0];
-            }
-            return firebaseApp;
-        }
-        throw new Error(
-            "Missing Firebase client configuration. Please set NEXT_PUBLIC_FIREBASE_* environment variables."
+    if (isDevelopment) {
+        console.warn(
+            `⚠️  Firebase client not fully configured. Missing: ${missing.join(", ")}\n` +
+                "Please create a .env.local file with these variables."
         );
+        return initializeOnce(MOCK_CONFIG);
     }
 
-    if (getApps().length === 0) {
-        firebaseApp = initializeApp(config);
-    } else {
-        firebaseApp = getApps()[0];
-    }
-
-    return firebaseApp;
+    throw new Error(
+        "Missing Firebase client configuration. Please set NEXT_PUBLIC_FIREBASE_* environment variables."
+    );
 };
 
 export const getAuthClient = () => {
