@@ -48,7 +48,6 @@ function request(method: string, panel: UserRoleLevel) {
                 ? TARGET_UID
                 : ACTOR_UID,
         }),
-        // biome-ignore lint/suspicious/noExplicitAny: minimal NextRequest stand-in
     } as any;
 }
 

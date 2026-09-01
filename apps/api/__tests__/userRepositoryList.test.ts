@@ -51,10 +51,7 @@ function authRecord(uid: string, email: string) {
 }
 
 function givenProfiles(profiles: unknown[]) {
-    vi.spyOn(userRepository, "findAll").mockResolvedValue(
-        // biome-ignore lint/suspicious/noExplicitAny: raw Firestore rows
-        profiles as any
-    );
+    vi.spyOn(userRepository, "findAll").mockResolvedValue(profiles as any);
 }
 
 beforeEach(() => {
