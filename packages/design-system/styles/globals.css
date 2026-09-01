@@ -243,14 +243,15 @@ html
 }
 
 /* Ícones @ant-design/icons usam .anticon; cor própria do Ant pode ficar errada no dark */
-html .ant-dropdown
+html .ant-dropdown .ant-dropdown-menu-item-danger .anticon {
+    color: var(--color-destructive);
+}
+
+html
+    .ant-dropdown
     .ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger)
     .anticon {
     color: var(--color-foreground);
-}
-
-html .ant-dropdown .ant-dropdown-menu-item-danger .anticon {
-    color: var(--color-destructive);
 }
 
 html .ant-pagination,

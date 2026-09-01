@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/complexity/noUselessFragments: <explanation> */
 import { Button } from "@base-ui/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
@@ -25,14 +24,22 @@ interface HookFormInputPasswordProps<T extends FieldValues> extends InputProps {
 export function HookFormInputPassword<T extends FieldValues>(
     props: HookFormInputPasswordProps<T>
 ) {
-    const { control, name, label, controllerProps, required = false, hidden = false, ...rest } = props;
+    const {
+        control,
+        name,
+        label,
+        controllerProps,
+        required = false,
+        hidden = false,
+        ...rest
+    } = props;
     const { formState } = useFormContext();
     const [showPassword, setShowPassword] = useState(false);
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
 
     if (hidden) {
-        return <></>;
+        return null;
     }
 
     return (
@@ -49,7 +56,10 @@ export function HookFormInputPassword<T extends FieldValues>(
                         >
                             {label}
                             {required ? (
-                                <span aria-hidden="true" className="text-destructive">
+                                <span
+                                    aria-hidden="true"
+                                    className="text-destructive"
+                                >
                                     {" *"}
                                 </span>
                             ) : null}

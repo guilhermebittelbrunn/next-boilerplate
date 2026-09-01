@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/complexity/noUselessFragments: <explanation> */
 import type { HTMLInputTypeAttribute } from "react";
 import {
     type Control,
@@ -25,12 +24,20 @@ interface HookFormInputProps<T extends FieldValues> extends InputProps {
 
 export function HookFormInput<T extends FieldValues>(
     props: HookFormInputProps<T>
-): React.ReactElement {
-    const { control, name, label, controllerProps, required = false, hidden = false, ...rest } = props;
+): React.ReactElement | null {
+    const {
+        control,
+        name,
+        label,
+        controllerProps,
+        required = false,
+        hidden = false,
+        ...rest
+    } = props;
     const { formState } = useFormContext();
 
     if (hidden) {
-        return <></>;
+        return null;
     }
 
     return (
@@ -47,7 +54,10 @@ export function HookFormInput<T extends FieldValues>(
                         >
                             {label}
                             {required ? (
-                                <span aria-hidden="true" className="text-destructive">
+                                <span
+                                    aria-hidden="true"
+                                    className="text-destructive"
+                                >
                                     {" *"}
                                 </span>
                             ) : null}
