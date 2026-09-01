@@ -23,23 +23,44 @@ Os guards:
 
 > Ao criar rotas, repita a checagem mesmo que o front já restrinja a navegação. Ver [`apps/api/CLAUDE.md`](../apps/api/CLAUDE.md) e a skill `/new-api-route`.
 
-## ⚠️ Firestore: achado crítico e como blindar
+## Firestore: acesso por service account, rules em deny-all
 
-**Situação atual**: a `apps/api` acessa o Firestore pelo **client SDK do Firebase, não autenticado** (`apps/api/(shared)/infra/dabatase.ts`, com config pública hardcoded). Isso significa:
+**Postura vigente**: a `apps/api` acessa o Firestore pelo **Admin SDK** — `getFirestoreAdmin()` de `@repo/auth/server`, resolvido em `apps/api/(shared)/infra/database.ts` e injetado no `BaseRepository`. Como serviço confiável, a API **ignora** as security rules; então [`firestore.rules`](../firestore.rules) pode **negar todo acesso direto de cliente** (`allow read, write: if false`) sem afetar a API.
 
-- As **security rules do Firestore se aplicam** ao acesso da API.
-- Como a config do projeto é pública (vai no bundle do cliente), **se as rules forem permissivas, qualquer pessoa pode ler/escrever todos os dados direto no Firestore**, ignorando completamente os guards da API.
-- Mas se as rules forem restritivas, a API (que não tem identidade autenticada) **perde acesso e quebra**.
+> ⛔ **ESTADO ATUAL: as rules do arquivo NÃO estão publicadas.** O código da API já roda no Admin SDK, mas
+> enquanto o `deploy` abaixo não for executado a base continua **legível e gravável** por qualquer pessoa
+> com a chave pública do projeto — medido: a leitura direta via REST devolve **200 com dados reais**. O
+> arquivo `firestore.rules` estar em `deny-all` **não protege nada** até ser publicado. Trate como a
+> pendência #1 de segurança do fork.
 
-**Postura recomendada (secure-by-default)**: todo acesso ao Firestore deve passar pela API via **firebase-admin**, que roda como serviço confiável e **ignora** as security rules. Então as rules podem **negar todo acesso direto de cliente**. É o que está em [`firestore.rules`](../firestore.rules) (`allow read, write: if false`).
+Consequências (uma vez publicadas):
 
-**Migração necessária antes de publicar as rules** (ordem):
-1. Em `apps/api/(shared)/infra/dabatase.ts`, troque o client SDK por `getFirestoreAdmin()` de `@repo/auth/server`.
-2. Adapte `BaseRepository` e os repositórios para a API do **admin SDK** (`db.collection(...).doc(...).get()/set()/update()`, `Timestamp` do `firebase-admin/firestore`) em vez de `firebase/firestore` (`collection`, `getDocs`, `query`, `where`).
-3. Configure as credenciais admin (`FIREBASE_ADMIN_*` — ver [`docs/SETUP.md`](SETUP.md)).
-4. Publique as rules: `npx -y firebase-tools@latest deploy --only firestore:rules`.
+- Nenhum cliente (browser) toca o Firestore: o front fala só com a API via `@repo/sdk`. A chave pública do projeto deixa de ser um caminho de leitura dos dados.
+- A API **não sobe** sem `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL` e `FIREBASE_ADMIN_PRIVATE_KEY`: `apps/api/instrumentation.ts` resolve a instância no boot e o processo morre com mensagem clara se faltar alguma. Não existe modo degradado — credencial ausente é erro de configuração, não estado de negócio.
+- `packages/auth/keys.ts` trata a service account como **tudo ou nada**: um conjunto parcial é erro de env (antes passava e só explodia no primeiro request).
 
-Enquanto a migração não acontecer, **não publique** `allow read, write: if false` (a API quebra). Trate isso como a prioridade #1 de segurança do fork.
+### Publicar rules e índices
+
+```bash
+npx -y firebase-tools@latest login                                          # uma vez por máquina
+npx -y firebase-tools@latest deploy --only firestore:rules --dry-run        # valida a sintaxe
+npx -y firebase-tools@latest deploy --only firestore:rules,firestore:indexes
+```
+
+O projeto alvo vem do [`.firebaserc`](../.firebaserc) versionado. **Um fork publica com `--project <id-do-fork>`** — ver [`docs/SETUP.md`](SETUP.md).
+
+⛔ **Ordem e rollback**: publique as rules **depois** de a API estar rodando no Admin SDK; o inverso deixa a API sem acesso. E o rollback correto é **reverter o código da API primeiro** — republicar rules permissivas sem reverter reexpõe a base inteira, o que não é rollback.
+
+### Verificar que o furo está fechado
+
+Com as rules publicadas, uma leitura direta com a chave pública do projeto deve ser **negada**:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  "https://firestore.googleapis.com/v1/projects/<projectId>/databases/(default)/documents/entity?key=<NEXT_PUBLIC_FIREBASE_API_KEY>"
+```
+
+Esperado **403** (`PERMISSION_DENIED`). Com rules permissivas o mesmo comando devolve **200 com os dados** — é a medida da vulnerabilidade. Não salve o corpo da resposta: ele contém dados reais.
 
 ### Auditar as rules
 - **Firebase MCP** (já conectado): use a skill `firebase:firebase-security-rules-auditor` para avaliar a robustez das rules — especialmente útil **se** adotar o modelo alternativo (regras por dono) comentado em `firestore.rules`. Para `allow ... if false` o resultado é trivialmente "máximo de restrição".
@@ -54,7 +75,7 @@ Enquanto a migração não acontecer, **não publique** `allow read, write: if f
 ## Segredos e configuração
 
 - Não commite `.env`/`.env.local`. As vars reais estão em [`docs/SETUP.md`](SETUP.md).
-- **Higiene pendente**: mover a config Firebase hardcoded de `infra/dabatase.ts` para `NEXT_PUBLIC_FIREBASE_*`; limpar `.env.example` (chaves do upstream que não são usadas).
+- **Higiene pendente**: limpar `apps/api/.env.example` (chaves do upstream que não são usadas: Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub).
 - `@repo/security` (Arcjet) fornece rate limiting e secure headers — habilite `ARCJET_KEY` em produção.
 
 ## Checklist ao revisar mudanças sensíveis

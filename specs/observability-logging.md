@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-21
+updated: 2026-08-31
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -25,8 +25,11 @@ invisível até alguém conferir a fatura.
 
 ## O que já existe no repo
 
-- `apps/api/instrumentation.ts:1-2` — o arquivo existe e é um **stub vazio**: um comentário e uma função de
-  registro que não faz nada. `apps/api/instrumentation-client.ts:1` é só um comentário, sem exportação.
+- `apps/api/instrumentation.ts:8-15` — **deixou de ser um stub vazio** em 2026-08-31
+  (`firestore-admin-access`): o `register()` roda no boot e resolve a instância do Firestore, para que a
+  falta de credencial mate o processo em vez de degradar. Isso prova que o gancho funciona, mas **nenhuma
+  observabilidade passa por ele** — nem logger, nem coletor de erro, nem tracing.
+  `apps/api/instrumentation-client.ts:1` continua sendo só um comentário, sem exportação.
   **`apps/app` e `apps/web` não têm arquivo de instrumentação nenhum** — a busca no repositório retorna só
   os dois de `apps/api`. Os apps que o usuário acessa não têm nem o gancho.
 - Não há Sentry, OpenTelemetry, logger estruturado ou qualquer coleta de erro em nenhum `package.json`.

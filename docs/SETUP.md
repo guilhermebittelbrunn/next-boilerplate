@@ -2,7 +2,7 @@
 
 Como subir o boilerplate do zero e o mapa **real** das variáveis de ambiente. A fonte de verdade de cada var é o `keys.ts` do pacote correspondente (validado por `@t3-oss/env-nextjs`) e o `env.ts` de cada app.
 
-> Os `.env.example` de `apps/{api,app,web}` já refletem **apenas** as vars usadas por este fork (agrupadas e comentadas). Copie o de cada app para `.env` (ou `.env.local`) e preencha. Este documento detalha **como obter/usar cada uma**. As chaves do upstream next-forge não usadas (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub) foram removidas.
+> Os `.env.example` de `apps/{api,app,web}` refletem **apenas** as vars usadas por este fork (agrupadas e comentadas). Copie o de cada app para `.env` (ou `.env.local`) e preencha. Este documento detalha **como obter/usar cada uma**. As chaves herdadas do upstream next-forge e não usadas aqui — Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub, `FLAGS_SECRET` e PostHog — foram removidas.
 
 ## Pré-requisitos
 
@@ -30,6 +30,15 @@ Usado pelos **três** apps: `apps/api` (guards verificam o ID token), e `apps/ap
 | `FIREBASE_WEB_API_KEY` | sim | Web API key (Identity Toolkit, usada no sign-in/sign-up REST). Faz fallback p/ `NEXT_PUBLIC_FIREBASE_API_KEY` |
 
 \* `FIREBASE_ADMIN_PROJECT_ID` cai para `NEXT_PUBLIC_FIREBASE_PROJECT_ID` se omitido (mesmo projeto).
+
+> ⛔ **A `apps/api` não sobe sem as três.** Para ela a service account não é só auth: é a credencial do **banco** (o Firestore é acessado pelo Admin SDK). `apps/api/instrumentation.ts` resolve a instância no boot e o processo morre com mensagem clara se faltar alguma — não há modo degradado.
+>
+> As três também são exigidas em **`pnpm --filter api build`**: `apps/api/env.ts` as declara como server vars
+> obrigatórias e é importado por uma rota, então o build de produção falha com `Invalid environment
+> variables` se elas não estiverem no ambiente de build (só `NODE_ENV=development` pula a validação).
+> Considere isso ao configurar CI ou qualquer build fora da Vercel.
+
+> ⚠️ **A service account é tudo ou nada.** `packages/auth/keys.ts` aceita o conjunto **inteiramente ausente** (um front que só precise de `FIREBASE_WEB_API_KEY`), mas rejeita um conjunto **parcial** como erro de env, nomeando as vars que faltam. Atenção ao caso de borda: como `FIREBASE_ADMIN_PROJECT_ID` cai para `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, ter essa var pública configurada já torna o conjunto "não vazio" — então `FIREBASE_ADMIN_CLIENT_EMAIL` e `FIREBASE_ADMIN_PRIVATE_KEY` passam a ser exigidas. É o comportamento desejado (os três apps precisam do service account), mas explica a mensagem se você configurar só a parte pública.
 
 ### Firebase — client (browser) · lido em `@repo/auth/client.ts` e providers
 Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
@@ -110,8 +119,24 @@ scripts `dev` **e** nas URLs cruzadas de cada `.env` — hoje não é suportado.
 
 ## Firestore
 
-- O modelo de dados (coleções `user`, `entity`, …) é acessado pela API. As **regras de segurança** vivem em [`firestore.rules`](../firestore.rules) — leia [`docs/SECURITY.md`](SECURITY.md) **antes de fazer deploy das regras** (há uma dependência arquitetural importante).
-- Provisione o Firestore no Firebase Console (modo de produção) e faça deploy das regras com a Firebase CLI (`npx -y firebase-tools@latest deploy --only firestore:rules`) ou via Firebase MCP.
+- O modelo de dados (coleções `user`, `entity`, …) é acessado **só** pela API, que se autentica com a service account via Admin SDK e por isso **ignora** as security rules. O arquivo de rules ([`firestore.rules`](../firestore.rules)) está escrito em `deny-all`. Contexto em [`docs/SECURITY.md`](SECURITY.md).
+- ⛔ **Escrito no arquivo ≠ publicado.** Enquanto o `deploy` abaixo não rodar, qualquer pessoa com a chave pública do projeto lê e grava a base direto, ignorando os guards da API. Publicar é obrigatório em todo ambiente, inclusive dev.
+- Provisione o Firestore no Firebase Console (modo de produção) e publique rules **e** índices:
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:rules,firestore:indexes
+```
+
+- Os índices compostos **declarados** para as consultas atuais estão em [`firestore.indexes.json`](../firestore.indexes.json). O Firestore serve as consultas de hoje sem eles (só igualdades, resolvidas pelos índices de campo único automáticos), então a declaração é preventiva — não espere um erro se remover. Se uma consulta nova responder `FAILED_PRECONDITION … requires an index`, a mensagem do Firestore nomeia o índice exato: acrescente a entrada ao arquivo e republique.
+
+### Projeto alvo — `.firebaserc` é versionado
+
+O [`.firebaserc`](../.firebaserc) na raiz é **versionado** e seu `default` aponta para o projeto de referência deste boilerplate. Isso encurta os comandos (sem `--project`) e mantém o project id num lugar só.
+
+**Um fork não deve rodar `firebase use <id>`**: esse comando **reescreve um arquivo versionado**, deixando o `git status` sujo para sempre ou forçando um commit do id próprio por cima. Use uma das duas saídas:
+
+- `npx -y firebase-tools@latest deploy --project <id-do-fork> --only firestore:rules,firestore:indexes` — o flag **sobrepõe** o `default` sem tocar no arquivo. **Recomendado.**
+- `npx -y firebase-tools@latest use --add` — grava um **alias** nomeado ao lado do `default`, o que ao menos torna a mudança intencional e revisável no diff.
 
 ## Primeiro admin (bootstrap de desenvolvimento)
 
@@ -138,4 +163,4 @@ nessa conta e promove o perfil a admin. Rodar de novo é a forma de voltar a ent
 
 ## Pendências de higiene (recomendadas)
 
-- **`apps/api/(shared)/infra/dabatase.ts`** tem a config Firebase **hardcoded** (apiKey/projectId no código). Mover para `NEXT_PUBLIC_FIREBASE_*` (já presentes no `.env.example` da api) evita divergência entre ambientes/forks. Ver [`docs/SECURITY.md`](SECURITY.md).
+- **`apps/api/.env.example`** ainda carrega chaves do upstream next-forge que este fork não usa (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub) — apesar da nota no topo deste documento. Limpar evita que cada fork herde configuração morta.

@@ -9,7 +9,7 @@ area: [apps/api, packages/sdk, apps/app, packages/design-system]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-08-21
+updated: 2026-08-31
 ---
 
 # Paginação por cursor no BaseRepository e no SDK
@@ -24,16 +24,17 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
 
 ## O que já existe no repo
 
-- `apps/api/(shared)/repositories/base.repository.ts:45-55` — `findAll()` monta a query só com
+- `apps/api/(shared)/repositories/base.repository.ts:36-49` — `findAll()` monta a query só com
   `where("deletedAt", "==", null)`: **sem `limit`, sem `orderBy`, sem cursor e sem contagem**. É a base de
-  toda listagem, e nenhum dos métodos do `BaseRepository<DTO>` (34-141) aceita parâmetro de consulta.
-- **Achado adicional:** `findAll()` (51-54) devolve `{ id, ...doc.data() }` cru e **ignora o `rowMapper`**,
-  enquanto `findById()` (67-71) o aplica — as duas rotas de leitura produzem formatos diferentes, o que
-  precisa ser reconciliado junto com a paginação.
+  toda listagem, e nenhum dos métodos do `BaseRepository<DTO>` (22-135) aceita parâmetro de consulta.
+- ✅ **Achado adicional resolvido em 2026-08-31** (`firestore-admin-access`): `findAll()` **ignorava o
+  `rowMapper`** enquanto `findById()` o aplicava, e as duas rotas de leitura produziam formatos diferentes.
+  Hoje `findAll()` aplica o mapper (`:44-46`), como `findById()` (`:60-64`). A reconciliação de formato
+  saiu do escopo desta spec.
 - `apps/api/(shared)/repositories/entity.repository.ts:12-33` — `listByUserId` filtra `deletedAt` em
   memória (20-23) e ordena por `createdAt` em memória (28-32).
-- `apps/api/(shared)/repositories/user.repository.ts:36-47` — `list({type})` chama `findAll()` e filtra por
-  tipo em memória (37-39); depois faz **uma chamada ao Admin SDK por usuário** (42-46, 56-67).
+- `apps/api/(shared)/repositories/user.repository.ts:32-43` — `list({type})` chama `findAll()` e filtra por
+  tipo em memória (34-36); depois faz **uma chamada ao Admin SDK por usuário** (38-40, 52-63).
 - `packages/sdk/src/actions/entity/action.ts:15-22` e
   `packages/sdk/src/actions/user/user/action.ts:21-31` — `list()` devolve array cru, **sem envelope**: não
   há onde caber cursor ou `hasMore` sem quebrar o contrato.
@@ -41,7 +42,10 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
   `useListX`/`fetchXList` que todo fork copia.
 - `packages/design-system/components/ui/table.tsx:11-22` — `TableProps` estende `AntdTableProps` sem tratar
   `pagination`: o que a tela exibe é a **paginação client-side padrão do antd**, sobre o array inteiro.
-- `firestore.indexes.json:1-4` — **vazio**. Qualquer consulta composta nova falha em produção sem aviso.
+- `firestore.indexes.json:2-11` — deixou de ser vazio em 2026-08-31: versiona **um** índice composto, o de
+  `findByReferenceId`. O arquivo e o caminho de deploy agora existem (`docs/SETUP.md:127-139`), o que
+  **remove o obstáculo** — mas qualquer consulta composta nova continua exigindo a entrada correspondente,
+  ou falha em produção sem aviso.
 - `docs/feature-analysis-guide.md:85-93` (seção 2.2) — o repo **já reconhece a lacuna por escrito**: "o
   `BaseRepository` não tem paginação, `orderBy` nem filtros compostos… é uma decisão de arquitetura a
   registrar, não algo a improvisar no handler". Esta spec é essa decisão.
@@ -96,9 +100,11 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
   produção. Sem exercitar as consultas contra o emulador (`firebase-emulator-seed`), o risco sobrevive.
 - **Ordenação instável corrompe a navegação**: sem desempate determinístico, registros criados no mesmo
   instante somem ou repetem entre páginas — bug que só aparece com volume.
-- **Dependência de `firestore-admin-access`:** hoje o acesso é pelo client SDK
-  (`apps/api/(shared)/infra/dabatase.ts:1-15`); a migração para o Admin SDK reescreve exatamente estes
-  métodos. Paginar antes é escrever o mesmo código duas vezes.
+- ✅ **Dependência de `firestore-admin-access` satisfeita em 2026-08-31.** O risco que a criava — paginar
+  sobre o client SDK e reescrever tudo na migração — não existe mais: `BaseRepository` já roda no
+  `firebase-admin/firestore` (`base.repository.ts:3`) e é sobre essa API que o cursor será escrito
+  (`.startAfter()`/`.limit()`, não `startAfter(...)` de `firebase/firestore`). **Esta spec está
+  desbloqueada.**
 - **Custo herdado por todo fork:** paginar é mais código que `findAll()` e a UI perde "pular para a página
   N" — mas nenhum serviço, env ou custo em dinheiro. Mitigação: o padrão vem pronto no slice `entity`.
 

@@ -1,6 +1,5 @@
 import type { EntityDTO } from "@repo/sdk/src/types";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import db from "../infra/dabatase";
+import db from "../infra/database";
 import { entityMapper } from "../mappers/entity.mapper";
 import { BaseRepository } from "./base.repository";
 
@@ -10,10 +9,10 @@ class EntityRepository extends BaseRepository<EntityDTO> {
     }
 
     async listByUserId(userId: string): Promise<EntityDTO[]> {
-        const ref = collection(this.db, this.table);
-        const snapshot = await getDocs(
-            query(ref, where("userId", "==", userId))
-        );
+        const snapshot = await this.db
+            .collection(this.table)
+            .where("userId", "==", userId)
+            .get();
 
         const rows = snapshot.docs
             .map((docSnap) => {
