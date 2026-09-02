@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
 
       # No `version:` on purpose: the action reads `packageManager` from package.json.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       # Must run after pnpm/action-setup, otherwise `cache: pnpm` cannot find pnpm.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
