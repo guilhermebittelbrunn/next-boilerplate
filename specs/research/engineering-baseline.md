@@ -50,6 +50,18 @@ Cache. Materializa em `.github/workflows/ci.yml` (`pnpm/action-setup`, `setup-no
 `fetch-depth: 2`) + `turbo run …` com `TURBO_TOKEN`/`TURBO_TEAM`. **Armadilha:** env não declarada em
 `env`/`globalEnv` do `turbo.json` gera **cache-hit com valor errado** — clássico com `NEXT_PUBLIC_*`.
 
+> **Adendo de 2026-09-01 (`/spec --sync`, 3ª rodada) — runtime das actions tem prazo.** Fora do escopo da
+> coleta original (2026-08-21), levantado quando o workflow deste repo rodou pela primeira vez e emitiu o
+> aviso. O GitHub deprecou o **Node.js 20** nos runners: **Node 24 virou o padrão em 2026-06-16** (actions
+> em `node20` já rodam forçadas nele, com anotação de `warning` em toda execução) e o **suporte a Node 20 é
+> removido em 2026-09-23**. Toda action que declara `using: node20` no seu `action.yml` cai nisso.
+> Verificado tag a tag na origem: a **v5** é a primeira major em `node24` para `actions/checkout`,
+> `actions/setup-node` e `pnpm/action-setup` — mas as majors atuais já são **checkout v7.0.1**,
+> **setup-node v7.0.0** e **pnpm/action-setup v6.0.10**. Prática: fixar a major mais recente, não a mínima
+> que cala o aviso. Reforça a prática 13 (Renovate) — é o tipo de vencimento que só um bot pega a tempo.
+> Fonte: <https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/>
+> (`collected: 2026-09-01`).
+
 **3. Testes de regras do Firestore.** `@firebase/rules-unit-testing` (`initializeTestEnvironment`,
 `assertFails`/`assertSucceeds`) sob `firebase emulators:exec --only firestore`. **Armadilhas:** precisa de
 `withSecurityRulesDisabled` para semear; cachear `~/.cache/firebase/emulators/` no CI evita baixar o JAR a
