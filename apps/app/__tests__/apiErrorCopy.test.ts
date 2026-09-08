@@ -12,13 +12,17 @@ import { describe, expect, it } from "vitest";
  * degraded to the generic message. These cases fail if anything re-introduces that.
  */
 
-function apiError(status: number, data: unknown): AxiosError {
+function apiError(
+    status: number,
+    data: unknown,
+    responseHeaders: Record<string, string> = {}
+): AxiosError {
     const headers = new AxiosHeaders();
     const config = { headers };
     return new AxiosError("Request failed", "ERR_BAD_REQUEST", config, {}, {
         status,
         statusText: "Forbidden",
-        headers,
+        headers: new AxiosHeaders(responseHeaders),
         config,
         data,
     } as never);
@@ -95,6 +99,62 @@ describe("API error code to user copy", () => {
                 "pt-br"
             )
         ).toBe("403 - Forbidden");
+    });
+});
+
+const RETRY_AFTER_SECONDS = 43;
+
+/**
+ * The edge refuses a burst on the public auth routes with its own code, separate from the
+ * one Firebase raises for its own limit: same symptom, different layer and different remedy.
+ */
+describe("rate limited by the API edge", () => {
+    const rateLimited = (headers?: Record<string, string>) =>
+        apiError(
+            HTTP_STATUS.TOO_MANY_REQUESTS,
+            { error: { code: "AUTH_RATE_LIMITED" } },
+            headers
+        );
+
+    it("reads as a wait, not as an unexpected failure, in every locale", () => {
+        expect(copyFor(rateLimited(), "pt-br")).toBe(
+            "Muitas tentativas em pouco tempo. Aguarde um instante e tente de novo."
+        );
+        expect(copyFor(rateLimited(), "en")).toBe(
+            "Too many attempts in a short time. Wait a moment and try again."
+        );
+        expect(copyFor(rateLimited(), "es")).toBe(
+            "Demasiados intentos en poco tiempo. Espere un momento e inténtelo de nuevo."
+        );
+    });
+
+    it("stays distinct from the limit Firebase enforces", () => {
+        const firebaseLimited = apiError(HTTP_STATUS.TOO_MANY_REQUESTS, {
+            error: { code: "USERS_AUTH_RATE_LIMITED" },
+        });
+
+        expect(copyFor(rateLimited(), "en")).not.toBe(
+            copyFor(firebaseLimited, "en")
+        );
+    });
+
+    it("carries the wait the server asked for", () => {
+        expect(
+            new FormattedError(
+                rateLimited({ "retry-after": String(RETRY_AFTER_SECONDS) })
+            ).retryAfterSeconds
+        ).toBe(RETRY_AFTER_SECONDS);
+    });
+
+    it("has no wait to report when the response carries none", () => {
+        expect(new FormattedError(rateLimited()).retryAfterSeconds).toBeNull();
+        expect(
+            new FormattedError(rateLimited({ "retry-after": "later" }))
+                .retryAfterSeconds
+        ).toBeNull();
+        expect(
+            new FormattedError(transportError()).retryAfterSeconds
+        ).toBeNull();
     });
 });
 
