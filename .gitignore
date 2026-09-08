@@ -291,6 +291,10 @@ skills-lock.json
 # Conductor: settings.toml (compartilhado) é versionado; o .local é pessoal
 .conductor/settings.local.toml
 
-# Nota: `docs/features/` (plano, handoff, review, critérios de aceite, screenshots) é
-# VERSIONADO de propósito — é o histórico de como cada feature foi construída.
-# Ver docs/TASK-PIPELINE.md.
+# Nota: `docs/features/` (plano, handoff, review, critérios de aceite) é VERSIONADO de
+# propósito — é o histórico de como cada feature foi construída. Ver docs/TASK-PIPELINE.md.
+# Os screenshots da validação visual ficam de fora: são a evidência de uma execução, pesam
+# megabytes e envelhecem junto com a UI. O que precisa sobreviver é a descrição do que foi
+# validado, que vive no markdown da etapa.
+docs/features/**/screenshots/
+docs/features/**/test/e2e/
