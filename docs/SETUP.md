@@ -54,7 +54,9 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 | `NEXT_PUBLIC_APP_URL` | todos | URL do painel. Link "Ir para o painel" (web, modo subscription), redirect comum→painel, e **base das URLs de retorno do Stripe checkout/portal** (api). |
 | `NEXT_PUBLIC_WEB_URL` | todos | URL da web. Redirect do comum → web no modo `simple`. |
 | `NEXT_PUBLIC_DOCS_URL` | `app`, `web` | Link de Documentação no header (opcional; oculto se vazio). |
-| `CORS_ORIGIN` | `api` | Origem permitida nas respostas da API (`Access-Control-Allow-Origin`). Default `*`; em prod, sua origem web/app. |
+| `CORS_ORIGIN` | `api` | **Lista de origens separada por vírgula** (`https://app.example.com,https://example.com`) autorizadas a chamar a API pelo browser. **Obrigatória em produção**: sem ela a API não sobe (`apps/api/instrumentation.ts`). Fora de produção, vazia = `http://localhost:3000,http://localhost:3001`. **Não existe coringa.** Requisição sem header `Origin` (servidor→servidor, prefetch RSC) passa sem cabeçalho de CORS; origem fora da lista recebe `403 AUTH_FORBIDDEN_ORIGIN`. |
+
+> ⚠️ **Preview deploys**: o domínio efêmero (`*.vercel.app`) não está em `CORS_ORIGIN` e o browser será recusado. Acrescente a origem do preview à variável do ambiente de preview — mesma armadilha dos *Authorized domains* do Firebase.
 
 ### Modo de produto e sessão · `@repo/next-config` (`packages/next-config/keys.ts`) + `@repo/auth/session`
 | Var | App | Para quê |
