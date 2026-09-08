@@ -1,6 +1,9 @@
 "use client";
 
-import { Avatar, AvatarImage } from "@repo/design-system/components/ui/avatar";
+import {
+    Avatar,
+    AvatarFallback,
+} from "@repo/design-system/components/ui/avatar";
 import {
     Collapsible,
     CollapsibleContent,
@@ -70,7 +73,7 @@ export const GlobalSidebar = ({
                 <SidebarHeader className="mt-0">
                     <div className="flex items-center gap-4">
                         <Avatar className="h-8 w-8">
-                            <AvatarImage src="https://github.com/shadcn.png" />
+                            <AvatarFallback />
                         </Avatar>
                         {sidebar.open && (
                             <span className="text-sm">company name</span>

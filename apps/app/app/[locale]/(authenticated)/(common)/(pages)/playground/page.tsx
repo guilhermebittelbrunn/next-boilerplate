@@ -192,6 +192,11 @@ const tableColumns: TableProps<MockUser>["columns"] = [
 
 const FAKE_SUBMIT_DELAY_MS = 800;
 
+// Inline so this showcase does not oblige every fork to allow an outside image
+// host in its content security policy just to render a sample avatar.
+const SAMPLE_AVATAR =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='20' fill='%236366f1'/%3E%3Ccircle cx='20' cy='16' r='6' fill='%23ffffff'/%3E%3Cpath d='M8 38a12 12 0 0 1 24 0z' fill='%23ffffff'/%3E%3C/svg%3E";
+
 const noop = () => null;
 
 function PlaygroundSection(props: {
@@ -982,7 +987,7 @@ export default function CommonPlaygroundClient() {
                         <PlaygroundVariants>
                             <PlaygroundVariant title="Image and fallback">
                                 <Avatar>
-                                    <AvatarImage src="https://github.com/shadcn.png" />
+                                    <AvatarImage src={SAMPLE_AVATAR} />
                                     <AvatarFallback>GB</AvatarFallback>
                                 </Avatar>
                                 <Avatar>
