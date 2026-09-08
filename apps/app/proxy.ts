@@ -2,10 +2,53 @@ import { postAuthRedirectTarget } from "@repo/auth/redirect";
 import { getUserFromSessionCookie } from "@repo/auth/server";
 import { getDefaultLocale, locales } from "@repo/internationalization/utils";
 import { secure } from "@repo/security";
+import {
+    applySecurityHeaders,
+    buildBrowserAppOptions,
+} from "@repo/security/middleware";
 import { handleClientError } from "@repo/shared/utils";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
+
+const IDENTITY_TOOLKIT_ORIGIN = "https://identitytoolkit.googleapis.com";
+/** Refreshes the ID token roughly hourly; blocking it kills the session long after sign-in. */
+const SECURE_TOKEN_ORIGIN = "https://securetoken.googleapis.com";
+const GOOGLE_AVATAR_ORIGIN = "https://lh3.googleusercontent.com";
+const TAG_MANAGER_ORIGIN = "https://www.googletagmanager.com";
+const GOOGLE_ANALYTICS_ORIGINS = [
+    TAG_MANAGER_ORIGIN,
+    "https://www.google-analytics.com",
+    "https://region1.google-analytics.com",
+];
+/** Vercel Analytics only loads from this host while developing; in production it is served same-origin. */
+const VERCEL_SCRIPTS_ORIGIN = "https://va.vercel-scripts.com";
+
+const isDevelopment = process.env.NODE_ENV === "development";
+const isAnalyticsEnabled = Boolean(
+    env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.startsWith("G-")
+);
+const firebaseAuthOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    ? `https://${env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}`
+    : null;
+
+const securityOptions = buildBrowserAppOptions({
+    scriptSrc: [
+        ...(isAnalyticsEnabled ? [TAG_MANAGER_ORIGIN] : []),
+        ...(isDevelopment ? [VERCEL_SCRIPTS_ORIGIN] : []),
+    ],
+    connectSrc: [
+        env.NEXT_PUBLIC_API_URL ?? "",
+        IDENTITY_TOOLKIT_ORIGIN,
+        SECURE_TOKEN_ORIGIN,
+        ...(isAnalyticsEnabled ? GOOGLE_ANALYTICS_ORIGINS : []),
+    ],
+    imgSrc: [
+        GOOGLE_AVATAR_ORIGIN,
+        ...(isAnalyticsEnabled ? [TAG_MANAGER_ORIGIN] : []),
+    ],
+    frameSrc: firebaseAuthOrigin ? [firebaseAuthOrigin] : [],
+});
 
 /**
  * The only paths that do not require a session. Everything else is default-deny, so a
@@ -61,6 +104,10 @@ function pathWithoutLocale(pathname: string, locale: string): string {
 }
 
 export default async function proxy(request: NextRequest) {
+    return applySecurityHeaders(await route(request), securityOptions);
+}
+
+async function route(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     if (isStaticAssetPath(pathname)) {
