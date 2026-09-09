@@ -6,107 +6,94 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue** — spec concluída é arquivada junto da feature e passa a
 constar na seção **Entregues** abaixo. Ciclo de vida: [`README.md`](README.md).
 
-> **Última auditoria:** 2026-09-02 (`/spec --sync`, pós-pipeline de `api-hardening`) · anteriores:
-> 2026-09-01 2ª rodada · 2026-09-01 1ª rodada · 2026-08-31 · **rodada de origem:** semeadura inicial
-> (2026-08-21).
+> **Última auditoria:** 2026-09-02 (`/spec --sync`, pós-pipeline de `api-hardening`, **reconciliada com
+> a 3ª rodada**) · anteriores: 2026-09-01 3ª rodada (pós-merge da PR #5) · 2026-09-01 2ª · 2026-09-01 1ª ·
+> 2026-08-31 · **rodada de origem:** semeadura inicial (2026-08-21).
 >
-> ### ⚠️ A medição desta rodada é de **working tree**, não de histórico
+> ### Este arquivo é o merge de duas auditorias do mesmo dia
 >
-> A entrega de `api-hardening` **não está commitada**. Os 31 arquivos (22 modificados, 9 novos, fora os
-> artefatos de `docs/features/`) existem **só no working tree** da branch `api-hardening-flow` — `git
-> diff --cached` está vazio e `HEAD` é `77c2939`, idêntico a `origin/main`. Isso foi decisão explícita do
-> usuário: os 16 commits do plano ficam para o fim do loop e são aprovados bloco a bloco por ele. É por
-> isso que a etapa `review` do `STATE.md` está `in-progress` e não `done` — a revisão terminou, a execução
-> dos commits não começou.
+> Duas rodadas de `/spec --sync` correram em paralelo sem saber uma da outra, e este índice é a
+> reconciliação das duas:
 >
-> **Consequência metodológica, declarada:** toda evidência de `api-hardening` nesta auditoria vem de
-> `git diff` e de leitura direta dos arquivos em disco. A 2ª rodada de 2026-09-01 fez questão de re-medir
-> `ci-pipeline` contra `eed0fa2` "para que a evidência deixe de ser medição de working tree" — aqui isso
-> **não é possível**, e a auditoria assume o rebaixamento em vez de disfarçá-lo.
+> - a **3ª rodada** fechou `ci-pipeline`, virou a **PR #6** e **está mergeada em `main`**
+>   (`44e3f23`). A spec saiu de `specs/` e vive em
+>   [`docs/features/ci-pipeline/spec.md`](../docs/features/ci-pipeline/spec.md);
+> - a **4ª rodada** (esta) auditou `api-hardening` de ponta a ponta.
 >
-> ### 🛑 Colisão a resolver antes de qualquer coisa: a **PR #6 está aberta**
+> **Sobre `ci-pipeline`, a decisão da 3ª rodada prevalece e não é reaberta aqui.** Esta auditoria havia
+> recomendado segurar o fechamento até a branch protection existir; a decisão foi fechar, está mergeada,
+> e uma auditoria não reverte decisão de produto já tomada. O que sobrevive é o **registro da lacuna**:
+> ver [`ci-pipeline` — fechada com um item em aberto](#ci-pipeline--fechada-com-um-item-em-aberto).
 >
-> Existiu uma **3ª rodada de `/spec --sync`** em 2026-09-02T00:25 que eu não conhecia ao começar — a
-> saída dela não foi mergeada, virou a **PR #6 `docs(specs): close and archive the CI pipeline spec`,
-> hoje `OPEN`** (branch `specs/docs/close-ci-pipeline`, `d136803`). Ela mexe em **4 arquivos**:
-> `specs/ci-pipeline.md` (removido), `docs/features/ci-pipeline/spec.md` (criado, `status: done`),
-> `specs/BACKLOG.md` (regravado) e `specs/research/engineering-baseline.md`.
+> ### A entrega de `api-hardening` **está commitada e pushada** — a medição mudou de figura
 >
-> **Consequências diretas, as duas ruins:**
+> Quando esta rodada começou, a entrega existia só no working tree, e o índice dizia isso em letras
+> garrafais. **Não é mais o caso.** Os **17 commits** estão em `api-hardening-flow`, a branch está no
+> remoto e a **PR #8** (`feat: harden the API edge with security headers, CORS allowlist and rate
+> limits`) está **aberta**.
 >
-> 1. **Esta auditoria e a PR #6 discordam sobre `ci-pipeline`.** Eu o mantive `in-progress`; a #6 o
->    fecha como `done` e arquiva. **A #6 tem precedência de decisão** — o corpo dela diz, com todas as
->    letras, que "a auditoria recomendou ligar a branch protection primeiro; a decisão foi fechar", e
->    redefine `done` como "*o pipeline da feature terminou e saiu do backlog*", não "os cinco itens
->    foram entregues" (ela mesma anota o placar real: **3 de 5 implementados, 2 parciais**). Eu **não**
->    apliquei transição em `ci-pipeline`: o que está escrito abaixo descreve o **sistema de arquivos
->    desta branch**, onde `specs/ci-pipeline.md:4` ainda diz `in-progress`. Reverter uma decisão sua não
->    é atribuição da auditoria.
-> 2. **Este `BACKLOG.md` vai conflitar com o da PR #6.** Os dois regravam o arquivo inteiro a partir de
->    bases diferentes (a #6 saiu de `main`; este saiu de `api-hardening-flow`), e a #6 **deleta**
->    `specs/ci-pipeline.md`, que este arquivo referencia. Ordem de merge sugerida: **mergear a #6
->    primeiro**, depois rebasear `api-hardening-flow` e reconciliar esta seção — ou fechar a #6 e trazer
->    o fechamento de `ci-pipeline` para dentro desta rodada. **Decisão sua**; ver as perguntas em aberto
->    do retorno.
+> Consequência honesta: **o argumento central que sustentava o "não arquivar" morreu.** Ele era "a
+> entrega existe em um único lugar e pode sumir num `git checkout`". A evidência agora é de primeira
+> classe — histórico e remoto. A decisão foi **reavaliada do zero** e **mantida**, por uma razão
+> diferente e menor. Ver [Por que a spec ainda não foi arquivada](#por-que-a-spec-ainda-não-foi-arquivada).
 >
-> **O que a #6 muda no meu argumento sobre arquivar `api-hardening` — nada, e isso é o ponto.** A #6
-> estabelece um precedente mais permissivo (`done` = pipeline terminado, mesmo com item aberto). Mesmo
-> sob **essa** régua, `api-hardening` não qualifica: o pipeline dela **não terminou** — a etapa `review`
-> está `in-progress` e os 16 commits não existem. A decisão de não arquivar sobrevive às duas
-> definições de `done` em disputa no repositório, o que é a forma mais forte que ela poderia ter.
+> As tabelas de veredito abaixo foram levantadas **lendo o código**, não o `handoff.md`, e continuam
+> válidas: o conteúdo auditado é byte a byte o que foi commitado. Onde o texto disser "working tree",
+> leia "o que hoje está nos 17 commits".
 >
-> ### O que mudou desde a última auditoria
+> ### O que mudou nesta rodada
 >
-> 1. **`api-hardening` foi implementada de ponta a ponta.** Os **5 itens do corte de MVP estão no
->    código** e os **4 "Sinais de pronto" estão atendidos** — conferidos um a um em
->    [Onde está `api-hardening`](#onde-está-api-hardening), com ref de arquivo/linha. **A spec permanece
->    `in-progress` e NÃO foi arquivada**; o argumento está na mesma seção.
-> 2. **`ci-pipeline`: um dos 2 itens humanos caiu.** O workflow **rodou de verdade no GitHub** — 5
->    execuções, todas `success`, incluindo **2 em `pull_request`** e **2 em `push` para `main`** —, e as
->    PRs #5 e #7 foram abertas **e mergeadas**. O que sobra é **um** passo: a branch protection. Medido
->    hoje: `gh api …/branches/main/protection` → **404 "Branch not protected"** e
->    `gh api …/rulesets` → **`[]`**. Segue `in-progress`.
-> 3. **Gates re-medidos por esta auditoria, não copiados** — ver [Gates](#gates--medidos-nesta-auditoria).
->    Batem com o `/test` em `pnpm check` e no total de testes; a auditoria acrescenta a quebra por
->    workspace, que o relatório não trazia.
-> 4. **Achados: 3 resolvidos, 1 rebaixado, 5 novos.** O 🔴 do `CORS_ORIGIN` **caiu**; o 🟡 do
->    `isRateLimit()` sem regra **caiu**; o de `apps/api` não declarar `@repo/security` **caiu**. Um anchor
->    apodreceu e foi corrigido (`ci.yml:33` → `:39`). Ver
+> 1. **`api-hardening` implementada de ponta a ponta.** Os **5 itens do corte** estão no código e os
+>    **4 "Sinais de pronto"** atendidos — item a item, com ref de arquivo/linha, em
+>    [Onde está `api-hardening`](#onde-está-api-hardening). **Permanece `in-progress`.**
+> 2. **`ci-pipeline` saiu do backlog** pela PR #6. O item humano que restava — branch protection — segue
+>    **em aberto e sem dono**, e agora é registro de arquivo morto: nenhum `/spec --sync` futuro vai
+>    reconciliá-lo. Reconferido nesta rodada: `gh api …/branches/main/protection` → **404**,
+>    `gh api …/rulesets` → **`[]`**. O que **melhorou** desde a 3ª rodada: o workflow acumula **5
+>    execuções, todas `success`** (2 em `pull_request`, 2 em `push` para `main`).
+> 3. **Gates re-medidos por esta auditoria** — ver [Gates](#gates--medidos-nesta-auditoria).
+> 4. **Achados: 4 resolvidos, 1 anchor corrigido, 5 novos.** Caíram os 3 de escopo de `api-hardening`
+>    (`CORS_ORIGIN`, `isRateLimit()` sem regra, `apps/api` sem `@repo/security`) **e o 🟠 do Node 20**,
+>    que a 3ª rodada registrou como aberto e a **PR #7 já havia corrigido** — ver
 >    [Achados](#achados-da-varredura-que-não-viraram-spec).
-> 5. **Uma deriva corrigida no texto da spec** (`apps/web` × analytics) — ver [Deriva](#deriva-desta-auditoria).
-> 6. **Nova ordem da fila:** com `api-hardening` fora da fila do `/analyze`, o **#1 passa a ser
->    [`transactional-emails`](transactional-emails.md)**, e a justificativa mudou de "herdada" para
->    "medida no grafo de `depends_on`" — ver [Ordem recomendada](#ordem-recomendada).
+> 5. **Uma deriva corrigida** no texto da spec (`apps/web` × analytics) — ver [Deriva](#deriva).
+> 6. **Nova ordem:** com `ci-pipeline` entregue e `api-hardening` fora da fila do `/analyze`, o **#1 é
+>    [`transactional-emails`](transactional-emails.md)** — justificado no grafo de `depends_on`, não na
+>    ordem herdada. Ver [Ordem recomendada](#ordem-recomendada).
+>
+> **Nota sobre a evidência visual.** Desde `7dd4439` os screenshots são gitignored
+> (`docs/features/**/screenshots/`, `docs/features/**/test/e2e/`). Este índice **nunca** citou prints
+> como evidência — cita a descrição do que foi validado, que continua versionada no markdown de cada
+> etapa. Nada a ajustar; registrado para que a próxima rodada não vá procurá-los.
 
 ## Contadores
 
-Sobre as **18 specs que seguem em `specs/`** (a 19ª foi entregue e arquivada em 2026-08-31).
+Sobre as **17 specs que seguem em `specs/`**. Duas foram entregues e arquivadas: `firestore-admin-access`
+(2026-08-31) e `ci-pipeline` (2026-09-01). **Recontados do zero contra o disco em 2026-09-02**, lendo o
+frontmatter de cada arquivo — não somando os dois lados do merge.
 
 | status | qtd |
 |--------|-----|
 | `proposed` | 15 |
 | `approved` | 0 |
-| `in-progress` | 2 |
-| `done` (arquivadas) | 1 |
+| `in-progress` | 1 |
+| `done` (arquivadas) | 2 |
 | `deferred` | 1 |
 | `rejected` | 0 |
 | `superseded` | 0 |
 
-**Por audiência (em `specs/`):** `produto` 8 · `dx` 5 · `confianca` 5.
-**Por esforço (em `specs/`):** P 0 · M 15 · G 3.
+**Por audiência (em `specs/`):** `produto` 8 · `dx` 4 · `confianca` 5.
+**Por esforço (em `specs/`):** P 0 · M 14 · G 3.
 
-*Se a **PR #6** for mergeada, estes contadores viram: `in-progress` **1**, `done` (arquivadas) **2**,
-total em `specs/` **17**.*
-
-**A fila `approved` está vazia.** As duas `in-progress` (`ci-pipeline`, `api-hardening`) estão fora da fila
-do `/analyze` porque o que falta nas duas **não é código**: numa é um clique no GitHub, na outra é a
-aprovação dos commits. A próxima a virar tarefa nova é `transactional-emails`, hoje `proposed` — ou seja,
-**depende de você aprová-la** antes do `/analyze`.
+**A fila `approved` está vazia.** A única `in-progress` é `api-hardening`, e ela está fora da fila do
+`/analyze`: o que falta nela não é código, é o merge da PR #8. A próxima a virar tarefa nova é
+`transactional-emails`, hoje `proposed` — ou seja, **depende de você aprová-la** antes do `/analyze`.
 
 ## Gates — medidos nesta auditoria
 
-Re-executados agora, no working tree, com `--force` onde havia cache. **Não são os números do `/test`
-copiados** — coincidem, e a coincidência é o resultado.
+Re-executados por esta rodada, com `--force` onde havia cache. **Não são os números do `/test`
+copiados** — coincidem, e a coincidência é o resultado. `pnpm check` foi re-rodado **depois** dos 17
+commits e o número não se moveu.
 
 | comando | resultado |
 |---------|-----------|
@@ -133,12 +120,13 @@ entrega (era 21 antes).
 
 ## Onde está `api-hardening`
 
-**Status: `in-progress`. Não arquivada.** O corte está inteiro no código; o que falta é a entrega existir
-como entrega.
+**Status: `in-progress`. Não arquivada.** O corte está inteiro no código, e o código está commitado e
+pushado; o que falta é o merge em `main`.
 
 ### Os 5 itens do corte de MVP
 
-Conferidos no **working tree**, lendo o código — não o `handoff.md`.
+Conferidos lendo o código — não o `handoff.md`. O que foi auditado é byte a byte o conteúdo dos 17
+commits de `api-hardening-flow`.
 
 | item do corte | evidência | veredito |
 |---------------|-----------|----------|
@@ -157,62 +145,53 @@ Conferidos no **working tree**, lendo o código — não o `handoff.md`.
 | Os três apps trazem cabeçalhos com CSP ativa e nenhuma tela quebra (claro/escuro/mobile) | Zero `Refused to …` em 13 telas × light/dark × desktop/390×844 × pt-br/en/es, em dev **e** em `next build && next start`. Os 3 defaults do nosecone que matariam o login estão tratados de propósito e com o porquê no código: COOP `same-origin-allow-popups` (`middleware.ts:56`), COEP desligado (`:57`) e `frame-src`/`child-src` com o `authDomain` (`:99-100`). 18 mutações no código de produção, 18 mortas — 3 delas em runtime | ✅ *(ressalva de desenho, **não** desvio: na `apps/web` a CSP é **Report-Only** — `apps/web/proxy.ts:64,72`. É exatamente a recomendação da própria spec na sua pergunta em aberto: "somente-relatório na primeira entrega da `apps/web`, bloqueando nos demais apps". Report-Only **relata** e não bloqueia; a landing rodou com **zero violações reportadas**)* |
 | Um fork sem a variável de contagem sobe, funciona, e deixa claro que o limite está desligado | `packages/security/index.ts:43-44` (NO-OP) + `instrumentation.ts:23-27` (aviso de boot). Medido ao vivo no `/review` e no `/test`: 25 POSTs em `/auth/sign-in/google` com o limitador desligado → **zero 429**, e o aviso impresso **uma única vez** | ✅ |
 
-### Por que a spec **não** foi arquivada
+### Por que a spec ainda não foi arquivada
 
-Os 5 itens estão no código e os 4 sinais estão atendidos. Ainda assim, `done` + arquivamento seria errado —
-e não por formalismo. Quatro razões, na ordem do peso:
+Os 5 itens estão no código, os 4 sinais estão atendidos, e agora **os commits existem**. A decisão foi
+reavaliada do zero depois disso — e a maior parte do argumento original caiu.
 
-**1. O que o contrato exige e o que ele significa.** O [`README.md`](README.md) diz que a spec sai de
-`specs/` "**só depois de confirmar no código** que o corte de MVP foi entregue". Confirmei no código: essa
-condição está satisfeita. Mas o mesmo README define `in-progress` como "tem uma feature em
-`docs/features/` **em andamento**", e a `/spec-audit` §3 é literal: "Feature em andamento → a spec
-correspondente deve estar `in-progress`". A etapa `review` do `STATE.md` está `in-progress`. A §4 da skill
-resolve o empate na direção conservadora: "Parte implementada, feature em andamento → `in-progress`;
-**não** arquive". O corte não está "parte implementado", o que gera tensão real com a primeira linha
-daquela tabela — e o desempate é o item 2.
+**O que caiu.** Três das quatro razões dependiam de a entrega não estar commitada: que a evidência era de
+working tree e portanto de segunda classe; que 31 arquivos podiam sumir num `git checkout`, deixando o
+backlog a descrever como entregue algo inexistente (a **regressão** da `/spec-audit` §5); e que arquivar
+agora desincronizaria um plano de commits que você ainda ia aprovar bloco a bloco. **Nenhuma das três
+sobrevive**: o histórico existe, está no remoto, e o plano foi executado — inclusive com os 2 arquivos de
+teste que esta auditoria apontou como ausentes do plano (`securityPolicySources.test.ts` na `app` e na
+`web`), hoje versionados.
 
-**2. Arquivar é a auditoria *afirmando* uma entrega cuja aceitação é do usuário.** O usuário reteve
-deliberadamente a aprovação dos 16 commits, bloco a bloco. Mover a spec para
-`docs/features/api-hardening/spec.md` faz três coisas de uma vez: tira o item da lista do que falta,
-declara a feature como história, e faz o `/spec` nunca mais repropor o tema. Se ele reprovar ou reformular
-um bloco na revisão, a entrega muda — e a auditoria já teria escrito que ela acabou. O trabalho da
-auditoria é **verificar**, não **autorizar**.
+**O que resta, e é o suficiente — uma coisa só: a entrega não está em `main`.**
 
-**3. Uma entrega não commitada pode desaparecer, e o arquivamento a tornaria irrecuperável no registro.**
-Os 31 arquivos existem em exatamente um lugar: o working tree. Um `git checkout .`, um stash errado, um
-`git clean` e não há commit de onde voltar. Se a spec estivesse arquivada, o backlog passaria a descrever
-como entregue uma capacidade que não existiria em nenhum lugar — a definição de **regressão** da
-`/spec-audit` §5, que a skill classifica como achado **bloqueante**. Arquivar agora é criar
-deliberadamente a condição que a skill manda caçar.
+O `README.md` define `specs/` como "**apenas o que não foi entregue**", e o sentido operacional de
+"entregue" neste repositório é o que um fork recebe ao clonar. **Um fork que clonar `main` hoje ainda
+responde `Access-Control-Allow-Origin: *`.** Enquanto for assim, tirar a spec da lista do que falta é
+escrever no índice uma coisa que o `main` desmente. Isso não é formalismo: é a diferença entre o backlog
+descrever o core e descrever uma branch.
 
-**4. Precedente, e por que ele não se aplica cegamente.** As duas auditorias de 2026-09-01 recusaram fechar
-`ci-pipeline` e uma das razões foi "nada foi commitado". Só que ali a razão era **causal**: um `ci.yml`
-fora do remoto **não pode** rodar no GitHub — o item do corte dependia do código estar publicado. Em
-`api-hardening` **nenhum** item do corte depende de git: CSP, CORS, limite e log funcionam a partir do
-sistema de arquivos, e foram medidos assim. Já `firestore-admin-access` foi arquivada, e a 2ª rodada de
-2026-09-01 re-mediu tudo contra `eed0fa2` justamente "para que a evidência deixe de ser medição de working
-tree". Os dois precedentes apontam para o mesmo lado: **o repositório trata working tree como evidência de
-segunda classe**, e o arquivamento é o ato que mais exige evidência de primeira.
+**O precedente confirma a linha, e agora são dois casos.** As duas specs já arquivadas tiveram o código
+em `main` no momento do arquivamento: `firestore-admin-access` pela PR #4 (`3089d71`) e `ci-pipeline` pela
+PR #5 (`5b56702`), com a PR #6 fazendo o arquivamento **depois**. Não há precedente de spec arquivada a
+partir de uma branch aberta — e a PR #8 está **`CONFLICTING`** neste momento, o que torna o merge um
+evento real e não uma formalidade.
 
-**Argumento contrário, registrado por honestidade:** a `/spec-audit` §4.1 diz que "o arquivo movido
-pertence ao commit `docs(features): <slug>` daquela feature" — o que sugere que o `git mv` deveria
-acontecer *antes* dos commits, para pegar carona no bloco 16. Não o fiz porque o plano de 16 commits foi
-escrito sem esse arquivo: o `git mv` esvaziaria o bloco 15 (`chore(specs): mark the API hardening spec as
-in progress`, que tem `specs/api-hardening.md` como único arquivo) e injetaria silenciosamente um rename
-no bloco 16. Alterar o conteúdo dos blocos que o usuário vai aprovar um por um, sem ele saber, é pior que
-arquivar uma rodada depois.
+**A régua permissiva da PR #6 também não fecha o caso.** A #6 redefiniu `done` como "o pipeline da feature
+terminou e saiu do backlog", com um item do corte em aberto. Mesmo por essa régua `api-hardening` não
+qualifica hoje: `docs/features/api-hardening/STATE.md:17` ainda marca `review` como `in-progress`, e o
+próprio `/test` exige um **passe humano do login com Google antes do merge** (🔴 M3, ~2 min) cujo modo de
+falha é silencioso — o popup fecha e nada acontece, sem mensagem e sem log. A renovação do ID token após
+1h (⚠️ M4) segue não exercitada. A decisão sobrevive às duas definições de `done` em disputa no
+repositório.
 
 **A condição exata que falta — uma só:**
 
-> Os 16 commits do plano aprovados e aplicados na branch `api-hardening-flow`. No último bloco
-> (`docs(features): api-hardening`) a spec entra como `git mv specs/api-hardening.md
-> docs/features/api-hardening/spec.md`, com `status: done` e a data. Rodar `/spec --sync` depois disso
-> fecha em uma linha.
+> **A PR #8 mergeada em `main`.** Feito isso, `/spec --sync` fecha em uma linha:
+> `git mv specs/api-hardening.md docs/features/api-hardening/spec.md`, com `status: done` e a data — o
+> mesmo movimento que a PR #6 fez para `ci-pipeline`.
 
-O **passe humano do login com Google** (🔴 M3, ~2 min) e a renovação do ID token após 1h (⚠️ M4) são
-exigências que o próprio `/test` declarou **antes do merge**. Não bloqueiam o arquivamento pelo critério do
-`README.md` — nenhum dos dois é item do corte — mas reforçam que a entrega ainda não foi aceita, e o modo
-de falha do primeiro é **silencioso**: o popup fecha e nada acontece, sem mensagem e sem log.
+**A rota alternativa, registrada por honestidade.** A `/spec-audit` §4.1 diz que o arquivo movido pertence
+ao commit `docs(features): <slug>` daquela feature — o que, lido ao pé da letra, colocaria o `git mv`
+**dentro da PR #8**, e não numa rodada posterior. É defensável, e o preço de fazê-lo é acrescentar um
+rename a uma PR que hoje não mergeia. Se você preferir esse caminho, é um `git mv` e uma linha de
+frontmatter; a recomendação continua sendo esperar o merge, porque ele é o evento que torna a afirmação
+verdadeira para quem clona.
 
 ### A limitação que `api-hardening` **não** cobre
 
@@ -227,46 +206,30 @@ a cota da Identity Toolkit do fork. O item do corte diz "as rotas públicas de a
 literalmente o que foi entregue; só não é o que a frase sugere. Rate limit no `/api/auth/session` das
 front-ends ficou **fora do corte** de propósito.
 
-## Por que `ci-pipeline` não fechou — **1 dos 2 itens humanos caiu**
+## `ci-pipeline` — fechada com um item em aberto
 
-> ⚠️ **Leia primeiro a [colisão da PR #6](#-colisão-a-resolver-antes-de-qualquer-coisa-a-pr-6-está-aberta).**
-> Esta seção descreve o estado **desta branch** (`specs/ci-pipeline.md:4` = `in-progress`). A PR #6,
-> aberta, fecha a spec como `done` por decisão sua, com o item 2 reconhecidamente em aberto. Se a #6
-> for mergeada, **esta seção inteira é substituída** pela linha correspondente em **Entregues**.
+Arquivada em [`docs/features/ci-pipeline/spec.md`](../docs/features/ci-pipeline/spec.md) pela **PR #6**,
+mergeada em `main` (`44e3f23`). O corte ficou em **3 de 5 itens implementados e 2 parciais**; a evidência
+item a item, os dois lados da decisão de status e os gates re-executados estão na spec arquivada, em
+"Estado da entrega".
 
-Reconferência de hoje. **O workflow rodou.** Isso encerra, com dado, a segunda razão que sustentava o
-`in-progress` nas duas rodadas de 2026-09-01:
+**O que este índice precisa continuar dizendo:** `main` **não tem branch protection**, então o CI
+**sinaliza e não bloqueia** — a PR #5 foi mergeada sem gate. Reconferido nesta rodada, em 2026-09-02:
+`gh api …/branches/main/protection` → **404 `"Branch not protected"`** e `gh api …/rulesets` → **`[]`**
+(as duas portas de bloqueio do GitHub, as duas fechadas). Ligar exigindo o check `verify`
+(`docs/SETUP.md:122-133`) custa minutos e já está destravado, e **resolve também** o item 2 de
+[`e2e-testing`](e2e-testing.md), que herda a mesma pendência.
 
-| medição de hoje | resultado |
-|-----------------|-----------|
-| `gh run list` | **5 execuções, todas `success`** — 2 em `pull_request` (`ci/feat/github-actions-pipeline`, `specs/docs/close-ci-pipeline`, mais `ci/chore/bump-actions-to-node24`) e 2 em `push` para `main` (`33571925292`, `33582572810`) |
-| `gh workflow list --all` | **`CI  active  347941676`** — deixou de voltar vazio |
-| `git cat-file -e origin/main:.github/workflows/ci.yml` | **presente em `origin/main`** |
-| PRs | **#5 e #7 abertas e mergeadas** (`5b56702`, `77c2939`, ambas em `origin/main`) |
-| `gh api …/branches/main/protection` | **404 `"Branch not protected"`** |
-| `gh api …/rulesets` | **`[]`** |
+**O que melhorou desde a 3ª rodada, e vale registrar porque remove a última desculpa técnica:** o
+workflow deixou de ser recém-nascido. São **5 execuções, todas `success`** — 2 em `pull_request` e 2 em
+`push` para `main` —, `gh workflow list --all` devolve `CI active 347941676`, e o `ci.yml` está em
+`origin/main`. O pré-requisito que o runbook avisava (o GitHub só oferece o check na busca depois de
+tê-lo visto executar) está **amplamente satisfeito**. O `apps/web` na suíte, item 5 do corte, cresceu de
+15 para **22 testes** por causa de `api-hardening`.
 
-Ou seja: "existe no remoto" virou "roda no GitHub" — e continua **não** virando "bloqueia o merge".
-
-O corte de MVP, item a item, medido em `77c2939` + working tree:
-
-| item do corte | evidência | veredito |
-|---------------|-----------|----------|
-| PR e push na principal disparam verificação | `.github/workflows/ci.yml:3-6` + job `verify` em `:19-20`. **Agora comprovado em execução**, não só no código: 5 runs, 2 por `pull_request` e 2 por `push` em `main` | ✅ **e observado** (era "✅ no código") |
-| Cobre lint + tipos de todos os workspaces + testes, **falhando o merge** | `ci.yml:39` → `pnpm turbo run lint typecheck test`. Cobre, roda e reporta; os 4 defeitos deliberados derrubam o gate. **Não bloqueia**: sem protection e sem ruleset, o check é decorativo na hora do merge | ⚠️ **parcial — é o único item humano que resta** |
-| `lint` e `typecheck` viram tasks do turbo | `turbo.json:7-10` (`//#lint`, task da raiz) e `:11-15` (`typecheck`, `dependsOn: []`), ambas `outputs: []`. Medido: 22 tasks no gate | ✅ |
-| Envs das tasks declaradas | `env: []` em `//#lint` (`:9`), `typecheck` (`:14`) e `test` (`:28`); `globalDependencies` inclui `**/.env` (`:3`) | ⚠️ **parcial** — `envMode: loose` (`:5`) segue global e `build` (`:16-25`) não declara env (decisão Q7, rota A) |
-| `apps/web` entra na suíte | `apps/web/package.json`, `apps/web/vitest.config.mts` (`environment: "node"`). **Cresceu de 15 para 22 testes** (3 arquivos) porque `api-hardening` acrescentou `securityHeaders` e `securityPolicySources` | ✅ |
-
-Sinais de pronto: o do **comando único** (local = CI) e o do **clone limpo sem segredo** seguem fechados
-(zero `secrets` no workflow). O da **"PR vermelha sem ninguém rodar nada"** deixou de ser hipótese: o
-check `verify` **apareceu e rodou em PRs reais** — verdes, não vermelhas, mas o mecanismo está provado e a
-capacidade de falhar foi medida localmente e dentro do `act`.
-
-**O que fecha — um passo, humano:** ligar a branch protection em `main` marcando `verify` como status check
-obrigatório (`docs/SETUP.md:122-133`). O pré-requisito que o runbook avisava — o GitHub só oferece o check
-na busca depois de tê-lo visto executar — **está satisfeito desde hoje**. Depois disso, `/spec --sync` →
-`done` + arquivar em `docs/features/ci-pipeline/spec.md`. **Só esse passo troca "sinaliza" por "bloqueia".**
+Como a spec saiu de `specs/`, **nenhum `/spec --sync` futuro vai reconciliá-la contra o código**. Este
+parágrafo, a linha em [Entregues](#entregues) e o "Estado da entrega" da spec arquivada são o único
+registro vivo da lacuna.
 
 ## Ordem recomendada
 
@@ -274,11 +237,10 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 
 | # | id | por que agora |
 |---|----|---------------|
-| — | [`ci-pipeline`](ci-pipeline.md) | 🚧 **`in-progress`, fora da fila do `/analyze`.** Falta **um** passo humano: ligar a branch protection. O workflow já rodou 5 vezes, todas verdes. Ver a seção acima. |
-| — | [`api-hardening`](api-hardening.md) | 🚧 **`in-progress`, fora da fila do `/analyze`.** Corte inteiro no código; falta a aprovação dos 16 commits (+ o passe manual do login Google). Ver [Onde está `api-hardening`](#onde-está-api-hardening). |
+| — | [`api-hardening`](api-hardening.md) | 🚧 **`in-progress`, fora da fila do `/analyze`.** Corte inteiro no código, 17 commits pushados, **PR #8 aberta** (hoje `CONFLICTING`). Falta o merge em `main` + o passe manual do login Google. Ver [Onde está `api-hardening`](#onde-está-api-hardening). |
 | 1 | [`transactional-emails`](transactional-emails.md) | **Promovida ao topo, e a razão não é herança da fila — é o grafo de `depends_on` medido.** É a **raiz da cadeia bloqueada mais profunda do backlog**, 5 specs: `transactional-emails` → `auth-recovery-verification` → `account-settings` → {`account-security-mfa`, `data-rights-lgpd`} (+ `teams-organizations` pendurada direto nela). Uma spec de esforço M destranca cinco. E a dependência **não** é burocrática: o corte de `auth-recovery-verification:43` exige "e-mail traduzido no seu idioma" numa "tela do próprio app — **não** pela página padrão do Firebase", e a página hospedada do Firebase não traduz nem respeita a marca. Estado no código, reconferido hoje: `packages/email/templates/` tem **um único** arquivo (`contact.tsx`), com copy em inglês literal dentro do JSX (`:32-39`), fora do dicionário; o único consumidor é `apps/web/app/[locale]/contact/actions/contact.tsx:3-4`. |
 | 2 | [`auth-recovery-verification`](auth-recovery-verification.md) | Commodity absoluta (10/10 no painel) e ausente: `sendPasswordResetEmail`, `sendEmailVerification` e `updatePassword` retornam **zero ocorrências** em `apps/` + `packages/`. Um fork não pode ir a produção sem "esqueci minha senha" — hoje o único caminho é resetar à mão no console do Firebase. |
-| 3 | [`firebase-emulator-seed`](firebase-emulator-seed.md) | **Subiu de #4 para #3, e o argumento ficou mais forte pela terceira auditoria consecutiva.** Reconferido hoje: `firebase.json` tem **só** `firestore.rules` + `firestore.indexes.json` — **nenhum bloco `emulators`**. Agora o repositório tem **421 testes rodando a cada PR de verdade** (não mais "roda se alguém rodar") e **nenhum deles toca o banco ou as rules**: a única prova de que o `deny-all` funciona continua sendo um `curl` manual de uma auditoria. `api-hardening` acabou de somar ~90 testes e nenhum chega ao Firestore. Cada spec nova que mexe em coleção (`cursor-pagination`, `audit-log`, `account-settings`, `data-rights-lgpd`, `file-upload-storage`) herda essa cegueira. É também a **segunda** dependência de `e2e-testing`, e agora o gargalo dela. |
+| 3 | [`firebase-emulator-seed`](firebase-emulator-seed.md) | **Subiu de #4 para #3, e o argumento ficou mais forte pela terceira auditoria consecutiva.** Reconferido hoje: `firebase.json` tem **só** `firestore.rules` + `firestore.indexes.json` — **nenhum bloco `emulators`**. Agora o repositório tem **421 testes rodando a cada PR de verdade** (não mais "roda se alguém rodar") e **nenhum deles toca o banco ou as rules**: a única prova de que o `deny-all` funciona continua sendo um `curl` manual de uma auditoria. `api-hardening` acabou de somar ~90 testes e nenhum chega ao Firestore. Cada spec nova que mexe em coleção (`cursor-pagination`, `audit-log`, `account-settings`, `data-rights-lgpd`, `file-upload-storage`) herda essa cegueira. **Com `ci-pipeline` fechada, virou o gargalo único de `e2e-testing`.** |
 | 4 | [`cursor-pagination`](cursor-pagination.md) | Todo fork herda "ler a coleção inteira" por construção. O `BaseRepository` já está no Admin SDK, que é a API sobre a qual o cursor será escrito. Depois de haver dados em produção, a correção quebra contrato do SDK. Cruza com a dívida do `update()` (abaixo), que precisa de `orderBy` estável em `createdAt`. |
 | 5 | [`audit-log`](audit-log.md) | O painel **já tem impersonação** e nada registra quem entrou na conta de quem. A mutação sob impersonação já foi bloqueada; o **registro** continua inexistente. |
 | 6 | [`cookie-consent`](cookie-consent.md) | O Google Analytics carrega hoje **sem qualquer consentimento prévio**. **Nota nova de `api-hardening`:** a CSP da `apps/app` só libera as origens do GA quando `NEXT_PUBLIC_GA_MEASUREMENT_ID` começa com `G-` (`apps/app/proxy.ts:26-28`), então a política já tem o gancho de onde pendurar o Consent Mode. |
@@ -289,7 +251,7 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 | 11 | [`observability-logging`](observability-logging.md) | Sem logger estruturado e sem coleta de erro. **O custo de plugar caiu outra vez:** `api-hardening` criou o primeiro log deliberado do repositório (`apps/api/proxy.ts:41-49`, prefixo `[security]`, sem PII) — existe agora um formato a padronizar em vez de um campo vazio. E o "log estruturado e alerta sobre os bloqueios" está explicitamente **fora do corte** de `api-hardening`, apontando para cá. |
 | 12 | [`data-rights-lgpd`](data-rights-lgpd.md) | Obrigação legal com prazo. Depende da área de conta existir; fica mais cara a cada coleção nova. |
 | 13 | [`dashboard-home`](dashboard-home.md) | As duas homes do painel estão literalmente vazias — é a primeira tela de todo fork. |
-| 14 | [`e2e-testing`](e2e-testing.md) | 🔒 **Segue bloqueada.** O gargalo é `firebase-emulator-seed` (#3); `ci-pipeline` continua `in-progress` por causa da branch protection. Ver [Dependências](#dependências-e-bloqueios). |
+| 14 | [`e2e-testing`](e2e-testing.md) | 🔒 **Segue bloqueada, mas por uma razão só agora.** `ci-pipeline` fechou; o gargalo restante é `firebase-emulator-seed` (#3). Ver [Dependências](#dependências-e-bloqueios). |
 | 15 | [`account-security-mfa`](account-security-mfa.md) | Prevalência baixa (MFA 3/10, sessões 1/10). Valor médio, mas fecha a superfície de autenticação. **Ganhou um vizinho:** o 🔴 de revogação de sessão (abaixo) segue de pé e é o mesmo território. |
 
 ### O que **não** foi escolhido para #1, e por quê
@@ -308,7 +270,7 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 
 | spec | `depends_on` | situação em 2026-09-02 |
 |------|--------------|------------------------|
-| [`e2e-testing`](e2e-testing.md) | `ci-pipeline`, `firebase-emulator-seed` | 🔒 **bloqueada por ambas** — mas a natureza do bloqueio mudou. `ci-pipeline` está `in-progress` e o que falta nele (branch protection) é **exatamente** a mesma pendência do item 2 do corte de `e2e-testing` ("bloqueiam o merge quando quebram"): ligar a proteção uma vez resolve para as duas specs. O gargalo **técnico** é `firebase-emulator-seed`, `proposed` e intocada (`firebase.json` sem bloco `emulators`) — sem ele os testes escreveriam num Firebase real, disputando dados entre execuções. |
+| [`e2e-testing`](e2e-testing.md) | `ci-pipeline`, `firebase-emulator-seed` | 🔒 **bloqueada — e agora por uma dependência só. Mudança real de estado nesta rodada.** `ci-pipeline` **fechou** (arquivada pela PR #6, com o item da branch protection em aberto), então das duas dependências **resta uma**: `firebase-emulator-seed`, `proposed` e intocada — medido hoje, `firebase.json` declara apenas `firestore.rules` e `firestore.indexes.json`, **sem bloco `emulators`**. Sem ela os fluxos E2E escreveriam num Firebase real, disputando dados entre execuções. **Promover `firebase-emulator-seed` é o que move esta spec**; o status do CI deixou de ser limitante. Segundo laço, inalterado: o item 2 do corte de `e2e-testing` (`e2e-testing.md:70-71`) diz "bloqueiam o merge quando quebram" e herda **a mesma** pendência de branch protection que `ci-pipeline` deixou em aberto — ligar a proteção uma vez resolve para as duas, e agora é a única forma de fechar aquele item órfão. |
 | [`auth-recovery-verification`](auth-recovery-verification.md) · [`teams-organizations`](teams-organizations.md) | `transactional-emails` | 🔒 bloqueada — é o que põe `transactional-emails` em **#1**. A cadeia continua: `auth-recovery-verification` destrava `account-settings`, que destrava `account-security-mfa` e `data-rights-lgpd`. |
 | [`account-settings`](account-settings.md) | `auth-recovery-verification`, `file-upload-storage` | 🔒 bloqueada — nenhuma das duas entregue |
 | [`account-security-mfa`](account-security-mfa.md) · [`data-rights-lgpd`](data-rights-lgpd.md) | `account-settings` | 🔒 bloqueadas em cadeia (2 níveis abaixo de `transactional-emails`) |
@@ -337,12 +299,11 @@ Specs que não entram na ordem acima. Ficam em `specs/` como memória institucio
 | [`audit-log`](audit-log.md) | Trilha de auditoria de ações sensíveis | confianca | alto | M | `proposed` | ✅ `firestore-admin-access` (entregue) |
 | [`auth-recovery-verification`](auth-recovery-verification.md) | Recuperação de senha e verificação de e-mail | produto | alto | M | `proposed` | 🔒 `transactional-emails` |
 | [`billing-subscription`](billing-subscription.md) | Assinatura Stripe de ponta a ponta | produto | alto | M | `proposed` | — |
-| [`ci-pipeline`](ci-pipeline.md) | Pipeline de CI no GitHub Actions | dx | alto | M | **`in-progress`** | — |
 | [`cookie-consent`](cookie-consent.md) | Consentimento de cookies e Consent Mode | confianca | alto | M | `proposed` | — |
 | [`cursor-pagination`](cursor-pagination.md) | Paginação por cursor no BaseRepository e no SDK | dx | alto | M | `proposed` | ✅ `firestore-admin-access` (entregue) |
 | [`dashboard-home`](dashboard-home.md) | Home do painel com widgets | produto | médio | M | `proposed` | — |
 | [`data-rights-lgpd`](data-rights-lgpd.md) | Direitos do titular: exportar dados e excluir conta | confianca | alto | G | `proposed` | 🔒 `account-settings` |
-| [`e2e-testing`](e2e-testing.md) | Testes E2E e acessibilidade automatizada | dx | médio | G | `proposed` | 🔒 `ci-pipeline`, `firebase-emulator-seed` |
+| [`e2e-testing`](e2e-testing.md) | Testes E2E e acessibilidade automatizada | dx | médio | G | `proposed` | ✅ `ci-pipeline` (entregue) · 🔒 `firebase-emulator-seed` |
 | [`file-upload-storage`](file-upload-storage.md) | Upload de arquivos e storage | produto | alto | M | `proposed` | — |
 | [`firebase-emulator-seed`](firebase-emulator-seed.md) | Emulador do Firebase, seed e primeiro admin | dx | alto | M | `proposed` | ✅ `firestore-admin-access` (entregue) |
 | [`observability-logging`](observability-logging.md) | Observabilidade: erros, tracing e logs estruturados | dx | alto | M | `proposed` | — |
@@ -358,6 +319,21 @@ mostre entregue e pendente lado a lado.
 | id | entregue em | spec arquivada |
 |----|-------------|----------------|
 | `firestore-admin-access` | 2026-08-31 | [`docs/features/firestore-admin-access/spec.md`](../docs/features/firestore-admin-access/spec.md) |
+| `ci-pipeline` | 2026-09-01 | [`docs/features/ci-pipeline/spec.md`](../docs/features/ci-pipeline/spec.md) — ⚠️ **fechada com 1 item do corte em aberto**, ver abaixo |
+
+> ⚠️ **`ci-pipeline` foi fechada por decisão do usuário com o corte em 3 de 5 itens implementados e 2
+> parciais.** A recomendação da auditoria era ligar a branch protection antes de fechar; a decisão foi
+> fechar mantendo o texto do item 2 (*"com falha bloqueando o merge"*) como está. Portanto, aqui `done`
+> significa **"o pipeline da feature terminou e saiu do backlog"**, não "os 5 itens foram entregues".
+>
+> **Pendência que sobrevive ao arquivamento — sem dono:** `main` **não tem branch protection**
+> (`gh api …/branches/main/protection` → **404**, medido em 2026-09-01), então **o CI sinaliza e não
+> bloqueia**: uma PR vermelha pode ser mergeada, e a **PR #5 foi mergeada sem gate**. Ligar exigindo o check
+> `verify` (`docs/SETUP.md:122-133`) custa minutos e já está destravado. `e2e-testing` herda a mesma
+> pendência no seu item 2 — ligar uma vez resolve as duas.
+>
+> Como a spec saiu de `specs/`, **nenhum `/spec --sync` futuro vai reconciliá-la contra o código**. Este
+> parágrafo e o "Estado da entrega" da spec arquivada são o único registro vivo dessa lacuna.
 
 **Evidência dos 5 itens do corte de MVP**, conferida no código em 2026-08-31 (não no `status` gravado):
 
@@ -374,26 +350,34 @@ O arquivo cresceu com o gate de `CORS_ORIGIN` de `api-hardening` e a resolução
 `:29-30`. Corrigido — é o tipo de apodrecimento de referência que a auditoria existe para pegar.
 
 As **duas** features concluídas sem spec — `auth-panel-context` e `impersonation-read-only` — **não
-constam aqui**: o `spec: -` no `STATE.md` das duas está correto, não é vínculo faltando. `ci-pipeline` e
-`api-hardening` têm `spec:` preenchido no `STATE.md` e as specs ainda vivas em `specs/` — que é exatamente
-o estado correto de uma spec `in-progress`. *(`docs/features/` tem 5 pastas e apenas 1 `spec.md`
-arquivado; a segunda, `docs/features/ci-pipeline/spec.md`, existe **só na PR #6**, ainda aberta.)*
+constam aqui**: o `spec: -` no `STATE.md` das duas está correto, não é vínculo faltando. `ci-pipeline`
+tem `spec: ci-pipeline` no `STATE.md` e a spec **arquivada ao lado dele** — vínculo completo nos dois
+sentidos, que é o estado correto de uma spec entregue. `api-hardening` tem `spec: api-hardening` no
+`STATE.md` e a spec **ainda viva em `specs/`** — o estado correto de uma spec `in-progress`.
+*(`docs/features/` tem 5 pastas e **2** `spec.md` arquivados.)*
 
-## Deriva desta auditoria
+## Deriva
 
 **Deriva** = o corte foi implementado diferente do especificado, ou o mundo mudou embaixo da spec.
+A primeira linha é desta rodada; as demais são de rodadas anteriores, preservadas como memória.
 
 | id | o que a spec afirmava | o que o código mostra | ação |
 |----|----------------------|------------------------|------|
-| [`api-hardening`](api-hardening.md) | `:99` — a `apps/web` "é a mais sensível a CSP por causa de scripts de marketing/analytics" | **É o contrário.** O `AnalyticsProvider` tem **um único** consumidor no repositório: `apps/app/app/layout.tsx:3,39`. A `apps/web` não o monta e não carrega script de terceiro nenhum — quem tem analytics é a `apps/app`, e é lá que a CSP precisou nomear `googletagmanager`, `google-analytics` e `region1.google-analytics` (`apps/app/proxy.ts:17-22`) | **texto corrigido na spec** (a spec **fica** em `specs/`, então corrigi em vez de registrar como nota de arquivamento). **A spec estava errada; a implementação não desviou.** Não muda o corte — e a conclusão prática sobreviveu invertida: a landing entrou em Report-Only não por ter scripts, mas por ser onde um fork **vai** bolar tag de marketing |
+| [`api-hardening`](api-hardening.md) **(nova, 2026-09-02)** | `:99` — a `apps/web` "é a mais sensível a CSP por causa de scripts de marketing/analytics" | **É o contrário.** O `AnalyticsProvider` tem **um único** consumidor no repositório: `apps/app/app/layout.tsx:3,39`. A `apps/web` não o monta e não carrega script de terceiro nenhum — quem tem analytics é a `apps/app`, e é lá que a CSP precisou nomear `googletagmanager`, `google-analytics` e `region1.google-analytics` (`apps/app/proxy.ts:17-22`) | **texto corrigido na spec** (ela **fica** em `specs/`, então corrigi em vez de virar nota de arquivamento). **A spec estava errada; a implementação não desviou.** Não muda o corte — e a conclusão prática sobreviveu invertida: a landing entrou em Report-Only não por ter scripts, mas por ser onde um fork **vai** bolar tag de marketing |
+| [`ci-pipeline`](../docs/features/ci-pipeline/spec.md) | "não há `vercel.json`" (correção registrada em `:29-35`) | **Existe nos três apps**: `apps/api/vercel.json`, `apps/app/vercel.json`, `apps/web/vercel.json`, os três com `ignoreCommand: node scripts/skip-ci.js` (`apps/web/scripts/skip-ci.js:5-8` pula o build em commit com `[skip ci]`); o da api tem ainda um `crons` para `/cron/keep-alive`. `.husky/` de fato não existe | texto corrigido. **Não muda o corte** — `vercel.json` governa deploy, não verificação. Vale como aviso para a prática 14 (preview deploy por PR), hoje fora do corte: o `ignoreCommand` já existe e terá de ser considerado |
+| [`ci-pipeline`](../docs/features/ci-pipeline/spec.md) | `:44` — suíte de **23 arquivos** Vitest | 44 arquivos / **331 testes** em 7 tasks na 3ª rodada; **54 arquivos / 421 testes em 8 tasks** hoje, depois de `api-hardening` | anotado como número histórico da descoberta, preservando a baseline que motivou a spec. *(A referência dizia `:37`; corrigida para `:44` na 3ª rodada — o anchor estava 7 linhas acima do texto.)* |
+| [`e2e-testing`](e2e-testing.md) | 23 arquivos, três configs, `apps/web` **sem script de teste** | 8 tasks / 421 testes; `apps/web` na suíte com 22 testes | texto corrigido. **O argumento da spec não muda** — a lacuna nunca foi o número de testes unitários, e sim que nada exercita um fluxo de ponta a ponta. Acrescentado que nenhum componente da landing é renderizado por teste |
+| [`billing-subscription`](billing-subscription.md) | `packages/payments/index.ts:5` — cliente `stripe` em escopo de módulo; refs do webhook em `:36`/`:50`/`:57`/`:61` | `getStripe()` em `:14-24`, devolvendo `null` sem chave; webhook em `:27`/`:43`/`:50`/`:54` | refs corrigidas + **consequência nova para a spec**: toda rota de pagamento precisa tratar o `null` |
+| [`observability-logging`](observability-logging.md) | `packages/analytics/server.ts` está quebrado; `instrumentation-client.ts:1` é só um comentário | os **dois arquivos foram apagados** | achado marcado como resolvido e **um item do corte de MVP marcado como entregue por tabela** ("o código morto de analytics de servidor é removido") |
+| [`api-hardening`](api-hardening.md) | "enquanto `firestore-admin-access` não fechar, endurecer a borda é trancar a porta de uma casa com a parede aberta" | `firestore-admin-access` fechou em 2026-08-31 | risco de ordem marcado como resolvido; acrescentado que o gate automático agora protege contra regressão silenciosa de CSP/CORS. Ref de `packages/payments/index.ts` atualizada |
 
-O `/analyze` detectou essa deriva e, corretamente, **não editou a spec** (editar spec é do `/spec`).
-Registrou em `docs/features/api-hardening/STATE.md` para esta auditoria — o handoff funcionou como
-projetado.
+A deriva nova foi detectada pelo `/analyze`, que corretamente **não editou a spec** (editar spec é do
+`/spec`) e a registrou em `docs/features/api-hardening/STATE.md` para esta auditoria — o handoff funcionou
+como projetado.
 
-**Nenhuma regressão detectada.** A capacidade de `firestore-admin-access` (a única spec `done`) foi
-reconferida: `firestore.rules` intacto, zero import `firebase/*` na `apps/api`, `getFirestoreAdmin()`
-ainda o único caminho ao banco.
+**Nenhuma regressão detectada.** A capacidade de `firestore-admin-access` foi reconferida:
+`firestore.rules` intacto, zero import `firebase/*` na `apps/api`, `getFirestoreAdmin()` ainda o único
+caminho ao banco.
 
 **Deriva de rodadas anteriores, verificada e mantida:** o predicado de posse
 `row.userId !== ctx.subjectProfile.id` continua repetido **3 vezes no mesmo arquivo**
@@ -471,13 +455,21 @@ qualquer spec.
 | String `"Home"` literal fora do dicionário nas duas home pages | `apps/app/…/(common)/(pages)/page.tsx:7` · `apps/app/…/(admin)/admin/(pages)/page.tsx:7` | Viola a regra de ouro 2. |
 | `useHealthCheck` usa `useQuery` direto (`:29`), contra a convenção do escopo | `apps/app/shared/hooks/useHealthCheck.ts` | Viola `apps/app/CLAUDE.md`. |
 | 🟡 **`setTimeout` sem cleanup** no `useEffect` do carrossel: `:24-38` agenda o avanço automático e **não devolve função de limpeza**, com `[api, current]` nas dependências — um timer é agendado a cada avanço e nenhum é cancelado na desmontagem | `apps/web/app/[locale]/(home)/components/cases-client.tsx:29` | Timer disparando depois da desmontagem chama `setCurrent` em componente morto. É a home da landing: o caminho mais percorrido do repo. |
-| 🟡 **`hydration mismatch` num `id` gerado pelo Radix + aviso "Select is changing from uncontrolled to controlled"** | `apps/app/shared/components/ui/PanelNavbarControls.tsx` · `apps/app/shared/components/ui/Sidebar.tsx:96-154` | O `Collapsible` do `GlobalSidebar` produz o mesmo mismatch, e o `GlobalSidebar` é montado pelos **dois** painéis — o aviso aparece em **toda carga do painel**, sem interação. Contradiz a regra do escopo de resolver no servidor todo estado de UI persistido no browser. *(O `Sidebar.tsx` foi tocado por `api-hardening`, mas só no avatar de exemplo — o mismatch não foi endereçado.)* |
-| 🟡 **`turbo run` aborta na primeira falha** (`--continue=false` é o default), então uma PR com dois tipos de defeito mostra só o primeiro | `.github/workflows/ci.yml:39` | **Anchor corrigido nesta auditoria** (era `:33`; a PR #7 mexeu no arquivo). Medido no `/test` do `ci-pipeline`: com `@repo/internationalization#test` vermelho, as tasks de teste de `app`, `web` e `api` nem chegam a rodar. É o comportamento correto, mas quem ler o log da PR verá "3 suítes não rodaram" e pode se confundir. `--continue` resolveria, ao custo de fazer o comando do CI divergir do local. **Agora dá para observar de verdade** — o workflow roda em toda PR. |
+| 🟡 **`hydration mismatch` num `id` gerado pelo Radix + aviso "Select is changing from uncontrolled to controlled"** | `apps/app/shared/components/ui/PanelNavbarControls.tsx` · `apps/app/shared/components/ui/Sidebar.tsx:96-154` | **Escopo ampliado em 2026-09-01** (o registro anterior citava só o `DropdownMenuTrigger`): o `Collapsible` do `GlobalSidebar` produz o mesmo mismatch, e o `GlobalSidebar` é montado pelos **dois** painéis (`(common)/sidebar.tsx:13` e `(admin)/admin/sidebar.tsx:13`). Ou seja, o aviso aparece em **toda carga do painel**, sem interação — não num canto do menu. Contradiz a regra do escopo de resolver no servidor todo estado de UI persistido no browser. *(O `Sidebar.tsx` foi tocado por `api-hardening`, mas só no avatar de exemplo — o mismatch não foi endereçado.)* |
+| 🟡 **`turbo run` aborta na primeira falha** (`--continue=false` é o default), então uma PR com dois tipos de defeito mostra só o primeiro | `.github/workflows/ci.yml:39` | **Anchor corrigido nesta auditoria** (era `:33`; a PR #7 mexeu no arquivo e empurrou o gate 6 linhas). Medido no `/test` do `ci-pipeline`: com `@repo/internationalization#test` vermelho, as tasks de teste de `app`, `web` e `api` nem chegam a rodar (15 de 17 no cenário). É o comportamento correto, mas quem ler o log da PR verá "3 suítes não rodaram" e pode se confundir. `--continue` resolveria, ao custo de fazer o comando do CI divergir do local — daí ser achado, e não correção óbvia. **Agora dá para observar de verdade**: o workflow roda em toda PR. |
 | 🟡 **`apps/app/next.config.ts:19` lista `www.google.com` em `images.domains`** sem uso e sem `remotePattern` correspondente; `domains` está **deprecado** no Next 16 | `apps/app/next.config.ts:19` | Reconferido: `domains: ["lh3.googleusercontent.com", "www.google.com"]`, e `remotePatterns` só declara `lh3`. Origem sem uso numa lista de hosts confiáveis de imagem é superfície gratuita — e agora **divergente** da CSP, que nomeia só `lh3.googleusercontent.com` (`apps/app/proxy.ts:19,39`). Duas allowlists de imagem que discordam. |
 | 🟡 **`/auth/sign-in` e `/auth/sign-up` da api não têm consumidor nenhum e não seguem o contrato `{ error: { code } }`** — devolvem string crua (`sign-in/route.ts:12`, `sign-up/route.ts:26,40`); a primeira responde **500** para credencial inválida | `apps/api/app/(routes)/auth/sign-in/route.ts` · `.../sign-up/route.ts` | Viola a regra de ouro 3. Confirmado no `/develop`: as 20 primeiras requisições do teste de limite voltaram **500**. `api-hardening` acabou de pôr rate limit nessas duas rotas — protegeu endpoints que **ninguém chama e que respondem errado**. A decisão certa provavelmente é removê-las, não consertá-las; enquanto existem, são POST público sem guard queimando cota da Identity Toolkit. |
 | 🟡 **Casamento exato de rota no rate limit deixa variações de fora.** `RATE_LIMITED_PATHS.includes(pathname)` (`apps/api/proxy.ts:38`) não pega `/auth/sign-in/` (barra final) nem futuras `/auth/sign-in/*` | `apps/api/proxy.ts:31-39` | Decisão consciente do `/review` (D-E): `startsWith` limitaria `/auth/sign-in/google` duas vezes. Há teste fixando o comportamento. Revisitar quando entrar a 4ª rota pública. |
 
 ### Higiene pendente dos pipelines
+
+**Branches mergeadas ainda vivas (registrado na 3ª rodada, reconferido em 2026-09-02).** As PRs são
+mergeadas por squash e as branches ficam. `ci/feat/github-actions-pipeline` (PR #5) segue de pé, e a ela
+somaram-se `ci/chore/bump-actions-to-node24` (PR #7) e `specs/docs/close-ci-pipeline` (PR #6) — as três
+mergeadas, as três ainda no remoto. Destoa do padrão do próprio repo: as branches das PRs #1 e #4
+aparecem como `: gone`. Some-se a isso a **`main` local desatualizada**: medida hoje em `5b56702`,
+enquanto `origin/main` está em `44e3f23` — duas PRs à frente. **Nada foi apagado nem sincronizado nesta
+auditoria** — é registro de limpeza pendente, para decisão de quem opera o repositório.
 
 Não é achado de código, mas some do radar se não ficar escrito: o projeto Firebase de desenvolvimento
 (`next-boilerplate-576d0`) acumulou **contas de QA** criadas pelas etapas de quatro pipelines —
@@ -507,9 +499,9 @@ inchar a cada rodada.
 | Widget de feedback | 1/10 | Terceirizar é mais racional que manter no core. |
 | Referral / afiliados | 0/10 | Nenhuma referência do painel entrega. A pesquisa classifica como discurso de blog; o mercado resolve com produto de terceiro. |
 | SSO enterprise · SCIM | 0/10 | Território de provedor especializado. Só entra com o primeiro contrato enterprise — e aí não é mais boilerplate. |
-| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | Estão no **"fora do corte" de `ci-pipeline`** de propósito: dependem de um CI verde e estável para não virarem ruído. **A condição que faltava está quase satisfeita** — o CI agora roda de verdade e as 5 execuções foram verdes; falta só a branch protection. Reavaliar assim que ela estiver ligada. Nota para a prática 14: os três `vercel.json` já trazem `ignoreCommand`, o que muda o desenho do preview por PR. |
+| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | Estão no **"fora do corte" de `ci-pipeline`** de propósito: dependem de um CI verde e estável para não virarem ruído. **A condição chegou:** o CI está em `main` e verde em **5 execuções** — falta só a branch protection. **Argumento a favor de Renovate, agora com desfecho:** a 3ª rodada registrou que as três actions do `ci.yml` miravam Node 20 (removido em 2026-09-23) e que **nenhuma validação local pegou, nem o `act`** — só apareceu quando o workflow rodou na plataforma. A correção veio à mão, pela PR #7. Um bot teria aberto essa PR meses antes; `.github/workflows/*.yml` está no escopo do Renovate, e o agrupamento resolve o "40 PRs/semana" que a nota cita. Nota para a prática 14: os três `vercel.json` já trazem `ignoreCommand`, o que muda o desenho do preview por PR. |
 | Remote Cache do Turbo | prática 1 | Fora do corte de `ci-pipeline` (decisão Q3): é a única peça que arrasta conta e env, e o ganho só aparece com o CI estável. Entra quando doer, com medição — e como opt-in por variável ausente, no padrão do `ARCJET_KEY` (que `api-hardening` acabou de reforçar como o padrão do repo). |
-| Limiar de cobertura que bloqueia merge | prática 5 | Nenhuma das **8** configs de Vitest declara cobertura: não há número para discutir. *(Eram 7; `packages/security` acrescentou a oitava.)* Medir primeiro, gatear depois, e só em pastas críticas. Relatório por workspace **não soma** — exige consolidação na raiz. Cruza com `e2e-testing`, que traz a medição no corte. |
+| Limiar de cobertura que bloqueia merge | prática 5 | Nenhuma das **8** configs de Vitest declara cobertura: não há número para discutir. *(Eram 7; `packages/security` acrescentou a oitava em `api-hardening`.)* Medir primeiro, gatear depois, e só em pastas críticas. Relatório por workspace **não soma** — exige consolidação na raiz. Cruza com `e2e-testing`, que traz a medição no corte. |
 | Changesets / versionamento | opcional-forte | Com pacotes `private: true` e forks que divergem, o valor seria só o changelog. Não paga o processo agora. |
 | Storybook | não apareceu no painel | O `playground` já serve de catálogo vivo dos componentes. |
 | Blog/CMS · status page · changelog público | nível de marketing | Decisão de cada fork, não do core. |
