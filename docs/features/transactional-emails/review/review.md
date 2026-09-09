@@ -369,4 +369,29 @@ specs/transactional-emails.md
 
 ### Commits realizados
 
-_(preenchido pelo orquestrador do `/review` após cada bloco aprovado)_
+Branch renomeada de `next-spec-task` para **`email/feat/transactional-emails`** (autorizada pelo usuário).
+Os 12 blocos entraram na ordem do plano, sem alteração de agrupamento:
+
+| # | hash | mensagem |
+|---|------|----------|
+| A1 | `46fbe9a` | `feat(internationalization): add the email copy branch in the three languages` |
+| A2 | `e5dce27` | `feat(internationalization): expose resolveLocale and the global dictionary subpath` |
+| A3 | `4c933c1` | `fix(email): validate the credentials without disabling the schema` |
+| A4 | `5e2af9c` | `feat(email): send through a lazy client that answers instead of throwing` |
+| A5 | `a0f2ff9` | `feat(email): add the shared layout and the brand constants` |
+| A6 | `270c709` | `feat(email): add the welcome and action-link templates and translate the contact one` |
+| A7 | `fb2ee6c` | `test(email): set the package suite up and cover sending, copy and templates` |
+| A8 | `d322783` | `test(email): guard the credentials, the log privacy, the layout and the previews` |
+| A9 | `e5263b4` | `refactor(web): send the contact message through the shared email facade` |
+| A10 | `affe94e` | `test(web): cover the contact action against a failing send` |
+| A11 | `9901ba3` | `docs(features): transactional-emails` |
+| B1 | `5cda4d5` | `docs(specs): archive the API hardening spec and re-audit the backlog` |
+
+**Não enviados ao remoto.** A branch é local; o push aguarda autorização.
+
+Duas conferências feitas antes de fechar: o rename de `specs/api-hardening.md` chegou ao B1 **como rename**
+(`git show -M --summary` → 63% de similaridade), preservando o histórico do arquivo; e a varredura por
+credencial nos markdowns do A11 não achou nada. Os screenshots das quatro etapas **não entraram** — são
+gitignored desde `7dd4439`, então o A11 tem só os 6 markdowns.
+
+Gate re-executado sobre os commits: `pnpm turbo run lint typecheck test` → **23/23**.
