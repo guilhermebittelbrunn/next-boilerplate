@@ -40,6 +40,8 @@ export const sharedUtilsTranslations = {
             ENTITY_NOT_FOUND: "Entidade não encontrada.",
             ENTITY_CREATE_FAILED:
                 "Não foi possível concluir o cadastro da entidade.",
+            AUTH_RATE_LIMITED:
+                "Muitas tentativas em pouco tempo. Aguarde um instante e tente de novo.",
         },
     },
     en: {
@@ -79,6 +81,8 @@ export const sharedUtilsTranslations = {
                 "This action is not available for your account.",
             ENTITY_NOT_FOUND: "Entity not found.",
             ENTITY_CREATE_FAILED: "Could not finish creating the entity.",
+            AUTH_RATE_LIMITED:
+                "Too many attempts in a short time. Wait a moment and try again.",
         },
     },
     es: {
@@ -122,6 +126,8 @@ export const sharedUtilsTranslations = {
             ENTITY_NOT_FOUND: "Entidad no encontrada.",
             ENTITY_CREATE_FAILED:
                 "No se pudo completar el registro de la entidad.",
+            AUTH_RATE_LIMITED:
+                "Demasiados intentos en poco tiempo. Espere un momento e inténtelo de nuevo.",
         },
     },
 };

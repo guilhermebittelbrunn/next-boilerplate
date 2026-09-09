@@ -1,15 +1,15 @@
 ---
 id: api-hardening
 title: "Endurecimento da borda da API: headers/CSP, rate limit e CORS"
-status: approved
+status: in-progress
 value: alto
 effort: M
 audience: confianca
 area: [apps/api, apps/app, apps/web, packages/security, packages/internationalization]
 mode: ambos
 depends_on: []
-feature: -
-updated: 2026-09-01
+feature: api-hardening
+updated: 2026-09-02
 ---
 
 # Endurecimento da borda da API: headers/CSP, rate limit e CORS
@@ -96,7 +96,7 @@ invadida.
 | `packages/sdk` | Nenhum contrato novo; precisa tratar 429 como caso próprio, não erro genérico. |
 | `apps/api` | Borda ganha cabeçalhos e limite; `CORS_ORIGIN` entra no env tipado. Nenhuma rota muda de forma. |
 | `apps/app` | Cabeçalhos ativos; CSP pode exigir ajuste no que é carregado. Novo estado "muitas tentativas" na tela de login. |
-| `apps/web` | Mesmos cabeçalhos; é a mais sensível a CSP por causa de scripts de marketing/analytics. |
+| `apps/web` | Mesmos cabeçalhos. ⚠️ **Correção de 2026-09-02:** a redação original dizia que a `apps/web` é "a mais sensível a CSP por causa de scripts de marketing/analytics". É o contrário — a `apps/web` **não monta** o `AnalyticsProvider` (o único consumidor é `apps/app/app/layout.tsx:3,39`) e não carrega script de terceiro nenhum; quem tem analytics é a `apps/app`. A sensibilidade da landing é **potencial** (é onde um fork bolta tag de marketing), não atual — e é o que justifica começar em modo somente-relatório ali. Não muda o corte. |
 | `packages/*` | `@repo/security` deixa de ser pacote parcialmente morto; i18n ganha a mensagem do limite. |
 | Infra/env | Origem permitida obrigatória em produção; serviço externo de contagem **opcional**. |
 

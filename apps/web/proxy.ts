@@ -2,10 +2,38 @@
 
 import { getDefaultLocale, locales } from "@repo/internationalization/utils";
 import { secure } from "@repo/security";
+import {
+    applySecurityHeaders,
+    buildBrowserAppOptions,
+} from "@repo/security/middleware";
 import { handleClientError } from "@repo/shared/utils";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
+
+const IDENTITY_TOOLKIT_ORIGIN = "https://identitytoolkit.googleapis.com";
+/** Refreshes the ID token roughly hourly; blocking it kills the session long after sign-in. */
+const SECURE_TOKEN_ORIGIN = "https://securetoken.googleapis.com";
+
+const firebaseAuthOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    ? `https://${env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}`
+    : null;
+
+const securityOptions = buildBrowserAppOptions({
+    connectSrc: [
+        env.NEXT_PUBLIC_API_URL ?? "",
+        IDENTITY_TOOLKIT_ORIGIN,
+        SECURE_TOKEN_ORIGIN,
+    ],
+    frameSrc: firebaseAuthOrigin ? [firebaseAuthOrigin] : [],
+});
+
+/**
+ * The landing carries whatever marketing scripts a fork bolts on, and the cost of a
+ * wrong policy here is a blank page for anonymous visitors. Reporting first surfaces
+ * the real origins in the console without taking the site down while they are found.
+ */
+const REPORT_ONLY = true;
 
 export const config = {
     // matcher tells Next.js which routes to run the proxy on. This runs on all
@@ -38,6 +66,14 @@ const arcjetMiddleware = async (request: NextRequest) => {
 };
 
 export default async function proxy(request: NextRequest) {
+    return applySecurityHeaders(
+        await route(request),
+        securityOptions,
+        REPORT_ONLY
+    );
+}
+
+async function route(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const cookieStore = await cookies();
 

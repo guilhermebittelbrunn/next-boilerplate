@@ -9,12 +9,15 @@ import { HTTP_STATUS } from "./httpStatus";
 export default class FormattedError {
     message: string;
     status: number;
+    /** Seconds the server asked the caller to wait, when it said so. */
+    retryAfterSeconds: number | null;
     translations: (typeof globalTranslations)[keyof typeof globalTranslations];
 
     constructor(error: unknown, locale: Locale = "pt-br") {
         this.translations = globalTranslations[locale];
         this.message = this.formatMessage(error);
         this.status = this.formatStatus(error);
+        this.retryAfterSeconds = this.formatRetryAfter(error);
     }
 
     formatMessage(error: unknown): string {
@@ -78,6 +81,24 @@ export default class FormattedError {
         }
 
         return `${response.status} - ${response.statusText}`;
+    }
+
+    /**
+     * Only the delta-seconds form of `Retry-After` is read: this API answers with a
+     * countdown, never with the HTTP-date the header also permits.
+     */
+    private formatRetryAfter(error: unknown): number | null {
+        if (!(axios.isAxiosError(error) && error.response)) {
+            return null;
+        }
+
+        const rawHeader = error.response.headers?.["retry-after"];
+        if (typeof rawHeader !== "string" && typeof rawHeader !== "number") {
+            return null;
+        }
+
+        const seconds = Number(rawHeader);
+        return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
     }
 
     private isUploadRequest(error: unknown): boolean {
