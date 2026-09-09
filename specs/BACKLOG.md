@@ -6,107 +6,81 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue** — spec concluída é arquivada junto da feature e passa a
 constar na seção **Entregues** abaixo. Ciclo de vida: [`README.md`](README.md).
 
-> **Última auditoria:** 2026-09-01, 2ª rodada (`/spec --sync`, pós-commit) · anterior: 2026-09-01, 1ª
-> rodada · 2026-08-31 · **rodada de origem:** semeadura inicial (2026-08-21).
+> **Última auditoria:** 2026-09-01, 3ª rodada (`/spec --sync`, pós-merge) · anteriores: 2026-09-01 (2ª,
+> pós-commit) · 2026-09-01 (1ª) · 2026-08-31 · **rodada de origem:** semeadura inicial (2026-08-21).
 >
-> **Resultado da 2ª rodada: nada material mudou, e esse é o resultado.** Entre as duas auditorias do dia
-> **nenhuma linha de código mudou** — o que mudou foi o **empacotamento**: os 29 commits do plano do
-> `/review` foram aplicados (`1b4ad2f`…`eed0fa2`, 196 arquivos, +6406/−2008), o working tree está **limpo**
-> e a branch `ci/feat/github-actions-pipeline` está **publicada e sincronizada** com `origin`. Os quatro
-> gates foram **re-executados contra `eed0fa2`** para que a evidência deixe de ser medição de working tree:
-> `pnpm check` **392 arquivos, 0/0** · `turbo run lint typecheck test --force` **21/21** · `pnpm test`
-> **7 tasks / 44 arquivos / 331 testes** · `turbo run typecheck --force` **13/13**. Números idênticos aos da
-> 1ª rodada.
+> **Resultado da 3ª rodada: o pipeline entrou em `main` e rodou de verdade — mas o backlog muda pouco.**
+> A **PR #5 foi aberta, verificada e mergeada**; `origin/main` está em `5b56702` e o `ci.yml` agora vive na
+> branch padrão. O workflow **executou duas vezes, ambas `success`**: run `33568291265` (`pull_request`,
+> 1m35s) e run `33571925292` (`push` em `main`, 1m36s). `gh workflow list --all` devolve
+> `CI  active  347941676`, e o check-run `verify` da PR está `success`. **Nenhuma linha de código de
+> aplicação mudou** desde a 2ª rodada.
 >
-> **A spec [`ci-pipeline`](ci-pipeline.md) permanece `in-progress`** — **2 dos 5 itens do corte cumpridos,
-> 3 parciais**. A 1ª rodada sustentou isso em duas razões; a 2ª reavaliou as duas e **manteve a decisão**:
-> o bloqueio de
-> merge continua inexistente (`gh api …/branches/main/protection` → **404 "Branch not protected"**) e o
-> workflow **nunca rodou** — o `ci.yml` chegou ao remoto, mas numa **branch de feature**, e o gatilho é
-> `pull_request` + `push` para `main`. `gh run list` e `gh workflow list --all` voltam **vazios**: a aba
-> Actions do repositório ainda não conhece o workflow. **"Existe no remoto" não é "roda no GitHub".** Ver
-> [Por que `ci-pipeline` não fechou](#por-que-ci-pipeline-não-fechou).
+> **Evidência reancorada em `origin/main`.** Os gates foram re-executados **por esta auditoria**, e a
+> ancoragem agora é exata: o `HEAD` local e `origin/main` têm a **mesma tree**
+> (`d5bdaaf66b0d6e481094bca65a03e729ec7fff51`), com `git diff HEAD origin/main` vazio — o merge foi squash,
+> então `HEAD` não é ancestral, mas o **conteúdo é idêntico byte a byte**. Medido: `pnpm check` **392
+> arquivos, 0/0** · `turbo run lint typecheck test --force` **21/21 em 1m14s** · `turbo run typecheck
+> --force` **13/13 em 32s** · `turbo run test --force` **7 tasks / 44 arquivos / 331 testes em 21s**. Os
+> quatro exit 0, números idênticos aos das duas rodadas anteriores.
+>
+> **A spec `ci-pipeline` foi fechada como `done` e arquivada** em
+> [`docs/features/ci-pipeline/spec.md`](../docs/features/ci-pipeline/spec.md) — **com 3 de 5 itens do corte
+> implementados e 2 parciais** (era 2/5). O item da *execução visível* fechou nesta rodada. Das duas razões
+> que a seguravam, uma caiu e **outra continua de pé**: o workflow rodou (razão 2, extinta), mas **nada
+> bloqueia o merge** (razão 1, intacta — `gh api …/branches/main/protection` → **404 "Branch not
+> protected"**, reconferido), e a lacuna deixou de ser teórica: **a PR #5 foi mergeada com a proteção
+> desligada.**
+>
+> ⚠️ **A auditoria recomendou ligar a proteção antes de fechar; o usuário decidiu fechar mantendo o texto
+> do item 2.** Registrado em [Entregues](#entregues) e no "Estado da entrega" da spec arquivada. **`done`
+> aqui significa "saiu do backlog", não "tudo foi entregue"** — e a pendência da branch protection não tem
+> dono nem volta por auditoria futura.
+>
+> **1 achado novo, e ele tem prazo:** as três actions do `ci.yml` miram **Node.js 20, deprecado**, com
+> remoção total em **2026-09-23** — 22 dias. Só apareceu porque o workflow rodou; **nenhuma validação local
+> pegou, nem o `act`**. Ver a tabela de achados.
 >
 > **A tabela de achados, a deriva e a ordem da fila não foram refeitas** — foram auditadas na 1ª rodada de
-> hoje e o código não mudou desde então. Os anchors mais carregados foram re-conferidos por amostragem e
-> seguem válidos. Da 1ª rodada: 4 achados removidos por resolução confirmada, 8 acrescentados vindos do
-> pipeline, 5 specs com texto corrigido por deriva, e **uma autocorreção** — ver
-> [Correção da auditoria anterior](#correção-da-auditoria-anterior).
->
-> **Exceção — 1 achado resolvido nesta 2ª rodada:** o `permissions:` ausente no `ci.yml` foi **aplicado**
-> (`permissions: contents: read` no nível do workflow) e saiu da tabela. Foi feito **antes de a PR ser
-> aberta**, de propósito, para que a primeira execução do workflow já rode com o mínimo de privilégio.
+> hoje e o código não mudou desde então. Da 1ª rodada: 4 achados removidos por resolução confirmada, 8
+> acrescentados vindos do pipeline, 5 specs com texto corrigido por deriva, e **uma autocorreção** — ver
+> [Correção da auditoria anterior](#correção-da-auditoria-anterior). Na 2ª, o `permissions:` do `ci.yml`
+> foi aplicado (`ci.yml:11-12`) e saiu da tabela.
 >
 > **Fila `approved`:** [`api-hardening`](api-hardening.md), sem `depends_on` e pronta para o `/analyze`.
 
 ## Contadores
 
-Sobre as **18 specs que seguem em `specs/`** (a 19ª foi entregue e arquivada em 2026-08-31).
+Sobre as **17 specs que seguem em `specs/`**. Duas foram entregues e arquivadas: `firestore-admin-access`
+(2026-08-31) e `ci-pipeline` (2026-09-01). Recontados frontmatter a frontmatter na 3ª rodada de 2026-09-01.
 
 | status | qtd |
 |--------|-----|
 | `proposed` | 15 |
 | `approved` | 1 |
-| `in-progress` | 1 |
-| `done` (arquivadas) | 1 |
+| `in-progress` | 0 |
+| `done` (arquivadas) | 2 |
 | `deferred` | 1 |
 | `rejected` | 0 |
 | `superseded` | 0 |
 
-**Por audiência (em `specs/`):** `produto` 8 · `dx` 5 · `confianca` 5.
-**Por esforço (em `specs/`):** P 0 · M 15 · G 3.
+**Por audiência (em `specs/`):** `produto` 8 · `dx` 4 · `confianca` 5.
+**Por esforço (em `specs/`):** P 0 · M 14 · G 3.
 
-**Fila de execução:** `ci-pipeline` está **fora da fila do `/analyze`** — não porque acabou, mas porque o
-que falta nela é ação humana no GitHub (abrir a PR, ligar a branch protection). A próxima a virar tarefa é
-`api-hardening`.
+**Fila de execução:** `ci-pipeline` saiu do backlog (ver [Entregues](#entregues) — fechada com **1 item do
+corte em aberto**). A próxima a virar tarefa é `api-hardening`.
 
-## Por que `ci-pipeline` não fechou
+## `ci-pipeline` — fechada com um item em aberto
 
-O corte de MVP, conferido item a item **em `eed0fa2`** (na 1ª rodada de hoje a mesma conferência foi feita
-no working tree, porque nada estava commitado; agora o `HEAD` da branch contém tudo, e os números não
-mudaram):
+Arquivada em [`docs/features/ci-pipeline/spec.md`](../docs/features/ci-pipeline/spec.md) em 2026-09-01.
+O corte ficou em **3 de 5 itens implementados e 2 parciais**; a evidência item a item, os dois lados da
+decisão de status e os gates re-executados estão na spec arquivada, em "Estado da entrega".
 
-| item do corte | evidência | veredito |
-|---------------|-----------|----------|
-| PR e push na principal disparam verificação | `.github/workflows/ci.yml:3-6` (`on: pull_request` + `push: branches: [main]`); job `verify` em `:13-14` | ✅ no código |
-| Cobre lint + tipos de todos os workspaces + testes, **falhando o merge** | `ci.yml:33` → `pnpm turbo run lint typecheck test`. Cobre e falha (os 4 defeitos deliberados derrubam o gate, provado local e dentro do `act`). **Não bloqueia** | ⚠️ **parcial** |
-| `lint` e `typecheck` viram tasks do turbo | `turbo.json:7-10` (`//#lint`, task da raiz, precedente `//#clean`) e `:11-15` (`typecheck`, `dependsOn: []`), ambas `outputs: []` | ✅ |
-| Envs das tasks declaradas | `env: []` em `//#lint` (`:9`), `typecheck` (`:14`) e `test` (`:28`); `globalDependencies` inclui `**/.env` (`:3`) | ⚠️ **parcial** — `envMode: loose` (`:5`) segue global e `build` (`:16-25`) não declara env (decisão Q7, rota A) |
-| `apps/web` entra na suíte | `apps/web/package.json:10`, `apps/web/vitest.config.mts` (`environment: "node"`), `__tests__/seo.test.ts` — **15 testes verdes** | ✅ |
-
-Sinais de pronto (`ci-pipeline.md:100-104`): o do **comando único** (local = CI) e o do **clone limpo sem
-segredo** estão fechados — o workflow tem **zero** ocorrências de `secrets` e `build` ficou fora do corte.
-O da **PR vermelha sem ninguém rodar nada** está fechado *localmente* e nunca foi observado numa PR real.
-
-**A decisão de status, explicitada.** Marcar `done` afirmaria que merges são bloqueados quando nada
-bloqueia. Um runbook (`docs/SETUP.md:122-133`) é uma instrução para um humano, não um mecanismo — e
-"documentação não é evidência" é regra da própria `/spec-audit`. Seria exatamente a classe de mentira que
-a linha do `docs/PAYMENTS.md` nesta tabela de achados registra: um documento afirmando uma capacidade que
-o código não tem. Cometê-la no backlog, na auditoria cujo trabalho é pegá-la, tornaria o loop inútil.
-
-**Reavaliação da 2ª rodada (pós-commit).** A segunda razão da 1ª rodada era "nada foi commitado, e um
-`ci.yml` que nunca chegou ao remoto nunca rodou no GitHub". Metade disso caiu: o arquivo **chegou** ao
-remoto (`db53bcc`, na branch publicada). A conclusão, porém, não se move — o arquivo está numa **branch de
-feature**, e o gatilho é `pull_request` + `push` para `main`. Push em branch de feature não dispara nada.
-Medido: `gh run list` **vazio**, `gh workflow list --all` **vazio**, `git cat-file -e
-origin/main:.github/workflows/ci.yml` **falha**. O GitHub não apenas não executou o workflow: ele não o
-**enumera**, porque não está na branch padrão nem tem execução alguma. E a razão principal — a ausência de
-bloqueio — está **intacta**: `gh api repos/:owner/:repo/branches/main/protection` → **404 "Branch not
-protected"**.
-
-Isso **não** é um juízo sobre a qualidade do trabalho: a engenharia está feita, medida e agora empacotada.
-É que a régua da própria spec tem dois passos restantes, os dois humanos.
-
-**O que fecha — dois passos, encadeados** (commitar e publicar já foi feito):
-
-1. **Abrir a PR** de `ci/feat/github-actions-pipeline` para `main`. É isto — e só isto — que faz o workflow
-   **rodar pela primeira vez** e o check `verify` aparecer vermelho/verde numa PR real.
-2. **Ligar a branch protection** (`docs/SETUP.md:122-133`), marcando `verify` como status check obrigatório
-   em `main`. **Só fica selecionável depois do passo 1**: o GitHub só oferece um check na busca depois de
-   tê-lo visto executar — o próprio runbook abre com essa advertência.
-
-Depois dos dois, `/spec --sync` → `done` + arquivar em `docs/features/ci-pipeline/spec.md`. **Só o passo 2
-troca "sinaliza" por "bloqueia".**
+**O que este índice precisa continuar dizendo:** `main` **não tem branch protection** (404, medido em
+2026-09-01), então o CI **sinaliza e não bloqueia** — a PR #5 foi mergeada sem gate. Ligar exigindo o check
+`verify` (`docs/SETUP.md:122-133`) custa minutos e já está destravado, e **resolve também** o item 2 de
+[`e2e-testing`](e2e-testing.md), que herda a mesma pendência. Detalhes e a decisão registrada em
+[Entregues](#entregues).
 
 ## Ordem recomendada
 
@@ -114,7 +88,6 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 
 | # | id | por que agora |
 |---|----|---------------|
-| — | [`ci-pipeline`](ci-pipeline.md) | 🚧 **`in-progress`, fora da fila do `/analyze`.** Commitado e publicado (`eed0fa2`); o que falta é humano e acontece no GitHub: **abrir a PR** (faz o workflow rodar pela 1ª vez) e então **ligar a branch protection**. Ver a seção acima. |
 | 1 | [`api-hardening`](api-hardening.md) | Buraco aberto **hoje**, reconferido nesta auditoria: `apps/api/proxy.ts:15` responde `Access-Control-Allow-Origin` com `process.env.CORS_ORIGIN ?? "*"`, o CSP segue desligado (`packages/security/middleware.ts:14`), o middleware de headers **não é usado por nenhum app**, e a `apps/api` **sequer declara** `@repo/security`. Dois argumentos ficaram mais fortes: (a) `firestore-admin-access` fechou, então trancar a porta deixou de ser paliativo — a parede está de pé; (b) agora existe gate automático, e CSP/CORS são exatamente o tipo de coisa que regride em silêncio num arquivo que ninguém reabre. |
 | 2 | [`transactional-emails`](transactional-emails.md) | Um único template, em inglês literal, fora do dicionário. Desbloqueia recuperação de senha e convites. |
 | 3 | [`auth-recovery-verification`](auth-recovery-verification.md) | Commodity absoluta (10/10 no painel) e ausente. Um fork não pode ir a produção sem "esqueci minha senha". |
@@ -129,14 +102,14 @@ A ordem respeita `depends_on` e prioriza o que **desbloqueia** e o que **fica ma
 | 12 | [`observability-logging`](observability-logging.md) | Sem logger estruturado e sem coleta de erro. **Um item do corte já caiu por tabela** (o código morto de analytics de servidor foi apagado), e o gancho de instrumentação da api funciona — o custo de plugar caiu de novo. |
 | 13 | [`data-rights-lgpd`](data-rights-lgpd.md) | Obrigação legal com prazo. Depende da área de conta existir; fica mais cara a cada coleção nova. |
 | 14 | [`dashboard-home`](dashboard-home.md) | As duas homes do painel estão literalmente vazias — é a primeira tela de todo fork. |
-| 15 | [`e2e-testing`](e2e-testing.md) | 🔒 **Segue bloqueada.** Ver [Dependências](#dependências-e-bloqueios) — o gargalo agora é `firebase-emulator-seed` (#4), não mais o CI. |
+| 15 | [`e2e-testing`](e2e-testing.md) | 🔒 **Segue bloqueada, e o gargalo está confirmado como `firebase-emulator-seed` (#4).** Mesmo que `ci-pipeline` feche hoje, nada se destrava: sem emulador os fluxos escreveriam num Firebase real. Ver [Dependências](#dependências-e-bloqueios). |
 | 16 | [`account-security-mfa`](account-security-mfa.md) | Prevalência baixa (MFA 3/10, sessões 1/10). Valor médio, mas fecha a superfície de autenticação. |
 
 ## Dependências e bloqueios
 
 | spec | `depends_on` | situação em 2026-09-01 |
 |------|--------------|------------------------|
-| [`e2e-testing`](e2e-testing.md) | `ci-pipeline`, `firebase-emulator-seed` | 🔒 **bloqueada por ambas.** `ci-pipeline` está `in-progress`, não `done`; `firebase-emulator-seed` segue `proposed` e intocada. **Mesmo quando o CI fechar, o gargalo continua sendo o emulador** — sem ele os testes escreveriam num Firebase real, disputando dados entre execuções. Há um segundo laço a notar: o item 2 do corte de `e2e-testing` também diz "bloqueiam o merge quando quebram", e herda **a mesma** pendência de branch protection. Ligar a proteção uma vez resolve para as duas specs. |
+| [`e2e-testing`](e2e-testing.md) | `ci-pipeline`, `firebase-emulator-seed` | 🔒 **bloqueada — e a 3ª rodada confirma que o gargalo real é o emulador.** `ci-pipeline` **fechou** (arquivada, com o item da branch protection em aberto), mas isso **não destravou nada sozinho**: `firebase-emulator-seed` segue `proposed` e intocada, e sem ela os fluxos E2E escreveriam num Firebase real, disputando dados entre execuções. Ou seja, promover `firebase-emulator-seed` na fila é o que move esta spec — o status do CI não é mais o limitante. Segundo laço, inalterado: o item 2 do corte de `e2e-testing` (`e2e-testing.md:70-71`) também diz "bloqueiam o merge quando quebram" e herda **a mesma** pendência de branch protection. **Ligar a proteção uma vez resolve para as duas specs** — e agora é a única forma de fechar o item que `ci-pipeline` deixou em aberto. |
 | [`audit-log`](audit-log.md) · [`cursor-pagination`](cursor-pagination.md) · [`firebase-emulator-seed`](firebase-emulator-seed.md) | `firestore-admin-access` | ✅ satisfeita (entregue em 2026-08-31) |
 | [`account-settings`](account-settings.md) | `auth-recovery-verification`, `file-upload-storage` | 🔒 bloqueada — nenhuma das duas entregue |
 | [`account-security-mfa`](account-security-mfa.md) | `account-settings` | 🔒 bloqueada em cadeia |
@@ -162,7 +135,6 @@ Specs que não entram na ordem acima. Ficam em `specs/` como memória institucio
 | [`audit-log`](audit-log.md) | Trilha de auditoria de ações sensíveis | confianca | alto | M | `proposed` | ✅ `firestore-admin-access` (entregue) |
 | [`auth-recovery-verification`](auth-recovery-verification.md) | Recuperação de senha e verificação de e-mail | produto | alto | M | `proposed` | 🔒 `transactional-emails` |
 | [`billing-subscription`](billing-subscription.md) | Assinatura Stripe de ponta a ponta | produto | alto | M | `proposed` | — |
-| [`ci-pipeline`](ci-pipeline.md) | Pipeline de CI no GitHub Actions | dx | alto | M | **`in-progress`** | — |
 | [`cookie-consent`](cookie-consent.md) | Consentimento de cookies e Consent Mode | confianca | alto | M | `proposed` | — |
 | [`cursor-pagination`](cursor-pagination.md) | Paginação por cursor no BaseRepository e no SDK | dx | alto | M | `proposed` | ✅ `firestore-admin-access` (entregue) |
 | [`dashboard-home`](dashboard-home.md) | Home do painel com widgets | produto | médio | M | `proposed` | — |
@@ -183,6 +155,21 @@ mostre entregue e pendente lado a lado.
 | id | entregue em | spec arquivada |
 |----|-------------|----------------|
 | `firestore-admin-access` | 2026-08-31 | [`docs/features/firestore-admin-access/spec.md`](../docs/features/firestore-admin-access/spec.md) |
+| `ci-pipeline` | 2026-09-01 | [`docs/features/ci-pipeline/spec.md`](../docs/features/ci-pipeline/spec.md) — ⚠️ **fechada com 1 item do corte em aberto**, ver abaixo |
+
+> ⚠️ **`ci-pipeline` foi fechada por decisão do usuário com o corte em 3 de 5 itens implementados e 2
+> parciais.** A recomendação da auditoria era ligar a branch protection antes de fechar; a decisão foi
+> fechar mantendo o texto do item 2 (*"com falha bloqueando o merge"*) como está. Portanto, aqui `done`
+> significa **"o pipeline da feature terminou e saiu do backlog"**, não "os 5 itens foram entregues".
+>
+> **Pendência que sobrevive ao arquivamento — sem dono:** `main` **não tem branch protection**
+> (`gh api …/branches/main/protection` → **404**, medido em 2026-09-01), então **o CI sinaliza e não
+> bloqueia**: uma PR vermelha pode ser mergeada, e a **PR #5 foi mergeada sem gate**. Ligar exigindo o check
+> `verify` (`docs/SETUP.md:122-133`) custa minutos e já está destravado. `e2e-testing` herda a mesma
+> pendência no seu item 2 — ligar uma vez resolve as duas.
+>
+> Como a spec saiu de `specs/`, **nenhum `/spec --sync` futuro vai reconciliá-la contra o código**. Este
+> parágrafo e o "Estado da entrega" da spec arquivada são o único registro vivo dessa lacuna.
 
 **Evidência dos 5 itens do corte de MVP**, conferida no código em 2026-08-31 (não no `status` gravado):
 
@@ -196,8 +183,9 @@ mostre entregue e pendente lado a lado.
 
 As duas features já concluídas em `docs/features/` — `auth-panel-context` e `impersonation-read-only` —
 **não nasceram de spec** e por isso não constam aqui. O `spec: -` no `STATE.md` das duas está correto —
-não é vínculo faltando. A terceira, `ci-pipeline`, tem `spec: ci-pipeline` no `STATE.md` e a spec ainda
-viva em `specs/` — que é exatamente o estado correto de uma spec `in-progress`.
+não é vínculo faltando. A terceira, `ci-pipeline`, tem `spec: ci-pipeline` no `STATE.md` e a spec
+**arquivada ao lado dele**, em `docs/features/ci-pipeline/spec.md` — o vínculo está completo nos dois
+sentidos, que é o estado correto de uma spec entregue.
 
 ## Correção da auditoria anterior
 
@@ -217,8 +205,8 @@ cinco casos abaixo **a spec estava errada ou desatualizada** — nenhuma impleme
 
 | id | o que a spec afirmava | o que o código mostra | ação |
 |----|----------------------|------------------------|------|
-| [`ci-pipeline`](ci-pipeline.md) | `:28` — "não há `vercel.json`" | **Existe nos três apps**: `apps/api/vercel.json`, `apps/app/vercel.json`, `apps/web/vercel.json`, os três com `ignoreCommand: node scripts/skip-ci.js` (`apps/web/scripts/skip-ci.js:5-8` pula o build em commit com `[skip ci]`); o da api tem ainda um `crons` para `/cron/keep-alive`. `.husky/` de fato não existe | texto corrigido. **Não muda o corte** — `vercel.json` governa deploy, não verificação. Vale como aviso para a prática 14 (preview deploy por PR), hoje fora do corte: o `ignoreCommand` já existe e terá de ser considerado |
-| [`ci-pipeline`](ci-pipeline.md) | `:37` — suíte de **23 arquivos** Vitest | 44 arquivos / **331 testes** em 7 tasks | anotado como número histórico da descoberta, preservando a baseline que motivou a spec |
+| [`ci-pipeline`](../docs/features/ci-pipeline/spec.md) | "não há `vercel.json`" (correção registrada em `:29-35`) | **Existe nos três apps**: `apps/api/vercel.json`, `apps/app/vercel.json`, `apps/web/vercel.json`, os três com `ignoreCommand: node scripts/skip-ci.js` (`apps/web/scripts/skip-ci.js:5-8` pula o build em commit com `[skip ci]`); o da api tem ainda um `crons` para `/cron/keep-alive`. `.husky/` de fato não existe | texto corrigido. **Não muda o corte** — `vercel.json` governa deploy, não verificação. Vale como aviso para a prática 14 (preview deploy por PR), hoje fora do corte: o `ignoreCommand` já existe e terá de ser considerado |
+| [`ci-pipeline`](../docs/features/ci-pipeline/spec.md) | `:44` — suíte de **23 arquivos** Vitest | 44 arquivos / **331 testes** em 7 tasks, remedidos na 3ª rodada | anotado como número histórico da descoberta, preservando a baseline que motivou a spec. *(A referência dizia `:37`; corrigida para `:44` nesta rodada — o anchor estava 7 linhas acima do texto.)* |
 | [`e2e-testing`](e2e-testing.md) | 23 arquivos, três configs, `apps/web` **sem script de teste** | 7 tasks / 331 testes; `apps/web` na suíte com 15 testes de `seo.ts` | texto corrigido. **O argumento da spec não muda** — a lacuna nunca foi o número de testes unitários, e sim que nada exercita um fluxo de ponta a ponta. Acrescentado que nenhum componente da landing é renderizado por teste |
 | [`billing-subscription`](billing-subscription.md) | `packages/payments/index.ts:5` — cliente `stripe` em escopo de módulo; refs do webhook em `:36`/`:50`/`:57`/`:61` | `getStripe()` em `:14-24`, devolvendo `null` sem chave; webhook em `:27`/`:43`/`:50`/`:54` | refs corrigidas + **consequência nova para a spec**: toda rota de pagamento precisa tratar o `null` |
 | [`observability-logging`](observability-logging.md) | `packages/analytics/server.ts` está quebrado; `instrumentation-client.ts:1` é só um comentário | os **dois arquivos foram apagados** | achado marcado como resolvido e **um item do corte de MVP marcado como entregue por tabela** ("o código morto de analytics de servidor é removido") |
@@ -291,9 +279,17 @@ qualquer spec.
 | `useHealthCheck` usa `useQuery` direto (`:29`), contra a convenção do escopo | `apps/app/shared/hooks/useHealthCheck.ts` | Viola `apps/app/CLAUDE.md`. |
 | 🟡 **`setTimeout` sem cleanup** no `useEffect` do carrossel: `:24-38` agenda o avanço automático e **não devolve função de limpeza**, com `[api, current]` nas dependências — um timer é agendado a cada avanço e nenhum é cancelado na desmontagem | `apps/web/app/[locale]/(home)/components/cases-client.tsx:29` | Timer disparando depois da desmontagem chama `setCurrent` em componente morto. É a home da landing: o caminho mais percorrido do repo. |
 | 🟡 **`hydration mismatch` num `id` gerado pelo Radix + aviso "Select is changing from uncontrolled to controlled"** | `apps/app/shared/components/ui/PanelNavbarControls.tsx` · `apps/app/shared/components/ui/Sidebar.tsx:96-154` | **Escopo ampliado em 2026-09-01** (o registro anterior citava só o `DropdownMenuTrigger`): o `Collapsible` do `GlobalSidebar` produz o mesmo mismatch, e o `GlobalSidebar` é montado pelos **dois** painéis (`(common)/sidebar.tsx:13` e `(admin)/admin/sidebar.tsx:13`). Ou seja, o aviso aparece em **toda carga do painel**, sem interação — não num canto do menu. Contradiz a regra do escopo de resolver no servidor todo estado de UI persistido no browser. |
-| 🟡 **`turbo run` aborta na primeira falha** (`--continue=false` é o default), então uma PR com dois tipos de defeito mostra só o primeiro | `.github/workflows/ci.yml:33` | Medido no `/test`: com `@repo/internationalization#test` vermelho, as tasks de teste de `app`, `web` e `api` nem chegam a rodar (15 de 17 no cenário). É o comportamento correto, mas quem ler o log da PR verá "3 suítes não rodaram" e pode se confundir. `--continue` resolveria, ao custo de fazer o comando do CI divergir do local — daí ser achado, e não correção óbvia. |
+| 🟠 **As três actions do `ci.yml` miram Node.js 20, deprecado — e o prazo é 2026-09-23, daqui a 22 dias.** `actions/checkout@v4` (`:24`), `pnpm/action-setup@v4` (`:29`) e `actions/setup-node@v4` (`:32`) declaram `using: node20`; o runner já as força para Node 24 e emite `warning` em **toda** execução | `.github/workflows/ci.yml:24,29,32` | **Só apareceu quando o workflow rodou de verdade** — as duas execuções trazem a anotação, e **nenhuma validação local pegou, nem o `act`**. É dívida com data marcada num arquivo que **todo fork herda**. Confirmado na origem (o `action.yml` de cada tag declara o runtime): a 1ª major em `node24` é a **v5** nas três, mas as majors atuais são **`checkout` v7.0.1 · `setup-node` v7.0.0 · `action-setup` v6.0.10**. ⚠️ **Subir só para `@v5` já nasce desatualizado** — recomendo ir direto em v7/v7/v6, mesma mudança de 3 linhas. Prazo oficial: Node 24 por padrão desde **2026-06-16**, remoção total do Node 20 em **2026-09-23** ([changelog](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). Correção pontual, não requer spec. |
+| 🟡 **`turbo run` aborta na primeira falha** (`--continue=false` é o default), então uma PR com dois tipos de defeito mostra só o primeiro | `.github/workflows/ci.yml:39` | Medido no `/test`: com `@repo/internationalization#test` vermelho, as tasks de teste de `app`, `web` e `api` nem chegam a rodar (15 de 17 no cenário). É o comportamento correto, mas quem ler o log da PR verá "3 suítes não rodaram" e pode se confundir. `--continue` resolveria, ao custo de fazer o comando do CI divergir do local — daí ser achado, e não correção óbvia. |
 
 ### Higiene pendente dos pipelines
+
+**Branch mergeada ainda viva (registrado na 3ª rodada, 2026-09-01).** A PR #5 foi mergeada por squash, mas
+`ci/feat/github-actions-pipeline` **continua existindo local e remotamente**
+(`origin/ci/feat/github-actions-pipeline`). Destoa do padrão do próprio repo: as branches das PRs #1 e #4
+já aparecem como `: gone`, ou seja, foram apagadas no remoto após o merge. Some-se a isso a `main` local,
+que está em `197bc04` e **80 commits atrás** de `origin/main`. **Nada foi apagado nesta auditoria** — é
+registro de limpeza pendente, para decisão de quem opera o repositório.
 
 Não é achado de código, mas some do radar se não ficar escrito: o projeto Firebase de desenvolvimento
 (`next-boilerplate-576d0`) acumulou **contas de QA** criadas pelas etapas de três pipelines —
@@ -320,7 +316,7 @@ inchar a cada rodada.
 | Widget de feedback | 1/10 | Terceirizar é mais racional que manter no core. |
 | Referral / afiliados | 0/10 | Nenhuma referência do painel entrega. A pesquisa classifica como discurso de blog; o mercado resolve com produto de terceiro. |
 | SSO enterprise · SCIM | 0/10 | Território de provedor especializado. Só entra com o primeiro contrato enterprise — e aí não é mais boilerplate. |
-| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | Estão no **"fora do corte" de `ci-pipeline`** de propósito: dependem de um CI verde e estável para não virarem ruído. **Reavaliar assim que a branch protection estiver ligada** — é a condição que faltava. Nota para a prática 14: os três `vercel.json` já trazem `ignoreCommand`, o que muda o desenho do preview por PR. |
+| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | Estão no **"fora do corte" de `ci-pipeline`** de propósito: dependem de um CI verde e estável para não virarem ruído. **A condição chegou:** o CI está em `main` e verde em duas execuções — falta só a branch protection. **Argumento novo a favor de Renovate (3ª rodada):** o achado 🟠 do Node 20 é exatamente o que um bot de dependências teria pego meses antes, e ninguém percebeu até o workflow rodar na plataforma. `.github/workflows/*.yml` está no escopo do Renovate, e o agrupamento resolve o "40 PRs/semana" que a nota cita. Nota para a prática 14: os três `vercel.json` já trazem `ignoreCommand`, o que muda o desenho do preview por PR. |
 | Remote Cache do Turbo | prática 1 | Fora do corte de `ci-pipeline` (decisão Q3): é a única peça que arrasta conta e env, e o ganho só aparece com o CI estável. Entra quando doer, com medição — e como opt-in por variável ausente, no padrão do `ARCJET_KEY`. |
 | Limiar de cobertura que bloqueia merge | prática 5 | Nenhuma das **7** configs de Vitest declara cobertura: não há número para discutir. Medir primeiro, gatear depois, e só em pastas críticas. Relatório por workspace **não soma** — exige consolidação na raiz. Cruza com `e2e-testing`, que traz a medição no corte. |
 | Changesets / versionamento | opcional-forte | Com pacotes `private: true` e forks que divergem, o valor seria só o changelog. Não paga o processo agora. |
