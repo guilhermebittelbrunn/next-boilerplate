@@ -1,54 +1,75 @@
-import {
-    Body,
-    Container,
-    Head,
-    Hr,
-    Html,
-    Preview,
-    Section,
-    Tailwind,
-    Text,
-} from "@react-email/components";
+import { Hr, Text } from "@react-email/components";
+import type { Locale } from "@repo/internationalization/utils";
+import { emailBrand } from "../brand";
+import { EmailLayout } from "../components/layout";
+import { emailCopy } from "../copy";
+import { interpolate } from "../interpolate";
+import { contactPreviewData } from "../preview-data";
+import type { EmailTemplate } from "../template";
 
-type ContactTemplateProps = {
+export type ContactData = {
     readonly name: string;
     readonly email: string;
     readonly message: string;
 };
 
-export const ContactTemplate = ({
-    name,
-    email,
-    message,
-}: ContactTemplateProps) => (
-    <Tailwind>
-        <Html>
-            <Head />
-            <Preview>New email from {name}</Preview>
-            <Body className="bg-zinc-50 font-sans">
-                <Container className="mx-auto py-12">
-                    <Section className="mt-8 rounded-md bg-zinc-200 p-px">
-                        <Section className="rounded-[5px] bg-white p-8">
-                            <Text className="mt-0 mb-4 font-semibold text-2xl text-zinc-950">
-                                New email from {name}
-                            </Text>
-                            <Text className="m-0 text-zinc-500">
-                                {name} ({email}) has sent you a message:
-                            </Text>
-                            <Hr className="my-4" />
-                            <Text className="m-0 text-zinc-500">{message}</Text>
-                        </Section>
-                    </Section>
-                </Container>
-            </Body>
-        </Html>
-    </Tailwind>
-);
-
-ContactTemplate.PreviewProps = {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    message: "I'm interested in your services.",
+type ContactEmailProps = {
+    readonly locale: Locale;
+    readonly data: ContactData;
 };
 
-export default ContactTemplate;
+const ContactEmail = ({ locale, data }: ContactEmailProps) => {
+    const copy = emailCopy(locale).contact;
+
+    return (
+        <EmailLayout
+            footerNote={interpolate(copy.footerNote, {
+                brand: emailBrand.name,
+            })}
+            locale={locale}
+            preview={interpolate(copy.preview, { name: data.name })}
+        >
+            <Text
+                className="mt-0 mb-4 font-semibold text-2xl"
+                style={{ color: emailBrand.textColor }}
+            >
+                {interpolate(copy.title, { name: data.name })}
+            </Text>
+            <Text className="m-0" style={{ color: emailBrand.mutedTextColor }}>
+                {interpolate(copy.intro, {
+                    name: data.name,
+                    email: data.email,
+                })}
+            </Text>
+            <Hr
+                className="my-4"
+                style={{ borderColor: emailBrand.borderColor }}
+            />
+            <Text
+                className="m-0 font-medium text-sm"
+                style={{ color: emailBrand.textColor }}
+            >
+                {copy.messageLabel}
+            </Text>
+            <Text
+                className="mt-1 mb-0"
+                style={{ color: emailBrand.mutedTextColor }}
+            >
+                {data.message}
+            </Text>
+        </EmailLayout>
+    );
+};
+
+export const contactEmail: EmailTemplate<ContactData> = {
+    id: "contact",
+    subject: (copy) => copy.contact.subject,
+    render: ({ locale, data }) => <ContactEmail data={data} locale={locale} />,
+};
+
+ContactEmail.PreviewProps = {
+    locale: "pt-br",
+    data: contactPreviewData,
+} satisfies ContactEmailProps;
+
+export default ContactEmail;
