@@ -1,15 +1,15 @@
 ---
 id: transactional-emails
 title: E-mails transacionais traduzidos
-status: proposed
+status: in-progress
 value: alto
 effort: M
 audience: produto
 area: [packages/email, packages/internationalization, apps/email, apps/api]
 mode: ambos
 depends_on: []
-feature: -
-updated: 2026-08-21
+feature: transactional-emails
+updated: 2026-09-09
 ---
 
 # E-mails transacionais traduzidos
