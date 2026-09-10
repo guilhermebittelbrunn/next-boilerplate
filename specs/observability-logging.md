@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-09-01
+updated: 2026-09-09
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -25,19 +25,39 @@ invisível até alguém conferir a fatura.
 
 ## O que já existe no repo
 
-- `apps/api/instrumentation.ts:8-15` — **deixou de ser um stub vazio** em 2026-08-31
+- `apps/api/instrumentation.ts:12-31` — **deixou de ser um stub vazio** em 2026-08-31
   (`firestore-admin-access`): o `register()` roda no boot e resolve a instância do Firestore, para que a
-  falta de credencial mate o processo em vez de degradar. Isso prova que o gancho funciona, mas **nenhuma
-  observabilidade passa por ele** — nem logger, nem coletor de erro, nem tracing.
+  falta de credencial mate o processo em vez de degradar. Desde `api-hardening` ele também derruba o boot
+  quando falta `CORS_ORIGIN` em produção (`:17-21`) e emite um aviso de boot quando o rate limit está
+  desligado (`:23-27`). **Ainda assim, nenhuma observabilidade de verdade passa por ele** — nem logger,
+  nem coletor de erro, nem tracing.
   `apps/api/instrumentation-client.ts` **foi apagado** em 2026-09-01 pelo saneamento de `ci-pipeline` — era
   um arquivo só com um comentário, sem exportação. **`apps/app` e `apps/web` não têm arquivo de
   instrumentação nenhum**: hoje o repositório inteiro tem **um** gancho, `apps/api/instrumentation.ts`. Os
   apps que o usuário acessa não têm nem isso.
-- Não há Sentry, OpenTelemetry, logger estruturado ou qualquer coleta de erro em nenhum `package.json`.
-- Registro de erro hoje é `console`, exatamente onde um incidente silencioso custa caro:
-  `apps/api/app/(routes)/webhooks/payments/route.ts:66` (evento de pagamento não tratado) e `:72` (erro no
+- Não há Sentry, OpenTelemetry, logger estruturado ou qualquer coleta de erro em nenhum `package.json`
+  (`sentry`, `opentelemetry`, `@vercel/otel`, `pino`, `winston` e `logger` dão **zero ocorrências** em
+  `apps/` + `packages/`).
+- Registro de erro hoje é `console` cru, exatamente onde um incidente silencioso custa caro:
+  `apps/api/app/(routes)/webhooks/payments/route.ts:59` (evento de pagamento não tratado) e `:65` (erro no
   webhook); `apps/api/app/(routes)/auth/sign-up/route.ts:38` e `apps/api/app/(routes)/users/route.ts:71`
   (falha ao criar perfil).
+- **Mas já existe um formato de log deliberado a padronizar — não a inventar** (medido em 2026-09-09).
+  Duas entregas convergiram, de forma independente, na mesma convenção: linha única, prefixo estável entre
+  colchetes, pares `chave=valor` e **nenhum dado pessoal**. `apps/api/proxy.ts:41-49`
+  (`[security] blocked reason=… path=… method=…`, de `api-hardening`) e `packages/email/index.ts:39-49`
+  (`[email] skipped template=… reason=… locale=…`, de `transactional-emails`), este último com teste
+  dedicado que **reprova** se alguém acrescentar o objeto de erro ao log
+  (`packages/email/__tests__/logPrivacy.test.ts`). **Consequência para esta spec:** o corte deixa de ser
+  "introduzir log estruturado onde não há nenhum" e passa a ser "**promover a convenção que já emergiu**
+  a um helper compartilhado, antes que uma terceira entrega invente a quarta variação". A parte de
+  `console` cru acima continua valendo — hoje o repo tem as duas coisas ao mesmo tempo.
+- **E já existe o primeiro custo medido de não ter isso.** `packages/email/index.ts:120-130` colapsa
+  **três falhas operacionalmente distintas** — cota do provedor estourada, domínio não verificado e chave
+  revogada — num único `reason=provider-error`, com a mesma linha de log. A decisão de descartar o objeto
+  de erro é **correta e deliberada** (ele carrega o endereço do destinatário: `:127`), mas o resultado é
+  que ninguém consegue distinguir "acabou a cota" de "alguém revogou a chave" sem abrir o painel do
+  provedor. É exatamente o buraco que esta spec fecha: um campo de causa que não seja o texto do provedor.
 - `apps/api/app/(routes)/health/route.ts:3-4` — responde `{"message":"OK"}` fixo. **Não verifica nenhuma
   dependência** e não declara renderização dinâmica: responde OK mesmo com o Firestore fora do ar.
 - ✅ **Achado resolvido (`/spec --sync`, 2026-09-01): `packages/analytics/server.ts` foi apagado.** O

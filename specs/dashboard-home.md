@@ -9,7 +9,7 @@ area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-21
+updated: 2026-09-09
 ---
 
 # Home do painel com widgets
@@ -25,12 +25,16 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 
 ## O que já existe no repo
 
-- `apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx:5` — o componente inteiro é
-  `<Header page="Home" /> + <Container><></></Container>`. Doze linhas, incluindo um
-  `biome-ignore` para o fragmento inútil (`:1`). O título `"Home"` (`:8`) é ainda uma **string literal
-  fora do dictionary**, contra a regra de ouro 2.
-- `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx:5` — **idêntica**, mesma string
-  literal, mesmo fragmento vazio.
+- `apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx:4-11` — o componente inteiro é
+  `<Header page="Home" /> + <Container />`. Onze linhas, sem nenhum conteúdo. O título `"Home"` (`:7`) é
+  ainda uma **string literal fora do dictionary**, contra a regra de ouro 2 — e a chave traduzida já
+  existe (`translations/apps/app/pages/common/routes/index.ts:3,17,31`).
+- `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx:7` — **idêntica**, mesma string
+  literal.
+  > **Deriva corrigida (`/spec --sync`, 2026-09-09):** a redação anterior falava em "doze linhas", um
+  > `<Container><></></Container>` e um `biome-ignore` para o fragmento inútil. Nada disso existe hoje —
+  > o fragmento vazio e o `biome-ignore` foram removidos e o arquivo tem onze linhas. **O argumento não
+  > muda:** a página segue vazia. A spec estava desatualizada; a implementação não desviou.
 - `packages/design-system/components/ui/chart.tsx` — wrapper de gráfico completo (`ChartContainer`,
   `ChartStyle`, tooltip/legend), reexportado no barrel em `components/ui/index.ts:8`, com `recharts`
   `^2.15.4` já instalado (`packages/design-system/package.json:31`). **Não é renderizado em lugar

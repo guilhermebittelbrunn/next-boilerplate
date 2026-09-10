@@ -87,3 +87,37 @@ Consequência prática: toda funcionalidade que precise falar com o usuário for
 - De onde vem o idioma do envio na ausência de preferência salva? — **recomendação:** do locale da requisição que originou a ação, com pt-br como padrão.
 - A rota de contato da `apps/web` migra agora ou fica como está? — **recomendação:** migrar; é o consumidor real que valida a base sem inventar caso de teste.
 - Layout com Tailwind (como o template atual) ou tabelas clássicas? — **recomendação:** manter Tailwind via React Email, que é o que já está em uso, aceitando as limitações em clientes antigos.
+
+## Estado da auditoria — 2026-09-09 (`/spec --sync`)
+
+> As seções acima descrevem o repo **antes** da implementação e são preservadas de propósito: são o
+> "antes" que justificou a tarefa. Esta seção é a única com o estado atual.
+
+**Os 6 itens do corte estão implementados no código** — reconferidos um a um nesta auditoria:
+
+| # | item do corte | evidência |
+|---|---------------|-----------|
+| 1 | forma única e tipada de enviar, resolvendo assunto e corpo pelo idioma | `packages/email/index.ts:88-131`; locale em `:95`, assunto e corpo pelo dicionário em `:116-117` |
+| 2 | layout comum, marca em um lugar só | `packages/email/components/layout.tsx` + `packages/email/brand.ts:6-17`, consumido pelos 3 templates e pelo `action-button.tsx` |
+| 3 | árvore de e-mail no i18n com paridade cobrada | `translations/packages/email/index.ts`, pendurada em `translations/packages/index.ts:6,12,18`; o `parity.test.ts:15-23` varre recursivamente, **sem lista fixa de ramos**, então cobre o ramo novo sem alteração |
+| 4 | dois templates reais sobre a base | `templates/welcome.tsx:49` e `templates/action-link.tsx`, mais o `contact.tsx` migrado |
+| 5 | templates revisáveis no preview da 3003 nos 3 idiomas | 3 templates com `PreviewProps` em pt-br (ex.: `welcome.tsx:56-59`) + 6 wrappers em `templates/previews/*.{en,es}.tsx` = 9; `apps/email/package.json:7` |
+| 6 | falha de envio não derruba a operação e fica registrada | `index.ts:99-130` — união discriminada, nunca lança; log de uma linha sem destinatário em `:39-49` |
+
+**Mesmo assim a spec permanece `in-progress`. O que falta não é código: é o merge.** Os 13 commits estão
+na branch `email/feat/transactional-emails`, pushados, **sem PR aberta** e ausentes de `origin/main`. O
+`README.md:115` define `done` como "entregue e **confirmada no código**", e neste repo "o código" tem
+significado `main` — foi essa a régua aplicada a `api-hardening` em 2026-09-02 (17 commits pushados, PR
+aberta, mantida `in-progress`), arquivada só depois do merge de `920ef6c`. **Aqui o caso é mais fraco que
+o precedente:** lá havia PR e, com ela, uma execução verde de CI na branch; aqui `.github/workflows/ci.yml:3-5`
+só dispara em `pull_request` e em `push` para `main`, e `gh run list --branch email/feat/transactional-emails`
+volta **vazio** — estes 13 commits nunca foram validados pela plataforma.
+
+**Lacuna de corte registrada (não bloqueia, mas viaja com a spec):** a base não tem **nenhum consumidor
+alcançável**. `welcome` e `action-link` não têm chamador em produção, e o `contact` tem um só
+(`apps/web/app/[locale]/contact/actions/contact.tsx:16`) que por sua vez **não tem chamador nenhum** — o
+formulário da landing é maquete, sem `<form>` e com campos que não correspondem aos parâmetros da action.
+O item 6 do corte ("falha de envio não derruba a operação") está entregue e coberto por teste, mas nunca
+foi exercitado por um caminho real. **Consequência para quem vier depois:** a primeira spec a disparar um
+e-mail de verdade — `auth-recovery-verification` — é que vai descobrir qualquer defeito de integração
+desta base. O envio real também segue sem prova: exige domínio com SPF/DKIM, que é passo manual de DNS.
