@@ -9,7 +9,7 @@ area: [apps/api, packages/sdk, apps/app, packages/design-system]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-08-31
+updated: 2026-09-09
 ---
 
 # Paginação por cursor no BaseRepository e no SDK
@@ -32,7 +32,7 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
   Hoje `findAll()` aplica o mapper (`:44-46`), como `findById()` (`:60-64`). A reconciliação de formato
   saiu do escopo desta spec.
 - `apps/api/(shared)/repositories/entity.repository.ts:12-33` — `listByUserId` filtra `deletedAt` em
-  memória (20-23) e ordena por `createdAt` em memória (28-32).
+  memória (`:25`) e ordena por `createdAt` em memória (`:27`).
 - `apps/api/(shared)/repositories/user.repository.ts:32-43` — `list({type})` chama `findAll()` e filtra por
   tipo em memória (34-36); depois faz **uma chamada ao Admin SDK por usuário** (38-40, 52-63).
 - `packages/sdk/src/actions/entity/action.ts:15-22` e

@@ -9,7 +9,7 @@ area: [apps/app, apps/web, packages/analytics, packages/design-system, packages/
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-21
+updated: 2026-09-09
 ---
 
 # Consentimento de cookies e Consent Mode
@@ -39,7 +39,7 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
   idioma (`packages/internationalization/utils/cookies.ts:1`) e o cookie de sessão
   (`packages/auth/session.ts:14`). **Não existe banner nem componente de consentimento em lugar nenhum**,
   inclusive no `packages/design-system`.
-- `packages/shared/utils/helpers/cookies.ts:2,16,38` — `setCookie` / `getCookie` / `removeCookie` já
+- `packages/shared/utils/helpers/cookies.ts:2,16,31` — `setCookie` / `getCookie` / `removeCookie` já
   existem como helpers de cliente (`SameSite=Lax`, sem flag `secure`). Peça reaproveitável para guardar a
   escolha — não precisa reinventar.
 - **Lacuna:** nenhuma camada entre o visitante e as tags. O consentimento simplesmente não é um conceito

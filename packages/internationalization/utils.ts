@@ -16,3 +16,17 @@ export const getDefaultLocale = () =>
     (typeof process !== "undefined" &&
         process.env.NEXT_PUBLIC_DEFAULT_LOCALE) ||
     locales[0];
+
+/** Narrows any candidate (cookie, URL segment, caller argument) to a supported locale. */
+export function resolveLocale(value: string | null | undefined): Locale {
+    if (value && locales.includes(value as Locale)) {
+        return value as Locale;
+    }
+
+    const fallback = getDefaultLocale();
+    if (typeof fallback === "string" && locales.includes(fallback as Locale)) {
+        return fallback as Locale;
+    }
+
+    return locales[0];
+}

@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-08-31
+updated: 2026-09-09
 ---
 
 # Trilha de auditoria de ações sensíveis
@@ -48,9 +48,11 @@ suporte mais poderoso do produto operando sem contrapartida.
   (`packages/shared/utils/helpers/auth-request-headers.ts:12`, `packages/auth/types.ts:22`,
   `apps/app/shared/lib/authRequestHeaders.ts:19`) — nenhum handler, coleção ou rota.
 - Sem logger estruturado: só `console.error/warn` avulso (`apps/api/app/(routes)/users/route.ts:71`,
-  `.../webhooks/payments/route.ts:66,72`). O `apps/api/instrumentation.ts` **deixou de ser um stub vazio**
-  em 2026-08-31 (`firestore-admin-access`): o `register()` (`:8-15`) roda no boot, mas só resolve a instância
-  do Firestore. O gancho passou a existir — nenhuma instrumentação de log foi plugada nele.
+  `.../webhooks/payments/route.ts:59,65`). O `apps/api/instrumentation.ts` **deixou de ser um stub vazio**
+  em 2026-08-31 (`firestore-admin-access`): o `register()` (`:12-31`) roda no boot, resolve a instância do
+  Firestore e, desde `api-hardening`, derruba o boot sem `CORS_ORIGIN` em produção (`:17-21`) e avisa
+  quando o rate limit está desligado (`:23-27`). O gancho passou a existir — **nenhuma instrumentação de
+  log foi plugada nele**.
 - **Lacuna:** nenhum evento sensível é persistido e nenhuma retenção de log de acesso está configurada.
 
 ## Evidência de mercado

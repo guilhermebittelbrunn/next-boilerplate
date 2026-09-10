@@ -7,7 +7,8 @@
     "./keys": "./keys.ts",
     "./server": "./server.ts",
     "./client": "./client.ts",
-    "./utils": "./utils.ts"
+    "./utils": "./utils.ts",
+    "./translations/global": "./translations/global.ts"
   },
   "scripts": {
     "test": "NODE_ENV=test vitest run",

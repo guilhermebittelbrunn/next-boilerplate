@@ -9,7 +9,7 @@ area: [raiz, apps/app, apps/web, packages/design-system]
 mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 feature: -
-updated: 2026-09-01
+updated: 2026-09-09
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -32,17 +32,29 @@ alguém olhar.
 - A prova de que a prática é levada a sério: `docs/features/auth-panel-context/test/e2e/` guarda **22
   capturas de tela versionadas** (e mais 4 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
   incluindo o fluxo de impersonação.
-- Suíte automatizada atual (**medida em 2026-09-01**): **7 tasks de teste / 331 testes**, todos de
-  unidade/integração estreita — `apps/api` 118, `apps/app` 135, `@repo/auth` 29, `@repo/shared` 15,
-  `apps/web` 15, `@repo/internationalization` 11, `@repo/payments` 8. **Nenhum sobe um app de verdade**, e
-  **nenhuma** das sete configs declara **cobertura**: não existe medida nem baseline para discutir.
+- Suíte automatizada atual (**medida em 2026-09-09, 2ª rodada**): **9 tasks de teste / 573 testes em 63
+  arquivos**, todos de unidade/integração estreita — `apps/app` 153, `apps/api` 152, `@repo/email` 131,
+  `@repo/security` 31, `@repo/auth` 29, `apps/web` 27, `@repo/internationalization` 27, `@repo/shared` 15,
+  `@repo/payments` 8. **Nenhum sobe um app de verdade**, e **nenhuma** das nove configs declara
+  **cobertura**: não existe medida nem baseline para discutir.
 - `apps/web` **entrou** na suíte (`package.json:10`, `vitest.config.mts` com `environment: "node"`,
   `__tests__/seo.test.ts`), mas só com lógica pura de SEO — **nenhum componente da landing é renderizado
   por teste**. Não há Playwright, Cypress nem `axe` em nenhum `package.json` do repositório.
-  > **Deriva corrigida (`/spec --sync`, 2026-09-01):** a redação original falava em 23 arquivos, três
-  > configs e `apps/web` sem script de teste. As entregas de `firestore-admin-access` e `ci-pipeline`
-  > mudaram isso. **O argumento da spec não muda** — a lacuna nunca foi o número de testes unitários, e sim
-  > que nada exercita um fluxo de ponta a ponta. Essa lacuna segue intacta.
+  > **Deriva corrigida (`/spec --sync`; números reatualizados em 2026-09-09, 2ª rodada):** a redação
+  > original falava em 23 arquivos, três configs e `apps/web` sem script de teste. Quatro entregas mudaram
+  > isso — `firestore-admin-access`, `ci-pipeline`, `api-hardening` (oitava config, `@repo/security`) e
+  > `transactional-emails`, que acrescentou a **nona** (`@repo/email`, 131 testes) e levou o total de 421 a
+  > **573**. **O argumento da spec não muda** — a lacuna nunca foi o número de testes unitários, e sim que
+  > nada exercita um fluxo de ponta a ponta. Essa lacuna segue intacta: os 131 testes novos de e-mail
+  > cobrem render e política de log, e **nenhum** deles alcança o único consumidor de produção da feature,
+  > que é inalcançável pela UI.
+- **Novo argumento a favor desta spec (2026-09-09):** a suíte já produz **falha intermitente**.
+  `apps/app/__tests__/securityPolicySources.test.ts:92` estourou o `testTimeout` padrão de 5000 ms numa de
+  duas execuções de `pnpm turbo run lint typecheck test --force` nesta auditoria; isolado, passou 3/3. A
+  causa é estrutural: cada caso faz `vi.resetModules()` + `await import("@/proxy")` (`:60-61`),
+  reconstruindo o grafo inteiro do proxy, e `apps/app/vitest.config.mts` **não declara `testTimeout`**. Um
+  gate de merge instável é pior que gate nenhum — e é exatamente o que a prática 2 desta spec precisa que
+  seja confiável.
 - **Lacuna:** a única garantia de que os fluxos principais funcionam é **humana e pontual**; nada a repete
   sozinho, e nada disso pode rodar como gate de merge.
 

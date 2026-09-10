@@ -1,7 +1,7 @@
 ---
 id: api-hardening
 title: "Endurecimento da borda da API: headers/CSP, rate limit e CORS"
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: confianca
@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/security, packages/internationaliz
 mode: ambos
 depends_on: []
 feature: api-hardening
-updated: 2026-09-02
+updated: 2026-09-09
 ---
 
 # Endurecimento da borda da API: headers/CSP, rate limit e CORS
@@ -132,12 +132,65 @@ invadida.
   dela (verificado em claro/escuro e mobile).
 - Um fork sem a variável do serviço de contagem sobe, funciona, e deixa claro que o limite está desligado.
 
+## Estado da entrega — auditado em 2026-09-09 (pós-merge da PR #8)
+
+Entregue pela **PR #8** (`920ef6c`, `feat: harden the API edge with security headers, CORS allowlist and
+rate limits`), mergeada em `main` em 2026-09-09. A auditoria que fechou esta spec leu **o código mergeado**
+— não o `handoff.md` nem o `status` gravado — e reconfirmou que a resolução dos conflitos da PR (que esteve
+`CONFLICTING`) **não comeu nenhum item do corte**.
+
+### Evidência por item do corte
+
+| item do corte | evidência no código mergeado | veredito |
+|---------------|------------------------------|----------|
+| Cabeçalhos de segurança nos três apps, **com CSP ativa** | `packages/security/middleware.ts:146-160` (`applySecurityHeaders`, que injeta na resposta que o proxy já possui, em vez do `createMiddleware` — incompatível com as decisões de locale/sessão/CORS) + os 3 consumidores reais: `apps/api/proxy.ts:23,51-53`, `apps/app/proxy.ts:107`, `apps/web/proxy.ts:68-74`. Duas políticas: `buildApiOptions()` (`:110-139`, `defaultSrc 'none'` — a API só serve JSON) e `buildBrowserAppOptions()` (`:60-104`). O `contentSecurityPolicy: false` que a spec citava **não existe mais** | ✅ implementado |
+| Origem sem coringa, via env tipado, falhando cedo em produção | Coringa extinto: `apps/api/(shared)/lib/cors.ts:67-81` devolve a origem **validada** da allowlist, nunca `*`; sem match, `apps/api/proxy.ts:93-95` recusa com `AUTH_FORBIDDEN_ORIGIN`/403. Env tipado: `apps/api/env.ts:21` (`CORS_ORIGIN: z.string().optional()`), lido em `proxy.ts:19` como `env.CORS_ORIGIN`. Falha cedo: `apps/api/instrumentation.ts:17-21`. Fora de produção cai numa allowlist de `localhost:3000/3001` (`cors.ts:8,39`), **não** num coringa | ✅ implementado *(ressalva: o gate lança mas não encerra o processo — ver abaixo)* |
+| Limite nas rotas públicas de auth, com 429 e indicação de espera | `apps/api/proxy.ts:31-39` (as 3 rotas) → `:103-112` → `packages/security/index.ts:39-79`, com `slidingWindow` de fato registrado (`:50-54`, 20/60s). O 429 sai em `proxy.ts:77-88` com `error.code = AUTH_RATE_LIMITED` e `Retry-After`, legível por script cross-origin graças a `Access-Control-Expose-Headers` (`cors.ts:59,78`) | ✅ implementado |
+| Limite **opt-in**: sem a variável, o app sobe e funciona | `packages/security/index.ts:42-44` devolve `{ allowed: true, enforced: false }` antes de instanciar o Arcjet. `packages/security/keys.ts:9-15` trata string vazia como ausente — o valor que os `.env.example` distribuem | ✅ implementado |
+| Pedido bloqueado é observável e não some em silêncio | `apps/api/proxy.ts:41-49` (`logBlocked`: linha única, prefixo `[security]`, `reason`/`path`/`method`, **sem IP, header ou body**), chamado na recusa de origem (`:63`) e de limite (`:107`); complementado por `instrumentation.ts:23-27`, que avisa no boot que o limite está desligado | ✅ implementado |
+
+### Sinais de pronto — conferidos
+
+Os quatro atendidos. `AUTH_RATE_LIMITED` existe nos três idiomas
+(`packages/internationalization/translations/packages/shared/utils.ts:43,84,129`) e `AUTH_FORBIDDEN_ORIGIN`
+idem (`:25,69,111`). Gates re-medidos nesta auditoria: `pnpm check` **404 arquivos, 0 erros**;
+`pnpm turbo run lint typecheck test --force` **22/22 tasks, 0 cached**; `pnpm turbo run test --force`
+**8 workspaces · 54 arquivos · 421 testes**, todos verdes — incluindo os 31 de `@repo/security`, a suíte
+nova desta entrega.
+
+### O que fica em aberto depois do arquivamento
+
+Registrado aqui porque, saindo a spec de `specs/`, nenhum `/spec --sync` futuro reconcilia estes pontos:
+
+1. 🔴 **Passe manual do login com Google nunca foi feito com conta real.** O `/test` provou o mecanismo do
+   COOP via `postMessage`, não o fluxo ponta a ponta. O modo de falha é silencioso: o popup fecha e nada
+   acontece, sem mensagem e sem log. Custa ~2 minutos.
+2. ⚠️ **O gate de `CORS_ORIGIN` em produção não derruba o processo.** `apps/api/instrumentation.ts:17-21`
+   lança, o Next imprime `Failed to prepare server` e **fica no ar respondendo 500 a tudo** — um health
+   check que só faz ping na porta veria o container saudável. Ou o health check distingue 5xx, ou o gate
+   chama `process.exit(1)`.
+3. **Na `apps/web` a CSP é Report-Only** (`apps/web/proxy.ts:36,68-74`), não bloqueante. É exatamente a
+   recomendação registrada na pergunta em aberto desta spec, não um desvio — mas o item 1 do corte diz
+   "com CSP ativa", então a landing só cumpre metade. A política rodou com **zero violações reportadas**:
+   virar a chave é barato e ninguém tem a tarefa.
+4. **O rate limit não protege o formulário de login.** O login por e-mail/senha das front-ends vai direto
+   do browser a `identitytoolkit.googleapis.com` via `packages/auth/client.ts`, sem tocar a `apps/api`. O
+   corte entrega limite na superfície da API, que é literalmente o que ele promete — só não é o que a
+   frase sugere a um leitor apressado.
+5. **`isRateLimitEnforced()` (`packages/security/index.ts:32`) e `FormattedError.retryAfterSeconds`
+   (`packages/shared/utils/helpers/formattedError.ts:13,20`) não têm consumidor** fora dos testes. A
+   cadeia para levar a espera até a tela está inteira e para no último metro: o toast diz "aguarde um
+   instante", sem o número que o servidor mandou.
+
 ## Perguntas em aberto
+
+*(Todas resolvidas na entrega; preservadas como registro da decisão.)*
 
 - Arcjet (já instalado, chave opcional) ou Upstash Redis (o que a nota de engenharia sugere) para o
   contador? — **recomendação:** Arcjet, por já estar no repo e seguir o padrão de opt-in; reavaliar se o
-  limite por rota ficar caro.
+  limite por rota ficar caro. → **Decidido: Arcjet** (`packages/security/index.ts:46-56`).
 - CSP em modo somente-relatório primeiro ou já bloqueando? — **recomendação:** somente-relatório na primeira
-  entrega da `apps/web`, bloqueando nos demais apps.
+  entrega da `apps/web`, bloqueando nos demais apps. → **Decidido como recomendado**; ver item 3 acima.
 - `CORS_ORIGIN` ausente em produção deve falhar o build ou cair para a origem do próprio app? —
-  **recomendação:** falhar; foi exatamente o default silencioso que produziu o coringa de hoje.
+  **recomendação:** falhar; foi exatamente o default silencioso que produziu o coringa de hoje. →
+  **Decidido: falhar no boot, não no build** (`apps/api/instrumentation.ts:17-21`); ver ressalva no item 2.
