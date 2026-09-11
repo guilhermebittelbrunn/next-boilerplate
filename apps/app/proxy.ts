@@ -55,12 +55,33 @@ const securityOptions = buildBrowserAppOptions({
  * new authenticated route is protected the moment it exists — no allowlist to remember.
  * An authenticated visitor on one of these is bounced to their home.
  */
-export const PUBLIC_PATHS = ["/sign-in", "/sign-up"] as const;
+export const PUBLIC_PATHS = [
+    "/sign-in",
+    "/sign-up",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-email",
+] as const;
+
+/**
+ * These carry a single-use action code in the query string, so the bounce below must
+ * skip them: sending an authenticated visitor home would discard the code — and with
+ * it the only way to finish the reset or the verification.
+ */
+const OOB_ACTION_PATHS = ["/reset-password", "/verify-email"] as const;
+
+function matchesPathPrefix(path: string, prefixes: readonly string[]): boolean {
+    return prefixes.some(
+        (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+    );
+}
 
 function isPublicPath(path: string): boolean {
-    return PUBLIC_PATHS.some(
-        (publicPath) => path === publicPath || path.startsWith(`${publicPath}/`)
-    );
+    return matchesPathPrefix(path, PUBLIC_PATHS);
+}
+
+function isOobActionPath(path: string): boolean {
+    return matchesPathPrefix(path, OOB_ACTION_PATHS);
 }
 
 export const config = {
@@ -147,7 +168,7 @@ async function route(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
-    if (isPublic && sessionUser) {
+    if (isPublic && sessionUser && !isOobActionPath(appPath)) {
         // Honour the deep link the unauthenticated redirect stored, so returning through
         // sign-in lands where the visitor was going. The role lives in Firestore, not in
         // the session cookie, so resolving admin vs common here would cost an API call on
