@@ -33,13 +33,25 @@ function getWebApiKey(): string {
     return k;
 }
 
-async function parseToolkitResponse(res: Response): Promise<ToolkitSuccess> {
-    const data = (await res.json()) as ToolkitSuccess & ToolkitErrorBody;
+async function parseToolkitJson<T>(
+    res: Response,
+    fallbackMessage: string
+): Promise<T> {
+    const data = (await res.json()) as T & ToolkitErrorBody;
     if (!res.ok || data.error) {
-        const msg = data.error?.message ?? "Authentication request failed";
-        throw new IdentityToolkitError(msg, data.error?.code);
+        throw new IdentityToolkitError(
+            data.error?.message ?? fallbackMessage,
+            data.error?.code
+        );
     }
     return data;
+}
+
+function parseToolkitResponse(res: Response): Promise<ToolkitSuccess> {
+    return parseToolkitJson<ToolkitSuccess>(
+        res,
+        "Authentication request failed"
+    );
 }
 
 export async function identitySignUp(
@@ -74,6 +86,41 @@ export async function identitySignInWithPassword(
         }),
     });
     return parseToolkitResponse(res);
+}
+
+type ToolkitResetPassword = { email: string; requestType: string };
+
+type ToolkitApplyOob = {
+    localId: string;
+    email: string;
+    emailVerified: boolean;
+};
+
+/** Consumes a password-reset action code and sets the new password. */
+export async function identityResetPassword(
+    oobCode: string,
+    newPassword: string
+): Promise<ToolkitResetPassword> {
+    const key = getWebApiKey();
+    const res = await fetch(`${BASE}/accounts:resetPassword?key=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oobCode, newPassword }),
+    });
+    return parseToolkitJson<ToolkitResetPassword>(res, "Password reset failed");
+}
+
+/** Applies an email-verification action code. */
+export async function identityApplyOobCode(
+    oobCode: string
+): Promise<ToolkitApplyOob> {
+    const key = getWebApiKey();
+    const res = await fetch(`${BASE}/accounts:update?key=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oobCode }),
+    });
+    return parseToolkitJson<ToolkitApplyOob>(res, "Email verification failed");
 }
 
 type IdpSuccess = ToolkitSuccess & {
