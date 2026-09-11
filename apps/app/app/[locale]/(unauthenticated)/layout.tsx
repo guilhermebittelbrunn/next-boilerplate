@@ -1,14 +1,19 @@
 import { ModeToggle } from "@repo/design-system/components/ui/mode-toggle";
-import { getDictionary } from "@repo/internationalization/server";
+import { getTranslations } from "@repo/internationalization/server";
+import { resolveLocale } from "@repo/internationalization/utils";
 import { CommandIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 type AuthLayoutProps = {
     readonly children: ReactNode;
+    readonly params: Promise<{ locale: string }>;
 };
 
-const AuthLayout = async ({ children }: AuthLayoutProps) => {
-    const { dictionary } = await getDictionary();
+const AuthLayout = async ({ children, params }: AuthLayoutProps) => {
+    // The segment, not the cookie: the cookie is written after this renders, so
+    // reading it here would answer with the language of the previous navigation.
+    const { locale } = await params;
+    const dictionary = await getTranslations(resolveLocale(locale));
 
     return (
         <div className="container relative grid h-dvh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0">
