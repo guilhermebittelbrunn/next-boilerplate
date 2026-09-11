@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/auth, packages/design-system, packages/inter
 mode: ambos
 depends_on: [account-settings]
 feature: -
-updated: 2026-08-21
+updated: 2026-09-10
 ---
 
 # MFA, sessões ativas e política de senha
@@ -30,17 +30,20 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
 - `packages/auth/server.ts:212` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE` o chama
   em `packages/auth/session-routes.ts:79`, montado em `apps/app/app/api/auth/session/route.ts:13` e
   `apps/web/app/api/auth/session/route.ts:12`, alcançado pelo botão de sair
-  (`apps/app/shared/components/ui/ProfileDropdown.tsx:49` → `packages/auth/provider.tsx:244`). Não é
+  (`apps/app/shared/components/ui/ProfileDropdown.tsx:49` → `packages/auth/provider.tsx:238-239`, a
+  mutation `signOutMutation`/`mutationFn: logout`). Não é
   código morto — **o efeito colateral é que todo logout é um "sair de todos os dispositivos"**, sem
   granularidade e sem aviso ao usuário.
-- ⚠️ **`packages/auth/server.ts:123` — `verifyIdToken(token)` é chamado sem o argumento de revogação.** E
-  `apps/api/(shared)/lib/resolve-api-actor.ts` tenta **primeiro** o caminho do bearer ID token. Resultado:
-  depois de revogar, **um ID token já emitido continua passando no guard da API até expirar**. O outro
+- ⚠️ **`packages/auth/server.ts:123` — `verifyIdToken(token)` é chamado sem o argumento de revogação**
+  (reconferido ao vivo em 2026-09-10). E `apps/api/(shared)/lib/resolve-api-actor.ts` tenta **primeiro** o
+  caminho do bearer ID token (`:24`, retorna em `:26`) antes do cookie de sessão (`:34`). Resultado: depois
+  de revogar, **um ID token já emitido continua passando no guard da API até expirar**. O outro
   caminho já faz o certo — `getUserFromSessionCookie` usa `verifySessionCookie(sessionCookie, true)`
   (`packages/auth/server.ts:193`). A base está metade correta, e é a metade errada que é tentada antes.
 - `packages/auth/session.ts:14` — `SESSION_COOKIE_NAME = "access-token"`; `:22` e `:23` já clampam a
-  duração aos limites do Firebase (5 min / 14 dias), com padrão de 5 dias (`:24`). Atributos em `:39`
-  (`httpOnly`), `:41` (`sameSite: "lax"`) e `:52` (`secure` **apenas em produção**).
+  duração aos limites do Firebase (5 min / 14 dias), com padrão de 5 dias (`:24`). O tipo declara os
+  atributos em `:39` (`httpOnly`) e `:41` (`sameSite: "lax"`), mas os valores de fato são atribuídos no
+  bloco `:51-53` — é dali que vem o já citado `:52` (`secure` **apenas em produção**).
 - `packages/auth/session.ts:66` — `isSameOriginRequest` é a **única** proteção contra CSRF no
   `sessionPOST` (`packages/auth/session-routes.ts:34`), e ela **retorna `true` quando não há cabeçalho
   `Origin`**. **Não há validação de csrfToken.**
@@ -120,7 +123,7 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
 
 - **Custo herdado por todo fork:** se o segundo fator exigir habilitar um serviço pago no provedor, todo
   fork que não o usa não pode pagar por ele nem falhar no build. O padrão tem de ser **NO-OP quando falta
-  a configuração**, como `packages/security/index.ts:16` faz com `ARCJET_KEY`.
+  a configuração**, como `packages/security/index.ts:42-44` faz com `ARCJET_KEY`.
 - **Endurecer a verificação de credencial custa latência em toda requisição autenticada.** Checar
   revogação a cada chamada é mais seguro e mais caro; não checar é a falha atual. O meio-termo (checar
   onde importa) só funciona se "onde importa" estiver definido no core, e não a critério de cada fork.

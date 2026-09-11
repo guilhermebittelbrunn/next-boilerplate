@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-21
+updated: 2026-09-10
 ---
 
 # Upload de arquivos e storage
@@ -31,17 +31,21 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
   configurado no repo.
 - Busca por integração de storage em `apps/` + `packages/` (`getStorage`, `firebase-storage`,
   `@aws-sdk`, `S3Client`, `uploadthing`): **zero ocorrências**. A única menção a `multipart/form-data`
-  no repo é em `packages/shared/utils/helpers/formattedError.ts:83`, que apenas detecta o content-type ao
+  no repo é em `packages/shared/utils/helpers/formattedError.ts:115`, que apenas detecta o content-type ao
   formatar erro — não processa upload.
 - `packages/sdk/src/types/entity/entity.ts:14` — `photo: string | null`. É só uma string.
 - `apps/api/(shared)/validation/entity.schema.ts:23` — a validação é
-  `z.string().trim().max(2048)`. **Não é validação de URL**: qualquer texto de até 2048 caracteres passa,
-  e vai direto para o Firestore via `apps/api/(shared)/mappers/entity.mapper.ts:22`.
+  `z.string().trim().max(PHOTO_URL_MAX)`, com `PHOTO_URL_MAX = 2048` declarado em `:7`. **Não é validação
+  de URL**: qualquer texto de até 2048 caracteres passa. O mesmo limite se repete, **idêntico**, em
+  `updateEntitySchema` (`:34`) — a spec original citava só o `createEntitySchema`. No lado da leitura, o
+  campo chega pronto via `apps/api/(shared)/mappers/entity.mapper.ts:19` (`toDTO`); no lado da escrita, o
+  caminho é `toPersistence` (`:32-52`), com `"photo"` na lista de chaves em `:41`.
 - `packages/design-system/components/form/hookform/` — **7** componentes (`hookformInput`,
   `hookformInputPassword`, `hookformTextarea`, `hookformSelect`, `hookformSwitch`, `hookformRadioGroup`,
   `hookformDateInput`). **Nenhum** aceita arquivo.
 - `packages/design-system/components/ui/responsive-image.tsx:16` — componente de **exibição** (78
-  linhas, `next/image` com fallback quando `src` é vazio, `:27`). Já é o padrão de miniatura em listas
+  linhas, `next/image`). Quando `src` é vazio, `:27` não é fallback nenhum: é `return <></>`, ou seja,
+  **não renderiza nada** — sem imagem substituta, sem placeholder. Já é o padrão de miniatura em listas
   segundo `apps/app/CLAUDE.md`. Reaproveitável como preview.
 - `packages/{analytics,auth,email,internationalization,next-config,payments,security}/keys.ts` — 7
   arquivos de env tipada; nenhum declara bucket ou credencial de storage.
@@ -98,7 +102,8 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
   por download. URL expirável ajuda no controle de acesso, não na conta: um fork com imagem pesada em
   lista pública queima cota rápido.
 - **Regras do bucket são um segundo modelo de autorização.** Hoje o repo concentra tudo na API
-  (`firestore.rules:30` nega todo acesso direto de cliente). Se o cliente subir direto ao bucket, a
+  (`firestore.rules:32-33`, `match /{document=**}` com `allow read, write: if false;`, nega todo acesso
+  direto de cliente). Se o cliente subir direto ao bucket, a
   autorização passa a viver nas regras, e divergir do guard da API é o caminho mais curto para vazamento.
   Atravessar a API mantém um único lugar de decisão, ao custo de tráfego pela função — e do limite de
   tamanho de corpo do runtime, que precisa entrar no limite anunciado ao usuário.

@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-09-09
+updated: 2026-09-10
 ---
 
 # Trilha de auditoria de ações sensíveis
@@ -44,9 +44,12 @@ suporte mais poderoso do produto operando sem contrapartida.
   `apps/api/app/(routes)/users/[id]/route.ts:75-91` exclui um usuário devolvendo 204 e `:54-68` altera
   perfil e credencial de Auth, ambos em silêncio.
 - **Nenhuma trilha existe:** só há os repositórios `base`, `entity` e `user`
-  (`apps/api/(shared)/repositories/`), e varrer "audit" no código retorna apenas três comentários
-  (`packages/shared/utils/helpers/auth-request-headers.ts:12`, `packages/auth/types.ts:22`,
-  `apps/app/shared/lib/authRequestHeaders.ts:19`) — nenhum handler, coleção ou rota.
+  (`apps/api/(shared)/repositories/`), e varrer "audit" no código retorna **5 ocorrências** — os mesmos
+  três comentários de sempre (`packages/shared/utils/helpers/auth-request-headers.ts:12`,
+  `packages/auth/types.ts:22`, `apps/app/shared/lib/authRequestHeaders.ts:19`) mais
+  `apps/api/__tests__/userProfileSerialization.test.ts:49` e `:53`, que exercitam um campo
+  `audit: { lastSeenAt }` numa fixture de serialização. É só teste — nenhum handler, coleção ou rota grava
+  trilha de verdade.
 - Sem logger estruturado: só `console.error/warn` avulso (`apps/api/app/(routes)/users/route.ts:71`,
   `.../webhooks/payments/route.ts:59,65`). O `apps/api/instrumentation.ts` **deixou de ser um stub vazio**
   em 2026-08-31 (`firestore-admin-access`): o `register()` (`:12-31`) roda no boot, resolve a instância do

@@ -9,7 +9,7 @@ area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: [auth-recovery-verification, file-upload-storage]
 feature: -
-updated: 2026-08-21
+updated: 2026-09-10
 ---
 
 # Área de conta e preferências do usuário
@@ -24,11 +24,11 @@ Pior que faltar: o produto **promete e não entrega**. A sidebar exibe um menu "
 
 - `apps/app/shared/components/ui/ProfileDropdown.tsx` — o menu do avatar mostra nome e e-mail (`:42-45`) e tem **uma** ação: sair (`:49-52`, com a string "Sair" literal no JSX, `:51`). Nenhum link para conta.
 - `apps/app/app/[locale]/(authenticated)/(common)/routes.tsx:64-81` — o grupo "Configurações" declara `General`, `Team`, `Billing` e `Limits`, **todos com `url: "#"`** e título literal em inglês. O grupo `Documentation` (`:41-58`) tem outros 4 placeholders iguais.
-- `apps/app/app/[locale]/(authenticated)/(common)/paths.ts:10-35` — o mapa real de rotas da área comum tem só `root`, `playground` e `entities`. Confirma que os itens acima não existem como página.
+- `apps/app/app/[locale]/(authenticated)/(common)/paths.ts:10-36` — o mapa real de rotas da área comum tem só `root`, `playground` e `entities`. Confirma que os itens acima não existem como página.
 - `packages/sdk/src/types/user/user.ts:30-52` — `UserWithAuthDTO` já carrega `displayName:34`, `photoURL:35`, `phoneNumber:36` e `emailVerified:33`. O contrato existe; é **somente leitura** hoje.
 - `packages/design-system/components/form/hookform/index.ts:2-8` — 7 campos RHF prontos (input, senha, data, radio, select, switch, textarea), que cobrem quase todo o formulário desta spec.
 - `packages/auth/server.ts:212` — `revokeUserSessions` já existe e já é usado no logout global (`packages/auth/session-routes.ts:79`); falta só ser oferecido como ação do usuário.
-- `packages/design-system/components/ui/mode-toggle.tsx:25` e `apps/app/shared/components/ui/LanguageSwitcher.tsx:37` — tema e idioma **já são trocáveis**, mas via `next-themes` e cookie de navegador: mudar de máquina perde a escolha.
+- `packages/design-system/components/ui/mode-toggle.tsx:25` e `apps/app/shared/components/ui/LanguageSwitcher.tsx:50` (`setCookie("x-locale", …)`, componente exportado em `:32`) — tema e idioma **já são trocáveis**, mas via `next-themes` e cookie de navegador: mudar de máquina perde a escolha.
 - **Lacuna:** todas as rotas de usuário da API são de administrador — `users/route.ts:21,34` e `users/[id]/route.ts:15,33,75` estão sob `requireAdminApi`. **Não existe nenhum caminho pelo qual o usuário edite a si mesmo.** Não há campo de preferência no `UserDTO` (`:7-14`), não há wrapper RHF de checkbox nem de upload no design system, e `firebase.json:1-6` configura só Firestore — não há bucket de arquivo.
 
 ## Evidência de mercado
@@ -62,7 +62,7 @@ Pior que faltar: o produto **promete e não entrega**. A sidebar exibe um menu "
 | Camada | Impacto |
 |--------|---------|
 | `packages/sdk` | ações de "meu perfil" (ler/atualizar, trocar senha, encerrar sessões) + campo de preferências no DTO |
-| `apps/api` | rotas de auto-serviço sob `requireCommonPanelApi` (`apps/api/app/(guards)/common-panel.ts:28`), com ownership no servidor; recepção e validação do avatar |
+| `apps/api` | rotas de auto-serviço sob `requireCommonPanelApi` (`apps/api/app/(guards)/common-panel.ts:29`), com ownership no servidor; recepção e validação do avatar |
 | `apps/app` | página de conta com abas (perfil, segurança, preferências); menu do avatar ganha entrada; `routes.tsx` deixa de ter `url: "#"` |
 | `apps/web` | N/A |
 | `packages/*` | `design-system` pode precisar do campo de upload que hoje não existe; i18n para toda a copy (incluindo a string "Sair" hoje literal) |

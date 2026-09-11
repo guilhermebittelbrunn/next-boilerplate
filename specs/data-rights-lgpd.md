@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/sdk, packages/auth, packages/inter
 mode: ambos
 depends_on: [account-settings]
 feature: -
-updated: 2026-08-21
+updated: 2026-09-10
 ---
 
 # Direitos do titular: exportar dados e excluir conta
@@ -29,9 +29,9 @@ acumula, maior o estrago de uma exclusão feita errado.
 
 - `apps/api/app/(routes)/users/[id]/route.ts:75` — existe um `DELETE`, mas sob `requireAdminApi`: **rota
   administrativa**, não autoatendimento do titular. O usuário comum não a alcança.
-- `apps/api/(shared)/repositories/base.repository.ts:133` — o `delete()` herdado por todo repositório é
-  **soft delete**: grava `deletedAt` e nada mais. A conta no Firebase Auth continua existindo e o e-mail
-  continua ocupado. Hoje "excluir" não exclui.
+- `apps/api/(shared)/repositories/base.repository.ts:127-129` — o `delete()` herdado por todo repositório
+  é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:128`) e nada mais. A conta no Firebase
+  Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui.
 - `apps/api/app/(routes)/` — o inventário completo de rotas é `auth`, `health`, `users`, `entities`,
   `webhooks`. **Nenhuma rota de exportação.**
 - `apps/app/app/[locale]/(authenticated)/(common)/(pages)/` — o painel comum tem `entities`, `playground`
@@ -40,8 +40,8 @@ acumula, maior o estrago de uma exclusão feita errado.
   **existem** nos 3 idiomas via dictionary
   (`packages/internationalization/translations/apps/web/pages/legal/index.ts:15`), **mas o conteúdo é
   placeholder**: o próprio texto avisa "Este é um modelo do boilerplate. Substitua por sua política real
-  antes de publicar" (`:27`) e a política tem **3 seções genéricas**. "Seus direitos" (`:39`) manda
-  "entrar em contato conosco" — sem dizer com quem.
+  antes de publicar" (`:28`, com o mesmo aviso em `:78` para en e `:128` para es) e a política tem **3
+  seções genéricas**. "Seus direitos" (`:39`) manda "entrar em contato conosco" — sem dizer com quem.
 - Busca por `encarregado`, `DPO`, `data protection officer` ou endereço de privacidade em `apps/` e
   `packages/`: **zero ocorrências**. Não há canal publicado.
 - **Lacuna:** nem exportação, nem exclusão pelo titular, nem tela, nem canal de contato — e o único

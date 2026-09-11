@@ -9,7 +9,7 @@ area: [apps/api, packages/sdk, apps/app, packages/design-system]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-09-09
+updated: 2026-09-10
 ---
 
 # Paginação por cursor no BaseRepository e no SDK
@@ -26,26 +26,26 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
 
 - `apps/api/(shared)/repositories/base.repository.ts:36-49` — `findAll()` monta a query só com
   `where("deletedAt", "==", null)`: **sem `limit`, sem `orderBy`, sem cursor e sem contagem**. É a base de
-  toda listagem, e nenhum dos métodos do `BaseRepository<DTO>` (22-135) aceita parâmetro de consulta.
+  toda listagem, e nenhum dos métodos do `BaseRepository<DTO>` (22-134) aceita parâmetro de consulta.
 - ✅ **Achado adicional resolvido em 2026-08-31** (`firestore-admin-access`): `findAll()` **ignorava o
   `rowMapper`** enquanto `findById()` o aplicava, e as duas rotas de leitura produziam formatos diferentes.
   Hoje `findAll()` aplica o mapper (`:44-46`), como `findById()` (`:60-64`). A reconciliação de formato
   saiu do escopo desta spec.
-- `apps/api/(shared)/repositories/entity.repository.ts:12-33` — `listByUserId` filtra `deletedAt` em
+- `apps/api/(shared)/repositories/entity.repository.ts:11-32` — `listByUserId` filtra `deletedAt` em
   memória (`:25`) e ordena por `createdAt` em memória (`:27`).
 - `apps/api/(shared)/repositories/user.repository.ts:32-43` — `list({type})` chama `findAll()` e filtra por
   tipo em memória (34-36); depois faz **uma chamada ao Admin SDK por usuário** (38-40, 52-63).
 - `packages/sdk/src/actions/entity/action.ts:15-22` e
   `packages/sdk/src/actions/user/user/action.ts:21-31` — `list()` devolve array cru, **sem envelope**: não
   há onde caber cursor ou `hasMore` sem quebrar o contrato.
-- `apps/app/.../entities/(hooks)/useListEntities.tsx:11-17` — query única, sem parâmetros; é o padrão
+- `apps/app/.../entities/(hooks)/useListEntities.tsx:10-17` — query única, sem parâmetros; é o padrão
   `useListX`/`fetchXList` que todo fork copia.
 - `packages/design-system/components/ui/table.tsx:11-22` — `TableProps` estende `AntdTableProps` sem tratar
   `pagination`: o que a tela exibe é a **paginação client-side padrão do antd**, sobre o array inteiro.
 - `firestore.indexes.json:2-11` — deixou de ser vazio em 2026-08-31: versiona **um** índice composto, o de
-  `findByReferenceId`. O arquivo e o caminho de deploy agora existem (`docs/SETUP.md:127-139`), o que
-  **remove o obstáculo** — mas qualquer consulta composta nova continua exigindo a entrada correspondente,
-  ou falha em produção sem aviso.
+  `findByReferenceId`. O arquivo e o caminho de deploy agora existem (`docs/SETUP.md:170-189`, com o
+  comando de deploy em `:177`), o que **remove o obstáculo** — mas qualquer consulta composta nova
+  continua exigindo a entrada correspondente, ou falha em produção sem aviso.
 - `docs/feature-analysis-guide.md:85-93` (seção 2.2) — o repo **já reconhece a lacuna por escrito**: "o
   `BaseRepository` não tem paginação, `orderBy` nem filtros compostos… é uma decisão de arquitetura a
   registrar, não algo a improvisar no handler". Esta spec é essa decisão.
@@ -78,8 +78,9 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
 - Busca textual no servidor: o `searchFields` da tabela filtra no cliente e passaria a filtrar só a página
   atual. Precisa de decisão própria (prefixo no Firestore × serviço de busca) — spec futura.
 - Contagem total de registros: no Firestore custa uma agregação à parte; "carregar mais" não precisa dela.
-- Migrar a listagem de usuários: carrega o N+1 do Admin SDK (`user.repository.ts:42-46`), que merece
-  tratamento separado. Filtros compostos arbitrários na API — cada um exige índice; entram por demanda.
+- Migrar a listagem de usuários: carrega o N+1 do Admin SDK (`user.repository.ts:38-40` + `:52-63`), que
+  merece tratamento separado. Filtros compostos arbitrários na API — cada um exige índice; entram por
+  demanda.
 
 ## Impacto por camada
 

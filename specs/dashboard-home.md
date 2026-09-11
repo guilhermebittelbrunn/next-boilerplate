@@ -9,7 +9,7 @@ area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-09-09
+updated: 2026-09-10
 ---
 
 # Home do painel com widgets
@@ -28,7 +28,9 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 - `apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx:4-11` — o componente inteiro é
   `<Header page="Home" /> + <Container />`. Onze linhas, sem nenhum conteúdo. O título `"Home"` (`:7`) é
   ainda uma **string literal fora do dictionary**, contra a regra de ouro 2 — e a chave traduzida já
-  existe (`translations/apps/app/pages/common/routes/index.ts:3,17,31`).
+  existe (`translations/apps/app/pages/common/routes/index.ts:3,17,31`). Medido em 2026-09-10: a chave
+  **não é morta** — é consumida via `(common)/paths.ts:12` e renderizada no breadcrumb de **8** telas do
+  painel (entities, playground, users…). A home é a **única** tela que a ignora e escreve o literal.
 - `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx:7` — **idêntica**, mesma string
   literal.
   > **Deriva corrigida (`/spec --sync`, 2026-09-09):** a redação anterior falava em "doze linhas", um
@@ -60,7 +62,7 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 
 > **Sejamos honestos: o benchmark não sustenta esta spec.** 3/10 é prevalência baixa e o valor de
 > mercado é só médio — o `value: médio` reflete isso e não deve ser inflado. O que sustenta a spec é o
-> código acima: a home **não está simples, está vazia** (`page.tsx:5`, nos dois painéis), e o repo
+> código acima: a home **não está simples, está vazia** (`page.tsx:7`, nos dois painéis), e o repo
 > carrega um wrapper de gráfico com `recharts` que nunca é renderizado. Não se propõe um "dashboard de
 > métricas" para copiar o mercado, e sim **preencher a tela que todo fork mostra primeiro** com um
 > exemplo copiável, como o slice `entity`. O entregável é um **padrão**, não um produto de analytics.

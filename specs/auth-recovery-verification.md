@@ -1,15 +1,15 @@
 ---
 id: auth-recovery-verification
 title: Recuperação de senha e verificação de e-mail
-status: proposed
+status: in-progress
 value: alto
 effort: M
 audience: produto
 area: [apps/api, apps/app, packages/auth, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: [transactional-emails]
-feature: -
-updated: 2026-09-09
+feature: auth-recovery-verification
+updated: 2026-09-10
 ---
 
 # Recuperação de senha e verificação de e-mail
@@ -25,16 +25,16 @@ O outro lado do mesmo buraco: o cadastro é aberto e o e-mail **nunca é verific
 - `apps/api/app/(routes)/auth/` tem exatamente **4 rotas**: `sign-in`, `sign-in/google`, `sign-up`, `me`. Nada de reset, verificação ou troca de senha.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts` — encapsula o Identity Toolkit por REST: `getWebApiKey():26`, `parseToolkitResponse():36`, `identitySignUp():45`, `identitySignInWithPassword():62`, `identitySignInWithGoogleIdToken():111`, erro tipado `IdentityToolkitError:16`. **É o ponto de extensão natural** — reset e verificação são do mesmo endpoint da mesma API.
 - `apps/api/(shared)/lib/toolkit-error-codes.ts:5` — traduz mensagem do toolkit para `error.code` estável; hoje cobre 5 casos (`:8`, `:11`, `:14`, `:17`, `:19`), todos de cadastro.
-- `packages/internationalization/translations/packages/shared/utils.ts:28-33` (pt-br) e `:68-72` (en) — os `USERS_AUTH_*` já existem nos 3 idiomas; o padrão de tradução por código está estabelecido.
+- `packages/internationalization/translations/packages/shared/utils.ts:30-35` (pt-br), `:74-78` (en) e `:116-121` (es) — os `USERS_AUTH_*` já existem nos 3 idiomas; o padrão de tradução por código está estabelecido.
 - `packages/auth/server.ts:212` — `revokeUserSessions`, já usado no logout global (`packages/auth/session-routes.ts:79`), mas **não** após troca de senha, que é onde o mercado espera.
 - `packages/sdk/src/types/user/user.ts:33` — `emailVerified` já viaja no `UserWithAuthDTO`; nenhum ponto do código lê esse campo para decidir coisa alguma.
 - **Lacuna:** `packages/auth/client.ts` expõe `signIn:109`, `signInWithGoogle:117`, `signUp:127`, `logout:135`, `loginWithCustomToken:145`, `getIdToken:172` — e nada de reset/verificação. Buscar por `sendPasswordResetEmail`, `sendEmailVerification`, `updatePassword`, `generatePasswordResetLink`, `confirmPasswordReset` e `oobCode` em `apps/` + `packages/` retorna **zero ocorrências**. `apps/app/app/[locale]/(unauthenticated)/` só tem `sign-in` e `sign-up`, e o rodapé do formulário (`sign-in/components/SignInForm.tsx:186-196`) oferece apenas "criar conta". `apps/api/app/(routes)/auth/sign-up/route.ts:10-53` cria a identidade e o perfil e **retorna sem disparar e-mail nenhum**.
 
-### A dependência mudou — o que esta spec ainda precisa construir (auditado em 2026-09-09)
+### A dependência mudou — o que esta spec ainda precisa construir (auditado em 2026-09-10)
 
-`transactional-emails` está **implementada** (13 commits em `email/feat/transactional-emails`, **ainda não
-mergeados em `main`** — ver o estado lá). Isso reduz o escopo desta spec, e de um jeito que a redação
-acima não capturava:
+`transactional-emails` está **implementada e satisfeita em `main`** (PR #9, mergeada em 2026-09-10,
+commit `400f290`, CI verde nesse SHA). A base já está disponível e esta spec está **desbloqueada para
+começar**. Isso reduz o escopo desta spec, e de um jeito que a redação acima não capturava:
 
 - **Não são "dois templates novos".** O `action-link` já é genérico por descritor:
   `packages/email/templates/action-link.tsx:11-12` define `ActionSlug = keyof EmailCopy["actionLink"]["actions"]`,
@@ -88,7 +88,7 @@ acima não capturava:
 - **Custo herdado por todo fork:** o fluxo só funciona com remetente de e-mail e domínio verificado. As credenciais seguem **opcionais** (`packages/email/keys.ts:29-42,47-48`) e o repo sobe sem elas — depois desta spec, "sobe sem e-mail" passa a significar "quem esquecer a senha perde a conta". Cotas do free tier do provedor: **não verificadas** nesta nota.
   > **⚠️ Conflito de desenho a resolver no `/analyze` (levantado em 2026-09-09).** A redação original pedia que a ausência de credencial "falhe de forma visível, não silenciosa". A base entregue decidiu o **oposto, de propósito**: `packages/email/index.ts:99-102` devolve `{ sent: false, reason: "not-configured" }` e apenas registra uma linha de `console.warn` — nunca lança, para que a falha de envio não derrube a operação que a originou (item 6 do corte de `transactional-emails`). Os dois comportamentos são defensáveis e **incompatíveis**: para um e-mail de contato, engolir a falha é correto; para "redefinir senha", engolir a falha é perder a conta do usuário em silêncio. Esta spec precisa decidir se propaga o `reason` até a tela (o `SendResult` é união discriminada, então dá) ou se muda a base. **Recomendação:** propagar, sem tocar na base — quem chama decide o que fazer com o `not-configured`.
 - **Enumeração de conta:** responder "e-mail não cadastrado" entrega a lista de usuários. A resposta genérica é mais segura e pior de usar — escolha consciente, não acidente.
-- **Superfície pública nova sem autenticação**, e `packages/security/index.ts:12` hoje só aplica shield e detecção de bot (vira no-op sem `ARCJET_KEY`, `:16`). Sem limite de taxa, o endpoint de reset vira gerador gratuito de e-mail em nome do fork — e a fatura é do fork.
+- **Superfície pública nova sem autenticação.** `packages/security/index.ts` lê `arcjetKey` em `:11` e expõe `checkRateLimit` em `:39`, com janela deslizante de 20 requisições/60s — mas vira no-op quando `ARCJET_KEY` não está definida (`:42-44`). A nova rota `/auth/reset` **não** ganha limite de taxa automaticamente: precisa ser adicionada a `RATE_LIMITED_PATHS` em `apps/api/proxy.ts:31-35` (o `match` é exato, feito em `isRateLimitedPath`, `:37-39`). Sem esse passo, o endpoint de reset vira gerador gratuito de e-mail em nome do fork — e a fatura é do fork.
 - **Página de ação própria × página hospedada do Firebase:** a hospedada é grátis e não traduz nem respeita a marca. Assumir a tela custa uma rota a mais e paga em consistência de i18n.
 
 ## Sinais de pronto

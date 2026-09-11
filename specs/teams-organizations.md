@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/sdk, packages/auth, packages/internationaliz
 mode: ambos
 depends_on: [transactional-emails]
 feature: -
-updated: 2026-08-22
+updated: 2026-09-10
 ---
 
 # Organizações, membros e convites
@@ -54,10 +54,11 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
 - **A posse é por usuário, repetida em cada handler**:
   `apps/api/app/(routes)/entities/[id]/route.ts:16`, `:32` e `:65` — o mesmo
   `row.userId !== ctx.subjectProfile.id` → 404, três vezes, num único arquivo de um único recurso.
-- `apps/api/(shared)/repositories/entity.repository.ts:12` — `listByUserId` consulta com
-  `where("userId", "==", userId)`. A listagem é escopada por usuário na origem.
-- `firestore.rules:30` — negação total de acesso direto de cliente; o comentário em `:37` já registra a
-  sutileza de que `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
+- `apps/api/(shared)/repositories/entity.repository.ts:11` — `listByUserId` consulta com
+  `where("userId", "==", userId)` (`:14`). A listagem é escopada por usuário na origem.
+- `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
+  `allow read, write: if false;` em `:33`); o comentário em `:39-40` já registra a sutileza de que
+  `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
 - **Lacuna:** não existe grupo, não existe papel dentro de grupo, não existe convite. E o escopo por
   usuário está espalhado por handler, repositório e (potencialmente) regras — três lugares para
   retrofitar por recurso.
@@ -109,7 +110,7 @@ ponta a ponta, não entregar administração de times completa.
 | `apps/api` | Guard de pertencimento novo; coleções novas; **toda consulta e toda checagem de posse existente muda de chave**. Convite exige envio de e-mail. |
 | `apps/app` | Telas de membros e convites; aceite de convite (rota parcialmente pública); o painel admin ganha a dimensão "organização". |
 | `apps/web` | Página de aceite de convite para quem ainda não tem conta, se o aceite não viver no `app`. |
-| `packages/*` | `auth`: papel por organização convive com `UserRoleLevel` global. `email`: template de convite. i18n nos 3 idiomas. |
+| `packages/*` | `auth`: papel por organização convive com `UserRoleLevel` global. `email`: a dependência `transactional-emails` está satisfeita em `main` (PR #9, mergeada em 2026-09-10) e já entrega template genérico por descritor (`packages/email/templates/action-link.tsx:12`, `ActionSlug` como chave do dicionário) — convite não é template novo, é **slug de dicionário × 3 idiomas**. i18n nos 3 idiomas. |
 | Infra/env | Índices compostos no Firestore (escopo + filtro) para toda consulta escopada; `firestore.rules` reescritas se algum dia expuser cliente direto. Nenhum serviço pago novo além do envio de e-mail. |
 
 ## Riscos e trade-offs

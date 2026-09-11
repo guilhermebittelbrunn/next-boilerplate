@@ -9,7 +9,7 @@ area: [raiz, apps/api, apps/app, packages/auth]
 mode: ambos
 depends_on: [firestore-admin-access]
 feature: -
-updated: 2026-08-31
+updated: 2026-09-10
 ---
 
 # Emulador do Firebase, seed e primeiro admin
@@ -34,8 +34,10 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
   **Não há bloco de emuladores**, nem hosting, functions ou storage.
 - Não existe **nenhum** script de seed, fixture ou dado de demonstração: buscar por `seed`/`emulator` no
   código-fonte retorna apenas menções em notas de pesquisa e documentação de agents.
-- `docs/SETUP.md:111-114` — a seção "Firestore" instrui a provisionar no Firebase Console em **modo de
-  produção** e fazer deploy das regras. Não menciona emulador, seed nem primeiro admin.
+- `docs/SETUP.md:170-180` — a seção "Firestore" instrui a provisionar no Firebase Console em **modo de
+  produção** (`:174`) e fazer deploy das regras. Não menciona emulador nem seed — mas desde então o próprio
+  `docs/SETUP.md` ganhou uma seção **"Primeiro admin (bootstrap de desenvolvimento)" em `:191`**,
+  documentando o script abaixo. A lacuna de emulador e seed segue de pé; a de primeiro admin, não.
 - `apps/api/(shared)/infra/database.ts:1-5` — desde 2026-08-31 (`firestore-admin-access`) a conexão é uma
   única linha: `getFirestoreAdmin()` de `@repo/auth/server`, sem configuração hardcoded. **O ponto de
   conexão do emulador ficou muito mais barato** — o Admin SDK lê `FIRESTORE_EMULATOR_HOST` do ambiente, o
@@ -49,7 +51,7 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
   criar um admin é preciso já ser admin.**
 - **Bootstrap do primeiro admin: entregue, mas só contra projeto real.**
   `apps/api/scripts/create-dev-admin.mjs` (idempotente: `ensureAuthUser` `:48-67`,
-  `ensureAdminProfile` `:69-97`), exposto em `apps/api/package.json:11`. Foi entregue por fora desta spec,
+  `ensureAdminProfile` `:69-97`), exposto em `apps/api/package.json:13`. Foi entregue por fora desta spec,
   em `docs/features/impersonation-read-only/`. **Exige credenciais `FIREBASE_ADMIN_*` de service account
   reais** (`:31-46`) e não conhece emulador — o item do corte que pede "executável tanto no emulador quanto
   num projeto real" está **metade feito**.
@@ -117,7 +119,7 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
   que o bootstrap de admin exigia. **Esta spec está desbloqueada** — e o argumento a favor dela ficou mais
   forte, não mais fraco: as rules agora estão publicadas em `deny-all` e ninguém as testa.
 - **Custo herdado por todo fork:** **zero em dinheiro** e nenhuma env obrigatória — a ausência da variável
-  do emulador deve significar "usar o Firebase real", no mesmo no-op que `packages/security/index.ts:16-18`
+  do emulador deve significar "usar o Firebase real", no mesmo no-op que `packages/security/index.ts:42-44`
   aplica ao `ARCJET_KEY`. Herda-se, isso sim, o runtime Java exigido pelos emuladores, que precisa entrar
   nos pré-requisitos.
 

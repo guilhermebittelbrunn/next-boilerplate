@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-09-09
+updated: 2026-09-10
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -58,7 +58,8 @@ invisível até alguém conferir a fatura.
   de erro é **correta e deliberada** (ele carrega o endereço do destinatário: `:127`), mas o resultado é
   que ninguém consegue distinguir "acabou a cota" de "alguém revogou a chave" sem abrir o painel do
   provedor. É exatamente o buraco que esta spec fecha: um campo de causa que não seja o texto do provedor.
-- `apps/api/app/(routes)/health/route.ts:3-4` — responde `{"message":"OK"}` fixo. **Não verifica nenhuma
+- `apps/api/app/(routes)/health/route.ts:1-2` — o arquivo inteiro tem 2 linhas e responde `{"message":"OK"}`
+  fixo. **Não verifica nenhuma
   dependência** e não declara renderização dinâmica: responde OK mesmo com o Firestore fora do ar.
 - ✅ **Achado resolvido (`/spec --sync`, 2026-09-01): `packages/analytics/server.ts` foi apagado.** O
   arquivo importava `posthog-node` (não declarado em `packages/analytics/package.json`) e lia chaves
@@ -66,7 +67,7 @@ invisível até alguém conferir a fatura.
   fosse importado. Removido pelo saneamento de `ci-pipeline` (decisão Q4 do usuário). **Efeito nesta
   spec:** quando a observabilidade entrar, `@repo/analytics` está limpo — não há stub quebrado para
   desfazer, e o `keys.ts` do pacote segue declarando **só** `NEXT_PUBLIC_GA_MEASUREMENT_ID`.
-- `packages/security/index.ts:16-18` — o padrão de referência do repo para integração opcional: sem a
+- `packages/security/index.ts:42-44` — o padrão de referência do repo para integração opcional: sem a
   variável de ambiente, a função retorna sem fazer nada. É o critério que qualquer serviço novo deve seguir.
 - **Lacuna:** nenhum erro é coletado, nenhuma requisição é rastreável, nenhum log é consultável.
 
@@ -125,7 +126,7 @@ invisível até alguém conferir a fatura.
 ## Riscos e trade-offs
 
 - **Custo herdado por todo fork:** o serviço de coleta exige conta. Se a integração não for estritamente
-  no-op na ausência da variável — como `packages/security/index.ts:16-18` já faz com `ARCJET_KEY` — todo
+  no-op na ausência da variável — como `packages/security/index.ts:42-44` já faz com `ARCJET_KEY` — todo
   fork passa a ter uma env obrigatória a mais para subir. Este é o risco número um da spec.
 - **Cota queimada por amostragem alta** (prática 6): o free tier some em dias se o padrão for coletar tudo.
   O default do boilerplate precisa ser conservador, e o valor precisa ser configurável.

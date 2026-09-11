@@ -9,7 +9,7 @@ area: [apps/app, apps/web, packages/analytics, packages/design-system, packages/
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-09-09
+updated: 2026-09-10
 ---
 
 # Consentimento de cookies e Consent Mode
@@ -35,9 +35,11 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
 - `apps/web/app/[locale]/layout.tsx` — a landing pública **não monta o `AnalyticsProvider`** (a única
   referência ao componente em todo o repo é a do `apps/app`). Ou seja, hoje o app autenticado mede sem
   consentimento e o site público, que é onde o tráfego anônimo e europeu de fato chega, não mede nada.
-- Busca por `cookie`, `consent` e `banner` em `apps/` e `packages/`: as únicas ocorrências são o cookie de
-  idioma (`packages/internationalization/utils/cookies.ts:1`) e o cookie de sessão
-  (`packages/auth/session.ts:14`). **Não existe banner nem componente de consentimento em lugar nenhum**,
+- Busca por `cookie`, `consent` e `banner` em `apps/` e `packages/`: as únicas ocorrências relevantes são
+  o cookie de sessão (`packages/auth/session.ts:14`) e o cookie de idioma — mas
+  `packages/internationalization/utils/cookies.ts:1` é só um `getCookie` **genérico**, sem nomear locale
+  nenhum; quem lê `"x-locale"` de fato é `packages/internationalization/client.ts:8` (cliente) e
+  `server.ts:20` (servidor). **Não existe banner nem componente de consentimento em lugar nenhum**,
   inclusive no `packages/design-system`.
 - `packages/shared/utils/helpers/cookies.ts:2,16,31` — `setCookie` / `getCookie` / `removeCookie` já
   existem como helpers de cliente (`SameSite=Lax`, sem flag `secure`). Peça reaproveitável para guardar a
@@ -108,7 +110,8 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
 - **Custo herdado por todo fork:** um banner é a primeira coisa que todo visitante vê. Um fork que não
   usa analytics nenhum não pode ser obrigado a exibi-lo — se não há tag não essencial para carregar, não
   há o que consentir. O padrão precisa ser **NO-OP quando não há nada a consentir**, no mesmo espírito de
-  `packages/security/index.ts:16`, que simplesmente retorna quando `ARCJET_KEY` não está definida.
+  `packages/security/index.ts:42-44` (e do segundo guard equivalente em `:85`), que simplesmente retornam
+  quando `ARCJET_KEY` não está definida.
 - **Perda de medição é real e deve ser dita.** Rejeitar por padrão significa medir menos; trocar isso por
   um "aceitar" em destaque é exatamente o que a ANPD proíbe.
 - **Consentimento no cliente é estado que precede a hidratação.** Ler a escolha no render do cliente

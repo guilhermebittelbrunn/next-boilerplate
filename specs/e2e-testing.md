@@ -9,7 +9,7 @@ area: [raiz, apps/app, apps/web, packages/design-system]
 mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 feature: -
-updated: 2026-09-09
+updated: 2026-09-10
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -26,20 +26,23 @@ alguém olhar.
 
 ## O que já existe no repo
 
-- **Validação visual é obrigatória e funciona.** `CLAUDE.md:60` (regra de ouro 11) exige que todo fluxo que
+- **Validação visual é obrigatória e funciona.** `CLAUDE.md:70` (regra de ouro 11) exige que todo fluxo que
   toca UI e toda entrega de código sejam validados com a skill `agent-browser` — subindo o app, percorrendo
-  o fluxo e conferindo responsivo e tema. A skill vive em `.claude/skills/agent-browser`.
+  o fluxo e conferindo responsivo e tema. A regra é reforçada em `:136` e `:145`. A skill vive em
+  `.claude/skills/agent-browser`.
 - A prova de que a prática é levada a sério: `docs/features/auth-panel-context/test/e2e/` guarda **22
-  capturas de tela versionadas** (e mais 4 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
+  capturas de tela versionadas** (e mais 5 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
   incluindo o fluxo de impersonação.
-- Suíte automatizada atual (**medida em 2026-09-09, 2ª rodada**): **9 tasks de teste / 573 testes em 63
+- Suíte automatizada atual (**remedida em 2026-09-10, números inalterados**): **9 tasks de teste / 573 testes em 63
   arquivos**, todos de unidade/integração estreita — `apps/app` 153, `apps/api` 152, `@repo/email` 131,
   `@repo/security` 31, `@repo/auth` 29, `apps/web` 27, `@repo/internationalization` 27, `@repo/shared` 15,
   `@repo/payments` 8. **Nenhum sobe um app de verdade**, e **nenhuma** das nove configs declara
   **cobertura**: não existe medida nem baseline para discutir.
-- `apps/web` **entrou** na suíte (`package.json:10`, `vitest.config.mts` com `environment: "node"`,
-  `__tests__/seo.test.ts`), mas só com lógica pura de SEO — **nenhum componente da landing é renderizado
-  por teste**. Não há Playwright, Cypress nem `axe` em nenhum `package.json` do repositório.
+- `apps/web` **entrou** na suíte (`package.json:10`, `vitest.config.mts` com `environment: "node"`) e hoje
+  `__tests__/` tem **4 arquivos**: `seo.test.ts`, `contactAction.test.ts`, `securityHeaders.test.ts` e
+  `securityPolicySources.test.ts` — todos com lógica pura (SEO, proxy e a action de contato exercitados
+  isoladamente), **nenhum componente da landing é renderizado por teste**. Não há Playwright, Cypress nem
+  `axe` em nenhum `package.json` do repositório.
   > **Deriva corrigida (`/spec --sync`; números reatualizados em 2026-09-09, 2ª rodada):** a redação
   > original falava em 23 arquivos, três configs e `apps/web` sem script de teste. Quatro entregas mudaram
   > isso — `firestore-admin-access`, `ci-pipeline`, `api-hardening` (oitava config, `@repo/security`) e
@@ -48,13 +51,15 @@ alguém olhar.
   > nada exercita um fluxo de ponta a ponta. Essa lacuna segue intacta: os 131 testes novos de e-mail
   > cobrem render e política de log, e **nenhum** deles alcança o único consumidor de produção da feature,
   > que é inalcançável pela UI.
-- **Novo argumento a favor desta spec (2026-09-09):** a suíte já produz **falha intermitente**.
-  `apps/app/__tests__/securityPolicySources.test.ts:92` estourou o `testTimeout` padrão de 5000 ms numa de
-  duas execuções de `pnpm turbo run lint typecheck test --force` nesta auditoria; isolado, passou 3/3. A
-  causa é estrutural: cada caso faz `vi.resetModules()` + `await import("@/proxy")` (`:60-61`),
-  reconstruindo o grafo inteiro do proxy, e `apps/app/vitest.config.mts` **não declara `testTimeout`**. Um
-  gate de merge instável é pior que gate nenhum — e é exatamente o que a prática 2 desta spec precisa que
-  seja confiável.
+- **Argumento a favor desta spec, revisto (remedido em 2026-09-10):** uma auditoria anterior observou
+  `apps/app/__tests__/securityPolicySources.test.ts:92` estourar o `testTimeout` padrão de 5000 ms numa
+  execução de `pnpm turbo run lint typecheck test --force`. Reexecutado hoje **3 vezes seguidas**, o mesmo
+  comando fechou **23/23 tasks verdes** nas três rodadas — a falha **não reproduziu**. A causa estrutural
+  que a explicaria continua real e sem mitigação: cada caso faz `vi.resetModules()` + `await
+  import("@/proxy")` (`:60-61`), reconstruindo o grafo inteiro do proxy, e **nenhuma config de vitest do
+  repositório declara `testTimeout`**. Ou seja: é uma observação isolada e não reproduzida, não um gate
+  vermelho de pé — mas o risco estrutural que a explicaria segue de pé, e é exatamente o que a prática 2
+  desta spec precisa que seja confiável.
 - **Lacuna:** a única garantia de que os fluxos principais funcionam é **humana e pontual**; nada a repete
   sozinho, e nada disso pode rodar como gate de merge.
 

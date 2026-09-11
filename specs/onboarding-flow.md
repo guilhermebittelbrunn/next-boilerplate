@@ -9,7 +9,7 @@ area: [apps/app, apps/api, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-08-21
+updated: 2026-09-10
 ---
 
 # Onboarding pós-cadastro
@@ -25,20 +25,26 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 
 ## O que já existe no repo
 
-- `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:42` — logo após o
-  cadastro, resolve o caminho e faz `router.push` (`:47`); no fluxo Google, `window.location.replace`
-  (`:84`). Não há qualquer passo entre "cadastrou" e "está no painel".
+- `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:36-49` — a mutation
+  **`googleSignIn`** resolve o caminho (`resolveAppPostLoginPath`, `:42`) e faz `router.push` (`:47`). Já o
+  cadastro por **e-mail/senha** faz `window.location.replace` (`:84`), dentro do `useEffect` (`:62-90`) que
+  dispara depois do POST da sessão. Não há qualquer passo entre "cadastrou" e "está no painel", em
+  nenhum dos dois fluxos.
 - `apps/app/shared/lib/postLoginNavigation.ts:31` — `resolveAppPostLoginPath` é o único ponto de decisão
   do destino: honra `?redirect=`, senão manda admin para `/{locale}/admin` (`:24`) e o resto para o
   fallback. É o gancho natural para desviar um usuário incompleto.
 - `packages/auth/redirect.ts:10` — `postAuthRedirectTarget` já sanitiza o deep link (guard de
   open-redirect, coberto por `apps/app/__tests__/postAuthRedirectTarget.test.ts`). Um fluxo retomável
   precisa exatamente disso para voltar ao destino original ao terminar.
-- `apps/api/(shared)/lib/user-merge.ts:47` — `ensureDefaultUserProfile` cria o perfil com apenas
-  `type: COMMON` e `reference_id`. É o ponto exato onde o estado inicial de onboarding nasceria, e é
-  chamado nos três caminhos de entrada (`:22`, `:41`, `apps/api/app/(routes)/auth/sign-in/google/route.ts:19`).
-- `apps/app/proxy.ts:15` — `PUBLIC_PATHS` é só `/sign-in` e `/sign-up`; o proxy é default-deny, então
-  qualquer rota nova de onboarding já fica protegida sem allowlist.
+- `apps/api/(shared)/lib/user-merge.ts:47` — **`createDefaultUserProfile`** (não `ensureDefaultUserProfile`
+  — esse nome não existe no repo) cria o perfil com apenas `type: COMMON` e `reference_id`. É o ponto exato
+  onde o estado inicial de onboarding nasceria. Há **dois** pontos de chamada diretos, ambos internos ao
+  próprio `user-merge.ts` (`:22`, `:41`); a rota Google
+  (`apps/api/app/(routes)/auth/sign-in/google/route.ts:16`) chega até ele **indiretamente**, via
+  `getMergedUserByUid`.
+- `apps/app/proxy.ts:58` — `PUBLIC_PATHS` é só `/sign-in` e `/sign-up` (`isPublicPath` em `:61`); o proxy é
+  default-deny (razão documentada em `:54-55`), então qualquer rota nova de onboarding já fica protegida
+  sem allowlist.
 - `packages/sdk/src/types/user/user.ts:7` — o `UserDTO` tem `id`, `type`, `reference_id` e timestamps.
 - **Lacuna:** não existe nenhuma noção de "perfil incompleto", nenhum passo guiado, nenhum estado
   persistido de progresso. O perfil não guarda sequer o nome próprio do usuário.
@@ -82,7 +88,7 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 | Camada | Impacto |
 |--------|---------|
 | `packages/sdk` | Estende o recurso de usuário com o estado de onboarding e a ação de avançar/concluir. |
-| `apps/api` | Rota(s) sob o guard de painel comum; o estado inicial passa a nascer em `ensureDefaultUserProfile`. Sem coleção nova — é campo no perfil existente. |
+| `apps/api` | Rota(s) sob o guard de painel comum; o estado inicial passa a nascer em `createDefaultUserProfile`. Sem coleção nova — é campo no perfil existente. |
 | `apps/app` | Rotas novas dentro de `(authenticated)`, formulários com os `HookForm*` já existentes; ponto de desvio no resolvedor pós-login e no `proxy.ts`. |
 | `apps/web` | N/A. |
 | `packages/*` | i18n nos 3 idiomas (títulos de passo, ações, progresso, erros). Nenhuma mudança em `auth`. |
