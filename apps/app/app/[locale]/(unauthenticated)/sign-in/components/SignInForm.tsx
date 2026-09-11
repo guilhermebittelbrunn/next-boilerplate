@@ -183,16 +183,26 @@ export const SignInForm = () => {
                     {dictionary.apps.app.pages.signIn.googleSignIn}
                 </Button>
 
-                <div className="text-center text-sm">
-                    <span className="text-muted-foreground">
-                        {dictionary.apps.app.pages.signIn.noAccount}
-                    </span>
-                    <Link
-                        className="text-primary hover:underline"
-                        href={`/${locale}/sign-up`}
-                    >
-                        {dictionary.apps.app.pages.signIn.signUp}
-                    </Link>
+                <div className="space-y-2 text-center text-sm">
+                    <p>
+                        <Link
+                            className="text-primary hover:underline"
+                            href={`/${locale}/forgot-password`}
+                        >
+                            {dictionary.apps.app.pages.signIn.forgotPassword}
+                        </Link>
+                    </p>
+                    <p>
+                        <span className="text-muted-foreground">
+                            {dictionary.apps.app.pages.signIn.noAccount}
+                        </span>
+                        <Link
+                            className="text-primary hover:underline"
+                            href={`/${locale}/sign-up`}
+                        >
+                            {dictionary.apps.app.pages.signIn.signUp}
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>

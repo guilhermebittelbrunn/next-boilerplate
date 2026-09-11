@@ -116,7 +116,13 @@ describe("proxy default deny", () => {
     });
 
     it("lets an anonymous visitor reach the public paths", async () => {
-        for (const path of ["/pt-br/sign-in", "/pt-br/sign-up"]) {
+        for (const path of [
+            "/pt-br/sign-in",
+            "/pt-br/sign-up",
+            "/pt-br/forgot-password",
+            "/pt-br/reset-password",
+            "/pt-br/verify-email",
+        ]) {
             const response = await proxy(anonymous(path));
 
             expect(locationOf(response)).toBeNull();
@@ -156,6 +162,23 @@ describe("proxy bounce off the public paths", () => {
 
     it("falls back to the locale home with no deep link", async () => {
         const response = await proxy(signedIn("/pt-br/sign-in"));
+
+        expect(locationOf(response)).toBe("/pt-br");
+    });
+
+    it("leaves a signed-in visitor on a recovery link, action code intact", async () => {
+        for (const path of [
+            "/pt-br/reset-password?oobCode=abc123",
+            "/pt-br/verify-email?oobCode=abc123",
+        ]) {
+            const response = await proxy(signedIn(path));
+
+            expect(locationOf(response)).toBeNull();
+        }
+    });
+
+    it("still bounces a signed-in visitor off the request screen", async () => {
+        const response = await proxy(signedIn("/pt-br/forgot-password"));
 
         expect(locationOf(response)).toBe("/pt-br");
     });

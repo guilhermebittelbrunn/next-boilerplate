@@ -136,6 +136,23 @@ describe("action-link template", () => {
         expect(html).toContain(emailCopy("pt-br").layout.fallbackUrlLabel);
     });
 
+    it.each(
+        (["resetPassword", "verifyEmail"] as const).flatMap((action) =>
+            locales.map((locale) => [action, locale] as const)
+        )
+    )("renders the %s action in %s", async (action, locale) => {
+        const data = { ...actionLinkPreviewData, action };
+        const html = await render(actionLinkEmail.render({ locale, data }));
+        const actionCopy = emailCopy(locale).actionLink.actions[action];
+
+        expect(html).toContain(actionCopy.body);
+        expect(html).toContain(actionCopy.cta);
+        expect(html).toContain(`href="${data.url}"`);
+        expect(actionLinkEmail.subject(emailCopy(locale), data)).toBe(
+            interpolate(actionCopy.subject, { brand: emailBrand.name })
+        );
+    });
+
     it("resolves the subject of the requested action", () => {
         expect(
             actionLinkEmail.subject(emailCopy("es"), actionLinkPreviewData)

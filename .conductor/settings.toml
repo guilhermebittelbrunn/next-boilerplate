@@ -3,7 +3,12 @@
 # Arquivos gitignored copiados para todo workspace novo.
 # Sem os `.env` de cada app o front não fala com a API e o Firebase não inicializa — nenhum agent
 # consegue subir e validar a aplicação. Os `.env.example` são versionados e já vêm com o worktree.
-file_include_globs = ".env\n.env.local\napps/*/.env\napps/*/.env.local\n.claude/settings.local.json\n.claude/dev-credentials.local.md\n"
+#
+# Os screenshots da validação visual (`docs/features/**/screenshots/` e `**/test/e2e/`) são gitignored
+# de propósito — pesam megabytes e envelhecem junto com a UI —, mas são a evidência de como cada tela
+# ficou. Copiá-los do root para cada workspace novo mantém esse registro acessível sem versioná-lo. O
+# caminho de volta (workspace → root) é o script `archive` abaixo.
+file_include_globs = ".env\n.env.local\napps/*/.env\napps/*/.env.local\n.claude/settings.local.json\n.claude/dev-credentials.local.md\ndocs/features/**/screenshots/**\ndocs/features/**/test/e2e/**\n"
 
 [scripts]
 # Criação do workspace: instala as dependências do monorepo (root + apps/* + packages/*), para que os
@@ -11,9 +16,17 @@ file_include_globs = ".env\n.env.local\napps/*/.env\napps/*/.env.local\n.claude/
 # O fallback cobre o caso de o lockfile estar dessincronizado do package.json.
 setup = "pnpm install --frozen-lockfile || pnpm install"
 
-# Antes de arquivar: remove todo node_modules do worktree (root, apps/*, packages/*).
-# São ~2 GB por workspace — sem isso cada workspace arquivado deixa esse peso no disco.
-archive = "find . -name node_modules -type d -prune -exec rm -rf '{}' +"
+# Antes de arquivar, na ordem:
+# 1. Salva os screenshots da validação visual no diretório raiz do repositório. Eles são gitignored,
+#    então arquivar o workspace os apagaria para sempre — e são a única evidência de como a tela
+#    ficou em cada entrega. O root acumula o histórico e o `file_include_globs` acima o devolve aos
+#    workspaces novos.
+# 2. Remove todo node_modules do worktree (root, apps/*, packages/*). São ~2 GB por workspace — sem
+#    isso cada workspace arquivado deixa esse peso no disco.
+archive = '''
+find docs/features -type d \( -name screenshots -o -path '*/test/e2e' \) -exec sh -c 'for d; do t="$CONDUCTOR_ROOT_PATH/$d"; mkdir -p "$t"; cp -R "$d/." "$t/"; done' _ {} + 2>/dev/null || true
+find . -name node_modules -type d -prune -exec rm -rf '{}' +
+'''
 
 # As portas são fixas nos scripts `dev` de cada app (app 3000 · web 3001 · api 3002 · email 3003) e os
 # apps se referenciam por `NEXT_PUBLIC_*_URL`. Dois workspaces rodando ao mesmo tempo colidiriam de

@@ -6,7 +6,10 @@ import { toast } from "react-toastify";
 type NotificationType = "success" | "info" | "warning" | "error";
 
 export const useAlert = () => {
-    const { theme } = useTheme();
+    // Resolved, never the raw preference: the toast library only knows "light" and
+    // "dark", so handing it the literal "system" leaves it with no stylesheet and it
+    // keeps its default white text — invisible against the light background below.
+    const { resolvedTheme } = useTheme();
 
     const openNotification = (type: NotificationType, message: string) => {
         toast[type](message, {
@@ -16,7 +19,7 @@ export const useAlert = () => {
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
-            theme,
+            theme: resolvedTheme === "dark" ? "dark" : "light",
         });
     };
 

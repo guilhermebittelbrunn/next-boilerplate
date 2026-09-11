@@ -8,6 +8,7 @@ import {
     getAuth,
     onAuthStateChanged,
     onIdTokenChanged,
+    reload,
     signInWithCustomToken,
     signInWithEmailAndPassword,
     signInWithPopup,
@@ -177,4 +178,25 @@ export const getIdToken = (forceRefresh?: boolean): Promise<string | null> => {
         return Promise.resolve(null);
     }
     return user.getIdToken(forceRefresh);
+};
+
+/**
+ * Re-reads the account from Firebase, then forces a token refresh so the id-token
+ * listener re-fires with the fresh record.
+ *
+ * Both halves are needed: profile fields such as `emailVerified` come from the
+ * account record and a token refresh alone leaves them stale, while a reload alone
+ * notifies no subscriber.
+ */
+export const reloadCurrentUser = async (): Promise<User | null> => {
+    const auth = getAuthClient();
+    const user = auth.currentUser;
+
+    if (!user) {
+        return null;
+    }
+
+    await reload(user);
+    await user.getIdToken(true);
+    return auth.currentUser;
 };

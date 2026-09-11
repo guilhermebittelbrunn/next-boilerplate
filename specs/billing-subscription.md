@@ -9,7 +9,7 @@ area: [packages/sdk, apps/api, apps/app, apps/web, packages/payments, packages/i
 mode: subscription
 depends_on: []
 feature: -
-updated: 2026-09-01
+updated: 2026-09-10
 ---
 
 # Assinatura Stripe de ponta a ponta
@@ -26,7 +26,7 @@ Quem precisar faturar escreve a integração inteira à mão, justamente a parte
 - `packages/payments/ai.ts:4-5` — `paymentsAgentToolkit` (cria produtos/preços/payment links). Serve para **semear** o catálogo, não para vender. 🔴 **Ainda tem o defeito gêmeo que o `getStripe()` corrigiu**: `new StripeAgentToolkit({ secretKey: keys().STRIPE_SECRET_KEY || "" })` em escopo de módulo. Não explode hoje só porque nada importa `@repo/payments/ai` — explodiria no primeiro fork que importasse, e esta spec é justamente o que faria alguém importar.
 - `packages/payments/keys.ts:7-8` — `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, ambos `.optional()`; `:14` desliga a validação inteira quando não há secret.
 - `apps/api/app/(routes)/webhooks/payments/route.ts:27` — o POST **valida a assinatura** do evento (`:43`, `constructEvent`). Essa metade está pronta. Já `:8` e `:18` são **stubs com `// TODO`** (`:11`, `:21`): checam `data.customer` e retornam sem persistir nada. Só dois eventos são roteados (`:50` `checkout.session.completed`, `:54` `subscription_schedule.canceled`). *(Refs de linha corrigidas em 2026-09-01; a variável morta `customerId` que existia aqui foi removida pelo saneamento de `ci-pipeline`, e a rota ganhou 11 testes.)*
-- `apps/api/app/(guards)/common-panel.ts:28` (`requireCommonPanelApi`), `apps/api/package.json:6` (`dev:with-stripe`) e `.claude/skills/payments-flow/SKILL.md` — guard, listener local de webhook e procedimento de implementação já existem.
+- `apps/api/app/(guards)/common-panel.ts:29` (`requireCommonPanelApi`), `apps/api/package.json:6` (`dev:with-stripe`) e `.claude/skills/payments-flow/SKILL.md` — guard, listener local de webhook e procedimento de implementação já existem.
 - **Lacuna:** `apps/api/app/(routes)/` tem 10 rotas e **nenhuma** sob `payments/`; `packages/sdk/src/client/index.ts:11-14` registra só `application`, `authApi`, `user` e `entity`; `UserDTO` (`packages/sdk/src/types/user/user.ts:7-14`) e `UserWithAuthDTO` (`:30-52`) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
 
 ### ⚠️ Divergência doc × código (achado crítico)
@@ -37,7 +37,7 @@ Quem precisar faturar escreve a integração inteira à mão, justamente a parte
 |---|---|
 | `:8` `GET /payments/plans`, `POST /payments/checkout`, `POST /payments/portal` | nenhuma existe |
 | `:8` webhook trata `customer.subscription.updated\|deleted` | só `checkout.session.completed` e `subscription_schedule.canceled`, ambos vazios |
-| `:9` `UserDTO.subscription` + `userRepository.updateSubscriptionByReferenceId` | campo inexistente; o repositório (`apps/api/(shared)/repositories/user.repository.ts:11-14`) não tem o método |
+| `:9` `UserDTO.subscription` + `userRepository.updateSubscriptionByReferenceId` | campo inexistente; o repositório (`apps/api/(shared)/repositories/user.repository.ts:11-13`, classe declarada em `:10`) não tem o método |
 | `:10` `apiClient.payments.{listPlans,createCheckout,createPortal}` | módulo `payments` não existe no SDK |
 | `:11` tela "Minha assinatura" em `apps/app` | não existe |
 | `:12` "Falta por fork: criar os produtos/preços no Stripe" | falta a integração inteira |

@@ -20,12 +20,19 @@ export const env = createEnv({
         // in `instrumentation.ts`.
         CORS_ORIGIN: z.string().optional(),
     },
-    client: {},
+    // Base of the links the account action emails carry. Redeclared here even though
+    // `core()` already provides it: `skipValidation` makes createEnv answer with this
+    // module's own `runtimeEnv` and drop everything inherited, which below is every
+    // development run — and a reset link that resolves to nothing is a dead feature.
+    client: {
+        NEXT_PUBLIC_APP_URL: z.url().optional(),
+    },
     runtimeEnv: {
         FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
         FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
         FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
         CORS_ORIGIN: process.env.CORS_ORIGIN,
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     },
     skipValidation: process.env.NODE_ENV === "development",
 });

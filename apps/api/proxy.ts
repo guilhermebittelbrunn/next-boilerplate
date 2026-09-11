@@ -23,15 +23,21 @@ const allowedOrigins = resolveAllowedOrigins(
 const securityOptions = buildApiOptions();
 
 /**
- * Public authentication endpoints: no guard to hang a budget on, and each one
- * spends the project's Identity Toolkit quota. `/auth/me` is authenticated and on
- * the hot path, `/webhooks/payments` is retried aggressively by Stripe — throttling
- * either costs more than it protects.
+ * Account entry and recovery endpoints: no guard to hang a budget on, and each one
+ * spends the project's Identity Toolkit quota or sends mail on the fork's account.
+ * `/auth/me` is authenticated and on the hot path, `/webhooks/payments` is retried
+ * aggressively by Stripe — throttling either costs more than it protects.
+ *
+ * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
 const RATE_LIMITED_PATHS = [
     "/auth/sign-in",
     "/auth/sign-up",
     "/auth/sign-in/google",
+    "/auth/password/reset-request",
+    "/auth/password/reset",
+    "/auth/email-verification/send",
+    "/auth/email-verification/confirm",
 ];
 
 function isRateLimitedPath(pathname: string): boolean {
