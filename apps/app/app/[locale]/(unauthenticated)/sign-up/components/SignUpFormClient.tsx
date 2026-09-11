@@ -14,12 +14,14 @@ import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation } from "@tanstack/react-query";
+import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
+import { apiClient } from "@/shared/lib/client";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
 import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
 import {
@@ -89,11 +91,28 @@ export default function SignUpFormClient() {
         };
     }, [user, authLoading, locale]);
 
+    /**
+     * Only accounts created with a password get here: signing in with Google brings an
+     * address the provider already vouched for. Runs after the redirect has already been
+     * ordered, and swallows its own failure: the account exists at this point and the
+     * panel carries a notice with its own resend button, so a send that does not go
+     * through must never turn a completed sign-up into an error.
+     */
+    const requestVerificationEmail = async (credential: UserCredential) => {
+        try {
+            const accessToken = await credential.user.getIdToken();
+            apiClient.setAuthorizationHeader(accessToken);
+            await apiClient.authApi.sendEmailVerification({ locale });
+        } catch (error) {
+            console.error("Could not request the verification email", error);
+        }
+    };
+
     const onSubmit = (data: SignUpFormValues) => {
-        signUp.mutate({
-            email: data.email,
-            password: data.password,
-        });
+        signUp.mutate(
+            { email: data.email, password: data.password },
+            { onSuccess: requestVerificationEmail }
+        );
     };
 
     // Already authenticated or still resolving the session: show a loader and let

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { env } from "@/env";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
 import { resolveSidebarDefaultOpen } from "@/lib/server/sidebarState";
+import { EmailNotVerifiedNotice } from "@/shared/components/ui/EmailNotVerifiedNotice";
 import Navbar from "@/shared/components/ui/Navbar";
 import { isImpersonatingSnapshot } from "@/shared/lib/panelState";
 import { SidebarCommon } from "./sidebar";
@@ -37,6 +38,7 @@ const AppLayout = async ({ children, params }: AppLayoutProperties) => {
         <SidebarProvider defaultOpen={await resolveSidebarDefaultOpen()}>
             <SidebarCommon>
                 <Navbar />
+                <EmailNotVerifiedNotice />
                 {children}
             </SidebarCommon>
         </SidebarProvider>
