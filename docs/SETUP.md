@@ -4,6 +4,8 @@ Como subir o boilerplate do zero e o mapa **real** das variáveis de ambiente. A
 
 > Os `.env.example` de `apps/{api,app,web}` refletem **apenas** as vars usadas por este fork (agrupadas e comentadas). Copie o de cada app para `.env` (ou `.env.local`) e preencha. Este documento detalha **como obter/usar cada uma**. As chaves herdadas do upstream next-forge e não usadas aqui — Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub, `FLAGS_SECRET` e PostHog — foram removidas.
 
+> 🚀 **Indo para produção?** Este documento cobre o ambiente local. Os passos que só existem fora do repo — publicar as rules do Firestore, verificar o domínio de e-mail no DNS, ligar branch protection — estão em [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), em formato de checklist.
+
 ## Pré-requisitos
 
 - Node `22.12.0` (`nvm use`) · pnpm `10.19.0`

@@ -4,6 +4,8 @@ Boilerplate em **monorepo** (Turborepo + pnpm) para gerar rapidamente **MVPs** c
 
 > 📐 [Arquitetura](docs/ARCHITECTURE.md) · ⚙️ [Setup & env](docs/SETUP.md) · 🔒 [Segurança](docs/SECURITY.md) · 💳 [Pagamentos](docs/PAYMENTS.md) · 🔑 [SSO](docs/AUTH-SSO.md) · 👤 [Auth & painéis](docs/AUTH-PANEL.md) · 📖 [Glossário](docs/GLOSSARY.md)
 >
+> 🚀 **[Antes de entrar em produção](docs/PRE-PRODUCTION.md)** — os passos de console, DNS e painel que nenhum teste cobra (e sem os quais a base do Firestore fica aberta e a recuperação de senha não existe)
+>
 > 🤖 IA: [Ferramental](docs/AI-WORKFLOW.md) · [Pipeline de tarefas](docs/TASK-PIPELINE.md) · [Guia de análise](docs/feature-analysis-guide.md) · [Checklist de revisão](docs/review-checklist.md)
 >
 > 🗺️ [Backlog de funcionalidades](specs/BACKLOG.md) — o que ainda falta no core, com evidência de mercado
