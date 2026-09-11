@@ -42,6 +42,16 @@ export const sharedUtilsTranslations = {
                 "Não foi possível concluir o cadastro da entidade.",
             AUTH_RATE_LIMITED:
                 "Muitas tentativas em pouco tempo. Aguarde um instante e tente de novo.",
+            EMAIL_NOT_CONFIGURED:
+                "O envio de e-mails não está configurado. Fale com o suporte.",
+            EMAIL_SEND_FAILED:
+                "Não foi possível enviar o e-mail agora. Tente de novo em instantes.",
+            AUTH_OOB_CODE_INVALID: "Este link não é válido. Peça um novo.",
+            AUTH_OOB_CODE_EXPIRED: "Este link expirou. Peça um novo.",
+            AUTH_PASSWORD_RESET_FAILED:
+                "Não foi possível redefinir a senha. Peça um novo link.",
+            AUTH_EMAIL_VERIFICATION_FAILED:
+                "Não foi possível confirmar o e-mail. Peça um novo link.",
         },
     },
     en: {
@@ -83,6 +93,16 @@ export const sharedUtilsTranslations = {
             ENTITY_CREATE_FAILED: "Could not finish creating the entity.",
             AUTH_RATE_LIMITED:
                 "Too many attempts in a short time. Wait a moment and try again.",
+            EMAIL_NOT_CONFIGURED:
+                "Email delivery is not configured. Contact support.",
+            EMAIL_SEND_FAILED:
+                "The email could not be sent right now. Try again shortly.",
+            AUTH_OOB_CODE_INVALID: "This link is not valid. Request a new one.",
+            AUTH_OOB_CODE_EXPIRED: "This link has expired. Request a new one.",
+            AUTH_PASSWORD_RESET_FAILED:
+                "Could not reset the password. Request a new link.",
+            AUTH_EMAIL_VERIFICATION_FAILED:
+                "Could not confirm the email. Request a new link.",
         },
     },
     es: {
@@ -128,6 +148,18 @@ export const sharedUtilsTranslations = {
                 "No se pudo completar el registro de la entidad.",
             AUTH_RATE_LIMITED:
                 "Demasiados intentos en poco tiempo. Espere un momento e inténtelo de nuevo.",
+            EMAIL_NOT_CONFIGURED:
+                "El envío de correos no está configurado. Contacta al soporte.",
+            EMAIL_SEND_FAILED:
+                "No se pudo enviar el correo ahora. Inténtalo de nuevo en unos momentos.",
+            AUTH_OOB_CODE_INVALID:
+                "Este enlace no es válido. Solicita uno nuevo.",
+            AUTH_OOB_CODE_EXPIRED:
+                "Este enlace ha caducado. Solicita uno nuevo.",
+            AUTH_PASSWORD_RESET_FAILED:
+                "No se pudo restablecer la contraseña. Solicita un enlace nuevo.",
+            AUTH_EMAIL_VERIFICATION_FAILED:
+                "No se pudo confirmar el correo. Solicita un enlace nuevo.",
         },
     },
 };
