@@ -279,6 +279,41 @@ describe("api proxy rate limit", () => {
         );
     });
 
+    it("counts the account recovery endpoints", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+        const recoveryPaths = [
+            "/auth/password/reset-request",
+            "/auth/password/reset",
+            "/auth/email-verification/send",
+            "/auth/email-verification/confirm",
+        ];
+
+        for (const path of recoveryPaths) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "POST", path })
+            );
+        }
+
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(recoveryPaths.length);
+    });
+
+    it("matches the recovery endpoints exactly, not by prefix", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        for (const path of [
+            "/auth/password",
+            "/auth/password/reset/",
+            "/auth/password/reset-request/extra",
+            "/auth/email-verification",
+        ]) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "POST", path })
+            );
+        }
+
+        expect(checkRateLimitMock).not.toHaveBeenCalled();
+    });
+
     it("answers a spent budget with the code and the wait", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
         checkRateLimitMock.mockResolvedValue({
