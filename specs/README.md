@@ -99,7 +99,8 @@ effort: M              # P (≤1 dia) | M (2–4 dias) | G (>1 semana)
 audience: produto      # produto | dx | confianca — quem colhe o benefício
 area: [apps/api, apps/app, packages/sdk]
 mode: ambos            # subscription | simple | ambos — modo de produto afetado
-depends_on: []         # ids de outras specs que precisam vir antes
+depends_on: []         # ORDEM — ids de outras specs que precisam vir antes
+contends_on: []        # CONTENÇÃO — arquivos compartilhados existentes que esta spec altera
 feature: -             # slug em docs/features/<slug> quando entra em execução
 updated: 2026-08-21
 ---
@@ -125,6 +126,50 @@ updated: 2026-08-21
 
 Um backlog saudável tem as três. Só `produto` produz um MVP bonito que ninguém consegue operar; só `dx`
 produz uma base impecável que não entrega nada.
+
+### `depends_on` × `contends_on`
+
+São **eixos diferentes** e a confusão entre os dois é o erro que o campo novo existe para impedir:
+
+| campo | pergunta que responde | o que impede |
+|-------|-----------------------|--------------|
+| `depends_on` | "isto pode ser feito **antes** daquilo?" | **ordem** — A precisa do que B entrega |
+| `contends_on` | "isto pode ser feito **ao mesmo tempo** que aquilo?" | **contenção** — A e B editam o mesmo arquivo |
+
+Duas specs com `depends_on: []` podem colidir feio: `cursor-pagination` e `audit-log` não dependem uma da
+outra em nada, e mesmo assim alteram as duas o `apps/api/(shared)/repositories/base.repository.ts`.
+`depends_on` nunca veria isso, porque não é ordem — é disputa por arquivo.
+
+**`contends_on` lista os arquivos compartilhados específicos que a spec vai *modificar*, e onde duas
+features rodando em paralelo produziriam conflito de merge caro.** É uma lista **curta** — tipicamente
+0 a 3 entradas, raramente mais. Ela existe para alimentar o cálculo de [lotes
+paralelos](BACKLOG.md#lotes-paralelos), não para descrever o raio de impacto da spec (isso é o `area:`,
+que é grosso demais para esta finalidade: quase toda spec lista `packages/internationalization`, então
+overlap de `area` marcaria tudo como conflitante com tudo).
+
+**O que NÃO entra — e o porquê, que é o que impede o campo de inchar:**
+
+| não entra | por quê |
+|-----------|---------|
+| `packages/internationalization/translations/*` | toda feature com UI escreve lá, mas em **nós diferentes** do dicionário. Conflito trivial, resolve sozinho. Se entrasse, **nada** seria paralelizável |
+| `specs/BACKLOG.md` | resolvido por **processo** (só um workspace roda a auditoria; os outros usam `--no-audit`), não por dado |
+| arquivos em `docs/` | markdown não quebra build e o conflito é barato de resolver à mão |
+| arquivos que a spec apenas **lê** | ler não conflita |
+| arquivos **novos** que a spec cria | arquivo que não existe não tem com o que conflitar |
+
+**O que entra:** arquivo de código ou configuração, **existente**, **compartilhado**, que a spec
+**altera** — e que é plausível que outra spec do backlog também altere. Os campeões de disputa neste repo
+são os **barris** (`packages/sdk/src/client/index.ts`,
+`packages/design-system/components/ui/index.ts`), os **pontos únicos de configuração**
+(`firestore.indexes.json`, `firebase.json`, `package.json` da raiz, `env.ts` dos apps) e as **bases
+herdadas** (`apps/api/(shared)/repositories/base.repository.ts`, `packages/auth/server.ts`).
+
+**Na dúvida, inclua.** A assimetria de custo é clara: um falso positivo custa uma feature rodando em série;
+um falso negativo custa um merge conflict noturno, sem ninguém acordado para resolver.
+
+> **Detalhe de sintaxe:** caminho que contenha `[` ou `]` (rotas do Next, como
+> `apps/app/app/[locale]/...`) **precisa de aspas** dentro da lista — em YAML flow, colchete é indicador e
+> quebra o parsing. Os demais caminhos, inclusive os com `(grupo)`, vão sem aspas.
 
 ## Regras de qualidade de uma spec
 

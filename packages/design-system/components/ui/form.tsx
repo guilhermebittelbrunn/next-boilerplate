@@ -86,16 +86,21 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
 
 function FormLabel({
   className,
+  invalid,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+}: React.ComponentProps<typeof LabelPrimitive.Root> & {
+  invalid?: boolean;
+}) {
   const { error, formItemId } = useFormField();
+  const isInvalid = invalid ?? !!error;
 
   return (
     <Label
-      className={cn("data-[error=true]:text-destructive", className)}
-      data-error={!!error}
+      className={className}
+      data-error={isInvalid}
       data-slot="form-label"
       htmlFor={formItemId}
+      invalid={isInvalid}
       {...props}
     />
   );

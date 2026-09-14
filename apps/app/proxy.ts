@@ -15,6 +15,8 @@ const IDENTITY_TOOLKIT_ORIGIN = "https://identitytoolkit.googleapis.com";
 /** Refreshes the ID token roughly hourly; blocking it kills the session long after sign-in. */
 const SECURE_TOKEN_ORIGIN = "https://securetoken.googleapis.com";
 const GOOGLE_AVATAR_ORIGIN = "https://lh3.googleusercontent.com";
+/** Host of the V4 signed URLs Cloud Storage issues (path-style, one fixed host). */
+const STORAGE_ORIGIN = "https://storage.googleapis.com";
 const TAG_MANAGER_ORIGIN = "https://www.googletagmanager.com";
 const GOOGLE_ANALYTICS_ORIGINS = [
     TAG_MANAGER_ORIGIN,
@@ -28,6 +30,7 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const isAnalyticsEnabled = Boolean(
     env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.startsWith("G-")
 );
+const isStorageConfigured = Boolean(env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
 const firebaseAuthOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     ? `https://${env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}`
     : null;
@@ -45,6 +48,7 @@ const securityOptions = buildBrowserAppOptions({
     ],
     imgSrc: [
         GOOGLE_AVATAR_ORIGIN,
+        ...(isStorageConfigured ? [STORAGE_ORIGIN] : []),
         ...(isAnalyticsEnabled ? [TAG_MANAGER_ORIGIN] : []),
     ],
     frameSrc: firebaseAuthOrigin ? [firebaseAuthOrigin] : [],

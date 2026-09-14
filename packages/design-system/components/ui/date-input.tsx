@@ -57,11 +57,7 @@ export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
     return (
       <div className={cn("grid gap-2", className)}>
         {label ? (
-          <Label
-            className={cn(error ? "text-destructive" : "")}
-            htmlFor={id}
-            required={required}
-          >
+          <Label htmlFor={id} invalid={Boolean(error)} required={required}>
             {label}
           </Label>
         ) : null}

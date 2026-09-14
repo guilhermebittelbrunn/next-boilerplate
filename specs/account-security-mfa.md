@@ -8,6 +8,7 @@ audience: confianca
 area: [apps/api, apps/app, packages/auth, packages/design-system, packages/internationalization]
 mode: ambos
 depends_on: [account-settings]
+contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
 updated: 2026-09-10
 ---
@@ -79,6 +80,24 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
   que forçam memorizar, ou que bloqueiam colar a senha, vão contra o critério.
 - **Custo:** o preço de MFA no Google Cloud Identity Platform é **não confirmado** na nota — nenhuma
   decisão de adoção deve tratá-lo como gratuito.
+
+> 🔴 **A gravidade do item 1 subiu em 2026-09-11, sem uma linha dele ter sido escrita.** Até a PR #10,
+> `revokeUserSessions` só era chamada pelo logout global (`packages/auth/session-routes.ts:79`) — um
+> gesto deliberado de quem já está com a conta na mão. Agora ela também é chamada pela **redefinição de
+> senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:49`), que é o fluxo canônico de "minha
+> conta foi comprometida". E a janela continua aberta: `packages/auth/server.ts:123` chama
+> `verifyIdToken(token)` **sem `checkRevoked`**, e `apps/api/(shared)/lib/resolve-api-actor.ts:23-32`
+> tenta o bearer ID token **antes** do cookie de sessão (`:34`), que esse sim verifica revogação
+> (`server.ts:193-196`). Efeito prático: **a vítima redefine a senha e o ID token do atacante continua
+> passando no guard da API por até uma hora.** O item 1 deixou de ser dívida teórica e virou o furo de um
+> fluxo de segurança que já está em produção. Reforça o que a seção de dependências já dizia: este item
+> **não depende de `account-settings`** e pode ser tarefa direta hoje.
+>
+> Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
+> (`packages/auth/client.ts:191-202`), que força `reload(user)` + `getIdToken(true)`. É o primeiro
+> precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
+> do lado do browser. ⚠️ Ela não tem teste próprio em `packages/auth` (a suíte do pacote segue com 2
+> arquivos / 29 testes); só é exercitada por mock em `apps/app/__tests__/useEmailVerification.test.tsx`.
 
 ## Proposta — corte de MVP
 

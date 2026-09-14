@@ -19,6 +19,7 @@ export * from './collapsible';
 export * from './spinner';
 export * from './aspect-ratio';
 export * from './combobox';
+export * from './image-upload-input';
 export * from './input-group';
 export * from './progress';
 export * from './switch';

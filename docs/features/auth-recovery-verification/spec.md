@@ -1,7 +1,7 @@
 ---
 id: auth-recovery-verification
 title: Recuperação de senha e verificação de e-mail
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: produto
@@ -9,8 +9,14 @@ area: [apps/api, apps/app, packages/auth, packages/sdk, packages/internationaliz
 mode: ambos
 depends_on: [transactional-emails]
 feature: auth-recovery-verification
-updated: 2026-09-10
+updated: 2026-09-11
 ---
+
+> **Entregue em 2026-09-11** pela feature [`auth-recovery-verification`](STATE.md), na branch
+> `feat/auth-recovery-verification` (PR **#10**, mergeada em 2026-09-11T03:10:59Z, merge commit
+> `e4eddb9`, CI verde nesse SHA). Os **5 itens do corte de MVP** foram conferidos um a um no código pela
+> auditoria de 2026-09-11 — as evidências estão marcadas no corte abaixo. O restante do texto é o registro
+> de **por que** a mudança foi feita e descreve o repositório **antes** dela, não o estado atual.
 
 # Recuperação de senha e verificação de e-mail
 
@@ -58,11 +64,29 @@ começar**. Isso reduz o escopo desta spec, e de um jeito que a redação acima 
 
 ## Proposta — corte de MVP
 
-- [ ] A tela de login oferece "esqueci minha senha" e o usuário pede a redefinição informando o e-mail.
-- [ ] O usuário recebe um e-mail traduzido no seu idioma com link de validade limitada e define a senha nova por uma tela do próprio app — não pela página padrão do Firebase.
-- [ ] Redefinir a senha encerra as sessões ativas daquele usuário em todos os apps.
-- [ ] O cadastro dispara e-mail de verificação, e o app mostra ao usuário não verificado um aviso com opção de reenviar (protegida contra rajada).
-- [ ] Os erros novos do fluxo (link expirado, e-mail desconhecido, excesso de tentativas) chegam ao front como `error.code` traduzido nos 3 idiomas — sem mensagem crua do provedor.
+- [x] A tela de login oferece "esqueci minha senha" e o usuário pede a redefinição informando o e-mail.
+      — `apps/app/.../sign-in/components/SignInForm.tsx:190,192` (link para `/${locale}/forgot-password`,
+      copy de dicionário); página em `(unauthenticated)/forgot-password/page.tsx`; rota
+      `apps/api/app/(routes)/auth/password/reset-request/route.ts`.
+- [x] O usuário recebe um e-mail traduzido no seu idioma com link de validade limitada e define a senha nova por uma tela do próprio app — não pela página padrão do Firebase.
+      — slug `resetPassword` nos 3 idiomas (`translations/packages/email/index.ts:28`, `:80`, `:125+`),
+      consumido por `actionLinkEmail` em `auth/password/reset-request/route.ts:33`; a tela própria é
+      `(unauthenticated)/reset-password/page.tsx:27-30`, que lê o `oobCode` da query. O link é reconstruído
+      contra a nossa página em `apps/api/(shared)/lib/auth-action-links.ts`.
+- [x] Redefinir a senha encerra as sessões ativas daquele usuário em todos os apps.
+      — `auth/password/reset/route.ts:1,49` chama `revokeUserSessions(user.uid)`; o mecanismo é verificável
+      porque `verifySessionCookie` roda com `checkRevoked: true` (`packages/auth/server.ts:193-196`).
+- [x] O cadastro dispara e-mail de verificação, e o app mostra ao usuário não verificado um aviso com opção de reenviar (protegida contra rajada).
+      — gatilho em `SignUpFormClient.tsx:105` (`apiClient.authApi.sendEmailVerification`); aviso em
+      `shared/components/ui/EmailNotVerifiedNotice.tsx`, montado no painel comum
+      (`(authenticated)/(common)/layout.tsx:8,41`); a proteção contra rajada é a entrada das 4 rotas novas
+      em `RATE_LIMITED_PATHS` (`apps/api/proxy.ts:37-40`). **Ressalva registrada:** o limitador é no-op sem
+      `ARCJET_KEY` (`packages/security/index.ts:42-44`) — ver `docs/PRE-PRODUCTION.md` §6.
+- [x] Os erros novos do fluxo (link expirado, e-mail desconhecido, excesso de tentativas) chegam ao front como `error.code` traduzido nos 3 idiomas — sem mensagem crua do provedor.
+      — 6 códigos novos nos 3 idiomas em `translations/packages/shared/utils.ts:45-53` (pt-br), `:96-104`
+      (en) e `:151-161` (es): `EMAIL_NOT_CONFIGURED`, `EMAIL_SEND_FAILED`, `AUTH_OOB_CODE_INVALID`,
+      `AUTH_OOB_CODE_EXPIRED`, `AUTH_PASSWORD_RESET_FAILED`, `AUTH_EMAIL_VERIFICATION_FAILED`.
+      `HTTP_STATUS.SERVICE_UNAVAILABLE` (503) entrou em `packages/shared/utils/helpers/httpStatus.ts:13`.
 
 ### Fora do corte
 

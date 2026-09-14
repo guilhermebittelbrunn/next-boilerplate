@@ -12,6 +12,7 @@ import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../../paths";
 import { EntityFormFields } from "../../../(components)/EntityFormFields";
@@ -36,6 +37,7 @@ export function EditEntityClient() {
 
     const { data: entity, isLoading, isError } = useFindEntityById(id);
     const { updateEntityMutation } = useEntityCrud();
+    const { uploadFile, isUploading } = useFileUpload();
 
     const schema = useMemo(
         () => buildEntityFormSchema(dictionary),
@@ -114,6 +116,8 @@ export function EditEntityClient() {
                                         createdAtLabel={entitiesForm.createdAt}
                                         createdAtValue={entity.createdAt}
                                         mode="update"
+                                        photoPreviewUrl={entity.photoUrl}
+                                        uploadPhoto={uploadFile}
                                     />
                                 </FormContainer>
                             </Container>
@@ -122,7 +126,8 @@ export function EditEntityClient() {
                                 disabled={
                                     updateEntityMutation.isPending ||
                                     !entity ||
-                                    isImpersonating
+                                    isImpersonating ||
+                                    isUploading
                                 }
                                 isLoading={updateEntityMutation.isPending}
                                 onBack={() =>

@@ -8,6 +8,7 @@ audience: produto
 area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/internationalization]
 mode: ambos
 depends_on: [auth-recovery-verification, file-upload-storage]
+contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/routes.tsx", "apps/app/app/[locale]/(authenticated)/(common)/paths.ts", packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts]
 feature: -
 updated: 2026-09-10
 ---
@@ -30,6 +31,23 @@ Pior que faltar: o produto **promete e não entrega**. A sidebar exibe um menu "
 - `packages/auth/server.ts:212` — `revokeUserSessions` já existe e já é usado no logout global (`packages/auth/session-routes.ts:79`); falta só ser oferecido como ação do usuário.
 - `packages/design-system/components/ui/mode-toggle.tsx:25` e `apps/app/shared/components/ui/LanguageSwitcher.tsx:50` (`setCookie("x-locale", …)`, componente exportado em `:32`) — tema e idioma **já são trocáveis**, mas via `next-themes` e cookie de navegador: mudar de máquina perde a escolha.
 - **Lacuna:** todas as rotas de usuário da API são de administrador — `users/route.ts:21,34` e `users/[id]/route.ts:15,33,75` estão sob `requireAdminApi`. **Não existe nenhum caminho pelo qual o usuário edite a si mesmo.** Não há campo de preferência no `UserDTO` (`:7-14`), não há wrapper RHF de checkbox nem de upload no design system, e `firebase.json:1-6` configura só Firestore — não há bucket de arquivo.
+
+### Uma das duas dependências caiu (auditado em 2026-09-11)
+
+`auth-recovery-verification` foi **entregue e mergeada em `main`** (PR #10, `e4eddb9`), então esta spec
+passa a ter **um único bloqueio**: `file-upload-storage`. Duas consequências práticas, medidas no código:
+
+- **A troca de senha autenticada ficou quase de graça.** O "Fora do corte" daquela spec deixou a troca
+  autenticada para cá dizendo que reaproveitaria "o mesmo ponto de extensão" — e ele agora existe:
+  `apps/api/app/(routes)/auth/password/reset/route.ts` já resolve `oobCode` → conta → nova senha →
+  `revokeUserSessions` (`:49`), e `packages/shared/utils/helpers/httpStatus.ts:13` ganhou o 503. Falta a
+  variante autenticada, não o mecanismo.
+- **Há UI reusável pronta:** `(unauthenticated)/components/AuthCard.tsx` (card com 7 estados) e
+  `(unauthenticated)/reset-password/validations/resetPasswordSchema.ts` — a regra de senha já está escrita
+  e testada, em vez de ser reinventada nesta spec.
+
+Isso reforça a recomendação já registrada em "Perguntas em aberto": se `file-upload-storage` demorar,
+**entregue esta spec sem avatar** — o que sobra encolheu, e o que sobra já entrega valor sozinho.
 
 ## Evidência de mercado
 

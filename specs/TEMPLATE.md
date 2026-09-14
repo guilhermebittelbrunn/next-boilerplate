@@ -7,7 +7,8 @@ effort: <P | M | G>
 audience: <produto | dx | confianca>
 area: [<apps/api>, <apps/app>, <apps/web>, <packages/...>]
 mode: <subscription | simple | ambos>
-depends_on: []
+depends_on: []      # ordem: ids de specs que precisam vir ANTES desta
+contends_on: []     # contenção: arquivos compartilhados EXISTENTES que esta spec ALTERA (0–3, raro passar disso)
 feature: -
 updated: <YYYY-MM-DD>
 ---

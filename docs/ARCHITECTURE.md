@@ -6,6 +6,13 @@ Visão de sistema do boilerplate. Este documento explica **como as peças se con
 
 Monorepo **boilerplate full-stack** (fork customizado do [next-forge](https://github.com/vercel/next-forge)) para gerar **vários forks de MVPs**. Princípio mestre: **genérico no pacote, específico no app** — `packages/*` carrega infraestrutura reutilizável; o domínio de cada produto vive em `apps/*`. Toda a stack é escolhida para **começar de graça e escalar** (Vercel, Firebase, free tiers).
 
+> ⚠️ **Uma exceção, e só uma:** ligar o **upload de arquivo** exige o plano **Blaze** do Firebase (cartão de
+> crédito) — o Cloud Storage deixou de existir no plano Spark em 2026-02-03. O gasto real continua
+> **$0,00/mês** num MVP, e um fork que **não** usa upload segue inteiramente no Spark, sem cartão: a
+> capacidade é opt-in por env. Comparativo com S3/R2, cenários e números em
+> [`specs/research/object-storage-costs.md`](../specs/research/object-storage-costs.md); ativação em
+> [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §6.
+
 ## Topologia
 
 ```

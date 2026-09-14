@@ -8,6 +8,7 @@ audience: dx
 area: [raiz, apps/app, apps/web, packages/design-system]
 mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
+contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: -
 updated: 2026-09-10
 ---

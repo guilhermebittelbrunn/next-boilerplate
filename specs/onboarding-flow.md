@@ -8,6 +8,7 @@ audience: produto
 area: [apps/app, apps/api, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: []
+contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
 feature: -
 updated: 2026-09-10
 ---
@@ -25,11 +26,16 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 
 ## O que já existe no repo
 
-- `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:36-49` — a mutation
-  **`googleSignIn`** resolve o caminho (`resolveAppPostLoginPath`, `:42`) e faz `router.push` (`:47`). Já o
-  cadastro por **e-mail/senha** faz `window.location.replace` (`:84`), dentro do `useEffect` (`:62-90`) que
+- `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:38-51` — a mutation
+  **`googleSignIn`** resolve o caminho (`resolveAppPostLoginPath`, `:44`) e faz `router.push` (`:49`). Já o
+  cadastro por **e-mail/senha** faz `window.location.replace` (`:86`), dentro do `useEffect` (`:64-92`) que
   dispara depois do POST da sessão. Não há qualquer passo entre "cadastrou" e "está no painel", em
-  nenhum dos dois fluxos.
+  nenhum dos dois fluxos. **Precisão de 2026-09-11:** desde a PR #10 esse mesmo `useEffect` dispara o
+  e-mail de verificação (`:105`, `apiClient.authApi.sendEmailVerification`) — ou seja, **já existe um
+  gancho pós-cadastro no lugar exato** onde o desvio de onboarding entraria, e o banner de e-mail não
+  verificado (`shared/components/ui/EmailNotVerifiedNotice.tsx`, montado em
+  `(authenticated)/(common)/layout.tsx:41`) já provou que o painel comum aceita um aviso de estado
+  incompleto. O caminho ficou mais barato do que a spec orçou.
 - `apps/app/shared/lib/postLoginNavigation.ts:31` — `resolveAppPostLoginPath` é o único ponto de decisão
   do destino: honra `?redirect=`, senão manda admin para `/{locale}/admin` (`:24`) e o resto para o
   fallback. É o gancho natural para desviar um usuário incompleto.
@@ -42,9 +48,14 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   próprio `user-merge.ts` (`:22`, `:41`); a rota Google
   (`apps/api/app/(routes)/auth/sign-in/google/route.ts:16`) chega até ele **indiretamente**, via
   `getMergedUserByUid`.
-- `apps/app/proxy.ts:58` — `PUBLIC_PATHS` é só `/sign-in` e `/sign-up` (`isPublicPath` em `:61`); o proxy é
-  default-deny (razão documentada em `:54-55`), então qualquer rota nova de onboarding já fica protegida
-  sem allowlist.
+- `apps/app/proxy.ts:58` — `PUBLIC_PATHS` (`isPublicPath` em `:79-80`); o proxy é default-deny (razão
+  documentada em `:54-55`), então qualquer rota nova de onboarding já fica protegida sem allowlist.
+  **Remedido em 2026-09-11:** a lista deixou de ser "só `/sign-in` e `/sign-up`" — a PR #10 a levou a
+  **cinco** entradas (`:59-63`: `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`,
+  `/verify-email`) e introduziu o conceito de rota pública **isenta do bounce**
+  (`OOB_ACTION_PATHS:71`, `isOobActionPath:83-85`, consumido em `:171`), porque o redirect de visitante
+  autenticado apaga a query string (`:182`). Um passo de onboarding que carregue token na URL herda
+  exatamente esse problema — e agora herda também a solução.
 - `packages/sdk/src/types/user/user.ts:7` — o `UserDTO` tem `id`, `type`, `reference_id` e timestamps.
 - **Lacuna:** não existe nenhuma noção de "perfil incompleto", nenhum passo guiado, nenhum estado
   persistido de progresso. O perfil não guarda sequer o nome próprio do usuário.

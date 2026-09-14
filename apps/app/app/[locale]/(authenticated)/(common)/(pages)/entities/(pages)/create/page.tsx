@@ -12,6 +12,7 @@ import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../paths";
 import { EntityFormFields } from "../../(components)/EntityFormFields";
@@ -29,6 +30,7 @@ export default function CreateEntityPage() {
     const routes = COMMON_ROUTES(dictionary, locale);
     const entitiesForm = dictionary.apps.app.pages.common.entities.form;
     const { createEntityMutation } = useEntityCrud();
+    const { uploadFile, isUploading } = useFileUpload();
 
     const schema = useMemo(
         () => buildEntityFormSchema(dictionary),
@@ -75,12 +77,15 @@ export default function CreateEntityPage() {
                         <Container className="flex flex-col gap-4 p-0">
                             <ImpersonationReadOnlyNotice />
                             <FormContainer>
-                                <EntityFormFields mode="create" />
+                                <EntityFormFields
+                                    mode="create"
+                                    uploadPhoto={uploadFile}
+                                />
                             </FormContainer>
                         </Container>
                         <Footer
                             confirmLabel={entitiesForm.save}
-                            disabled={isImpersonating}
+                            disabled={isImpersonating || isUploading}
                             isLoading={createEntityMutation.isPending}
                             onBack={() => router.push(routes.entities.list.url)}
                             showBack

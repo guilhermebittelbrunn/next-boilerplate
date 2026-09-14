@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// =============================================================================
+// Cloud Storage Security Rules — boilerplate (next-forge fork)
+//
+// MODELO DE ACESSO
+//   Todo acesso ao bucket passa pela apps/api (guard → service account via
+//   firebase-admin). Como serviço confiável, ela IGNORA estas regras — publicar
+//   a negação abaixo não afeta a API. Nenhum cliente (browser) fala com o
+//   bucket: o upload vai por POST /files e a leitura sai por URL assinada V4,
+//   expirável, emitida só depois do check de posse do recurso.
+//
+// ⚠️ ESTAS REGRAS GOVERNAM firebasestorage.googleapis.com (a API do Firebase).
+//   O que fecha storage.googleapis.com (a API do GCS, de onde saem as URLs
+//   assinadas) é a AUSÊNCIA de IAM público no bucket. São duas coisas:
+//     - nunca conceda allUsers / allAuthenticatedUsers no bucket;
+//     - nunca use makePublic(), predefinedAcl "publicRead" nem
+//       getDownloadURL() — este último gera uma URL permanente e pública.
+//   Conferir: curl -o /dev/null -w '%{http_code}' \
+//               https://storage.googleapis.com/<bucket>/<objeto>   → 403
+//
+// Deploy: `npx -y firebase-tools@latest deploy --only storage`
+// =============================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

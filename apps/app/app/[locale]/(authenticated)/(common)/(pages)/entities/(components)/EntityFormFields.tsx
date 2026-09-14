@@ -2,6 +2,7 @@
 
 import {
     HookFormDateInput,
+    HookFormImageUpload,
     HookFormInput,
     HookFormRadioGroup,
     HookFormSelect,
@@ -13,25 +14,37 @@ import { getDictionary } from "@repo/internationalization/client";
 import { EntityType } from "@repo/sdk/src/types";
 import { useMemo } from "react";
 import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
+import { isStorageEnabled } from "@/shared/lib/storageEnabled";
 import {
     entityGenreUnset,
     entityGenreValues,
 } from "../(validations)/entityFormSchema";
 
+type UploadPhotoHandler = (
+    file: File,
+    onProgress: (percent: number) => void
+) => Promise<{ path: string; url: string }>;
+
 type EntityFormFieldsProps = {
     mode: "create" | "update";
     createdAtLabel?: string;
     createdAtValue?: string | null;
+    /** Displayable URL of the stored reference; the field itself keeps the reference. */
+    photoPreviewUrl?: string | null;
+    uploadPhoto?: UploadPhotoHandler;
 };
 
 export function EntityFormFields({
     mode,
     createdAtLabel,
     createdAtValue,
+    photoPreviewUrl,
+    uploadPhoto,
 }: EntityFormFieldsProps) {
     const { dictionary } = getDictionary();
     const entitiesForm = dictionary.apps.app.pages.common.entities.form;
     const entitiesList = dictionary.apps.app.pages.common.entities.list;
+    const canUploadPhoto = Boolean(uploadPhoto) && isStorageEnabled();
 
     const typeOptions = [
         {
@@ -105,15 +118,27 @@ export function EntityFormFields({
             </div>
 
             <div className="col-span-1 md:col-span-2">
-                <HookFormInput
-                    label={entitiesForm.photo}
-                    name="photo"
-                    placeholder={entitiesForm.photoPlaceholder}
-                    type="url"
-                />
-                <p className="mt-1 text-muted-foreground text-xs">
-                    {entitiesForm.photoHint}
-                </p>
+                {canUploadPhoto && uploadPhoto ? (
+                    <HookFormImageUpload
+                        label={entitiesForm.photoUpload.label}
+                        name="photo"
+                        previewSrc={photoPreviewUrl}
+                        texts={entitiesForm.photoUpload}
+                        upload={uploadPhoto}
+                    />
+                ) : (
+                    <>
+                        <HookFormInput
+                            label={entitiesForm.photo}
+                            name="photo"
+                            placeholder={entitiesForm.photoPlaceholder}
+                            type="url"
+                        />
+                        <p className="mt-1 text-muted-foreground text-xs">
+                            {entitiesForm.photoHint}
+                        </p>
+                    </>
+                )}
             </div>
 
             <div className="col-span-1 md:col-span-2">

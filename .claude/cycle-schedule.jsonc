@@ -1,0 +1,110 @@
+// Agendamento do /cycle — trabalho autônomo fora do horário.
+//
+// Quem lê este arquivo é scripts/cycle-runner.sh, que invoca o Claude Code em modo headless
+// (claude -p) dentro do workspace indicado. Nada aqui é lido pelo Claude Code sozinho.
+//
+//   scripts/cycle-runner.sh --selftest          confere o ambiente (COMECE POR AQUI)
+//   scripts/cycle-runner.sh --list              lista os jobs
+//   scripts/cycle-runner.sh --dry-run <job>     imprime o comando, não executa
+//   scripts/cycle-runner.sh <job>               roda agora
+//   scripts/cycle-runner.sh --install           instala os jobs habilitados no launchd (macOS)
+//   scripts/cycle-runner.sh --uninstall         remove do launchd
+//
+// ⛔ O /cycle NÃO commita. Você acorda com working tree sujo e um plano de commits — nunca com
+//    commits que ninguém revisou. É deliberado: veja .claude/cycle-policy.md §1.
+//
+// ⚠️  O Mac precisa estar LIGADO E ACORDADO. O runner segura o sono com `caffeinate` enquanto roda,
+//    mas não acorda uma máquina suspensa. Agende com a tampa aberta ou "Prevent sleep" ativo.
+{
+  // Valores herdados por todo job que não os sobrescrever.
+  "defaults": {
+    // Alias ('opus', 'sonnet', 'haiku', 'fable') ou nome completo do modelo.
+    "model": "opus",
+
+    // low | medium | high | xhigh | max — esforço de raciocínio.
+    // O ciclo inteiro é longo; 'high' equilibra qualidade e custo. 'max' num job noturno
+    // de 3 features é caro o bastante para você querer ter decidido de propósito.
+    "effort": "high",
+
+    // acceptEdits deixa o agente editar sem perguntar, mas ainda pede para comandos fora da
+    // allowlist de .claude/settings.json. É o mínimo que funciona sem supervisão.
+    // bypassPermissions remove todas as barreiras — só use se entender o que isso implica.
+    "permissionMode": "acceptEdits",
+
+    // Teto de tempo por job. Uma rodada completa observada levou ~2h com 2 voltas de /test.
+    "timeoutMinutes": 240,
+
+    // Diretório dos logs, relativo à raiz do repo. Gitignored.
+    "logDir": ".claude/cycle-logs"
+  },
+
+  "jobs": [
+    {
+      "name": "nightly-audit",
+      "enabled": false,
+
+      // Workspace do Conductor onde o job roda. Caminho absoluto, ou relativo à raiz do repo.
+      // É ele que define a BRANCH: o runner usa a branch que estiver ativa no workspace.
+      "workspace": "/Users/guilhermebittelbrunn/conductor/workspaces/next-boilerplate/surabaya",
+
+      // O prompt/slash command a executar.
+      // Este é o job que AUDITA — o único que pode rodar /spec --sync. Ver a nota sobre
+      // paralelismo no fim do arquivo.
+      "command": "/cycle",
+
+      // Cron de 5 campos, hora local. Evite :00 e :30 (todo mundo agenda neles).
+      // ⚠️ O --install traduz para launchd, que NÃO aceita intervalo no dia da semana:
+      //    "1-5" instala sem restrição de dia. Para dias úteis, crie 5 jobs (dow 1..5)
+      //    ou aceite que rode todo dia. O --install avisa quando encontra intervalo.
+      "cron": "7 20 * * 1-5",
+
+      "description": "Audita o backlog e ataca a spec #1. Roda nos dias úteis, às 20h07."
+    },
+
+    {
+      "name": "nightly-parallel-1",
+      "enabled": false,
+      "workspace": "/Users/guilhermebittelbrunn/conductor/workspaces/next-boilerplate/<workspace-2>",
+
+      // --no-audit é OBRIGATÓRIO em todo job que não seja o de auditoria.
+      "command": "/cycle dashboard-home --no-audit",
+      "cron": "9 20 * * 1-5",
+
+      // Feature pequena e isolada não precisa do modelo mais caro.
+      "model": "sonnet",
+      "effort": "medium",
+
+      "description": "Segunda feature do lote. Trocar o id conforme os lotes do BACKLOG.md."
+    },
+
+    {
+      "name": "weekly-backlog-audit",
+      "enabled": false,
+      "workspace": "/Users/guilhermebittelbrunn/conductor/workspaces/next-boilerplate/surabaya",
+
+      // Só a auditoria, sem desenvolver nada. Barato e mantém o backlog honesto.
+      "command": "/cycle --audit-only",
+      "cron": "3 9 * * 6",
+      "effort": "medium",
+      "timeoutMinutes": 60,
+
+      "description": "Sábado de manhã: reconcilia o backlog com o código, sem implementar."
+    }
+  ]
+
+  // ── Paralelismo: a regra que evita estrago ────────────────────────────────────────────────
+  //
+  // Só UM job pode rodar a auditoria. Todos os outros usam --no-audit. Senão vários agents
+  // reescrevem specs/BACKLOG.md ao mesmo tempo e você acorda com um conflito de 68 KB.
+  //
+  // Quais features podem rodar juntas NÃO se deduz do depends_on — ele modela ordem lógica
+  // ("A precisa de B"), não contenção de arquivo. Quem responde isso é o campo `contends_on`
+  // das specs, e o /spec --sync escreve os lotes prontos na seção "Lotes paralelos" do
+  // specs/BACKLOG.md. Tire os ids de lá.
+  //
+  // Escalone os horários em alguns minutos (20h07, 20h09, 20h11): subir 3 instâncias no mesmo
+  // instante desperdiça I/O e embaralha os logs.
+  //
+  // Teto prático: 3 jobs. Acima disso o custo em tokens e a revisão humana no dia seguinte
+  // deixam de compensar — uma rodada completa observada consumiu ~3M tokens de subagent.
+}

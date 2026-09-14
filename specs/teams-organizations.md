@@ -8,6 +8,7 @@ audience: produto
 area: [apps/api, apps/app, packages/sdk, packages/auth, packages/internationalization]
 mode: ambos
 depends_on: [transactional-emails]
+contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
 updated: 2026-09-10
 ---

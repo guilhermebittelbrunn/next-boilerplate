@@ -18,11 +18,22 @@ Sem estes, ou o produto está **inseguro**, ou uma funcionalidade central **não
 
 ### 1. Publicar as rules e os índices do Firestore
 
-- [ ] `firestore.rules` publicado no projeto
+- [x] `firestore.rules` publicado no projeto de referência (`next-boilerplate-576d0`)
+- [ ] `firestore.rules` publicado **no projeto do seu fork**
 
-**Estado hoje: a base está aberta.** O arquivo [`firestore.rules`](../firestore.rules) está escrito em
-`deny-all`, mas **nunca foi publicado** — e arquivo não publicado não protege nada. Qualquer pessoa com a
-chave pública do projeto (que, por definição, viaja no bundle do front) lê e grava a base inteira.
+**Estado hoje: a base do projeto de referência está fechada.** O `deny-all` de
+[`firestore.rules`](../firestore.rules) **está publicado e em vigor** — medido em **2026-09-11** (o `curl`
+de [`SECURITY.md`](SECURITY.md#verificar-que-o-furo-está-fechado) devolveu **403**) e reconferido em
+**2026-09-14** lendo as rules publicadas direto do projeto, que batem com o arquivo versionado.
+
+> ⚠️ **Versões anteriores deste documento afirmavam o contrário** ("nunca foi publicado", "a base está
+> aberta") e tratavam isso como a pendência #1 de segurança. **Era falso.** Se você leu aquela versão, não
+> republique nada por engano: a ordem errada de publicação/rollback é justamente o que **reexpõe** a base
+> (ver o aviso no fim desta seção).
+
+**Isto não isenta um fork.** Um fork roda em **outro projeto Firebase**, onde nada foi publicado ainda — lá
+a base nasce aberta e o passo abaixo é obrigatório. O runbook continua aqui por isso: ele é o procedimento
+para **ambiente novo**, não dívida em aberto do projeto de referência.
 
 A `apps/api` acessa o Firestore pelo Admin SDK e **ignora** as rules, então publicar não quebra a API:
 
@@ -87,13 +98,81 @@ Obrigatória em produção: `apps/api/instrumentation.ts` derruba o boot sem ela
 500 a tudo** — uma plataforma que só verifica se a porta responde veria o container **saudável** e daria o
 deploy por bem-sucedido. Ou o health check distingue 5xx, ou vale trocar o `throw` por `process.exit(1)`.
 
+### 6. Cloud Storage — **só se o fork usa upload de arquivo**
+
+- [ ] Serviço de Storage ativado no projeto (exige plano **Blaze**)
+- [ ] `FIREBASE_STORAGE_BUCKET` (`apps/api`) e `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` (`apps/app`), local **e** na Vercel
+- [ ] `roles/storage.objectAdmin` concedido à service account
+- [ ] `storage.rules` publicado
+- [ ] Verificado que o objeto **não** abre sem assinatura
+
+**Este item é pulável, e pular é uma escolha legítima.** A capacidade é opt-in por env: sem as variáveis o
+app sobe, o build passa e o fork **continua no plano Spark, sem cartão**. Só siga adiante se o produto
+precisa de upload.
+
+⛔ **O que ninguém avisa: storage exige plano Blaze — ou seja, cartão de crédito.** Desde **2026-02-03** um
+projeto no Spark **não tem acesso a bucket nenhum**; as chamadas voltam **402/403**. O gasto real continua
+**$0,00/mês** no cenário de um MVP (a faixa "Always Free" do GCS cobre folgado), mas a **forma de pagamento
+passou a ser obrigatória** — e isso contraria a leitura ingênua de "começar de graça". Os números, o
+comparativo com S3/R2 e o veredito estão em
+[`specs/research/object-storage-costs.md`](../specs/research/object-storage-costs.md).
+
+⚠️ **Escolha a região do bucket com cuidado — é o erro caro deste passo.** A franquia "Always Free" do
+Cloud Storage só existe em **`us-central1`, `us-east1` e `us-west1`**. Criar o bucket em
+`southamerica-east1` por reflexo de latência **cancela a franquia inteira** e passa a cobrar desde o
+primeiro byte.
+
+**Passo a passo:**
+
+1. **Ativar.** Firebase Console → Build → Storage → *Get started*. O console vai exigir o upgrade para
+   Blaze e um método de pagamento. Escolha uma das três regiões acima. Anote o nome do bucket — algo como
+   `<project-id>.firebasestorage.app`.
+2. **Preencher as duas variáveis**, com o **mesmo** valor, em **dois lugares** (o `.env` local e o painel da
+   Vercel de cada app — esquecer a Vercel é o modo de falha mais comum aqui):
+   - `apps/api` → `FIREBASE_STORAGE_BUCKET`
+   - `apps/app` → `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+3. **Dar permissão à service account.** A mesma do item 2 precisa ler, gravar e apagar objetos:
+   ```bash
+   gcloud storage buckets add-iam-policy-binding gs://<bucket> \
+     --member="serviceAccount:<FIREBASE_ADMIN_CLIENT_EMAIL>" \
+     --role="roles/storage.objectAdmin"
+   ```
+   ⛔ **Nunca conceda `allUsers` nem `allAuthenticatedUsers`**, em nenhum papel. Isso torna o bucket
+   público e anula todo o desenho de acesso — a URL deixa de precisar de assinatura e nunca expira.
+4. **Publicar as rules do bucket** (com ensaio antes, como nas do Firestore):
+   ```bash
+   npx -y firebase-tools@latest deploy --only storage --dry-run   # valida a sintaxe
+   npx -y firebase-tools@latest deploy --only storage
+   ```
+5. **Verificar que o furo está fechado.** Pegue o caminho de um objeto que você acabou de subir e tente
+   baixá-lo **sem** assinatura:
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' "https://storage.googleapis.com/<bucket>/<objeto>"
+   ```
+   Esperado **403**. Se devolver **200**, o bucket está público — revise o passo 3. A URL assinada que a
+   API emite, essa sim, deve devolver 200 enquanto não expirar (15 min).
+
+**CORS no bucket: não é necessário.** O browser nunca fala com o bucket a não ser por `GET` de imagem
+(`<img src>`), que não é requisição CORS. O upload atravessa a `apps/api` (`POST /files`), servidor a
+servidor. Se algum dia o upload virar direto-ao-bucket, aí sim CORS passa a ser obrigatório.
+
+⚠️ **Duas camadas diferentes, e só uma é `storage.rules`.** As rules governam
+`firebasestorage.googleapis.com` (a API do Firebase). Quem fecha `storage.googleapis.com` — de onde saem as
+URLs assinadas — é a **ausência de IAM público** no bucket (passo 3). Publicar as rules e deixar `allUsers`
+no IAM deixa o bucket aberto. O cabeçalho de [`storage.rules`](../storage.rules) detalha.
+
+**O que acontece sem configurar (comportamento projetado, não bug):** o app sobe e o build passa;
+`POST /files` responde **503 `STORAGE_NOT_CONFIGURED`**; o formulário de `entities` **não** mostra o seletor
+de arquivo e mantém o campo de URL de imagem que já existia. Nada quebra — a funcionalidade apenas não
+existe, e diz isso em voz alta em vez de fingir.
+
 ---
 
 ## ⚠️ Fortemente recomendados
 
 Não impedem o deploy. Cada um é uma conta que chega depois.
 
-### 6. `ARCJET_KEY`
+### 7. `ARCJET_KEY`
 
 - [ ] Definida em produção
 
@@ -101,7 +180,7 @@ Sem ela o `@repo/security` degrada para **no-op** e a API avisa uma vez, no boot
 redefinição de senha e o reenvio de verificação: sem limite, os dois viram **gerador gratuito de e-mail em
 nome do fork** — e a fatura do provedor é do fork.
 
-### 7. Branch protection na `main`
+### 8. Branch protection na `main`
 
 - [ ] Exigir o check do CI antes do merge
 
@@ -113,7 +192,7 @@ O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh a
 contra o default de 5 s. Gate obrigatório + teste que falha sozinho = merge bloqueado ao acaso, e o runner
 do GitHub é mais lento que uma máquina local.
 
-### 8. CSP bloqueante na `apps/web`
+### 9. CSP bloqueante na `apps/web`
 
 - [ ] Trocar `Report-Only` por enforcing
 
@@ -138,7 +217,8 @@ então virar a chave é barato.
 
 Quem for a produção pela primeira vez deve conferir, na ordem: **service account** → **build passa** →
 **`CORS_ORIGIN`** → **deploy da API** → **publicar as rules** → **domínio de e-mail** → **ciclo real de
-recuperação de senha**. Os três últimos são os que ninguém lembra, e são os que o usuário final sente.
+recuperação de senha** → **storage, se o fork usa upload**. Os quatro últimos são os que ninguém lembra, e
+são os que o usuário final sente.
 
 Referências: [`SETUP.md`](SETUP.md) (variáveis, uma a uma) · [`SECURITY.md`](SECURITY.md) (postura e
 comandos) · [`ARCHITECTURE.md`](ARCHITECTURE.md).

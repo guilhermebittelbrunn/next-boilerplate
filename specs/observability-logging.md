@@ -8,6 +8,7 @@ audience: dx
 area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
+contends_on: [apps/api/instrumentation.ts, apps/api/proxy.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
 feature: -
 updated: 2026-09-10
 ---
@@ -42,16 +43,30 @@ invisível até alguém conferir a fatura.
   `apps/api/app/(routes)/webhooks/payments/route.ts:59` (evento de pagamento não tratado) e `:65` (erro no
   webhook); `apps/api/app/(routes)/auth/sign-up/route.ts:38` e `apps/api/app/(routes)/users/route.ts:71`
   (falha ao criar perfil).
-- **Mas já existe um formato de log deliberado a padronizar — não a inventar** (medido em 2026-09-09).
-  Duas entregas convergiram, de forma independente, na mesma convenção: linha única, prefixo estável entre
-  colchetes, pares `chave=valor` e **nenhum dado pessoal**. `apps/api/proxy.ts:41-49`
-  (`[security] blocked reason=… path=… method=…`, de `api-hardening`) e `packages/email/index.ts:39-49`
-  (`[email] skipped template=… reason=… locale=…`, de `transactional-emails`), este último com teste
-  dedicado que **reprova** se alguém acrescentar o objeto de erro ao log
-  (`packages/email/__tests__/logPrivacy.test.ts`). **Consequência para esta spec:** o corte deixa de ser
-  "introduzir log estruturado onde não há nenhum" e passa a ser "**promover a convenção que já emergiu**
-  a um helper compartilhado, antes que uma terceira entrega invente a quarta variação". A parte de
-  `console` cru acima continua valendo — hoje o repo tem as duas coisas ao mesmo tempo.
+- **Mas já existe um formato de log deliberado a padronizar — não a inventar** (medido em 2026-09-09,
+  remedido em 2026-09-11). Duas entregas convergiram, de forma independente, na mesma convenção: linha
+  única, prefixo estável entre colchetes, pares `chave=valor` e **nenhum dado pessoal**.
+  `apps/api/proxy.ts:47-55` (`[security] blocked reason=… path=… method=…`, de `api-hardening`) e
+  `packages/email/index.ts:39-47` (`[email] skipped template=… reason=… locale=…`, de
+  `transactional-emails`), este último com teste dedicado que **reprova** se alguém acrescentar o objeto de
+  erro ao log (`packages/email/__tests__/logPrivacy.test.ts`). **Consequência para esta spec:** o corte
+  deixa de ser "introduzir log estruturado onde não há nenhum" e passa a ser "**promover a convenção que já
+  emergiu** a um helper compartilhado, antes que uma terceira entrega invente a quarta variação". A parte
+  de `console` cru acima continua valendo — hoje o repo tem as duas coisas ao mesmo tempo.
+- 🔴 **A previsão da linha acima se cumpriu em uma única PR — a #10 (`auth-recovery-verification`,
+  2026-09-11) inventou a quarta e a quinta variação.** Medido na auditoria de 2026-09-11:
+  `apps/api/(shared)/lib/auth-action-links.ts:25` **segue** a convenção
+  (`[auth-action-link] refused kind=… code=…`); mas
+  `apps/api/app/(routes)/auth/password/reset-request/route.ts:41` faz
+  `console.error("[auth-reset-request] delivery failed", error)` — tem prefixo, porém mensagem livre **e
+  passa o objeto de erro**, exatamente o que o teste do `@repo/email` reprova uma camada abaixo; e
+  `apps/api/app/(routes)/auth/password/reset/route.ts:51` faz
+  `console.error("Could not revoke sessions after password reset", error)` — **sem prefixo, sem
+  `chave=valor`, com o objeto de erro**. Ou seja: a mesma entrega produziu um log conforme, um
+  semiconforme e um não-conforme, e os dois últimos estão no fluxo de **redefinição de senha**, onde o
+  objeto de erro tem a maior chance de carregar endereço de e-mail. Isso deixa de ser argumento de
+  higiene e vira argumento de privacidade: a convenção **não se propaga sozinha**, só um helper
+  compartilhado com teste a torna obrigatória.
 - **E já existe o primeiro custo medido de não ter isso.** `packages/email/index.ts:120-130` colapsa
   **três falhas operacionalmente distintas** — cota do provedor estourada, domínio não verificado e chave
   revogada — num único `reason=provider-error`, com a mesma linha de log. A decisão de descartar o objeto

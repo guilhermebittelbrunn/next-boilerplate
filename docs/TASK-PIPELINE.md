@@ -13,6 +13,8 @@ Descobrir → Planejar  → Desenvolver → Revisar → QA        (+ opcional)
 /spec     → /analyze  → /develop    → /review → /test      /observe · /mediate
    ↑                                                  │
    └────────────── /spec --sync fecha o ciclo ────────┘
+
+           /cycle = a linha inteira de uma vez, sem parar para perguntar
 ```
 
 Cada papel é um **slash command** (interativo, roda no loop principal e **pergunta antes de decidir**)
@@ -41,9 +43,20 @@ deixou, sem depender da conversa.
 | `/test [foco? / manual / --force]` | QA | Gera os critérios de aceite (§9.1) **E** roda os testes Vitest dos workspaces afetados + `pnpm test` do root; cria os testes que faltam; dirige o app com `agent-browser`. |
 | `/observe [slug?]` | Observador *(opcional)* | Observação final de 2–3 parágrafos em linguagem de negócio, pronta para colar num card. Exige só o `/review`. |
 | `/mediate [PR?]` | Mediador de PR *(avulso)* | Triagem dos comentários de uma PR aberta → markdown de replies com status por item. **Independente** do pipeline. |
+| `/cycle [id? / --audit-only / --max-rounds N]` | Orquestrador do ciclo | Roda a linha inteira — `/spec --sync` → `/analyze` → `/develop` → `/review` → `/test` — **sem parar para perguntar**, acumulando as decisões para um relatório final. Para quando você **não vai acompanhar**. Detalhes em [`AI-WORKFLOW.md`](AI-WORKFLOW.md#cycle--o-ciclo-inteiro-numa-tacada). |
 
-> ⚠️ **Colisão de nome**: existe também um `/review` global (revisão de PR do GitHub). O deste projeto tem
+> ⚠️ **Colisão de nome**: existe um `/review` global (revisão de PR do GitHub); o deste projeto tem
 > precedência. Para a revisão genérica de diff, use `/code-review`.
+>
+> O comando do ciclo chama-se **`/cycle`** e não `/loop` justamente por isso: `/loop` é um comando
+> **embutido** do Claude Code (agenda um prompt em intervalo recorrente) e o nome ficaria ambíguo.
+> `cycle` também é a palavra que o repo já usa — "o ciclo", "fecha o ciclo".
+
+> **`/cycle` é a exceção à regra do quadro acima.** Os comandos rodam no loop principal justamente para
+> **perguntar antes de decidir**; o `/cycle` abre mão disso de propósito, em troca de autonomia. Ele decide
+> pela recomendação da spec → o padrão do repo → o menor raio de impacto, e leva **toda** decisão ao
+> relatório final com a alternativa que descartou. O que ele **não** abre mão: não commita, não pusha, não
+> cria branch.
 
 > `/spec` **não** faz parte do gate sequencial: ele roda antes de existir tarefa e pode ser chamado a
 > qualquer momento. Uma tarefa não precisa nascer de spec — bug e ajuste pontual vão direto ao `/analyze`.

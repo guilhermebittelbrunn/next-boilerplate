@@ -66,9 +66,7 @@ export function HookFormSelect<T extends FieldValues>(
 
                 return (
                     <FormItem>
-                        <FormLabel
-                            className={errorMessage ? "text-destructive" : ""}
-                        >
+                        <FormLabel invalid={Boolean(errorMessage)}>
                             {label}
                             {required ? (
                                 <span

@@ -14,6 +14,8 @@ const firebaseAuthKeysSchema = z
         FIREBASE_ADMIN_PRIVATE_KEY: z.string().min(1).optional(),
         /** Web API key for Identity Toolkit REST (sign-in / sign-up). Falls back to NEXT_PUBLIC_FIREBASE_API_KEY. */
         FIREBASE_WEB_API_KEY: z.string().min(1).optional(),
+        /** Cloud Storage bucket. Absent means the upload capability stays switched off. */
+        FIREBASE_STORAGE_BUCKET: z.string().min(1).optional(),
     })
     .superRefine((env, ctx) => {
         const missing = serviceAccountFields.filter((field) => !env[field]);
@@ -46,9 +48,17 @@ export const keys = () => {
             process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
         FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
         FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+        // `||`, not `??`, on both: `.env.example` ships these as `""`, and an empty
+        // value has to read as "not set". With `??` the empty string survives and fails
+        // the length check below, so the process never starts.
         FIREBASE_WEB_API_KEY:
-            process.env.FIREBASE_WEB_API_KEY ??
-            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+            process.env.FIREBASE_WEB_API_KEY ||
+            process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
+            undefined,
+        FIREBASE_STORAGE_BUCKET:
+            process.env.FIREBASE_STORAGE_BUCKET ||
+            process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+            undefined,
     };
 
     // Only validate if at least one key is present
@@ -64,6 +74,7 @@ export const keys = () => {
             FIREBASE_ADMIN_CLIENT_EMAIL: undefined,
             FIREBASE_ADMIN_PRIVATE_KEY: undefined,
             FIREBASE_WEB_API_KEY: env.FIREBASE_WEB_API_KEY,
+            FIREBASE_STORAGE_BUCKET: env.FIREBASE_STORAGE_BUCKET,
         };
     }
 
