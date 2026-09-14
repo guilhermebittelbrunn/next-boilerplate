@@ -6,6 +6,7 @@ const { envMock, getUserFromSessionCookieMock } = vi.hoisted(() => ({
         ARCJET_KEY: undefined as string | undefined,
         NEXT_PUBLIC_API_URL: undefined as string | undefined,
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: undefined as string | undefined,
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: undefined as string | undefined,
         NEXT_PUBLIC_GA_MEASUREMENT_ID: undefined as string | undefined,
     },
     getUserFromSessionCookieMock: vi.fn(),
@@ -29,6 +30,7 @@ const DIRECTIVE_SEPARATOR = /\s+/;
 const AUTH_DOMAIN = "demo-project.firebaseapp.com";
 const API_URL = "http://localhost:3002";
 const TAG_MANAGER = "https://www.googletagmanager.com";
+const STORAGE_ORIGIN = "https://storage.googleapis.com";
 const ORIGIN = "http://localhost:3000";
 const PATH = "/pt-br/entities";
 
@@ -53,6 +55,7 @@ async function policyWith(
         ARCJET_KEY: undefined,
         NEXT_PUBLIC_API_URL: API_URL,
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: AUTH_DOMAIN,
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: undefined,
         NEXT_PUBLIC_GA_MEASUREMENT_ID: undefined,
         ...overrides,
     });
@@ -141,6 +144,44 @@ describe("analytics origins follow the measurement id", () => {
         expect(policy.get("connect-src")).not.toContain(
             "https://www.google-analytics.com"
         );
+    });
+});
+
+/**
+ * Signed reads come straight from the bucket host, so leaving it out of the policy
+ * shows a broken thumbnail with no clue why. A fork without a bucket must not have its
+ * policy widened for a host it never talks to.
+ */
+describe("image sources follow the storage bucket", () => {
+    it("leaves the bucket host out while no bucket is configured", async () => {
+        const imgSrc = (await policyWith({})).get("img-src") ?? [];
+
+        expect(imgSrc).not.toContain(STORAGE_ORIGIN);
+        expect(imgSrc).toContain("'self'");
+    });
+
+    it("names the bucket host once a bucket is configured", async () => {
+        const imgSrc =
+            (
+                await policyWith({
+                    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:
+                        "demo-project.firebasestorage.app",
+                })
+            ).get("img-src") ?? [];
+
+        expect(imgSrc).toContain(STORAGE_ORIGIN);
+    });
+
+    it("does not let the bucket reach connect-src, which the browser never uses", async () => {
+        const connectSrc =
+            (
+                await policyWith({
+                    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:
+                        "demo-project.firebasestorage.app",
+                })
+            ).get("connect-src") ?? [];
+
+        expect(connectSrc).not.toContain(STORAGE_ORIGIN);
     });
 });
 
