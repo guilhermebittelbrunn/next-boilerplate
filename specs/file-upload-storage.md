@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Upload de arquivos e storage
@@ -98,9 +98,13 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
 - **Custo herdado por todo fork:** variável de ambiente nova e um bucket a provisionar. Precisa ser
   opt-in de verdade — um fork sem storage configurado tem de subir e passar no build. Se a env virar
   obrigatória, todo fork paga por um recurso que talvez não use.
-- **Custo de serviço pago.** O free tier do Firebase Storage é generoso mas finito, e egress é cobrado
-  por download. URL expirável ajuda no controle de acesso, não na conta: um fork com imagem pesada em
-  lista pública queima cota rápido.
+- **Custo de serviço pago.** ⚠️ **Corrigido em 2026-09-14 — este risco estava mal formulado.** Não é que o
+  free tier seja "generoso mas finito": desde **2026-02-03** o Cloud Storage **não existe no plano Spark**
+  (chamadas voltam 402/403). Ligar upload **exige plano Blaze, ou seja, cartão de crédito** — ainda que o
+  gasto real seja **$0,00/mês** no cenário de um MVP. O risco é de **plano e atrito de cadastro**, não de
+  cota. Segue verdade que egress é cobrado por download e que URL expirável ajuda no controle de acesso,
+  não na conta. Números, comparativo com S3/R2 e cenários de 10×/100×:
+  [`research/object-storage-costs.md`](research/object-storage-costs.md).
 - **Regras do bucket são um segundo modelo de autorização.** Hoje o repo concentra tudo na API
   (`firestore.rules:32-33`, `match /{document=**}` com `allow read, write: if false;`, nega todo acesso
   direto de cliente). Se o cliente subir direto ao bucket, a
@@ -126,5 +130,13 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
   upload direto só se o limite de corpo virar problema medido.
 - Firebase Storage ou provedor S3-compatível? — **recomendação:** Firebase Storage, para não introduzir
   um segundo provedor num repo que já roda Auth e Firestore em Firebase.
+  ✅ **Pesquisado e confirmado em 2026-09-14** ([`research/object-storage-costs.md`](research/object-storage-costs.md)):
+  no cenário de MVP o custo é **$0,00** no Cloud Storage, **$0,10** no S3 e **$0,00** no R2 — **S3 não é
+  mais barato**, é a única das três que cobra no MVP e a única cujo free tier expira. Custo de dependência
+  do Firebase segue **zero** (`@google-cloud/storage` já vem com o `firebase-admin`). **Ressalva que a
+  decisão original não previa:** exige plano **Blaze** (cartão). **Saída registrada:** o **Cloudflare R2**
+  tem **egress zero** e fica ~80× mais barato a partir de ~10× este cenário; o gatilho para reavaliar é
+  egress **> ~100 GB/mês**. A troca é barata e continua barata — todo o provedor está isolado em
+  `apps/api/(shared)/lib/storage.ts`, e S3/R2 são API-compatíveis entre si.
 - Endurecer `entity.photo` agora ou manter texto livre por compatibilidade? — **recomendação:**
   endurecer; hoje o campo aceita qualquer texto, e isso é bug latente, não flexibilidade.
