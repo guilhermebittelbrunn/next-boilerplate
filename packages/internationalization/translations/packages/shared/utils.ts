@@ -52,6 +52,15 @@ export const sharedUtilsTranslations = {
                 "Não foi possível redefinir a senha. Peça um novo link.",
             AUTH_EMAIL_VERIFICATION_FAILED:
                 "Não foi possível confirmar o e-mail. Peça um novo link.",
+            STORAGE_NOT_CONFIGURED:
+                "O envio de arquivos não está configurado. Fale com o suporte.",
+            UPLOAD_FILE_MISSING: "Nenhum arquivo foi enviado.",
+            UPLOAD_FILE_TOO_LARGE: "O arquivo excede o tamanho máximo de 4 MB.",
+            UPLOAD_FILE_TYPE_NOT_ALLOWED:
+                "Formato não aceito. Envie JPG, PNG ou WebP.",
+            UPLOAD_FAILED:
+                "Não foi possível enviar o arquivo agora. Tente de novo em instantes.",
+            ENTITY_PHOTO_INVALID: "Imagem inválida para esta entidade.",
         },
     },
     en: {
@@ -103,6 +112,15 @@ export const sharedUtilsTranslations = {
                 "Could not reset the password. Request a new link.",
             AUTH_EMAIL_VERIFICATION_FAILED:
                 "Could not confirm the email. Request a new link.",
+            STORAGE_NOT_CONFIGURED:
+                "File uploads are not configured. Contact support.",
+            UPLOAD_FILE_MISSING: "No file was sent.",
+            UPLOAD_FILE_TOO_LARGE: "The file exceeds the 4 MB limit.",
+            UPLOAD_FILE_TYPE_NOT_ALLOWED:
+                "Format not accepted. Send JPG, PNG or WebP.",
+            UPLOAD_FAILED:
+                "Could not upload the file right now. Try again shortly.",
+            ENTITY_PHOTO_INVALID: "Invalid image for this record.",
         },
     },
     es: {
@@ -160,6 +178,15 @@ export const sharedUtilsTranslations = {
                 "No se pudo restablecer la contraseña. Solicita un enlace nuevo.",
             AUTH_EMAIL_VERIFICATION_FAILED:
                 "No se pudo confirmar el correo. Solicita un enlace nuevo.",
+            STORAGE_NOT_CONFIGURED:
+                "La subida de archivos no está configurada. Contacta al soporte.",
+            UPLOAD_FILE_MISSING: "No se envió ningún archivo.",
+            UPLOAD_FILE_TOO_LARGE: "El archivo supera el límite de 4 MB.",
+            UPLOAD_FILE_TYPE_NOT_ALLOWED:
+                "Formato no aceptado. Envía JPG, PNG o WebP.",
+            UPLOAD_FAILED:
+                "No se pudo subir el archivo ahora. Inténtalo en unos instantes.",
+            ENTITY_PHOTO_INVALID: "Imagen no válida para este registro.",
         },
     },
 };
