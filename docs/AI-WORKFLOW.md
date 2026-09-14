@@ -21,7 +21,7 @@ assistido por IA.
 | Roteiro de análise | [`feature-analysis-guide.md`](feature-analysis-guide.md) | Checklist de tech lead + formato dos critérios de aceite (§9.1). |
 | Checklist de revisão | [`review-checklist.md`](review-checklist.md) | **Fonte única** das invariantes que uma revisão cobra. |
 | Glossário | [`GLOSSARY.md`](GLOSSARY.md) | Vocabulário do boilerplate (guard, subject, DTO/mapper, slice, modo de produto…). |
-| Slash commands | `.claude/commands/*` | `/spec`, `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate`. |
+| Slash commands | `.claude/commands/*` | `/spec`, `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate` + `/loop` (o ciclo inteiro de uma vez). |
 | Subagents | `.claude/agents/*` | Os motores do pipeline + o `code-reviewer` read-only. |
 | Skills do projeto | `.claude/skills/*` | Procedimentos invocáveis com `/`. |
 | Harness | `.claude/settings.json` + `.claude/hooks/` | Permissões, auto-format ao editar, bloqueio de commit em branch protegida. |
@@ -176,6 +176,8 @@ Estes arquivos são carregados em toda sessão — por isso são curtos:
 Formal, com rastreio em disco → use o [pipeline](TASK-PIPELINE.md):
 `/spec → /analyze → /develop → /review → /test` (+ `/observe`), fechando com `/spec --sync`.
 
+Autônomo, quando você não vai acompanhar → **`/loop`** (abaixo).
+
 Informal, para mudanças pequenas:
 
 1. Descreva o recurso. Se for CRUD, peça `/new-crud`.
@@ -187,6 +189,58 @@ Informal, para mudanças pequenas:
 4. **Se tocou front-end**: valide visualmente com `agent-browser` (fluxos, screenshots, responsivo + tema).
 5. Passe o agente `code-reviewer` (ou `/code-review`) no diff. Para mudanças sensíveis (auth, pagamentos,
    dados), rode `/security-review`.
+
+## `/loop` — o ciclo inteiro numa tacada
+
+[`/loop`](../.claude/commands/loop.md) roda `/spec --sync`, escolhe a próxima spec do
+[`BACKLOG.md`](../specs/BACKLOG.md) e a leva por `/analyze → /develop → /review → /test` **sem parar para
+perguntar**. Existe para uma situação específica: **você não vai estar na frente da tela**.
+
+```bash
+/loop                      # audita o backlog e ataca a spec recomendada
+/loop cursor-pagination    # força uma spec específica (vence a recomendação, mas registra a divergência)
+/loop --audit-only         # só o /spec --sync
+/loop --max-rounds 3       # teto do vai-e-volta /test ↔ /review (padrão 2)
+```
+
+**O que ele faz com as perguntas.** Onde o `/analyze` ou o `/develop` parariam, ele decide nesta ordem: a
+recomendação da **spec** → o **padrão vigente no repo** → a opção de **menor raio de impacto**. Cada decisão
+vai para o relatório final **com a alternativa que não foi escolhida** — é isso que permite você desfazer o
+que não gostar. Só chegam até você as perguntas de **julgamento humano** (aprovar spec, adotar serviço pago,
+mudar prioridade), agrupadas e com resposta recomendada.
+
+**O que ele não faz.** ⛔ **Não commita, não pusha, não abre PR, não cria branch.** Ele deixa o working tree
+pronto e apresenta o plano de commits. Rodar o `/loop` **não é** aprovação de commit
+([`git-commits.md`](../.claude/rules/git-commits.md)).
+
+**Onde as pendências ficam.** Tudo que exige ação externa (console de provedor, DNS, cartão, IAM, variável
+em produção) é escrito em [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) — com o passo a passo, o que acontece sem
+aquilo, e como verificar. O relatório da conversa some quando você fecha a janela; o arquivo não.
+
+### Por que ele é desconfiado de propósito
+
+Três comportamentos do `/loop` parecem paranoia e são cicatriz de rodada real:
+
+- **Cada etapa reverifica a afirmação de maior risco da anterior.** Um handoff já deu como validado um
+  fallback de imagem que na verdade **derrubava a página inteira** — apareceu porque o revisor não aceitou o
+  screenshot de terceiro. Se a etapa anterior diz "X funciona" e X é o coração da feature, a seguinte abre o
+  browser e olha.
+- **Defeito de produção achado no `/test` volta ao `/review`**, não vira nota de rodapé — e a correção que o
+  QA sugere é tratada como **hipótese**: o revisor implementa, **mede**, e reverte se não funcionar. Numa
+  rodada a correção sugerida não resolvia e a alternativa óbvia era uma regressão de segurança disfarçada.
+- **Critério que ninguém consegue verificar sem infra externa fica 🔒 "não verificado"** — nem aprovado
+  (seria mentira), nem reprovado (seria alarme falso que some no ruído).
+
+### Limites honestos
+
+- Uma rodada completa é **cara e longa**, e pode esbarrar em limite de sessão. Nada se perde: o estado vive
+  no `STATE.md` e nos artefatos de cada etapa. Ao retomar, retome o **subagent pelo `agentId`** em vez de
+  abrir outro.
+- Ele **não** substitui os comandos individuais. Quem acompanha de perto deve rodar um a um — o feedback
+  chega mais cedo e sai mais barato. `/loop` troca interatividade por autonomia, conscientemente.
+- ⚠️ Existe um `/loop` **embutido** no Claude Code (agendar um prompt em intervalo recorrente). O comando do
+  projeto tem precedência, mas se você vir comportamento de agendador em vez do ciclo, renomeie este arquivo
+  para `.claude/commands/cycle.md` — só o nome muda.
 
 ## Mantendo a base de IA saudável
 
