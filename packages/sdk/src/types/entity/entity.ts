@@ -11,7 +11,14 @@ export type EntityDTO = {
     name: string;
     description: string;
     type: EntityType;
+    /** Stored reference: an object path in the bucket, or an absolute external URL. */
     photo: string | null;
+    /**
+     * Derived by the API on read: a displayable, expiring URL when `photo` is a bucket
+     * object, or `photo` itself when it already is a URL. It is never persisted, and
+     * sending it on a write would store a signature that is already expiring.
+     */
+    photoUrl?: string | null;
     genre: string | null;
     birthdate: string | null;
     enabled: boolean;
