@@ -1,10 +1,10 @@
 ---
 description: Roda o ciclo inteiro sem parar — /spec --sync, escolhe a próxima spec do backlog e leva ela por /analyze → /develop → /review → /test, acumulando as perguntas para o fim. Adota a recomendação quando precisa decidir, registra as pendências de infra em docs/PRE-PRODUCTION.md e nunca commita sozinho.
-argument-hint: "[opcional: id da spec para forçar | --audit-only | --no-audit | --max-rounds N]"
+argument-hint: "[id da spec | --audit-only | --no-audit (exige id) | --max-rounds N]"
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill
 ---
 
-# /loop
+# /cycle
 
 Foco (opcional): **$ARGUMENTS**
 
@@ -18,17 +18,21 @@ ser honesto o bastante para o usuário conseguir desfazer qualquer decisão que 
 
 > **Este comando não substitui os individuais.** Quem está acompanhando de perto deve rodar
 > `/spec --sync`, `/analyze`, `/develop`, `/review`, `/test` um a um — o feedback chega mais cedo e sai
-> mais barato. O `/loop` é para a rodada autônoma.
+> mais barato. O `/cycle` é para a rodada autônoma.
 
 ## A regra que não pode ser quebrada
 
-⛔ **O `/loop` NÃO commita e NÃO faz push.** Ele deixa o working tree pronto e **apresenta o plano de
+⛔ **O `/cycle` NÃO commita e NÃO faz push.** Ele deixa o working tree pronto e **apresenta o plano de
 commits** no fim. Commit exige aprovação explícita do usuário
-([`.claude/rules/git-commits.md`](../rules/git-commits.md)) — e "rodar o loop" **não é** essa aprovação.
+([`.claude/rules/git-commits.md`](../rules/git-commits.md)) — e "rodar o `/cycle`" **não é** essa aprovação.
 Isso vale mesmo com tudo verde, mesmo que o usuário tenha aprovado commits numa rodada anterior.
 
 ## Passo 0 — Fixar o terreno
 
+0. **Leia [`.claude/cycle-policy.md`](../cycle-policy.md) antes de qualquer coisa.** É a lista de decisões
+   que o usuário já tomou e não quer que você readivinhe. **Ela vence a escada de decisão do Passo 2**, e
+   perde só para uma instrução direta na conversa e para `.claude/rules/`. Onde a política cobre o caso,
+   siga-a e **não** leve a pergunta ao relatório final — é justamente o que ela existe para eliminar.
 1. **Trave o diretório de trabalho.** Rode `pwd` e guarde o **caminho absoluto**. Existem checkouts
    paralelos deste repo na máquina (workspaces do Conductor, clones antigos) e **eles divergem**. Já houve
    rodada em que um subagent leu o checkout errado e reportou símbolos que não existiam aqui, contaminando
@@ -36,7 +40,7 @@ Isso vale mesmo com tudo verde, mesmo que o usuário tenha aprovado commits numa
    `pwd` antes de editar.**
 2. **Cheque a branch**: `git rev-parse --abbrev-ref HEAD`. Se for protegida (`main`, `master`,
    `production`, `production-backup`), **PARE** e diga que o `/review` precisa criar uma branch antes — o
-   `/loop` não nomeia branch, isso é do `revisor-codigo`.
+   `/cycle` não nomeia branch, isso é do `revisor-codigo`.
 3. **Cheque o working tree**: `git status --short`. Se já houver mudanças, **não as descarte** — identifique
    de que assunto são e registre, porque elas vão precisar de commits separados no fim.
 4. **Defina o teto de rodadas**: `--max-rounds N` (padrão **2**) limita o vai-e-volta `/test` ↔ `/review`
@@ -53,13 +57,26 @@ inteiro confirmado — e o critério de "entregue" inclui **PR mergeada em `main
 merge**, não apenas código no disco.
 
 Peça também: corrigir a **deriva** de referências nas specs (elas apodrecem a cada entrega), reconferir os
-**achados** e as **pendências sem dono** um a um, remedir os **gates**, e devolver a **recomendação de #1**
-já decidida.
+**achados** e as **pendências sem dono** um a um, remedir os **gates**, recalcular os **lotes paralelos** a
+partir do `contends_on`, e devolver a **recomendação de #1** já decidida.
 
 Se `$ARGUMENTS` trouxer um **id de spec**, ele **vence** a recomendação do agente — mas registre a
 divergência no relatório final, com o motivo que o agente deu.
 
 Com `--audit-only`, pare aqui e apresente o resultado da auditoria.
+
+### `--no-audit` — quando você é um de vários
+
+Existe para **rodar em paralelo**. Vários workspaces rodando o ciclo ao mesmo tempo não podem todos
+reescrever o `specs/BACKLOG.md`: só **um** roda a auditoria, os outros passam `--no-audit`.
+
+Com `--no-audit`, o `$ARGUMENTS` **tem** de trazer o id da spec — sem auditoria não há recomendação, e
+adivinhar qual atacar é exatamente como dois workspaces acabam na mesma feature. Se vier vazio, **pare** e
+peça o id.
+
+Antes de começar, confirme no `BACKLOG.md` que a spec pedida está no **mesmo lote** que as outras em
+execução: lote é calculado por `contends_on` disjunto. `depends_on` vazio **não** significa paralelizável —
+ele modela ordem ("A precisa de B"), não contenção de arquivo.
 
 ### Passo 1.1 — Resolver o que a auditoria pede antes de seguir
 
@@ -183,6 +200,10 @@ Estruture em seis blocos:
    discordar de forma informada.
 4. **Perguntas que exigem você** — só as de julgamento humano, cada uma com **a resposta recomendada**.
    Agrupe; não faça oito perguntas em sequência.
+   > Pergunta que você respondeu pela [`cycle-policy.md`](../cycle-policy.md) **não entra aqui** — ela já
+   > foi decidida. E se uma pergunta se repetiu em duas rodadas com a mesma resposta, **proponha a linha
+   > de política** que a elimina da próxima vez. É assim que o arquivo cresce: por evidência, não por
+   > antecipação.
 5. **Pendências** — as de infra (com ponteiro para o `PRE-PRODUCTION.md`, não recopiadas), as de higiene
    (contas de QA, branches mortas, dados de teste), e os **achados** novos que viraram item de backlog.
 6. **Plano de commits proposto** — na ordem de dependência, assuntos separados. E a pergunta: **commito?**
@@ -193,7 +214,7 @@ relatório é o usuário saber **onde olhar com desconfiança**.
 
 ## Passo 8 — Fechar
 
-Sugira o próximo passo concreto: aprovar os commits, depois `git push`, PR, e **`/loop` de novo** depois do
+Sugira o próximo passo concreto: aprovar os commits, depois `git push`, PR, e **`/cycle` de novo** depois do
 merge — a spec entregue sai do backlog e a cadeia de dependências se move.
 
 ## Se a sessão cair no meio
@@ -202,7 +223,7 @@ Rodada completa é longa e pode esbarrar em limite de sessão. **O estado real e
 histórico: `docs/features/<slug>/STATE.md` diz até onde foi, e cada etapa deixou o seu artefato
 (`analyze/plan.md`, `develop/handoff.md`, `review/review.md`, `test/`).
 
-Ao retomar: cheque `git status` (nada se perde — o `/loop` não commita), leia o `STATE.md`, e **retome o
+Ao retomar: cheque `git status` (nada se perde — o `/cycle` não commita), leia o `STATE.md`, e **retome o
 subagent pelo `agentId`** em vez de abrir um novo, se ele ainda existir — o contexto dele vale mais que o
 tempo de recarregar.
 
