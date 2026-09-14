@@ -8,6 +8,7 @@ audience: confianca
 area: [apps/app, apps/web, packages/analytics, packages/design-system, packages/internationalization, packages/shared]
 mode: ambos
 depends_on: []
+contends_on: [packages/analytics/provider.tsx, apps/app/app/layout.tsx, "apps/web/app/[locale]/layout.tsx", packages/design-system/components/ui/index.ts]
 feature: -
 updated: 2026-09-10
 ---

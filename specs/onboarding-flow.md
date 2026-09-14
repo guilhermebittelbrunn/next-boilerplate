@@ -8,6 +8,7 @@ audience: produto
 area: [apps/app, apps/api, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: []
+contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
 feature: -
 updated: 2026-09-10
 ---

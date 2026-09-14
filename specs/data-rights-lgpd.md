@@ -8,6 +8,7 @@ audience: confianca
 area: [apps/api, apps/app, apps/web, packages/sdk, packages/auth, packages/internationalization]
 mode: ambos
 depends_on: [account-settings]
+contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
 feature: -
 updated: 2026-09-10
 ---

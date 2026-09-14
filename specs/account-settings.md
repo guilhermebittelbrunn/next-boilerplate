@@ -8,6 +8,7 @@ audience: produto
 area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/internationalization]
 mode: ambos
 depends_on: [auth-recovery-verification, file-upload-storage]
+contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/routes.tsx", "apps/app/app/[locale]/(authenticated)/(common)/paths.ts", packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts]
 feature: -
 updated: 2026-09-10
 ---

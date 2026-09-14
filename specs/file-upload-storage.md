@@ -8,6 +8,7 @@ audience: produto
 area: [apps/api, apps/app, packages/sdk, packages/design-system, packages/internationalization]
 mode: ambos
 depends_on: []
+contends_on: [firebase.json, apps/api/env.ts, apps/app/env.ts, apps/api/proxy.ts, apps/app/proxy.ts, apps/app/next.config.ts]
 feature: -
 updated: 2026-09-14
 ---

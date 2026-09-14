@@ -146,6 +146,91 @@ mais caro depois**.
   continua sendo `depends_on` dela. Fazê-la antes significa entregá-la sem avatar — o que a própria spec
   autoriza como plano B, mas é decisão do usuário, não do `/spec`.
 
+## Lotes paralelos
+
+Para rodar o ciclo completo em 2–4 workspaces do Conductor ao mesmo tempo. Calculado em **2026-09-14** a
+partir do `contends_on` de cada spec, pelo algoritmo escrito em
+[`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por
+disjunção → teto de 3.
+
+**A ordem recomendada acima e estes lotes respondem perguntas diferentes.** A ordem diz *o que vale mais a
+pena fazer*; o lote diz *o que pode ser feito junto sem uma spec pisar na outra*. Um lote **não** é uma
+recomendação de prioridade — se você só vai rodar uma coisa, rode o #1 da ordem.
+
+**Elegíveis nesta rodada: 8 de 14.** Ficaram de fora: `teams-organizations` (`deferred`),
+`account-settings` + `account-security-mfa` + `data-rights-lgpd` + `e2e-testing` (`depends_on` não
+satisfeito) e `file-upload-storage` — esta última por um motivo que merece nome: **está entregue mas não
+mergeada.** Os commits vivem na branch `spec-sync-backlog-loop`, com `HEAD` à frente de `origin/main`, e
+por isso ela conta como **`in-progress`** para efeito de elegibilidade. O código dela não está em `main`:
+quem ramificar hoje ramifica de uma base que não a contém — e é exatamente por isso que `account-settings`,
+que depende dela, segue bloqueada.
+
+| lote | specs | o que cada uma toca | por que não colidem |
+|------|-------|---------------------|---------------------|
+| **1** | `observability-logging` · `cookie-consent` · `firebase-emulator-seed` | instrumentação + proxy da API + webhook de pagamento · provedor de analytics + os dois `layout.tsx` + barril de UI · `firebase.json` + `package.json` da raiz + `packages/auth/server.ts` | três territórios disjuntos: **API**, **camada de apresentação/analytics** e **infra local**. Nenhum arquivo em comum |
+| **2** | `cursor-pagination` · `billing-subscription` | `base.repository.ts` + `entity.repository.ts` + `table.tsx` + `firestore.indexes.json` + ação `entity` do SDK · webhook + barril do SDK + `UserDTO` + `user.repository.ts` + `routes.tsx` | uma mexe no **slice `entity`** e na leitura paginada, a outra no **slice `user`** e na cobrança. Repositórios diferentes, tipos diferentes |
+| **3** | `audit-log` · `onboarding-flow` | `base.repository.ts` + `users/[id]` + índices + barril do SDK + `queryKeys.ts` · `apps/app/proxy.ts` + resolvedor pós-login + `user-merge.ts` + `UserDTO` | uma é **escrita de trilha na API**, a outra é **desvio de navegação no app**. Encostam no `user` por caminhos distintos (`users/[id]/route.ts` × `user-merge.ts`) |
+| **4** | `dashboard-home` | as duas `page.tsx` de home + `queryKeys.ts` + índices | sozinha — ver abaixo |
+
+### Por que cada spec ficou de fora do lote 1
+
+Distinguir os dois motivos importa: colisão é **dado**, teto é **decisão**.
+
+- **`billing-subscription` — colisão real.** Não entra com `observability-logging`: as duas alteram
+  `apps/api/app/(routes)/webhooks/payments/route.ts`. Uma troca os dois handlers `// TODO` por persistência
+  e dedupe; a outra troca o `console.error` de lá por log estruturado com request id. É o mesmo punhado de
+  linhas, no mesmo arquivo, e o conflito seria no fluxo que mexe com dinheiro.
+- **`cursor-pagination`, `audit-log`, `onboarding-flow`, `dashboard-home` — sem colisão com o lote 1.**
+  Qualquer uma delas caberia tecnicamente. Ficaram de fora **só pelo teto de 3**, que é escolha de custo de
+  revisão, não impedimento técnico. Se você tiver fôlego para revisar 4 features amanhã, promova uma destas
+  ao lote 1 — a de melhor posição na ordem recomendada é `cursor-pagination`.
+
+E o que separa os lotes 2, 3 e 4 entre si:
+
+- **`audit-log` não entra com `cursor-pagination`:** as duas alteram
+  `apps/api/(shared)/repositories/base.repository.ts` — uma para ensiná-lo a paginar, a outra para tornar a
+  trilha somente-adição — **e** as duas alteram `firestore.indexes.json`. Duas colisões, não uma.
+- **`onboarding-flow` não entra com `billing-subscription`:** as duas alteram
+  `packages/sdk/src/types/user/user.ts`. Uma acrescenta `subscription`/`stripeCustomerId` ao `UserDTO`, a
+  outra acrescenta o estado de onboarding. Mesmo tipo, mesmo arquivo.
+- **`dashboard-home` fica sozinha:** disputa `firestore.indexes.json` com `cursor-pagination` e `audit-log`,
+  e `apps/app/shared/lib/queryKeys.ts` com `audit-log`. É a spec mais "presa" do conjunto elegível, apesar
+  de não depender de ninguém — bom exemplo de que `depends_on: []` não significa "pode rodar a qualquer
+  momento".
+
+**O arquivo mais disputado do repositório é `firestore.indexes.json`**, citado por 5 das 14 specs
+(`audit-log`, `cursor-pagination`, `dashboard-home`, `data-rights-lgpd`, `teams-organizations`). Todo
+recurso que consulta por período, dono ou escopo precisa de um índice composto, e todos moram no mesmo
+arquivo. Vale saber disso antes de planejar qualquer noite de execução paralela.
+
+### Nota de processo — a auditoria é de um workspace só
+
+**Só um workspace roda a auditoria do backlog** (`/spec --sync --audit-only`); os outros rodam com
+`--no-audit`. Sem essa disciplina, 3 agents regravam o `BACKLOG.md` ao mesmo tempo e o arquivo que existe
+para dizer a verdade sobre o repositório vira o pior conflito da noite. É também por isso que
+`specs/BACKLOG.md` **não** aparece em nenhum `contends_on`: esse conflito se resolve por **processo**, não
+por dado — ver [`README.md`](README.md#depends_on--contends_on).
+
+### A ressalva honesta
+
+**Lote disjunto em `contends_on` reduz conflito; não elimina.** O campo é uma *previsão* feita lendo o corte
+de MVP, e uma previsão erra: duas features ainda podem brigar num arquivo que nenhuma das duas antecipou —
+um helper que as duas resolvem extrair, um teste que as duas tocam, um barril que ninguém lembrou.
+
+A medida desse erro está disponível, foi medida hoje, e não é pequena: **`file-upload-storage`, já
+entregue, modificou 32 arquivos compartilhados** (contados em `origin/main..HEAD`, descontados testes,
+`docs/`, `specs/`, `.env.example` e i18n) — **12 deles no design system**, mais
+`packages/shared/utils/helpers/httpStatus.ts` e `packages/auth/keys.ts`, nenhum dos quais uma leitura da
+spec anteciparia. O `contends_on` dela lista **6**.
+
+Essa razão — 6 previstos para 32 alterados — é a régua honesta do campo: ele **não** tenta prever o raio de
+impacto da spec, e falharia feio se tentasse. Ele mira nos arquivos de **alta disputa**, os que outra spec
+do backlog também alteraria. Os 26 restantes não entram porque ninguém mais os disputa: mexer sozinho num
+arquivo não é contenção.
+
+Corolário prático: se dois workspaces do mesmo lote tocarem o mesmo arquivo por acidente, **isso é achado
+de auditoria** — corrija o `contends_on` das duas specs na rodada seguinte, em vez de tratar como azar.
+
 ## Dependências e bloqueios
 
 | spec | `depends_on` | situação em 2026-09-11 |

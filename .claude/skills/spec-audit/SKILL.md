@@ -127,7 +127,46 @@ Deriva não é erro — é informação. Para cada caso, diga qual das duas ocor
 Verifique também **regressão**: spec `done` cuja capacidade não está mais no código (removida num refactor).
 Isso é achado bloqueante — reporte, não rebaixe o status em silêncio.
 
-## 6. Regrave o `BACKLOG.md`
+## 6. Compute os lotes paralelos
+
+Depois que os status estão reconciliados — e **só depois**, porque o cálculo lê o `status` corrigido, não o
+gravado —, monte os **lotes paralelizáveis**: conjuntos de specs que podem ser executadas ao mesmo tempo,
+em workspaces diferentes, sem brigar pelo mesmo arquivo.
+
+Isto é o que o `depends_on` **não** resolve. Ele modela ordem lógica ("A precisa de B"), não contenção de
+arquivo: duas specs com `depends_on: []` podem alterar as duas o mesmo
+`apps/api/(shared)/repositories/base.repository.ts`. Quem modela isso é o `contends_on`
+([contrato](../../../specs/README.md#depends_on--contends_on)).
+
+### O algoritmo
+
+1. **Filtre as elegíveis.** `status` em `proposed`/`approved`, **e** `depends_on` **satisfeito** (toda
+   dependência entregue e arquivada). Exclua `deferred`, `rejected`, `superseded` e `in-progress`.
+   > Spec entregue mas **ainda não mergeada** conta como `in-progress`: o código dela não está em `main`, e
+   > quem depender dela vai ramificar de uma base que não a contém.
+2. **Ordene pela prioridade do backlog** — a ordem da seção "Ordem recomendada", não a alfabética.
+3. **Monte gulosamente.** Percorra a lista em ordem; a spec entra no lote atual se seu `contends_on` for
+   **disjunto** do de **todas** as specs já no lote. Senão, tenta a próxima; o que sobrar abre lote novo.
+4. **Teto de 3 specs por lote.** Acima disso, o custo de token e a revisão humana no dia seguinte deixam de
+   compensar. Registre isso como **decisão**, não como limite técnico — se um dia a revisão deixar de ser o
+   gargalo, o teto sobe.
+
+Leia o `contends_on` do frontmatter **do disco**; não o reconstrua de memória nem o deduza do `area:`.
+
+### O que escrever no `BACKLOG.md`
+
+Seção **"Lotes paralelos"**, logo depois de "Ordem recomendada", contendo:
+
+- a **tabela dos lotes** — lote · specs · o que cada uma toca · por que não colidem;
+- **por que uma spec ficou de fora do lote 1, nominalmente** — é a parte que se consulta de verdade
+  (ex.: "`audit-log` não entra com `cursor-pagination`: as duas alteram `base.repository.ts`"). Diga também
+  quando a spec ficou de fora **sem colisão**, barrada só pelo teto de 3: é informação diferente;
+- a **nota de processo**: só **um** workspace roda a auditoria (`--audit-only`); os demais usam
+  `--no-audit`. Sem isso, o `BACKLOG.md` é reescrito por 3 agents ao mesmo tempo;
+- a **ressalva honesta**: lote disjunto em `contends_on` **reduz** conflito, não elimina. Duas features
+  ainda podem brigar num arquivo que nenhuma das duas previu.
+
+## 7. Regrave o `BACKLOG.md`
 
 - Regrave **o arquivo inteiro**, preservando as specs que você não tocou.
 - Mantenha a seção **Entregues** com uma linha por spec arquivada, apontando para
@@ -136,8 +175,9 @@ Isso é achado bloqueante — reporte, não rebaixe o status em silêncio.
 - Atualize os contadores por `status` e a data de auditoria.
 - Confira as dependências: spec `approved` cujo `depends_on` aponta para spec não-`done` **não** pode ser
   recomendada como próxima — sinalize o bloqueio.
+- Regrave a seção **Lotes paralelos** com o resultado do §6.
 
-## 7. Relatório
+## 8. Relatório
 
 ```markdown
 ## Auditoria do backlog — <YYYY-MM-DD>
@@ -152,6 +192,9 @@ Isso é achado bloqueante — reporte, não rebaixe o status em silêncio.
 
 ### Deriva
 | id | especificado | implementado | leitura |
+
+### Lotes paralelos
+| lote | specs | fora do lote 1 e por quê |
 
 ### Achados
 - Entrega parcial órfã: <id> — <itens implementados sem feature ativa>

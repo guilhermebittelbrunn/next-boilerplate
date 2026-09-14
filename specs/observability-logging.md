@@ -8,6 +8,7 @@ audience: dx
 area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
+contends_on: [apps/api/instrumentation.ts, apps/api/proxy.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
 feature: -
 updated: 2026-09-10
 ---

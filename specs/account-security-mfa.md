@@ -8,6 +8,7 @@ audience: confianca
 area: [apps/api, apps/app, packages/auth, packages/design-system, packages/internationalization]
 mode: ambos
 depends_on: [account-settings]
+contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
 updated: 2026-09-10
 ---

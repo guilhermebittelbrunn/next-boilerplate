@@ -8,6 +8,7 @@ audience: dx
 area: [apps/api, packages/sdk, apps/app, packages/design-system]
 mode: ambos
 depends_on: [firestore-admin-access]
+contends_on: [apps/api/(shared)/repositories/base.repository.ts, apps/api/(shared)/repositories/entity.repository.ts, packages/design-system/components/ui/table.tsx, firestore.indexes.json, packages/sdk/src/actions/entity/action.ts]
 feature: -
 updated: 2026-09-10
 ---
