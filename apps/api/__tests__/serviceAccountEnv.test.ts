@@ -15,7 +15,11 @@ const RELATED_VARS = [
     "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
     "NEXT_PUBLIC_FIREBASE_API_KEY",
     "FIREBASE_WEB_API_KEY",
+    "FIREBASE_STORAGE_BUCKET",
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
 ] as const;
+
+const BUCKET = "demo-project.firebasestorage.app";
 
 const COMPLETE_SERVICE_ACCOUNT = {
     FIREBASE_ADMIN_PROJECT_ID: "demo-project",
@@ -92,6 +96,31 @@ describe("apps/api env", () => {
 
         await expect(import("@/env")).rejects.toThrow(CLIENT_EMAIL_MENTION);
     });
+
+    /**
+     * `.env.example` ships the bucket empty, which is how a fork declares it does not
+     * want uploads. Treating that as a malformed value would refuse to boot the API
+     * over a feature the fork opted out of.
+     */
+    it("boots with the bucket left empty and reports no bucket", async () => {
+        givenEnv({ ...COMPLETE_SERVICE_ACCOUNT, FIREBASE_STORAGE_BUCKET: "" });
+
+        const { env } = await import("@/env");
+
+        expect(env.FIREBASE_STORAGE_BUCKET).toBeUndefined();
+    });
+
+    it("falls back to the public bucket variable when the server one is empty", async () => {
+        givenEnv({
+            ...COMPLETE_SERVICE_ACCOUNT,
+            FIREBASE_STORAGE_BUCKET: "",
+            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: BUCKET,
+        });
+
+        const { env } = await import("@/env");
+
+        expect(env.FIREBASE_STORAGE_BUCKET).toBe(BUCKET);
+    });
 });
 
 describe("@repo/auth keys", () => {
@@ -117,6 +146,39 @@ describe("@repo/auth keys", () => {
 
         expect(() => keys()).toThrow(PRIVATE_KEY_MENTION);
         expect(() => keys()).toThrow(PROJECT_ID_MENTION);
+    });
+
+    it("reads an empty bucket as no bucket instead of an invalid one", async () => {
+        givenEnv({ ...COMPLETE_SERVICE_ACCOUNT, FIREBASE_STORAGE_BUCKET: "" });
+
+        const { keys } = await import("@repo/auth/keys");
+
+        expect(keys().FIREBASE_STORAGE_BUCKET).toBeUndefined();
+    });
+
+    /**
+     * `.env.example` ships the web API key empty too, so copying it and filling only the
+     * service account has to leave the process able to start.
+     */
+    it("reads an empty web api key as absent instead of refusing to start", async () => {
+        givenEnv({ ...COMPLETE_SERVICE_ACCOUNT, FIREBASE_WEB_API_KEY: "" });
+
+        const { keys } = await import("@repo/auth/keys");
+
+        expect(() => keys()).not.toThrow();
+        expect(keys().FIREBASE_WEB_API_KEY).toBeUndefined();
+    });
+
+    it("falls back to the public api key when the server one is empty", async () => {
+        givenEnv({
+            ...COMPLETE_SERVICE_ACCOUNT,
+            FIREBASE_WEB_API_KEY: "",
+            NEXT_PUBLIC_FIREBASE_API_KEY: "public-web-key",
+        });
+
+        const { keys } = await import("@repo/auth/keys");
+
+        expect(keys().FIREBASE_WEB_API_KEY).toBe("public-web-key");
     });
 
     it("accepts the public project id as the service account project id", async () => {

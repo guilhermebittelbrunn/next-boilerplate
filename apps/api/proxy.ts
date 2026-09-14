@@ -28,6 +28,10 @@ const securityOptions = buildApiOptions();
  * `/auth/me` is authenticated and on the hot path, `/webhooks/payments` is retried
  * aggressively by Stripe — throttling either costs more than it protects.
  *
+ * `/files` is the exception that is authenticated: a guard is no budget when the caller
+ * is a legitimate user in a loop, and every accepted request writes to the fork's bucket
+ * and is billed as storage and egress.
+ *
  * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
 const RATE_LIMITED_PATHS = [
@@ -38,6 +42,7 @@ const RATE_LIMITED_PATHS = [
     "/auth/password/reset",
     "/auth/email-verification/send",
     "/auth/email-verification/confirm",
+    "/files",
 ];
 
 function isRateLimitedPath(pathname: string): boolean {

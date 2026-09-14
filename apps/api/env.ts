@@ -19,6 +19,11 @@ export const env = createEnv({
         // environment — demand a production value. Production is guarded at boot,
         // in `instrumentation.ts`.
         CORS_ORIGIN: z.string().optional(),
+        // Redeclared even though `auth()` already provides it: `skipValidation` makes
+        // createEnv answer with this module's own `runtimeEnv` and drop everything
+        // inherited, which below is every development run — and the upload capability
+        // would read as switched off on every local machine.
+        FIREBASE_STORAGE_BUCKET: z.string().optional(),
     },
     // Base of the links the account action emails carry. Redeclared here even though
     // `core()` already provides it: `skipValidation` makes createEnv answer with this
@@ -32,6 +37,10 @@ export const env = createEnv({
         FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
         FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
         CORS_ORIGIN: process.env.CORS_ORIGIN,
+        FIREBASE_STORAGE_BUCKET:
+            process.env.FIREBASE_STORAGE_BUCKET ||
+            process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+            undefined,
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     },
     skipValidation: process.env.NODE_ENV === "development",
