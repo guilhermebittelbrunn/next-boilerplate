@@ -40,10 +40,7 @@ export function RadioGroupInput({
   return (
     <div className="grid gap-2">
       {label ? (
-        <Label
-          className={cn(error ? "text-destructive" : "")}
-          required={required}
-        >
+        <Label invalid={Boolean(error)} required={required}>
           {label}
         </Label>
       ) : null}

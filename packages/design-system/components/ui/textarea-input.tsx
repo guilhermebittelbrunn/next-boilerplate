@@ -27,11 +27,7 @@ export const TextareaInput = forwardRef<
   return (
     <div className="grid gap-2">
       {label ? (
-        <Label
-          className={cn(error ? "text-destructive" : "")}
-          htmlFor={id}
-          required={required}
-        >
+        <Label htmlFor={id} invalid={Boolean(error)} required={required}>
           {label}
         </Label>
       ) : null}
