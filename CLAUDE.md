@@ -102,7 +102,7 @@ Hub do ferramental: [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md).
 descobrir  planejar     implementar   revisar     QA
    ↑                                                └── /spec --sync fecha o ciclo
 
-/loop — a linha inteira numa tacada, sem parar para perguntar (não commita)
+/cycle — a linha inteira numa tacada, sem parar para perguntar (não commita)
 ```
 
 O ciclo começa no **backlog de funcionalidades** ([`specs/`](specs/README.md)): o `/spec` varre o repo,
@@ -117,10 +117,10 @@ Cada comando roda no loop principal (pergunta antes de decidir) e aciona um suba
 `docs/features/<slug>/` (versionado — é o histórico de como a feature foi construída): `STATE.md` é o gate,
 e cada etapa deixa um handoff conciso para a seguinte. Gate sequencial com bypass via `--force`.
 
-**`/loop`** roda a linha inteira sozinho, para quando você **não vai acompanhar**: decide pela recomendação
+**`/cycle`** roda a linha inteira sozinho, para quando você **não vai acompanhar**: decide pela recomendação
 da spec → padrão do repo → menor raio de impacto, e junta tudo num relatório final com as alternativas que
 descartou. Pendências que exigem infra externa vão para [`docs/PRE-PRODUCTION.md`](docs/PRE-PRODUCTION.md).
-⛔ Ele **não commita nem cria branch** — rodar o `/loop` não é aprovação de commit.
+⛔ Ele **não commita nem cria branch** — rodar o `/cycle` não é aprovação de commit.
 
 Apoio: [`docs/feature-analysis-guide.md`](docs/feature-analysis-guide.md) (roteiro de análise + formato dos
 critérios de aceite) · [`docs/review-checklist.md`](docs/review-checklist.md) (**fonte única** do que a

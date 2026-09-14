@@ -21,7 +21,7 @@ assistido por IA.
 | Roteiro de análise | [`feature-analysis-guide.md`](feature-analysis-guide.md) | Checklist de tech lead + formato dos critérios de aceite (§9.1). |
 | Checklist de revisão | [`review-checklist.md`](review-checklist.md) | **Fonte única** das invariantes que uma revisão cobra. |
 | Glossário | [`GLOSSARY.md`](GLOSSARY.md) | Vocabulário do boilerplate (guard, subject, DTO/mapper, slice, modo de produto…). |
-| Slash commands | `.claude/commands/*` | `/spec`, `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate` + `/loop` (o ciclo inteiro de uma vez). |
+| Slash commands | `.claude/commands/*` | `/spec`, `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate` + `/cycle` (o ciclo inteiro de uma vez). |
 | Subagents | `.claude/agents/*` | Os motores do pipeline + o `code-reviewer` read-only. |
 | Skills do projeto | `.claude/skills/*` | Procedimentos invocáveis com `/`. |
 | Harness | `.claude/settings.json` + `.claude/hooks/` | Permissões, auto-format ao editar, bloqueio de commit em branch protegida. |
@@ -176,7 +176,7 @@ Estes arquivos são carregados em toda sessão — por isso são curtos:
 Formal, com rastreio em disco → use o [pipeline](TASK-PIPELINE.md):
 `/spec → /analyze → /develop → /review → /test` (+ `/observe`), fechando com `/spec --sync`.
 
-Autônomo, quando você não vai acompanhar → **`/loop`** (abaixo).
+Autônomo, quando você não vai acompanhar → **`/cycle`** (abaixo).
 
 Informal, para mudanças pequenas:
 
@@ -190,17 +190,17 @@ Informal, para mudanças pequenas:
 5. Passe o agente `code-reviewer` (ou `/code-review`) no diff. Para mudanças sensíveis (auth, pagamentos,
    dados), rode `/security-review`.
 
-## `/loop` — o ciclo inteiro numa tacada
+## `/cycle` — o ciclo inteiro numa tacada
 
-[`/loop`](../.claude/commands/loop.md) roda `/spec --sync`, escolhe a próxima spec do
+[`/cycle`](../.claude/commands/cycle.md) roda `/spec --sync`, escolhe a próxima spec do
 [`BACKLOG.md`](../specs/BACKLOG.md) e a leva por `/analyze → /develop → /review → /test` **sem parar para
 perguntar**. Existe para uma situação específica: **você não vai estar na frente da tela**.
 
 ```bash
-/loop                      # audita o backlog e ataca a spec recomendada
-/loop cursor-pagination    # força uma spec específica (vence a recomendação, mas registra a divergência)
-/loop --audit-only         # só o /spec --sync
-/loop --max-rounds 3       # teto do vai-e-volta /test ↔ /review (padrão 2)
+/cycle                      # audita o backlog e ataca a spec recomendada
+/cycle cursor-pagination    # força uma spec específica (vence a recomendação, mas registra a divergência)
+/cycle --audit-only         # só o /spec --sync
+/cycle --max-rounds 3       # teto do vai-e-volta /test ↔ /review (padrão 2)
 ```
 
 **O que ele faz com as perguntas.** Onde o `/analyze` ou o `/develop` parariam, ele decide nesta ordem: a
@@ -210,7 +210,7 @@ que não gostar. Só chegam até você as perguntas de **julgamento humano** (ap
 mudar prioridade), agrupadas e com resposta recomendada.
 
 **O que ele não faz.** ⛔ **Não commita, não pusha, não abre PR, não cria branch.** Ele deixa o working tree
-pronto e apresenta o plano de commits. Rodar o `/loop` **não é** aprovação de commit
+pronto e apresenta o plano de commits. Rodar o `/cycle` **não é** aprovação de commit
 ([`git-commits.md`](../.claude/rules/git-commits.md)).
 
 **Onde as pendências ficam.** Tudo que exige ação externa (console de provedor, DNS, cartão, IAM, variável
@@ -219,7 +219,7 @@ aquilo, e como verificar. O relatório da conversa some quando você fecha a jan
 
 ### Por que ele é desconfiado de propósito
 
-Três comportamentos do `/loop` parecem paranoia e são cicatriz de rodada real:
+Três comportamentos do `/cycle` parecem paranoia e são cicatriz de rodada real:
 
 - **Cada etapa reverifica a afirmação de maior risco da anterior.** Um handoff já deu como validado um
   fallback de imagem que na verdade **derrubava a página inteira** — apareceu porque o revisor não aceitou o
@@ -237,10 +237,70 @@ Três comportamentos do `/loop` parecem paranoia e são cicatriz de rodada real:
   no `STATE.md` e nos artefatos de cada etapa. Ao retomar, retome o **subagent pelo `agentId`** em vez de
   abrir outro.
 - Ele **não** substitui os comandos individuais. Quem acompanha de perto deve rodar um a um — o feedback
-  chega mais cedo e sai mais barato. `/loop` troca interatividade por autonomia, conscientemente.
-- ⚠️ Existe um `/loop` **embutido** no Claude Code (agendar um prompt em intervalo recorrente). O comando do
-  projeto tem precedência, mas se você vir comportamento de agendador em vez do ciclo, renomeie este arquivo
-  para `.claude/commands/cycle.md` — só o nome muda.
+  chega mais cedo e sai mais barato. `/cycle` troca interatividade por autonomia, conscientemente.
+- O nome é `/cycle` e não `/loop` de propósito: **`/loop` é um comando embutido** do Claude Code (agenda um
+  prompt em intervalo recorrente). São coisas diferentes e o nome ficaria ambíguo — inclusive porque os dois
+  se combinam (veja abaixo).
+
+## Rodar várias features em paralelo
+
+O gargalo do desenvolvimento paralelo **não é** agendamento, é escolher specs que não brigam. Duas coisas
+governam isso, e elas são diferentes:
+
+| campo | pergunta que responde | exemplo |
+|-------|----------------------|---------|
+| `depends_on` | "pode ser feito **antes**?" | `account-settings` precisa de `file-upload-storage` entregue |
+| `contends_on` | "pode ser feito **ao mesmo tempo**?" | `cursor-pagination` e `audit-log` alteram as duas o `base.repository.ts` |
+
+`depends_on` vazio **não** significa paralelizável. O `/spec --sync` calcula os **lotes paralelos** a partir
+do `contends_on` e escreve a tabela no [`BACKLOG.md`](../specs/BACKLOG.md) — é de lá que você tira o que
+rodar junto.
+
+**A regra de processo que evita estrago:** só **um** workspace roda a auditoria (`/cycle --audit-only` ou
+`/cycle` normal); todos os outros rodam `/cycle <id> --no-audit`. Senão três agents reescrevem o
+`BACKLOG.md` ao mesmo tempo e você acorda com um conflito de 68 KB.
+
+```bash
+# workspace A (o que audita)
+/cycle
+# workspaces B e C
+/cycle dashboard-home --no-audit
+/cycle cookie-consent --no-audit
+```
+
+Lote disjunto em `contends_on` **reduz** conflito, não elimina: duas features ainda podem brigar num arquivo
+que nenhuma das duas previu. E o teto prático é **3 specs** — acima disso o custo em tokens e a revisão
+humana no dia seguinte deixam de compensar.
+
+## Agendar o ciclo (trabalho noturno)
+
+Configuração declarativa em [`.claude/cycle-schedule.jsonc`](../.claude/cycle-schedule.jsonc): horário,
+workspace, comando, modelo e esforço por job. Quem lê o arquivo é
+[`scripts/cycle-runner.sh`](../scripts/cycle-runner.sh), que invoca o Claude Code em modo headless
+(`claude -p`) dentro do workspace certo.
+
+```bash
+scripts/cycle-runner.sh --list          # mostra os jobs configurados
+scripts/cycle-runner.sh --dry-run nightly-1   # imprime o comando sem executar
+scripts/cycle-runner.sh nightly-1       # roda agora
+scripts/cycle-runner.sh --install       # instala os jobs no launchd (macOS)
+```
+
+**O que funciona e o que não funciona**, sem ilusão:
+
+- O `/loop` embutido e o `CronCreate` vivem **na sessão**: morrem quando você fecha o Claude Code e só
+  disparam com o REPL ocioso. Servem para "daqui a 2h faça X" na mesma sessão — **não** para trabalho
+  noturno.
+- O que sobrevive a você fechar o terminal é o **launchd** (macOS) chamando o runner. O Mac precisa estar
+  **ligado e acordado** — o runner usa `caffeinate` enquanto roda, mas não acorda uma máquina suspensa.
+  Agende com a tampa aberta ou com "Prevent sleep" ligado.
+- O runner escreve **dentro do workspace do Conductor**, na branch dele. De manhã você abre o Conductor,
+  vê o diff e revisa normalmente — é o mesmo fluxo de sempre, só que o trabalho já estava lá.
+- ⛔ O runner roda o `/cycle`, que **não commita**. Você acorda com working tree sujo e um plano de commits,
+  não com commits que ninguém revisou. É deliberado.
+
+Cada execução deixa log em `.claude/cycle-logs/<job>-<data>.log` (gitignored). Comece com **`--dry-run`**,
+depois um job só, e só então paralelize.
 
 ## Mantendo a base de IA saudável
 
