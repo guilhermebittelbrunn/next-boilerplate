@@ -34,17 +34,31 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
   **Não há bloco de emuladores**, nem hosting, functions ou storage.
 - Não existe **nenhum** script de seed, fixture ou dado de demonstração: buscar por `seed`/`emulator` no
   código-fonte retorna apenas menções em notas de pesquisa e documentação de agents.
-- `docs/SETUP.md:170-180` — a seção "Firestore" instrui a provisionar no Firebase Console em **modo de
-  produção** (`:174`) e fazer deploy das regras. Não menciona emulador nem seed — mas desde então o próprio
-  `docs/SETUP.md` ganhou uma seção **"Primeiro admin (bootstrap de desenvolvimento)" em `:191`**,
+- `docs/SETUP.md:172-191` — a seção "Firestore" instrui a provisionar no Firebase Console em **modo de
+  produção** (`:176`) e fazer deploy das regras (`:179`). Não menciona emulador nem seed — mas desde então o
+  próprio `docs/SETUP.md` ganhou uma seção **"Primeiro admin (bootstrap de desenvolvimento)" em `:193`**,
   documentando o script abaixo. A lacuna de emulador e seed segue de pé; a de primeiro admin, não.
 - `apps/api/(shared)/infra/database.ts:1-5` — desde 2026-08-31 (`firestore-admin-access`) a conexão é uma
   única linha: `getFirestoreAdmin()` de `@repo/auth/server`, sem configuração hardcoded. **O ponto de
   conexão do emulador ficou muito mais barato** — o Admin SDK lê `FIRESTORE_EMULATOR_HOST` do ambiente, o
   que torna o "no-op quando a variável falta" quase gratuito, sem ramificação no código de infra.
-- `firestore.rules:32-34` — negação total (`allow read, write: if false`), **publicada em 2026-08-31** e
-  **nunca exercitada por teste**. O impasse que impedia publicá-la acabou; o que falta é o emulador para
-  provar que as regras fazem o que dizem, em vez de confiar num `curl` manual.
+- `firestore.rules:32-34` — negação total (`allow read, write: if false`), **publicada e em vigor**, e
+  **nunca exercitada por teste**. O impasse técnico que impedia publicá-la acabou (a API roda no Admin SDK
+  e ignora as rules); o que falta é o emulador para provar que as regras fazem o que dizem, em vez de
+  depender de um `curl` manual contra o projeto real.
+  > ✅ **Verificado em 2026-09-11: as rules ESTÃO publicadas.** A leitura REST direta com a chave pública
+  > devolve **HTTP 403** — a negação está valendo. Medido com o comando de
+  > `docs/SECURITY.md:56-63` contra o projeto `next-boilerplate-576d0`.
+  >
+  > **E é justamente esse episódio que dá o melhor argumento a esta spec.** Durante onze dias,
+  > `docs/SECURITY.md:30-35` e `docs/PRE-PRODUCTION.md:23-25` afirmaram exatamente o contrário — que as
+  > rules nunca tinham sido publicadas e que a base estava "legível e gravável por qualquer pessoa com a
+  > chave pública" —, e **nada no repositório foi capaz de desmentir isso**: nem os 668 testes, nem o
+  > `typecheck`, nem o CI. A pergunta "as regras de acesso do banco estão valendo?" só pôde ser respondida
+  > por um `curl` manual, feito à mão, contra um projeto real, por alguém que desconfiou. É esse buraco
+  > que o emulador fecha: com teste de rules, a resposta vira automática e a documentação não consegue
+  > divergir da realidade por onze dias sem que uma PR fique vermelha. O valor desta spec **não** é
+  > descobrir se as rules valem — é tornar impossível que ninguém saiba.
 - **O impasse do primeiro admin, em código:** `apps/api/app/(routes)/auth/sign-up/route.ts:34` cria o
   perfil com `type: UserType.COMMON` fixo; e a única rota que cria usuário com outro tipo,
   `apps/api/app/(routes)/users/route.ts:34`, está atrás de `requireAdminApi`. Ou seja: **pelo produto, para
