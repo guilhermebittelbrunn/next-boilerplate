@@ -11,6 +11,13 @@ interface ResponsiveImageProps {
     height: number;
     className?: string;
     priority?: boolean;
+    /**
+     * Skips the optimizer, and with it the check that the host is listed in
+     * `next.config`. Needed wherever the source is a value a user supplied, since an
+     * unlisted host makes the optimizer throw and take the whole page down instead of
+     * leaving one broken thumbnail.
+     */
+    unoptimized?: boolean;
 }
 
 export default function ResponsiveImage({
@@ -20,6 +27,7 @@ export default function ResponsiveImage({
     height,
     className,
     priority = false,
+    unoptimized = false,
 }: ResponsiveImageProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
@@ -65,6 +73,7 @@ export default function ResponsiveImage({
                         isLoading ? 'opacity-0' : 'opacity-100',
                     )}
                     priority={priority}
+                    unoptimized={unoptimized}
                     onLoad={() => setIsLoading(false)}
                     onError={() => {
                         setIsLoading(false);
