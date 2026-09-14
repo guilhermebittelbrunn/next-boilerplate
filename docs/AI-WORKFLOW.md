@@ -279,12 +279,21 @@ workspace, comando, modelo e esforço por job. Quem lê o arquivo é
 [`scripts/cycle-runner.sh`](../scripts/cycle-runner.sh), que invoca o Claude Code em modo headless
 (`claude -p`) dentro do workspace certo.
 
+**Configure nesta ordem** — cada passo só faz sentido se o anterior passou:
+
 ```bash
-scripts/cycle-runner.sh --list          # mostra os jobs configurados
-scripts/cycle-runner.sh --dry-run nightly-1   # imprime o comando sem executar
-scripts/cycle-runner.sh nightly-1       # roda agora
-scripts/cycle-runner.sh --install       # instala os jobs no launchd (macOS)
+scripts/cycle-runner.sh --selftest            # 1. ambiente + headless (~10 s, modelo barato)
+scripts/cycle-runner.sh --list                # 2. o que está configurado
+scripts/cycle-runner.sh --dry-run nightly-audit  # 3. workspace, branch e comando, sem executar
+scripts/cycle-runner.sh nightly-audit         # 4. uma execução real, você acompanhando
+scripts/cycle-runner.sh --install             # 5. só depois que o passo 4 tiver dado certo
+scripts/cycle-runner.sh --uninstall           #    desfaz o passo 5
 ```
+
+O `--selftest` confere as dependências (`claude`, `jq`, `perl`, `caffeinate`, `git`), valida o JSONC,
+checa que cada job aponta para um workspace existente fora de branch protegida, e **prova que
+`claude -p` resolve um slash command do projeto** — a suposição que sustenta o resto. Job desabilitado
+com problema **avisa**, não reprova: os do arquivo de exemplo são template por preencher.
 
 **O que funciona e o que não funciona**, sem ilusão:
 
@@ -297,7 +306,12 @@ scripts/cycle-runner.sh --install       # instala os jobs no launchd (macOS)
 - O runner escreve **dentro do workspace do Conductor**, na branch dele. De manhã você abre o Conductor,
   vê o diff e revisa normalmente — é o mesmo fluxo de sempre, só que o trabalho já estava lá.
 - ⛔ O runner roda o `/cycle`, que **não commita**. Você acorda com working tree sujo e um plano de commits,
-  não com commits que ninguém revisou. É deliberado.
+  não com commits que ninguém revisou. É deliberado — e o log confere: uma linha `commits criados` diferente
+  de zero vira aviso, porque significa que algo saiu do contrato.
+- ⚠️ **`--install` e dias úteis**: o launchd não aceita intervalo no dia da semana, então um cron com
+  `1-5` é instalado **sem restrição de dia** (roda todo dia). Para dias úteis de verdade, crie 5 jobs — um
+  por `dow`. O `--install` avisa quando encontra intervalo, em vez de instalar em silêncio.
+- O runner **recusa rodar em branch protegida**, antes de gastar um token.
 
 Cada execução deixa log em `.claude/cycle-logs/<job>-<data>.log` (gitignored). Comece com **`--dry-run`**,
 depois um job só, e só então paralelize.

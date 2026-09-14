@@ -3,6 +3,7 @@
 // Quem lê este arquivo é scripts/cycle-runner.sh, que invoca o Claude Code em modo headless
 // (claude -p) dentro do workspace indicado. Nada aqui é lido pelo Claude Code sozinho.
 //
+//   scripts/cycle-runner.sh --selftest          confere o ambiente (COMECE POR AQUI)
 //   scripts/cycle-runner.sh --list              lista os jobs
 //   scripts/cycle-runner.sh --dry-run <job>     imprime o comando, não executa
 //   scripts/cycle-runner.sh <job>               roda agora
@@ -52,6 +53,9 @@
       "command": "/cycle",
 
       // Cron de 5 campos, hora local. Evite :00 e :30 (todo mundo agenda neles).
+      // ⚠️ O --install traduz para launchd, que NÃO aceita intervalo no dia da semana:
+      //    "1-5" instala sem restrição de dia. Para dias úteis, crie 5 jobs (dow 1..5)
+      //    ou aceite que rode todo dia. O --install avisa quando encontra intervalo.
       "cron": "7 20 * * 1-5",
 
       "description": "Audita o backlog e ataca a spec #1. Roda nos dias úteis, às 20h07."

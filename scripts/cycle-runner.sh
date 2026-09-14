@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Executa os jobs do /cycle definidos em .claude/cycle-schedule.jsonc.
 #
+#   cycle-runner.sh --selftest          confere o ambiente e o headless (comece por aqui)
 #   cycle-runner.sh --list              lista os jobs
 #   cycle-runner.sh --dry-run <job>     imprime o comando sem executar
 #   cycle-runner.sh <job>               roda o job agora
@@ -53,11 +54,12 @@ cmd_list() {
   printf '\nconfig: %s\n' "$CONFIG"
 }
 
-resolve_workspace() { # imprime o caminho absoluto do workspace do job
+resolve_workspace() { # imprime o caminho absoluto e normalizado do workspace do job
   local ws; ws="$(job_field "$1" workspace)"
   [ -n "$ws" ] || die "job '$1' não define 'workspace'"
   case "$ws" in /*) ;; *) ws="$REPO_ROOT/$ws" ;; esac
-  printf '%s' "$ws"
+  [ -d "$ws" ] || { printf '%s' "$ws"; return 0; }
+  ( cd "$ws" && pwd -P )
 }
 
 build_argv() { # preenche a global CLAUDE_ARGV com o comando do claude para o job
@@ -103,6 +105,9 @@ cmd_run() {
       die "branch protegida ($branch) em $workspace. Crie uma branch de feature antes." ;;
   esac
 
+  # Baseline para medir o que ESTE job produziu, não o que a branch já tinha.
+  local head_before; head_before="$(git -C "$workspace" rev-parse HEAD)"
+
   {
     printf '=== %s | job=%s branch=%s ===\n' "$(date -Iseconds)" "$job" "$branch"
     printf 'workspace: %s\n' "$workspace"
@@ -111,18 +116,122 @@ cmd_run() {
 
   local status=0
   # caffeinate segura o sono enquanto roda; não acorda máquina já suspensa.
-  ( cd "$workspace" && caffeinate -i timeout "${timeout}m" "${CLAUDE_ARGV[@]}" ) >>"$log_file" 2>&1 || status=$?
+  ( cd "$workspace" && caffeinate -i "${CLAUDE_ARGV[@]}" ) >>"$log_file" 2>&1 &
+  local child=$!
+
+  # macOS não traz `timeout` (é do coreutils do GNU), então o cão de guarda é
+  # um subshell que espera e mata. O arquivo sentinela distingue "morreu por
+  # tempo" de "saiu com erro", que do lado de fora dariam o mesmo código.
+  local timed_out_flag; timed_out_flag="$(mktemp -t cycle-runner)"
+  rm -f "$timed_out_flag"
+  (
+    sleep "$((timeout * 60))"
+    kill -0 "$child" 2>/dev/null || exit 0
+    : >"$timed_out_flag"
+    kill -TERM "$child" 2>/dev/null || true
+    sleep 15
+    kill -KILL "$child" 2>/dev/null || true
+  ) &
+  local watchdog=$!
+
+  wait "$child" || status=$?
+  kill -TERM "$watchdog" 2>/dev/null || true
+  wait "$watchdog" 2>/dev/null || true
+
+  local timed_out=0
+  [ -e "$timed_out_flag" ] && { timed_out=1; rm -f "$timed_out_flag"; }
 
   {
     printf '\n=== fim %s | exit=%d ===\n' "$(date -Iseconds)" "$status"
-    [ "$status" -eq 124 ] && printf 'ATENÇÃO: timeout de %s min atingido.\n' "$timeout"
+    [ "$timed_out" -eq 1 ] && printf 'ATENÇÃO: timeout de %s min atingido; processo encerrado.\n' "$timeout"
     printf 'arquivos alterados: %s\n' "$(git -C "$workspace" status --short | wc -l | tr -d ' ')"
-    printf 'commits criados:    %s (o /cycle não commita; esperado 0)\n' \
-      "$(git -C "$workspace" log --oneline "origin/main..HEAD" 2>/dev/null | wc -l | tr -d ' ')"
+    local made; made="$(git -C "$workspace" rev-list --count "${head_before}..HEAD" 2>/dev/null || echo '?')"
+    printf 'commits criados:    %s' "$made"
+    if [ "$made" = "0" ]; then
+      printf ' (esperado — o /cycle não commita)\n'
+    else
+      printf ' ⚠️  o /cycle não deveria commitar; confira antes de seguir\n'
+    fi
   } | tee -a "$log_file"
 
   printf '\nlog: %s\n' "$log_file"
   return "$status"
+}
+
+cmd_selftest() {
+  local ws="${1:-$REPO_ROOT}" fail=0
+  printf 'Verificando o ambiente para o agendamento.\n\n'
+
+  for c in claude jq perl caffeinate git; do
+    if command -v "$c" >/dev/null 2>&1; then
+      printf '  ✅ %-11s %s\n' "$c" "$(command -v "$c")"
+    else
+      printf '  ❌ %-11s AUSENTE\n' "$c"; fail=1
+    fi
+  done
+
+  printf '\n  config      %s\n' "$CONFIG"
+  if jq -e . >/dev/null 2>&1 <<<"$CONFIG_JSON"; then
+    printf '  ✅ jsonc     parseia (%s jobs)\n' "$(jq '.jobs | length' <<<"$CONFIG_JSON")"
+  else
+    printf '  ❌ jsonc     não parseia\n'; fail=1
+  fi
+
+  # Workspace existe e não está em branch protegida? Job desabilitado é template:
+  # problema nele avisa, não reprova — senão a config de exemplo nunca passa.
+  printf '\n'
+  local problem
+  while IFS=$'\t' read -r name enabled; do
+    [ -n "$name" ] || continue
+    local mark='⚠️ '; [ "$enabled" = "true" ] && mark='❌'
+    local w; w="$(resolve_workspace "$name")"
+    problem=""
+
+    if [ ! -d "$w" ]; then
+      problem="workspace inexistente: $w"
+    else
+      local b; b="$(git -C "$w" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+      case "$b" in
+        main|master|production|production-backup) problem="branch protegida ($b)" ;;
+        '?') problem="não é repositório git" ;;
+      esac
+    fi
+
+    if [ -z "$problem" ]; then
+      printf '  ✅ %-22s %s @ %s\n' "$name" "$b" "$w"
+    else
+      printf '  %s %-22s %s\n' "$mark" "$name" "$problem"
+      [ "$enabled" = "true" ] && fail=1
+    fi
+  done < <(jq -r '.jobs[] | [.name, (.enabled | tostring)] | @tsv' <<<"$CONFIG_JSON")
+
+  printf '  (⚠️  em job desabilitado é template por preencher, não erro)\n'
+
+  # O headless resolve slash command de projeto? É a suposição que sustenta tudo.
+  printf '\n  Testando `claude -p` com um slash command do projeto (~10 s, modelo barato)…\n'
+  local out
+  out="$( cd "$ws" && claude -p "Responda apenas com a palavra: RUNNER-OK" \
+      --model haiku --effort low --output-format text 2>&1 )" || true
+  if grep -q 'RUNNER-OK' <<<"$out"; then
+    printf '  ✅ headless   responde e o comando resolve\n'
+  else
+    printf '  ❌ headless   não respondeu como esperado:\n%s\n' "$(sed 's/^/      /' <<<"$out" | head -5)"
+    fail=1
+  fi
+
+  printf '\n'
+  if [ "$fail" -eq 0 ]; then
+    cat <<-'EOF'
+	Tudo certo. Próximos passos:
+	  1. ponha "enabled": true no job desejado, em .claude/cycle-schedule.jsonc
+	  2. scripts/cycle-runner.sh --dry-run <job>     confira workspace, branch e comando
+	  3. scripts/cycle-runner.sh <job>               rode uma vez à mão, acompanhando
+	  4. scripts/cycle-runner.sh --install           só depois que o passo 3 tiver dado certo
+	EOF
+  else
+    printf 'Há falhas acima. Corrija antes de instalar no launchd.\n'
+  fi
+  return "$fail"
 }
 
 plist_path() { printf '%s/%s.%s.plist' "$LAUNCH_AGENTS" "$LAUNCHD_PREFIX" "$1"; }
@@ -205,9 +314,10 @@ cmd_uninstall() {
 
 case "${1:-}" in
   --list|-l|"")  cmd_list ;;
+  --selftest)    cmd_selftest "${2:-}" ;;
   --install)     cmd_install ;;
   --uninstall)   cmd_uninstall ;;
   --dry-run)     [ $# -ge 2 ] || die "uso: $0 --dry-run <job>"; cmd_run "$2" --dry-run ;;
-  -h|--help)     sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
+  -h|--help)     sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' ;;
   *)             cmd_run "$1" ;;
 esac
