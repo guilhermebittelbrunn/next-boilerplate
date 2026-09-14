@@ -2,6 +2,7 @@ import "server-only";
 import { type App, cert, getApps, initializeApp } from "firebase-admin/app";
 import { type Auth, getAuth } from "firebase-admin/auth";
 import { type Firestore, getFirestore } from "firebase-admin/firestore";
+import { getStorage, type Storage } from "firebase-admin/storage";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { keys } from "./keys";
@@ -24,6 +25,7 @@ export type CurrentUser = {
 let firebaseAdminApp: App | undefined;
 let firebaseAuth: Auth | undefined;
 let firebaseFirestore: Firestore | undefined;
+let firebaseStorage: Storage | undefined;
 
 const getFirebaseAdminApp = () => {
     if (firebaseAdminApp) {
@@ -77,6 +79,18 @@ export const getFirestoreAdmin = (): Firestore => {
     }
     firebaseFirestore = getFirestore(getFirebaseAdminApp());
     return firebaseFirestore;
+};
+
+/**
+ * The admin app is initialised without a default bucket, so callers name the bucket
+ * themselves: the front-ends import this module too and must not inherit one.
+ */
+export const getStorageAdmin = (): Storage => {
+    if (firebaseStorage) {
+        return firebaseStorage;
+    }
+    firebaseStorage = getStorage(getFirebaseAdminApp());
+    return firebaseStorage;
 };
 
 /** Firebase Admin verifyIdToken failures that mean "no session", not a server bug */
