@@ -27,13 +27,21 @@ Os guards:
 
 **Postura vigente**: a `apps/api` acessa o Firestore pelo **Admin SDK** — `getFirestoreAdmin()` de `@repo/auth/server`, resolvido em `apps/api/(shared)/infra/database.ts` e injetado no `BaseRepository`. Como serviço confiável, a API **ignora** as security rules; então [`firestore.rules`](../firestore.rules) pode **negar todo acesso direto de cliente** (`allow read, write: if false`) sem afetar a API.
 
-> ⛔ **ESTADO ATUAL: as rules do arquivo NÃO estão publicadas.** O código da API já roda no Admin SDK, mas
-> enquanto o `deploy` abaixo não for executado a base continua **legível e gravável** por qualquer pessoa
-> com a chave pública do projeto — medido: a leitura direta via REST devolve **200 com dados reais**. O
-> arquivo `firestore.rules` estar em `deny-all` **não protege nada** até ser publicado. Trate como a
-> pendência #1 de segurança do fork.
+> ✅ **ESTADO ATUAL: as rules estão publicadas e em vigor** no projeto de referência
+> (`next-boilerplate-576d0`). Medido em **2026-09-11** — a leitura direta via REST com a chave pública
+> devolve **403 `PERMISSION_DENIED`** (ver [Verificar que o furo está fechado](#verificar-que-o-furo-está-fechado)) — e
+> reconferido em **2026-09-14** lendo as rules publicadas direto do projeto, que batem com o arquivo
+> versionado.
+>
+> ⚠️ **Versões anteriores deste documento afirmavam o oposto** ("NÃO estão publicadas", "200 com dados
+> reais") e mandavam tratar isso como a pendência #1 de segurança. **Era falso.** Não republique rules
+> "para corrigir a falha": não há falha, e a ordem errada de publicação/rollback é o que de fato reexpõe a
+> base (ver o aviso abaixo).
+>
+> ⛔ **Um fork não herda isso.** Outro projeto Firebase = outras rules, e lá nada foi publicado. Para um
+> fork, o `deploy` abaixo é obrigatório e a base nasce aberta até ele rodar.
 
-Consequências (uma vez publicadas):
+Consequências:
 
 - Nenhum cliente (browser) toca o Firestore: o front fala só com a API via `@repo/sdk`. A chave pública do projeto deixa de ser um caminho de leitura dos dados.
 - A API **não sobe** sem `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL` e `FIREBASE_ADMIN_PRIVATE_KEY`: `apps/api/instrumentation.ts` resolve a instância no boot e o processo morre com mensagem clara se faltar alguma. Não existe modo degradado — credencial ausente é erro de configuração, não estado de negócio.
@@ -65,6 +73,27 @@ Esperado **403** (`PERMISSION_DENIED`). Com rules permissivas o mesmo comando de
 ### Auditar as rules
 - **Firebase MCP** (já conectado): use a skill `firebase:firebase-security-rules-auditor` para avaliar a robustez das rules — especialmente útil **se** adotar o modelo alternativo (regras por dono) comentado em `firestore.rules`. Para `allow ... if false` o resultado é trivialmente "máximo de restrição".
 - CLI: `npx -y firebase-tools@latest deploy --only firestore:rules --dry-run` para validar sintaxe.
+
+## Cloud Storage: bucket privado, leitura por URL assinada
+
+Mesma postura do Firestore — **a API é a única autoridade** — com uma diferença que engana: aqui são
+**duas** camadas de acesso, e publicar as rules fecha só uma.
+
+- O upload atravessa a API (`POST /files`, sob guard de painel comum), que valida **tipo real** (magic
+  bytes) e tamanho. O caminho do objeto é derivado no servidor: dono + UUID + extensão do tipo sniffado —
+  nada que o cliente envia entra no path.
+- A leitura sai por **URL assinada V4, expirável (15 min)**, emitida só depois do check de posse do
+  recurso. O documento no Firestore guarda o **caminho**, nunca uma URL assinada.
+- [`storage.rules`](../storage.rules) é `deny-all` e governa `firebasestorage.googleapis.com`. Quem fecha
+  `storage.googleapis.com` — de onde saem as URLs assinadas — é a **ausência de IAM público**.
+
+⛔ **Nunca** conceda `allUsers`/`allAuthenticatedUsers` no bucket, nem use `makePublic()`,
+`predefinedAcl: "publicRead"` ou `getDownloadURL()` — o último gera URL permanente e pública, o oposto do
+desenho. Verificação: `curl -o /dev/null -w '%{http_code}' https://storage.googleapis.com/<bucket>/<objeto>`
+→ **403**.
+
+Ativação, permissões e custo (exige plano **Blaze**): [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §6. Sem
+configurar, a capacidade fica desligada e `POST /files` responde `STORAGE_NOT_CONFIGURED` (503).
 
 ## Borda HTTP: cabeçalhos, CSP, CORS e limite de requisições
 
@@ -130,5 +159,6 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 - [ ] Webhooks verificam assinatura.
 - [ ] Segredos só no servidor; nada de `NEXT_PUBLIC_*` para chave secreta.
 - [ ] Domínio de terceiro novo (script, iframe, imagem, endpoint) foi acrescentado à CSP do app que o carrega.
+- [ ] Arquivo é servido por URL assinada e expirável; bucket sem IAM público e sem `getDownloadURL()`.
 
 > Para uma varredura automatizada das mudanças pendentes, use a skill global `/security-review`.
