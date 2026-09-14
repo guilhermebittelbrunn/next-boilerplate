@@ -298,3 +298,5 @@ skills-lock.json
 # validado, que vive no markdown da etapa.
 docs/features/**/screenshots/
 docs/features/**/test/e2e/
+# Logs das execuções agendadas do /cycle
+.claude/cycle-logs/

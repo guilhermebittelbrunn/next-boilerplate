@@ -56,5 +56,17 @@
       "!apps/email/.react-email",
       "!packages/cms/basehub-types.d.ts"
     ]
-  }
+  },
+  "overrides": [
+    {
+      // Configuração do ferramental de IA: é lida por script, não pela aplicação,
+      // e os comentários são metade do valor do arquivo.
+      "includes": [".claude/**/*.jsonc"],
+      "json": {
+        "parser": {
+          "allowComments": true
+        }
+      }
+    }
+  ]
 }
