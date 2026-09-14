@@ -44,6 +44,16 @@ vi.mock("@/(shared)/repositories/entity.repository", () => ({
     },
 }));
 
+// Not `importActual`: the real module reaches Firebase Admin through `server-only`,
+// which refuses to load outside a server component.
+vi.mock("@/(shared)/lib/storage", () => ({
+    isStorageConfigured: () => false,
+    signReadUrl: vi.fn(),
+    deleteObjectQuietly: vi.fn(),
+    isStorageObjectPath: () => false,
+    isOwnedBy: () => true,
+}));
+
 const { GET, POST } = await import("@/app/(routes)/entities/route");
 const {
     GET: GET_BY_ID,
@@ -176,7 +186,9 @@ describe("entities routes while an admin acts as another user", () => {
         const response = await GET(asImpersonatingAdmin("GET"));
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        expect(await response.json()).toEqual({ data: [TARGET_ENTITY] });
+        expect(await response.json()).toEqual({
+            data: [{ ...TARGET_ENTITY, photoUrl: null }],
+        });
         expect(listByUserIdMock).toHaveBeenCalledWith(TARGET_PROFILE.id);
     });
 
@@ -187,7 +199,9 @@ describe("entities routes while an admin acts as another user", () => {
         );
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        expect(await response.json()).toEqual({ data: TARGET_ENTITY });
+        expect(await response.json()).toEqual({
+            data: { ...TARGET_ENTITY, photoUrl: null },
+        });
     });
 
     it("refuses to create and writes nothing", async () => {
