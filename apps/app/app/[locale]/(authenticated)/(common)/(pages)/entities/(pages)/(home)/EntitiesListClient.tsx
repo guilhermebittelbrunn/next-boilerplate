@@ -48,14 +48,15 @@ export function EntitiesListClient() {
     const columns = [
         {
             title: entitiesList.columns.photo,
-            dataIndex: "photo",
-            render: (value: string | null, record: EntityDTO) =>
+            dataIndex: "photoUrl",
+            render: (value: string | null | undefined, record: EntityDTO) =>
                 value ? (
                     <ResponsiveImage
                         alt={record.name}
                         className="rounded-full"
                         height={44}
                         src={value}
+                        unoptimized
                         width={44}
                     />
                 ) : (

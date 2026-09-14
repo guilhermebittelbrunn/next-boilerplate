@@ -8,6 +8,26 @@ const NAME_MAX = 255;
 const DESCRIPTION_MAX = 10_000;
 const PHOTO_URL_MAX = 2048;
 const BIRTHDATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const STORAGE_OBJECT_PATH_RE =
+    /^uploads\/[A-Za-z0-9_-]{1,128}\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
+
+/**
+ * The field holds a reference, not a picture: either an object already uploaded to the
+ * bucket or an absolute http(s) URL. Pinning the scheme is what keeps `javascript:` out,
+ * since it parses as a URL and the value reaches the `src` of a rendered image.
+ */
+function isPhotoReference(value: string): boolean {
+    const trimmed = value.trim();
+    if (trimmed === "" || STORAGE_OBJECT_PATH_RE.test(trimmed)) {
+        return true;
+    }
+    try {
+        const url = new URL(trimmed);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
+    }
+}
 
 export const entityGenreValues = ["male", "female", "other"] as const;
 export type EntityGenreValue = (typeof entityGenreValues)[number];
@@ -48,16 +68,7 @@ export function buildEntityFormSchema(dictionary: Dictionary) {
         photo: z
             .string()
             .max(PHOTO_URL_MAX, validation.photoMax)
-            .refine(
-                (value) => {
-                    const trimmed = value.trim();
-                    if (trimmed === "") {
-                        return true;
-                    }
-                    return URL.canParse(trimmed);
-                },
-                { message: validation.photoUrl }
-            ),
+            .refine(isPhotoReference, { message: validation.photoReference }),
         genre: z.union([
             z.literal(entityGenreUnset),
             z.enum(entityGenreValues),
