@@ -97,19 +97,28 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
 > import de `getStorage` em `packages/auth/server.ts`, deslocando o arquivo em +14 linhas. A referência
 > antiga `:193-196` era **insidiosa**: a linha deslocada caiu exatamente sobre o comentário que menciona
 > `checkRevoked`, então uma conferência superficial dava "confere" — mas a chamada real de
-> `verifySessionCookie(sessionCookie, true)` está em `:207-210`. **A vulnerabilidade descrita acima
-> continua real e não mitigada** — a PR #11 não tocou nesse caminho; só moveu as linhas.
+> `verifySessionCookie(sessionCookie, true)` está em `:238-241`. ✅ **Resolvido em 2026-09-15** pela
+> entrega de `account-settings`: o caminho que faltava era o do **bearer ID token**, agora fechado em
+> `getCurrentUser` (ver o item 1 do corte, abaixo).
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
 > (`packages/auth/client.ts:191-202`), que força `reload(user)` + `getIdToken(true)`. É o primeiro
 > precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
-> do lado do browser. ⚠️ Ela não tem teste próprio em `packages/auth` (a suíte do pacote segue com 2
-> arquivos / 29 testes); só é exercitada por mock em `apps/app/__tests__/useEmailVerification.test.tsx`.
+> do lado do browser. A suíte de `packages/auth` deixou de ser o ponto cego que esta nota apontava: passou
+> de 2 arquivos / 29 testes para **3 / 38**, com a revogação coberta — mas `reloadCurrentUser` em si segue
+> sem teste próprio, exercitada só por mock em `apps/app/__tests__/useEmailVerification.test.tsx`.
 
 ## Proposta — corte de MVP
 
-- [ ] **Fechar a janela de revogação primeiro.** Depois que a sessão é encerrada, **nenhuma credencial já
+- [x] **Fechar a janela de revogação primeiro.** Depois que a sessão é encerrada, **nenhuma credencial já
       emitida** continua sendo aceita pela API. Sem isso, tudo o mais nesta spec é decorativo.
+      ✅ **Entregue por `account-settings` em 2026-09-15**, nos **dois** transportes: o bearer ID token
+      passou a ser recusado quando `auth_time` é anterior a `tokensValidAfterTime`
+      (`packages/auth/server.ts:138-152`, aplicado em `getCurrentUser:167`), e o session cookie já era
+      verificado com `checkRevoked` (`packages/auth/server.ts:238-241`). Antes disso, um token emitido
+      antes da revogação seguia aceito **até expirar — por até uma hora**. Coberto por
+      `packages/auth/__tests__/serverSessionRevocation.test.ts` (9 casos); o teste **falha** se a checagem
+      for removida (verificado por mutação).
 - [ ] O usuário **vê onde a conta está conectada** — sessões ativas com dispositivo/origem e último uso —
       dentro da área de conta.
 - [ ] O usuário **encerra sessões**: uma específica ou todas as outras, mantendo a atual. E o logout
