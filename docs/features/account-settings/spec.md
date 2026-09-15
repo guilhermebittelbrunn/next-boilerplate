@@ -1,7 +1,7 @@
 ---
 id: account-settings
 title: Área de conta e preferências do usuário
-status: proposed
+status: done
 value: alto
 effort: M
 audience: produto
@@ -9,8 +9,9 @@ area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/routes.tsx", "apps/app/app/[locale]/(authenticated)/(common)/paths.ts", packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts]
-feature: -
-updated: 2026-09-14
+feature: account-settings
+delivered: 2026-09-15
+updated: 2026-09-15
 ---
 
 # Área de conta e preferências do usuário
@@ -70,12 +71,55 @@ Três consequências práticas, medidas no código:
 
 ## Proposta — corte de MVP
 
-- [ ] Existe uma área de conta acessível pelo menu do avatar e pela sidebar, e os itens de "Configurações" deixam de apontar para `#`.
-- [ ] O usuário edita os próprios dados de perfil (nome de exibição, telefone) e vê o resultado no cabeçalho sem recarregar.
-- [ ] O usuário troca a própria senha informando a senha atual, e a troca encerra as demais sessões.
-- [ ] O usuário escolhe tema e idioma, e a escolha **acompanha a conta** — outro navegador, mesma preferência.
-- [ ] O usuário envia uma foto de perfil, validada em tipo e tamanho **no servidor**.
-- [ ] A API garante que cada um só altera a si mesmo: o guard é de painel comum, não de administrador.
+**Entregue 6/6** — PR **#12**, merge commit `a4df5ed` em `main` (2026-09-15T14:12:48Z), CI `success` nesse
+SHA. Cada item abaixo foi reconferido **no código** na auditoria de 2026-09-15, não no `status` gravado.
+
+- [x] Existe uma área de conta acessível pelo menu do avatar e pela sidebar, e os itens de "Configurações" deixam de apontar para `#`.
+      → `ProfileDropdown.tsx:61-64` (item "minha conta" com `Link` para `/account`);
+      `(common)/routes.tsx:41,45,49,53` (os 4 itens de Configurações apontam para `routes.account.*`);
+      `(common)/paths.ts:36-57` (as rotas existem de verdade, com rótulo vindo do dicionário).
+      **`grep -rn 'url: "#"' apps/` ⇒ 0 ocorrências** — os 8 placeholders morreram.
+- [x] O usuário edita os próprios dados de perfil (nome de exibição, telefone) e vê o resultado no cabeçalho sem recarregar.
+      → `apps/api/app/(routes)/account/route.ts:107` (`PUT`), `:130-138` (patch de `phone`/`avatar`/`preferences`),
+      `:79-83` (`displayName` vai para o Firebase Auth, não para o documento);
+      SDK `packages/sdk/src/actions/account/action.ts:25`; o cabeçalho relê por invalidação em
+      `account/(hooks)/useAccountMutations.tsx:26-27`, e o `ProfileDropdown.tsx:27,32` lê de `useMyAccount`
+      em vez do usuário do Firebase client — que é o que faz o nome trocar sem reload.
+- [x] O usuário troca a própria senha informando a senha atual, e a troca encerra as demais sessões.
+      → `account/password/route.ts:35` (revalida a senha atual pelo Identity Toolkit **antes** de trocar),
+      `:51-53` (troca), `:63` (`revokeUserSessions`, com o porquê escrito em `:61-62`).
+- [x] O usuário escolhe tema e idioma, e a escolha **acompanha a conta** — outro navegador, mesma preferência.
+      → `(shared)/validation/account.schema.ts:10-19` (`theme`/`locale` validados na borda);
+      `account/route.ts:58-66` (merge explícito, porque o Firestore mescla mapa raso e apagaria a metade
+      não enviada); projeção no login em `shared/lib/postLoginNavigation.ts:63-78`, **antes** da decisão de
+      destino (`:121` roda antes do `?redirect=` lido em `:122`); formulário em
+      `AccountPreferencesForm.tsx:64-65,81`.
+- [x] O usuário envia uma foto de perfil, validada em tipo e tamanho **no servidor**.
+      → `(shared)/validation/file.schema.ts:73-84` (o tipo real vem dos **magic bytes**, não do
+      `Content-Type` do cliente), `:123` (tamanho exato do arquivo decodificado), `:99-102` (recusa pelo
+      `content-length` antes de carregar o corpo na memória); consumido por `files/route.ts:21`.
+      O avatar é amarrado ao dono em `account/route.ts:41` (`isUsablePhotoReference`).
+- [x] A API garante que cada um só altera a si mesmo: o guard é de painel comum, não de administrador.
+      → as 3 rotas usam `requireCommonPanelApi` (`account/route.ts:97,107`,
+      `account/password/route.ts:15`, `account/sessions/revoke/route.ts:4`), e o alvo **sempre** vem do
+      token (`ctx.subjectProfile.id`, `route.ts:119`), nunca do corpo. O `.strict()` de
+      `account.schema.ts:26-37` transforma um corpo com `id`/`uid`/`type` em falha explícita em vez de
+      campo ignorado em silêncio — o comentário em `:21-25` registra que essa é a função do modificador.
+
+**Cobertura:** 11 arquivos de teste nomeados para a feature — 6 na `apps/api` (`accountRoute`,
+`accountPasswordRoute`, `accountSchema`, `accountAvatar`, `accountMergedPayload`, `serviceAccountEnv`) e 5
+na `apps/app` (`accountFormSchema`, `accountPreferencesForm`, `accountSecurityForm`, `accountApiErrorCopy`,
+`profileDropdownAccount`).
+
+### Duas correções de raiz que a entrega trouxe de brinde
+
+Nenhuma das duas está no corte, e as duas valem para **todo** fork:
+
+- **`HookFormSelect` aceitava o valor vazio** que o primitivo emite antes de montar as opções — corrigido
+  no componente compartilhado (`hookformSelect.tsx:90`, que só aceita `next` se ele estiver entre as
+  opções), não no formulário que expôs o sintoma.
+- **Revogar sessão não valia para bearer token**, corrigido em `packages/auth` durante a revisão.
+  ⚠️ Isso **não** fecha o furo mais amplo de `account-security-mfa` — ver os achados do backlog.
 
 ### Fora do corte
 
@@ -112,10 +156,30 @@ Três consequências práticas, medidas no código:
 - Nenhum item de menu da área comum aponta para `#`.
 - Tentar alterar o perfil de outra pessoa é recusado pela API, não só escondido na UI; e arquivo grande ou de tipo inválido é recusado pelo servidor com erro traduzido.
 
-## Perguntas em aberto
+## Perguntas em aberto — todas encerradas na entrega
 
-- Preferência de tema/idioma no documento do usuário ou em coleção separada? — **recomendação:** no próprio documento; são poucos campos e evita uma leitura extra por render.
-- Trocar a senha exige a senha atual? — **recomendação:** sim; sem isso, uma sessão roubada assume a conta em um clique.
-- Manter "Documentation" e "Limits" na sidebar? — **recomendação:** remover os dois placeholders agora e reintroduzir quando houver destino real.
-- ~~Se `file-upload-storage` não vier antes, entregamos a área sem avatar?~~ — **pergunta encerrada em
-  2026-09-14:** `file-upload-storage` veio (PR #11, `9154776`). O avatar entra no corte.
+- Preferência de tema/idioma no documento do usuário ou em coleção separada? — **decidido: no próprio
+  documento**, como recomendado. `account/route.ts:58-66` reconstrói o mapa inteiro a cada escrita, porque
+  o Firestore mescla mapa de forma rasa e apagaria o campo não enviado.
+- Trocar a senha exige a senha atual? — **decidido: sim**, como recomendado
+  (`account/password/route.ts:35`).
+- Manter "Documentation" e "Limits" na sidebar? — **decidido: removidos.** O grupo de Configurações ficou
+  com 4 itens reais (perfil, segurança, preferências, cobrança) e o `grep` por `url: "#"` em `apps/` dá
+  **zero**. "Billing" aponta para uma aba que reserva o lugar de `billing-subscription`.
+- ~~Se `file-upload-storage` não vier antes, entregamos a área sem avatar?~~ — encerrada em 2026-09-14; o
+  avatar entrou no corte e foi entregue.
+
+## Deriva — o corte foi entregue como especificado
+
+A auditoria de 2026-09-15 **não encontrou desvio de implementação**: os 6 itens saíram como escritos, nas
+camadas previstas em "Impacto por camada". Duas observações honestas, que não mudam o veredito:
+
+- **O caminho feliz do avatar segue não verificado contra infra real.** O Cloud Storage não está ativado no
+  projeto de referência, então o que foi exercido foi o **modo degradado** (`POST /files` ⇒ 503 traduzido,
+  formulário intacto). Isso é pendência de infra, não reprovação de entrega — a validação de tipo e tamanho,
+  que é o que o corte exige, está no servidor e tem teste.
+- **Sobrou uma segunda rota de navegação pós-login.** `packages/auth/provider.tsx:80-94` retorna em `:87`
+  quando há `?redirect=`, **sem** projetar preferência; quem projeta nesse caso é o resolvedor da `apps/app`
+  (`postLoginNavigation.ts:121`, com teste em `postLoginPreferences.test.ts:167`). O contrato do pacote está
+  escrito (`provider.tsx:54-55`: só resolve "quando não há `redirect`"), então não é bug — mas são **dois**
+  caminhos vivos para o mesmo fato, e o do pacote é o que todo fork herda. Registrado como achado.
