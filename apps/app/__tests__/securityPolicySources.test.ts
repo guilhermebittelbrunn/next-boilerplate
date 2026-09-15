@@ -6,6 +6,9 @@ const { envMock, getUserFromSessionCookieMock } = vi.hoisted(() => ({
         ARCJET_KEY: undefined as string | undefined,
         NEXT_PUBLIC_API_URL: undefined as string | undefined,
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: undefined as string | undefined,
+        NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: undefined as
+            | string
+            | undefined,
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: undefined as string | undefined,
         NEXT_PUBLIC_GA_MEASUREMENT_ID: undefined as string | undefined,
     },
@@ -55,6 +58,7 @@ async function policyWith(
         ARCJET_KEY: undefined,
         NEXT_PUBLIC_API_URL: API_URL,
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: AUTH_DOMAIN,
+        NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: undefined,
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: undefined,
         NEXT_PUBLIC_GA_MEASUREMENT_ID: undefined,
         ...overrides,
@@ -119,6 +123,43 @@ describe("connect sources", () => {
         expect(connectSrc).toContain("'self'");
         expect(connectSrc).not.toContain("");
         expect(connectSrc).toContain("https://securetoken.googleapis.com");
+    });
+});
+
+/**
+ * The policy here is blocking, so a fork pointed at the Auth emulator cannot sign in
+ * unless its plain-http origin is named. The mirror case matters just as much: a fork
+ * that never emulates must not have its policy widened for a localhost origin.
+ */
+describe("auth emulator origin follows its variable", () => {
+    const EMULATOR_HOST = "127.0.0.1:9099";
+    const EMULATOR_ORIGIN = `http://${EMULATOR_HOST}`;
+
+    it("stays out of the policy while the variable is empty", async () => {
+        const policy = await policyWith({
+            NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: "",
+        });
+
+        expect(policy.get("connect-src")).not.toContain(EMULATOR_ORIGIN);
+        expect(policy.get("frame-src")).toEqual([`https://${AUTH_DOMAIN}`]);
+    });
+
+    it("is named in connect-src and frame-src once configured", async () => {
+        const policy = await policyWith({
+            NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: EMULATOR_HOST,
+        });
+
+        expect(policy.get("connect-src")).toContain(EMULATOR_ORIGIN);
+        expect(policy.get("frame-src")).toContain(EMULATOR_ORIGIN);
+    });
+
+    it("still names the emulator when no real auth domain is configured", async () => {
+        const policy = await policyWith({
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: undefined,
+            NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: EMULATOR_HOST,
+        });
+
+        expect(policy.get("frame-src")).toEqual([EMULATOR_ORIGIN]);
     });
 });
 
