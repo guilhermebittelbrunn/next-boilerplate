@@ -421,3 +421,126 @@ O plano de 12 blocos **continua valendo**; os arquivos da correção do D-1 entr
   `accountPasswordRoute`, `postLoginPreferences`, `profileDropdownAccount`, `serverSessionRevocation`, …)
   acompanham o commit da funcionalidade que cobrem; `serverSessionRevocation.test.ts` vai com o **#2**
   (`fix(auth): reject id tokens minted before a session revocation`), que é o contrato que ele fixa.
+
+---
+
+# Rodada 3 — dois defeitos devolvidos pelo `/test`
+
+## Antes de tudo: a conflação que eu cometi na rodada 2
+
+Afirmei ter corrigido a "segunda causa" (projeção pulada com `?redirect=`) e **não corrigi**. O que eu
+medi foi **coerência** entre SSR e DOM, não **projeção**: num navegador que já tem `localStorage.theme`,
+o `ThemeCookieSync` mantém cookie e storage alinhados, então servidor e cliente pintam igual **mesmo sem
+projeção nenhuma**. O teste que escrevi herdou o mesmo ponto cego. Fica registrado: *medir o sintoma
+vizinho não é medir o defeito*.
+
+## Defeito 1 — preferências não chegavam quando havia `?redirect=`
+
+**Causa raiz**: projetar preferências e resolver destino eram a **mesma** função. `projectPreferences`
+só era alcançada por `resolveDefaultPostLoginForApp`, e os dois caminhos de pós-login retornam antes
+quando há `redirect` na query (`postLoginNavigation.ts:88-91` e `packages/auth/provider.tsx:85-88`).
+O efeito colateral (levar a preferência ao dispositivo) estava pendurado na decisão de rota.
+
+**Medido antes**, navegador virgem, conta `{theme: light, locale: es}`, `?redirect=%2Fpt-br%2Fentities`:
+destino `/pt-br/entities` ✅, mas `x-theme` **ausente**, `localStorage.theme` **null**, DOM **`dark`**
+(preferência do SO) — a conta dizia `light`.
+
+**Correção** (só em `apps/app`, o pacote genérico não foi tocado): separei as responsabilidades em
+`postLoginNavigation.ts` — `applyAccountPreferences(idToken)` faz o efeito e devolve `{type,
+preferredLocale}`; `destinationForAccount()` decide a rota. `resolveAppPostLoginPath` **sempre** aplica
+as preferências e **depois** avalia o `redirect`; o `postAuthRedirectTarget` continua sendo o único dono
+do destino — o guard de open-redirect não foi tocado (o teste "recusa um redirect para fora da
+aplicação" segue verde).
+
+**Medido depois**, mesmo cenário: destino `/pt-br/entities` ✅ (inalterado), `x-theme=light`,
+`localStorage.theme=light`, DOM **`light`**.
+
+**Decisão sobre o idioma**: o `x-locale` **não** é projetado quando um `?redirect=` está mandando no
+destino. Motivo medido: `apps/app/proxy.ts:159` reescreve `x-locale` a partir do segmento da URL **a
+cada request**, então projetar `es` ao ir para `/pt-br/entities` só produzia um render transitório em
+espanhol dentro de uma página portuguesa (`lang=es` com cookie voltando a `pt-br`) — piora, não melhora.
+Sem `?redirect=`, o idioma continua sendo projetado e a navegação vai para `/{idioma preferido}`, que é
+o caso que a spec descreve.
+
+## Defeito 2 (D-4) — idioma vinha vazio e travava o salvamento
+
+**Causa raiz isolada com instrumentação temporária** (removida): o campo era corrompido por uma escrita
+vinda do **próprio primitivo de select**. Sequência medida no browser, com pilha de chamada:
+
+1. render 1–2: `field.value = "pt-br"` (o `defaultValue`), opções `["pt-br","en","es"]`;
+2. o dado da conta chega e `form.reset` põe `locale = "es"` (render 3–4);
+3. o `select` nativo escondido que o primitivo mantém para submissão de formulário **ainda não tem a
+   opção `es` montada**, então o browser força o valor dele para `""` e dispara `change`;
+4. o handler do primitivo (`onChange` → `useControllableState.setValue`) propaga `""` pelo
+   `onValueChange`, que o wrapper ligava direto ao `field.onChange` — **RHF passa a valer `""`**;
+5. `""` não é opção válida, então o próprio wrapper deixa de controlar o primitivo e o estado se
+   sustenta: rótulo mostra o placeholder e o submit morre no Zod (`Invalid option`).
+
+Sonda que fecha o diagnóstico: `{"rhf":{"theme":"light","locale":""},"acc":{"theme":"light","locale":"es"}}`
+— a conta trazia `es`, o formulário guardava `""`. Por isso só aparecia quando a conta tinha idioma
+diferente do `defaultValue`: com `pt-br` o valor coincidia e a escrita espúria era invisível.
+
+**Correção na raiz, no componente compartilhado** (`packages/design-system/.../hookformSelect.tsx`):
+o wrapper só repassa para o RHF um valor que **é uma das `options`**. É o contrato do componente —
+escolha é sempre uma opção — e vale para **todos** os consumidores (os formulários de entidade e de
+usuário fazem o mesmo `reset` assíncrono e tinham a mesma armadilha dormente). Não mexi na
+`AccountPreferencesForm`: remendar a tela seria replicar workaround num dos call sites.
+
+**Medido depois**, na tela real: com conta `{locale: es}` e URL `/pt-br/account?tab=preferences`, o
+campo abre com **"Español"**, o submit **emite `PUT /account`** e a mensagem de Zod cru desapareceu.
+
+## Os testes mordem?
+
+| Teste | Muta o quê | Resultado |
+|---|---|---|
+| `postLoginPreferences.test.ts` › "dá precedência ao redirect … e ainda assim aplica o tema" | movi a projeção para depois do early return do `redirect` | ❌ **falhou** · restaurado ⇒ 11/11 |
+| `hookFormSelectValue.test.tsx` › "ignora um valor que não é uma das opções" | removi a guarda `options.some(...)` | ❌ **falhou** · restaurado ⇒ 2/2 |
+| `accountPreferencesForm.test.tsx` › "mantém o idioma da conta quando o dado chega depois" | removi a guarda | ⚠️ **passou mesmo sem a correção** |
+
+O terceiro **não morde** e eu digo isso em vez de contar como cobertura: o jsdom não reproduz o
+`select` nativo escondido que dispara a escrita espúria. Ele fica porque descreve o cenário de ponta a
+ponta (dado assíncrono ⇒ rótulo certo ⇒ submit com `locale: "es"`), mas **quem prova a correção é o
+teste do wrapper**. O teste do `postLoginPreferences` que fixava o comportamento errado
+(`expect(meMock).not.toHaveBeenCalled()`) foi **reescrito**, não removido: agora exige destino do
+`redirect` **e** tema aplicado **e** `x-locale` ausente.
+
+## Validação visual (rodada 3)
+
+`agent-browser` em sequência estrita, sessão real, conta `{theme: light, locale: es}`:
+
+| Arquivo | Cenário |
+|---|---|
+| `14-idioma-recarrega-light-ptbr.png` | URL `/pt-br`, conta `es`: campo Idioma abre com **"Español"** (antes: vazio) · claro |
+| `15-preferencias-salvas-light-es.png` | salvar emite `PUT /account` **200** e navega para `/es/account?tab=preferences` · claro |
+| `16-preferencias-dark-es.png` | mesma tela em **escuro**, es — rádio mostra o valor da conta, tela no override local |
+| `17-idioma-mobile390-dark-en.png` | **390×844**, escuro, en: "Español" carregado no select |
+
+Rede conferida no salvamento: `PUT /account` **200** seguido de `GET /account` **200** — antes da
+correção **nenhuma requisição saía** (o submit morria na validação).
+
+Cobertura desta rodada: claro + escuro, desktop + 390 px, pt-br + en + es.
+
+## Gates (rodada 3, `--force`, sem cache)
+
+| Gate | Resultado |
+|---|---|
+| `pnpm check` | ✅ **508 arquivos**, 0 erro |
+| `pnpm turbo run lint typecheck test --force` | ✅ **23 successful / 23 total**, `Cached: 0`, exit 0 |
+| `api:test` | ✅ **315 testes** / 30 arquivos (inalterado) |
+| `app:test` | ✅ **262 testes** / 36 arquivos (259/34 antes: **+2 arquivos, +3 casos**) |
+| `@repo/internationalization:test` | ✅ **27 testes** |
+
+## Plano de commits — os novos commits desta rodada
+
+Por cima dos 13 já feitos (`HEAD = 5d4f443`), **sem amend e sem rebase**. Um por pacote/app, na ordem de
+dependência:
+
+| # | Mensagem | Arquivos |
+|---|---|---|
+| 14 | `fix(design-system): keep a select value the primitive cannot resolve yet` | `packages/design-system/components/form/hookform/hookformSelect.tsx` |
+| 15 | `fix(app): apply the account preferences on every sign-in` | `apps/app/shared/lib/postLoginNavigation.ts`, `apps/app/__tests__/postLoginPreferences.test.ts` |
+| 16 | `test(app): cover the language field reloading from the account` | `apps/app/__tests__/hookFormSelectValue.test.tsx`, `apps/app/__tests__/accountPreferencesForm.test.tsx` |
+| 17 | `docs(features): account-settings` | `docs/features/account-settings/review/review.md`, `docs/features/account-settings/review/screenshots/14…17`, `docs/features/account-settings/STATE.md` |
+
+O #16 podia entrar junto do #14, mas cobre os dois defeitos (wrapper **e** tela), então fica separado
+para não amarrar um teste de `apps/app` ao commit do pacote.
