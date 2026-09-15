@@ -164,12 +164,16 @@ describe("projeção das preferências da conta no sign-in", () => {
 });
 
 describe("resolveAppPostLoginPath", () => {
-    it("dá precedência ao redirect pedido na query, sem consultar o perfil", async () => {
+    it("dá precedência ao redirect pedido na query e ainda assim aplica o tema da conta", async () => {
         window.history.replaceState(
             {},
             "",
             "/pt-br/sign-in?redirect=%2Fpt-br%2Fentities"
         );
+        meMock.mockResolvedValue({
+            type: UserType.COMMON,
+            preferences: { theme: "light", locale: "es" },
+        });
 
         const path = await resolveAppPostLoginPath({
             idToken: ID_TOKEN,
@@ -178,7 +182,11 @@ describe("resolveAppPostLoginPath", () => {
         });
 
         expect(path).toBe("/pt-br/entities");
-        expect(meMock).not.toHaveBeenCalled();
+        expect(window.localStorage.getItem("theme")).toBe("light");
+        expect(readCookie("x-theme")).toBe("light");
+        // O idioma vem do caminho pedido, e o proxy reescreve o cookie a cada request:
+        // projetá-lo aqui só pintaria um idioma que a própria navegação desfaz.
+        expect(readCookie("x-locale")).toBeNull();
     });
 
     it("recusa um redirect para fora da aplicação", async () => {
