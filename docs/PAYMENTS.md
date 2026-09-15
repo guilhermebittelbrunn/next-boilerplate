@@ -2,14 +2,30 @@
 
 Como o fluxo de assinatura funciona neste boilerplate e o que falta implementar em cada fork. Para o passo a passo de implementação, use a skill `/payments-flow`. Aspectos de segurança em [`docs/SECURITY.md`](SECURITY.md).
 
-## Estado atual (implementado)
+## Estado atual (medido em 2026-09-14)
 
-- `@repo/payments` expõe `getStripe()` (server-only), que constrói o cliente sob demanda e devolve `null` quando não há `STRIPE_SECRET_KEY` — por isso o build da API não quebra num ambiente sem chave. Toda rota que usa o cliente precisa tratar o `null`. Expõe também um `paymentsAgentToolkit` (`@repo/payments/ai`) para criar produtos/preços/payment links.
-- **Rotas** em `apps/api`: `GET /payments/plans` (público; `prices.list` → `PlanDTO`), `POST /payments/checkout` e `POST /payments/portal` (`requireCommonPanelApi`). O **webhook** trata `checkout.session.completed` e `customer.subscription.updated|deleted`.
-- **Persistência**: `UserDTO.subscription` (`stripeCustomerId`, `status`, `priceId`, `currentPeriodEnd`) no doc `user`, via `userRepository.updateSubscriptionByReferenceId`. O customer é criado no 1º checkout com `metadata.firebaseUid` + `client_reference_id`, e o webhook reconcilia por esse UID.
-- **SDK**: `apiClient.payments.{listPlans,createCheckout,createPortal}`.
-- **UI**: "Minha assinatura" em `apps/app` (área comum, **modo `subscription`** — sidebar `Assinatura`) liga checkout/portal; os CTAs do pricing (`apps/web`) apontam para essa área no modo subscription.
-- **Falta por fork**: criar os produtos/preços no Stripe e ajustar a política de reembolso/copy. A skill `/payments-flow` ajuda a estender. **Idempotência**: os handlers de webhook relêem o estado do objeto Stripe a cada evento (sem dedup por `event.id`), e o checkout não deduplica `customers` por `metadata.firebaseUid` antes de criar — suficiente para começar; endureça (store de `event.id` processado + busca de customer) conforme o volume.
+> ⚠️ **Não há fluxo de assinatura funcionando.** O que existe é o encanamento da borda: o cliente Stripe e
+> um webhook que valida assinatura de evento mas **não persiste nada**. Tudo abaixo de "Fluxo alvo" é
+> **projeto**, não estado — a entrega está no backlog como
+> [`specs/billing-subscription.md`](../specs/billing-subscription.md).
+
+**O que existe:**
+
+- `@repo/payments` expõe `getStripe()` (`packages/payments/index.ts:14`, server-only), que constrói o cliente sob demanda e devolve `null` quando não há `STRIPE_SECRET_KEY` — por isso o build da API não quebra num ambiente sem chave. Toda rota que usa o cliente precisa tratar o `null`. Expõe também um `paymentsAgentToolkit` (`packages/payments/ai.ts:4`) para criar produtos/preços/payment links.
+- **Uma** rota: `POST /webhooks/payments` (`apps/api/app/(routes)/webhooks/payments/route.ts`). Ela valida a assinatura com `constructEvent` e despacha **dois** eventos — `checkout.session.completed` e `subscription_schedule.canceled`. Sem `STRIPE_WEBHOOK_SECRET` responde `{ ok: false, message: "Not configured" }`.
+
+**O que NÃO existe** (e que versões anteriores deste documento afirmavam existir):
+
+- ❌ **Os handlers de evento são stubs vazios** (`route.ts:8-25`, com `TODO`). Nenhum evento muda nada: assinatura paga não vira acesso.
+- ❌ **Nenhuma persistência**: não há `UserDTO.subscription`, `stripeCustomerId` nem `updateSubscriptionByReferenceId` em lugar nenhum do repo.
+- ❌ **Nenhuma rota de plano, checkout ou portal** — `GET /payments/plans`, `POST /payments/checkout` e `POST /payments/portal` não existem.
+- ❌ **Nada no SDK**: não há `apiClient.payments`.
+- ❌ **Nenhuma UI de assinatura** na `apps/app`, e nenhum modo `subscription`.
+- ❌ O webhook **não** trata `customer.subscription.updated|deleted`.
+
+**Consequência prática para um fork:** ligar as chaves da Stripe hoje faz o webhook responder `200` e
+descartar o evento em silêncio. Idempotência, dedup de `customer` e reconciliação por UID são decisões que
+ainda **não foram tomadas** — não são dívida a endurecer, são código a escrever.
 
 ## Fluxo alvo (ponta a ponta)
 
