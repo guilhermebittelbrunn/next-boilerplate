@@ -1,12 +1,7 @@
 "use client";
 
 import { getDictionaryForLocale } from "@repo/internationalization/client";
-import {
-    BookOpenIcon,
-    LayersIcon,
-    Settings2Icon,
-    SquareTerminalIcon,
-} from "lucide-react";
+import { LayersIcon, Settings2Icon, SquareTerminalIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import type { NavItem } from "@/shared/components/ui/Sidebar";
@@ -19,6 +14,8 @@ export function useCommonNavRoutes(): NavItem[] {
     return useMemo(() => {
         const { dictionary } = getDictionaryForLocale(locale);
         const routes = COMMON_ROUTES(dictionary, locale);
+        const settingsItems =
+            dictionary.apps.app.pages.common.routes.platform.settingsItems;
         return [
             {
                 title: dictionary.apps.app.pages.common.routes.platform
@@ -36,47 +33,24 @@ export function useCommonNavRoutes(): NavItem[] {
             },
             {
                 title: dictionary.apps.app.pages.common.routes.platform
-                    .documentation,
-                icon: BookOpenIcon,
-                items: [
-                    {
-                        title: "Introduction",
-                        url: "#",
-                    },
-                    {
-                        title: "Get Started",
-                        url: "#",
-                    },
-                    {
-                        title: "Tutorials",
-                        url: "#",
-                    },
-                    {
-                        title: "Changelog",
-                        url: "#",
-                    },
-                ],
-            },
-            {
-                title: dictionary.apps.app.pages.common.routes.platform
                     .settings,
                 icon: Settings2Icon,
                 items: [
                     {
-                        title: "General",
-                        url: "#",
+                        title: settingsItems.general,
+                        url: routes.account.profile.url,
                     },
                     {
-                        title: "Team",
-                        url: "#",
+                        title: settingsItems.security,
+                        url: routes.account.security.url,
                     },
                     {
-                        title: "Billing",
-                        url: "#",
+                        title: settingsItems.preferences,
+                        url: routes.account.preferences.url,
                     },
                     {
-                        title: "Limits",
-                        url: "#",
+                        title: settingsItems.billing,
+                        url: routes.account.billing.url,
                     },
                 ],
             },
