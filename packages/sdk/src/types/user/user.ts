@@ -4,6 +4,11 @@ export enum UserType {
     COMMON = "common",
 }
 
+export type UserPreferences = {
+    theme: "light" | "dark" | "system";
+    locale: "pt-br" | "en" | "es";
+};
+
 export type UserDTO = {
     id: string;
     type: UserType;
@@ -11,6 +16,9 @@ export type UserDTO = {
     createdAt: Date;
     updatedAt: Date;
     deletedAt: Date | null;
+    phone?: string | null;
+    avatar?: string | null;
+    preferences?: UserPreferences | null;
 };
 
 export type AdminCreateUserRequest = {
