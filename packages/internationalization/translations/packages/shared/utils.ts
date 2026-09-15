@@ -25,6 +25,16 @@ export const sharedUtilsTranslations = {
             AUTH_FORBIDDEN_ORIGIN: "Origem da requisição não permitida.",
             AUTH_NO_SESSION: "Nenhuma sessão ativa.",
             USERS_NOT_FOUND: "Usuário não encontrado.",
+            ACCOUNT_NOTHING_TO_UPDATE: "Nada para atualizar.",
+            ACCOUNT_AVATAR_INVALID:
+                "A imagem informada não pode ser usada como foto de perfil.",
+            ACCOUNT_CURRENT_PASSWORD_INVALID: "A senha atual está incorreta.",
+            ACCOUNT_PASSWORD_UNSUPPORTED:
+                "Esta conta não usa senha. Entre pelo provedor de acesso original.",
+            ACCOUNT_UPDATE_FAILED:
+                "Não foi possível salvar a sua conta. Tente de novo.",
+            ACCOUNT_SESSIONS_REVOKE_FAILED:
+                "Não foi possível encerrar as sessões. Tente de novo.",
             USERS_NOTHING_TO_UPDATE: "Nenhum dado para atualizar.",
             VALIDATION_FAILED: "Dados inválidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este e-mail já está em uso.",
@@ -88,6 +98,16 @@ export const sharedUtilsTranslations = {
             AUTH_FORBIDDEN_ORIGIN: "Request origin not allowed.",
             AUTH_NO_SESSION: "No active session.",
             USERS_NOT_FOUND: "User not found.",
+            ACCOUNT_NOTHING_TO_UPDATE: "Nothing to update.",
+            ACCOUNT_AVATAR_INVALID:
+                "That image cannot be used as your profile picture.",
+            ACCOUNT_CURRENT_PASSWORD_INVALID: "The current password is wrong.",
+            ACCOUNT_PASSWORD_UNSUPPORTED:
+                "This account does not use a password. Sign in with your original provider.",
+            ACCOUNT_UPDATE_FAILED:
+                "Your account could not be saved. Try again.",
+            ACCOUNT_SESSIONS_REVOKE_FAILED:
+                "The sessions could not be ended. Try again.",
             USERS_NOTHING_TO_UPDATE: "Nothing to update.",
             VALIDATION_FAILED: "Invalid data.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "This email is already in use.",
@@ -149,6 +169,17 @@ export const sharedUtilsTranslations = {
             AUTH_FORBIDDEN_ORIGIN: "Origen de la solicitud no permitido.",
             AUTH_NO_SESSION: "No hay sesión activa.",
             USERS_NOT_FOUND: "Usuario no encontrado.",
+            ACCOUNT_NOTHING_TO_UPDATE: "Nada para actualizar.",
+            ACCOUNT_AVATAR_INVALID:
+                "Esa imagen no se puede usar como foto de perfil.",
+            ACCOUNT_CURRENT_PASSWORD_INVALID:
+                "La contraseña actual es incorrecta.",
+            ACCOUNT_PASSWORD_UNSUPPORTED:
+                "Esta cuenta no usa contraseña. Entra con tu proveedor de acceso original.",
+            ACCOUNT_UPDATE_FAILED:
+                "No se pudo guardar tu cuenta. Inténtalo de nuevo.",
+            ACCOUNT_SESSIONS_REVOKE_FAILED:
+                "No se pudieron cerrar las sesiones. Inténtalo de nuevo.",
             USERS_NOTHING_TO_UPDATE: "No hay datos para actualizar.",
             VALIDATION_FAILED: "Datos no válidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este correo ya está en uso.",
