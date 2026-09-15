@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [firebase.json, package.json, packages/auth/server.ts]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Emulador do Firebase, seed e primeiro admin
@@ -31,13 +31,15 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
 
 ## O que já existe no repo
 
-- `firebase.json:1-6` — o arquivo inteiro aponta apenas `firestore.rules` e `firestore.indexes.json`.
-  **Não há bloco de emuladores**, nem hosting, functions ou storage.
+- `firebase.json:1-9` — o arquivo inteiro tem 9 linhas e declara duas coisas: Firestore
+  (`firestore.rules` + `firestore.indexes.json`) e, desde `file-upload-storage`, **storage** (`:6-8`,
+  apontando `storage.rules`). **Continua não havendo bloco de emuladores** — nem hosting nem functions.
+  O arquivo cresceu; a lacuna que esta spec ataca não.
 - Não existe **nenhum** script de seed, fixture ou dado de demonstração: buscar por `seed`/`emulator` no
   código-fonte retorna apenas menções em notas de pesquisa e documentação de agents.
-- `docs/SETUP.md:172-191` — a seção "Firestore" instrui a provisionar no Firebase Console em **modo de
-  produção** (`:176`) e fazer deploy das regras (`:179`). Não menciona emulador nem seed — mas desde então o
-  próprio `docs/SETUP.md` ganhou uma seção **"Primeiro admin (bootstrap de desenvolvimento)" em `:193`**,
+- `docs/SETUP.md:178-188` — a seção "Firestore" instrui a provisionar no Firebase Console em **modo de
+  produção** (`:182`) e fazer deploy das regras (`:185`). Não menciona emulador nem seed — mas desde então o
+  próprio `docs/SETUP.md` ganhou uma seção **"Primeiro admin (bootstrap de desenvolvimento)" em `:199`**,
   documentando o script abaixo. A lacuna de emulador e seed segue de pé; a de primeiro admin, não.
 - `apps/api/(shared)/infra/database.ts:1-5` — desde 2026-08-31 (`firestore-admin-access`) a conexão é uma
   única linha: `getFirestoreAdmin()` de `@repo/auth/server`, sem configuração hardcoded. **O ponto de
@@ -49,17 +51,27 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
   depender de um `curl` manual contra o projeto real.
   > ✅ **Verificado em 2026-09-11: as rules ESTÃO publicadas.** A leitura REST direta com a chave pública
   > devolve **HTTP 403** — a negação está valendo. Medido com o comando de
-  > `docs/SECURITY.md:56-63` contra o projeto `next-boilerplate-576d0`.
+  > `docs/SECURITY.md:62-70` contra o projeto `next-boilerplate-576d0`, e reconferido em 2026-09-14.
   >
   > **E é justamente esse episódio que dá o melhor argumento a esta spec.** Durante onze dias,
-  > `docs/SECURITY.md:30-35` e `docs/PRE-PRODUCTION.md:23-25` afirmaram exatamente o contrário — que as
-  > rules nunca tinham sido publicadas e que a base estava "legível e gravável por qualquer pessoa com a
-  > chave pública" —, e **nada no repositório foi capaz de desmentir isso**: nem os 668 testes, nem o
-  > `typecheck`, nem o CI. A pergunta "as regras de acesso do banco estão valendo?" só pôde ser respondida
+  > `docs/SECURITY.md` e `docs/PRE-PRODUCTION.md` afirmaram exatamente o contrário — que as rules nunca
+  > tinham sido publicadas e que a base estava "legível e gravável por qualquer pessoa com a chave
+  > pública". **Não procure o erro nos arquivos de hoje:** os dois documentos foram reescritos no commit
+  > `9154776`, e as versões atuais dizem o certo — com um aviso explícito de que as anteriores mentiam. O
+  > erro vive no histórico do git, não na árvore de trabalho. O que interessa é o que o episódio revelou:
+  > **nada no repositório foi capaz de desmentir a afirmação falsa enquanto ela esteve lá** — nem os 668
+  > testes, nem o `typecheck`, nem o CI. A pergunta "as regras de acesso do banco estão valendo?" só pôde ser respondida
   > por um `curl` manual, feito à mão, contra um projeto real, por alguém que desconfiou. É esse buraco
   > que o emulador fecha: com teste de rules, a resposta vira automática e a documentação não consegue
   > divergir da realidade por onze dias sem que uma PR fique vermelha. O valor desta spec **não** é
   > descobrir se as rules valem — é tornar impossível que ninguém saiba.
+- **Agora são duas rules files sem teste, não uma.** `file-upload-storage` (PR #11, `9154776`)
+  acrescentou `storage.rules` na raiz — também `deny-all` (`:26-30`), também **nunca exercitado por
+  teste** e, pior que o `firestore.rules`, **nunca publicado**: o Cloud Storage sequer está ativado no
+  projeto de referência, e `docs/PRE-PRODUCTION.md:106` mantém "`storage.rules` publicado" como item em
+  aberto. O argumento desta spec **dobrou de tamanho sem que ninguém escrevesse uma linha a favor dele** —
+  e o segundo arquivo é o caso mais agudo, porque não existe nem o `curl` manual para conferi-lo: não há
+  projeto onde a regra rode. O emulador de Storage é o mesmo binário do de Firestore.
 - **O impasse do primeiro admin, em código:** `apps/api/app/(routes)/auth/sign-up/route.ts:34` cria o
   perfil com `type: UserType.COMMON` fixo; e a única rota que cria usuário com outro tipo,
   `apps/api/app/(routes)/users/route.ts:34`, está atrás de `requireAdminApi`. Ou seja: **pelo produto, para

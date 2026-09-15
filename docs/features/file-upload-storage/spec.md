@@ -1,7 +1,7 @@
 ---
 id: file-upload-storage
 title: Upload de arquivos e storage
-status: proposed
+status: done
 value: alto
 effort: M
 audience: produto
@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 contends_on: [firebase.json, apps/api/env.ts, apps/app/env.ts, apps/api/proxy.ts, apps/app/proxy.ts, apps/app/next.config.ts]
-feature: -
+feature: file-upload-storage
 updated: 2026-09-14
 ---
 
@@ -65,15 +65,43 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
 
 ## Proposta — corte de MVP
 
-- [ ] Um campo de upload no formulário do painel: o usuário escolhe um arquivo, vê o progresso, vê o
+> **Entregue.** PR **#11** mergeada em `main` em 2026-09-14T23:53:32Z (merge commit `9154776`), CI
+> **verde** nesse SHA (run `34910857483`, `success`). Os 5 itens abaixo foram reconferidos **um a um no
+> código** em 2026-09-14, não no `status` gravado.
+
+- [x] Um campo de upload no formulário do painel: o usuário escolhe um arquivo, vê o progresso, vê o
       preview e salva o registro com a imagem associada.
-- [ ] **Validação no servidor** de tipo real e tamanho máximo, com recusa por `error.code` traduzível —
+      → `EntityFormFields.tsx:121-128` monta `HookFormImageUpload`;
+      `packages/design-system/components/ui/image-upload-input.tsx:215-217` renderiza a barra de
+      progresso e o percentual, `:162-167` o preview;
+      `packages/sdk/src/actions/file/action.ts:29-36` converte `onUploadProgress` em percentual;
+      `apps/app/shared/hooks/useFileUpload.ts:26` chama `apiClient.file.upload`.
+- [x] **Validação no servidor** de tipo real e tamanho máximo, com recusa por `error.code` traduzível —
       o limite do navegador é conveniência, não a proteção.
-- [ ] Bucket **não público**: o arquivo só é servido por URL de acesso restrito e expirável, emitida pela
+      → `apps/api/(shared)/validation/file.schema.ts:128` faz sniffing de magic bytes
+      (`sniffImageType:73-84`), `:123-125` recusa acima de 4 MiB e `:107-109` recusa antes de bufferizar
+      pelo `content-length`; os 6 códigos estão traduzidos nos 3 idiomas em
+      `packages/internationalization/translations/packages/shared/utils.ts:55-63` (pt-br), `:115-123`
+      (en), `:181-189` (es).
+- [x] Bucket **não público**: o arquivo só é servido por URL de acesso restrito e expirável, emitida pela
       API para quem tem permissão de ver o registro.
-- [ ] Substituir o arquivo de um registro remove o anterior, para o bucket não acumular órfãos.
-- [ ] A capacidade é **opt-in por env**: sem a variável configurada, o fork continua funcionando e o
+      → `apps/api/(shared)/lib/storage.ts:56-67` emite URL assinada V4 com TTL de 15 min (`:11`);
+      `entity-photo.ts:31-34` decide **fail-closed** (só URL http(s) absoluta ou objeto sob o prefixo do
+      próprio dono); `entities/[id]/route.ts:65-73` recusa referência alheia com `ENTITY_PHOTO_INVALID`;
+      `storage.rules:26-30` publica `allow read, write: if false`. Zero ocorrências de
+      `makePublic`/`getDownloadURL`/`allUsers` em `apps/` + `packages/`.
+- [x] Substituir o arquivo de um registro remove o anterior, para o bucket não acumular órfãos.
+      → `apps/api/app/(routes)/entities/[id]/route.ts:81-91` chama `deleteObjectQuietly(previousPhoto)`
+      **depois** do `update`, e só quando o objeto é do próprio dono (`isOwnStorageObject`).
+      ⚠️ **Limitação conhecida e aceita** (não é falha do corte): sem contagem de referência, dois
+      registros apontando para o mesmo objeto perdem a miniatura de um deles. Ver [Achados].
+- [x] A capacidade é **opt-in por env**: sem a variável configurada, o fork continua funcionando e o
       campo de upload simplesmente não aparece.
+      → `apps/api/(shared)/lib/storage.ts:23-24` (`isStorageConfigured`) e `apps/api/app/(routes)/files/route.ts:14-19`
+      devolvem `STORAGE_NOT_CONFIGURED` 503; `apps/app/shared/lib/storageEnabled.ts:3-4` +
+      `EntityFormFields.tsx:47,121-141` caem de volta no campo de URL; a env é `.optional()` nos três
+      pontos (`packages/auth/keys.ts:18`, `apps/api/env.ts:26`, `apps/app/env.ts:16`), então o boot e o
+      build passam sem ela.
 
 ### Fora do corte
 

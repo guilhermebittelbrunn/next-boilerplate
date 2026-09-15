@@ -33,5 +33,28 @@ export const COMMON_ROUTES = (
                 url: buildPath(`/entities/edit/${id}`),
             }),
         },
+        account: {
+            root: {
+                label: dictionary?.apps.app.pages.common.account.title,
+                url: buildPath("/account"),
+            },
+            profile: {
+                label: dictionary?.apps.app.pages.common.account.tabs.profile,
+                url: buildPath("/account?tab=profile"),
+            },
+            security: {
+                label: dictionary?.apps.app.pages.common.account.tabs.security,
+                url: buildPath("/account?tab=security"),
+            },
+            preferences: {
+                label: dictionary?.apps.app.pages.common.account.tabs
+                    .preferences,
+                url: buildPath("/account?tab=preferences"),
+            },
+            billing: {
+                label: dictionary?.apps.app.pages.common.account.tabs.billing,
+                url: buildPath("/account?tab=billing"),
+            },
+        },
     };
 };

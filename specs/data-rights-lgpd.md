@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Direitos do titular: exportar dados e excluir conta
@@ -34,7 +34,7 @@ acumula, maior o estrago de uma exclusão feita errado.
   é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:128`) e nada mais. A conta no Firebase
   Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui.
 - `apps/api/app/(routes)/` — o inventário completo de rotas é `auth`, `health`, `users`, `entities`,
-  `webhooks`. **Nenhuma rota de exportação.**
+  `files` (PR #11) e `webhooks`. **Nenhuma rota de exportação.**
 - `apps/app/app/[locale]/(authenticated)/(common)/(pages)/` — o painel comum tem `entities`, `playground`
   e a home. **Não existe área de conta**; é a spec `account-settings` que a cria.
 - `apps/web/app/[locale]/legal/privacy/page.tsx:15` e `.../legal/terms/page.tsx` — as páginas legais
@@ -111,12 +111,20 @@ acumula, maior o estrago de uma exclusão feita errado.
 
 ## Riscos e trade-offs
 
-- **Acoplamento de ordem com `billing-subscription` e `file-upload-storage`.** Não bloqueiam o começo —
-  por isso ficam fora do `depends_on` —, mas são **acopladas por definição de pronto**: no dia em que o
-  fork tiver assinatura Stripe ou arquivos em bucket, a exclusão precisa cancelar e limpar, senão produz
-  o órfão que a nota aponta como armadilha central (assinatura ativa cobrando um titular que não existe
-  mais). Quem entregar por último paga a integração — daí a exclusão nascer com pontos de extensão em que
-  cada uma dessas specs se registra.
+- 🔴 **O acoplamento com `file-upload-storage` deixou de ser hipótese (remedido em 2026-09-14).** A spec
+  foi **entregue e arquivada** em `docs/features/file-upload-storage/spec.md` pela PR #11: o fork já tem
+  arquivos em bucket, e `entity.photo` passou a guardar **referência de objeto**, não mais um dado inerte.
+  Consequência direta: a exclusão de conta **precisa** limpar os objetos do bucket
+  (`apps/api/(shared)/lib/storage.ts`, `deleteObjectQuietly`), e isso não é trabalho futuro — é requisito
+  de hoje. Agrava o quadro que `deleteObjectQuietly` tenha **um único call site em produção**
+  (`apps/api/app/(routes)/entities/[id]/route.ts:90`, a **troca** de foto): não existe nenhum caminho que
+  apague objetos em lote por titular, então **apagar a conta hoje deixa os objetos órfãos no bucket** —
+  pagos, e ainda contendo dado pessoal de alguém que exerceu o direito de eliminação.
+- **Acoplamento de ordem com `billing-subscription`.** Não bloqueia o começo — por isso fica fora do
+  `depends_on` —, mas é **acoplado por definição de pronto**: no dia em que o fork tiver assinatura
+  Stripe, a exclusão precisa cancelar, senão produz o órfão que a nota aponta como armadilha central
+  (assinatura ativa cobrando um titular que não existe mais). Quem entregar por último paga a integração —
+  daí a exclusão nascer com pontos de extensão em que cada uma dessas specs se registra.
 - **Exclusão é irreversível e boilerplate é copiado sem leitura.** O soft delete atual já é armadilha
   silenciosa (declara-se conformidade tendo marcado um campo); e uma implementação agressiva demais
   destrói dado que a lei manda reter, tímida demais não cumpre o art. 18-VI. O equilíbrio — anonimizar

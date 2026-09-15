@@ -1,6 +1,11 @@
 import "server-only";
 import { type App, cert, getApps, initializeApp } from "firebase-admin/app";
-import { type Auth, getAuth } from "firebase-admin/auth";
+import {
+    type Auth,
+    type DecodedIdToken,
+    getAuth,
+    type UserRecord,
+} from "firebase-admin/auth";
 import { type Firestore, getFirestore } from "firebase-admin/firestore";
 import { getStorage, type Storage } from "firebase-admin/storage";
 import { cookies } from "next/headers";
@@ -122,6 +127,29 @@ function firebaseAuthErrorCode(error: unknown): string | null {
     return null;
 }
 
+const MILLISECONDS_IN_A_SECOND = 1000;
+
+/**
+ * An ID token stays cryptographically valid until it expires (up to an hour), so revoking
+ * a user's sessions only takes effect if the sign-in that minted the token is compared
+ * against the revocation mark. The user record is already loaded here, so this costs no
+ * extra round trip.
+ */
+function isMintedBeforeRevocation(
+    decodedToken: DecodedIdToken,
+    user: UserRecord
+): boolean {
+    if (!user.tokensValidAfterTime) {
+        return false;
+    }
+    const validAfterSeconds =
+        Date.parse(user.tokensValidAfterTime) / MILLISECONDS_IN_A_SECOND;
+    return (
+        Number.isFinite(validAfterSeconds) &&
+        decodedToken.auth_time < validAfterSeconds
+    );
+}
+
 /**
  * Get the current user from the request
  * @param token - Firebase ID token from the request
@@ -136,6 +164,9 @@ export const getCurrentUser = async (token: string | null) => {
         const authInstance = getAuthInstance();
         const decodedToken = await authInstance.verifyIdToken(token);
         const user = await authInstance.getUser(decodedToken.uid);
+        if (isMintedBeforeRevocation(decodedToken, user)) {
+            return null;
+        }
         return user;
     } catch (error) {
         const code = firebaseAuthErrorCode(error);

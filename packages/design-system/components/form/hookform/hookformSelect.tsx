@@ -81,7 +81,16 @@ export function HookFormSelect<T extends FieldValues>(
                             <Select
                                 disabled={disabled || formState.isSubmitting}
                                 emptyMessage={emptyMessage}
-                                onValueChange={field.onChange}
+                                onValueChange={(next) => {
+                                    // The primitive keeps a hidden native select for form
+                                    // submission, and it reports an empty value while its
+                                    // options are not mounted — which happens whenever the
+                                    // value only arrives after the first render. A choice is
+                                    // always one of the options, so anything else is noise.
+                                    if (options.some((o) => o.value === next)) {
+                                        field.onChange(next);
+                                    }
+                                }}
                                 options={options}
                                 placeholder={placeholder ?? label}
                                 searchable={searchable}

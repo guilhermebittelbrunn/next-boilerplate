@@ -110,6 +110,16 @@ deploy por bem-sucedido. Ou o health check distingue 5xx, ou vale trocar o `thro
 app sobe, o build passa e o fork **continua no plano Spark, sem cartão**. Só siga adiante se o produto
 precisa de upload.
 
+**São dois os consumidores hoje** — pulando o item, os dois degradam e nada quebra:
+
+| Consumidor | Sem Storage |
+|---|---|
+| Foto da entidade de exemplo (`entities`) | O campo volta a ser uma caixa de URL de texto. |
+| **Foto de perfil na área de conta** (`/account`, aba Perfil) | O campo de avatar **não aparece**; o resto da aba (nome, telefone) funciona normalmente. |
+
+Se as variáveis estiverem preenchidas mas o serviço **não** estiver ativado, o upload responde **503 com
+`error.code` traduzido** — nunca 500, e nunca uma tela quebrada.
+
 ⛔ **O que ninguém avisa: storage exige plano Blaze — ou seja, cartão de crédito.** Desde **2026-02-03** um
 projeto no Spark **não tem acesso a bucket nenhum**; as chamadas voltam **402/403**. O gasto real continua
 **$0,00/mês** no cenário de um MVP (a faixa "Always Free" do GCS cobre folgado), mas a **forma de pagamento
@@ -187,10 +197,13 @@ nome do fork** — e a fatura do provedor é do fork.
 O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh api …/branches/main/protection`
 → **404**, rulesets → `[]`). Ligar exigindo o check `verify` fecha isto.
 
-⚠️ Antes de ligar, declare um `testTimeout` explícito nas configs do Vitest. Nenhuma das 9 declara, e
-`apps/app/__tests__/securityPolicySources.test.ts` roda **216 ms isolado × até 2203 ms sob contenção**
-contra o default de 5 s. Gate obrigatório + teste que falha sozinho = merge bloqueado ao acaso, e o runner
-do GitHub é mais lento que uma máquina local.
+⚠️ Antes de ligar, declare um `testTimeout` explícito nas configs do Vitest. **Nenhuma das 9 declara**, e
+são **dois** os testes expostos, não um: `apps/app/__tests__/securityPolicySources.test.ts` e
+`apps/web/__tests__/securityPolicySources.test.ts`. Ambos reconstroem o grafo do proxy por caso, então o
+custo explode sob contenção — medido em 2026-09-14: isolados ficam em **225–278 ms**, mas dentro de
+`turbo run test --force` sobem para **1768 ms** (`app`) e **1296 ms** (`web`), e o da `web` já foi visto em
+**4033 ms** — **81% do default de 5 s**. Gate obrigatório + teste que falha sozinho = merge bloqueado ao
+acaso, e o runner do GitHub é mais lento que uma máquina local.
 
 ### 9. CSP bloqueante na `apps/web`
 

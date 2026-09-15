@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx", apps/app/shared/lib/queryKeys.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Home do painel com widgets
@@ -44,13 +44,15 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
   nenhum**: a única outra ocorrência de "chart" no app é a string `"chart"` dentro do catálogo de nomes
   de componentes em `.../(common)/(pages)/playground/page.tsx:130` — uma lista de texto, não um gráfico.
   Hoje é dependência paga e não usada.
-- `apps/app/shared/hooks/` tem exatamente **3** hooks: `useAuthorizedQuery.ts`, `useHealthCheck.ts:19`
-  (que ainda usa `useQuery` direto) e `useListUsers.ts:25`.
+- `apps/app/shared/hooks/` tem **5** hooks (remedido em 2026-09-14; eram 3): `useAuthorizedQuery.ts`,
+  `useEmailVerification.ts` (PR #10), `useFileUpload.ts` (PR #11), `useHealthCheck.ts:19` (que ainda usa
+  `useQuery` direto) e `useListUsers.ts:25`. As duas linhas citadas seguem corretas — o que morreu foi o
+  **número**, e ele importa porque é o piso a partir do qual esta spec argumenta que a pasta é rasa.
 - `apps/app/shared/lib/queryKeys.ts:11` — factory tipada com `entities`, `users` e `health`; a hierarquia
   já suporta invalidação por prefixo. É onde as chaves de um widget entrariam.
-- `apps/api/app/(routes)/` — **10** rotas (`auth/*`, `entities`, `entities/[id]`, `users`, `users/[id]`,
-  `health`, `webhooks/payments`). Nenhuma devolve agregado; contagem só existe implicitamente no tamanho
-  da lista.
+- `apps/api/app/(routes)/` — **15** rotas (`auth/*`, `entities`, `entities/[id]`, `files`, `users`,
+  `users/[id]`, `health`, `webhooks/payments`) — remedido em 2026-09-14, depois de a PR #11 acrescentar
+  `files/route.ts`. Nenhuma devolve agregado; contagem só existe implicitamente no tamanho da lista.
 - **Lacuna:** não há tela de visão geral, não há dado agregado, e o único primitivo de visualização do
   design system nunca foi exercitado.
 

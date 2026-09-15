@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Onboarding pós-cadastro
@@ -48,13 +48,13 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   próprio `user-merge.ts` (`:22`, `:41`); a rota Google
   (`apps/api/app/(routes)/auth/sign-in/google/route.ts:16`) chega até ele **indiretamente**, via
   `getMergedUserByUid`.
-- `apps/app/proxy.ts:58` — `PUBLIC_PATHS` (`isPublicPath` em `:79-80`); o proxy é default-deny (razão
-  documentada em `:54-55`), então qualquer rota nova de onboarding já fica protegida sem allowlist.
+- `apps/app/proxy.ts:62` — `PUBLIC_PATHS` (`isPublicPath` em `:83-84`); o proxy é default-deny (razão
+  documentada em `:58-59`), então qualquer rota nova de onboarding já fica protegida sem allowlist.
   **Remedido em 2026-09-11:** a lista deixou de ser "só `/sign-in` e `/sign-up`" — a PR #10 a levou a
-  **cinco** entradas (`:59-63`: `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`,
+  **cinco** entradas (`:63-67`: `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`,
   `/verify-email`) e introduziu o conceito de rota pública **isenta do bounce**
-  (`OOB_ACTION_PATHS:71`, `isOobActionPath:83-85`, consumido em `:171`), porque o redirect de visitante
-  autenticado apaga a query string (`:182`). Um passo de onboarding que carregue token na URL herda
+  (`OOB_ACTION_PATHS:75`, `isOobActionPath:87-89`, consumido em `:175`), porque o redirect de visitante
+  autenticado apaga a query string (`:186`). Um passo de onboarding que carregue token na URL herda
   exatamente esse problema — e agora herda também a solução.
 - `packages/sdk/src/types/user/user.ts:7` — o `UserDTO` tem `id`, `type`, `reference_id` e timestamps.
 - **Lacuna:** não existe nenhuma noção de "perfil incompleto", nenhum passo guiado, nenhum estado
@@ -92,7 +92,8 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 - Coleta de dados de domínio (empresa, cargo, segmento) — não é genérico; é código do fork, que apenas
   encaixa um passo a mais no fluxo.
 - Convite de colegas ([`teams-organizations`](teams-organizations.md)), upload de avatar
-  ([`file-upload-storage`](file-upload-storage.md)) e e-mail de boas-vindas (`transactional-emails`).
+  ([`file-upload-storage`](../docs/features/file-upload-storage/spec.md) — **entregue**, PR #11) e
+  e-mail de boas-vindas (`transactional-emails`).
 
 ## Impacto por camada
 
