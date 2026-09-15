@@ -157,13 +157,11 @@ function AlertDialogAction({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Action> &
   Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
   return (
-    <Button size={size} variant={variant}>
-      <AlertDialogPrimitive.Action
-        className={cn(className)}
-        data-slot="alert-dialog-action"
-        {...props}
-      />
-    </Button>
+    // `asChild`: the primitive already renders a button, so wrapping it in one would
+    // nest two buttons and produce invalid markup.
+    <AlertDialogPrimitive.Action asChild data-slot="alert-dialog-action">
+      <Button className={cn(className)} size={size} variant={variant} {...props} />
+    </AlertDialogPrimitive.Action>
   );
 }
 
@@ -175,13 +173,9 @@ function AlertDialogCancel({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Cancel> &
   Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
   return (
-    <Button size={size} variant={variant}>
-      <AlertDialogPrimitive.Cancel
-        className={cn(className)}
-        data-slot="alert-dialog-cancel"
-        {...props}
-      />
-    </Button>
+    <AlertDialogPrimitive.Cancel asChild data-slot="alert-dialog-cancel">
+      <Button className={cn(className)} size={size} variant={variant} {...props} />
+    </AlertDialogPrimitive.Cancel>
   );
 }
 
