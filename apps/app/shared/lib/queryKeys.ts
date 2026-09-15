@@ -9,6 +9,10 @@
  * every entity query; `entities.list()` clears just the list, etc.
  */
 export const queryKeys = {
+    account: {
+        all: ["account"] as const,
+        me: () => [...queryKeys.account.all, "me"] as const,
+    },
     entities: {
         all: ["entities"] as const,
         list: () => [...queryKeys.entities.all, "list"] as const,
