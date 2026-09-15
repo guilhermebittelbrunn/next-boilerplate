@@ -34,6 +34,14 @@ const isStorageConfigured = Boolean(env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
 const firebaseAuthOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     ? `https://${env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}`
     : null;
+/**
+ * Prefer 127.0.0.1 over localhost when filling this in: the responses carry HSTS, and a
+ * policy installed for localhost would also cover an emulator served from localhost,
+ * upgrading its plain-http origin to https. 127.0.0.1 is a separate host and escapes it.
+ */
+const authEmulatorOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST
+    ? `http://${env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST}`
+    : null;
 
 const securityOptions = buildBrowserAppOptions({
     scriptSrc: [
@@ -44,6 +52,7 @@ const securityOptions = buildBrowserAppOptions({
         env.NEXT_PUBLIC_API_URL ?? "",
         IDENTITY_TOOLKIT_ORIGIN,
         SECURE_TOKEN_ORIGIN,
+        ...(authEmulatorOrigin ? [authEmulatorOrigin] : []),
         ...(isAnalyticsEnabled ? GOOGLE_ANALYTICS_ORIGINS : []),
     ],
     imgSrc: [
@@ -51,7 +60,12 @@ const securityOptions = buildBrowserAppOptions({
         ...(isStorageConfigured ? [STORAGE_ORIGIN] : []),
         ...(isAnalyticsEnabled ? [TAG_MANAGER_ORIGIN] : []),
     ],
-    frameSrc: firebaseAuthOrigin ? [firebaseAuthOrigin] : [],
+    // The Google sign-in flow embeds a relay iframe served by whichever auth backend is
+    // in use (/emulator/auth/iframe on the emulator), so that origin has to be framable.
+    frameSrc: [
+        ...(firebaseAuthOrigin ? [firebaseAuthOrigin] : []),
+        ...(authEmulatorOrigin ? [authEmulatorOrigin] : []),
+    ],
 });
 
 /**

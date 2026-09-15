@@ -1,6 +1,19 @@
+import { authEmulatorOrigin, DEMO_WEB_API_KEY } from "@repo/auth/emulator";
 import { keys } from "@repo/auth/keys";
 
-const BASE = "https://identitytoolkit.googleapis.com/v1";
+const PRODUCTION_BASE = "https://identitytoolkit.googleapis.com/v1";
+
+/**
+ * The Auth emulator serves the same REST API under the production host repeated as a
+ * path segment. Resolved per call rather than once at import time so the value tracks
+ * the environment instead of being frozen at module load.
+ */
+const base = (): string => {
+    const origin = authEmulatorOrigin();
+    return origin
+        ? `${origin}/identitytoolkit.googleapis.com/v1`
+        : PRODUCTION_BASE;
+};
 
 type ToolkitSuccess = {
     localId: string;
@@ -26,6 +39,11 @@ export class IdentityToolkitError extends Error {
 function getWebApiKey(): string {
     const k = keys().FIREBASE_WEB_API_KEY;
     if (!k) {
+        // The emulator accepts any key, so requiring a real one would block the local
+        // setup for nothing. Production still has to supply one.
+        if (authEmulatorOrigin()) {
+            return DEMO_WEB_API_KEY;
+        }
         throw new IdentityToolkitError(
             "FIREBASE_WEB_API_KEY or NEXT_PUBLIC_FIREBASE_API_KEY is not configured"
         );
@@ -59,7 +77,7 @@ export async function identitySignUp(
     password: string
 ): Promise<ToolkitSuccess> {
     const key = getWebApiKey();
-    const res = await fetch(`${BASE}/accounts:signUp?key=${key}`, {
+    const res = await fetch(`${base()}/accounts:signUp?key=${key}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,15 +94,18 @@ export async function identitySignInWithPassword(
     password: string
 ): Promise<ToolkitSuccess> {
     const key = getWebApiKey();
-    const res = await fetch(`${BASE}/accounts:signInWithPassword?key=${key}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email,
-            password,
-            returnSecureToken: true,
-        }),
-    });
+    const res = await fetch(
+        `${base()}/accounts:signInWithPassword?key=${key}`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email,
+                password,
+                returnSecureToken: true,
+            }),
+        }
+    );
     return parseToolkitResponse(res);
 }
 
@@ -102,7 +123,7 @@ export async function identityResetPassword(
     newPassword: string
 ): Promise<ToolkitResetPassword> {
     const key = getWebApiKey();
-    const res = await fetch(`${BASE}/accounts:resetPassword?key=${key}`, {
+    const res = await fetch(`${base()}/accounts:resetPassword?key=${key}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ oobCode, newPassword }),
@@ -115,7 +136,7 @@ export async function identityApplyOobCode(
     oobCode: string
 ): Promise<ToolkitApplyOob> {
     const key = getWebApiKey();
-    const res = await fetch(`${BASE}/accounts:update?key=${key}`, {
+    const res = await fetch(`${base()}/accounts:update?key=${key}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ oobCode }),
@@ -161,7 +182,7 @@ export async function identitySignInWithGoogleIdToken(
 ): Promise<IdpSuccess> {
     const key = getWebApiKey();
     const postBody = `id_token=${encodeURIComponent(googleIdToken)}&providerId=google.com`;
-    const res = await fetch(`${BASE}/accounts:signInWithIdp?key=${key}`, {
+    const res = await fetch(`${base()}/accounts:signInWithIdp?key=${key}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

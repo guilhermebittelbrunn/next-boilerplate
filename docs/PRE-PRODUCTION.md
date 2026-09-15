@@ -51,6 +51,14 @@ Conferir depois de publicar — uma leitura direta com a chave pública deve dev
 a API sem acesso. E o rollback correto é **reverter o código da API primeiro**: republicar rules
 permissivas sem reverter reexpõe a base inteira, o que não é rollback, é o incidente de novo.
 
+> 📌 **O emulador chegou; a suíte de testes das rules, não.** O repo agora roda contra os emuladores de
+> Auth e Firestore (`pnpm emulators`), o que era o **pré-requisito** para testar as rules — mas nenhum
+> teste as exercita ainda. Elas continuam validadas só por `deploy --dry-run` (sintaxe) e pelo `curl`
+> manual acima (comportamento). A suíte com `@firebase/rules-unit-testing` está fora do corte da entrega
+> do emulador e anda junto de `ci-pipeline`/`e2e-testing`. **Não leia "emulador entregue" como "rules
+> testadas".** O emulador de **Storage** não foi ligado, então `storage.rules` segue sem teste e sem
+> publicação (§ abaixo).
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
@@ -197,13 +205,35 @@ nome do fork** — e a fatura do provedor é do fork.
 O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh api …/branches/main/protection`
 → **404**, rulesets → `[]`). Ligar exigindo o check `verify` fecha isto.
 
-⚠️ Antes de ligar, declare um `testTimeout` explícito nas configs do Vitest. **Nenhuma das 9 declara**, e
-são **dois** os testes expostos, não um: `apps/app/__tests__/securityPolicySources.test.ts` e
-`apps/web/__tests__/securityPolicySources.test.ts`. Ambos reconstroem o grafo do proxy por caso, então o
-custo explode sob contenção — medido em 2026-09-14: isolados ficam em **225–278 ms**, mas dentro de
-`turbo run test --force` sobem para **1768 ms** (`app`) e **1296 ms** (`web`), e o da `web` já foi visto em
-**4033 ms** — **81% do default de 5 s**. Gate obrigatório + teste que falha sozinho = merge bloqueado ao
-acaso, e o runner do GitHub é mais lento que uma máquina local.
+🔴 **Bloqueante: o gate já falhou de verdade. Declare um `testTimeout` explícito nas 9 configs do Vitest
+ANTES de tornar o check obrigatório.** Até 2026-09-14 este aviso era preventivo — baseado em margem
+estreita, não em falha observada. **Em 2026-09-15 a falha aconteceu**, e isso muda a natureza do
+pré-requisito.
+
+Medição de 2026-09-15, com `pnpm turbo run lint typecheck test --force` executado **duas vezes** no mesmo
+workspace, sem cache:
+
+| execução | resultado |
+|----------|-----------|
+| 1ª | 🔴 **FALHOU** — `app#test`, 21/23 tasks. `apps/app/__tests__/accountSecurityForm.test.tsx > "só encerra as sessões depois da confirmação no diálogo"` ⇒ `Test timed out in 5000ms` |
+| 2ª | ✅ 23/23, 1 m 8,8 s |
+
+**Taxa de falha observada: 1 em 2.** O mesmo teste, rodado **isolado** três vezes, leva **390 ms, 986 ms e
+515 ms** (arquivo inteiro: 935/2755/1471 ms) — ou seja, sob contenção o custo sobe de **3× a 8×** e
+atravessa o teto de 5 s.
+
+**O arquivo culpado é um terceiro, e é novo.** A discussão anterior tratava só dos dois
+`securityPolicySources.test.ts` (`apps/app`, `apps/web`); quem estourou foi
+`apps/app/__tests__/accountSecurityForm.test.tsx`, introduzido pela PR #12. Na 2ª execução os três
+mediram, como arquivo: `securityPolicySources` (`app`) **7628 ms**, `accountSecurityForm` **7401 ms**,
+`securityPolicySources` (`web`) **2249 ms**.
+
+**A leitura correta é estrutural, não "esses três arquivos são lentos":** nenhuma das **9** configs declara
+`testTimeout` (`grep -rl testTimeout --include=vitest.config.* .` ⇒ **0**), então todo teste do repositório
+corre contra o default de 5 s **medido sob contenção do turbo**, e qualquer teste de componente que espere
+por interação entra na faixa de risco assim que nasce. A cada PR que acrescenta testes, a probabilidade de
+falha aleatória sobe. Gate obrigatório + falha aleatória = merge bloqueado ao acaso — e o runner do GitHub
+é mais lento que uma máquina local.
 
 ### 9. CSP bloqueante na `apps/web`
 
@@ -217,11 +247,23 @@ então virar a chave é barato.
 
 ## 🧹 Higiene
 
-- [ ] **Contas de QA acumuladas** no projeto Firebase de desenvolvimento (`next-boilerplate-576d0`):
-      `qa-admin@`, `qa-common@`, `qa-review-common@`, `qa-ci-admin@`, `qa-review-ci@`, `qa-common-ci@`,
-      `qa-api-hardening@`, `review-api-hardening@` e as descartáveis da recuperação de senha — todas
-      `example.com`, sem PII real e sem senha em arquivo. Limpar em Authentication **e** o doc `user` no
-      Firestore. Nenhuma existe no projeto de produção; a limpeza é para o ambiente de dev não virar lixão.
+- [ ] **Contas de QA acumuladas** no projeto Firebase de desenvolvimento (`next-boilerplate-576d0`).
+      Todas `example.com`, sem PII real e sem senha em arquivo. Limpar em Authentication **e** o doc `user`
+      no Firestore. Nenhuma existe no projeto de produção; a limpeza é para o ambiente de dev não virar
+      lixão.
+      - Ciclos anteriores: `qa-admin@`, `qa-common@`, `qa-review-common@`, `qa-ci-admin@`,
+        `qa-review-ci@`, `qa-common-ci@`, `qa-api-hardening@`, `review-api-hardening@` e as descartáveis da
+        recuperação de senha.
+      - Da PR #11 (`file-upload-storage`): `qa-test-upload@`, `qa-test-upload-b@`.
+      - **Da PR #12 (`account-settings`) — 5 contas, acrescentadas na auditoria de 2026-09-15 porque a
+        entrega não as registrou aqui:** `rv-a@`, `rv-b@` (criadas pelo `/review`),
+        `qa-account-settings-a@`, `qa-account-settings-b@`, `qa-account-settings-b2@` (criadas pelo
+        `/test`). ⚠️ `qa-account-settings-b@` ficou **inutilizável** — a senha não foi registrada e o
+        `sign-in` devolve 500; apagar em vez de tentar reusar.
+
+      > **Padrão a corrigir no processo, não na lista:** esta seção é atualizada por quem entrega, e a
+      > última entrega não a atualizou. Foram **15 contas** acumuladas em 12 PRs. Se o `/review` e o
+      > `/test` não escreverem aqui, a auditoria descobre tarde — e descobriu.
 - [ ] **Branches mergeadas ainda vivas no remoto** — as PRs são mergeadas por squash e as branches ficam.
 
 ---

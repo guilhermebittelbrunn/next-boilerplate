@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx", apps/app/shared/lib/queryKeys.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Home do painel com widgets
@@ -29,9 +29,13 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 - `apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx:4-11` — o componente inteiro é
   `<Header page="Home" /> + <Container />`. Onze linhas, sem nenhum conteúdo. O título `"Home"` (`:7`) é
   ainda uma **string literal fora do dictionary**, contra a regra de ouro 2 — e a chave traduzida já
-  existe (`translations/apps/app/pages/common/routes/index.ts:3,17,31`). Medido em 2026-09-10: a chave
-  **não é morta** — é consumida via `(common)/paths.ts:12` e renderizada no breadcrumb de **8** telas do
-  painel (entities, playground, users…). A home é a **única** tela que a ignora e escreve o literal.
+  existe (`translations/apps/app/pages/common/routes/index.ts:3` pt-br, `:23` en, `:43` es — âncoras
+  remedidas em 2026-09-15; a PR #12 inseriu as chaves de `settingsItems` no meio do arquivo). A chave
+  **não é morta** — é consumida via `(common)/paths.ts:12` e renderizada no breadcrumb de **5** telas
+  (playground, conta, lista/edição/criação de entidades). *(Correção de 2026-09-15: a spec dizia **8**.
+  São 8 breadcrumbs que usam `routes.root.label`, mas **3 deles são do painel admin**, cujo rótulo vem de
+  `admin.routes.administration` — outra chave. O número certo para esta chave é **5**.)* A home é a
+  **única** tela que a ignora e escreve o literal.
 - `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx:7` — **idêntica**, mesma string
   literal.
   > **Deriva corrigida (`/spec --sync`, 2026-09-09):** a redação anterior falava em "doze linhas", um
@@ -44,15 +48,19 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
   nenhum**: a única outra ocorrência de "chart" no app é a string `"chart"` dentro do catálogo de nomes
   de componentes em `.../(common)/(pages)/playground/page.tsx:130` — uma lista de texto, não um gráfico.
   Hoje é dependência paga e não usada.
-- `apps/app/shared/hooks/` tem **5** hooks (remedido em 2026-09-14; eram 3): `useAuthorizedQuery.ts`,
-  `useEmailVerification.ts` (PR #10), `useFileUpload.ts` (PR #11), `useHealthCheck.ts:19` (que ainda usa
-  `useQuery` direto) e `useListUsers.ts:25`. As duas linhas citadas seguem corretas — o que morreu foi o
-  **número**, e ele importa porque é o piso a partir do qual esta spec argumenta que a pasta é rasa.
-- `apps/app/shared/lib/queryKeys.ts:11` — factory tipada com `entities`, `users` e `health`; a hierarquia
-  já suporta invalidação por prefixo. É onde as chaves de um widget entrariam.
-- `apps/api/app/(routes)/` — **15** rotas (`auth/*`, `entities`, `entities/[id]`, `files`, `users`,
-  `users/[id]`, `health`, `webhooks/payments`) — remedido em 2026-09-14, depois de a PR #11 acrescentar
-  `files/route.ts`. Nenhuma devolve agregado; contagem só existe implicitamente no tamanho da lista.
+- `apps/app/shared/hooks/` tem **6** hooks (remedido em 2026-09-15; eram 3, depois 5):
+  `useAuthorizedQuery.ts`, `useEmailVerification.ts` (PR #10), `useFileUpload.ts` (PR #11),
+  `useMyAccount.ts` (PR #12), `useHealthCheck.ts:19` (que ainda usa `useQuery` direto) e
+  `useListUsers.ts:25`. As duas linhas citadas seguem corretas — o que morre a cada rodada é o **número**.
+  *(Registro honesto: ele foi corrigido em duas auditorias seguidas e voltou a envelhecer em um dia. A
+  premissa "a pasta é rasa" **enfraquece** a cada ciclo; vale reconferir antes de usá-la como argumento.)*
+- `apps/app/shared/lib/queryKeys.ts:11` — factory tipada com **4** grupos: `account` (`:12-15`, novo na
+  PR #12), `entities` (`:16`), `users` (`:22`) e `health` (`:30`); a hierarquia já suporta invalidação por
+  prefixo. É onde as chaves de um widget entrariam.
+- `apps/api/app/(routes)/` — **18** rotas (`account/*` ×3, `auth/*`, `entities`, `entities/[id]`, `files`,
+  `users`, `users/[id]`, `health`, `webhooks/payments`) — remedido em 2026-09-15, depois de a PR #12
+  acrescentar as três de `account/`. Nenhuma devolve agregado; contagem só existe implicitamente no
+  tamanho da lista.
 - **Lacuna:** não há tela de visão geral, não há dado agregado, e o único primitivo de visualização do
   design system nunca foi exercitado.
 

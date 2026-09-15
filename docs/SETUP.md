@@ -9,7 +9,8 @@ Como subir o boilerplate do zero e o mapa **real** das variáveis de ambiente. A
 ## Pré-requisitos
 
 - Node `22.12.0` (`nvm use`) · pnpm `10.19.0`
-- Contas: **Firebase** (Auth + Firestore), **Stripe**, **Resend**. Opcional: **Arcjet** (segurança), Google Analytics/PostHog.
+- **JDK 21+** — só para rodar os emuladores do Firebase (eles são JARs). `java -version` precisa dizer `21` ou mais; o `firebase-tools` recusa versões anteriores. No macOS: `brew install openjdk@21`.
+- Contas: **Firebase** (Auth + Firestore), **Stripe**, **Resend** — necessárias **para publicar**, não para desenvolver. Para desenvolver local, os emuladores substituem o Firebase (ver [Emulador do Firebase](#emulador-do-firebase-caminho-local-padrão)). Opcional: **Arcjet** (segurança), Google Analytics/PostHog.
 - [Stripe CLI](https://docs.stripe.com/stripe-cli) para webhooks locais.
 
 ```bash
@@ -98,13 +99,24 @@ Se `STRIPE_SECRET_KEY` não estiver setada, a validação é pulada (o app sobe 
 
 ## Rodando
 
+O caminho local padrão são **três comandos**, em dois terminais — sem conta no Google e sem tocar em dado real:
+
 ```bash
-pnpm dev                          # todos os apps (3000/3001/3002/3003)
+pnpm emulators   # terminal 1: Auth + Firestore emulados (deixe rodando)
+pnpm seed        # terminal 2: popula o estado inicial
+pnpm dev         # terminal 2: todos os apps (3000/3001/3002/3003)
+```
+
+Detalhes, credenciais do seed e como sair do emulador: [Emulador do Firebase](#emulador-do-firebase-caminho-local-padrão).
+
+```bash
 pnpm --filter app dev             # só um app
 pnpm --filter api dev:with-stripe # API (3002) + encaminhamento de webhooks Stripe
 ```
 
-Portas: `app` 3000 · `web` 3001 · `api` 3002 · `email` 3003.
+Portas: `app` 3000 · `web` 3001 · `api` 3002 · `email` 3003 · emulador Auth 9099 · Firestore 8080 · UI do
+emulador 4001. O `emulators:start` também reserva **4400** (hub), **4500** e **9150** — não são
+configuráveis pelo `firebase.json` e entram na conta de "porta ocupada derruba tudo".
 
 ## CI — GitHub Actions
 
@@ -196,19 +208,90 @@ O [`.firebaserc`](../.firebaserc) na raiz é **versionado** e seu `default` apon
 - `npx -y firebase-tools@latest deploy --project <id-do-fork> --only firestore:rules,firestore:indexes` — o flag **sobrepõe** o `default` sem tocar no arquivo. **Recomendado.**
 - `npx -y firebase-tools@latest use --add` — grava um **alias** nomeado ao lado do `default`, o que ao menos torna a mudança intencional e revisável no diff.
 
+## Emulador do Firebase (caminho local padrão)
+
+Os `.env.example` já vêm apontados para os emuladores. Copiando-os, o stack inteiro roda **local, offline,
+sem conta no Google e sem tocar em dado real** — o service account do Firebase só é necessário para publicar.
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/app/.env.example apps/app/.env
+cp apps/web/.env.example apps/web/.env
+
+pnpm emulators   # terminal 1 — deixe rodando; Ctrl+C encerra e descarta o estado
+pnpm seed        # terminal 2
+pnpm dev         # terminal 2
+```
+
+### Estado que o `pnpm seed` cria
+
+Todas as contas usam a senha **`demo1234`**.
+
+| e-mail | papel | dados |
+|--------|-------|-------|
+| `admin@example.com` | admin | acesso à área `/admin` |
+| `user@example.com` | comum | 4 `entity` (um de cada tipo + um desabilitado) |
+| `user2@example.com` | comum | 2 `entity` — existem para testar posse: abrir um registro deles logado como `user@example.com` tem de dar 404 |
+
+**`pnpm seed` apaga e repovoa**: reset e seed são o mesmo comando, então rodá-lo duas vezes devolve
+exatamente o mesmo estado, sem duplicata. O estado vive **só** nos emuladores e morre com o processo —
+não há `--import`/`--export-on-exit` de propósito, para que o ponto de partida seja sempre o mesmo.
+
+Essas credenciais são seguras porque não existem fora daqui: o seed **recusa rodar** se os hosts do
+emulador não estiverem preenchidos, ou se o project id não começar com `demo-`.
+
+### Por que `demo-next-boilerplate`
+
+Os emuladores aceitam qualquer project id prefixado com `demo-` sem credencial nenhuma, e o Google nunca
+emite um — é esse par que permite rodar sem conta. O id vai **na linha de comando** (`pnpm emulators` já
+passa `--project`), nunca no [`.firebaserc`](../.firebaserc), que é versionado (ver a seção acima).
+
+### Voltar para um projeto Firebase real
+
+**Esvazie o bloco do emulador** nos três `.env` (`FIRESTORE_EMULATOR_HOST`, `FIREBASE_AUTH_EMULATOR_HOST`,
+`NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`) e preencha o service account
+e as `NEXT_PUBLIC_FIREBASE_*`. Sem nenhuma dessas variáveis, o comportamento é exatamente o de antes de os
+emuladores existirem — o código não tem default algum, quem é opinativo é o `.env.example`.
+
+> ⚠️ **Trate o bloco como unidade.** Preencher metade — servidor emulado e navegador não, ou o contrário —
+> coloca os dois lados em projetos Firebase diferentes: o login "funciona" e o perfil não é encontrado.
+> É a falha mais provável de um fork.
+
+### Armadilhas
+
+- **A primeira execução precisa de internet.** O `firebase-tools` baixa os JARs dos emuladores na primeira
+  vez (para `~/.cache/firebase/emulators/`). Da segunda em diante, funciona offline de verdade.
+- **Precisa de JDK 21+.** Com Java 17 o `firebase-tools` recusa com `no longer supports Java version before 21`.
+- **Porta ocupada derruba tudo.** Se a porta da UI (4001) ou qualquer outra estiver em uso, o
+  `emulators:start` aborta inteiro, inclusive Auth e Firestore. O erro nomeia a porta; mude-a no bloco
+  `emulators` do [`firebase.json`](../firebase.json).
+- **`pnpm --filter api build` não funciona sob o emulador** — `apps/api/env.ts` exige os três
+  `FIREBASE_ADMIN_*` fora de `development`. O caminho local é `pnpm dev`; o build continua exigindo
+  service account, como já documentado acima.
+- **Upload de imagem fica desligado sob o emulador.** O Cloud Storage **não** é emulado aqui, e um bucket
+  real combinado com os hosts do emulador gravaria objeto de verdade num bucket de verdade — sem erro
+  visível. Por isso, emulando, a API responde `STORAGE_NOT_CONFIGURED` e o formulário de entidade cai no
+  campo de URL da foto. Para exercitar upload, use um projeto Firebase real.
+
 ## Primeiro admin (bootstrap de desenvolvimento)
 
 O cadastro público cria sempre um usuário **comum**, e a rota que cria admin exige um admin autenticado —
-então o primeiro admin de um ambiente novo não nasce pelo produto. Para criá-lo:
+então o primeiro admin de um ambiente novo não nasce pelo produto.
+
+**No emulador** o `pnpm seed` já entrega `admin@example.com`, e não é preciso mais nada. Para criar outro,
+ou para um projeto real:
 
 ```bash
+# contra o emulador — não precisa de service account nem de flag
 pnpm --filter api create-dev-admin <email> <senha>
-# ou: DEV_ADMIN_EMAIL=... DEV_ADMIN_PASSWORD=... pnpm --filter api create-dev-admin
+
+# contra um projeto Firebase REAL — exige o service account e consentimento explícito
+DEV_ADMIN_EMAIL=... DEV_ADMIN_PASSWORD=... pnpm --filter api create-dev-admin --allow-real-project
 ```
 
-O script usa as `FIREBASE_ADMIN_*` do `apps/api/.env`, cria (ou reaproveita) o usuário no Firebase Auth e
-grava/promove o documento correspondente na coleção `user` com `type: "admin"`. A senha vem por argumento
-ou variável de ambiente e **nunca** é gravada em arquivo nem impressa pelo script.
+O script cria (ou reaproveita) o usuário no Firebase Auth e grava/promove o documento correspondente na
+coleção `user` com `type: "admin"`. A senha vem por argumento ou variável de ambiente e **nunca** é gravada
+em arquivo nem impressa pelo script.
 
 É **idempotente e serve para recuperar acesso**: se o e-mail já existir, o script define a senha informada
 nessa conta e promove o perfil a admin. Rodar de novo é a forma de voltar a entrar quando a senha se perdeu.
@@ -216,8 +299,9 @@ nessa conta e promove o perfil a admin. Rodar de novo é a forma de voltar a ent
 > Prefira a forma com variável de ambiente: o `pnpm` ecoa a linha de comando que executa, então a senha
 > passada por argumento aparece no terminal e no histórico do shell.
 
-> ⚠️ É ferramenta de **desenvolvimento**. Ela fala com o projeto Firebase configurado no `.env`: apontada
-> para produção, cria um administrador real — e redefine a senha de uma conta existente.
+> ⚠️ **Sem nenhum host de emulador configurado, o script recusa rodar** e explica como prosseguir. Criar um
+> administrador com senha conhecida num projeto real é irreversível, então isso exige `--allow-real-project`
+> (ou `DEV_ADMIN_ALLOW_REAL_PROJECT=1`) escrito à mão.
 
 ## Pendências de higiene (recomendadas)
 

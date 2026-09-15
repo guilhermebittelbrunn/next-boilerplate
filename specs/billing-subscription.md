@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/app/(routes)/webhooks/payments/route.ts, packages/sdk/src/client/index.ts, packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts, "apps/app/app/[locale]/(authenticated)/(common)/routes.tsx"]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Assinatura Stripe de ponta a ponta
@@ -19,7 +19,7 @@ updated: 2026-09-14
 
 O boilerplate se declara pronto para SaaS por assinatura — existe até um `ProductMode` chamado `subscription` (`packages/next-config/product-mode.ts:12`) — mas **nenhum fork consegue cobrar de ninguém**. Não há planos, checkout, portal de cobrança, nem estado de assinatura gravado.
 
-Quem precisar faturar escreve a integração inteira à mão, justamente a parte em que errar custa dinheiro do usuário final: cobrança duplicada, acesso liberado sem pagamento, cancelamento que não revoga. Pior — a documentação do próprio repo afirma que isso já existe.
+Quem precisar faturar escreve a integração inteira à mão, justamente a parte em que errar custa dinheiro do usuário final: cobrança duplicada, acesso liberado sem pagamento, cancelamento que não revoga. *(Até 2026-09-14 havia um agravante — a documentação do próprio repo afirmava que isso já existia. **Não afirma mais**: `docs/PAYMENTS.md` foi corrigido na PR #12.)*
 
 ## O que já existe no repo
 
@@ -28,22 +28,35 @@ Quem precisar faturar escreve a integração inteira à mão, justamente a parte
 - `packages/payments/keys.ts:7-8` — `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, ambos `.optional()`; `:14` desliga a validação inteira quando não há secret.
 - `apps/api/app/(routes)/webhooks/payments/route.ts:27` — o POST **valida a assinatura** do evento (`:43`, `constructEvent`). Essa metade está pronta. Já `:8` e `:18` são **stubs com `// TODO`** (`:11`, `:21`): checam `data.customer` e retornam sem persistir nada. Só dois eventos são roteados (`:50` `checkout.session.completed`, `:54` `subscription_schedule.canceled`). *(Refs de linha corrigidas em 2026-09-01; a variável morta `customerId` que existia aqui foi removida pelo saneamento de `ci-pipeline`, e a rota ganhou 11 testes.)*
 - `apps/api/app/(guards)/common-panel.ts:29` (`requireCommonPanelApi`), `apps/api/package.json:6` (`dev:with-stripe`) e `.claude/skills/payments-flow/SKILL.md` — guard, listener local de webhook e procedimento de implementação já existem.
-- **Lacuna:** `apps/api/app/(routes)/` tem **15** `route.ts` (remedido em 2026-09-14; a PR #11 acrescentou `files/route.ts`) e **nenhuma** sob `payments/`; `packages/sdk/src/client/index.ts:12-16` registra só `application` (`:12`), `authApi` (`:13`), `user` (`:14`), `entity` (`:15`) e `file` (`:16`) — **cinco** actions, e nenhuma delas é `payments`; `UserDTO` (`packages/sdk/src/types/user/user.ts:7-14`) e `UserWithAuthDTO` (`:30-52`) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
+- **Lacuna:** `apps/api/app/(routes)/` tem **18** `route.ts` (remedido em 2026-09-15; a PR #12 acrescentou as 3 de `account/`) e **nenhuma** sob `payments/` — o diretório não existe; `packages/sdk/src/client/index.ts:13-18` registra `application` (`:13`), `authApi` (`:14`), `user` (`:15`), `entity` (`:16`), `file` (`:17`) e `account` (`:18`) — **seis** actions, e nenhuma delas é `payments`; `UserDTO` (`packages/sdk/src/types/user/user.ts:12-22`) e `UserWithAuthDTO` (`:38-60`) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
 
-### ⚠️ Divergência doc × código (achado crítico)
+### ✅ A divergência doc × código foi RESOLVIDA — por terceiros, em 2026-09-15
 
-`docs/PAYMENTS.md` tem uma seção **"Estado atual (implementado)"** (`:5`) que descreve como pronto:
+⚠️ **Esta seção acusava `docs/PAYMENTS.md` de descrever como pronto o que não existe. A acusação era
+verdadeira até 2026-09-14 e é FALSA desde `a4df5ed`.** A PR #12 reescreveu o documento (32 linhas), sem
+que a correção estivesse no escopo dela. Medido em 2026-09-15:
 
-| `docs/PAYMENTS.md` afirma | Realidade verificada |
-|---|---|
-| `:8` `GET /payments/plans`, `POST /payments/checkout`, `POST /payments/portal` | nenhuma existe |
-| `:8` webhook trata `customer.subscription.updated\|deleted` | só `checkout.session.completed` e `subscription_schedule.canceled`, ambos vazios |
-| `:9` `UserDTO.subscription` + `userRepository.updateSubscriptionByReferenceId` | campo inexistente; o repositório (`apps/api/(shared)/repositories/user.repository.ts:11-13`, classe declarada em `:10`) não tem o método |
-| `:10` `apiClient.payments.{listPlans,createCheckout,createPortal}` | módulo `payments` não existe no SDK |
-| `:11` tela "Minha assinatura" em `apps/app` | não existe |
-| `:12` "Falta por fork: criar os produtos/preços no Stripe" | falta a integração inteira |
+- `docs/PAYMENTS.md:5` deixou de ser "Estado atual (**implementado**)" e virou
+  **"Estado atual (medido em 2026-09-14)"**;
+- `:7-10` abre com `⚠️ **Não há fluxo de assinatura funcionando.**` e aponta para esta spec;
+- `:17` introduz o bloco **"O que NÃO existe (e que versões anteriores deste documento afirmavam
+  existir)"**, que lista nominalmente os 6 pontos falsos — handlers stub (`:19`), zero persistência
+  (`:20`), zero rotas de plano/checkout/portal (`:21`), nada no SDK (`:22`), nenhuma UI (`:23`) e o
+  webhook sem `customer.subscription.updated|deleted` (`:24`).
 
-Corrigir `docs/PAYMENTS.md` faz parte desta entrega: documentação que mente sobre o que existe é pior que documentação ausente, porque ninguém confere.
+**Consequência para o corte:** "corrigir a documentação" **sai desta entrega** — já foi feito. O que resta
+é escrever o código. E o documento adotou o formato que o resto do repo usa (afirmação **com data de
+medição** ao lado), que é o que impede a mentira de voltar.
+
+### 🆕 O lugar na sidebar já existe — preencher, não criar
+
+Outro efeito colateral da PR #12: a entrada "Billing" **deixou de ser `url: "#"`**. Hoje
+`(common)/routes.tsx:52-53` aponta para `routes.account.billing.url` → `/account?tab=billing`
+(`paths.ts:54-56`), servida por `AccountBillingPlaceholder.tsx` — um empty state de 22 linhas com copy já
+traduzida nos 3 idiomas (`translations/apps/app/pages/common/account.ts:170`).
+
+Isso **encolhe** o corte em uma tela e muda o verbo: a UI de assinatura já tem endereço, rota, aba e copy
+de espera. Falta o conteúdo.
 
 ## Evidência de mercado
 
@@ -74,7 +87,7 @@ Corrigir `docs/PAYMENTS.md` faz parte desta entrega: documentação que mente so
 |--------|---------|
 | `packages/sdk` | recurso novo de cobrança + campo de assinatura no DTO de usuário |
 | `apps/api` | rotas de plano/checkout/portal atrás de `requireCommonPanelApi`; webhook com persistência e dedupe de evento |
-| `apps/app` | tela de assinatura na área comum + entrada na sidebar (hoje `Billing` é `url: "#"`, `routes.tsx:73-76`) |
+| `apps/app` | **preencher** a aba `/account?tab=billing`, que já existe (`routes.tsx:52-53` → `paths.ts:54-56`, hoje servida pelo `AccountBillingPlaceholder.tsx`). A entrada na sidebar **não** precisa ser criada |
 | `apps/web` | CTAs do `pricing` apontando para o fluxo real no modo `subscription` |
 | `packages/*` | `payments` ganha planos/checkout/portal; i18n para copy e novos `error.code` |
 | Infra/env | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` deixam de ser decorativos; endpoint de webhook por ambiente; catálogo de produtos/preços criado no Stripe de cada fork |
@@ -84,14 +97,15 @@ Corrigir `docs/PAYMENTS.md` faz parte desta entrega: documentação que mente so
 - **Custo herdado por todo fork:** Stripe é serviço pago (taxa por transação) e a conta precisa existir antes do primeiro deploy útil. Em modo `simple` nada disso é obrigatório — mas o `skipValidation` de `keys.ts:14` hoje **esconde** a má configuração: um fork em modo `subscription` sem `STRIPE_WEBHOOK_SECRET` sobe calado e nunca reconcilia. Falhar cedo e visível é parte do escopo.
 - **Estado divergente é o risco central.** Webhook que falha vira usuário que paga sem acesso, ou que cancela e continua com acesso. Sem dedupe por evento, um retry reprocessa.
 - **O perfil vira dono de dado financeiro.** Assinatura no doc `user` acopla cobrança ao cadastro: `data-rights-lgpd` passa a ter de cancelar antes de excluir — a nota lista isso como a armadilha central da exclusão de conta.
-- Enquanto `docs/PAYMENTS.md` não for corrigido, toda pessoa e todo agent que ler o repo parte de premissa falsa.
+- ~~Enquanto `docs/PAYMENTS.md` não for corrigido, toda pessoa e todo agent que ler o repo parte de premissa falsa.~~ **Risco extinto em 2026-09-15** — a PR #12 corrigiu o documento. Registrado porque ele foi, por três rodadas, o achado 🔴 mais citado deste backlog.
 
 ## Sinais de pronto
 
 - Um usuário novo assina um plano de teste e a tela mostra plano e situação corretos; cancelar pelo portal reflete no app sem intervenção manual.
 - Reentregar o mesmo evento de webhook não muda o estado nem duplica registro.
 - Fork em modo `simple` continua subindo sem nenhuma variável da Stripe.
-- `docs/PAYMENTS.md` descreve o que o código faz, e o que falta está marcado como falta.
+- ✅ `docs/PAYMENTS.md` descreve o que o código faz, e o que falta está marcado como falta — **já
+  satisfeito desde 2026-09-15**, antes de a spec começar.
 
 ## Perguntas em aberto
 

@@ -3,6 +3,7 @@
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 import {
     type Auth,
+    connectAuthEmulator,
     createUserWithEmailAndPassword,
     GoogleAuthProvider,
     getAuth,
@@ -15,6 +16,11 @@ import {
     signOut,
     type User,
 } from "firebase/auth";
+import {
+    authEmulatorOrigin,
+    DEMO_PROJECT_ID,
+    DEMO_WEB_API_KEY,
+} from "./emulator";
 import type { SignInDTO, SignUpDTO } from "./types";
 
 let firebaseApp: FirebaseApp | undefined;
@@ -42,6 +48,19 @@ const MOCK_CONFIG = {
     authDomain: "mock",
     projectId: "mock",
     appId: "mock",
+};
+
+/**
+ * The Auth emulator partitions accounts by project id, so the browser has to use the
+ * same one the Admin SDK does. Falling back to MOCK_CONFIG here would sign the user in
+ * under project "mock", and the profile lookup would then find nothing — a login that
+ * appears to succeed and leads to an empty account.
+ */
+const EMULATOR_CONFIG = {
+    apiKey: DEMO_WEB_API_KEY,
+    authDomain: "localhost",
+    projectId: DEMO_PROJECT_ID,
+    appId: DEMO_PROJECT_ID,
 };
 
 const readClientConfig = (): FirebaseClientConfig => ({
@@ -77,6 +96,12 @@ const getFirebaseApp = () => {
         return initializeOnce(config);
     }
 
+    // Pointing at the emulator is a complete configuration on its own, so the absent
+    // NEXT_PUBLIC_FIREBASE_* values are not an error here.
+    if (authEmulatorOrigin()) {
+        return initializeOnce(EMULATOR_CONFIG);
+    }
+
     if (isDevelopment) {
         console.warn(
             `⚠️  Firebase client not fully configured. Missing: ${missing.join(", ")}\n` +
@@ -96,6 +121,14 @@ export const getAuthClient = () => {
     }
 
     firebaseAuth = getAuth(getFirebaseApp());
+
+    // connectAuthEmulator has to run before any other operation on the Auth object, so
+    // it belongs here, at the single place the instance is created, and not at a caller.
+    const origin = authEmulatorOrigin();
+    if (origin) {
+        connectAuthEmulator(firebaseAuth, origin, { disableWarnings: true });
+    }
+
     return firebaseAuth;
 };
 

@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Onboarding pós-cadastro
@@ -36,9 +36,16 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   verificado (`shared/components/ui/EmailNotVerifiedNotice.tsx`, montado em
   `(authenticated)/(common)/layout.tsx:41`) já provou que o painel comum aceita um aviso de estado
   incompleto. O caminho ficou mais barato do que a spec orçou.
-- `apps/app/shared/lib/postLoginNavigation.ts:31` — `resolveAppPostLoginPath` é o único ponto de decisão
-  do destino: honra `?redirect=`, senão manda admin para `/{locale}/admin` (`:24`) e o resto para o
-  fallback. É o gancho natural para desviar um usuário incompleto.
+- `apps/app/shared/lib/postLoginNavigation.ts` — ⚠️ **a PR #12 reescreveu este arquivo, e ele deixou de ter
+  um ponto único de decisão.** *(Referências antigas `:31` e `:24` remedidas em 2026-09-15: as duas caíram
+  dentro de `projectThemePreference`, função que nem existia quando a spec foi escrita.)* Hoje a decisão
+  está fatiada em três: **`destinationForAccount` (`:80`)**, onde mora a regra de mandar admin para
+  `/{locale}/admin` (`:92-93`); `resolveDefaultPostLoginForApp` (`:104`); e `resolveAppPostLoginPath`
+  (`:112`), que honra `?redirect=` em `:124-126`.
+  **O gancho natural para desviar um usuário incompleto mudou de endereço — é `destinationForAccount:80`.**
+  E há um **quarto** caminho, `packages/auth/provider.tsx:80-94`, que todo fork herda do pacote: um plano
+  de onboarding precisa decidir explicitamente se intercepta nos dois ou se promove a decisão a um lugar
+  só. Essa fragmentação é custo novo que a spec não orçava.
 - `packages/auth/redirect.ts:10` — `postAuthRedirectTarget` já sanitiza o deep link (guard de
   open-redirect, coberto por `apps/app/__tests__/postAuthRedirectTarget.test.ts`). Um fluxo retomável
   precisa exatamente disso para voltar ao destino original ao terminar.
@@ -56,9 +63,21 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   (`OOB_ACTION_PATHS:75`, `isOobActionPath:87-89`, consumido em `:175`), porque o redirect de visitante
   autenticado apaga a query string (`:186`). Um passo de onboarding que carregue token na URL herda
   exatamente esse problema — e agora herda também a solução.
-- `packages/sdk/src/types/user/user.ts:7` — o `UserDTO` tem `id`, `type`, `reference_id` e timestamps.
+- `packages/sdk/src/types/user/user.ts:12-22` — o `UserDTO` tem `id`, `type`, `reference_id`, timestamps e,
+  desde as PRs #11/#12, **`phone` (`:19`), `avatar` (`:20`) e `preferences` (`:21`)**. *(Âncora remedida em
+  2026-09-15: era `:7`, que hoje é o início de `UserPreferences`.)*
+- 🔴 **O item 2 do corte perdeu quase todo o conteúdo — e isso precisa ser decidido antes do `/analyze`.**
+  A spec propunha um fluxo que coleta **nome de exibição e idioma**. A PR #12 passou a coletar **exatamente
+  esses dois dados**: `displayName` em `AccountProfileForm.tsx` e `locale` em `AccountPreferencesForm.tsx`,
+  persistidos por `PUT /account` (`apps/api/app/(routes)/account/route.ts:107`) e projetados no login por
+  `postLoginNavigation.ts:63-78`. **O que sobra do item 2 é o "quando", não o "o quê"** — a diferença entre
+  "o usuário pode preencher" e "o produto pede antes de deixar entrar". Continua sendo uma diferença real
+  de ativação, mas é um item muito menor do que o escrito, e o corte deve ser reescrito para dizer isso.
 - **Lacuna:** não existe nenhuma noção de "perfil incompleto", nenhum passo guiado, nenhum estado
-  persistido de progresso. O perfil não guarda sequer o nome próprio do usuário.
+  persistido de progresso — `grep -rin onboarding` em `apps/` e `packages/` segue em **1 ocorrência**, e é
+  um endereço de sandbox do Resend num fixture (`packages/email/__tests__/credentials.test.ts:23`).
+  ~~O perfil não guarda sequer o nome próprio do usuário.~~ *(Essa frase caducou: o `displayName` já é
+  editável pelo titular desde a PR #12, ainda que viva no Firebase Auth e não no `UserDTO`.)*
 
 ## Evidência de mercado
 

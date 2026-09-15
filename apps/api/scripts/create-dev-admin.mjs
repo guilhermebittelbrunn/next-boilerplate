@@ -1,12 +1,17 @@
 import { cert, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { isRealProjectTarget, readEmulatorTarget } from "./emulatorTarget.mjs";
+
+const ALLOW_REAL_PROJECT_FLAG = "--allow-real-project";
 
 const USAGE = `Usage: pnpm --filter api create-dev-admin <email> <password>
    or: DEV_ADMIN_EMAIL=... DEV_ADMIN_PASSWORD=... pnpm --filter api create-dev-admin
 
-Requires FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL and
-FIREBASE_ADMIN_PRIVATE_KEY (apps/api/.env).`;
+Against the emulators (FIRESTORE_EMULATOR_HOST / FIREBASE_AUTH_EMULATOR_HOST filled in)
+no credentials are needed. Against a real Firebase project it needs the service account
+— FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY
+(apps/api/.env) — and ${ALLOW_REAL_PROJECT_FLAG}.`;
 
 const USERS_COLLECTION = "user";
 const ADMIN_TYPE = "admin";
@@ -16,8 +21,21 @@ function fail(message) {
     process.exit(1);
 }
 
+/**
+ * Creating an administrator with a password someone just typed on the command line is
+ * harmless against an emulator and irreversible against a live project, so the real one
+ * takes written consent rather than the printed warning it used to get afterwards.
+ */
+const allowRealProject = () =>
+    process.argv.includes(ALLOW_REAL_PROJECT_FLAG) ||
+    process.env.DEV_ADMIN_ALLOW_REAL_PROJECT === "1";
+
 function readCredentials() {
-    const [emailArg, passwordArg] = process.argv.slice(2);
+    // The flag has to come out before the positionals are read, or passing it first
+    // makes it the email.
+    const [emailArg, passwordArg] = process.argv
+        .slice(2)
+        .filter((arg) => arg !== ALLOW_REAL_PROJECT_FLAG);
     const email = emailArg ?? process.env.DEV_ADMIN_EMAIL;
     const password = passwordArg ?? process.env.DEV_ADMIN_PASSWORD;
 
@@ -96,19 +114,45 @@ async function ensureAdminProfile(db, uid) {
     return { id: profile.id, promoted: true };
 }
 
+function initializeTarget() {
+    const target = readEmulatorTarget();
+
+    if (!isRealProjectTarget(target)) {
+        // There is nobody to authenticate to on an emulator; the project id is enough.
+        initializeApp({ projectId: target.projectId });
+        return { projectId: target.projectId, real: false };
+    }
+
+    if (!allowRealProject()) {
+        fail(
+            [
+                "Refusing to run: no emulator host is set, so this would create an administrator",
+                "with a password you just typed in a REAL Firebase project",
+                `("${target.projectId ?? "unknown project"}").`,
+                "",
+                "Start the emulators with `pnpm emulators` to bootstrap locally, or repeat the",
+                `command with ${ALLOW_REAL_PROJECT_FLAG} if a real project is genuinely what you want.`,
+            ].join("\n")
+        );
+    }
+
+    const serviceAccount = readServiceAccount();
+    initializeApp({ credential: cert(serviceAccount) });
+    return { projectId: serviceAccount.projectId, real: true };
+}
+
 async function main() {
     const { email, password } = readCredentials();
-    const serviceAccount = readServiceAccount();
-
-    initializeApp({ credential: cert(serviceAccount) });
+    const { projectId, real } = initializeTarget();
 
     const { uid, created } = await ensureAuthUser(getAuth(), email, password);
     const { id, promoted } = await ensureAdminProfile(getFirestore(), uid);
 
     process.stdout.write(
         [
-            "Development bootstrap — this creates a real administrator in the",
-            `Firebase project "${serviceAccount.projectId}". Never run it against production.`,
+            real
+                ? `Created a REAL administrator in the Firebase project "${projectId}".`
+                : `Created an administrator in the emulated project "${projectId}".`,
             "",
             `auth user : ${uid} (${created ? "created" : "already existed, password reset"})`,
             `profile   : ${id} (${promoted ? "promoted to admin" : "created as admin"})`,

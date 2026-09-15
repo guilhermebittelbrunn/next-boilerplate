@@ -300,3 +300,11 @@ docs/features/**/screenshots/
 docs/features/**/test/e2e/
 # Logs das execuções agendadas do /cycle
 .claude/cycle-logs/
+
+# Firebase emulators — debug logs and the downloaded JAR/UI cache
+firebase-debug.log
+firestore-debug.log
+database-debug.log
+pubsub-debug.log
+ui-debug.log
+.firebase/

@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/analytics/provider.tsx, apps/app/app/layout.tsx, "apps/web/app/[locale]/layout.tsx", packages/design-system/components/ui/index.ts]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Consentimento de cookies e Consent Mode
@@ -32,19 +32,37 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
   definido** (`:16`). **Não há nenhuma checagem de consentimento antes disso** — este é o achado central.
 - `packages/analytics/keys.ts` — a env do GA é opcional e só aceita id com prefixo `G-`. Ou seja: o
   rastreio é opt-in **do desenvolvedor do fork**, nunca do visitante.
-- `apps/app/app/layout.tsx:39` — o `AnalyticsProvider` envolve toda a aplicação autenticada.
+- `apps/app/app/layout.tsx:63-70` — o `AnalyticsProvider` envolve toda a aplicação autenticada (import em
+  `:3`). ⚠️ *Referência corrigida em 2026-09-15: era `:39`, deslocada pela PR #12, que acrescentou 38
+  linhas a este arquivo.*
 - `apps/web/app/[locale]/layout.tsx` — a landing pública **não monta o `AnalyticsProvider`** (a única
   referência ao componente em todo o repo é a do `apps/app`). Ou seja, hoje o app autenticado mede sem
   consentimento e o site público, que é onde o tráfego anônimo e europeu de fato chega, não mede nada.
-- Busca por `cookie`, `consent` e `banner` em `apps/` e `packages/`: as únicas ocorrências relevantes são
-  o cookie de sessão (`packages/auth/session.ts:14`) e o cookie de idioma — mas
+- `grep -rniE "consent|cookie-?banner"` em `apps/` + `packages/` = **0 ocorrências** (remedido em
+  2026-09-15). **Não existe banner nem componente de consentimento em lugar nenhum**, inclusive no
+  `packages/design-system`.
+- **O inventário de cookies triplicou, e isso muda o corte** (remedido em 2026-09-15: são **6** nomes de
+  cookie, não os 2 que esta spec afirmava). Um banner que classifique por categoria precisa enumerá-los —
+  se declarar só dois, **nasce mentindo**:
+
+  | cookie | onde | categoria |
+  |--------|------|-----------|
+  | `access-token` | `packages/auth/session.ts:14` | estritamente necessário |
+  | `x-locale` | `packages/internationalization/client.ts:8` · `server.ts:20` · `apps/app/proxy.ts:155,159` · `apps/web/proxy.ts:92,96` | preferência |
+  | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:19` | preferência — 🆕 **criado pela PR #12** |
+  | `bp:panel-request-role` · `bp:impersonate-firebase-uid` · `bp:panel-state` | `apps/app/shared/lib/panelState.ts:18-20` | estritamente necessário (estado de painel) |
+
   `packages/internationalization/utils/cookies.ts:1` é só um `getCookie` **genérico**, sem nomear locale
-  nenhum; quem lê `"x-locale"` de fato é `packages/internationalization/client.ts:8` (cliente) e
-  `server.ts:20` (servidor). **Não existe banner nem componente de consentimento em lugar nenhum**,
-  inclusive no `packages/design-system`.
+  nenhum.
 - `packages/shared/utils/helpers/cookies.ts:2,16,31` — `setCookie` / `getCookie` / `removeCookie` já
   existem como helpers de cliente (`SameSite=Lax`, sem flag `secure`). Peça reaproveitável para guardar a
-  escolha — não precisa reinventar.
+  escolha — não precisa reinventar. **E agora tem precedente de produção:** a PR #12 criou o primeiro
+  consumidor real do `setCookie` (`themePreference.ts:3,33,60`, TTL de 180 dias em `:5-8`), então o formato
+  de persistência da escolha não precisa ser inventado — só imitado.
+- **A armadilha de hidratação que esta spec listava como risco já tem solução de referência no repo**, de
+  graça e por outro motivo: `apps/app/app/layout.tsx:27-32` lê o cookie **no servidor** e aplica a classe
+  no `<html>` (`:50-60`) — exatamente o padrão que `apps/app/CLAUDE.md:70` prescreve. O banner deve copiar
+  essa forma para não piscar na cara de quem já respondeu.
 - **Lacuna:** nenhuma camada entre o visitante e as tags. O consentimento simplesmente não é um conceito
   neste repositório.
 

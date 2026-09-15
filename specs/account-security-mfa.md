@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # MFA, sessões ativas e política de senha
@@ -22,25 +22,34 @@ caracteres quaisquer**. Não há segundo fator, não há como ver onde a conta e
 derrubar um acesso específico: sair em um dispositivo derruba todos os outros, sem que o usuário saiba
 nem tenha pedido.
 
-Pior: o encerramento **não é imediato para todo mundo**. Existe uma janela em que uma credencial já
-emitida continua sendo aceita pela API — invisível no uso normal e decisiva no único cenário que importa,
-o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
+~~Pior: o encerramento **não é imediato para todo mundo**.~~ **Essa parte do problema foi resolvida em
+2026-09-15** (ver abaixo) — o que resta é a falta de **granularidade** e de **visibilidade**, não a de
+eficácia.
 
 ## O que já existe no repo
 
-- `packages/auth/server.ts:226` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE` o chama
+- `packages/auth/server.ts:257` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE` o chama
   em `packages/auth/session-routes.ts:79`, montado em `apps/app/app/api/auth/session/route.ts:13` e
   `apps/web/app/api/auth/session/route.ts:12`, alcançado pelo botão de sair
-  (`apps/app/shared/components/ui/ProfileDropdown.tsx:49` → `packages/auth/provider.tsx:238-239`, a
+  (`apps/app/shared/components/ui/ProfileDropdown.tsx:66` → `packages/auth/provider.tsx:238-239`, a
   mutation `signOutMutation`/`mutationFn: logout`). Não é
   código morto — **o efeito colateral é que todo logout é um "sair de todos os dispositivos"**, sem
   granularidade e sem aviso ao usuário.
-- ⚠️ **`packages/auth/server.ts:137` — `verifyIdToken(token)` é chamado sem o argumento de revogação**
-  (reconferido ao vivo em 2026-09-14). E `apps/api/(shared)/lib/resolve-api-actor.ts` tenta **primeiro** o
-  caminho do bearer ID token (`:24`, retorna em `:26`) antes do cookie de sessão (`:34`). Resultado: depois
-  de revogar, **um ID token já emitido continua passando no guard da API até expirar**. O outro
-  caminho já faz o certo — `getUserFromSessionCookie` usa `verifySessionCookie(sessionCookie, true)`
-  (`packages/auth/server.ts:207-210`). A base está metade correta, e é a metade errada que é tentada antes.
+- ✅ **A janela de revogação foi FECHADA em 2026-09-15 pela entrega de `account-settings` (PR #12).**
+  Esta seção afirmava o contrário até esta auditoria; a afirmação antiga **é falsa desde `a4df5ed`**.
+  `packages/auth/server.ts:165` de fato segue chamando `verifyIdToken(token)` **sem** o segundo argumento —
+  mas a revogação passou a ser checada **manualmente**, logo depois: `:166` carrega o `UserRecord` e `:167`
+  aplica `isMintedBeforeRevocation` (`:138-151`), que recusa o token quando `decodedToken.auth_time` é
+  anterior a `user.tokensValidAfterTime`. O registro do usuário já estava carregado, então isso não custa
+  round trip extra — o porquê está escrito em `:132-137`. O caminho do cookie já fazia o certo com
+  `verifySessionCookie(sessionCookie, true)` (`:238-241`). Cobertura: 9 casos em
+  `packages/auth/__tests__/serverSessionRevocation.test.ts`.
+  A ordem em `apps/api/(shared)/lib/resolve-api-actor.ts` **continua** bearer (`:23-32`) antes do cookie
+  (`:34-37`) — mas isso **deixou de ser um furo**, porque o primeiro ramo agora recusa token revogado.
+  > ⚠️ **Armadilha de conferência, pela terceira rodada seguida.** `grep -n checkRevoked
+  > packages/auth/server.ts` devolve **uma única linha, a `:226` — e ela é comentário**, descrevendo o
+  > caminho do **cookie**. Quem conferir por esse grep conclui o oposto do que o código faz. A checagem do
+  > bearer **não usa a palavra `checkRevoked`**: ela está em `isMintedBeforeRevocation`, `:138-151`.
 - `packages/auth/session.ts:14` — `SESSION_COOKIE_NAME = "access-token"`; `:22` e `:23` já clampam a
   duração aos limites do Firebase (5 min / 14 dias), com padrão de 5 dias (`:24`). O tipo declara os
   atributos em `:39` (`httpOnly`) e `:41` (`sameSite: "lax"`), mas os valores de fato são atribuídos no
@@ -54,8 +63,10 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
   ocorrências**. Não existe segundo fator nem tela de sessões/dispositivos. Em compensação,
   `packages/design-system/components/ui/input-otp.tsx:11` já traz o primitivo de código de uso único, **não
   usado em lugar nenhum** — peça reaproveitável para o desafio e para os códigos de recuperação.
-- **Lacuna:** sem MFA, sem visibilidade de sessões, sem revogação seletiva, sem política de senha — e com
-  revogação que não fecha o caminho do bearer.
+- **Lacuna:** sem MFA, sem visibilidade de sessões, sem revogação seletiva e sem política de senha. *(A
+  quinta lacuna — "revogação que não fecha o caminho do bearer" — **caiu em 2026-09-15**.)* E a PR #12
+  **piorou** a política de senha por replicação: `account/(validations)/accountFormSchema.ts:9` copiou o
+  mesmo `MIN_PASSWORD_LENGTH = 6` do cadastro, de modo que agora o mínimo fraco está em **dois** schemas.
 
 ## Evidência de mercado
 
@@ -71,7 +82,9 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
   `httpOnly`+`secure`, e a doc **adverte explicitamente sobre CSRF** — o exemplo oficial valida um
   csrfToken. **Armadilha crítica:** `revokeRefreshTokens` **não invalida ID tokens já emitidos** — eles
   seguem válidos **até expirar (1 hora)**; rotas sensíveis precisam de
-  `verifySessionCookie(cookie, true)`. É exatamente a lacuna confirmada acima.
+  `verifySessionCookie(cookie, true)`. **Foi exatamente essa a lacuna — e ela está fechada desde
+  2026-09-15**, por comparação manual de `auth_time` contra `tokensValidAfterTime`, que é a mesma
+  semântica sem o round trip extra do flag.
 - **OWASP Top 10:2025, A07 Authentication Failures** é a categoria que cobre este conjunto (a nota
   registra que a **ASVS 5.0.0**, de 30/05/2025, substituiu a 4.0.3 — cite a versão ao referenciar
   requisitos).
@@ -81,25 +94,29 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
 - **Custo:** o preço de MFA no Google Cloud Identity Platform é **não confirmado** na nota — nenhuma
   decisão de adoção deve tratá-lo como gratuito.
 
-> 🔴 **A gravidade do item 1 subiu em 2026-09-11, sem uma linha dele ter sido escrita.** Até a PR #10,
-> `revokeUserSessions` só era chamada pelo logout global (`packages/auth/session-routes.ts:79`) — um
-> gesto deliberado de quem já está com a conta na mão. Agora ela também é chamada pela **redefinição de
-> senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:49`), que é o fluxo canônico de "minha
-> conta foi comprometida". E a janela continua aberta: `packages/auth/server.ts:137` chama
-> `verifyIdToken(token)` **sem `checkRevoked`**, e `apps/api/(shared)/lib/resolve-api-actor.ts:23-32`
-> tenta o bearer ID token **antes** do cookie de sessão (`:34`), que esse sim verifica revogação
-> (`server.ts:207-210`). Efeito prático: **a vítima redefine a senha e o ID token do atacante continua
-> passando no guard da API por até uma hora.** O item 1 deixou de ser dívida teórica e virou o furo de um
-> fluxo de segurança que já está em produção. Reforça o que a seção de dependências já dizia: este item
-> **não depende de `account-settings`** e pode ser tarefa direta hoje.
+> ✅ **O item 1 subiu de gravidade por três rodadas e foi FECHADO em 2026-09-15. Histórico preservado
+> porque a trajetória é o aprendizado, não o desfecho.**
 >
-> ⚠️ **Armadilha de conferência (remedição de 2026-09-14).** A PR #11 inseriu `getStorageAdmin()` e o
-> import de `getStorage` em `packages/auth/server.ts`, deslocando o arquivo em +14 linhas. A referência
-> antiga `:193-196` era **insidiosa**: a linha deslocada caiu exatamente sobre o comentário que menciona
-> `checkRevoked`, então uma conferência superficial dava "confere" — mas a chamada real de
-> `verifySessionCookie(sessionCookie, true)` está em `:238-241`. ✅ **Resolvido em 2026-09-15** pela
-> entrega de `account-settings`: o caminho que faltava era o do **bearer ID token**, agora fechado em
-> `getCurrentUser` (ver o item 1 do corte, abaixo).
+> Até a PR #10, `revokeUserSessions` só era chamada pelo logout global
+> (`packages/auth/session-routes.ts:79`) — gesto deliberado de quem já está com a conta na mão. A PR #10 a
+> pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:49`), o
+> fluxo canônico de "minha conta foi comprometida", e com isso o furo saiu da dívida teórica e entrou num
+> caminho de segurança real: **a vítima redefinia a senha e o ID token do atacante continuava passando no
+> guard da API por até uma hora.**
+>
+> **A entrega de `account-settings` (PR #12) fechou isso** — e note a ironia estrutural: o item era
+> descrito, rodada após rodada, como algo que **não dependia** de `account-settings` e podia ser tarefa
+> direta. Foi resolvido justamente por ela, como efeito colateral de precisar que "sair de todos os
+> dispositivos" funcionasse de verdade. **Lição para a priorização:** um item bloqueado por dependência
+> declarada pode ser desbloqueado *pela própria dependência*, sem que ninguém o ataque de frente.
+>
+> ⚠️ **A armadilha de conferência sobreviveu ao conserto, e é o que merece atenção agora.** Por três
+> rodadas, uma referência a `packages/auth/server.ts` foi conferida errado, sempre pelo mesmo mecanismo: a
+> linha citada cai sobre um **comentário que menciona `checkRevoked`**, e a conferência superficial dá
+> "confere". Hoje `grep -n checkRevoked packages/auth/server.ts` devolve **uma única linha, a `:226`, e ela
+> é comentário** — descrevendo o caminho do **cookie**. A checagem do bearer não usa essa palavra em lugar
+> nenhum: chama-se `isMintedBeforeRevocation` (`:138-151`) e é aplicada em `:167`. Quem auditar por
+> palavra-chave vai concluir o oposto do que o código faz, nas duas direções.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
 > (`packages/auth/client.ts:191-202`), que força `reload(user)` + `getIdToken(true)`. É o primeiro
@@ -114,15 +131,24 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
       emitida** continua sendo aceita pela API. Sem isso, tudo o mais nesta spec é decorativo.
       ✅ **Entregue por `account-settings` em 2026-09-15**, nos **dois** transportes: o bearer ID token
       passou a ser recusado quando `auth_time` é anterior a `tokensValidAfterTime`
-      (`packages/auth/server.ts:138-152`, aplicado em `getCurrentUser:167`), e o session cookie já era
+      (`packages/auth/server.ts:138-151`, aplicado em `getCurrentUser:167`), e o session cookie já era
       verificado com `checkRevoked` (`packages/auth/server.ts:238-241`). Antes disso, um token emitido
       antes da revogação seguia aceito **até expirar — por até uma hora**. Coberto por
       `packages/auth/__tests__/serverSessionRevocation.test.ts` (9 casos); o teste **falha** se a checagem
       for removida (verificado por mutação).
 - [ ] O usuário **vê onde a conta está conectada** — sessões ativas com dispositivo/origem e último uso —
       dentro da área de conta.
-- [ ] O usuário **encerra sessões**: uma específica ou todas as outras, mantendo a atual. E o logout
+- [~] O usuário **encerra sessões**: uma específica ou todas as outras, mantendo a atual. E o logout
       comum deixa de ser um "sair de todos" silencioso.
+      ◐ **Metade entregue por `account-settings` (PR #12), e a metade que falta é justamente a difícil.**
+      Já existe `POST /account/sessions/revoke` (`apps/api/app/(routes)/account/sessions/revoke/route.ts:4`,
+      sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:49`) e acionável pela UI
+      (`AccountSecurityForm.tsx:137`). **Mas é tudo-ou-nada**, e o próprio código declara o porquê em
+      `AccountSecurityForm.tsx:53-54`: *"Firebase cannot revoke sessions selectively, so both actions below
+      end the current one too"*. Ou seja: o usuário ganhou um botão explícito de "sair de todos" — o que
+      elimina o **silêncio** —, mas não ganhou granularidade nem a preservação da sessão atual. **Isso muda
+      o escopo do que resta:** a parte pendente não é de UI, é de modelo — manter sessão específica exige
+      identificá-las, e o Firebase não oferece isso pronto.
 - [ ] **Política de senha explícita e honesta no cadastro e na troca**, com força mínima real,
       **respeitando o critério 3.3.8** — sem CAPTCHA, sem proibir colar, sem exigir decorar sequência de
       símbolos.

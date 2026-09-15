@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, "apps/api/app/(routes)/users/[id]/route.ts", firestore.indexes.json, packages/sdk/src/client/index.ts, apps/app/shared/lib/queryKeys.ts]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Trilha de auditoria de ações sensíveis
@@ -50,6 +50,20 @@ suporte mais poderoso do produto operando sem contrapartida.
   trata como sensível: `apps/api/proxy.ts:45` a inclui em `RATE_LIMITED_PATHS`, ao lado das rotas de
   autenticação. Mas **rate limit não é trilha** — ele limita a frequência do abuso e não registra o que
   foi feito, por quem, nem quando. Quem subiu o quê continua invisível depois do fato.
+- 🆕 **A PR #12 (2026-09-15) abriu mais três rotas de escrita sensível, nenhuma com trilha — e uma delas é
+  o caso de escola.** Recontagem de 2026-09-15: são **18 handlers de escrita**
+  (`POST`/`PUT`/`PATCH`/`DELETE`) em `apps/api/app/(routes)/`, **17 de produto**, e **zero** gravam evento.
+  As três novas:
+  - `POST /account/sessions/revoke` (`account/sessions/revoke/route.ts`) — **revogação de sessão**, o
+    evento que toda norma de trilha cita nominalmente. Hoje não dá para distinguir se quem derrubou as
+    sessões foi o dono da conta ou quem a tomou.
+  - `POST /account/password` (`account/password/route.ts`) — troca de senha.
+  - `PUT /account` (`account/route.ts`) — altera perfil, avatar e preferências.
+
+  **O argumento da spec muda de natureza com isso.** Até a PR #12, o boilerplate não oferecia nenhuma ação
+  de segurança em auto-serviço — a trilha protegia sobretudo o admin. Agora o usuário final executa três
+  operações cuja ausência de log é indefensável numa investigação de conta comprometida, e elas vieram
+  justamente da spec que ocupava o #1 do backlog.
 - **Nenhuma trilha existe:** só há os repositórios `base`, `entity` e `user`
   (`apps/api/(shared)/repositories/`), e varrer "audit" no código retorna **5 ocorrências** — os mesmos
   três comentários de sempre (`packages/shared/utils/helpers/auth-request-headers.ts:12`,

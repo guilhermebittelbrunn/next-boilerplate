@@ -10,6 +10,7 @@ import { type Firestore, getFirestore } from "firebase-admin/firestore";
 import { getStorage, type Storage } from "firebase-admin/storage";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { DEMO_PROJECT_ID, isEmulated } from "./emulator";
 import { keys } from "./keys";
 
 /** Clerk-style auth return type for compatibility */
@@ -38,6 +39,20 @@ const getFirebaseAdminApp = () => {
     }
 
     const adminKeys = keys();
+
+    // The emulators authenticate nobody, so there is no service account to supply: a
+    // `demo-` project id is the whole configuration. The Admin SDK then picks up
+    // FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST from the environment
+    // on its own, which is why no call site below changes.
+    if (isEmulated()) {
+        firebaseAdminApp =
+            getApps()[0] ??
+            initializeApp({
+                projectId:
+                    adminKeys.FIREBASE_ADMIN_PROJECT_ID ?? DEMO_PROJECT_ID,
+            });
+        return firebaseAdminApp;
+    }
 
     // Only initialize if all required keys are present
     if (
