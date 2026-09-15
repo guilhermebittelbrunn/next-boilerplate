@@ -51,6 +51,14 @@ Conferir depois de publicar — uma leitura direta com a chave pública deve dev
 a API sem acesso. E o rollback correto é **reverter o código da API primeiro**: republicar rules
 permissivas sem reverter reexpõe a base inteira, o que não é rollback, é o incidente de novo.
 
+> 📌 **O emulador chegou; a suíte de testes das rules, não.** O repo agora roda contra os emuladores de
+> Auth e Firestore (`pnpm emulators`), o que era o **pré-requisito** para testar as rules — mas nenhum
+> teste as exercita ainda. Elas continuam validadas só por `deploy --dry-run` (sintaxe) e pelo `curl`
+> manual acima (comportamento). A suíte com `@firebase/rules-unit-testing` está fora do corte da entrega
+> do emulador e anda junto de `ci-pipeline`/`e2e-testing`. **Não leia "emulador entregue" como "rules
+> testadas".** O emulador de **Storage** não foi ligado, então `storage.rules` segue sem teste e sem
+> publicação (§ abaixo).
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
