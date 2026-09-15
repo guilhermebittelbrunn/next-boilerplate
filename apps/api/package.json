@@ -11,6 +11,7 @@
     "test": "NODE_ENV=test vitest run",
     "stripe": "stripe listen --forward-to localhost:3002/webhooks/payments",
     "create-dev-admin": "node --env-file-if-exists=.env scripts/create-dev-admin.mjs",
+    "seed": "node --env-file-if-exists=.env scripts/seed-emulator.mjs",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
