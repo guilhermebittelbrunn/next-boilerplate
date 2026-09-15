@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Organizações, membros e convites
@@ -22,10 +22,18 @@ updated: 2026-09-14
 >
 > 1. escrever, em `docs/ARCHITECTURE.md`, se este core é **B2B ou B2C por padrão** — hoje a resposta está
 >    implícita no código e ninguém a declarou;
-> 2. concentrar o predicado de posse num ponto único de escopo. Hoje ele está copiado **4 vezes** em
->    `apps/api/app/(routes)/entities/[id]/route.ts:24,40,102` (posse do **registro**) e `:65` (posse do
->    **objeto no bucket**) — para **um** recurso. Com o predicado num só lugar, trocar "dono = usuário"
->    por "dono = organização" deixa de ser reescrita.
+> 2. concentrar o predicado de posse num ponto único de escopo. **Recontado em 2026-09-15: são 9 sítios em
+>    3 recursos** — e eram 4 em 1 recurso na rodada anterior.
+>
+>    | recurso | sítios | o que expressa |
+>    |---------|--------|----------------|
+>    | `entities/[id]/route.ts` | `:24`, `:40`, `:102` | posse do **registro** (`row.userId !== ctx.subjectProfile.id`) |
+>    | `entities/[id]/route.ts` | `:67`, `:86` | posse do **objeto no bucket** (`isUsablePhotoReference`, `isOwnStorageObject`) |
+>    | `entities/route.ts` | `:16`, `:36`, `:44` | escopo da listagem, posse do objeto, gravação do dono |
+>    | `account/route.ts` | `:41`, `:154` | posse do objeto — 🆕 **PR #12** |
+>    | `files/route.ts` | `:27` | derivação do caminho pelo dono (`buildObjectPath`) |
+>
+>    Com o predicado num só lugar, trocar "dono = usuário" por "dono = organização" deixa de ser reescrita.
 >
 > Sem essas duas, adiar é só acumular juros. Reabrir esta spec exige argumento novo — tipicamente o
 > primeiro fork B2B real.
@@ -56,22 +64,26 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
 - **A posse é por usuário, repetida em cada handler**:
   `apps/api/app/(routes)/entities/[id]/route.ts:24`, `:40` e `:102` — o mesmo
   `row.userId !== ctx.subjectProfile.id` → 404, três vezes, num único arquivo de um único recurso.
-  ⚠️ **Remedido em 2026-09-14:** a PR #11 reescreveu esse arquivo e as referências antigas (`:16`, `:32`,
-  `:65`) deslocaram. A pior delas é `:65`: hoje ela aponta para um `if` de posse **do objeto no bucket**
-  (`isUsablePhotoReference`), não do registro — quem confere a citação encontra um teste de posse, dá por
-  boa e conclui errado sobre o que o arquivo faz.
+  ⚠️ **Remedido em 2026-09-15 — e a própria correção anterior estava errada.** A PR #11 deslocou as
+  referências antigas (`:16`, `:32`, `:65`) e a rodada passada "corrigiu" a de posse do objeto para `:65`;
+  ela está em **`:67`** (o `if` abre em `:66`), e há uma **segunda**, `isOwnStorageObject`, em **`:86`**.
+  A armadilha continua valendo: quem confere `:65` encontra código de posse, dá por boa e conclui errado.
+  **A lição de método é a interessante**: este é o terceiro ciclo em que uma referência a este arquivo
+  aparece errada — é sintoma de que o predicado não tem nome nem casa, exatamente o que a spec propõe
+  resolver.
 - `apps/api/(shared)/repositories/entity.repository.ts:11` — `listByUserId` consulta com
   `where("userId", "==", userId)` (`:14`). A listagem é escopada por usuário na origem.
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
   `allow read, write: if false;` em `:33`); o comentário em `:39-40` já registra a sutileza de que
   `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
 - **Lacuna:** não existe grupo, não existe papel dentro de grupo, não existe convite. E o escopo por
-  usuário está espalhado por handler, repositório e (potencialmente) regras — **quatro** lugares para
-  retrofitar por recurso desde a PR #11, que passou a codificar a posse também no **prefixo do caminho
-  no bucket** (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath`/`isOwnedBy`, espelhado em
-  `storage.rules`). **O custo do retrofit subiu**: agora "dono = organização" precisa reescrever também o
-  layout de caminhos dos objetos já gravados e a regra que os protege — o que reforça o argumento desta
-  spec de que adiar a decisão cobra juros.
+  usuário está espalhado por handler, repositório e regras — **9 sítios em 3 recursos** (tabela acima),
+  contra 4 em 1 na rodada anterior. A PR #11 passou a codificar a posse também no **prefixo do caminho no
+  bucket** (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath`/`isOwnedBy`, espelhado em
+  `storage.rules`), e a PR #12 replicou esse mesmo padrão num terceiro recurso (`account/route.ts:41,154`).
+  **O custo do retrofit mais que dobrou em um único ciclo**, e a curva é o argumento: cada recurso novo que
+  aceita upload acrescenta 2 sítios, em duas camadas diferentes (handler e regra de bucket), onde o
+  retrofit não é `find & replace`.
 
 ## Evidência de mercado
 
@@ -132,10 +144,11 @@ ponta a ponta, não entregar administração de times completa.
   que esconde o custo do usuário final — não do desenvolvedor.
 - **O risco simétrico é maior.** Não adotar significa que o primeiro fork B2B reescreve o escopo de todo
   recurso já construído, mais os índices, mais as regras — em código que já está em produção. A nota de
-  pesquisa chama isso de reescrita, e a evidência local confirma: o predicado de posse já aparece
-  **quatro** vezes num único arquivo (`entities/[id]/route.ts:24`, `:40`, `:102` para o registro e `:65`
-  para o objeto no bucket) para **um** recurso, com **dois** recursos no repo. Esse número só cresce — a
-  PR #11 sozinha o levou de três para quatro.
+  pesquisa chama isso de reescrita, e a evidência local confirma com uma série temporal, não com uma
+  medição só: o predicado de posse foi de **3 sítios em 1 recurso** (até a PR #10) para **4 em 1**
+  (PR #11) e para **9 em 3** (PR #12) — ver a tabela acima. **Triplicou em dois ciclos, sem que ninguém
+  decidisse nada a respeito.** É a definição de juros compostos: o custo de adotar cresce a cada entrega
+  que não tem nada a ver com organizações.
 - **Vazamento entre organizações é a falha crítica.** Uma consulta sem o filtro de escopo entrega dado de
   outro cliente, e com a autorização espalhada por handler basta um handler novo esquecer. Isso empurra
   para um ponto único de escopo no acesso a dados — decisão que precisa ser tomada junto, não depois.

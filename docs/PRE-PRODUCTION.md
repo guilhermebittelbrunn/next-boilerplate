@@ -217,11 +217,23 @@ então virar a chave é barato.
 
 ## 🧹 Higiene
 
-- [ ] **Contas de QA acumuladas** no projeto Firebase de desenvolvimento (`next-boilerplate-576d0`):
-      `qa-admin@`, `qa-common@`, `qa-review-common@`, `qa-ci-admin@`, `qa-review-ci@`, `qa-common-ci@`,
-      `qa-api-hardening@`, `review-api-hardening@` e as descartáveis da recuperação de senha — todas
-      `example.com`, sem PII real e sem senha em arquivo. Limpar em Authentication **e** o doc `user` no
-      Firestore. Nenhuma existe no projeto de produção; a limpeza é para o ambiente de dev não virar lixão.
+- [ ] **Contas de QA acumuladas** no projeto Firebase de desenvolvimento (`next-boilerplate-576d0`).
+      Todas `example.com`, sem PII real e sem senha em arquivo. Limpar em Authentication **e** o doc `user`
+      no Firestore. Nenhuma existe no projeto de produção; a limpeza é para o ambiente de dev não virar
+      lixão.
+      - Ciclos anteriores: `qa-admin@`, `qa-common@`, `qa-review-common@`, `qa-ci-admin@`,
+        `qa-review-ci@`, `qa-common-ci@`, `qa-api-hardening@`, `review-api-hardening@` e as descartáveis da
+        recuperação de senha.
+      - Da PR #11 (`file-upload-storage`): `qa-test-upload@`, `qa-test-upload-b@`.
+      - **Da PR #12 (`account-settings`) — 5 contas, acrescentadas na auditoria de 2026-09-15 porque a
+        entrega não as registrou aqui:** `rv-a@`, `rv-b@` (criadas pelo `/review`),
+        `qa-account-settings-a@`, `qa-account-settings-b@`, `qa-account-settings-b2@` (criadas pelo
+        `/test`). ⚠️ `qa-account-settings-b@` ficou **inutilizável** — a senha não foi registrada e o
+        `sign-in` devolve 500; apagar em vez de tentar reusar.
+
+      > **Padrão a corrigir no processo, não na lista:** esta seção é atualizada por quem entrega, e a
+      > última entrega não a atualizou. Foram **15 contas** acumuladas em 12 PRs. Se o `/review` e o
+      > `/test` não escreverem aqui, a auditoria descobre tarde — e descobriu.
 - [ ] **Branches mergeadas ainda vivas no remoto** — as PRs são mergeadas por squash e as branches ficam.
 
 ---

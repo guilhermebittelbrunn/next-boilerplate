@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -34,14 +34,27 @@ alguém olhar.
 - A prova de que a prática é levada a sério: `docs/features/auth-panel-context/test/e2e/` guarda **22
   capturas de tela versionadas** (e mais 5 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
   incluindo o fluxo de impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-14**): **9 tasks de teste / 750 testes em 74
-  arquivos**, todos de unidade/integração estreita — `apps/api` 268, `apps/app` 208, `@repo/email` 137,
-  `@repo/security` 31, `@repo/auth` 29, `apps/web` 27, `@repo/internationalization` 27, `@repo/shared` 15,
-  `@repo/payments` 8. **Nenhum sobe um app de verdade**, e **nenhuma** das nove configs declara
-  **cobertura**: não existe medida nem baseline para discutir. *(Eram 573 testes em 63 arquivos; o
-  crescimento é das PRs #10 e #11. O que **não** mudou: seguem **9** tasks e **9** configs de Vitest,
-  **nenhuma** declara `testTimeout` — 0 ocorrências no repo — e não há Playwright, Cypress nem `axe` em
-  `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
+- Suíte automatizada atual (**remedida em 2026-09-15, rodando o gate**): **9 tasks de teste / 860 testes
+  em 88 arquivos**, todos de unidade/integração estreita — `apps/api` 315, `apps/app` 262,
+  `@repo/email` 137, `@repo/auth` 38, `@repo/security` 31, `apps/web` 27, `@repo/internationalization` 27,
+  `@repo/shared` 15, `@repo/payments` 8. **Nenhum sobe um app de verdade**, e **nenhuma** das nove configs
+  declara **cobertura**: não existe medida nem baseline para discutir. *(Eram 573 em 63 arquivos, depois
+  750 em 74; o crescimento é das PRs #10, #11 e #12. O que **não** mudou em nenhuma rodada: seguem **9**
+  tasks e **9** configs de Vitest, **nenhuma** declara `testTimeout` — 0 ocorrências no repo — e não há
+  Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
+- 🔴 **O gate instável deixou de ser previsão: ele FALHOU na auditoria de 2026-09-15.** Rodando
+  `pnpm turbo run lint typecheck test --force` duas vezes seguidas no mesmo workspace, a **primeira
+  falhou** (`app#test`, 21/23 tasks) e a segunda passou —
+  `apps/app/__tests__/accountSecurityForm.test.tsx > "só encerra as sessões depois da confirmação no
+  diálogo"` estourou o default de **5000 ms**. Isolado, o mesmo teste leva **390–986 ms**.
+  **Taxa de falha observada: 1 em 2.**
+  Repare no que isso diz sobre a causa: o arquivo que estourou **não é** nenhum dos dois
+  `securityPolicySources.test.ts` que a discussão vinha perseguindo — é um teste de **componente**, novo,
+  da PR #12. Ou seja, a causa não é "estes dois arquivos são lentos": é que **9 configs sem `testTimeout`**
+  deixam a suíte inteira correndo contra 5 s **medidos sob contenção do turbo**, de modo que cada PR que
+  acrescenta teste de interação aumenta a probabilidade de falha aleatória. É o argumento mais forte desta
+  spec — e ele **não depende** de E2E: declarar `testTimeout` é correção de minutos, já registrada em
+  `docs/PRE-PRODUCTION.md` como pré-requisito do branch protection.
 - `apps/web` **entrou** na suíte (`package.json:10`, `vitest.config.mts` com `environment: "node"`) e hoje
   `__tests__/` tem **4 arquivos**: `seo.test.ts`, `contactAction.test.ts`, `securityHeaders.test.ts` e
   `securityPolicySources.test.ts` — todos com lógica pura (SEO, proxy e a action de contato exercitados

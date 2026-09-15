@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Direitos do titular: exportar dados e excluir conta
@@ -33,10 +33,16 @@ acumula, maior o estrago de uma exclusão feita errado.
 - `apps/api/(shared)/repositories/base.repository.ts:127-129` — o `delete()` herdado por todo repositório
   é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:128`) e nada mais. A conta no Firebase
   Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui.
-- `apps/api/app/(routes)/` — o inventário completo de rotas é `auth`, `health`, `users`, `entities`,
-  `files` (PR #11) e `webhooks`. **Nenhuma rota de exportação.**
-- `apps/app/app/[locale]/(authenticated)/(common)/(pages)/` — o painel comum tem `entities`, `playground`
-  e a home. **Não existe área de conta**; é a spec `account-settings` que a cria.
+- `apps/api/app/(routes)/` — o inventário completo é `account` (PR #12), `auth`, `health`, `users`,
+  `entities`, `files` (PR #11) e `webhooks` — **7 grupos, 18 `route.ts`**. **Nenhuma rota de exportação e
+  nenhum `DELETE` de auto-serviço:** `account/` expõe só `GET`/`PUT` (`route.ts:97,107`),
+  `POST /account/password` (`:15`) e `POST /account/sessions/revoke` (`:4`).
+- ✅ **A área de conta passou a existir (PR #12), e isso barateia esta spec.**
+  ⚠️ *A versão anterior desta linha afirmava "**Não existe área de conta**" — falso desde `a4df5ed`.*
+  `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/` tem 10 arquivos e 4 abas (perfil,
+  segurança, preferências, cobrança). **Consequência para o corte:** as duas ações desta spec (baixar meus
+  dados, excluir minha conta) têm onde morar — aba, rota, guard de painel comum e copy traduzida já
+  montados. Ela deixa de inaugurar superfície e passa a acrescentar dois botões a uma tela pronta.
 - `apps/web/app/[locale]/legal/privacy/page.tsx:15` e `.../legal/terms/page.tsx` — as páginas legais
   **existem** nos 3 idiomas via dictionary
   (`packages/internationalization/translations/apps/web/pages/legal/index.ts:15`), **mas o conteúdo é
@@ -116,10 +122,15 @@ acumula, maior o estrago de uma exclusão feita errado.
   arquivos em bucket, e `entity.photo` passou a guardar **referência de objeto**, não mais um dado inerte.
   Consequência direta: a exclusão de conta **precisa** limpar os objetos do bucket
   (`apps/api/(shared)/lib/storage.ts`, `deleteObjectQuietly`), e isso não é trabalho futuro — é requisito
-  de hoje. Agrava o quadro que `deleteObjectQuietly` tenha **um único call site em produção**
-  (`apps/api/app/(routes)/entities/[id]/route.ts:90`, a **troca** de foto): não existe nenhum caminho que
-  apague objetos em lote por titular, então **apagar a conta hoje deixa os objetos órfãos no bucket** —
-  pagos, e ainda contendo dado pessoal de alguém que exerceu o direito de eliminação.
+  de hoje. Agrava o quadro que os **dois** call sites de `deleteObjectQuietly` em produção sejam ambos de
+  **troca**, nunca de expurgo: `entities/[id]/route.ts:90` (foto de entidade) e
+  **`account/route.ts:158` (avatar de perfil — novo na PR #12)**. Não existe nenhum caminho que apague
+  objetos em lote por titular, então **apagar a conta hoje deixa os objetos órfãos no bucket** — pagos, e
+  ainda contendo dado pessoal de alguém que exerceu o direito de eliminação.
+  ⚠️ *Contagem corrigida em 2026-09-15: a spec dizia "**um único** call site". São **dois**, e agora são
+  **duas famílias de objeto por titular** (foto de entidade + avatar), em coleções diferentes. O trabalho
+  de expurgo dobrou antes de começar — e vai dobrar de novo a cada recurso novo que aceite upload, que é
+  exatamente o argumento para resolver isso com uma varredura por prefixo de dono, e não caso a caso.*
 - **Acoplamento de ordem com `billing-subscription`.** Não bloqueia o começo — por isso fica fora do
   `depends_on` —, mas é **acoplado por definição de pronto**: no dia em que o fork tiver assinatura
   Stripe, a exclusão precisa cancelar, senão produz o órfão que a nota aponta como armadilha central

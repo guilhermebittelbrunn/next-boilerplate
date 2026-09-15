@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/api/instrumentation.ts, apps/api/proxy.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -73,10 +73,25 @@ invisível até alguém conferir a fatura.
   prefixo, `chave=valor`, linha única, sem objeto de erro; mas
   `apps/api/(shared)/lib/entity-photo.ts:61`
   (`console.warn("[storage] could not sign a read url for an entity photo")`) pega **só o prefixo**: a
-  mensagem é livre, não há par `chave=valor` e não há como filtrar por recurso. Placar atual do inventário
-  deliberado, medido em 2026-09-14: **4 conformes** (`proxy.ts:57`, `packages/email/index.ts:46`,
-  `auth-action-links.ts:25`, `storage.ts:74`), **2 semiconformes** (`reset-request/route.ts:41`,
-  `entity-photo.ts:61`) e **1 não-conforme** (`reset/route.ts:51`).
+  mensagem é livre, não há par `chave=valor` e não há como filtrar por recurso.
+- 🔴 **A PR #12 (`account-settings`, 2026-09-15) repetiu o defeito literalmente — e este é o dado mais
+  forte que a spec tem.** `apps/api/(shared)/lib/account-avatar.ts:44`
+  (`console.warn("[storage] could not sign a read url for an avatar")`) é um **clone** de
+  `entity-photo.ts:61`: mesmo caminho raro (assinar URL), mesma degradação (fica só o prefixo), agora no
+  avatar. Não é acidente de uma entrega — **a degradação se copia junto com o código**, que é precisamente
+  o que um helper impede e a imitação não.
+  Placar do inventário deliberado, remedido em **2026-09-15**: **4 conformes** (`proxy.ts:57`,
+  `packages/email/index.ts:46`, `auth-action-links.ts:25`, `storage.ts:74`), **3 semiconformes**
+  (`reset-request/route.ts:41`, `entity-photo.ts:61`, `account-avatar.ts:44`) e **1 não-conforme**
+  (`reset/route.ts:51`) — **8 pontos**, contra 7 na rodada anterior.
+- **A superfície sem observabilidade cresceu na mesma PR.** As 3 rotas novas de conta (`/account`,
+  `/account/password`, `/account/sessions/revoke`) não emitem **nenhum** log — incluindo a troca de senha e
+  a revogação de sessões, que são exatamente os eventos que alguém procuraria numa investigação de conta
+  comprometida.
+- **O `console` cru é mais comum do que esta spec vinha afirmando.** Recontagem de 2026-09-15: **26
+  chamadas `console.*` em 18 arquivos** de código de produção. Só `packages/auth/server.ts` concentra
+  **5** (`:176`, `:189`, `:205`, `:248`, `:261`), todas com o objeto de erro e sem prefixo — num pacote de
+  **autenticação**, que é onde o objeto de erro tem mais chance de carregar identificador de usuário.
   **O que isso faz com a tese desta spec:** enfraquece a versão forte dela. A convenção **se propagou sem
   helper** — dois terços dos pontos novos nasceram certos por imitação, então "só um helper com teste a
   torna obrigatória" é forte demais como está escrito. O que os dados sustentam é mais modesto e ainda

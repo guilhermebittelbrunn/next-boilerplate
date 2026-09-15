@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [firebase.json, package.json, packages/auth/server.ts]
 feature: -
-updated: 2026-09-14
+updated: 2026-09-15
 ---
 
 # Emulador do Firebase, seed e primeiro admin

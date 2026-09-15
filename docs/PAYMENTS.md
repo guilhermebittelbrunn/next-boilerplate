@@ -20,7 +20,7 @@ Como o fluxo de assinatura funciona neste boilerplate e o que falta implementar 
 - ❌ **Nenhuma persistência**: não há `UserDTO.subscription`, `stripeCustomerId` nem `updateSubscriptionByReferenceId` em lugar nenhum do repo.
 - ❌ **Nenhuma rota de plano, checkout ou portal** — `GET /payments/plans`, `POST /payments/checkout` e `POST /payments/portal` não existem.
 - ❌ **Nada no SDK**: não há `apiClient.payments`.
-- ❌ **Nenhuma UI de assinatura** na `apps/app`, e nenhum modo `subscription`.
+- ❌ **Nenhuma UI de assinatura com conteúdo** na `apps/app` — existe o **lugar**, não o conteúdo: a aba `/account?tab=billing` (`AccountTabs.tsx:23,76-77`, alcançada por `routes.tsx:53` → `paths.ts:54-56`) renderiza o `AccountBillingPlaceholder`, um empty state traduzido nos 3 idiomas. ⚠️ *Corrigido em 2026-09-15: a versão anterior desta linha dizia "nenhuma UI de assinatura **e nenhum modo `subscription`**", e as duas metades eram falsas — o modo `subscription` existe e é o **padrão** (`packages/next-config/product-mode.ts:12` declara o tipo, `:14` o torna default em `DEFAULT_PRODUCT_MODE`, `:23` expõe `isSubscriptionMode()`, consumido em `apps/web/…/header/index.tsx:38`). Este documento errou na direção oposta à de sempre: afirmou ausência onde havia presença.*
 - ❌ O webhook **não** trata `customer.subscription.updated|deleted`.
 
 **Consequência prática para um fork:** ligar as chaves da Stripe hoje faz o webhook responder `200` e
