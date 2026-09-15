@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isEmulated } from "@repo/auth/emulator";
 import { getStorageAdmin } from "@repo/auth/server";
 import { env } from "@/env";
 
@@ -20,8 +21,14 @@ const UPLOAD_PREFIX = "uploads";
 const STORAGE_OBJECT_PATH_RE =
     /^uploads\/[A-Za-z0-9_-]{1,128}\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
 
+/**
+ * There is no Cloud Storage emulator in this setup, so an emulated stack with a bucket
+ * name still filled in would write objects into the real bucket — with Application
+ * Default Credentials, silently. Reporting storage as unconfigured keeps every read and
+ * write inside the emulated boundary; the panel already degrades to the photo URL field.
+ */
 export const isStorageConfigured = (): boolean =>
-    Boolean(env.FIREBASE_STORAGE_BUCKET);
+    Boolean(env.FIREBASE_STORAGE_BUCKET) && !isEmulated();
 
 const bucket = () =>
     getStorageAdmin().bucket(env.FIREBASE_STORAGE_BUCKET as string);
