@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # MFA, sessões ativas e política de senha
@@ -28,19 +28,19 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
 
 ## O que já existe no repo
 
-- `packages/auth/server.ts:212` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE` o chama
+- `packages/auth/server.ts:226` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE` o chama
   em `packages/auth/session-routes.ts:79`, montado em `apps/app/app/api/auth/session/route.ts:13` e
   `apps/web/app/api/auth/session/route.ts:12`, alcançado pelo botão de sair
   (`apps/app/shared/components/ui/ProfileDropdown.tsx:49` → `packages/auth/provider.tsx:238-239`, a
   mutation `signOutMutation`/`mutationFn: logout`). Não é
   código morto — **o efeito colateral é que todo logout é um "sair de todos os dispositivos"**, sem
   granularidade e sem aviso ao usuário.
-- ⚠️ **`packages/auth/server.ts:123` — `verifyIdToken(token)` é chamado sem o argumento de revogação**
-  (reconferido ao vivo em 2026-09-10). E `apps/api/(shared)/lib/resolve-api-actor.ts` tenta **primeiro** o
+- ⚠️ **`packages/auth/server.ts:137` — `verifyIdToken(token)` é chamado sem o argumento de revogação**
+  (reconferido ao vivo em 2026-09-14). E `apps/api/(shared)/lib/resolve-api-actor.ts` tenta **primeiro** o
   caminho do bearer ID token (`:24`, retorna em `:26`) antes do cookie de sessão (`:34`). Resultado: depois
   de revogar, **um ID token já emitido continua passando no guard da API até expirar**. O outro
   caminho já faz o certo — `getUserFromSessionCookie` usa `verifySessionCookie(sessionCookie, true)`
-  (`packages/auth/server.ts:193`). A base está metade correta, e é a metade errada que é tentada antes.
+  (`packages/auth/server.ts:207-210`). A base está metade correta, e é a metade errada que é tentada antes.
 - `packages/auth/session.ts:14` — `SESSION_COOKIE_NAME = "access-token"`; `:22` e `:23` já clampam a
   duração aos limites do Firebase (5 min / 14 dias), com padrão de 5 dias (`:24`). O tipo declara os
   atributos em `:39` (`httpOnly`) e `:41` (`sameSite: "lax"`), mas os valores de fato são atribuídos no
@@ -85,13 +85,20 @@ o de conta comprometida, em que o usuário sai justamente para expulsar alguém.
 > `revokeUserSessions` só era chamada pelo logout global (`packages/auth/session-routes.ts:79`) — um
 > gesto deliberado de quem já está com a conta na mão. Agora ela também é chamada pela **redefinição de
 > senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:49`), que é o fluxo canônico de "minha
-> conta foi comprometida". E a janela continua aberta: `packages/auth/server.ts:123` chama
+> conta foi comprometida". E a janela continua aberta: `packages/auth/server.ts:137` chama
 > `verifyIdToken(token)` **sem `checkRevoked`**, e `apps/api/(shared)/lib/resolve-api-actor.ts:23-32`
 > tenta o bearer ID token **antes** do cookie de sessão (`:34`), que esse sim verifica revogação
-> (`server.ts:193-196`). Efeito prático: **a vítima redefine a senha e o ID token do atacante continua
+> (`server.ts:207-210`). Efeito prático: **a vítima redefine a senha e o ID token do atacante continua
 > passando no guard da API por até uma hora.** O item 1 deixou de ser dívida teórica e virou o furo de um
 > fluxo de segurança que já está em produção. Reforça o que a seção de dependências já dizia: este item
 > **não depende de `account-settings`** e pode ser tarefa direta hoje.
+>
+> ⚠️ **Armadilha de conferência (remedição de 2026-09-14).** A PR #11 inseriu `getStorageAdmin()` e o
+> import de `getStorage` em `packages/auth/server.ts`, deslocando o arquivo em +14 linhas. A referência
+> antiga `:193-196` era **insidiosa**: a linha deslocada caiu exatamente sobre o comentário que menciona
+> `checkRevoked`, então uma conferência superficial dava "confere" — mas a chamada real de
+> `verifySessionCookie(sessionCookie, true)` está em `:207-210`. **A vulnerabilidade descrita acima
+> continua real e não mitigada** — a PR #11 não tocou nesse caminho; só moveu as linhas.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
 > (`packages/auth/client.ts:191-202`), que força `reload(user)` + `getIdToken(true)`. É o primeiro

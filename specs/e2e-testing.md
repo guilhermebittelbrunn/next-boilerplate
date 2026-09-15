@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -29,16 +29,19 @@ alguém olhar.
 
 - **Validação visual é obrigatória e funciona.** `CLAUDE.md:70` (regra de ouro 11) exige que todo fluxo que
   toca UI e toda entrega de código sejam validados com a skill `agent-browser` — subindo o app, percorrendo
-  o fluxo e conferindo responsivo e tema. A regra é reforçada em `:136` e `:145`. A skill vive em
+  o fluxo e conferindo responsivo e tema. A regra é reforçada em `:143` e `:152`. A skill vive em
   `.claude/skills/agent-browser`.
 - A prova de que a prática é levada a sério: `docs/features/auth-panel-context/test/e2e/` guarda **22
   capturas de tela versionadas** (e mais 5 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
   incluindo o fluxo de impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-10, números inalterados**): **9 tasks de teste / 573 testes em 63
-  arquivos**, todos de unidade/integração estreita — `apps/app` 153, `apps/api` 152, `@repo/email` 131,
+- Suíte automatizada atual (**remedida em 2026-09-14**): **9 tasks de teste / 750 testes em 74
+  arquivos**, todos de unidade/integração estreita — `apps/api` 268, `apps/app` 208, `@repo/email` 137,
   `@repo/security` 31, `@repo/auth` 29, `apps/web` 27, `@repo/internationalization` 27, `@repo/shared` 15,
   `@repo/payments` 8. **Nenhum sobe um app de verdade**, e **nenhuma** das nove configs declara
-  **cobertura**: não existe medida nem baseline para discutir.
+  **cobertura**: não existe medida nem baseline para discutir. *(Eram 573 testes em 63 arquivos; o
+  crescimento é das PRs #10 e #11. O que **não** mudou: seguem **9** tasks e **9** configs de Vitest,
+  **nenhuma** declara `testTimeout` — 0 ocorrências no repo — e não há Playwright, Cypress nem `axe` em
+  `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
 - `apps/web` **entrou** na suíte (`package.json:10`, `vitest.config.mts` com `environment: "node"`) e hoje
   `__tests__/` tem **4 arquivos**: `seo.test.ts`, `contactAction.test.ts`, `securityHeaders.test.ts` e
   `securityPolicySources.test.ts` — todos com lógica pura (SEO, proxy e a action de contato exercitados
@@ -52,15 +55,26 @@ alguém olhar.
   > nada exercita um fluxo de ponta a ponta. Essa lacuna segue intacta: os 131 testes novos de e-mail
   > cobrem render e política de log, e **nenhum** deles alcança o único consumidor de produção da feature,
   > que é inalcançável pela UI.
-- **Argumento a favor desta spec, revisto (remedido em 2026-09-10):** uma auditoria anterior observou
-  `apps/app/__tests__/securityPolicySources.test.ts:92` estourar o `testTimeout` padrão de 5000 ms numa
-  execução de `pnpm turbo run lint typecheck test --force`. Reexecutado hoje **3 vezes seguidas**, o mesmo
+- **Argumento a favor desta spec, revisto (remedido em 2026-09-14):** uma auditoria anterior observou
+  `apps/app/__tests__/securityPolicySources.test.ts:94` estourar o `testTimeout` padrão de 5000 ms numa
+  execução de `pnpm turbo run lint typecheck test --force`. Reexecutado **3 vezes seguidas**, o mesmo
   comando fechou **23/23 tasks verdes** nas três rodadas — a falha **não reproduziu**. A causa estrutural
   que a explicaria continua real e sem mitigação: cada caso faz `vi.resetModules()` + `await
-  import("@/proxy")` (`:60-61`), reconstruindo o grafo inteiro do proxy, e **nenhuma config de vitest do
+  import("@/proxy")` (`:63-64`), reconstruindo o grafo inteiro do proxy, e **nenhuma config de vitest do
   repositório declara `testTimeout`**. Ou seja: é uma observação isolada e não reproduzida, não um gate
   vermelho de pé — mas o risco estrutural que a explicaria segue de pé, e é exatamente o que a prática 2
   desta spec precisa que seja confiável.
+  > 🔴 **A documentação estava olhando para o arquivo errado (achado de 2026-09-14).** Existem **DOIS**
+  > arquivos `securityPolicySources.test.ts` — `apps/app/__tests__/` e `apps/web/__tests__/` — e toda a
+  > análise acima só conhecia o primeiro. Medido no gate completo
+  > (`pnpm turbo run lint typecheck test --force`): o da **`apps/web`** levou **3491 ms** de arquivo, com
+  > um **único teste em 3089 ms**, contra 387–556 ms quando rodado isolado; o da `apps/app` levou 3577 ms
+  > com pior caso de 2434 ms, contra 616–914 ms isolado. Com o default de **5 s** do Vitest, **sob
+  > contenção o pior caso chega a 62% do timeout** — e **o arquivo mais próximo de estourar não é o que a
+  > documentação nomeia**. A PR #11 ainda acrescentou 41 linhas ao arquivo da `apps/app` (o bloco
+  > `describe("image sources follow the storage bucket")`, `:155`). O argumento estrutural desta spec
+  > ficou **mais forte**, não mais fraco: o gate depende de margem de tempo que ninguém mede, num arquivo
+  > que ninguém estava vigiando.
 - **Lacuna:** a única garantia de que os fluxos principais funcionam é **humana e pontual**; nada a repete
   sozinho, e nada disso pode rodar como gate de merge.
 

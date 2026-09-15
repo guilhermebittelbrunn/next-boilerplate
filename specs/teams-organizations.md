@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Organizações, membros e convites
@@ -22,9 +22,10 @@ updated: 2026-09-10
 >
 > 1. escrever, em `docs/ARCHITECTURE.md`, se este core é **B2B ou B2C por padrão** — hoje a resposta está
 >    implícita no código e ninguém a declarou;
-> 2. concentrar o predicado de posse num ponto único de escopo. Hoje ele está copiado **3 vezes** em
->    `apps/api/app/(routes)/entities/[id]/route.ts:16,32,65` — para **um** recurso. Com o predicado num só
->    lugar, trocar "dono = usuário" por "dono = organização" deixa de ser reescrita.
+> 2. concentrar o predicado de posse num ponto único de escopo. Hoje ele está copiado **4 vezes** em
+>    `apps/api/app/(routes)/entities/[id]/route.ts:24,40,102` (posse do **registro**) e `:65` (posse do
+>    **objeto no bucket**) — para **um** recurso. Com o predicado num só lugar, trocar "dono = usuário"
+>    por "dono = organização" deixa de ser reescrita.
 >
 > Sem essas duas, adiar é só acumular juros. Reabrir esta spec exige argumento novo — tipicamente o
 > primeiro fork B2B real.
@@ -53,16 +54,24 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
 - `apps/api/app/(guards)/` — dois arquivos: `admin.ts` (`requireAdminApi`, `:27`) e `common-panel.ts`
   (`requireCommonPanelApi`, `:29`). Nenhum resolve "pertence a este grupo".
 - **A posse é por usuário, repetida em cada handler**:
-  `apps/api/app/(routes)/entities/[id]/route.ts:16`, `:32` e `:65` — o mesmo
+  `apps/api/app/(routes)/entities/[id]/route.ts:24`, `:40` e `:102` — o mesmo
   `row.userId !== ctx.subjectProfile.id` → 404, três vezes, num único arquivo de um único recurso.
+  ⚠️ **Remedido em 2026-09-14:** a PR #11 reescreveu esse arquivo e as referências antigas (`:16`, `:32`,
+  `:65`) deslocaram. A pior delas é `:65`: hoje ela aponta para um `if` de posse **do objeto no bucket**
+  (`isUsablePhotoReference`), não do registro — quem confere a citação encontra um teste de posse, dá por
+  boa e conclui errado sobre o que o arquivo faz.
 - `apps/api/(shared)/repositories/entity.repository.ts:11` — `listByUserId` consulta com
   `where("userId", "==", userId)` (`:14`). A listagem é escopada por usuário na origem.
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
   `allow read, write: if false;` em `:33`); o comentário em `:39-40` já registra a sutileza de que
   `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
 - **Lacuna:** não existe grupo, não existe papel dentro de grupo, não existe convite. E o escopo por
-  usuário está espalhado por handler, repositório e (potencialmente) regras — três lugares para
-  retrofitar por recurso.
+  usuário está espalhado por handler, repositório e (potencialmente) regras — **quatro** lugares para
+  retrofitar por recurso desde a PR #11, que passou a codificar a posse também no **prefixo do caminho
+  no bucket** (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath`/`isOwnedBy`, espelhado em
+  `storage.rules`). **O custo do retrofit subiu**: agora "dono = organização" precisa reescrever também o
+  layout de caminhos dos objetos já gravados e a regra que os protege — o que reforça o argumento desta
+  spec de que adiar a decisão cobra juros.
 
 ## Evidência de mercado
 
@@ -85,7 +94,7 @@ ponta a ponta, não entregar administração de times completa.
 - [ ] Todo usuário passa a pertencer a uma organização — criada automaticamente no cadastro, de modo que
       o fork B2C nunca precise ver a palavra "organização" na interface.
 - [ ] O escopo dos recursos deixa de ser o usuário e passa a ser a organização: no slice `entity`, a
-      listagem e a checagem de posse (`entities/[id]/route.ts:16`) passam a decidir por grupo, com o
+      listagem e a checagem de posse (`entities/[id]/route.ts:24`) passam a decidir por grupo, com o
       isolamento verificado **no servidor**.
 - [ ] Dois papéis dentro da organização (dono e membro), independentes do `UserType` global, resolvidos
       por um guard próprio — o `admin`/`common` atual continua sendo papel de **plataforma**.
@@ -123,9 +132,10 @@ ponta a ponta, não entregar administração de times completa.
   que esconde o custo do usuário final — não do desenvolvedor.
 - **O risco simétrico é maior.** Não adotar significa que o primeiro fork B2B reescreve o escopo de todo
   recurso já construído, mais os índices, mais as regras — em código que já está em produção. A nota de
-  pesquisa chama isso de reescrita, e a evidência local confirma: o predicado de posse já aparece três
-  vezes num único arquivo (`entities/[id]/route.ts:16`, `:32`, `:65`) para **um** recurso, com **dois**
-  recursos no repo. Esse número só cresce.
+  pesquisa chama isso de reescrita, e a evidência local confirma: o predicado de posse já aparece
+  **quatro** vezes num único arquivo (`entities/[id]/route.ts:24`, `:40`, `:102` para o registro e `:65`
+  para o objeto no bucket) para **um** recurso, com **dois** recursos no repo. Esse número só cresce — a
+  PR #11 sozinha o levou de três para quatro.
 - **Vazamento entre organizações é a falha crítica.** Uma consulta sem o filtro de escopo entrega dado de
   outro cliente, e com a autorização espalhada por handler basta um handler novo esquecer. Isso empurra
   para um ponto único de escopo no acesso a dados — decisão que precisa ser tomada junto, não depois.

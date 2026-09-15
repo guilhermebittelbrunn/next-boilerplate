@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, apps/api/(shared)/repositories/entity.repository.ts, packages/design-system/components/ui/table.tsx, firestore.indexes.json, packages/sdk/src/actions/entity/action.ts]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Paginação por cursor no BaseRepository e no SDK
@@ -44,13 +44,12 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
 - `packages/design-system/components/ui/table.tsx:11-22` — `TableProps` estende `AntdTableProps` sem tratar
   `pagination`: o que a tela exibe é a **paginação client-side padrão do antd**, sobre o array inteiro.
 - `firestore.indexes.json:2-11` — deixou de ser vazio em 2026-08-31: versiona **um** índice composto, o de
-  `findByReferenceId`. O arquivo e o caminho de deploy agora existem (`docs/SETUP.md:172-191`, com o
-  comando de deploy em `:179`), o que **remove o obstáculo** — mas qualquer consulta composta nova
+  `findByReferenceId`. O arquivo e o caminho de deploy agora existem (`docs/SETUP.md:178-188`, com o
+  comando de deploy em `:185`), o que **remove o obstáculo** — mas qualquer consulta composta nova
   continua exigindo a entrada correspondente, ou falha em produção sem aviso. ✅ **Verificado em
   2026-09-11:** o `deploy` já rodou — a leitura REST direta com a chave pública responde **403**, ou seja
-  as rules (e os índices publicados junto, pelo mesmo comando) estão em vigor. *(`docs/SECURITY.md:30-35`
-  e `docs/PRE-PRODUCTION.md:19-25` afirmam o contrário e **estão errados**; a correção dos dois
-  documentos está registrada nos achados do [`BACKLOG.md`](BACKLOG.md).)* Para esta spec é boa notícia: o
+  as rules (e os índices publicados junto, pelo mesmo comando) estão em vigor. Reconferido em
+  **2026-09-14**, agora com `docs/SECURITY.md` e `docs/PRE-PRODUCTION.md` de acordo. Para esta spec é boa notícia: o
   caminho de publicação não é hipotético, já foi percorrido — o índice que a paginação por cursor exigir
   entra pelo mesmo comando já exercitado.
 - `docs/feature-analysis-guide.md:85-93` (seção 2.2) — o repo **já reconhece a lacuna por escrito**: "o

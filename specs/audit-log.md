@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, "apps/api/app/(routes)/users/[id]/route.ts", firestore.indexes.json, packages/sdk/src/client/index.ts, apps/app/shared/lib/queryKeys.ts]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Trilha de auditoria de ações sensíveis
@@ -44,6 +44,12 @@ suporte mais poderoso do produto operando sem contrapartida.
   de quem, quando entrou nem quando saiu. E as ações do admin **como ele mesmo** também não deixam registro:
   `apps/api/app/(routes)/users/[id]/route.ts:75-91` exclui um usuário devolvendo 204 e `:54-68` altera
   perfil e credencial de Auth, ambos em silêncio.
+- **Novo no inventário (PR #11, 2026-09-14): `POST /files`** (`apps/api/app/(routes)/files/route.ts`) é
+  uma rota de **escrita** que grava no bucket do fork — ou seja, consome recurso **cobrado** (storage e
+  egress) e aceita conteúdo enviado pelo usuário. **Não gera evento de auditoria.** O próprio repo já a
+  trata como sensível: `apps/api/proxy.ts:45` a inclui em `RATE_LIMITED_PATHS`, ao lado das rotas de
+  autenticação. Mas **rate limit não é trilha** — ele limita a frequência do abuso e não registra o que
+  foi feito, por quem, nem quando. Quem subiu o quê continua invisível depois do fato.
 - **Nenhuma trilha existe:** só há os repositórios `base`, `entity` e `user`
   (`apps/api/(shared)/repositories/`), e varrer "audit" no código retorna **5 ocorrências** — os mesmos
   três comentários de sempre (`packages/shared/utils/helpers/auth-request-headers.ts:12`,
@@ -58,6 +64,8 @@ suporte mais poderoso do produto operando sem contrapartida.
   quando o rate limit está desligado (`:23-27`). O gancho passou a existir — **nenhuma instrumentação de
   log foi plugada nele**.
 - **Lacuna:** nenhum evento sensível é persistido e nenhuma retenção de log de acesso está configurada.
+  *(Referências remedidas em 2026-09-14 contra o disco: as 20 citações de linha desta spec seguem
+  corretas — nenhuma precisou de correção. O que mudou foi o inventário, que ganhou `POST /files`.)*
 
 ## Evidência de mercado
 

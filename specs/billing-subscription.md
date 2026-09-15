@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/app/(routes)/webhooks/payments/route.ts, packages/sdk/src/client/index.ts, packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts, "apps/app/app/[locale]/(authenticated)/(common)/routes.tsx"]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Assinatura Stripe de ponta a ponta
@@ -28,7 +28,7 @@ Quem precisar faturar escreve a integração inteira à mão, justamente a parte
 - `packages/payments/keys.ts:7-8` — `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, ambos `.optional()`; `:14` desliga a validação inteira quando não há secret.
 - `apps/api/app/(routes)/webhooks/payments/route.ts:27` — o POST **valida a assinatura** do evento (`:43`, `constructEvent`). Essa metade está pronta. Já `:8` e `:18` são **stubs com `// TODO`** (`:11`, `:21`): checam `data.customer` e retornam sem persistir nada. Só dois eventos são roteados (`:50` `checkout.session.completed`, `:54` `subscription_schedule.canceled`). *(Refs de linha corrigidas em 2026-09-01; a variável morta `customerId` que existia aqui foi removida pelo saneamento de `ci-pipeline`, e a rota ganhou 11 testes.)*
 - `apps/api/app/(guards)/common-panel.ts:29` (`requireCommonPanelApi`), `apps/api/package.json:6` (`dev:with-stripe`) e `.claude/skills/payments-flow/SKILL.md` — guard, listener local de webhook e procedimento de implementação já existem.
-- **Lacuna:** `apps/api/app/(routes)/` tem 10 rotas e **nenhuma** sob `payments/`; `packages/sdk/src/client/index.ts:11-14` registra só `application`, `authApi`, `user` e `entity`; `UserDTO` (`packages/sdk/src/types/user/user.ts:7-14`) e `UserWithAuthDTO` (`:30-52`) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
+- **Lacuna:** `apps/api/app/(routes)/` tem **15** `route.ts` (remedido em 2026-09-14; a PR #11 acrescentou `files/route.ts`) e **nenhuma** sob `payments/`; `packages/sdk/src/client/index.ts:12-16` registra só `application` (`:12`), `authApi` (`:13`), `user` (`:14`), `entity` (`:15`) e `file` (`:16`) — **cinco** actions, e nenhuma delas é `payments`; `UserDTO` (`packages/sdk/src/types/user/user.ts:7-14`) e `UserWithAuthDTO` (`:30-52`) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
 
 ### ⚠️ Divergência doc × código (achado crítico)
 

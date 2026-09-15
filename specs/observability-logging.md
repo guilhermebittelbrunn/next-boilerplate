@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/api/instrumentation.ts, apps/api/proxy.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -44,9 +44,10 @@ invisível até alguém conferir a fatura.
   webhook); `apps/api/app/(routes)/auth/sign-up/route.ts:38` e `apps/api/app/(routes)/users/route.ts:71`
   (falha ao criar perfil).
 - **Mas já existe um formato de log deliberado a padronizar — não a inventar** (medido em 2026-09-09,
-  remedido em 2026-09-11). Duas entregas convergiram, de forma independente, na mesma convenção: linha
+  remedido em 2026-09-11 e em 2026-09-14). Duas entregas convergiram, de forma independente, na mesma convenção: linha
   única, prefixo estável entre colchetes, pares `chave=valor` e **nenhum dado pessoal**.
-  `apps/api/proxy.ts:47-55` (`[security] blocked reason=… path=… method=…`, de `api-hardening`) e
+  `apps/api/proxy.ts:52-60` (`[security] blocked reason=… path=… method=…`, de `api-hardening`, com o
+  `console.warn` em `:57-59`) e
   `packages/email/index.ts:39-47` (`[email] skipped template=… reason=… locale=…`, de
   `transactional-emails`), este último com teste dedicado que **reprova** se alguém acrescentar o objeto de
   erro ao log (`packages/email/__tests__/logPrivacy.test.ts`). **Consequência para esta spec:** o corte
@@ -65,8 +66,24 @@ invisível até alguém conferir a fatura.
   `chave=valor`, com o objeto de erro**. Ou seja: a mesma entrega produziu um log conforme, um
   semiconforme e um não-conforme, e os dois últimos estão no fluxo de **redefinição de senha**, onde o
   objeto de erro tem a maior chance de carregar endereço de e-mail. Isso deixa de ser argumento de
-  higiene e vira argumento de privacidade: a convenção **não se propaga sozinha**, só um helper
-  compartilhado com teste a torna obrigatória.
+  higiene e vira argumento de privacidade.
+- **A PR #11 (`file-upload-storage`, 2026-09-14) complicou o argumento acima — e a spec não deve esconder
+  isso.** Ela acrescentou dois pontos de log, ambos **sem helper nenhum**, e o resultado foi misto:
+  `apps/api/(shared)/lib/storage.ts:74` (`[storage] delete failed path=…`) **segue** a convenção inteira —
+  prefixo, `chave=valor`, linha única, sem objeto de erro; mas
+  `apps/api/(shared)/lib/entity-photo.ts:61`
+  (`console.warn("[storage] could not sign a read url for an entity photo")`) pega **só o prefixo**: a
+  mensagem é livre, não há par `chave=valor` e não há como filtrar por recurso. Placar atual do inventário
+  deliberado, medido em 2026-09-14: **4 conformes** (`proxy.ts:57`, `packages/email/index.ts:46`,
+  `auth-action-links.ts:25`, `storage.ts:74`), **2 semiconformes** (`reset-request/route.ts:41`,
+  `entity-photo.ts:61`) e **1 não-conforme** (`reset/route.ts:51`).
+  **O que isso faz com a tese desta spec:** enfraquece a versão forte dela. A convenção **se propagou sem
+  helper** — dois terços dos pontos novos nasceram certos por imitação, então "só um helper com teste a
+  torna obrigatória" é forte demais como está escrito. O que os dados sustentam é mais modesto e ainda
+  suficiente: sem helper, a convenção se propaga **por cópia e se degrada na borda** — quem escreve um log
+  num caminho de erro raro (assinar URL, revogar sessão) reverte para mensagem livre, e é justamente ali
+  que ninguém relê. O helper não existe para ensinar a convenção; existe para que a borda não seja a
+  exceção silenciosa.
 - **E já existe o primeiro custo medido de não ter isso.** `packages/email/index.ts:120-130` colapsa
   **três falhas operacionalmente distintas** — cota do provedor estourada, domínio não verificado e chave
   revogada — num único `reason=provider-error`, com a mesma linha de log. A decisão de descartar o objeto

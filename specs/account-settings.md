@@ -7,10 +7,10 @@ effort: M
 audience: produto
 area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/internationalization]
 mode: ambos
-depends_on: [auth-recovery-verification, file-upload-storage]
+depends_on: []
 contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/routes.tsx", "apps/app/app/[locale]/(authenticated)/(common)/paths.ts", packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts]
 feature: -
-updated: 2026-09-10
+updated: 2026-09-14
 ---
 
 # Área de conta e preferências do usuário
@@ -27,27 +27,37 @@ Pior que faltar: o produto **promete e não entrega**. A sidebar exibe um menu "
 - `apps/app/app/[locale]/(authenticated)/(common)/routes.tsx:64-81` — o grupo "Configurações" declara `General`, `Team`, `Billing` e `Limits`, **todos com `url: "#"`** e título literal em inglês. O grupo `Documentation` (`:41-58`) tem outros 4 placeholders iguais.
 - `apps/app/app/[locale]/(authenticated)/(common)/paths.ts:10-36` — o mapa real de rotas da área comum tem só `root`, `playground` e `entities`. Confirma que os itens acima não existem como página.
 - `packages/sdk/src/types/user/user.ts:30-52` — `UserWithAuthDTO` já carrega `displayName:34`, `photoURL:35`, `phoneNumber:36` e `emailVerified:33`. O contrato existe; é **somente leitura** hoje.
-- `packages/design-system/components/form/hookform/index.ts:2-8` — 7 campos RHF prontos (input, senha, data, radio, select, switch, textarea), que cobrem quase todo o formulário desta spec.
-- `packages/auth/server.ts:212` — `revokeUserSessions` já existe e já é usado no logout global (`packages/auth/session-routes.ts:79`); falta só ser oferecido como ação do usuário.
+- `packages/design-system/components/form/hookform/index.ts:2-9` — 8 campos RHF prontos (input, senha, data, radio, select, switch, textarea e **upload de imagem**, `:3`), que cobrem o formulário desta spec **inteiro**, avatar incluído.
+- `packages/auth/server.ts:226` — `revokeUserSessions` já existe e já é usado no logout global (`packages/auth/session-routes.ts:79`); falta só ser oferecido como ação do usuário.
 - `packages/design-system/components/ui/mode-toggle.tsx:25` e `apps/app/shared/components/ui/LanguageSwitcher.tsx:50` (`setCookie("x-locale", …)`, componente exportado em `:32`) — tema e idioma **já são trocáveis**, mas via `next-themes` e cookie de navegador: mudar de máquina perde a escolha.
-- **Lacuna:** todas as rotas de usuário da API são de administrador — `users/route.ts:21,34` e `users/[id]/route.ts:15,33,75` estão sob `requireAdminApi`. **Não existe nenhum caminho pelo qual o usuário edite a si mesmo.** Não há campo de preferência no `UserDTO` (`:7-14`), não há wrapper RHF de checkbox nem de upload no design system, e `firebase.json:1-6` configura só Firestore — não há bucket de arquivo.
+- **Lacuna:** todas as rotas de usuário da API são de administrador — `users/route.ts:21,34` e `users/[id]/route.ts:15,33,75` estão sob `requireAdminApi`. **Não existe nenhum caminho pelo qual o usuário edite a si mesmo.** Não há campo de preferência no `UserDTO` (`:7-14`) nem wrapper RHF de checkbox no design system.
+  **O upload deixou de ser lacuna:** `packages/design-system/components/ui/image-upload-input.tsx`
+  (exportado em `ui/index.ts:22`) e `components/form/hookform/hookformImageUpload.tsx` (o 8.º `HookForm*`,
+  exportado em `hookform/index.ts:3`) já existem; e o armazenamento também — `firebase.json:1-9` declara o
+  bloco `"storage"` (`:6-8`), `storage.rules` está na raiz, `FIREBASE_STORAGE_BUCKET` entrou nos env
+  tipados (`packages/auth/keys.ts:18`, `apps/api/env.ts:26`, `apps/app/env.ts:16`) e `getStorageAdmin()`
+  está em `packages/auth/server.ts:88`.
 
-### Uma das duas dependências caiu (auditado em 2026-09-11)
+### As duas dependências caíram — spec desbloqueada (remedido em 2026-09-14)
 
-`auth-recovery-verification` foi **entregue e mergeada em `main`** (PR #10, `e4eddb9`), então esta spec
-passa a ter **um único bloqueio**: `file-upload-storage`. Duas consequências práticas, medidas no código:
+`auth-recovery-verification` foi **entregue e mergeada em `main`** (PR #10, `e4eddb9`) e
+`file-upload-storage` também (PR #11, `9154776`). Esta spec **não tem mais bloqueio nenhum**, e o plano B
+de "entregar sem avatar" **caducou**: o avatar deixou de ser a parte cara do corte e virou a mais barata.
+Três consequências práticas, medidas no código:
 
 - **A troca de senha autenticada ficou quase de graça.** O "Fora do corte" daquela spec deixou a troca
   autenticada para cá dizendo que reaproveitaria "o mesmo ponto de extensão" — e ele agora existe:
   `apps/api/app/(routes)/auth/password/reset/route.ts` já resolve `oobCode` → conta → nova senha →
-  `revokeUserSessions` (`:49`), e `packages/shared/utils/helpers/httpStatus.ts:13` ganhou o 503. Falta a
+  `revokeUserSessions` (`:49`), e `packages/shared/utils/helpers/httpStatus.ts:14` ganhou o 503. Falta a
   variante autenticada, não o mecanismo.
 - **Há UI reusável pronta:** `(unauthenticated)/components/AuthCard.tsx` (card com 7 estados) e
   `(unauthenticated)/reset-password/validations/resetPasswordSchema.ts` — a regra de senha já está escrita
   e testada, em vez de ser reinventada nesta spec.
-
-Isso reforça a recomendação já registrada em "Perguntas em aberto": se `file-upload-storage` demorar,
-**entregue esta spec sem avatar** — o que sobra encolheu, e o que sobra já entrega valor sozinho.
+- **O avatar virou consumo, não construção.** `POST /files`
+  (`apps/api/app/(routes)/files/route.ts:13`, já sob `requireCommonPanelApi`), `FileActions` no SDK
+  (`packages/sdk/src/actions/file/action.ts:11`, exposto como `apiClient.file`),
+  `apps/app/shared/hooks/useFileUpload.ts` e o `HookFormImageUpload` foram construídos **genéricos
+  exatamente para este caso**. Esta spec **consome** essa cadeia; não inaugura nada.
 
 ## Evidência de mercado
 
@@ -83,12 +93,12 @@ Isso reforça a recomendação já registrada em "Perguntas em aberto": se `file
 | `apps/api` | rotas de auto-serviço sob `requireCommonPanelApi` (`apps/api/app/(guards)/common-panel.ts:29`), com ownership no servidor; recepção e validação do avatar |
 | `apps/app` | página de conta com abas (perfil, segurança, preferências); menu do avatar ganha entrada; `routes.tsx` deixa de ter `url: "#"` |
 | `apps/web` | N/A |
-| `packages/*` | `design-system` pode precisar do campo de upload que hoje não existe; i18n para toda a copy (incluindo a string "Sair" hoje literal) |
-| Infra/env | bucket de arquivo (ausente em `firebase.json`) com regras próprias; nenhuma variável nova se o avatar for adiado |
+| `packages/*` | `design-system` já tem o campo de upload (`HookFormImageUpload`), nada a criar; i18n para toda a copy (incluindo a string "Sair" hoje literal) |
+| Infra/env | nenhuma novidade: o bucket já está declarado (`firebase.json:6-8`), `storage.rules` existe e `FIREBASE_STORAGE_BUCKET` já está nos env tipados |
 
 ## Riscos e trade-offs
 
-- **Custo herdado por todo fork:** o avatar arrasta armazenamento de arquivo — bucket novo, regras novas e **custo por GB/egress** que o repo hoje não tem. Todo fork herda isso, inclusive quem nunca vai mostrar foto. Daí a dependência de `file-upload-storage`: se aquela spec não vier antes, o avatar sai deste corte e o resto continua de pé sem env nova.
+- **Custo herdado por todo fork: já não é hipótese, é herança.** O armazenamento de arquivo **entrou** com `file-upload-storage` — bucket declarado, `storage.rules` versionado e **custo por GB/egress** que todo fork passou a carregar, inclusive quem nunca vai mostrar foto. O que muda aqui é o sinal do risco: esta spec não **cria** esse custo, ela **usa** o que já foi pago — `POST /files`, `FileActions`, `useFileUpload` e `HookFormImageUpload` foram feitos genéricos exatamente para isso. Deixar o avatar de fora agora não economiza nada; só desperdiça a peça.
 - **Escrita de usuário sem ser admin é novidade no repo.** Toda rota de `users` hoje é `requireAdminApi`; abrir auto-serviço exige ownership espelhado no servidor — UI escondendo botão não protege nada. É o tipo de erro que só aparece em pentest.
 - **Preferência persistida × primeira pintura.** Tema e idioma vindos do perfil chegam depois do primeiro render: resolvidos no cliente, dão mismatch de hidratação e "pisca" na tela — a mesma armadilha que a área autenticada já documenta para estado de UI.
 - **Upload é vetor de abuso:** validar tipo e tamanho só no cliente é o erro clássico que a nota cita nominalmente.
@@ -107,4 +117,5 @@ Isso reforça a recomendação já registrada em "Perguntas em aberto": se `file
 - Preferência de tema/idioma no documento do usuário ou em coleção separada? — **recomendação:** no próprio documento; são poucos campos e evita uma leitura extra por render.
 - Trocar a senha exige a senha atual? — **recomendação:** sim; sem isso, uma sessão roubada assume a conta em um clique.
 - Manter "Documentation" e "Limits" na sidebar? — **recomendação:** remover os dois placeholders agora e reintroduzir quando houver destino real.
-- Se `file-upload-storage` não vier antes, entregamos a área sem avatar? — **recomendação:** sim; o restante do corte entrega valor observável sozinho.
+- ~~Se `file-upload-storage` não vier antes, entregamos a área sem avatar?~~ — **pergunta encerrada em
+  2026-09-14:** `file-upload-storage` veio (PR #11, `9154776`). O avatar entra no corte.
