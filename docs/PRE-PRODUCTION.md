@@ -205,13 +205,35 @@ nome do fork** — e a fatura do provedor é do fork.
 O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh api …/branches/main/protection`
 → **404**, rulesets → `[]`). Ligar exigindo o check `verify` fecha isto.
 
-⚠️ Antes de ligar, declare um `testTimeout` explícito nas configs do Vitest. **Nenhuma das 9 declara**, e
-são **dois** os testes expostos, não um: `apps/app/__tests__/securityPolicySources.test.ts` e
-`apps/web/__tests__/securityPolicySources.test.ts`. Ambos reconstroem o grafo do proxy por caso, então o
-custo explode sob contenção — medido em 2026-09-14: isolados ficam em **225–278 ms**, mas dentro de
-`turbo run test --force` sobem para **1768 ms** (`app`) e **1296 ms** (`web`), e o da `web` já foi visto em
-**4033 ms** — **81% do default de 5 s**. Gate obrigatório + teste que falha sozinho = merge bloqueado ao
-acaso, e o runner do GitHub é mais lento que uma máquina local.
+🔴 **Bloqueante: o gate já falhou de verdade. Declare um `testTimeout` explícito nas 9 configs do Vitest
+ANTES de tornar o check obrigatório.** Até 2026-09-14 este aviso era preventivo — baseado em margem
+estreita, não em falha observada. **Em 2026-09-15 a falha aconteceu**, e isso muda a natureza do
+pré-requisito.
+
+Medição de 2026-09-15, com `pnpm turbo run lint typecheck test --force` executado **duas vezes** no mesmo
+workspace, sem cache:
+
+| execução | resultado |
+|----------|-----------|
+| 1ª | 🔴 **FALHOU** — `app#test`, 21/23 tasks. `apps/app/__tests__/accountSecurityForm.test.tsx > "só encerra as sessões depois da confirmação no diálogo"` ⇒ `Test timed out in 5000ms` |
+| 2ª | ✅ 23/23, 1 m 8,8 s |
+
+**Taxa de falha observada: 1 em 2.** O mesmo teste, rodado **isolado** três vezes, leva **390 ms, 986 ms e
+515 ms** (arquivo inteiro: 935/2755/1471 ms) — ou seja, sob contenção o custo sobe de **3× a 8×** e
+atravessa o teto de 5 s.
+
+**O arquivo culpado é um terceiro, e é novo.** A discussão anterior tratava só dos dois
+`securityPolicySources.test.ts` (`apps/app`, `apps/web`); quem estourou foi
+`apps/app/__tests__/accountSecurityForm.test.tsx`, introduzido pela PR #12. Na 2ª execução os três
+mediram, como arquivo: `securityPolicySources` (`app`) **7628 ms**, `accountSecurityForm` **7401 ms**,
+`securityPolicySources` (`web`) **2249 ms**.
+
+**A leitura correta é estrutural, não "esses três arquivos são lentos":** nenhuma das **9** configs declara
+`testTimeout` (`grep -rl testTimeout --include=vitest.config.* .` ⇒ **0**), então todo teste do repositório
+corre contra o default de 5 s **medido sob contenção do turbo**, e qualquer teste de componente que espere
+por interação entra na faixa de risco assim que nasce. A cada PR que acrescenta testes, a probabilidade de
+falha aleatória sobe. Gate obrigatório + falha aleatória = merge bloqueado ao acaso — e o runner do GitHub
+é mais lento que uma máquina local.
 
 ### 9. CSP bloqueante na `apps/web`
 
