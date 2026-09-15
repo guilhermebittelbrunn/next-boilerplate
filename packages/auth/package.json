@@ -4,6 +4,7 @@
   "private": true,
   "exports": {
     "./keys": "./keys.ts",
+    "./emulator": "./emulator.ts",
     "./types": "./types.ts",
     "./server": "./server.ts",
     "./session": "./session.ts",
