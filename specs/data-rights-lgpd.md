@@ -34,7 +34,7 @@ acumula, maior o estrago de uma exclusão feita errado.
   é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:128`) e nada mais. A conta no Firebase
   Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui.
 - `apps/api/app/(routes)/` — o inventário completo é `account` (PR #12), `auth`, `health`, `users`,
-  `entities`, `files` (PR #11) e `webhooks` — **7 grupos, 18 `route.ts`**. **Nenhuma rota de exportação e
+  `entities`, `files` (PR #11) e `webhooks` — **7 grupos, 19 `route.ts`**. **Nenhuma rota de exportação e
   nenhum `DELETE` de auto-serviço:** `account/` expõe só `GET`/`PUT` (`route.ts:97,107`),
   `POST /account/password` (`:15`) e `POST /account/sessions/revoke` (`:4`).
 - ✅ **A área de conta passou a existir (PR #12), e isso barateia esta spec.**

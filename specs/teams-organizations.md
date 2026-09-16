@@ -41,7 +41,7 @@ updated: 2026-09-16
 > **Auditoria de 2026-09-16 — as duas contrapartidas seguem sem nenhum código, pela terceira rodada.**
 > (1) `docs/ARCHITECTURE.md` existe, mas não contém "B2B", "B2C", "tenant" nem "organização": a decisão
 > continua implícita no código. (2) O predicado de posse continua espalhado exatamente pelos 9 sítios da
-> tabela acima, reconferidos um a um — nenhum foi consolidado. As duas PRs desta janela (#13 e #14) não
+> tabela acima, reconferidos um a um — nenhum foi consolidado. As três PRs desta janela (#13, #14 e #15) não
 > tocaram em nenhum deles, então o adiamento não ficou mais caro, mas também não ficou mais honesto.
 > Se o padrão se repetir na próxima rodada, vale a pergunta ao usuário: ou as contrapartidas viram tarefa
 > com dono, ou o `deferred` deveria ser lido como `rejected` até o primeiro fork B2B aparecer.

@@ -8,7 +8,7 @@ audience: dx
 area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
-contends_on: [apps/api/instrumentation.ts, apps/api/proxy.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
+contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
 updated: 2026-09-16
 ---
@@ -17,107 +17,123 @@ updated: 2026-09-16
 
 ## Problema
 
-Quando algo quebra em produção num fork deste boilerplate, ninguém fica sabendo. Não há coleta de erros,
-trilha por requisição nem log estruturado: o que existe são chamadas soltas a `console` que somem na saída
-da plataforma, sem identificador, sem usuário, sem correlação entre o clique no navegador e a falha no
-servidor. O modo padrão de descobrir um bug é o cliente reclamar; o de investigar é pedir para ele
-reproduzir. Em fluxos que envolvem dinheiro, como o webhook de pagamento, uma falha de processamento é
-invisível até alguém conferir a fatura.
+Quando algo quebra em produção num fork deste boilerplate, ninguém fica sabendo. O modo padrão de descobrir
+um bug é o cliente reclamar; o de investigar é pedir para ele reproduzir.
+
+A PR #15 fechou a metade mecânica desse problema: hoje existe trilha, existe identificador por requisição e
+existe um endpoint de prontidão que consulta o banco. O que **não** existe é quem vigia a trilha. O log sai
+no stdout do processo, a plataforma o indexa, e ninguém é notificado — alguém ainda precisa ir olhar. Em
+fluxos que envolvem dinheiro, como o webhook de pagamento, a falha agora deixa registro rastreável, mas
+segue invisível até alguém conferir a fatura.
 
 ## O que já existe no repo
 
-- `apps/api/instrumentation.ts:12-31` — **deixou de ser um stub vazio** em 2026-08-31
+> **Seção reescrita em 2026-09-16, depois da PR #15** (`f8322f1`, mergeada em `main`, CI `success` no SHA
+> de merge). O inventário anterior descrevia um repositório sem logger compartilhado, sem identificador de
+> requisição e com um endpoint de saúde de duas linhas. Nenhuma dessas três afirmações continua verdadeira,
+> e mantê-las seria o pior tipo de erro que uma spec comete: acusar de ausente algo que já está no código.
+> O histórico de como a convenção de log se degradava por cópia — que era o argumento central desta spec —
+> está preservado na spec e no plano da feature, em `docs/features/observability-logging/`.
+
+### O que a PR #15 entregou
+
+- **Helper de log compartilhado, com escopo fechado.** `packages/shared/utils/helpers/log.ts:50-56` expõe
+  `logEvent(scope, event, fields)` e emite uma linha `[escopo] evento chave=valor`. O escopo é uma união
+  fechada de oito valores (`:5-13`), então um call site novo precisa declarar onde pertence em vez de
+  inventar um prefixo. A assinatura **não aceita objeto** (`:20`): passar um `Error` não compila, o que
+  transforma em erro de tipo o vazamento que antes dependia de disciplina. `sanitizeValue` (`:26-28`) troca
+  espaço em branco por `_`, de modo que um valor com quebra de linha não consiga forjar uma segunda entrada.
+- **As variações de formato acabaram.** Os **14** pontos de log deliberado passam todos pelo helper, entre
+  eles `apps/api/proxy.ts:63`, `webhooks/payments/route.ts:61,69`, `users/route.ts:73`,
+  `auth/sign-up/route.ts:40`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
+  `(shared)/lib/storage.ts:82`, `account-avatar.ts:45` e `entity-photo.ts:62`. Os dois clones que esta spec
+  usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
+  emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
+- **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:118` gera o UUID, `:157` o
+  repassa ao handler pelo header de entrada e `:71-72` o carimba na resposta.
+  `packages/shared/utils/helpers/request-id.ts:6` concentra o nome do header, e
+  `formattedError.ts:24,117` o lê de volta da resposta que o browser recebeu, para que o identificador do
+  toast case com o `requestId=` da linha de log.
+- **`onRequestError` nos três apps** — `apps/api/instrumentation.ts:36-37`, `apps/app/instrumentation.ts:4-5`
+  e `apps/web/instrumentation.ts:4-5`, todos apontando para `requestErrorReporter.ts:39-53`, que emite a
+  linha estruturada e só então repassa o objeto de erro. `pathWithoutQuery` (`:21-23`) descarta a query
+  string antes de logar, porque ela carrega o que o usuário digitou.
+- **Prontidão separada de vida.** `health/route.ts:3` fixa `force-dynamic`, então a rota deixou de ser
+  pré-renderizada; `health/ready/route.ts` consulta o Firestore via `(shared)/lib/readiness.ts:31-56`, com
+  teto de 2 s (`:9`), e responde um booleano nu — sem nome de dependência, sem versão, sem mensagem do
+  driver.
+- **Nada disso custa nada a um fork.** Zero dependência nova, zero variável de ambiente nova, zero linha
+  em `.env.example`. O modo degradado é o modo padrão.
+
+### O que segue aberto
+
+- **Ninguém é notificado.** Não há coletor plugado no `onRequestError`: a linha sai no stdout e a plataforma
+  a indexa. Descobrir um erro continua dependendo de alguém abrir o painel. É o item 1 do corte, e é a
+  razão de esta spec não estar fechada — detalhe em [Estado da entrega](#estado-da-entrega).
+- **`packages/auth/server.ts` não foi migrado** e concentra **5** das 12 chamadas de `console` cruas que
+  sobraram (`:191`, `:204`, `:220`, `:263`, `:276`), todas passando o objeto de erro e sem prefixo — num
+  pacote de autenticação, que é onde o objeto de erro tem mais chance de carregar identificador de usuário.
+  Recontagem de hoje: **14 chamadas `console.*` em 10 arquivos**, das quais 2 são o próprio helper
+  (`log.ts:55`) e o repasse deliberado do erro não tratado (`requestErrorReporter.ts:52`). Sobram **12 em 9
+  arquivos**, contra 24 em 19 antes da PR #15.
+- **`packages/email` mantém um helper próprio.** `packages/email/index.ts:39-48` (`logEmail`) produz
+  exatamente o mesmo formato do `logEvent`, com `console.warn` direto. Não é divergência de formato, é
+  duplicação de código — e o teste que reprova quem logar o objeto de erro
+  (`packages/email/__tests__/logPrivacy.test.ts`) vigia só esta cópia.
+- **`provider-error` continua colapsando três falhas distintas** — cota estourada, domínio não verificado e
+  chave revogada — num único motivo (`packages/email/index.ts:120-130`). Descartar o objeto de erro é
+  correto e deliberado (ele carrega o endereço do destinatário), mas ninguém distingue "acabou a cota" de
+  "revogaram a chave" sem abrir o painel do provedor.
+- **`import-in-the-middle` e `require-in-the-middle` seguem declarados e nunca importados**
+  (`apps/app/package.json:26,35`). São as dependências típicas de OTel/Sentry e continuam sendo peso morto:
+  a PR #15 entregou observabilidade **sem** tocá-las.
+
+### Histórico, preservado por ser o argumento que sustentou a spec
+
+- `apps/api/instrumentation.ts:15-34` deixou de ser um stub vazio em 2026-08-31
   (`firestore-admin-access`): o `register()` roda no boot e resolve a instância do Firestore, para que a
   falta de credencial mate o processo em vez de degradar. Desde `api-hardening` ele também derruba o boot
-  quando falta `CORS_ORIGIN` em produção (`:17-21`) e emite um aviso de boot quando o rate limit está
-  desligado (`:23-27`). **Ainda assim, nenhuma observabilidade de verdade passa por ele** — nem logger,
-  nem coletor de erro, nem tracing.
-  `apps/api/instrumentation-client.ts` **foi apagado** em 2026-09-01 pelo saneamento de `ci-pipeline` — era
-  um arquivo só com um comentário, sem exportação. **`apps/app` e `apps/web` não têm arquivo de
-  instrumentação nenhum**: hoje o repositório inteiro tem **um** gancho, `apps/api/instrumentation.ts`. Os
-  apps que o usuário acessa não têm nem isso.
-- Não há Sentry, OpenTelemetry, logger estruturado ou qualquer coleta de erro em nenhum `package.json`
-  (`sentry`, `opentelemetry`, `@vercel/otel`, `pino`, `winston` e `logger` dão **zero ocorrências** em
-  `apps/` + `packages/`).
-- Registro de erro hoje é `console` cru, exatamente onde um incidente silencioso custa caro:
-  `apps/api/app/(routes)/webhooks/payments/route.ts:59` (evento de pagamento não tratado) e `:65` (erro no
-  webhook); `apps/api/app/(routes)/auth/sign-up/route.ts:38` e `apps/api/app/(routes)/users/route.ts:71`
-  (falha ao criar perfil).
-- **Mas já existe um formato de log deliberado a padronizar — não a inventar** (medido em 2026-09-09,
-  remedido em 2026-09-11 e em 2026-09-14). Duas entregas convergiram, de forma independente, na mesma convenção: linha
-  única, prefixo estável entre colchetes, pares `chave=valor` e **nenhum dado pessoal**.
-  `apps/api/proxy.ts:52-60` (`[security] blocked reason=… path=… method=…`, de `api-hardening`, com o
-  `console.warn` em `:57-59`) e
-  `packages/email/index.ts:39-47` (`[email] skipped template=… reason=… locale=…`, de
-  `transactional-emails`), este último com teste dedicado que **reprova** se alguém acrescentar o objeto de
-  erro ao log (`packages/email/__tests__/logPrivacy.test.ts`). **Consequência para esta spec:** o corte
-  deixa de ser "introduzir log estruturado onde não há nenhum" e passa a ser "**promover a convenção que já
-  emergiu** a um helper compartilhado, antes que uma terceira entrega invente a quarta variação". A parte
-  de `console` cru acima continua valendo — hoje o repo tem as duas coisas ao mesmo tempo.
-- 🔴 **A previsão da linha acima se cumpriu em uma única PR — a #10 (`auth-recovery-verification`,
-  2026-09-11) inventou a quarta e a quinta variação.** Medido na auditoria de 2026-09-11:
-  `apps/api/(shared)/lib/auth-action-links.ts:25` **segue** a convenção
-  (`[auth-action-link] refused kind=… code=…`); mas
-  `apps/api/app/(routes)/auth/password/reset-request/route.ts:41` faz
-  `console.error("[auth-reset-request] delivery failed", error)` — tem prefixo, porém mensagem livre **e
-  passa o objeto de erro**, exatamente o que o teste do `@repo/email` reprova uma camada abaixo; e
-  `apps/api/app/(routes)/auth/password/reset/route.ts:51` faz
-  `console.error("Could not revoke sessions after password reset", error)` — **sem prefixo, sem
-  `chave=valor`, com o objeto de erro**. Ou seja: a mesma entrega produziu um log conforme, um
-  semiconforme e um não-conforme, e os dois últimos estão no fluxo de **redefinição de senha**, onde o
-  objeto de erro tem a maior chance de carregar endereço de e-mail. Isso deixa de ser argumento de
-  higiene e vira argumento de privacidade.
-- **A PR #11 (`file-upload-storage`, 2026-09-14) complicou o argumento acima — e a spec não deve esconder
-  isso.** Ela acrescentou dois pontos de log, ambos **sem helper nenhum**, e o resultado foi misto:
-  `apps/api/(shared)/lib/storage.ts:81` (`[storage] delete failed path=…`) **segue** a convenção inteira —
-  prefixo, `chave=valor`, linha única, sem objeto de erro; mas
-  `apps/api/(shared)/lib/entity-photo.ts:61`
-  (`console.warn("[storage] could not sign a read url for an entity photo")`) pega **só o prefixo**: a
-  mensagem é livre, não há par `chave=valor` e não há como filtrar por recurso.
-- 🔴 **A PR #12 (`account-settings`, 2026-09-15) repetiu o defeito literalmente — e este é o dado mais
-  forte que a spec tem.** `apps/api/(shared)/lib/account-avatar.ts:44`
-  (`console.warn("[storage] could not sign a read url for an avatar")`) é um **clone** de
-  `entity-photo.ts:61`: mesmo caminho raro (assinar URL), mesma degradação (fica só o prefixo), agora no
-  avatar. Não é acidente de uma entrega — **a degradação se copia junto com o código**, que é precisamente
-  o que um helper impede e a imitação não.
-  Placar do inventário deliberado, remedido em **2026-09-15**: **4 conformes** (`proxy.ts:57`,
-  `packages/email/index.ts:46`, `auth-action-links.ts:25`, `storage.ts:81`), **3 semiconformes**
-  (`reset-request/route.ts:41`, `entity-photo.ts:61`, `account-avatar.ts:44`) e **1 não-conforme**
-  (`reset/route.ts:51`) — **8 pontos**, contra 7 na rodada anterior.
-- **A superfície sem observabilidade cresceu na mesma PR.** As 3 rotas novas de conta (`/account`,
-  `/account/password`, `/account/sessions/revoke`) não emitem **nenhum** log — incluindo a troca de senha e
-  a revogação de sessões, que são exatamente os eventos que alguém procuraria numa investigação de conta
-  comprometida.
-- **O `console` cru é mais comum do que esta spec vinha afirmando.** Recontagem de 2026-09-16: **26
-  chamadas `console.*` em 20 arquivos** de código de produção (`.ts`/`.tsx` fora de `__tests__` e de
-  `scripts/`). Só `packages/auth/server.ts` concentra
-  **5** (`:191`, `:204`, `:220`, `:263`, `:276`), todas com o objeto de erro e sem prefixo — num pacote de
-  **autenticação**, que é onde o objeto de erro tem mais chance de carregar identificador de usuário.
-  **O que isso faz com a tese desta spec:** enfraquece a versão forte dela. A convenção **se propagou sem
-  helper** — dois terços dos pontos novos nasceram certos por imitação, então "só um helper com teste a
-  torna obrigatória" é forte demais como está escrito. O que os dados sustentam é mais modesto e ainda
-  suficiente: sem helper, a convenção se propaga **por cópia e se degrada na borda** — quem escreve um log
-  num caminho de erro raro (assinar URL, revogar sessão) reverte para mensagem livre, e é justamente ali
-  que ninguém relê. O helper não existe para ensinar a convenção; existe para que a borda não seja a
-  exceção silenciosa.
-- **E já existe o primeiro custo medido de não ter isso.** `packages/email/index.ts:120-130` colapsa
-  **três falhas operacionalmente distintas** — cota do provedor estourada, domínio não verificado e chave
-  revogada — num único `reason=provider-error`, com a mesma linha de log. A decisão de descartar o objeto
-  de erro é **correta e deliberada** (ele carrega o endereço do destinatário: `:127`), mas o resultado é
-  que ninguém consegue distinguir "acabou a cota" de "alguém revogou a chave" sem abrir o painel do
-  provedor. É exatamente o buraco que esta spec fecha: um campo de causa que não seja o texto do provedor.
-- `apps/api/app/(routes)/health/route.ts:1-2` — o arquivo inteiro tem 2 linhas e responde `{"message":"OK"}`
-  fixo. **Não verifica nenhuma
-  dependência** e não declara renderização dinâmica: responde OK mesmo com o Firestore fora do ar.
-- ✅ **Achado resolvido (`/spec --sync`, 2026-09-01): `packages/analytics/server.ts` foi apagado.** O
-  arquivo importava `posthog-node` (não declarado em `packages/analytics/package.json`) e lia chaves
-  PostHog que o `keys.ts` do pacote nunca declarou — código morto herdado do upstream que não compilava se
-  fosse importado. Removido pelo saneamento de `ci-pipeline` (decisão Q4 do usuário). **Efeito nesta
-  spec:** quando a observabilidade entrar, `@repo/analytics` está limpo — não há stub quebrado para
-  desfazer, e o `keys.ts` do pacote segue declarando **só** `NEXT_PUBLIC_GA_MEASUREMENT_ID`.
+  quando falta `CORS_ORIGIN` em produção (`:20-24`) e emite um aviso de boot quando o rate limit está
+  desligado (`:26-30`) — este último é o único `console` cru que sobrou na `apps/api`.
+- **A tese que sustentou esta spec por cinco rodadas, e que a PR #15 resolveu.** A convenção de log —
+  linha única, prefixo entre colchetes, pares `chave=valor`, nenhum dado pessoal — emergiu sozinha em
+  `api-hardening` e `transactional-emails`, e depois se propagou **por cópia**. Cada entrega nova a repetia
+  no caminho comum e a degradava no caminho raro: a PR #11 criou `entity-photo.ts` com só o prefixo, e a
+  #12 criou `account-avatar.ts` como clone textual do anterior. O placar antes da PR #15 era 4 conformes,
+  3 semiconformes e 1 não-conforme. A leitura que os dados sustentavam não era "sem helper ninguém segue a
+  convenção" — dois terços dos pontos novos nasciam certos por imitação —, era mais estreita e continua
+  valendo como aprendizado: **sem helper, a convenção se degrada na borda**, e a borda é onde ninguém relê.
+  O helper com escopo tipado fechou esse caminho, porque agora a forma errada não compila.
+- `packages/analytics/server.ts` foi apagado em 2026-09-01 pelo saneamento de `ci-pipeline` (importava
+  `posthog-node`, não declarado, e lia chaves que o `keys.ts` nunca declarou). É o item 6 do corte, entregue
+  por tabela. `@repo/analytics` segue limpo, declarando só `NEXT_PUBLIC_GA_MEASUREMENT_ID`.
 - `packages/security/index.ts:42-44` — o padrão de referência do repo para integração opcional: sem a
-  variável de ambiente, a função retorna sem fazer nada. É o critério que qualquer serviço novo deve seguir.
-- **Lacuna:** nenhum erro é coletado, nenhuma requisição é rastreável, nenhum log é consultável.
+  variável de ambiente, a função retorna sem fazer nada. É o critério que o coletor precisa seguir quando
+  alguém o adotar.
+
+## Estado da entrega
+
+**Auditado em 2026-09-16 contra o código, não contra o `status` gravado.** PR **#15** mergeada em `main` em
+2026-09-16T17:01:02Z (merge commit `f8322f1`), CI `success` nesse SHA.
+
+| item do corte | veredito | evidência |
+|---------------|----------|-----------|
+| 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:36-37`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
+| 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:118,157,71-72` · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
+| 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:61,69` · `users/route.ts:73` · `auth/sign-up/route.ts:40`, todos com `requestId` |
+| 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-56`, booleano nu, teto de 2 s em `:9` |
+| 5. Camada no-op sem a variável do serviço | **implementado**, por não haver serviço | zero dependência nova, zero env nova, zero linha em `.env.example` |
+| 6. Código morto de analytics removido | **implementado** | entregue por tabela em 2026-09-01 |
+
+**Por que a spec não foi fechada:** o item 1 pede que o erro chegue a quem opera "sem o cliente precisar
+avisar", e os sinais de pronto pedem alerta rastreável no webhook de pagamento. A entrega parou na costura,
+por decisão documentada no plano da feature: adotar um serviço gerenciado de coleta exige conta em
+provedor, e `.claude/cycle-policy.md` proíbe provisionar infraestrutura numa rodada autônoma. A decisão é a
+**pergunta em aberto nº 1 desta própria spec**, que nunca foi respondida.
+
+O resíduo é pequeno e bem delimitado: acrescentar a chamada do provedor dentro de `reportRequestError` e a
+variável correspondente, no padrão opt-in do `ARCJET_KEY`. Está registrado como passo de console em
+[`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md), seção 10.
 
 ## Evidência de mercado
 
@@ -138,16 +154,21 @@ invisível até alguém conferir a fatura.
 
 ## Proposta — corte de MVP
 
-- [ ] Um erro não tratado, em qualquer um dos três apps, é registrado num serviço de coleta com stack, rota
-      e contexto do usuário — e chega a quem opera sem o cliente precisar avisar.
-- [ ] Cada requisição da API carrega um identificador que aparece em todo log daquela requisição e volta na
-      resposta de erro, colando o que o usuário vê ao que o servidor registrou.
-- [ ] Os pontos que hoje usam `console` em fluxos críticos (webhook de pagamento, criação de perfil)
-      passam a emitir log estruturado com esse identificador.
-- [ ] O endpoint de saúde deixa de mentir: distingue "o processo está de pé" de "as dependências
-      respondem", e não é pré-renderizado.
-- [ ] Toda essa camada é **no-op quando a variável do serviço não existe** — um fork sem conta continua
-      rodando, apenas sem coleta remota.
+- [~] Um erro não tratado, em qualquer um dos três apps, é registrado num serviço de coleta com stack, rota
+      e contexto do usuário — e chega a quem opera sem o cliente precisar avisar. — **parcial:** a trilha
+      existe e é correlacionável; o coletor e a notificação não.
+- [x] Cada requisição da API carrega um identificador que aparece em todo log daquela requisição e volta na
+      resposta de erro, colando o que o usuário vê ao que o servidor registrou. — `apps/api/proxy.ts:118`
+      gera, `:157` repassa ao handler, `:71-72` carimba na resposta; `formattedError.ts:117` lê de volta.
+- [x] Os pontos que hoje usam `console` em fluxos críticos (webhook de pagamento, criação de perfil)
+      passam a emitir log estruturado com esse identificador. — `webhooks/payments/route.ts:61,69`,
+      `users/route.ts:73`, `auth/sign-up/route.ts:40`.
+- [x] O endpoint de saúde deixa de mentir: distingue "o processo está de pé" de "as dependências
+      respondem", e não é pré-renderizado. — `health/route.ts:3` e `health/ready/route.ts`, sobre
+      `(shared)/lib/readiness.ts:31-56`.
+- [x] Toda essa camada é **no-op quando a variável do serviço não existe** — um fork sem conta continua
+      rodando, apenas sem coleta remota. — cumprido de forma trivial: não há serviço, nem env, nem
+      dependência nova.
 - [x] O código morto de analytics de servidor é removido ou consertado. — **entregue por tabela** em
       2026-09-01 pelo saneamento de `ci-pipeline`: `packages/analytics/server.ts` foi apagado. Item
       cumprido fora desta spec; o restante do corte segue intacto.
@@ -189,18 +210,27 @@ invisível até alguém conferir a fatura.
 
 ## Sinais de pronto
 
-- Provocar um erro em cada um dos três apps produz registro consultável, com rota e stack, sem terminal.
-- A partir do identificador que o usuário vê numa tela de erro recupera-se toda a trilha da requisição.
-- Uma falha no webhook de pagamento gera alerta rastreável, em vez de sumir na saída padrão.
-- Derrubar o acesso ao banco faz o endpoint de prontidão falhar; o endpoint de vida continua respondendo.
-- Remover as variáveis do serviço de coleta e subir tudo do zero funciona normalmente, sem erro de env.
-- Nenhum token, senha ou e-mail aparece nos logs de um fluxo completo de cadastro e assinatura.
+Marcados com o resultado do `/test` da feature (16 critérios aprovados, 0 reprovados, 4 sem infra):
+
+- ✅ Provocar um erro em cada um dos três apps produz registro consultável, com rota e stack. **Ressalva:**
+  o registro sai no stdout do processo, então "sem terminal" depende de a plataforma indexar o log.
+- ✅ A partir do identificador que o usuário vê numa tela de erro recupera-se toda a trilha da requisição —
+  verificado em build de produção, não em `next dev`.
+- ❌ Uma falha no webhook de pagamento gera **alerta** rastreável. Hoje gera **registro** rastreável
+  (`webhooks/payments/route.ts:69`); alerta exige o coletor.
+- ✅ Derrubar o acesso ao banco faz o endpoint de prontidão falhar; o de vida continua respondendo.
+- ✅ Subir tudo do zero sem nenhuma variável de coleta funciona — é o modo padrão.
+- ✅ Nenhum token, senha ou e-mail aparece nos logs: a assinatura do helper não aceita objeto, e a query
+  string é descartada antes de logar (`requestErrorReporter.ts:21-23`).
 
 ## Perguntas em aberto
 
-- Adotar um serviço gerenciado de coleta de erros ou ficar só em log estruturado na plataforma de deploy?
-  — **recomendação:** serviço gerenciado, opt-in por env; log estruturado sozinho não notifica ninguém.
-- O código de analytics de servidor deve ser **removido** ou consertado? — **recomendação:** remover; está
-  quebrado, não é usado por ninguém, e reintroduzir analytics de produto é decisão de outra spec.
-- O identificador de requisição deve ser exposto ao usuário final na mensagem de erro? — **recomendação:**
-  sim, é o que torna o suporte viável; nunca junto de detalhe interno da falha.
+- 🔴 **A que decide o destino desta spec:** adotar um serviço gerenciado de coleta de erros ou ficar só em
+  log estruturado na plataforma de deploy? A PR #15 entregou a segunda metade e deixou a pergunta aberta,
+  porque adotar um serviço exige conta em provedor. **Recomendação:** fechar esta spec como entregue e
+  abrir uma spec própria para o coletor, com esforço P, em vez de manter uma spec quase inteira parada por
+  um item que depende de decisão de produto. Alternativa defensável: manter aberta até o coletor existir.
+- ✅ **Decidida pela entrega:** o identificador de requisição é exposto ao usuário final na mensagem de
+  erro, sem detalhe interno da falha. `formattedError.ts:24` o guarda, e o dicionário ganhou o rótulo
+  correspondente.
+- ✅ **Decidida em 2026-09-01:** o código de analytics de servidor foi removido, não consertado.
