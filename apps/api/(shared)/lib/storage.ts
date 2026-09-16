@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { isEmulated } from "@repo/auth/emulator";
 import { getStorageAdmin } from "@repo/auth/server";
+import { logEvent } from "@repo/shared/utils/helpers/log";
 import { env } from "@/env";
 
 const MS_PER_SECOND = 1000;
@@ -78,6 +79,6 @@ export async function deleteObjectQuietly(path: string): Promise<void> {
     try {
         await bucket().file(path).delete({ ignoreNotFound: true });
     } catch {
-        console.warn(`[storage] delete failed path=${path}`);
+        logEvent("storage", "delete-failed", { path });
     }
 }

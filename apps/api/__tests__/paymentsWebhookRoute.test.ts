@@ -198,6 +198,53 @@ describe("POST /webhooks/payments — despacho de eventos", () => {
         expect(response.status).toBe(HTTP_STATUS.OK);
     });
 
+    it("correlaciona a falha com o identificador que o proxy carimbou", async () => {
+        const requestId = "3f2a1b8c-0f4a-4d0a-9e77-9f5f0a3a1c22";
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {
+            return;
+        });
+        const error = vi.spyOn(console, "error").mockImplementation(() => {
+            return;
+        });
+        constructEventMock.mockImplementation(() => {
+            throw new Error("No signatures found matching the expected");
+        });
+
+        await POST(
+            new Request("http://localhost:3002/webhooks/payments", {
+                method: "POST",
+                body: SIGNED_BODY,
+                headers: { "x-request-id": requestId },
+            })
+        );
+
+        expect(warn).toHaveBeenCalledWith(
+            `[payments] webhook-failed requestId=${requestId}`
+        );
+
+        warn.mockRestore();
+        error.mockRestore();
+    });
+
+    it("registra a falha sem campo vazio quando não há identificador", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {
+            return;
+        });
+        const error = vi.spyOn(console, "error").mockImplementation(() => {
+            return;
+        });
+        constructEventMock.mockImplementation(() => {
+            throw new Error("No signatures found matching the expected");
+        });
+
+        await POST(request());
+
+        expect(warn).toHaveBeenCalledWith("[payments] webhook-failed");
+
+        warn.mockRestore();
+        error.mockRestore();
+    });
+
     it("registra e aceita um tipo de evento não tratado", async () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {
             return;
@@ -210,7 +257,9 @@ describe("POST /webhooks/payments — despacho de eventos", () => {
         const response = await POST(request());
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        expect(warn).toHaveBeenCalledWith("Unhandled event type invoice.paid");
+        expect(warn).toHaveBeenCalledWith(
+            "[payments] webhook-unhandled-event eventType=invoice.paid"
+        );
 
         warn.mockRestore();
     });

@@ -1,6 +1,7 @@
 import { getAuthInstance } from "@repo/auth/server";
 import { isEmailEnabled } from "@repo/email";
 import type { Locale } from "@repo/internationalization/utils";
+import { logEvent } from "@repo/shared/utils/helpers/log";
 import { env } from "@/env";
 
 export type AuthActionKind = "reset-password" | "verify-email";
@@ -22,7 +23,7 @@ function firebaseErrorCode(error: unknown): string | null {
 
 /** One line, stable prefix, no address: a refused link is no reason to log personal data. */
 function logRefusedLink(kind: AuthActionKind, code: string): void {
-    console.warn(`[auth-action-link] refused kind=${kind} code=${code}`);
+    logEvent("auth-action-link", "refused", { kind, code });
 }
 
 /**
