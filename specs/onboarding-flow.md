@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
 feature: -
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
 # Onboarding pós-cadastro
@@ -55,13 +55,13 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   próprio `user-merge.ts` (`:22`, `:41`); a rota Google
   (`apps/api/app/(routes)/auth/sign-in/google/route.ts:16`) chega até ele **indiretamente**, via
   `getMergedUserByUid`.
-- `apps/app/proxy.ts:62` — `PUBLIC_PATHS` (`isPublicPath` em `:83-84`); o proxy é default-deny (razão
-  documentada em `:58-59`), então qualquer rota nova de onboarding já fica protegida sem allowlist.
+- `apps/app/proxy.ts:76` — `PUBLIC_PATHS` (`isPublicPath` em `:97-99`); o proxy é default-deny (razão
+  documentada em `:71-75`), então qualquer rota nova de onboarding já fica protegida sem allowlist.
   **Remedido em 2026-09-11:** a lista deixou de ser "só `/sign-in` e `/sign-up`" — a PR #10 a levou a
-  **cinco** entradas (`:63-67`: `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`,
+  **cinco** entradas (`:77-81`: `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`,
   `/verify-email`) e introduziu o conceito de rota pública **isenta do bounce**
-  (`OOB_ACTION_PATHS:75`, `isOobActionPath:87-89`, consumido em `:175`), porque o redirect de visitante
-  autenticado apaga a query string (`:186`). Um passo de onboarding que carregue token na URL herda
+  (`OOB_ACTION_PATHS:89`, `isOobActionPath:101`, consumido em `:189`), porque o redirect de visitante
+  autenticado apaga a query string (`:200`). Um passo de onboarding que carregue token na URL herda
   exatamente esse problema — e agora herda também a solução.
 - `packages/sdk/src/types/user/user.ts:12-22` — o `UserDTO` tem `id`, `type`, `reference_id`, timestamps e,
   desde as PRs #11/#12, **`phone` (`:19`), `avatar` (`:20`) e `preferences` (`:21`)**. *(Âncora remedida em

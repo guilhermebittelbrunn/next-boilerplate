@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx", apps/app/shared/lib/queryKeys.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
 # Home do painel com widgets

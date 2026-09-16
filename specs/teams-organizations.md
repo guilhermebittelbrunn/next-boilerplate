@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
 # Organizações, membros e convites
@@ -37,6 +37,14 @@ updated: 2026-09-15
 >
 > Sem essas duas, adiar é só acumular juros. Reabrir esta spec exige argumento novo — tipicamente o
 > primeiro fork B2B real.
+>
+> **Auditoria de 2026-09-16 — as duas contrapartidas seguem sem nenhum código, pela terceira rodada.**
+> (1) `docs/ARCHITECTURE.md` existe, mas não contém "B2B", "B2C", "tenant" nem "organização": a decisão
+> continua implícita no código. (2) O predicado de posse continua espalhado exatamente pelos 9 sítios da
+> tabela acima, reconferidos um a um — nenhum foi consolidado. As duas PRs desta janela (#13 e #14) não
+> tocaram em nenhum deles, então o adiamento não ficou mais caro, mas também não ficou mais honesto.
+> Se o padrão se repetir na próxima rodada, vale a pergunta ao usuário: ou as contrapartidas viram tarefa
+> com dono, ou o `deferred` deveria ser lido como `rejected` até o primeiro fork B2B aparecer.
 
 ## Problema
 

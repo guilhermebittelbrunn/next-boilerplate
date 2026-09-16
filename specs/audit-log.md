@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, "apps/api/app/(routes)/users/[id]/route.ts", firestore.indexes.json, packages/sdk/src/client/index.ts, apps/app/shared/lib/queryKeys.ts]
 feature: -
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
 # Trilha de auditoria de ações sensíveis
