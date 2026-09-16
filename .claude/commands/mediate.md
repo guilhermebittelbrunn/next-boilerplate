@@ -1,7 +1,7 @@
 ---
 description: Faz a mediação dos comentários de uma PR aberta (review automático + humanos) validando contra a branch remota, aplica correções quando fizer sentido e gera um markdown de replies — um bloco por comentário (item a item quando há checklist), cada ponto com status, pronto para colar na PR. Independente do fluxo de desenvolvimento — não usa STATE.md.
 argument-hint: "[opcional: número/URL da PR — padrão: PR da branch atual]"
-allowed-tools: Agent, AskUserQuestion, Read, Bash
+allowed-tools: Agent, AskUserQuestion, Read, Bash, Skill
 ---
 
 # /mediate
@@ -10,6 +10,19 @@ Foco (opcional): **$ARGUMENTS**
 
 Você é o orquestrador do papel **Mediador de Comentários de PR**. Este comando é independente do fluxo
 `/analyze → /develop → /review → /test → /observe` — não interage com `STATE.md`.
+
+## Regras de escrita (`humanizer` + `caveman`)
+
+Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as skills estão no
+`allowed-tools`.
+
+- **`humanizer` no markdown de replies** — cada bloco vai ser colado numa **thread pública da PR**,
+  assinado pelo usuário. Se você mandar o agent atualizar o arquivo após o Passo 2, repita a exigência.
+- **`caveman` no que chega até o usuário**: contagem por status, sincronia com o remoto, arquivos
+  alterados. Estilo restrito a este comando; **não** fixe o modo na sessão. Saia do estilo nos itens
+  `⏳ Decisão pendente` e `❓ Preciso de contexto`, que viram pergunta.
+- **Exceção de formato**: o vocabulário de status (`✅ Corrigido`, `❌ Não procede`, …) e a tabela de visão
+  geral são o formato do artefato — ali o emoji **é** o dado.
 
 ## Passo 0 — Determinar a PR
 

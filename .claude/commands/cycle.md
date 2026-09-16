@@ -20,6 +20,21 @@ ser honesto o bastante para o usuário conseguir desfazer qualquer decisão que 
 > `/spec --sync`, `/analyze`, `/develop`, `/review`, `/test` um a um — o feedback chega mais cedo e sai
 > mais barato. O `/cycle` é para a rodada autônoma.
 
+## Regras de escrita (`humanizer` + `caveman`)
+
+Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md). Aqui elas pesam mais que nos
+outros comandos, porque **o usuário lê zero mensagens até o Passo 7**:
+
+- **`humanizer` em tudo que vira arquivo** — os artefatos de cada etapa, as specs que a auditoria regrava e
+  o [`docs/PRE-PRODUCTION.md`](../../docs/PRE-PRODUCTION.md), que é o que sobrevive ao fechar a janela.
+  **Repita a exigência no prompt de cada subagent**: numa rodada autônoma ninguém revisa o texto no meio.
+- **`caveman` no relatório final** — ele é longo por natureza e é o único momento em que você fala. Comprima
+  o estilo, **nunca o conteúdo**: decisão adotada sem perguntar continua vindo com a alternativa
+  descartada e o porquê, senão o usuário não tem como discordar de forma informada.
+- **Saia do `caveman`** no bloco de pendências, no plano de commits e na pergunta "commito?" — é
+  confirmação de ação difícil de desfazer.
+- **Não fixe o modo na sessão.** Terminado o comando, volte ao normal.
+
 ## A regra que não pode ser quebrada
 
 ⛔ **O `/cycle` NÃO commita e NÃO faz push.** Ele deixa o working tree pronto e **apresenta o plano de
@@ -40,7 +55,10 @@ Isso vale mesmo com tudo verde, mesmo que o usuário tenha aprovado commits numa
    `pwd` antes de editar.**
 2. **Cheque a branch**: `git rev-parse --abbrev-ref HEAD`. Se for protegida (`main`, `master`,
    `production`, `production-backup`), **PARE** e diga que o `/review` precisa criar uma branch antes — o
-   `/cycle` não nomeia branch, isso é do `revisor-codigo`.
+   `/cycle` não nomeia branch, isso é do `revisor-codigo`. **Cheque também se o nome bate com o padrão**
+   (regex no Passo 3 do [`/review`](review.md)): nome inválido não interrompe a rodada, mas entra no
+   relatório final como pendência — o `revisor-codigo` vai ter de resolvê-lo antes dos commits, e é melhor
+   o usuário saber disso no começo do que na hora de aprovar.
 3. **Cheque o working tree**: `git status --short`. Se já houver mudanças, **não as descarte** — identifique
    de que assunto são e registre, porque elas vão precisar de commits separados no fim.
 4. **Defina o teto de rodadas**: `--max-rounds N` (padrão **2**) limita o vai-e-volta `/test` ↔ `/review`
@@ -142,6 +160,16 @@ Duas instruções que só existem no modo loop:
 
 Acione o **`analista-qa`**: critérios de aceite no formato §9.1, testes dos workspaces afetados +
 `pnpm test` da raiz, criação dos testes que faltam, e validação executável dirigindo o app.
+
+Duas instruções que a rodada autônoma tende a atropelar, e que custam caro depois:
+
+- **Teste no nível mais barato que prova o comportamento.** Rodada sem ninguém olhando é onde nasce o
+  teste caro por precaução. Teste que exige processo externo de pé (emulador, app servindo) só quando a
+  **infra for o objeto do teste** — e com o motivo escrito no `report.md`.
+- **Devolva as portas.** Ele checa a porta antes de subir; ocupada = reutiliza e não derruba, livre = sobe,
+  guarda o PID e mata no fim, **inclusive quando o e2e falha**. Numa rodada autônoma ninguém está na frente
+  da tela para perceber processo pendurado — o usuário só descobre no próximo `pnpm dev`. ⛔ Nunca
+  `pkill -f node`/`killall node`.
 
 **Três regras de classificação** que evitam relatório enganoso:
 

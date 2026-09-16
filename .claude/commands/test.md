@@ -11,6 +11,18 @@ Foco (opcional): **$ARGUMENTS**
 Você é o orquestrador (loop principal) do papel **Analista de QA**. Este comando **unifica** geração de
 critérios de aceite + execução de testes + validação executável.
 
+## Regras de escrita (`humanizer` + `caveman`)
+
+Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as skills estão no
+`allowed-tools`.
+
+- **`caveman` no que chega até o usuário**: pass/fail, lacunas, status por critério, próximo passo. Estilo
+  restrito a este comando — **não** fixe o modo na sessão. Saia do estilo para avisar estado de dev
+  alterado (dado criado/apagado) e para o roteiro manual, onde a ordem dos passos é o conteúdo.
+- **`humanizer` no que vira arquivo**: `test/criterios-aceite.md` e `test/report.md`, incluindo o que você
+  acrescentar a eles depois do subagent. O formato §9.1 manda; a skill ajusta o texto dentro dele.
+- **Repita as regras no prompt do `analista-qa`.**
+
 ## Passo 0 — Determinar o foco e checar o gate (argumento é opcional)
 
 > **Não carregue o diff nem os artefatos na sua própria janela.** Quem lê o diff completo, o handoff, o
@@ -45,7 +57,13 @@ conteúdo no prompt. Peça para, **na mesma execução**:
   `pnpm --filter @repo/internationalization test` (paridade dos 3 idiomas). Mais
   `pnpm --filter <app> typecheck` nos apps afetados;
 - **Criar os testes que faltam** (skill `/write-tests`), cobrindo caminho feliz e **cada** caminho de erro
-  — validação, não encontrado, sem permissão e **ownership de outro usuário (404)**;
+  — validação, não encontrado, sem permissão e **ownership de outro usuário (404)** — sempre no **nível
+  mais barato que prova o comportamento**. Schema, mapper, hook e rota com `vi.mock` do repositório e do
+  guard já cobrem tudo isso. Teste que exige **processo externo de pé** (emulador do Firebase em
+  9099/8080, app servindo) só quando o objeto do teste for a **própria infra**: consulta real que depende
+  de índice, `firestore.rules`, serialização `Timestamp` contra o documento. Se a rota já tem teste e o
+  contrato de infra não mudou, **rodar o que existe** vale mais que somar cenário. Cada decisão dessas vai
+  registrada no `report.md`;
 - **Validação executável** dirigindo o app com `agent-browser`, quando houver fluxo de usuário (Passo 4);
 - Ao final, atualizar o `STATE.md` (`test = done`; `blocked` se algum teste falhar).
 
@@ -70,6 +88,11 @@ O objetivo é **acessar o app rodando e percorrer o fluxo como usuário**, não 
 **pergunte antes** (`AskUserQuestion`) — especialmente se puder alterar estado real. Ao autorizar, instrua
 o `analista-qa` a:
 
+- **checar a porta antes de subir qualquer coisa** (`lsof -ti tcp:3000`): ocupada = o ambiente é seu,
+  ele **reutiliza e não derruba**; livre = ele sobe, guarda o PID e **mata no final** — inclusive quando o
+  e2e falha ou é abortado. ⛔ Nunca `pkill -f node`/`killall node`, que derrubaria seu editor e os outros
+  workspaces. Portas em jogo: 3000 `app` · 3001 `web` · 3002 `api` · 3003 `email` · 9099 Auth · 8080
+  Firestore · 4001 UI do emulador;
 - subir `pnpm --filter api dev` (3002) + `pnpm --filter app dev` (3000) / `pnpm --filter web dev` (3001);
 - usar a skill **`agent-browser`** (`agent-browser skills get core`) — **não** instalar Playwright por
   conta própria;
@@ -85,6 +108,10 @@ agente. Usar **apenas em dev**. ⛔ **Nunca persista credenciais em arquivo vers
 quiser reuso entre rodadas, oriente-o a colocá-las em `.claude/dev-credentials.local.md` (gitignored).
 
 Caso não seja autorizado ou não haja como dirigir o app, fique no roteiro manual e registre o motivo.
+
+Ao receber o retorno, **confirme que as portas voltaram**: se o agent subiu algo, o `report.md` tem de
+dizer o que ele subiu, o que reutilizou e que derrubou o que era dele. Se ele não mencionar, cheque
+(`lsof -ti tcp:3000`) e peça o teardown antes de fechar o comando.
 
 ## Passo 5 — Cross-check
 

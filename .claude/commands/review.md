@@ -10,6 +10,21 @@ Foco (opcional): **$ARGUMENTS**
 
 Você é o orquestrador (loop principal) do papel **Revisor de Código**, com **gate de commit**.
 
+## Regras de escrita (`humanizer` + `caveman`)
+
+Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as skills estão no
+`allowed-tools`.
+
+- **`caveman` no que chega até o usuário**: achados, correções aplicadas, opções do `AskUserQuestion`.
+  Estilo restrito a este comando — **não** fixe o modo na sessão. **Saia do estilo no gate de commit**: o
+  plano de commits, o preview de cada bloco e a pergunta do push são confirmação de ação difícil de
+  desfazer, e o usuário aprova em cima do que você escreveu.
+- **`humanizer` no que vira arquivo** — inclusive no que **você** anexa ao `review/review.md` depois dos
+  commits (commits realizados, se foram para o remoto).
+- ⛔ **Mensagem de commit, nome de branch e título de PR não passam por nenhuma das duas**: são inglês, no
+  formato fechado de [`.claude/rules/git-commits.md`](../rules/git-commits.md).
+- **Repita as regras no prompt do `revisor-codigo`.**
+
 ## ⛔ REGRA CENTRAL — INVIOLÁVEL, VALE ACIMA DE QUALQUER OUTRA INSTRUÇÃO DESTE COMANDO
 
 **Nenhum commit pode ser feito em `main` ou `production`** (e, pela mesma razão, em `master` e
@@ -85,6 +100,20 @@ profunda) — não cole esse conteúdo no prompt. Peça para:
 O `revisor-codigo` é o dono da branch e já deve tê-la resolvido; o nome vem no retorno dele e no
 `review/review.md`. **Você não inventa nome de branch.** Se ainda estiver numa branch protegida, **não
 stageie nada** até criar a branch de feature.
+
+**Confirme também que o NOME é válido, não só que a branch não é protegida.** Commitar em cima de branch
+com nome fora do padrão já aconteceu aqui, e o custo aparece na PR. O `revisor-codigo` deve ter reportado o
+resultado da validação; se o retorno dele **não mencionar**, valide você:
+
+```bash
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+printf '%s' "$BRANCH" | grep -qE '^((app|web|api|email|sdk|design-system|internationalization|auth|payments|shared|analytics|security|seo|next-config|typescript-config|packages|claude|specs)/)?(feat|fix|style|chore|ci|refactor|perf|test|docs)/[a-z0-9]+(-[a-z0-9]+)*$' \
+  && echo "branch OK: $BRANCH" || echo "BRANCH INVALIDA: $BRANCH"
+```
+
+Deu inválida: **pare antes do `git add`**. Peça ao `revisor-codigo` o nome correto (ele é o dono) e
+renomeie com `git branch -m <nome>` se a branch não tiver remoto nem commit de terceiro; caso contrário,
+crie a correta a partir dela. Você não escolhe o nome sozinho.
 
 **Épico?** Se o plano ou o `STATE.md` indicar que a tarefa é **subtarefa de um épico**: a sub-branch sai
 **da branch do épico** (`feat/<epic-slug>`), não de `main` — o revisor cria a branch do épico (a partir de

@@ -10,6 +10,19 @@ Foco (opcional): **$ARGUMENTS**
 
 Você é o orquestrador (loop principal) do papel **Desenvolvedor**.
 
+## Regras de escrita (`humanizer` + `caveman`)
+
+Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as skills estão no
+`allowed-tools`.
+
+- **`caveman` no que chega até o usuário**: o que foi implementado, resultado de typecheck/lint/testes,
+  o que foi validado visualmente, decisões em aberto. Estilo restrito a este comando — **não** fixe o modo
+  na sessão. Saia do estilo nas decisões em aberto e em qualquer aviso de que a validação visual não
+  aconteceu.
+- **`humanizer` em qualquer prosa que você acrescente** ao `develop/handoff.md` ou ao `STATE.md` depois do
+  subagent. ⛔ Nunca em código, comentário ou chave de i18n.
+- **Repita as duas regras no prompt do `desenvolvedor`.**
+
 ## Passo 0 — Localizar a feature e checar o gate
 
 **Localizar a feature** (pasta em `docs/features/<slug>/`):
@@ -40,7 +53,10 @@ Invoque o subagent **`desenvolvedor`** (Agent tool, `subagent_type: "desenvolved
   `pnpm --filter @repo/internationalization test`;
 - **validar visualmente com `agent-browser`** se tocou `apps/app`, `apps/web` ou
   `packages/design-system` — percorrer o fluxo, light + dark + mobile, screenshots (comandos **em
-  sequência**);
+  sequência**). **Checar a porta antes de subir** (`lsof -ti tcp:3000`): ocupada = ambiente seu, reutiliza
+  e não derruba; livre = sobe, guarda o PID e mata no final. ⛔ Nunca `pkill -f node`/`killall node`;
+- criar teste sempre no **nível mais barato que prova o comportamento** — teste que exige emulador ou app
+  servindo só quando a infra for o objeto do teste;
 - **sem criar branch e sem commitar**;
 - escrever o **handoff** em `develop/handoff.md`, atualizar o `STATE.md` (`develop = done`) e devolver o
   resumo (blueprint → arquivos) + decisões em aberto.

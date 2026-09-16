@@ -52,7 +52,21 @@ Três permissões que separam os papéis, e que **nenhum** comando pode contorna
 
 **Commit exige a sua aprovação explícita** ([`../rules/git-commits.md`](../rules/git-commits.md)) — e
 "rodar o `/cycle`" não é essa aprovação. ⛔ Nunca em `main`/`master`/`production`/`production-backup`; o
-hook `block-protected-branch-write.sh` é a rede, não a verificação.
+hook `block-protected-branch-write.sh` é a rede, não a verificação. O `/review` também **valida o nome da
+branch** contra o padrão do repo antes dos commits: nome fora do formato barra o plano de commits.
+
+## Como eles escrevem
+
+Duas superfícies, duas skills ([`../rules/writing-skills.md`](../rules/writing-skills.md)):
+
+- **arquivo que fica no repo** (plano, handoff, review, critérios, relatório, spec, observação, replies de
+  PR) → passa pelo **`humanizer`**, em português normal. É lido meses depois, por quem não estava aqui.
+- **mensagem na conversa** (resumo, achados, opções de pergunta) → estilo **`caveman`**, comprimido. É
+  consumido uma vez.
+
+O `caveman` **nunca** sai da conversa: nada de prosa comprimida em arquivo, código, comentário, chave de
+i18n ou mensagem de commit. E os comandos não fixam o modo na sessão — o estilo vale só enquanto o comando
+roda.
 
 ## Gate sequencial
 

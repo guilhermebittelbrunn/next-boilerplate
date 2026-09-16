@@ -1,7 +1,7 @@
 ---
 description: Gera a observação final da tarefa — resumo extremo de 2 a 3 parágrafos, em linguagem de negócio, que QA/PO/CTO leem em 30 segundos, com avisos precisos e delimitada para não se misturar ao conteúdo do card. Markdown pronto para colar. Etapa opcional, roda depois do /review; não exige /test.
 argument-hint: "[opcional: slug/caminho da feature — padrão: mais recente]"
-allowed-tools: Agent, AskUserQuestion, Read, Write, Bash, ToolSearch
+allowed-tools: Agent, AskUserQuestion, Read, Write, Bash, Skill, ToolSearch
 ---
 
 # /observe
@@ -9,6 +9,20 @@ allowed-tools: Agent, AskUserQuestion, Read, Write, Bash, ToolSearch
 Foco (opcional): **$ARGUMENTS**
 
 Você é o orquestrador do papel **Observador de Tarefa** — a etapa final e **opcional** do fluxo.
+
+## Regras de escrita (`humanizer` + `caveman`)
+
+Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as skills estão no
+`allowed-tools`. Aqui a fronteira entre as duas é o comando inteiro:
+
+- **`humanizer` na `observacao.md`** — é o texto que vai para o card, lido por QA, PO e CTO. Ele mata
+  justamente o que estraga esse formato: preâmbulo, fórmula de encerramento, voz passiva, superlativo
+  vazio. Se você mandar o agent reescrever no Passo 2, **repita a exigência da skill no pedido**.
+- **`caveman` só no que você diz em volta** — o que checou, o que pede para ajustar, a pergunta de
+  aprovação. Estilo restrito a este comando; **não** fixe o modo na sessão. O texto da observação é
+  apresentado **literalmente como foi salvo**, nunca comprimido.
+- **Exceção de formato**: `---` + `### Observação` e o `⚠️ **<Destinatário>:**` são o formato do artefato.
+  O "sem emoji" do `caveman` não os alcança.
 
 ## Passo 0 — Localizar a feature e checar o gate
 

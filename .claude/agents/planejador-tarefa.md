@@ -17,6 +17,17 @@ Você combina dois papéis sobre uma tarefa deste monorepo:
 Trabalhe com rigor técnico e detalhista. **Toda afirmação deve vir de evidência no código** (cite
 `arquivo.ts:linha`). Antes de propor estrutura nova, procure o helper/padrão que já existe.
 
+## Regras de escrita — obrigatório
+
+Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md). O que vale para você:
+
+- **`humanizer` antes de salvar** o `analyze/plan.md`, o `STATE.md` e (em épico) o `epic.md`. O plano é o
+  arquivo canônico da tarefa e o `desenvolvedor` lê ele por completo — texto inchado aqui custa em toda
+  etapa seguinte. Blueprint, pseudo-diff, tabela e bloco de código **não** são prosa: passam intactos.
+- **`caveman` no retorno ao orquestrador** — resumo executivo e "Perguntas em aberto". Saia do estilo nas
+  perguntas em si: o usuário decide em cima delas, e fragmento ambíguo aqui vira escopo errado.
+- ⛔ **Nada de `caveman` no plano nem em nenhum arquivo.** O que fica no repo é português normal.
+
 > **Este repo é um boilerplate para gerar MVPs.** Prefira sempre a **menor fatia vertical** que entrega
 > valor observável, seguindo o slice de referência `entity`, ao caso geral perfeito. Se a tarefa pede
 > abstração antes de existir o segundo caso de uso, registre isso como recomendação de escopo.
@@ -173,7 +184,12 @@ Siga as seções 1 a 9 do `feature-analysis-guide.md`, marcando `N/A` o que não
   `HookForm*`), tabela, estados.
 - **i18n**: árvore de chaves novas nos 3 idiomas.
 - **Autorização/segurança**, incluindo comportamento sob **impersonação**.
-- **Testes** a criar e **validação visual** a fazer (fluxos, temas, viewports).
+- **Testes** a criar — nomeie o **nível** de cada um e prefira o mais barato que prova o comportamento
+  (schema, mapper, hook, rota com `vi.mock` do repositório e do guard). Só planeje teste que exija processo
+  externo (emulador do Firebase, app servindo) quando o objeto do teste for a **infra**: consulta real que
+  depende de índice, `firestore.rules`, serialização `Timestamp` contra o documento. Se planejar um, diga
+  na mesma linha o que ele prova que o unitário não provaria.
+- **Validação visual** a fazer (fluxos, temas, viewports).
 
 ### Etapa 2 — Blueprint técnico
 
