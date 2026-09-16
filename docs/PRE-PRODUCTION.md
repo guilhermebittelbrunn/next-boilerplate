@@ -205,35 +205,25 @@ nome do fork** — e a fatura do provedor é do fork.
 O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh api …/branches/main/protection`
 → **404**, rulesets → `[]`). Ligar exigindo o check `verify` fecha isto.
 
-🔴 **Bloqueante: o gate já falhou de verdade. Declare um `testTimeout` explícito nas 9 configs do Vitest
-ANTES de tornar o check obrigatório.** Até 2026-09-14 este aviso era preventivo — baseado em margem
-estreita, não em falha observada. **Em 2026-09-15 a falha aconteceu**, e isso muda a natureza do
-pré-requisito.
+✅ **O pré-requisito que segurava este item caiu.** Entre 2026-09-14 e 2026-09-15 este documento tratava o
+`testTimeout` ausente como bloqueante — o gate tinha falhado de verdade, `app#test` estourando o teto de 5 s
+do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
+**#13** declarou `testTimeout: 20_000` nas **9** configs.
 
-Medição de 2026-09-15, com `pnpm turbo run lint typecheck test --force` executado **duas vezes** no mesmo
-workspace, sem cache:
+Remedido em **2026-09-16**, neste workspace:
 
-| execução | resultado |
-|----------|-----------|
-| 1ª | 🔴 **FALHOU** — `app#test`, 21/23 tasks. `apps/app/__tests__/accountSecurityForm.test.tsx > "só encerra as sessões depois da confirmação no diálogo"` ⇒ `Test timed out in 5000ms` |
-| 2ª | ✅ 23/23, 1 m 8,8 s |
+| medição | comando | resultado |
+|---------|---------|-----------|
+| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **9 de 9** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **23/23 tasks**, 0 em cache, **50,7 s** |
+| lint/format | `pnpm check` | **517 arquivos**, 0 correções |
 
-**Taxa de falha observada: 1 em 2.** O mesmo teste, rodado **isolado** três vezes, leva **390 ms, 986 ms e
-515 ms** (arquivo inteiro: 935/2755/1471 ms) — ou seja, sob contenção o custo sobe de **3× a 8×** e
-atravessa o teto de 5 s.
+O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
+teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.
 
-**O arquivo culpado é um terceiro, e é novo.** A discussão anterior tratava só dos dois
-`securityPolicySources.test.ts` (`apps/app`, `apps/web`); quem estourou foi
-`apps/app/__tests__/accountSecurityForm.test.tsx`, introduzido pela PR #12. Na 2ª execução os três
-mediram, como arquivo: `securityPolicySources` (`app`) **7628 ms**, `accountSecurityForm` **7401 ms**,
-`securityPolicySources` (`web`) **2249 ms**.
-
-**A leitura correta é estrutural, não "esses três arquivos são lentos":** nenhuma das **9** configs declara
-`testTimeout` (`grep -rl testTimeout --include=vitest.config.* .` ⇒ **0**), então todo teste do repositório
-corre contra o default de 5 s **medido sob contenção do turbo**, e qualquer teste de componente que espere
-por interação entra na faixa de risco assim que nasce. A cada PR que acrescenta testes, a probabilidade de
-falha aleatória sobe. Gate obrigatório + falha aleatória = merge bloqueado ao acaso — e o runner do GitHub
-é mais lento que uma máquina local.
+O que **continua** valendo do diagnóstico antigo: o teto do Vitest é medido sob contenção do turbo, e o
+runner do GitHub é mais lento que uma máquina local. Um teste de componente que espere por interação e
+passe a encostar em 20 s é sinal de problema no teste, não motivo para subir o teto de novo.
 
 ### 9. CSP bloqueante na `apps/web`
 
@@ -242,6 +232,27 @@ falha aleatória sobe. Gate obrigatório + falha aleatória = merge bloqueado ao
 Na `apps/app` e na `apps/api` a CSP já é bloqueante; na landing é `Report-Only` (`apps/web/proxy.ts`). Foi
 decisão deliberada para observar antes de bloquear — e a política rodou com **zero violações reportadas**,
 então virar a chave é barato.
+
+### 10. Fechar o circuito de observabilidade
+
+A API passou a carimbar `x-request-id` em toda resposta, a emitir log estruturado de uma linha e a expor
+`/health/ready`. Isso cria a trilha; não cria quem a vigia. Os quatro passos abaixo são de console de
+provedor e nenhum deles é código.
+
+- [ ] **Apontar o health check da plataforma para `/health/ready`.** `/health` responde enquanto o processo
+      estiver de pé, mesmo com o Firestore fora do ar — serve como liveness e nada mais. Quem decide tirar
+      uma instância de rotação precisa consultar `/health/ready`, que responde `503` quando o banco não
+      atende em 2 segundos.
+- [ ] **Plugar um coletor de erro no `onRequestError` dos três apps.** O gancho existe e escreve no stdout,
+      que a Vercel e o Cloud Run indexam. Nenhum alerta é disparado: alguém ainda precisa ir olhar. Quem
+      quiser notificação acrescenta a chamada do provedor (Sentry, Better Stack, Axiom) dentro de
+      `reportRequestError` e traz a env correspondente.
+- [ ] **Conferir a retenção de log da plataforma de deploy.** No free tier a janela costuma ser curta o
+      bastante para servir a um incidente em andamento e não a um post-mortem do dia seguinte. O número
+      exato precisa ser lido no painel do provedor: nenhuma fonte com data foi consultada para ele aqui.
+- [ ] **Decidir o destino do cron órfão.** `apps/api/vercel.json:4-9` agenda `/cron/keep-alive`, rota que
+      não existe e que responde 404 todo dia à 01:00. Ou criar a rota, ou apontar o cron para `/health`
+      (que agora é dinâmico e serve de keep-alive), ou remover a entrada.
 
 ---
 
@@ -261,9 +272,22 @@ então virar a chave é barato.
         `/test`). ⚠️ `qa-account-settings-b@` ficou **inutilizável** — a senha não foi registrada e o
         `sign-in` devolve 500; apagar em vez de tentar reusar.
 
-      > **Padrão a corrigir no processo, não na lista:** esta seção é atualizada por quem entrega, e a
-      > última entrega não a atualizou. Foram **15 contas** acumuladas em 12 PRs. Se o `/review` e o
-      > `/test` não escreverem aqui, a auditoria descobre tarde — e descobriu.
+      - **Da PR #13 (`firebase-emulator-seed`): nenhuma.** Conferido na auditoria de 2026-09-16 contra
+        `docs/features/firebase-emulator-seed/test/report.md:131-135`: as contas do ciclo
+        (`admin@`, `user@`, `user2@`, `qa-emulator-seed@`) existiram **só no emulador** e morreram com o
+        processo; `qa-trap@` nunca chegou a ser criada, porque a trava de
+        `apps/api/scripts/emulatorTarget.mjs` recusou antes da escrita. É o primeiro ciclo que não engorda
+        esta lista, e é exatamente o efeito que a PR #13 existia para produzir.
+      - **Da PR #14:** nenhuma — a PR não tocou em código de aplicação.
+      - **Do ciclo `observability-logging`: nenhuma.** `qa-observability@example.com` aparece nos
+        formulários do `/develop` e do `/review`, mas nenhuma conta com esse endereço chegou a existir: o
+        `/forgot-password` para no `EMAIL_NOT_CONFIGURED` antes de consultar o Authentication, e as
+        tentativas de `sign-in` falharam por credencial inválida. Nada a apagar.
+
+      > **Padrão a corrigir no processo, não na lista:** esta seção é atualizada por quem entrega, e em
+      > 2026-09-15 a entrega anterior não a atualizou. Foram **15 contas** acumuladas em 12 PRs, todas
+      > anteriores ao emulador. Se o `/review` e o `/test` não escreverem aqui, a auditoria descobre tarde
+      > — e descobriu. Com o emulador como caminho local padrão, a tendência é a lista parar de crescer.
 - [ ] **Branches mergeadas ainda vivas no remoto** — as PRs são mergeadas por squash e as branches ficam.
 
 ---
