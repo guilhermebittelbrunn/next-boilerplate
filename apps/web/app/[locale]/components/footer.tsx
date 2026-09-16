@@ -2,6 +2,7 @@ import { getDictionary } from "@repo/internationalization/server";
 import Link from "next/link";
 import { env } from "@/env";
 import { getAppName } from "@/shared/lib/seo";
+import { CookiePreferencesButton } from "./cookiePreferencesButton";
 
 export async function Footer() {
     const { dictionary, locale } = await getDictionary();
@@ -10,11 +11,13 @@ export async function Footer() {
 
     const navigationItems = [
         {
+            id: "home",
             title: dictionary.apps.web.pages.home.meta.title,
             href: `/${locale}`,
             description: "",
         },
         {
+            id: "product",
             title: dictionary.components.header.product.title,
             description: dictionary.components.header.product.description,
             items: [
@@ -33,6 +36,7 @@ export async function Footer() {
             ],
         },
         {
+            id: "legal",
             title: legal.sectionTitle,
             description: legal.sectionDescription,
             items: [
@@ -49,7 +53,7 @@ export async function Footer() {
     ];
 
     return (
-        <footer className="border-foreground/10 border-t px-4 md:px-2">
+        <footer className="border-foreground/10 border-t bg-background px-4 md:px-2 [body:has([data-cookie-banner])_&]:pb-96">
             <div className="w-full bg-background py-8 text-foreground lg:py-16">
                 <div className="container mx-auto">
                     <div className="grid items-center gap-10 lg:grid-cols-2">
@@ -70,7 +74,7 @@ export async function Footer() {
                             {navigationItems.map((item) => (
                                 <div
                                     className="flex flex-col items-start gap-1 text-base"
-                                    key={item.title}
+                                    key={item.id}
                                 >
                                     <div className="flex flex-col gap-2">
                                         {item.href ? (
@@ -122,6 +126,11 @@ export async function Footer() {
                                                 </span>
                                             </Link>
                                         ))}
+                                        {item.id === "legal" && (
+                                            <CookiePreferencesButton
+                                                locale={locale}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             ))}
