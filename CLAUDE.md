@@ -127,9 +127,11 @@ critérios de aceite) · [`docs/review-checklist.md`](docs/review-checklist.md) 
 revisão cobra) · [`docs/GLOSSARY.md`](docs/GLOSSARY.md) (vocabulário do boilerplate).
 
 Regras sempre em contexto: [`.claude/rules/git-commits.md`](.claude/rules/git-commits.md) (⛔ nunca commitar
-em `main`/`production`; só o `revisor-codigo` cria branch; push só com seu "sim") e
+em `main`/`production`; só o `revisor-codigo` cria branch e valida o nome dela; push só com seu "sim"),
 [`.claude/rules/code-comments.md`](.claude/rules/code-comments.md) (o padrão é **não** comentar; nunca citar
-os artefatos do fluxo no código).
+os artefatos do fluxo no código) e
+[`.claude/rules/writing-skills.md`](.claude/rules/writing-skills.md) (`humanizer` no que vira arquivo,
+`caveman` no que fica na conversa — e a fronteira entre os dois).
 
 ### Skills do projeto (digite `/` para invocar)
 
@@ -139,7 +141,8 @@ os artefatos do fluxo no código).
 - **`/new-api-route`** — cria rota na `apps/api` (validação, guard, repo+mapper, `error.code`).
 - **`/i18n-sync`** — adiciona/valida chaves nos 3 idiomas + `apiErrors` (com teste de paridade determinístico).
 - **`/payments-flow`** — fluxo de assinatura Stripe (planos, checkout, portal, webhook). Ver [`docs/PAYMENTS.md`](docs/PAYMENTS.md).
-- **`/write-tests`** — testes Vitest (schema, mapper, rota, hook, componente) no setup do repo.
+- **`/write-tests`** — testes Vitest (schema, mapper, rota, hook, componente) no setup do repo. Sempre no **nível mais barato que prova o comportamento**: teste que exige emulador ou app de pé só quando a infra for o objeto do teste.
+- **`caveman`** — modo comprimido para a **conversa** (retorno de subagent, mensagem de comando). Nunca em arquivo, código ou commit; o par dela é a `humanizer` (global), obrigatória antes de salvar prosa. Regra em [`.claude/rules/writing-skills.md`](.claude/rules/writing-skills.md).
 - **`agent-browser`** — automação de browser para **validar layouts e fluxos** (QA/dogfooding). **Obrigatório** em fluxos de front-end e antes de entregas (ver regra de ouro 11).
 - **`vercel-react-best-practices`** — guia de performance React/Next (auto-aciona ao escrever/refatorar componentes, data fetching, bundle).
 - **`frontend-design`** — direção de design visual ao criar/reformular UI (útil principalmente na `apps/web`).

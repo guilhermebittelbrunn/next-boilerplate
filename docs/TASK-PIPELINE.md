@@ -109,7 +109,23 @@ que o `/analyze` preenche e do qual o `/test` deriva os critérios de aceite (fo
 
 **Validação visual** — regra de ouro 11: front-end não está pronto sem validação visual com
 `agent-browser`. É gate no `/develop`, no `/review` e no `/test`. Rode os comandos do `agent-browser`
-**estritamente em sequência**; confira **light + dark + mobile**.
+**estritamente em sequência**; confira **light + dark + mobile**. **Quem sobe, derruba**: o agent checa a
+porta antes (`lsof -ti tcp:3000`), reutiliza o que já estiver de pé (é ambiente do usuário) e mata só os
+PIDs que ele mesmo abriu, inclusive quando a validação falha. ⛔ Nunca `pkill -f node`/`killall node`.
+
+**Escrita** ([`.claude/rules/writing-skills.md`](../.claude/rules/writing-skills.md)) — duas superfícies,
+duas skills. O que **fica no repo** (plano, handoff, review, critérios, relatório, spec, observação,
+replies de PR) passa pelo **`humanizer`**, em português normal. O que **fica na conversa** (retorno ao
+orquestrador, mensagem ao usuário) sai no estilo **`caveman`**, comprimido. A fronteira não se cruza: prosa
+comprimida nunca entra em arquivo, código, chave de i18n ou mensagem de commit. Nos comandos, o estilo vale
+só enquanto o comando roda — não vira modo da sessão.
+
+**Testes: o nível mais barato que prova o comportamento.** Schema, mapper, hook e rota com `vi.mock` do
+repositório e do guard cobrem quase tudo, inclusive guard, `error.code` e ownership 404. Teste que exige
+**processo externo de pé** (emulador do Firebase em 9099/8080, app servindo) só quando o objeto do teste for
+a **própria infra** — consulta real que depende de índice, `firestore.rules`, serialização `Timestamp`
+contra o documento. Teste caro roda em todo `pnpm test` e em toda PR; quando existir, o motivo está escrito
+no `test/report.md`.
 
 **O CI é o gate final, não o `/review`.** Toda PR roda `pnpm turbo run lint typecheck test` no GitHub
 Actions ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), então lint, tipos, testes e paridade
@@ -128,7 +144,8 @@ intenção de um momento e o ponteiro apodrece; comentário precisa ser autossuf
 
 - **Nenhum commit em `main`/`master`/`production`/`production-backup`** — exige branch nova + PR. O hook
   `PreToolUse` `.claude/hooks/block-protected-branch-write.sh` é a rede de segurança.
-- **Só o `revisor-codigo` define e cria branch.** Os demais param e sinalizam.
+- **Só o `revisor-codigo` define e cria branch** — e **valida o nome contra o padrão** (regex) antes de
+  entregar o plano de commits. Nome fora do formato barra a entrega. Os demais param e sinalizam.
 - **Commit só com aprovação explícita** do usuário, bloco a bloco, no `/review`.
 - **Push** só no fim do `/review`, depois de todos os commits, e **com confirmação**.
 - Ordem de commit: **`packages/sdk` → `apps/api` → `apps/app`/`apps/web` → `packages/internationalization`**.
@@ -223,6 +240,7 @@ Catálogo completo em [`AI-WORKFLOW.md`](AI-WORKFLOW.md). As que o fluxo aciona 
 | `/i18n-sync` | `/develop` — toda chave de UI e todo `error.code` novo |
 | `/write-tests` | `/develop` e `/test` |
 | `agent-browser` | `/develop`, `/review`, `/test` — validação visual (obrigatória) |
+| `humanizer` · `caveman` | todos — arquivo humanizado, conversa comprimida |
 | `/code-review` | `/review` — passada genérica de bugs/simplificação |
 | `brainstorming` | antes do `/develop`, quando a tarefa cria UI nova |
 | `/payments-flow` | `/develop`, em tarefas de assinatura |
