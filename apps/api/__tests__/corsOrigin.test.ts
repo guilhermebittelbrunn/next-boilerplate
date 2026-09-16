@@ -29,6 +29,10 @@ const NO_CONTENT = 204;
 const FORBIDDEN = 403;
 const TOO_MANY_REQUESTS = 429;
 const RETRY_AFTER_SECONDS = 43;
+const ORIGIN_REFUSAL_LINE =
+    /^\[security] blocked reason=origin path=\/entities method=GET requestId=[0-9a-f-]{36}$/;
+const RATE_LIMIT_REFUSAL_LINE =
+    /^\[security] blocked reason=rate-limit path=\/auth\/sign-in method=POST requestId=[0-9a-f-]{36}$/;
 
 type ProxyRequestOptions = {
     origin?: string;
@@ -218,7 +222,7 @@ describe("api proxy origin decision", () => {
         await proxy(makeRequest({ origin: FOREIGN_ORIGIN }));
 
         expect(warnMock).toHaveBeenCalledWith(
-            "[security] blocked reason=origin path=/entities method=GET"
+            expect.stringMatching(ORIGIN_REFUSAL_LINE)
         );
     });
 });
@@ -413,7 +417,7 @@ describe("api proxy rate limit", () => {
         );
 
         expect(warnMock).toHaveBeenCalledWith(
-            "[security] blocked reason=rate-limit path=/auth/sign-in method=POST"
+            expect.stringMatching(RATE_LIMIT_REFUSAL_LINE)
         );
     });
 
