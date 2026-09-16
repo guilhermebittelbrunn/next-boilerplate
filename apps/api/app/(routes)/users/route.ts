@@ -1,6 +1,8 @@
 import { getAuthInstance } from "@repo/auth/server";
 import { UserRoleLevel } from "@repo/auth/types";
 import { UserType } from "@repo/sdk/src/types";
+import { logEvent } from "@repo/shared/utils/helpers/log";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import {
     IdentityToolkitError,
     identitySignUp,
@@ -66,9 +68,11 @@ export const POST = requireAdminApi(async (req, _ctx) => {
             reference_id: localId,
             type: input.type,
         });
-    } catch (profileErr) {
+    } catch {
         await getAuthInstance().deleteUser(localId);
-        console.error(profileErr);
+        logEvent("account", "profile-create-failed", {
+            requestId: requestIdFrom(req),
+        });
         return Response.json(
             { error: { code: "USERS_PROFILE_CREATE_FAILED" } },
             { status: 500 }

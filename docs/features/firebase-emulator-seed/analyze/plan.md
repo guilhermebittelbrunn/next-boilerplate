@@ -1,6 +1,6 @@
 # Plano — Emulador do Firebase, seed e primeiro admin
 
-> Spec de origem: [`specs/firebase-emulator-seed.md`](../../../../specs/firebase-emulator-seed.md)
+> Spec de origem: [`spec.md`](../spec.md)
 > (auditada em 2026-09-15). Guia: [`docs/feature-analysis-guide.md`](../../../feature-analysis-guide.md).
 > Roda no `/cycle` autônomo — as ambiguidades foram **decididas**, não perguntadas. §21 registra cada uma.
 

@@ -1,5 +1,7 @@
 import { getAuthInstance } from "@repo/auth/server";
 import { UserType } from "@repo/sdk/src/types";
+import { logEvent } from "@repo/shared/utils/helpers/log";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import {
     IdentityToolkitError,
     identitySignUp,
@@ -33,9 +35,11 @@ export async function POST(req: Request) {
             reference_id: localId,
             type: UserType.COMMON,
         });
-    } catch (profileErr) {
+    } catch {
         await getAuthInstance().deleteUser(localId);
-        console.error(profileErr);
+        logEvent("auth", "profile-create-failed", {
+            requestId: requestIdFrom(req),
+        });
         return Response.json(
             { error: "Could not create user profile" },
             { status: 500 }

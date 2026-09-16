@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/analytics/provider.tsx, apps/app/app/layout.tsx, "apps/web/app/[locale]/layout.tsx", packages/design-system/components/ui/index.ts]
 feature: -
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
 # Consentimento de cookies e Consent Mode
@@ -41,16 +41,26 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
 - `grep -rniE "consent|cookie-?banner"` em `apps/` + `packages/` = **0 ocorrências** (remedido em
   2026-09-15). **Não existe banner nem componente de consentimento em lugar nenhum**, inclusive no
   `packages/design-system`.
-- **O inventário de cookies triplicou, e isso muda o corte** (remedido em 2026-09-15: são **6** nomes de
-  cookie, não os 2 que esta spec afirmava). Um banner que classifique por categoria precisa enumerá-los —
-  se declarar só dois, **nasce mentindo**:
+- **O inventário de cookies dobrou desde que esta spec nasceu, e isso muda o corte.** São **5** nomes de
+  cookie, não os 2 que a spec afirmava originalmente. Um banner que classifique por categoria precisa
+  enumerá-los — se declarar só dois, **nasce mentindo**:
 
   | cookie | onde | categoria |
   |--------|------|-----------|
   | `access-token` | `packages/auth/session.ts:14` | estritamente necessário |
-  | `x-locale` | `packages/internationalization/client.ts:8` · `server.ts:20` · `apps/app/proxy.ts:155,159` · `apps/web/proxy.ts:92,96` | preferência |
-  | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:19` | preferência — 🆕 **criado pela PR #12** |
-  | `bp:panel-request-role` · `bp:impersonate-firebase-uid` · `bp:panel-state` | `apps/app/shared/lib/panelState.ts:18-20` | estritamente necessário (estado de painel) |
+  | `x-locale` | `packages/internationalization/client.ts:8` · `server.ts:20` · `apps/app/proxy.ts:169,173` · `apps/web/proxy.ts:104,108` | preferência |
+  | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:19` | preferência — criado pela PR #12 |
+  | `bp:panel-request-role` · `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:18-19` | estritamente necessário (estado de painel) |
+
+  > **Correção da auditoria de 2026-09-16 — a própria spec estava com o inventário errado.** A rodada de
+  > 2026-09-15 contou **6** cookies porque incluiu `bp:panel-state` na lista. Ele não é cookie:
+  > `apps/app/shared/lib/panelState.ts:20` o declara como `PANEL_STORAGE_KEY`, chave de **localStorage**, e
+  > o docblock do arquivo (`:8-13`) separa as duas coisas de propósito — cookie é a autoridade que o
+  > servidor lê, localStorage é o espelho do rótulo de exibição. O erro importa mais aqui do que importaria
+  > em outra spec, porque o número **6** vinha sendo usado como argumento, e porque um aviso de
+  > consentimento que lista um item de localStorage como cookie comete exatamente o defeito que esta spec
+  > existe para evitar. Vale a nota de método: banner de consentimento também precisa cobrir armazenamento
+  > local, mas em outra seção e com outra base legal — não misturado com a lista de cookies.
 
   `packages/internationalization/utils/cookies.ts:1` é só um `getCookie` **genérico**, sem nomear locale
   nenhum.

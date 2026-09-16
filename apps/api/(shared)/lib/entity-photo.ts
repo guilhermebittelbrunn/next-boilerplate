@@ -1,4 +1,5 @@
 import type { EntityDTO } from "@repo/sdk/src/types";
+import { logEvent } from "@repo/shared/utils/helpers/log";
 import {
     isOwnedBy,
     isStorageConfigured,
@@ -58,7 +59,7 @@ export async function withPhotoUrl(entity: EntityDTO): Promise<EntityDTO> {
     } catch {
         // A bucket that refuses to sign is a misconfiguration of one record's image,
         // not a reason to fail the whole read: the row renders without a thumbnail.
-        console.warn("[storage] could not sign a read url for an entity photo");
+        logEvent("storage", "sign-url-failed", { resource: "entity-photo" });
         return { ...entity, photoUrl: null };
     }
 }

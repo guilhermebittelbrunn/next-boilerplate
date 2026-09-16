@@ -1,4 +1,5 @@
 import { AUTH_REQUEST_HEADER } from "@repo/shared/utils/helpers/auth-request-headers";
+import { REQUEST_ID_HEADER } from "@repo/shared/utils/helpers/request-id";
 
 /**
  * Ports the front-ends listen on in this repository. Used only when `CORS_ORIGIN`
@@ -53,10 +54,11 @@ export function isOriginAllowed(
 
 /**
  * Browsers hide every response header from cross-origin scripts except a short
- * safelist, and `Retry-After` is not on it: without naming it here the wait sent
- * with a `429` reaches the network tab but never the code that would honour it.
+ * safelist, and neither `Retry-After` nor `x-request-id` is on it: without naming
+ * them here the wait sent with a `429` and the identifier stamped on every answer
+ * reach the network tab but never the code that would honour or quote them.
  */
-const EXPOSED_HEADERS = "Retry-After";
+const EXPOSED_HEADERS = ["Retry-After", REQUEST_ID_HEADER].join(", ");
 
 /**
  * `Access-Control-Allow-Origin` holds a single origin, so the validated member of

@@ -4,6 +4,11 @@ import {
     buildApiOptions,
 } from "@repo/security/middleware";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { logEvent } from "@repo/shared/utils/helpers/log";
+import {
+    generateRequestId,
+    REQUEST_ID_HEADER,
+} from "@repo/shared/utils/helpers/request-id";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import {
@@ -52,11 +57,20 @@ function isRateLimitedPath(pathname: string): boolean {
 /** Single line, stable prefix, no address, header or body: blocking is not a reason to start retaining personal data. */
 function logBlocked(
     reason: RateLimitBlockReason | "origin",
-    request: NextRequest
+    request: NextRequest,
+    requestId: string
 ): void {
-    console.warn(
-        `[security] blocked reason=${reason} path=${request.nextUrl.pathname} method=${request.method}`
-    );
+    logEvent("security", "blocked", {
+        reason,
+        path: request.nextUrl.pathname,
+        method: request.method,
+        requestId,
+    });
+}
+
+function withRequestId<T extends Response>(response: T, requestId: string): T {
+    response.headers.set(REQUEST_ID_HEADER, requestId);
+    return response;
 }
 
 function withSecurityHeaders<T extends Response>(response: T): T {
@@ -70,8 +84,8 @@ function withCors<T extends Response>(response: T, origin: string | null): T {
     return response;
 }
 
-function refuseOrigin(request: NextRequest): NextResponse {
-    logBlocked("origin", request);
+function refuseOrigin(request: NextRequest, requestId: string): NextResponse {
+    logBlocked("origin", request, requestId);
 
     // A preflight has no body the browser would read; withholding
     // `Access-Control-Allow-Origin` is itself the refusal.
@@ -99,15 +113,26 @@ function refuseRateLimit(retryAfterSeconds: number | null): NextResponse {
 }
 
 export async function proxy(request: NextRequest) {
+    // Always generated here, never read from the caller: honouring an inbound value
+    // would let a client forge log lines under an identifier of its choosing.
+    const requestId = generateRequestId();
     const origin = request.headers.get("origin");
 
     if (!isOriginAllowed(origin, allowedOrigins)) {
-        return withSecurityHeaders(withCors(refuseOrigin(request), null));
+        return withRequestId(
+            withSecurityHeaders(
+                withCors(refuseOrigin(request, requestId), null)
+            ),
+            requestId
+        );
     }
 
     if (request.method === "OPTIONS") {
-        return withSecurityHeaders(
-            withCors(new NextResponse(null, { status: NO_CONTENT }), origin)
+        return withRequestId(
+            withSecurityHeaders(
+                withCors(new NextResponse(null, { status: NO_CONTENT }), origin)
+            ),
+            requestId
         );
     }
 
@@ -115,14 +140,31 @@ export async function proxy(request: NextRequest) {
         const decision = await checkRateLimit(request);
 
         if (!decision.allowed) {
-            logBlocked(decision.reason, request);
-            return withSecurityHeaders(
-                withCors(refuseRateLimit(decision.retryAfterSeconds), origin)
+            logBlocked(decision.reason, request, requestId);
+            return withRequestId(
+                withSecurityHeaders(
+                    withCors(
+                        refuseRateLimit(decision.retryAfterSeconds),
+                        origin
+                    )
+                ),
+                requestId
             );
         }
     }
 
-    return withSecurityHeaders(withCors(NextResponse.next(), origin));
+    const forwardedHeaders = new Headers(request.headers);
+    forwardedHeaders.set(REQUEST_ID_HEADER, requestId);
+
+    return withRequestId(
+        withSecurityHeaders(
+            withCors(
+                NextResponse.next({ request: { headers: forwardedHeaders } }),
+                origin
+            )
+        ),
+        requestId
+    );
 }
 
 export const config = {

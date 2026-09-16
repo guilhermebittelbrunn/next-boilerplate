@@ -1,6 +1,8 @@
 /** biome-ignore-all lint/suspicious/useAwait: os handlers de evento são stubs aguardados pelo despacho abaixo; a assinatura async é o contrato que a persistência futura vai preencher. */
 import type { Stripe } from "@repo/payments";
 import { getStripe } from "@repo/payments";
+import { logEvent } from "@repo/shared/utils/helpers/log";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
@@ -56,13 +58,17 @@ export const POST = async (request: Request): Promise<Response> => {
                 break;
             }
             default: {
-                console.warn(`Unhandled event type ${event.type}`);
+                logEvent("payments", "webhook-unhandled-event", {
+                    eventType: event.type,
+                });
             }
         }
 
         return NextResponse.json({ result: event, ok: true });
-    } catch (error) {
-        console.error("Webhook error:", error);
+    } catch {
+        logEvent("payments", "webhook-failed", {
+            requestId: requestIdFrom(request),
+        });
 
         return NextResponse.json(
             {

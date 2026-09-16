@@ -1,4 +1,5 @@
 import type { AccountDTO, UserPreferences } from "@repo/sdk/src/types";
+import { logEvent } from "@repo/shared/utils/helpers/log";
 import { isAbsoluteHttpUrl } from "./entity-photo";
 import {
     isStorageConfigured,
@@ -41,7 +42,7 @@ async function resolveAvatarUrl(avatar: string | null): Promise<string | null> {
     } catch {
         // A bucket that refuses to sign costs the caller a picture, not the account:
         // the panel falls back to the initials avatar.
-        console.warn("[storage] could not sign a read url for an avatar");
+        logEvent("storage", "sign-url-failed", { resource: "avatar" });
         return null;
     }
 }

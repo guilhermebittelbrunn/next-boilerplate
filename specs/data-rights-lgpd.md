@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
 # Direitos do titular: exportar dados e excluir conta

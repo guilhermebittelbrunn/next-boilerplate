@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/app/(routes)/webhooks/payments/route.ts, packages/sdk/src/client/index.ts, packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts, "apps/app/app/[locale]/(authenticated)/(common)/routes.tsx"]
 feature: -
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
 # Assinatura Stripe de ponta a ponta

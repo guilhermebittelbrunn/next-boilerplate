@@ -2,6 +2,8 @@ import { sendEmail } from "@repo/email";
 import { actionLinkEmail } from "@repo/email/templates/action-link";
 import { type Locale, resolveLocale } from "@repo/internationalization/utils";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { logEvent } from "@repo/shared/utils/helpers/log";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { after } from "next/server";
 import {
     buildAuthActionLink,
@@ -17,7 +19,11 @@ import { parsePasswordResetRequest } from "@/(shared)/validation/auth.schema";
  * of hundreds of milliseconds that answers the very question the identical response
  * body refuses to answer.
  */
-function deliverResetLink(email: string, locale: Locale): void {
+function deliverResetLink(
+    email: string,
+    locale: Locale,
+    requestId: string | null
+): void {
     after(async () => {
         try {
             const url = await buildAuthActionLink(
@@ -35,10 +41,10 @@ function deliverResetLink(email: string, locale: Locale): void {
                 locale,
                 data: { name: email, url, action: "resetPassword" },
             });
-        } catch (error) {
+        } catch {
             // No address in the line: a failure here is not a reason to start
             // retaining personal data in the logs.
-            console.error("[auth-reset-request] delivery failed", error);
+            logEvent("auth", "reset-request-delivery-failed", { requestId });
         }
     });
 }
@@ -65,7 +71,7 @@ export async function POST(req: Request) {
     }
 
     const { email, locale: requestedLocale } = parsed.value;
-    deliverResetLink(email, resolveLocale(requestedLocale));
+    deliverResetLink(email, resolveLocale(requestedLocale), requestIdFrom(req));
 
     return Response.json({ data: { requested: true } });
 }

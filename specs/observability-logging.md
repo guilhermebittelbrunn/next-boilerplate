@@ -1,7 +1,7 @@
 ---
 id: observability-logging
 title: "Observabilidade: erros, tracing e logs estruturados"
-status: proposed
+status: in-progress
 value: alto
 effort: M
 audience: dx
@@ -9,8 +9,8 @@ area: [apps/api, apps/app, apps/web, packages/analytics, packages/shared]
 mode: ambos
 depends_on: []
 contends_on: [apps/api/instrumentation.ts, apps/api/proxy.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
-feature: -
-updated: 2026-09-15
+feature: observability-logging
+updated: 2026-09-16
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -69,7 +69,7 @@ invisível até alguém conferir a fatura.
   higiene e vira argumento de privacidade.
 - **A PR #11 (`file-upload-storage`, 2026-09-14) complicou o argumento acima — e a spec não deve esconder
   isso.** Ela acrescentou dois pontos de log, ambos **sem helper nenhum**, e o resultado foi misto:
-  `apps/api/(shared)/lib/storage.ts:74` (`[storage] delete failed path=…`) **segue** a convenção inteira —
+  `apps/api/(shared)/lib/storage.ts:81` (`[storage] delete failed path=…`) **segue** a convenção inteira —
   prefixo, `chave=valor`, linha única, sem objeto de erro; mas
   `apps/api/(shared)/lib/entity-photo.ts:61`
   (`console.warn("[storage] could not sign a read url for an entity photo")`) pega **só o prefixo**: a
@@ -81,16 +81,17 @@ invisível até alguém conferir a fatura.
   avatar. Não é acidente de uma entrega — **a degradação se copia junto com o código**, que é precisamente
   o que um helper impede e a imitação não.
   Placar do inventário deliberado, remedido em **2026-09-15**: **4 conformes** (`proxy.ts:57`,
-  `packages/email/index.ts:46`, `auth-action-links.ts:25`, `storage.ts:74`), **3 semiconformes**
+  `packages/email/index.ts:46`, `auth-action-links.ts:25`, `storage.ts:81`), **3 semiconformes**
   (`reset-request/route.ts:41`, `entity-photo.ts:61`, `account-avatar.ts:44`) e **1 não-conforme**
   (`reset/route.ts:51`) — **8 pontos**, contra 7 na rodada anterior.
 - **A superfície sem observabilidade cresceu na mesma PR.** As 3 rotas novas de conta (`/account`,
   `/account/password`, `/account/sessions/revoke`) não emitem **nenhum** log — incluindo a troca de senha e
   a revogação de sessões, que são exatamente os eventos que alguém procuraria numa investigação de conta
   comprometida.
-- **O `console` cru é mais comum do que esta spec vinha afirmando.** Recontagem de 2026-09-15: **26
-  chamadas `console.*` em 18 arquivos** de código de produção. Só `packages/auth/server.ts` concentra
-  **5** (`:176`, `:189`, `:205`, `:248`, `:261`), todas com o objeto de erro e sem prefixo — num pacote de
+- **O `console` cru é mais comum do que esta spec vinha afirmando.** Recontagem de 2026-09-16: **26
+  chamadas `console.*` em 20 arquivos** de código de produção (`.ts`/`.tsx` fora de `__tests__` e de
+  `scripts/`). Só `packages/auth/server.ts` concentra
+  **5** (`:191`, `:204`, `:220`, `:263`, `:276`), todas com o objeto de erro e sem prefixo — num pacote de
   **autenticação**, que é onde o objeto de erro tem mais chance de carregar identificador de usuário.
   **O que isso faz com a tese desta spec:** enfraquece a versão forte dela. A convenção **se propagou sem
   helper** — dois terços dos pontos novos nasceram certos por imitação, então "só um helper com teste a

@@ -1,4 +1,6 @@
 import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { logEvent } from "@repo/shared/utils/helpers/log";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import {
     IdentityToolkitError,
     identityResetPassword,
@@ -47,8 +49,10 @@ export async function POST(req: Request) {
     try {
         const user = await getAuthInstance().getUserByEmail(email);
         await revokeUserSessions(user.uid);
-    } catch (error) {
-        console.error("Could not revoke sessions after password reset", error);
+    } catch {
+        logEvent("auth", "session-revoke-failed", {
+            requestId: requestIdFrom(req),
+        });
     }
 
     return Response.json({ data: { confirmed: true } });
