@@ -2,6 +2,7 @@ import type { Locale } from "@repo/internationalization/utils";
 import axios from "axios";
 import { globalTranslations } from "../../../internationalization/translations/global";
 import { HTTP_STATUS } from "./httpStatus";
+import { REQUEST_ID_HEADER } from "./request-id";
 
 /**
  * Se houver alguma outra forma de error serem disparados devemos adicionar aqui
@@ -11,6 +12,8 @@ export default class FormattedError {
     status: number;
     /** Seconds the server asked the caller to wait, when it said so. */
     retryAfterSeconds: number | null;
+    /** Identifier the API stamped on this response, so the user can quote it. */
+    requestId: string | null;
     translations: (typeof globalTranslations)[keyof typeof globalTranslations];
 
     constructor(error: unknown, locale: Locale = "pt-br") {
@@ -18,6 +21,7 @@ export default class FormattedError {
         this.message = this.formatMessage(error);
         this.status = this.formatStatus(error);
         this.retryAfterSeconds = this.formatRetryAfter(error);
+        this.requestId = this.formatRequestId(error);
     }
 
     formatMessage(error: unknown): string {
@@ -99,6 +103,21 @@ export default class FormattedError {
 
         const seconds = Number(rawHeader);
         return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+    }
+
+    /**
+     * Only present when the API actually answered: a request that never reached the
+     * server has no identifier to quote, and the message must stay as it is.
+     */
+    private formatRequestId(error: unknown): string | null {
+        if (!(axios.isAxiosError(error) && error.response)) {
+            return null;
+        }
+
+        const rawHeader = error.response.headers?.[REQUEST_ID_HEADER];
+        return typeof rawHeader === "string" && rawHeader.length > 0
+            ? rawHeader
+            : null;
     }
 
     private isUploadRequest(error: unknown): boolean {
