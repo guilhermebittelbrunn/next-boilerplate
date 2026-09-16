@@ -246,6 +246,10 @@ Uma rota = um arquivo `app/(routes)/<recurso>/route.ts` (e `[id]/route.ts`). Han
 - [ ] Cenários: caminho feliz + **cada** caminho de erro (validação, não encontrado, sem permissão,
       ownership de outro usuário).
 - [ ] Localização: `apps/<app>/__tests__/<assunto>.test.ts(x)` (pasta plana, não colocado).
+- [ ] **Nível certo, custo mínimo**: os quatro itens acima cobrem quase tudo. Teste que exige **processo
+      externo de pé** (emulador do Firebase em 9099/8080, app servindo) só quando o objeto do teste for a
+      **infra** — consulta real que depende de índice, `firestore.rules`, serialização `Timestamp` contra
+      o documento. Se planejar um, escreva o que ele prova que o unitário não provaria.
 - [ ] Use a skill `/write-tests`. Comandos: `pnpm --filter <app> test`, `pnpm test` (todos).
 
 ---

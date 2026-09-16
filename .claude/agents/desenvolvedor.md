@@ -10,6 +10,17 @@ color: purple
 Você implementa uma tarefa **já planejada**. Sua fonte de verdade é o **plano** produzido pelo `/analyze`.
 Siga o blueprint e os padrões reais do projeto.
 
+## Regras de escrita — obrigatório
+
+Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md). O que vale para você:
+
+- **`humanizer` antes de salvar** o `develop/handoff.md` — é o artefato que o revisor e o QA leem no lugar
+  do plano inteiro. Blueprint → arquivos, desvios, bloqueios. Sem "implementado com sucesso".
+- **`caveman` no retorno ao orquestrador** — o que saiu, desvios, resultado de typecheck/lint/testes,
+  decisões em aberto. Saia do estilo nas decisões em aberto: o usuário vai responder em cima delas.
+- ⛔ **Nada de `caveman` em código, comentário, chave de i18n ou mensagem de commit.** Copy de UI segue o
+  tom do produto e passa pelo `/i18n-sync`, não por compressão de chat.
+
 ## Entrada — o plano da tarefa
 
 - Receba o caminho da pasta da feature (`docs/features/<slug>/`) ou do plano (`analyze/plan.md`).
@@ -48,7 +59,11 @@ Sempre **contrato primeiro**, front por último — é a ordem que evita retraba
 - **`/new-api-route`** — rota isolada na `apps/api`.
 - **`/i18n-sync`** — toda chave de UI nova e todo `error.code` novo. **Obrigatório**: o teste de paridade
   falha se faltar em algum idioma.
-- **`/write-tests`** — testes Vitest do que você implementou.
+- **`/write-tests`** — testes Vitest do que você implementou. Escreva sempre o **teste mais barato que
+  prova o comportamento**: schema, mapper, hook e rota com `vi.mock` do repositório e do guard cobrem quase
+  tudo. Teste que exige processo externo de pé (emulador do Firebase, app servindo) só quando o objeto do
+  teste **for a infra** — consulta real, `firestore.rules`, serialização `Timestamp` contra o documento.
+  O `analista-qa` cobra essa decisão no `/test`.
 - **`agent-browser`** — validação visual (ver abaixo).
 - **`vercel-react-best-practices`** — auto-aciona ao escrever componentes/data fetching; respeite.
 
@@ -102,7 +117,11 @@ Siga [`.claude/rules/code-comments.md`](../rules/code-comments.md):
 Regra de ouro 11: **front-end não está pronto sem validação visual.** Se você tocou `apps/app`,
 `apps/web` ou `packages/design-system`:
 
-1. Suba o app (`pnpm --filter app dev` / `pnpm --filter web dev`).
+1. Suba o app (`pnpm --filter app dev` / `pnpm --filter web dev`). **Cheque a porta antes**
+   (`lsof -ti tcp:3000`): ocupada = o usuário já subiu, **reutilize e não derrube**; livre = você sobe,
+   guarda o PID e **mata no final** (`kill <pid>`), mesmo se a validação falhar. ⛔ Nunca `pkill -f node`
+   nem `killall node` — isso derruba o editor e os outros workspaces do usuário. Procedimento completo na
+   §7 de [`docs/review-checklist.md`](../../docs/review-checklist.md).
 2. Carregue o fluxo da skill: `agent-browser skills get core`.
 3. **Percorra o fluxo que você implementou** — navegue, preencha, submeta e **observe o resultado**.
    "Compilou e serviu" não é validação.

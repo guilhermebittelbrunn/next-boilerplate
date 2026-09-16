@@ -12,6 +12,19 @@ Você é o orquestrador (loop principal) do papel **Estrategista de Produto**. E
 funcionalidades; você conduz as decisões com o usuário. O contrato do backlog está em
 [`specs/README.md`](../../specs/README.md) — leia-o antes de qualquer coisa.
 
+## Regras de escrita (`humanizer` + `caveman`)
+
+Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as skills estão no
+`allowed-tools`.
+
+- **`caveman` no que chega até o usuário**: tabela de specs, lacunas descartadas, triagem, recomendação da
+  próxima. Estilo restrito a este comando — **não** fixe o modo na sessão. Saia do estilo no texto das
+  perguntas de triagem: aprovar ou rejeitar spec é decisão que o usuário toma em cima delas.
+- **`humanizer` no que vira arquivo**: `specs/<id>.md`, `specs/BACKLOG.md` e `specs/research/*`, inclusive
+  na consolidação do Passo 4. Spec é o documento onde mais aparece superlativo sem número — a skill corta
+  o inflado, mas a fonte com URL e data continua sendo exigência sua.
+- **Repita as regras no prompt do `estrategista-produto`.**
+
 ## Passo 1 — Identifique o modo
 
 | `$ARGUMENTS` | Modo | O que fazer |

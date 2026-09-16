@@ -158,6 +158,16 @@ responsabilidade da revisão e do deploy da Vercel.
 - [ ] Rota da API: mocka repositório **e** guard (passthrough injetando `ctx.subjectProfile`).
 - [ ] Cobre caminho feliz **e** cada caminho de erro (validação, não encontrado, sem permissão,
       ownership de terceiro).
+- [ ] **Nível certo, custo mínimo**: o teste escolhido é o **mais barato que prova o comportamento**.
+      Schema, mapper, helper, hook e rota com `vi.mock` do repositório e do guard cobrem praticamente
+      tudo — inclusive validação de body, `error.code`, guard e ownership 404.
+- [ ] Teste que exige **processo externo de pé** (emulador do Firebase em 9099/8080, app servindo) só
+      quando o objeto do teste for a **própria infra**: consulta real que depende de índice ou de
+      `orderBy` que o `BaseRepository` não faz, `firestore.rules`/`storage.rules`, serialização
+      `Timestamp` ↔ ISO contra o documento real, emissão/revogação de sessão do Firebase Auth. Se existe
+      um, o motivo está escrito — qual comportamento ele prova que o unitário não provaria.
+- [ ] Sem teste redundante: rota/módulo que já tinha cobertura e cujo **contrato de infra não mudou** não
+      ganha cenário novo só por precaução. Teste caro é custo em todo `pnpm test` e em toda PR.
 - [ ] ⚠️ `turbo build` depende de `test` — teste quebrado bloqueia build. E o CI roda `test` em toda PR,
       então teste quebrado também bloqueia o merge.
 
@@ -175,6 +185,23 @@ Diff que toca `apps/app`, `apps/web` ou `packages/design-system` **não está re
       screenshots saem da aba errada.
 - [ ] Se o `agent-browser` não estiver disponível, **sinalize explicitamente** que a validação visual não
       foi feita — não trate como aprovada.
+
+### Portas: derrube só o que você subiu
+
+Agents e usuário disputam as mesmas portas — **3000** `app` · **3001** `web` · **3002** `api` ·
+**3003** `email` · **9099** Auth emulator · **8080** Firestore emulator · **4001** UI do emulador. Processo
+pendurado no fim da validação quebra o próximo `pnpm dev` do usuário, e o processo é do agent.
+
+- [ ] **Checou a porta antes de subir**: `lsof -ti tcp:3000` (vazio = livre).
+- [ ] **Porta ocupada → reutilizou e não derrubou.** O ambiente é do usuário; derrubá-lo no meio do
+      trabalho dele é pior do que não rodar a validação. Registre o que foi reutilizado.
+- [ ] **Porta livre → subiu em background guardando o PID** (`pnpm --filter api dev &` → `$!`) e **matou
+      esses PIDs no final** (`kill <pid>`), confirmando com `lsof -ti tcp:<porta>` que voltou a sair vazio.
+- [ ] **Teardown também quando dá errado** — validação que falhou ou foi abortada no meio derruba o que
+      subiu do mesmo jeito, antes de escrever o relatório.
+- [ ] ⛔ **Nunca `pkill -f node`, `pkill -f next` ou `killall node`.** Isso mata o editor, o dev server do
+      usuário e os outros workspaces abertos na máquina. Mate por PID; `lsof -ti tcp:<porta> | xargs kill`
+      só na porta que **você** abriu.
 
 ## 8. Formato do relatório
 

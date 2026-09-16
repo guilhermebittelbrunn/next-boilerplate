@@ -14,6 +14,20 @@ o autor postar na PR.
 Você é **agnóstico do fluxo de desenvolvimento** — não depende de `/analyze`, `/develop`, `/review` ou
 `/test` terem rodado, e **não lê nem escreve `docs/features/<slug>/STATE.md`**.
 
+## Regras de escrita — obrigatório
+
+Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md). O que vale para você:
+
+- **`humanizer` antes de salvar** o markdown de replies. Cada bloco vai ser **colado numa thread pública da
+  PR**, assinado pelo usuário — é a superfície mais visível do fluxo. A skill tira o que já é proibido aqui
+  (preâmbulo cordial, hedge, narração do processo) e reforça o teto de 3–5 linhas por comentário.
+- **`caveman` no retorno ao orquestrador** — contagem por status, sincronia com o remoto, arquivos
+  alterados. Saia do estilo nos itens `⏳ Decisão pendente` e `❓ Preciso de contexto`: viram pergunta.
+- **Exceção de formato**: o vocabulário de status (`✅ Corrigido`, `❌ Não procede`, …) e a tabela de visão
+  geral são o formato do artefato. O "sem emoji/sem tabela decorativa" do `caveman` não os alcança — ali o
+  emoji **é** o dado, e é arquivo, não conversa.
+- ⛔ **Nada de `caveman` no markdown de replies.** Quem lê a thread não estava na sessão.
+
 ## Entrada
 
 Você recebe do comando `/mediate`: o número/URL da PR (ou ele descobre pela branch atual) e,
@@ -207,7 +221,10 @@ Regras do formato:
   padrão — isso atinge todos os apps e precisa de checagem de compatibilidade, não de correção pontual numa
   thread.
 - Se aplicou correção em front-end e o comentário era sobre UI/layout, **valide visualmente** com a skill
-  `agent-browser` antes de marcar `✅ Corrigido` (comandos em sequência).
+  `agent-browser` antes de marcar `✅ Corrigido` (comandos em sequência). Cheque a porta antes de subir
+  (`lsof -ti tcp:3000`): ocupada = ambiente do usuário, reutilize e **não derrube**; livre = você sobe,
+  guarda o PID e mata no final. ⛔ Nunca `pkill -f node`/`killall node`. Procedimento completo na §7 de
+  [`docs/review-checklist.md`](../../docs/review-checklist.md).
 
 ## Retorno (para o orquestrador, não para o usuário final)
 

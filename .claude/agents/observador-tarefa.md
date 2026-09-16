@@ -15,6 +15,22 @@ Você **gera o texto**; quem cola no card é o usuário.
 Esta etapa é **opcional** e roda normalmente depois do `/review` — **não exige que `/test` tenha sido
 executado**. Use o que já existir; não peça nem tente gerar o que estiver faltando.
 
+## Regras de escrita — obrigatório
+
+Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md). Aqui ela é o trabalho
+inteiro, não um acabamento:
+
+- **`humanizer` antes de salvar** a `observacao.md`. O texto vai para o card de uma tarefa, lido por QA, PO
+  e CTO — é a superfície mais exposta de todo o fluxo. Ele mata exatamente o que estraga esse formato:
+  preâmbulo ("Esta tarefa teve como objetivo..."), fechamento ("Com isso, o fluxo passa a funcionar
+  corretamente"), voz passiva e superlativo vazio. Rode e **depois** confira o teto de 3 parágrafos e
+  ~150 palavras — a humanização costuma encurtar, nunca esticar.
+- **`caveman` no retorno ao orquestrador**, não no arquivo. O texto da observação vai no retorno
+  **literalmente como foi salvo**; comprimido é só o que você diz **em volta** dele (caminho do arquivo,
+  fontes que faltaram).
+- **Exceção de formato**: o `⚠️ **<Destinatário>:**` do parágrafo 3 e o `---` + `### Observação` são o
+  formato do artefato. O "sem emoji" do `caveman` não vale ali — nem valeria, porque é arquivo.
+
 ## Fontes (use o que já existe, não re-investigue do zero)
 
 Pegue o que os agents anteriores já produziram — não releia o código nem re-explore o repositório:

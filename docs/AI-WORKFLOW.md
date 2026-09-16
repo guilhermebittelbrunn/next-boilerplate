@@ -101,6 +101,10 @@ auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude
   tráfego). Voltada à `apps/web`.
 - **`ai-seo`** — otimização para **AI search** (AEO/GEO/LLMO): ser citado por AI Overviews, ChatGPT,
   Perplexity, Claude, Gemini. Complementa `seo-audit` e `copywriting`.
+- **`caveman`** — modo de resposta comprimido, para a **conversa**. Todo agent e todo comando do fluxo usa
+  o estilo dela no retorno ao orquestrador e na mensagem ao usuário. Nunca em arquivo — a fronteira está em
+  [`writing-skills.md`](../.claude/rules/writing-skills.md). Par dela é a `humanizer` (global), obrigatória
+  antes de salvar qualquer prosa do fluxo.
 
 > Para baixar mais skills da comunidade: rode `npx skills add <repo> --skill <nome>` e **mova a pasta
 > resultante de `.agents/skills/<nome>` para `.claude/skills/<nome>`** (é lá que o Claude Code descobre
@@ -114,8 +118,9 @@ auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude
 
 Como validar:
 
-1. Suba o app afetado: `pnpm --filter app dev` (3000) / `pnpm --filter web dev` (3001) — e
-   `pnpm --filter api dev` (3002) quando o fluxo carrega dados.
+1. **Cheque a porta antes de subir** (`lsof -ti tcp:3000`): ocupada significa que o ambiente é seu — o
+   agent reutiliza e **não derruba**. Livre, ele sobe guardando o PID: `pnpm --filter app dev` (3000) /
+   `pnpm --filter web dev` (3001) — e `pnpm --filter api dev` (3002) quando o fluxo carrega dados.
 2. Carregue o workflow da skill: `agent-browser skills get core` (e `... get dogfood` para QA
    exploratório/bug hunt).
 3. Abra o app e **percorra os fluxos tocados** pela mudança: navegue, preencha formulários, dispare as
@@ -124,7 +129,10 @@ Como validar:
    **tema** (light/dark/system). O `Table` é antd — confirme que respeita o tema.
 5. ⚠️ **Rode os comandos do `agent-browser` estritamente em sequência.** Chamadas concorrentes travam o
    daemon e os screenshots passam a sair da aba errada, silenciosamente.
-6. Registre o que foi validado (telas/fluxos + screenshots) e qualquer regressão. Se o `agent-browser` não
+6. **Devolva as portas**: mate os PIDs que o agent abriu, inclusive quando a validação falha ou é
+   abortada. ⛔ Nada de `pkill -f node` ou `killall node`, que derrubariam seu editor e os outros
+   workspaces. Detalhe na §7 de [`review-checklist.md`](review-checklist.md).
+7. Registre o que foi validado (telas/fluxos + screenshots) e qualquer regressão. Se o `agent-browser` não
    estiver instalado, **sinalize** que a validação não foi feita — não conte como aprovado.
 
 Os agents `desenvolvedor`, `revisor-codigo`, `analista-qa` e `code-reviewer` já executam esse passo quando
@@ -170,6 +178,9 @@ Estes arquivos são carregados em toda sessão — por isso são curtos:
 - [`code-comments.md`](../.claude/rules/code-comments.md) — o padrão é não comentar; e **nunca** referenciar
   o fluxo de agents no código, mesmo `docs/features/` estando versionado (o ponteiro apodrece; o comentário
   tem de ser autossuficiente).
+- [`writing-skills.md`](../.claude/rules/writing-skills.md) — `humanizer` no que vira arquivo, `caveman` no
+  que fica na conversa, e a fronteira entre os dois: prosa comprimida **nunca** entra em arquivo, código,
+  chave de i18n ou mensagem de commit.
 
 ## Fluxo recomendado para uma feature
 

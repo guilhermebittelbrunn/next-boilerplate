@@ -1,7 +1,7 @@
 ---
 description: Analisa e planeja uma tarefa como PO + Tech Lead (Etapa 1 + Etapa 2 do feature-analysis-guide) e salva o plano em docs/features/<slug>/analyze/plan.md. O argumento padrão é o nome de uma spec de specs/; também aceita descrição livre ou ID/link do ClickUp. Pergunta o que for ambíguo antes de decidir.
 argument-hint: "<nome-da-spec> (padrão) | descrição livre | ID/link do ClickUp | vazio escolhe do backlog"
-allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, ToolSearch
+allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill, ToolSearch
 ---
 
 # /analyze
@@ -9,6 +9,19 @@ allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Tool
 Tarefa a analisar: **$ARGUMENTS**
 
 Você é o orquestrador (loop principal) do papel **Planejador (PO + Tech Lead)**. Conduza assim:
+
+## Regras de escrita (`humanizer` + `caveman`)
+
+Valem para você tanto quanto para o subagent — a regra é
+[`.claude/rules/writing-skills.md`](../rules/writing-skills.md), e as duas skills estão no `allowed-tools`.
+
+- **`caveman` no que chega até o usuário**: resumo executivo, opções do `AskUserQuestion`, próximo passo.
+  Aplique o **estilo** só nas mensagens deste comando e volte ao normal quando ele terminar — **não** fixe
+  o modo na sessão. Saia do estilo no texto das perguntas: o usuário decide escopo em cima delas.
+- **`humanizer` no que vira arquivo**, inclusive no que **você** escreve depois que o subagent fechou — o
+  Passo 4 consolida as respostas no `analyze/plan.md` e mexe no `STATE.md`. Bloco de código, pseudo-diff e
+  tabela passam intactos; prosa é que passa pela skill.
+- **Repita as duas regras no prompt do `planejador-tarefa`** — ele começa com contexto limpo.
 
 ## Passo 1 — Resolva a entrada (spec é o padrão)
 

@@ -19,6 +19,19 @@ Você **não** produz blueprint técnico: contrato de SDK, schema Zod, handler, 
 pseudo-diff são do `planejador-tarefa` (`/analyze`). Sua fronteira está em
 [`specs/README.md`](../../specs/README.md) — leia antes de escrever qualquer spec.
 
+## Regras de escrita — obrigatório
+
+Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md). O que vale para você:
+
+- **`humanizer` antes de salvar** cada `specs/<id>.md`, o `specs/BACKLOG.md` e as notas de
+  `specs/research/`. Spec é onde mais aparece o vício que a skill caça: superlativo sem número
+  ("solução robusta", "padrão de mercado consolidado") e afirmação sem fonte com cara de fato. A skill
+  corta o inflado; a **prevalência com URL e data** é sua e continua obrigatória.
+- **`caveman` no retorno ao orquestrador** — tabela de specs, lacunas descartadas, perguntas em aberto.
+  Saia do estilo nas perguntas: o usuário aprova ou rejeita spec em cima delas.
+- ⛔ **Nada de `caveman` em spec, backlog ou nota de pesquisa.** São documentos de produto, lidos por
+  quem não estava na sessão.
+
 ## A regra que domina tudo: genérico no core
 
 Este repositório é um **core para gerar vários forks de MVPs**. Uma spec só é legítima se:
