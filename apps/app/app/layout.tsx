@@ -1,12 +1,14 @@
 import { QueryProvider } from "@/shared/providers/QueryProvider";
 import "./styles.css";
 import { AnalyticsProvider } from "@repo/analytics/provider";
+import { resolveConsentBootstrap } from "@repo/analytics/server";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
+import { env } from "@/env";
 import { getAppSessionUser } from "@/lib/server/authSession";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
 import { AppDesignProvider } from "@/shared/providers/AppDesignProvider";
@@ -32,13 +34,20 @@ async function resolvePreferredTheme(): Promise<string | undefined> {
 }
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-    const [{ locale }, sessionUser, panelSnapshot, preferredTheme] =
+    const [{ locale }, sessionUser, panelSnapshot, preferredTheme, consent] =
         await Promise.all([
             getDictionary(),
             getAppSessionUser(),
             resolvePanelSnapshot(),
             resolvePreferredTheme(),
+            resolveConsentBootstrap(),
         ]);
+
+    // The privacy policy lives in the marketing app; without its URL the notice drops
+    // the link and keeps working.
+    const privacyPolicyHref = env.NEXT_PUBLIC_WEB_URL
+        ? `${env.NEXT_PUBLIC_WEB_URL}/${locale}/legal/privacy`
+        : null;
 
     // Resolved on the server so the panel is already correct on the first paint.
     const initialPanel = {
@@ -60,7 +69,11 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         >
             <body>
                 <QueryProvider>
-                    <AnalyticsProvider>
+                    <AnalyticsProvider
+                        consent={consent}
+                        locale={locale}
+                        privacyPolicyHref={privacyPolicyHref}
+                    >
                         <AppDesignProvider defaultTheme={preferredTheme}>
                             <ToastContainer />
                             <ClientLayout initialPanel={initialPanel}>
