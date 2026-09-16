@@ -2,6 +2,7 @@ export const sharedUtilsTranslations = {
     "pt-br": {
         error: {
             unexpected: "Um erro inesperado aconteceu",
+            requestIdLabel: "Código do erro",
         },
         apiErrors: {
             AUTH_MISSING_BEARER: "Token de autenticação ausente.",
@@ -71,11 +72,14 @@ export const sharedUtilsTranslations = {
             UPLOAD_FAILED:
                 "Não foi possível enviar o arquivo agora. Tente de novo em instantes.",
             ENTITY_PHOTO_INVALID: "Imagem inválida para esta entidade.",
+            HEALTH_DEPENDENCY_UNAVAILABLE:
+                "O serviço está indisponível no momento.",
         },
     },
     en: {
         error: {
             unexpected: "An unexpected error occurred",
+            requestIdLabel: "Error code",
         },
         apiErrors: {
             AUTH_MISSING_BEARER: "Missing authentication token.",
@@ -141,11 +145,14 @@ export const sharedUtilsTranslations = {
             UPLOAD_FAILED:
                 "Could not upload the file right now. Try again shortly.",
             ENTITY_PHOTO_INVALID: "Invalid image for this record.",
+            HEALTH_DEPENDENCY_UNAVAILABLE:
+                "The service is unavailable right now.",
         },
     },
     es: {
         error: {
             unexpected: "Ocurrió un error inesperado",
+            requestIdLabel: "Código del error",
         },
         apiErrors: {
             AUTH_MISSING_BEARER: "Falta el token de autenticación.",
@@ -218,6 +225,8 @@ export const sharedUtilsTranslations = {
             UPLOAD_FAILED:
                 "No se pudo subir el archivo ahora. Inténtalo en unos instantes.",
             ENTITY_PHOTO_INVALID: "Imagen no válida para este registro.",
+            HEALTH_DEPENDENCY_UNAVAILABLE:
+                "El servicio no está disponible en este momento.",
         },
     },
 };
