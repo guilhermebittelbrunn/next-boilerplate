@@ -47,7 +47,7 @@ suporte mais poderoso do produto operando sem contrapartida.
 - **Novo no inventário (PR #11, 2026-09-14): `POST /files`** (`apps/api/app/(routes)/files/route.ts`) é
   uma rota de **escrita** que grava no bucket do fork — ou seja, consome recurso **cobrado** (storage e
   egress) e aceita conteúdo enviado pelo usuário. **Não gera evento de auditoria.** O próprio repo já a
-  trata como sensível: `apps/api/proxy.ts:45` a inclui em `RATE_LIMITED_PATHS`, ao lado das rotas de
+  trata como sensível: `apps/api/proxy.ts:50` a inclui em `RATE_LIMITED_PATHS`, ao lado das rotas de
   autenticação. Mas **rate limit não é trilha** — ele limita a frequência do abuso e não registra o que
   foi feito, por quem, nem quando. Quem subiu o quê continua invisível depois do fato.
 - 🆕 **A PR #12 (2026-09-15) abriu mais três rotas de escrita sensível, nenhuma com trilha — e uma delas é
@@ -65,21 +65,27 @@ suporte mais poderoso do produto operando sem contrapartida.
   operações cuja ausência de log é indefensável numa investigação de conta comprometida, e elas vieram
   justamente da spec que ocupava o #1 do backlog.
 - **Nenhuma trilha existe:** só há os repositórios `base`, `entity` e `user`
-  (`apps/api/(shared)/repositories/`), e varrer "audit" no código retorna **5 ocorrências** — os mesmos
+  (`apps/api/(shared)/repositories/`), e varrer "audit" no código retorna **6 ocorrências** — os mesmos
   três comentários de sempre (`packages/shared/utils/helpers/auth-request-headers.ts:12`,
   `packages/auth/types.ts:22`, `apps/app/shared/lib/authRequestHeaders.ts:19`) mais
   `apps/api/__tests__/userProfileSerialization.test.ts:49` e `:53`, que exercitam um campo
-  `audit: { lastSeenAt }` numa fixture de serialização. É só teste — nenhum handler, coleção ou rota grava
-  trilha de verdade.
-- Sem logger estruturado: só `console.error/warn` avulso (`apps/api/app/(routes)/users/route.ts:71`,
-  `.../webhooks/payments/route.ts:59,65`). O `apps/api/instrumentation.ts` **deixou de ser um stub vazio**
-  em 2026-08-31 (`firestore-admin-access`): o `register()` (`:12-31`) roda no boot, resolve a instância do
-  Firestore e, desde `api-hardening`, derruba o boot sem `CORS_ORIGIN` em produção (`:17-21`) e avisa
-  quando o rate limit está desligado (`:23-27`). O gancho passou a existir — **nenhuma instrumentação de
-  log foi plugada nele**.
+  `audit: { lastSeenAt }` numa fixture de serialização, e `packages/shared/__tests__/log.test.ts:112`, que
+  fala de trilha de auditoria num comentário. É só teste — nenhum handler, coleção ou rota grava trilha de
+  verdade.
+- 🔁 **Corrigido em 2026-09-16 — esta spec afirmava o contrário do código.** Até a auditoria anterior o
+  texto dizia "sem logger estruturado" e "nenhuma instrumentação de log foi plugada no gancho". As duas
+  frases ficaram falsas com a PR #15 (`f8322f1`). Hoje existe `logEvent`
+  (`packages/shared/utils/helpers/log.ts:50-56`), com escopo tipado e assinatura que recusa objeto, e o
+  `onRequestError` está plugado nos três apps (`apps/api/instrumentation.ts:36-37`). O `register()`
+  (`:15-34`) segue resolvendo o Firestore no boot, derrubando o processo sem `CORS_ORIGIN` em produção
+  (`:20-24`) e avisando quando o rate limit está desligado (`:26-30`).
+- **O que a PR #15 não entrega, e que é o objeto desta spec:** `logEvent` escreve no stdout. Não há ator,
+  sujeito e alvo num registro persistido, não há consulta por usuário ou por período, e nada sobrevive à
+  janela de retenção da plataforma. Trilha de log e trilha de auditoria são coisas diferentes: a primeira
+  serve para depurar um incidente em andamento, a segunda para responder "quem fez isso, e quando", meses
+  depois. O que a PR #15 deixou de graça é o formato — um registro de auditoria nasce com a convenção e o
+  helper já prontos.
 - **Lacuna:** nenhum evento sensível é persistido e nenhuma retenção de log de acesso está configurada.
-  *(Referências remedidas em 2026-09-14 contra o disco: as 20 citações de linha desta spec seguem
-  corretas — nenhuma precisou de correção. O que mudou foi o inventário, que ganhou `POST /files`.)*
 
 ## Evidência de mercado
 

@@ -38,7 +38,7 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
 - `apps/web/app/[locale]/layout.tsx` — a landing pública **não monta o `AnalyticsProvider`** (a única
   referência ao componente em todo o repo é a do `apps/app`). Ou seja, hoje o app autenticado mede sem
   consentimento e o site público, que é onde o tráfego anônimo e europeu de fato chega, não mede nada.
-- `grep -rniE "consent|cookie-?banner"` em `apps/` + `packages/` = **0 ocorrências** (remedido em
+- `grep -rniE "consent|cookie-?banner"` em `apps/` + `packages/` = **1 ocorrência, e é ruído** (`apps/api/scripts/create-dev-admin.mjs:27`, docblock do script de seed). Banner, componente e chave de consentimento seguem inexistentes (remedido em
   2026-09-15). **Não existe banner nem componente de consentimento em lugar nenhum**, inclusive no
   `packages/design-system`.
 - **O inventário de cookies dobrou desde que esta spec nasceu, e isso muda o corte.** São **5** nomes de

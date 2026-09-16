@@ -97,7 +97,7 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
 | `apps/app` | Hooks `useListX` e a tela de `entities` passam a paginar; padrão novo a ser copiado pelos forks. |
 | `apps/web` | N/A. |
 | `packages/*` | `design-system`: `Table` com paginação controlada pelo servidor. `internationalization`: rótulos de "carregar mais"/vazio nos 3 idiomas. |
-| Infra/env | Índices compostos versionados no arquivo de índices do Firestore (hoje vazio). Nenhum serviço novo, nenhuma env nova, nenhum custo. |
+| Infra/env | Índices compostos versionados em `firestore.indexes.json`, que já tem **um** índice composto desde 2026-08-31 e nenhum de paginação. Nenhum serviço novo, nenhuma env nova, nenhum custo. |
 
 ## Riscos e trade-offs
 

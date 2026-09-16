@@ -1,5 +1,16 @@
 /** biome-ignore-all lint/suspicious/noDocumentCookie: a Cookie Store API sugerida pela regra não existe no Safari, e estes cookies precisam ser lidos pelo servidor em todo navegador suportado. */
-export const setCookie = (name: string, value: string, expiresIn: number) => {
+export type SetCookieOptions = {
+    /** Registrable parent domain, so the cookie is shared between subdomains. */
+    domain?: string;
+    secure?: boolean;
+};
+
+export const setCookie = (
+    name: string,
+    value: string,
+    expiresIn: number,
+    options?: SetCookieOptions
+) => {
     if (typeof window === "undefined") {
         return;
     }
@@ -10,7 +21,14 @@ export const setCookie = (name: string, value: string, expiresIn: number) => {
 
     // Usar SameSite=Lax para permitir cookies em redirecionamentos externos (ex: Stripe)
     // Lax permite cookies em navegação top-level (como retorno do Stripe)
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+    document.cookie = [
+        `${name}=${value}`,
+        `expires=${expires.toUTCString()}`,
+        "path=/",
+        "SameSite=Lax",
+        ...(options?.domain ? [`domain=${options.domain}`] : []),
+        ...(options?.secure ? ["Secure"] : []),
+    ].join(";");
 };
 
 export const getCookie = (name: string): string | null => {

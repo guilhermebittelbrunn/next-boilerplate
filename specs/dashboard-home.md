@@ -57,7 +57,7 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 - `apps/app/shared/lib/queryKeys.ts:11` — factory tipada com **4** grupos: `account` (`:12-15`, novo na
   PR #12), `entities` (`:16`), `users` (`:22`) e `health` (`:30`); a hierarquia já suporta invalidação por
   prefixo. É onde as chaves de um widget entrariam.
-- `apps/api/app/(routes)/` — **18** rotas (`account/*` ×3, `auth/*`, `entities`, `entities/[id]`, `files`,
+- `apps/api/app/(routes)/` — **19** rotas (`account/*` ×3, `auth/*`, `entities`, `entities/[id]`, `files`,
   `users`, `users/[id]`, `health`, `webhooks/payments`) — remedido em 2026-09-15, depois de a PR #12
   acrescentar as três de `account/`. Nenhuma devolve agregado; contagem só existe implicitamente no
   tamanho da lista.

@@ -59,21 +59,33 @@ eficácia.
   `Origin`**. **Não há validação de csrfToken.**
 - `apps/app/.../sign-up/validations/signUpSchema.ts:6` — `MIN_PASSWORD_LENGTH = 6`. A validação é só
   tamanho mínimo + conferência de confirmação. Sem complexidade, sem verificação de senha vazada.
-- Busca por `multiFactor`, `MFA`, `TOTP`, `2FA` e `passkey` em `apps/` e `packages/`: **zero
-  ocorrências**. Não existe segundo fator nem tela de sessões/dispositivos. Em compensação,
+- Busca por palavra inteira (`grep -riw`) por `multiFactor`, `MFA`, `TOTP`, `2FA` e `passkey` em `apps/` e
+  `packages/`: **zero ocorrências**. ⚠️ Sem `-w` a busca devolve 7 falsos positivos, todos do `InputOTP`
+  — `TOTP` casa dentro de `InpuTOTP`. Não existe segundo fator nem tela de sessões/dispositivos. Em compensação,
   `packages/design-system/components/ui/input-otp.tsx:11` já traz o primitivo de código de uso único, **não
   usado em lugar nenhum** — peça reaproveitável para o desafio e para os códigos de recuperação.
 - **Lacuna:** sem MFA, sem visibilidade de sessões, sem revogação seletiva e sem política de senha. *(A
   quinta lacuna — "revogação que não fecha o caminho do bearer" — **caiu em 2026-09-15**.)*
-  > **Correção de escopo (auditoria de 2026-09-16):** esta linha dizia que o mínimo fraco estava em
-  > **dois** schemas. São **cinco**, e todos declaram o mesmo `MIN_PASSWORD_LENGTH = 6` por conta própria:
-  > `apps/app/.../sign-up/validations/signUpSchema.ts:6`,
-  > `.../reset-password/validations/resetPasswordSchema.ts:6`,
-  > `.../sign-in/validations/signInSchema.ts:6`,
-  > `.../admin/(pages)/users/(validations)/userFormSchema.ts:7` e
-  > `.../account/(validations)/accountFormSchema.ts:9`. O item 4 do corte é maior do que a spec vinha
-  > dimensionando: mudar a política em um lugar não muda em lugar nenhum, porque não existe "um lugar".
-  > Isso reforça que a política precisa nascer como regra compartilhada, não como constante copiada.
+  > **Correção de escopo, segunda revisão (auditoria de 2026-09-16, pós-PR #15).** Esta linha já foi
+  > corrigida uma vez, de "dois" para "cinco" schemas. **São dez** — e a contagem de cinco errou por um
+  > motivo que vale registrar: olhou só para `apps/app`. Todos declaram `MIN_PASSWORD_LENGTH = 6` por conta
+  > própria.
+  >
+  > | app | onde |
+  > |-----|------|
+  > | `apps/app` | `sign-up/validations/signUpSchema.ts:6` · `reset-password/validations/resetPasswordSchema.ts:6` · `sign-in/validations/signInSchema.ts:6` · `admin/(pages)/users/(validations)/userFormSchema.ts:7` · `account/(validations)/accountFormSchema.ts:9` |
+  > | `apps/web` | `sign-up/validations/signUp.ts:3` · `sign-in/validations/signInSchema.ts:3` |
+  > | `apps/api` | `(shared)/validation/auth.schema.ts:6` · `(shared)/validation/account.schema.ts:7` · `(shared)/validation/user-admin.schema.ts:4` |
+  >
+  > **O que muda, além do número.** Os três de `apps/api` são os que a política de senha realmente precisa
+  > alcançar: validação de cliente é conveniência, e a borda da API é o que ninguém contorna. A spec vinha
+  > dimensionando o item 4 como mudança de formulário, e ele é mudança de contrato — o que empurra o
+  > esforço para cima e pede que a regra nasça em `@repo/shared`, consumida pelas três camadas, em vez de
+  > virar uma décima primeira constante copiada.
+  >
+  > Achado lateral, fora do escopo desta spec:
+  > `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:9` tem a mensagem em pt-br cravada no código
+  > (`"A senha deve ter pelo menos 6 caracteres"`), fora do dicionário — viola a regra de ouro 2.
 
 ## Evidência de mercado
 
@@ -122,14 +134,14 @@ eficácia.
 > linha citada cai sobre um **comentário que menciona `checkRevoked`**, e a conferência superficial dá
 > "confere". Hoje `grep -n checkRevoked packages/auth/server.ts` devolve **uma única linha, a `:241`, e ela
 > é comentário** — descrevendo o caminho do **cookie**. A checagem do bearer não usa essa palavra em lugar
-> nenhum: chama-se `isMintedBeforeRevocation` (`:138-151`) e é aplicada em `:167`. Quem auditar por
+> nenhum: chama-se `isMintedBeforeRevocation` (`:153-166`) e é aplicada em `:182`. Quem auditar por
 > palavra-chave vai concluir o oposto do que o código faz, nas duas direções.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
 > (`packages/auth/client.ts:224-235`), que força `reload(user)` + `getIdToken(true)`. É o primeiro
 > precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
 > do lado do browser. A suíte de `packages/auth` deixou de ser o ponto cego que esta nota apontava: passou
-> de 2 arquivos / 29 testes para **3 / 38**, com a revogação coberta — mas `reloadCurrentUser` em si segue
+> de 2 arquivos / 29 testes para **6 / 61** (remedido em 2026-09-16), com a revogação coberta por 9 casos — mas `reloadCurrentUser` em si segue
 > sem teste próprio, exercitada só por mock em `apps/app/__tests__/useEmailVerification.test.tsx`.
 
 ## Proposta — corte de MVP

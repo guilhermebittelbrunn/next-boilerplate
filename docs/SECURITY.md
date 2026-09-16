@@ -132,11 +132,13 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 
 ### Limite de requisições
 
-`checkRateLimit()` (Arcjet, `slidingWindow` de **20 req/60 s por IP**) roda no proxy da API apenas em `/auth/sign-in`, `/auth/sign-up` e `/auth/sign-in/google`. Estouro devolve `429 AUTH_RATE_LIMITED` + `Retry-After`. Ficam de fora `/auth/me` (autenticada, hot path), `/webhooks/payments` (a Stripe faz retry agressivo; um 429 nosso viraria assinatura perdida) e `/health`.
+`checkRateLimit()` (Arcjet, `slidingWindow` de **20 req/60 s por IP**) roda no proxy da API sobre uma lista fechada de **8 caminhos**, casados por igualdade exata (`apps/api/proxy.ts:42-51`): `/auth/sign-in`, `/auth/sign-up`, `/auth/sign-in/google`, `/auth/password/reset-request`, `/auth/password/reset`, `/auth/email-verification/send`, `/auth/email-verification/confirm` e `/files`. Estouro devolve `429 AUTH_RATE_LIMITED` + `Retry-After`. Ficam de fora `/auth/me` (autenticada, hot path), `/webhooks/payments` (a Stripe faz retry agressivo; um 429 nosso viraria assinatura perdida), `/health` e `/health/ready`.
+
+⚠️ **Casamento exato significa que rota nova nasce sem limite.** As três rotas de `/account` — incluindo a troca de senha — não estão na lista. Quem acrescentar um endpoint sensível precisa acrescentá-lo ali também.
 
 - **Sem `ARCJET_KEY` o limite é um no-op explícito**: nada é contado, nenhuma chamada de rede é feita, e a API avisa **uma vez, no boot**. Nunca há contador em memória — em serverless ele não limita nada.
 - ⚠️ **Isto não protege o formulário de login.** O login por e-mail/senha das duas front-ends vai do browser direto para `identitytoolkit.googleapis.com` e **nunca toca a `apps/api`**; quem limita esse caminho é a proteção nativa do Firebase (`USERS_AUTH_RATE_LIMITED`). O limite aqui cobre a **superfície da API**.
-- Bloqueio é registrado com um `console.warn` de uma linha (`[security] blocked reason=… path=… method=…`), **sem IP, e-mail, body ou token** — IP é dado pessoal sob LGPD.
+- Bloqueio é registrado pelo helper de log compartilhado, numa linha só (`logEvent("security", "blocked", …)` em `apps/api/proxy.ts:63`, saindo como `[security] blocked reason=… path=… method=… requestId=…`), **sem IP, e-mail, body ou token** — IP é dado pessoal sob LGPD. A assinatura do helper não aceita objeto (`packages/shared/utils/helpers/log.ts:20`), então não há como passar o erro inteiro por descuido.
 
 ## Pagamentos (Stripe)
 

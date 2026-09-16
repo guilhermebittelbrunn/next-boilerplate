@@ -1,4 +1,6 @@
 import "./styles.css";
+import { AnalyticsProvider } from "@repo/analytics/provider";
+import { resolveConsentBootstrap } from "@repo/analytics/server";
 import { AuthProvider } from "@repo/auth/provider";
 import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
@@ -16,7 +18,10 @@ type RootLayoutProperties = {
 };
 
 const RootLayout = async ({ children }: RootLayoutProperties) => {
-    const { locale } = await getDictionary();
+    const [{ locale }, consent] = await Promise.all([
+        getDictionary(),
+        resolveConsentBootstrap(),
+    ]);
 
     return (
         <html
@@ -28,12 +33,18 @@ const RootLayout = async ({ children }: RootLayoutProperties) => {
                 <QueryProvider>
                     <DesignSystemProvider>
                         <AuthProvider>
-                            <ToastContainer />
-                            <Header />
-                            <main>
-                                <ClientLayout> {children} </ClientLayout>
-                            </main>
-                            <Footer />
+                            <AnalyticsProvider
+                                consent={consent}
+                                locale={locale}
+                                privacyPolicyHref={`/${locale}/legal/privacy`}
+                            >
+                                <ToastContainer />
+                                <Header />
+                                <main>
+                                    <ClientLayout> {children} </ClientLayout>
+                                </main>
+                                <Footer />
+                            </AnalyticsProvider>
                         </AuthProvider>
                     </DesignSystemProvider>
                 </QueryProvider>

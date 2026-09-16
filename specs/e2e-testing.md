@@ -35,11 +35,11 @@ alguém olhar.
   capturas de tela versionadas** (e mais 5 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
   incluindo o fluxo de impersonação.
 - Suíte automatizada atual (**remedida em 2026-09-16, rodando o gate sem cache**): **9 tasks de teste /
-  918 testes em 94 arquivos**, todos de unidade/integração estreita — `apps/api` 346 em 33 arquivos,
-  `apps/app` 265 em 36, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/security` 31 em 3,
-  `apps/web` 27 em 4, `@repo/internationalization` 27 em 3, `@repo/shared` 15 em 1, `@repo/payments` 8
+  981 testes em 102 arquivos**, todos de unidade/integração estreita — `apps/api` 371 em 35 arquivos,
+  `apps/app` 274 em 38, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 40 em 4,
+  `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8
   em 1. **Nenhum sobe um app de verdade**, e **nenhuma** das nove configs declara **cobertura**: não
-  existe medida nem baseline para discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, depois 860 em 88;
+  existe medida nem baseline para discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88 e 918 em 94;
   o crescimento vem das PRs #10 a #13. Seguem **9** tasks e **9** configs de Vitest, e não há Playwright,
   Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
 - ✅ **O gate instável foi corrigido — e o argumento mais forte desta spec caiu junto.** Em 2026-09-15 a
@@ -57,8 +57,9 @@ alguém olhar.
   é medida por nada**, então qual arquivo está mais perto de estourar é sempre descoberta tardia. Isso é
   argumento para a prática 5 (cobertura e instrumentação do gate), não mais para E2E.
 - `apps/web` **entrou** na suíte (`package.json:10`, `vitest.config.mts` com `environment: "node"`) e hoje
-  `__tests__/` tem **4 arquivos**: `seo.test.ts`, `contactAction.test.ts`, `securityHeaders.test.ts` e
-  `securityPolicySources.test.ts` — todos com lógica pura (SEO, proxy e a action de contato exercitados
+  `__tests__/` tem **5 arquivos**: `seo.test.ts`, `contactAction.test.ts`, `securityHeaders.test.ts`,
+  `securityPolicySources.test.ts` e `instrumentationRequestError.test.ts` (novo na PR #15) — todos com
+  lógica pura (SEO, proxy e a action de contato exercitados
   isoladamente), **nenhum componente da landing é renderizado por teste**. Não há Playwright, Cypress nem
   `axe` em nenhum `package.json` do repositório.
   > **Deriva corrigida (`/spec --sync`; números reatualizados em 2026-09-09, 2ª rodada):** a redação

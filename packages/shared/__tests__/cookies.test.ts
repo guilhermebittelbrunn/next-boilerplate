@@ -108,6 +108,36 @@ describe("setCookie", () => {
 
         expect(document.cookie).toBe("intacto");
     });
+
+    it("não declara domain nem Secure quando nenhuma opção é passada", () => {
+        setCookie("x-locale", "es", 60);
+
+        expect(document.cookie).not.toContain("domain=");
+        expect(document.cookie).not.toContain("Secure");
+    });
+
+    it("declara o domain pedido", () => {
+        setCookie("bp:cookie-consent", "v1:analytics=denied", 60, {
+            domain: "exemplo.com",
+        });
+
+        expect(document.cookie).toContain("domain=exemplo.com");
+    });
+
+    it("declara Secure quando pedido", () => {
+        setCookie("bp:cookie-consent", "v1:analytics=granted", 60, {
+            secure: true,
+        });
+
+        expect(document.cookie).toContain("Secure");
+    });
+
+    it("ignora domain vazio, que o navegador rejeitaria", () => {
+        setCookie("x-locale", "en", 60, { domain: "", secure: false });
+
+        expect(document.cookie).not.toContain("domain=");
+        expect(document.cookie).not.toContain("Secure");
+    });
 });
 
 describe("removeCookie", () => {

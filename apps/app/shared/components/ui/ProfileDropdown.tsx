@@ -1,5 +1,6 @@
 "use client";
 
+import { useCookieConsent } from "@repo/analytics/consent-context";
 import useAuth from "@repo/auth/provider";
 import {
     Avatar,
@@ -16,7 +17,7 @@ import {
     DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { getDictionary } from "@repo/internationalization/client";
-import { LogOutIcon, UserIcon } from "lucide-react";
+import { CookieIcon, LogOutIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useMyAccount } from "@/shared/hooks/useMyAccount";
 import { withLocalePath } from "@/shared/lib/localePath";
@@ -25,6 +26,7 @@ export default function ProfileDropdown() {
     const { user, signOut } = useAuth();
     const { dictionary, locale } = getDictionary();
     const { data: account } = useMyAccount();
+    const cookieConsent = useCookieConsent();
     const profileDropdown = dictionary.apps.app.shared.profileDropdown;
 
     // The Firebase client user is the fallback, not the source: it does not know the
@@ -63,6 +65,19 @@ export default function ProfileDropdown() {
                             <span>{profileDropdown.myAccount}</span>
                         </Link>
                     </DropdownMenuItem>
+                    {cookieConsent.available && (
+                        <DropdownMenuItem
+                            onClick={cookieConsent.openPreferences}
+                        >
+                            <CookieIcon className="text-muted-foreground" />
+                            <span>
+                                {
+                                    dictionary.components.cookieConsent.trigger
+                                        .label
+                                }
+                            </span>
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => signOut.mutate()}>
                         <LogOutIcon className="text-muted-foreground" />
                         <span>{profileDropdown.signOut}</span>

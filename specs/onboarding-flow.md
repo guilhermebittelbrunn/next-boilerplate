@@ -30,9 +30,14 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   **`googleSignIn`** resolve o caminho (`resolveAppPostLoginPath`, `:44`) e faz `router.push` (`:49`). Já o
   cadastro por **e-mail/senha** faz `window.location.replace` (`:86`), dentro do `useEffect` (`:64-92`) que
   dispara depois do POST da sessão. Não há qualquer passo entre "cadastrou" e "está no painel", em
-  nenhum dos dois fluxos. **Precisão de 2026-09-11:** desde a PR #10 esse mesmo `useEffect` dispara o
-  e-mail de verificação (`:105`, `apiClient.authApi.sendEmailVerification`) — ou seja, **já existe um
-  gancho pós-cadastro no lugar exato** onde o desvio de onboarding entraria, e o banner de e-mail não
+  nenhum dos dois fluxos. 🔁 **Correção de 2026-09-16 — a spec atribuía isto ao lugar errado.** A precisão de 2026-09-11 dizia que
+  "esse mesmo `useEffect` dispara o e-mail de verificação". Não dispara: `requestVerificationEmail`
+  (`:101-109`, com a chamada em `:105`) é ligada como `onSuccess` do `signUp.mutate` (`:114`), e o próprio
+  docblock em `:94-100` registra que ela roda **depois** de o redirect já ter sido ordenado. A âncora `:105`
+  está certa; a atribuição, não. **Por que importa:** a spec usava esse fato para dizer que já existe um
+  gancho pós-cadastro **no caminho de redirect** — que é onde o desvio de onboarding precisaria entrar. O
+  gancho existe, mas no `onSuccess` da mutation, fora do caminho que o onboarding interceptaria. O trabalho
+  de desvio segue por fazer; e o banner de e-mail não
   verificado (`shared/components/ui/EmailNotVerifiedNotice.tsx`, montado em
   `(authenticated)/(common)/layout.tsx:41`) já provou que o painel comum aceita um aviso de estado
   incompleto. O caminho ficou mais barato do que a spec orçou.

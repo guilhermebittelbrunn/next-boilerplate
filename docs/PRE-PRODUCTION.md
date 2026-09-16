@@ -184,13 +184,58 @@ no IAM deixa o bucket aberto. O cabeçalho de [`storage.rules`](../storage.rules
 de arquivo e mantém o campo de URL de imagem que já existia. Nada quebra — a funcionalidade apenas não
 existe, e diz isso em voz alta em vez de fingir.
 
+### 7. Consentimento de cookies — o texto legal e o domínio
+
+- [ ] Reescrever a política de privacidade com os dados reais do fork
+- [ ] Declarar os cookies que o fork grava, no texto da política
+- [ ] `SESSION_COOKIE_DOMAIN` definida em produção, **se** `web` e `app` rodam em subdomínios distintos
+- [ ] Conferir no painel do Google que o Consent Mode chega como esperado
+
+O banner de consentimento e o Consent Mode v2 já funcionam sem nenhum destes passos: o visitante escolhe,
+a escolha é respeitada e nenhuma tag carrega antes dela. O que falta é tudo **texto e domínio**, e é o tipo
+de pendência que um fork carrega sem perceber porque a tela parece pronta.
+
+**A política de privacidade em [`apps/web`](../apps/web) é um modelo**, e diz isso no próprio corpo. Um
+fork que sobe com ela fica em posição pior do que se não tivesse banner nenhum: o banner afirma ao visitante
+que existe uma política, e a política não descreve o tratamento real. Quem responde por isso é o fork, não o
+boilerplate.
+
+**A declaração de cookies é parte desse texto.** Hoje o repositório grava **sete**: `bp:cookie-consent`
+(a própria escolha), `x-locale`, `sidebar_state`, os de sessão do Firebase, e — só depois do consentimento —
+`_ga` e `_ga_<id>`. Um fork que acrescente ferramenta acrescenta cookie, e a lista precisa acompanhar.
+
+**`SESSION_COOKIE_DOMAIN` só importa em subdomínio.** Ela já existe para o SSO entre `web` e `app`; o
+consentimento reaproveita o mesmo valor. Em `localhost` os dois apps compartilham o cookie sem configuração
+nenhuma, então **este é um caso que não aparece em desenvolvimento**: a falha só surge em produção, com
+`site.com` e `app.site.com`, na forma de um visitante que aceita na landing e recebe o banner de novo ao
+entrar no app.
+
+**O Consent Mode do lado do Google não é verificável daqui.** Os quatro sinais são emitidos e chegam à
+requisição de coleta como `gcs=G101` — isso foi medido. Como o Google os interpreta só aparece numa
+propriedade real, depois de tráfego.
+
+**O que acontece sem configurar:** o app sobe, o build passa, o banner aparece e é respeitado. Sem
+`NEXT_PUBLIC_GA_MEASUREMENT_ID` e fora da Vercel, o banner **nem aparece** — não há o que consentir, e
+nenhuma tag é montada.
+
+**Como verificar** que o consentimento está de pé, com o app servindo:
+
+```bash
+curl -s -L http://localhost:3001/pt-br | grep -c googletagmanager
+# 0 — antes da decisão, o HTML não cita o Google
+
+curl -s -L -H 'Cookie: bp:cookie-consent=v1:analytics=granted' http://localhost:3001/pt-br \
+  | grep -o '"analytics_storage":"[a-z]*"'
+# "analytics_storage":"granted" — a escolha já nasce no primeiro script, sem esperar update
+```
+
 ---
 
 ## ⚠️ Fortemente recomendados
 
 Não impedem o deploy. Cada um é uma conta que chega depois.
 
-### 7. `ARCJET_KEY`
+### 8. `ARCJET_KEY`
 
 - [ ] Definida em produção
 
@@ -198,7 +243,7 @@ Sem ela o `@repo/security` degrada para **no-op** e a API avisa uma vez, no boot
 redefinição de senha e o reenvio de verificação: sem limite, os dois viram **gerador gratuito de e-mail em
 nome do fork** — e a fatura do provedor é do fork.
 
-### 8. Branch protection na `main`
+### 9. Branch protection na `main`
 
 - [ ] Exigir o check do CI antes do merge
 
@@ -215,8 +260,9 @@ Remedido em **2026-09-16**, neste workspace:
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **9 de 9** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **23/23 tasks**, 0 em cache, **50,7 s** |
-| lint/format | `pnpm check` | **517 arquivos**, 0 correções |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **23/23 tasks**, 0 em cache, **50,4 s** (remedido em 2026-09-16, pós-PR #15) |
+| lint/format | `pnpm check` | **532 arquivos**, 0 correções |
+| suíte | 9 tasks de teste | **981 testes em 102 arquivos** |
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
 teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.
@@ -225,7 +271,7 @@ O que **continua** valendo do diagnóstico antigo: o teto do Vitest é medido so
 runner do GitHub é mais lento que uma máquina local. Um teste de componente que espere por interação e
 passe a encostar em 20 s é sinal de problema no teste, não motivo para subir o teto de novo.
 
-### 9. CSP bloqueante na `apps/web`
+### 10. CSP bloqueante na `apps/web`
 
 - [ ] Trocar `Report-Only` por enforcing
 
@@ -233,7 +279,7 @@ Na `apps/app` e na `apps/api` a CSP já é bloqueante; na landing é `Report-Onl
 decisão deliberada para observar antes de bloquear — e a política rodou com **zero violações reportadas**,
 então virar a chave é barato.
 
-### 10. Fechar o circuito de observabilidade
+### 11. Fechar o circuito de observabilidade
 
 A API passou a carimbar `x-request-id` em toda resposta, a emitir log estruturado de uma linha e a expor
 `/health/ready`. Isso cria a trilha; não cria quem a vigia. Os quatro passos abaixo são de console de
@@ -250,9 +296,11 @@ provedor e nenhum deles é código.
 - [ ] **Conferir a retenção de log da plataforma de deploy.** No free tier a janela costuma ser curta o
       bastante para servir a um incidente em andamento e não a um post-mortem do dia seguinte. O número
       exato precisa ser lido no painel do provedor: nenhuma fonte com data foi consultada para ele aqui.
-- [ ] **Decidir o destino do cron órfão.** `apps/api/vercel.json:4-9` agenda `/cron/keep-alive`, rota que
-      não existe e que responde 404 todo dia à 01:00. Ou criar a rota, ou apontar o cron para `/health`
-      (que agora é dinâmico e serve de keep-alive), ou remover a entrada.
+- [x] ~~**Decidir o destino do cron órfão.**~~ Resolvido em **2026-09-16**: o bloco `crons` de
+      `apps/api/vercel.json` agendava `/cron/keep-alive` às 01:00 e a rota nunca existiu — nem no commit
+      que introduziu o agendamento (`665a4cc`), nem em nenhum outro. A entrada foi removida. Apontá-la
+      para `/health` chegou a ser considerado e foi descartado: um ping diário não mantém uma função
+      serverless aquecida, então a chamada existiria só para justificar a linha.
 
 ---
 

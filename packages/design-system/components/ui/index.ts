@@ -61,3 +61,4 @@ export * from './mode-toggle';
 export * from './sidebar';
 export * from './responsive-image';
 export * from './action-menu';
+export * from './cookie-consent';
