@@ -1,3 +1,6 @@
+import { reportRequestError } from "@repo/shared/utils/helpers/requestErrorReporter";
+import type { Instrumentation } from "next";
+
 /**
  * Firestore is this API's database and it is reached with a service account, so a missing
  * credential is a configuration error, not a runtime state to degrade into. Resolving the
@@ -29,3 +32,6 @@ export const register = async () => {
     const { getFirestoreAdmin } = await import("@repo/auth/server");
     getFirestoreAdmin();
 };
+
+export const onRequestError: Instrumentation.onRequestError =
+    reportRequestError;
