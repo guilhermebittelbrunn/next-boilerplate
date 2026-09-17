@@ -40,6 +40,38 @@ describe("firestore.indexes.json", () => {
         });
     });
 
+    it("declares the indexes the entity summary counts need", () => {
+        expect(indexes).toContainEqual({
+            collectionGroup: "entity",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "userId", order: "ASCENDING" },
+                { fieldPath: "deletedAt", order: "ASCENDING" },
+                { fieldPath: "enabled", order: "ASCENDING" },
+            ],
+        });
+        expect(indexes).toContainEqual({
+            collectionGroup: "entity",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "userId", order: "ASCENDING" },
+                { fieldPath: "deletedAt", order: "ASCENDING" },
+                { fieldPath: "type", order: "ASCENDING" },
+            ],
+        });
+    });
+
+    it("declares the index the user summary counts need", () => {
+        expect(indexes).toContainEqual({
+            collectionGroup: "user",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "deletedAt", order: "ASCENDING" },
+                { fieldPath: "type", order: "ASCENDING" },
+            ],
+        });
+    });
+
     it("declares the index the audit trail's user filter needs", () => {
         expect(indexes).toContainEqual({
             collectionGroup: "auditEvent",
