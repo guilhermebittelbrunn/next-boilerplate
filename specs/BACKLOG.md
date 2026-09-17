@@ -26,15 +26,24 @@ constar na seção [Entregues](#entregues).
 >    `docs/PRE-PRODUCTION.md`, pela terceira rodada seguida.
 > 5. **O #1 é `dashboard-home`**, e o motivo é de execução, não de valor bruto. Detalhe em
 >    [Ordem recomendada](#ordem-recomendada).
+> 6. 🆕 **Quatro specs novas entraram por pedido do usuário**, depois da auditoria e sem refazê-la
+>    (`/spec` em modo escrita, não `--sync`): [`session-refresh`](session-refresh.md) →
+>    [`user-activity-tracking`](user-activity-tracking.md) → [`admin-analytics-dashboard`](admin-analytics-dashboard.md),
+>    mais [`admin-billing-insights`](admin-billing-insights.md). É uma **cadeia de dependência**, e essa é a
+>    razão de serem quatro e não uma: o painel pedido precisa de um carimbo de último acesso, que precisa de
+>    um batimento de sessão, que hoje não existe. A parte de billing foi separada porque
+>    [`billing-subscription`](billing-subscription.md) está em 0/6 e amarrá-la ao dashboard faria a metade
+>    construível nascer bloqueada. **Primeira vez que o backlog tem spec bloqueada por dependência interna**
+>    — ver [Dependências e bloqueios](#dependências-e-bloqueios).
 
 ## Contadores
 
-Sobre as **8 specs que seguem em `specs/`**. Recontados do disco em 2026-09-17, lendo o frontmatter de cada
-arquivo.
+Sobre as **12 specs que seguem em `specs/`**. Recontados do disco em 2026-09-17, lendo o frontmatter de cada
+arquivo, já com as 4 specs novas.
 
 | status | qtd |
 |--------|-----|
-| `proposed` | 6 |
+| `proposed` | 10 |
 | `approved` | 0 |
 | `in-progress` | 1 |
 | `done` (arquivadas) | 11 |
@@ -42,10 +51,15 @@ arquivo.
 | `rejected` | 0 |
 | `superseded` | 0 |
 
-**Por audiência:** `produto` 3 · `confianca` 2 · `dx` 2 (+1 `deferred` em `produto`). **Por esforço:**
-P 0 · M 5 · G 3. **Por valor:** alto 5 · médio 3 · baixo 0.
+**Por audiência:** `produto` 6 · `confianca` 3 · `dx` 2 (+1 `deferred` em `produto`). **Por esforço:**
+P 0 · M 9 · G 3. **Por valor:** alto 6 · médio 6 · baixo 0.
 
-**Transições aplicadas nesta rodada: 1** (`audit-log`: `proposed` → `done`, arquivada).
+**Transições aplicadas na auditoria da manhã: 1** (`audit-log`: `proposed` → `done`, arquivada).
+**Specs criadas depois dela: 4**, todas nascendo `proposed` — aprovar ou rejeitar é decisão do usuário.
+
+> **A distribuição por audiência piorou, e vale registrar em vez de esconder:** as 4 novas são 3 `produto` e
+> 1 `confianca`, o que empurra `produto` de 3 para 6 contra 2 de `dx`. Um backlog que dobra de tamanho no
+> eixo de funcionalidade sem crescer no de ferramental é um backlog que vai ficar mais caro de executar.
 
 ### O caso `audit-log` — o que foi conferido antes de arquivar
 
@@ -103,7 +117,7 @@ branch protection continua satisfeito, e o branch protection continua não ligad
 ## Ordem recomendada
 
 Respeita `depends_on` (lido do frontmatter nesta rodada) e prioriza valor × esforço × custo de adiar.
-Nenhuma spec está bloqueada por dependência.
+**Três specs estão bloqueadas por dependência** — as novas de `user-activity-tracking` para baixo.
 
 > **Um critério ganhou peso e continua valendo: o que uma rodada autônoma consegue provar.** O `/cycle` não
 > provisiona infraestrutura, então uma spec cujos critérios de aceite dependem de conta em provedor volta
@@ -113,13 +127,17 @@ Nenhuma spec está bloqueada por dependência.
 | # | id | por que agora |
 |---|----|---------------|
 | 1 | [`dashboard-home`](dashboard-home.md) | **Sobe ao topo por ser a única spec de alto retorno que uma rodada autônoma prova inteira.** As duas homes do painel continuam com **11 linhas** e o literal `"Home"` (`page.tsx:7`, nos dois painéis), com a chave de dicionário pronta ao lado e já usada em 5 breadcrumbs do painel comum. É a primeira tela de todo fork. Resgataria `chart.tsx` e a dependência `recharts`, que pesa no bundle desde sempre sem renderizar nada. **Nada aqui depende de conta em provedor:** Firestore roda no emulador desde a PR #13, e a PR #18 acabou de entregar uma segunda tela de referência (`/admin/audit`) com cursor, filtros e `queryKeys` — há dois padrões prontos para copiar em vez de um. `value: médio` é o que a segurava; com `audit-log` fora da fila, nenhuma spec de valor alto é executável de ponta a ponta sem infra externa. |
-| 2 | [`data-rights-lgpd`](data-rights-lgpd.md) | **Maior valor do backlog e a única com prazo imposto de fora.** Segue em 0/5. A armadilha dos objetos órfãos continua dobrada: `deleteObjectQuietly` tem **2** call sites (`entities/[id]/route.ts:90` e `account/route.ts:158`), ambos de troca, nenhum de expurgo; e o `delete()` herdado é **soft delete** (`base.repository.ts:196-198`). O que a tira do topo é esforço **G** somado a um problema novo de verificação: o item 3 do corte exige limpar arquivos **e** cancelar assinatura ativa no mesmo fluxo — o primeiro depende do Cloud Storage não ativado, o segundo de um `billing-subscription` que não existe. Dois dos cinco critérios voltariam "não verificados". |
-| 3 | [`onboarding-flow`](onboarding-flow.md) | ⚠️ **Precisa ser reescopada antes do `/analyze`, e é isso que a tira do #1.** Valor alto, esforço M e zero dependência de infra externa — o perfil ideal para rodada autônoma, não fosse o corte estar desatualizado. O item 2 continua oco desde que a PR #12 passou a coletar nome e idioma na área de conta; e a spec atribui o gancho pós-cadastro ao lugar errado — ele está no `onSuccess` da mutation (`SignUpFormClient.tsx:114`), não no caminho de redirect que o onboarding precisaria interceptar. Reconferida nesta rodada: **zero deriva de âncora**, exatas pela terceira rodada seguida. O problema é o corte, não as referências. |
-| 4 | [`billing-subscription`](billing-subscription.md) | Maior valor bruto do backlog e ainda em **0/6**: não existe diretório `payments/` nas rotas, o `UserDTO` não tem `subscription` nem `stripeCustomerId`, e o webhook tem dois handlers `// TODO` (`webhooks/payments/route.ts:13,23`) sem dedupe por `event.id`. **Segue atrás por um motivo de execução, não de mérito:** provar checkout, portal e webhook exige chaves reais da Stripe, e uma rodada autônoma devolveria os critérios como "não verificados". **Pré-requisito barato que segue de pé:** o 🔴 de `packages/payments/ai.ts:4-5` explode no primeiro fork que importar o pacote — e é esta spec que faria alguém importar. |
-| 5 | [`e2e-testing`](e2e-testing.md) | Destravada, e sem o argumento mais forte que tinha — o gate instável foi corrigido pela PR #13 e não voltou. O que resta é sólido e mais lento de cobrar: zero `playwright`/`cypress`/`axe` em qualquer `package.json`, nenhuma das **10** configs medindo cobertura, e **duas rules files sem um único teste de regra** (`firestore.rules` publicado em deny-all, `storage.rules` nem publicado) — sem desculpa, porque o emulador existe. O argumento que ganhou na PR #17 dobrou na #18: o emulador **não cobra índice composto**, e agora são **dois** índices versionados que nenhum gate local prova estarem publicados. |
-| 6 | [`account-security-mfa`](account-security-mfa.md) | Cresceu duas auditorias atrás e não encolheu. O item 4 (política de senha) era descrito como mudança em 5 schemas de formulário; são **10 declarações**, e as 3 que importam estão em `apps/api` — mudança de contrato, não de formulário. Restam MFA (**3/10** de prevalência entre os starters pesquisados) e visibilidade de sessões (**1/10**). `value: médio` por mérito próprio, e esforço provavelmente acima de M. |
-| 7 | [`observability-logging`](observability-logging.md) | `in-progress`. Entregue em 5 dos 6 itens; o resíduo é adotar um coletor de erro, que depende de decisão de produto e de conta em provedor. **Fora do conjunto elegível** — ver [Precisam de decisão](#precisam-de-decisão). Quarta rodada consecutiva sem resposta. |
-| 8 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22 — a decisão, não só a implementação. As **duas contrapartidas de esforço P seguem não feitas**, agora pela sexta rodada. Ver [Precisam de decisão](#precisam-de-decisão). |
+| 2 | 🆕 [`session-refresh`](session-refresh.md) | **Cabeça da cadeia pedida pelo usuário, e a única das quatro que está destravada** (`depends_on: []`). Entra alto por três motivos que se somam: corrige um defeito real (a sessão expira em tempo absoluto e derruba quem está usando o produto — `packages/auth/session.ts:28-36`, sem nenhuma renovação no repositório), é pré-requisito das outras três, e é verificável numa rodada autônoma, já que o emulador do Firebase cobre Auth e nenhuma conta em provedor é necessária. ⚠️ **Tem risco de segurança embutido:** renovação deslizante sem teto absoluto é sessão eterna, e o sintoma não aparece em teste. O corte já exige o teto contado a partir do `auth_time`, mais revogação e limpeza de cookie. |
+| 3 | 🆕 [`user-activity-tracking`](user-activity-tracking.md) | Bloqueada pelo #2, e logo atrás dele porque é o elo fino da cadeia: sem o carimbo de último acesso, o painel pedido não tem eixo para agregar. **Metade dela é mais barata do que parece** — `UserWithAuthDTO.metadata` já carrega `lastSignInTime` e `lastRefreshTime` até a listagem do admin (`user.mapper.ts:13-17`), que simplesmente não os renderiza. A outra metade é onde mora o cuidado: é **dado pessoal**, e carimbar a cada requisição seria uma escrita no Firestore por requisição — a mesma armadilha de custo que `dashboard-home` teve de evitar na contagem. O corte fixa janela de gravação, finalidade e retenção. |
+| 4 | 🆕 [`admin-analytics-dashboard`](admin-analytics-dashboard.md) | Bloqueada pelo #3 e por `dashboard-home`. É o pedido original do usuário (KPIs de ativos e inativos, mais o gráfico de acesso) sobre as peças que a `dashboard-home` acabou de entregar: `MetricCard.tsx`, `category-bar-chart.tsx`, `AdminHomeClient.tsx`, `queryKeys.ts` e o molde de rota de agregado em `users/summary/route.ts`. **O item de visitas à WEB ficou de fora do corte, como pergunta em aberto com o custo das três saídas** (GA Data API × contador próprio × provedor dedicado), porque nenhuma delas foi decidida e nenhuma teve preço levantado. |
+| 5 | [`data-rights-lgpd`](data-rights-lgpd.md) | **Maior valor do backlog e a única com prazo imposto de fora.** Segue em 0/5. A armadilha dos objetos órfãos continua dobrada: `deleteObjectQuietly` tem **2** call sites (`entities/[id]/route.ts:90` e `account/route.ts:158`), ambos de troca, nenhum de expurgo; e o `delete()` herdado é **soft delete** (`base.repository.ts:196-198`). O que a tira do topo é esforço **G** somado a um problema novo de verificação: o item 3 do corte exige limpar arquivos **e** cancelar assinatura ativa no mesmo fluxo — o primeiro depende do Cloud Storage não ativado, o segundo de um `billing-subscription` que não existe. Dois dos cinco critérios voltariam "não verificados". |
+| 6 | [`onboarding-flow`](onboarding-flow.md) | ⚠️ **Precisa ser reescopada antes do `/analyze`, e é isso que a tira do #1.** Valor alto, esforço M e zero dependência de infra externa — o perfil ideal para rodada autônoma, não fosse o corte estar desatualizado. O item 2 continua oco desde que a PR #12 passou a coletar nome e idioma na área de conta; e a spec atribui o gancho pós-cadastro ao lugar errado — ele está no `onSuccess` da mutation (`SignUpFormClient.tsx:114`), não no caminho de redirect que o onboarding precisaria interceptar. Reconferida nesta rodada: **zero deriva de âncora**, exatas pela terceira rodada seguida. O problema é o corte, não as referências. |
+| 7 | [`billing-subscription`](billing-subscription.md) | Maior valor bruto do backlog e ainda em **0/6**: não existe diretório `payments/` nas rotas, o `UserDTO` não tem `subscription` nem `stripeCustomerId`, e o webhook tem dois handlers `// TODO` (`webhooks/payments/route.ts:13,23`) sem dedupe por `event.id`. **Segue atrás por um motivo de execução, não de mérito:** provar checkout, portal e webhook exige chaves reais da Stripe, e uma rodada autônoma devolveria os critérios como "não verificados". **Pré-requisito barato que segue de pé:** o 🔴 de `packages/payments/ai.ts:4-5` explode no primeiro fork que importar o pacote — e é esta spec que faria alguém importar. |
+| 8 | 🆕 [`admin-billing-insights`](admin-billing-insights.md) | Logo atrás da spec que a destrava, e **é a razão de existir separada**: `billing-subscription` está em 0/6, remedido hoje — não há diretório `payments/` entre as 22 rotas, o `UserDTO` não tem `subscription` nem `stripeCustomerId`, e o webhook tem dois `// TODO` (`webhooks/payments/route.ts:13,23`). Juntá-la ao #4 faria os KPIs de atividade, que são construíveis hoje, nascerem bloqueados. Herda também o motivo de execução do #7: provar receita exige chaves reais da Stripe. **O risco que a spec carrega é de correção, não de esforço** — agregar receita a partir de webhook sem dedupe por `event.id` infla o número em silêncio, porque a Stripe não garante ordem nem entrega única. |
+| 9 | [`e2e-testing`](e2e-testing.md) | Destravada, e sem o argumento mais forte que tinha — o gate instável foi corrigido pela PR #13 e não voltou. O que resta é sólido e mais lento de cobrar: zero `playwright`/`cypress`/`axe` em qualquer `package.json`, nenhuma das **10** configs medindo cobertura, e **duas rules files sem um único teste de regra** (`firestore.rules` publicado em deny-all, `storage.rules` nem publicado) — sem desculpa, porque o emulador existe. O argumento que ganhou na PR #17 dobrou na #18: o emulador **não cobra índice composto**, e agora são **dois** índices versionados que nenhum gate local prova estarem publicados. |
+| 10 | [`account-security-mfa`](account-security-mfa.md) | Cresceu duas auditorias atrás e não encolheu. O item 4 (política de senha) era descrito como mudança em 5 schemas de formulário; são **10 declarações**, e as 3 que importam estão em `apps/api` — mudança de contrato, não de formulário. Restam MFA (**3/10** de prevalência entre os starters pesquisados) e visibilidade de sessões (**1/10**). `value: médio` por mérito próprio, e esforço provavelmente acima de M. |
+| 11 | [`observability-logging`](observability-logging.md) | `in-progress`. Entregue em 5 dos 6 itens; o resíduo é adotar um coletor de erro, que depende de decisão de produto e de conta em provedor. **Fora do conjunto elegível** — ver [Precisam de decisão](#precisam-de-decisão). Quarta rodada consecutiva sem resposta. |
+| 12 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22 — a decisão, não só a implementação. As **duas contrapartidas de esforço P seguem não feitas**, agora pela sexta rodada. Ver [Precisam de decisão](#precisam-de-decisão). |
 
 ### O que **não** foi escolhido para #1, e por quê
 
@@ -142,6 +160,20 @@ Nenhuma spec está bloqueada por dependência.
   mitigação barata no lugar — `apps/api/__tests__/firestoreIndexes.test.ts` foi estendido pela PR #18 e lê
   as duas entradas do arquivo versionado.
 
+### O que a cadeia nova deslocou, e por que isso precisa de confirmação
+
+As quatro specs pedidas ocuparam as posições 2, 3, 4 e 8, e o efeito colateral é que
+[`data-rights-lgpd`](data-rights-lgpd.md) **caiu de #2 para #5** e [`onboarding-flow`](onboarding-flow.md)
+de #3 para #6.
+
+Isso não saiu de uma reavaliação de valor: o ranking da manhã continua válido nos seus próprios termos, e
+`data-rights-lgpd` continua sendo a única spec do backlog com prazo imposto de fora. A cadeia entrou na
+frente porque foi pedida, e essa é a justificativa inteira. **Como não é decisão da auditoria, virou a
+decisão nº 8** em [Precisam de decisão](#precisam-de-decisão), com recomendação.
+
+Vale notar o que **não** mudou: `session-refresh` não desbanca `dashboard-home` do #1, porque a
+`dashboard-home` está entregue na branch atual e as duas specs de painel dependem dela.
+
 ## Lotes paralelos
 
 Para rodar o ciclo completo em 2–4 workspaces do Conductor ao mesmo tempo. Calculado em **2026-09-17** a
@@ -153,34 +185,40 @@ disjunção → teto de 3.
 pena fazer*; o lote diz *o que pode ser feito junto sem uma spec pisar na outra*. Um lote **não** é
 recomendação de prioridade — se você só vai rodar uma coisa, rode o #1 da ordem.
 
-**Elegíveis nesta rodada: 6 de 8.** Fora ficam `teams-organizations` (`deferred`) e `observability-logging`
-(`in-progress`).
+**Elegíveis agora: 7 de 12** — recalculado depois da entrada das 4 specs novas. Fora ficam
+`teams-organizations` (`deferred`), `observability-logging` (`in-progress`) e, **pela primeira vez neste
+backlog, três specs barradas por dependência não satisfeita**: `user-activity-tracking`,
+`admin-analytics-dashboard` e `admin-billing-insights`.
 
 | lote | specs | o que cada uma toca | por que não colidem |
 |------|-------|---------------------|---------------------|
-| **1** | `dashboard-home` · `onboarding-flow` · `e2e-testing` | as duas `page.tsx` de home + `queryKeys.ts` + índices · `apps/app/proxy.ts` + resolvedor pós-login + `user-merge.ts` + `UserDTO` · `package.json` da raiz + `turbo.json` + `ci.yml` | **tela inicial**, **desvio de navegação no app** e **ferramental da raiz**. As duas primeiras vivem em `apps/app` por caminhos distintos (páginas de home × proxy e pós-login), e a terceira não toca em `apps/` nem em `packages/` |
-| **2** | `data-rights-lgpd` · `billing-subscription` | `base.repository.ts` + `packages/auth/server.ts` + índices · webhook de pagamento + barril do SDK + `UserDTO` + `user.repository.ts` + `routes.tsx` | **expurgo do titular** e **slice `user` cobrado**. Uma mexe no repositório base e na camada de sessão; a outra, no repositório de usuário e no contrato do SDK |
-| **3** | `account-security-mfa` | `packages/auth/*` + `resolve-api-actor.ts` | sozinha por colisão com o lote 2, não por falta de par |
+| **1** | `dashboard-home` · 🆕 `session-refresh` · `onboarding-flow` | as duas `page.tsx` de home + `queryKeys.ts` + índices · `packages/auth/session.ts` + `session-routes.ts` + `server.ts` · `apps/app/proxy.ts` + `postLoginNavigation.ts` + `user-merge.ts` + `UserDTO` | **tela inicial**, **camada de sessão** e **desvio de navegação no app**. As três vivem em árvores distintas: páginas de painel, `packages/auth` e o proxy/pós-login da `apps/app` |
+| **2** | `data-rights-lgpd` · `billing-subscription` · `e2e-testing` | `base.repository.ts` + `packages/auth/server.ts` + índices · webhook de pagamento + barril do SDK + `UserDTO` + `user.repository.ts` + `routes.tsx` · `package.json` da raiz + `turbo.json` + `ci.yml` | **expurgo do titular**, **slice `user` cobrado** e **ferramental da raiz**. As duas primeiras já eram disjuntas; a terceira não toca em `apps/` nem em `packages/` |
+| **3** | `account-security-mfa` | `packages/auth/*` + `resolve-api-actor.ts` | sozinha por colisão com o lote 1, e desta vez por **dado**, não por teto |
 
-### Por que cada spec ficou de fora do lote 1
+### O que mudou no cálculo, e por quê
 
-Distinguir os dois motivos importa: colisão é **dado**, teto é **decisão**.
+- **`e2e-testing` saiu do lote 1 e foi para o 2.** Não por colisão nova: ela continua disjunta de tudo. Foi
+  empurrada pelo **teto de 3**, porque `session-refresh` entrou à frente dela na ordem do backlog e o
+  algoritmo é guloso na ordem.
+- **`account-security-mfa` deixou de ser barrada por teto e passou a ser barrada por dado.** Ela declara
+  `packages/auth/server.ts`, `session.ts` e `session-routes.ts` — **exatamente os três arquivos** que
+  `session-refresh` altera. A colisão é total, e as duas não podem rodar juntas de jeito nenhum. Depois de
+  duas rodadas em que ela ficava de fora por escolha de custo de revisão, agora é impedimento técnico.
+- **`data-rights-lgpd` continua fora do lote 1**, agora por duas colisões em vez de uma: `firestore.indexes.json`
+  com `dashboard-home` e `packages/auth/server.ts` com `session-refresh`.
+- **`billing-subscription` continua colidindo com `onboarding-flow`** em
+  `packages/sdk/src/types/user/user.ts`, o que as mantém em lotes diferentes.
 
-- **`data-rights-lgpd` colide com `dashboard-home`** em `firestore.indexes.json`. É a mesma colisão que a
-  tirava do lote 1 na rodada passada, só que agora contra outra spec.
-- **`billing-subscription` colide com `onboarding-flow`** em `packages/sdk/src/types/user/user.ts`: uma
-  precisa acrescentar `subscription`/`stripeCustomerId` ao `UserDTO`, a outra o marcador de perfil completo.
-- **`account-security-mfa` não colide com nada do lote 1.** Ficou de fora **só pelo teto de 3**, que é
-  escolha de custo de revisão e não impedimento técnico. Se você tiver fôlego para revisar quatro features
-  amanhã, é ela que entra — e é a segunda rodada seguida em que ela é barrada por teto, não por dado.
+**`firestore.indexes.json` segue sendo o arquivo mais disputado**, agora com **4** citações entre as 12
+specs (`dashboard-home`, `data-rights-lgpd`, `teams-organizations` e `admin-analytics-dashboard`) — subiu de
+3 porque a spec nova de métricas vai precisar de índice por instante. Empatados com **3**:
+`packages/auth/server.ts`, `packages/sdk/src/types/user/user.ts` e, pela primeira vez na lista,
+`apps/app/shared/lib/queryKeys.ts` — as duas specs de painel novas escrevem nele junto com a `dashboard-home`.
 
-O lote 2 parou em **duas** specs por colisão, não pelo teto: `account-security-mfa` bateria em
-`packages/auth/server.ts` com `data-rights-lgpd`.
-
-**O arquivo mais disputado do repositório continua sendo `firestore.indexes.json`**, citado por **3** das 8
-specs (era 4 de 9 — a saída de `audit-log` tirou uma). Empatados com 2:
-`packages/sdk/src/client/index.ts`, `packages/auth/server.ts` e `packages/sdk/src/types/user/user.ts`. O
-`base.repository.ts` caiu para **1**, pela primeira vez desde que estes lotes são calculados.
+> **Um aviso que sai do dado acima:** as três specs bloqueadas por dependência disputam entre si o
+> `AdminHomeClient.tsx` e o `queryKeys.ts`. Quando forem destravadas, elas **não** poderão rodar no mesmo
+> lote. Vale saber disso antes de planejar a noite em que as três ficarem prontas ao mesmo tempo.
 
 ### Nota de processo — a auditoria é de um workspace só
 
@@ -223,6 +261,9 @@ Nenhuma delas é da auditoria. Todas têm recomendação, e nenhuma foi aplicada
 | 5 | **Quem escreve a política de privacidade que o banner linka?** O consentimento de cookies aponta para `/legal/privacy`, que é modelo e **não menciona cookies** em nenhum dos 3 idiomas. Um fork que suba assim fica em posição pior do que sem banner: o aviso afirma que existe política, e a política não descreve o tratamento. | Texto legal é responsabilidade de cada fork, não do core — mas o **core deve entregar um modelo que ao menos declare os cookies que ele próprio grava**. A tabela está em `docs/PRE-PRODUCTION.md` §7. Cabe no corte de `data-rights-lgpd` (#2) ou vira tarefa direta de esforço P. |
 | 6 | **A busca da tabela enxerga só as páginas carregadas.** A PR #17 tratou o sintoma — o texto de lista vazia avisa que a busca não alcançou o resto (`table.tsx:112-118`) —, mas o comportamento continua sendo "procurar no que já baixou". A PR #18 herdou isso na trilha de auditoria. | Abrir spec própria quando alguém sentir a dor, não antes. A decisão de fundo (prefixo no Firestore × serviço de busca) é cara e não tem caso de uso concreto no core hoje. Enquanto isso, o aviso na tela é o contrato honesto. |
 | 7 | 🆕 **Por quanto tempo reter os eventos da trilha de auditoria?** A coleção `auditEvent` nasceu sem expurgo e sem `expiresAt`, e cresce a cada ação sensível de todo fork. A spec arquivada deixou a pergunta explícita e recomendou prazo configurável com finalidade declarada. | Decidir um prazo padrão e escrevê-lo em `docs/PRE-PRODUCTION.md` §1.3, **sem** invocar o art. 15 do Marco Civil (que é do log de acesso, não da trilha de negócio). Guardar além do necessário é o risco que o Decreto 8.771/2016, art. 13, § 2º manda evitar. |
+| 8 | 🆕 **As 4 specs novas ficam nas posições 2, 3, 4 e 8?** A cadeia pedida empurrou [`data-rights-lgpd`](data-rights-lgpd.md) de #2 para #5 e [`onboarding-flow`](onboarding-flow.md) de #3 para #6. A `data-rights-lgpd` continua sendo a única spec com prazo imposto de fora, e o argumento dela só piora com o tempo. | **Manter a cadeia à frente, com uma condição:** rodar [`session-refresh`](session-refresh.md) (#2) primeiro, porque ela é destravada, corrige um defeito real e é verificável sem conta em provedor. Depois dela, reavaliar se `user-activity-tracking` e o painel vêm antes ou depois de `data-rights-lgpd`. Empurrar uma spec com prazo legal por **três** posições de uma vez é a decisão que merece ser tomada de propósito, e não por inércia do pedido. |
+| 9 | 🆕 **Aprovar ou rejeitar as 4 specs novas.** Todas nasceram `proposed`, e o `/spec` não aprova spec. As perguntas em aberto de cada uma (teto absoluto da sessão, janela de gravação do carimbo, definição de "usuário ativo", critério de receita) estão nos arquivos, com recomendação. | Aprovar [`session-refresh`](session-refresh.md) e [`user-activity-tracking`](user-activity-tracking.md), que formam a base e não dependem de nada externo. Deixar as duas de painel em `proposed` até a `dashboard-home` estar em `main` — elas não podem ser planejadas antes disso de qualquer forma. |
+| 10 | 🆕 **Como medir visitas à `apps/web`?** Foi deixado **fora** do corte de [`admin-analytics-dashboard`](admin-analytics-dashboard.md), como pergunta em aberto com o custo das três saídas: GA Data API (env nova por fork, e só conta quem consentiu), contador próprio no Firestore (uma escrita por visita) ou provedor dedicado (conta, possivelmente paga, para todo fork). ⚠️ **Nenhuma das três teve preço ou prevalência levantados.** | Decidir à parte, depois que os KPIs de atividade estiverem de pé. Das três, o contador próprio é a única que não arrasta conta nem variável obrigatória para quem não usa — que é o critério do core. Enquanto não houver decisão, a tela deve dizer que as métricas cobrem o painel, não a landing. |
 
 ## Dependências e bloqueios
 
@@ -231,23 +272,40 @@ Nenhuma delas é da auditoria. Todas têm recomendação, e nenhuma foi aplicada
 | [`e2e-testing`](e2e-testing.md) | `ci-pipeline`, `firebase-emulator-seed` | ✅ satisfeitas (PR #5 e PR #13) |
 | [`account-security-mfa`](account-security-mfa.md) · [`data-rights-lgpd`](data-rights-lgpd.md) | `account-settings` | ✅ satisfeita (PR #12, `a4df5ed`) |
 | [`teams-organizations`](teams-organizations.md) | `transactional-emails` | ✅ satisfeita (PR #9, `400f290`) |
-| [`billing-subscription`](billing-subscription.md) · [`dashboard-home`](dashboard-home.md) · [`observability-logging`](observability-logging.md) · [`onboarding-flow`](onboarding-flow.md) | — | ✅ sem dependência |
+| [`billing-subscription`](billing-subscription.md) · [`dashboard-home`](dashboard-home.md) · [`observability-logging`](observability-logging.md) · [`onboarding-flow`](onboarding-flow.md) · 🆕 [`session-refresh`](session-refresh.md) | — | ✅ sem dependência |
+| 🆕 [`user-activity-tracking`](user-activity-tracking.md) | `session-refresh` | ⛔ **bloqueada** — a spec de sessão não foi nem aprovada |
+| 🆕 [`admin-analytics-dashboard`](admin-analytics-dashboard.md) | `user-activity-tracking`, `dashboard-home` | ⛔ **bloqueada** pela primeira; ◐ a segunda está **entregue na branch `feat/dashboard-home` e ainda não em `main`** |
+| 🆕 [`admin-billing-insights`](admin-billing-insights.md) | `billing-subscription`, `dashboard-home` | ⛔ **bloqueada** — `billing-subscription` está em 0/6; ◐ mesma ressalva sobre `dashboard-home` |
 
-> **Nenhuma spec em `specs/` está bloqueada por outra.** O que limita a paralelização é contenção de
-> arquivo e o teto de revisão, não ordem lógica.
+> **Três specs estão bloqueadas por outra, e é a primeira vez que isso acontece neste backlog.** Até a
+> auditoria da manhã, o que limitava a paralelização era contenção de arquivo e teto de revisão, nunca ordem
+> lógica. A cadeia pedida pelo usuário introduziu ordem lógica de verdade: sessão → carimbo de acesso →
+> painel de métricas.
+
+**A ressalva sobre `dashboard-home` importa para duas das quatro specs novas.** Ela foi entregue na branch
+`feat/dashboard-home`, e a spec segue em `specs/` com `status: proposed` porque a auditoria só arquiva
+depois de confirmar a entrega em `main`. Na prática, as peças que
+[`admin-analytics-dashboard`](admin-analytics-dashboard.md) e
+[`admin-billing-insights`](admin-billing-insights.md) reaproveitam **já existem no disco** — `MetricCard.tsx`,
+`category-bar-chart.tsx`, `AdminHomeClient.tsx`, `queryKeys.ts` e `users/summary/route.ts` foram conferidos
+um a um em 2026-09-17. A dependência se fecha sozinha na primeira auditoria depois do merge.
 
 ## Todas as specs
 
 | id | título | audiência | valor | esforço | status | depende de |
 |----|--------|-----------|-------|---------|--------|------------|
 | [`account-security-mfa`](account-security-mfa.md) | MFA, sessões ativas e política de senha | confianca | médio | M | `proposed` | ✅ `account-settings` |
+| 🆕 [`admin-analytics-dashboard`](admin-analytics-dashboard.md) | Métricas de atividade na home do admin | produto | médio | M | `proposed` | ⛔ `user-activity-tracking` · ◐ `dashboard-home` |
+| 🆕 [`admin-billing-insights`](admin-billing-insights.md) | Seção de billing na home do admin | produto | médio | M | `proposed` | ⛔ `billing-subscription` · ◐ `dashboard-home` |
 | [`billing-subscription`](billing-subscription.md) | Assinatura Stripe de ponta a ponta | produto | alto | M | `proposed` | — |
 | [`dashboard-home`](dashboard-home.md) | Home do painel com widgets | produto | médio | M | `proposed` | — |
 | [`data-rights-lgpd`](data-rights-lgpd.md) | Direitos do titular: exportar dados e excluir conta | confianca | alto | G | `proposed` | ✅ `account-settings` |
 | [`e2e-testing`](e2e-testing.md) | Testes E2E e acessibilidade automatizada | dx | médio | G | `proposed` | ✅ `ci-pipeline` · ✅ `firebase-emulator-seed` |
 | [`observability-logging`](observability-logging.md) | Observabilidade: erros, tracing e logs estruturados | dx | alto | M | `in-progress` | — |
 | [`onboarding-flow`](onboarding-flow.md) | Onboarding pós-cadastro | produto | alto | M | `proposed` | — |
+| 🆕 [`session-refresh`](session-refresh.md) | Renovação deslizante da sessão | confianca | alto | M | `proposed` | — |
 | [`teams-organizations`](teams-organizations.md) | Organizações, membros e convites | produto | alto | G | `deferred` | ✅ `transactional-emails` |
+| 🆕 [`user-activity-tracking`](user-activity-tracking.md) | Último acesso do usuário | produto | médio | M | `proposed` | ⛔ `session-refresh` |
 
 ## Entregues
 
