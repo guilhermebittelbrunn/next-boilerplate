@@ -12,6 +12,7 @@ import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
+import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { useMutation } from "@tanstack/react-query";
 import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
@@ -79,13 +80,19 @@ export const SignInForm = () => {
         let cancelled = false;
         (async () => {
             const token = await user.getIdToken();
-            await fetch("/api/auth/session", {
+            const session = await fetch("/api/auth/session", {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ idToken: token }),
             }).catch(() => null);
             if (cancelled) {
+                return;
+            }
+            // A refused session (the absolute lifetime is over) leaves no cookie for
+            // the proxy, which would bounce the destination straight back here. The
+            // provider signs the stale user out; staying put is what ends the loop.
+            if (session?.status === HTTP_STATUS.UNAUTHORIZED) {
                 return;
             }
             const path = await resolveAppPostLoginPath({

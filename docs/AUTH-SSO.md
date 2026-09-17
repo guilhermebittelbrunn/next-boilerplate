@@ -29,6 +29,24 @@ Regra única, controlada por env:
 - **Dev:** deixe `SESSION_COOKIE_DOMAIN` **vazio**. O cookie fica host-only em `localhost` e o browser **ignora a porta**, então `localhost:3000` e `localhost:3001` já compartilham.
 - **Prod:** `SESSION_COOKIE_DOMAIN=<domínio registrável>` (ex.: `example.com`) → `example.com` + `app.example.com` compartilham. Atributos: `HttpOnly; Secure; SameSite=Lax; Path=/`. Vida útil via `SESSION_COOKIE_MAX_AGE_DAYS` (default 5; 5min–14 dias).
 
+## Renovação e teto absoluto
+
+Quem está usando o produto não é derrubado no prazo do cookie. A cada refresh de ID token
+(aproximadamente de hora em hora) o provider chama `POST /api/auth/session/refresh`; passada
+metade da vida do cookie, o servidor regrava o cookie com vida cheia. Antes disso responde
+`{ refreshed: false }` sem consultar o Firebase — é esse escalonamento que também serve de
+limite de frequência da rota.
+
+A renovação não é infinita. `SESSION_ABSOLUTE_MAX_AGE_DAYS` (default 30, grampeada entre a vida
+do cookie e 90 dias) é contada da autenticação original e é imposta dentro de `mintSessionCookie`
+— ou seja, vale também para `POST /api/auth/session`, não só para a rota de renovação. Estourado
+o teto, a resposta é 401 `AUTH_SESSION_EXPIRED`, o cookie é limpo e o provider leva a pessoa ao
+sign-in preservando o caminho em `?redirect=`.
+
+`signInWithCustomToken` é uma autenticação nova e reescreve `auth_time`, então o bootstrap de SSO
+carregaria a janela junto com a sessão. Para evitar isso, `POST /api/auth/custom-token` repassa o
+instante original na claim `sessionAuthTime`, e é ela que a verificação do teto lê primeiro.
+
 ⚠️ **Vercel preview:** `*.vercel.app` está na Public Suffix List — browsers recusam um cookie com `Domain=vercel.app`. Sessão **compartilhada** entre previews só com **domínio custom** (`*.preview.example.com`). Cada preview funciona standalone; produção usa subdomínios custom (onde funciona).
 
 ## Logout

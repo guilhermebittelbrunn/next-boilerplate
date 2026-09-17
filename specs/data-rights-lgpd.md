@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-16
+updated: 2026-09-17
 ---
 
 # Direitos do titular: exportar dados e excluir conta
@@ -33,13 +33,14 @@ acumula, maior o estrago de uma exclusão feita errado.
   em 2026-09-17:** a PR #18 acrescentou a gravação da trilha ao `PUT` acima, empurrando o `DELETE` de
   `:75` para cá. A rota agora também registra a exclusão na trilha (`:119-128`), lendo o rótulo do alvo
   antes de apagar — o que não a torna autoatendimento.
-- `apps/api/(shared)/repositories/base.repository.ts:196-198` — o `delete()` herdado por todo repositório
-  é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:197`) e nada mais. A conta no Firebase
+- `apps/api/(shared)/repositories/base.repository.ts:205-207` — o `delete()` herdado por todo repositório
+  é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:206`) e nada mais. A conta no Firebase
   Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui. ⚠️ **Âncora atualizada em
-  2026-09-16:** a PR #17 acrescentou `paginate` e reescreveu `update` no mesmo arquivo, empurrando o
-  `delete()` de `:127-129` para cá. O comportamento não mudou.
+  2026-09-17:** a PR #17 já havia empurrado o `delete()` de `:127-129` para `:196-198`, e a PR #19 o levou
+  para `:205-207` ao inserir `countQuery` em `:122`. O comportamento não mudou em nenhuma das duas.
 - `apps/api/app/(routes)/` — o inventário completo é `account` (PR #12), `audit-events` (PR #18), `auth`,
-  `health`, `users`, `entities`, `files` (PR #11) e `webhooks` — **8 grupos, 20 `route.ts`**. **Nenhuma
+  `health`, `users`, `entities`, `files` (PR #11) e `webhooks` — **8 grupos, 22 `route.ts`** (a PR #19
+  acrescentou `entities/summary` e `users/summary`, sem criar grupo novo). **Nenhuma
   rota de exportação e nenhum `DELETE` de auto-serviço:** `account/` expõe só `GET`/`PUT`
   (`route.ts:97,107`), `POST /account/password` (`:18`) e `POST /account/sessions/revoke` (`:7`).
   *(Contagem e âncoras remedidas em 2026-09-17.)*

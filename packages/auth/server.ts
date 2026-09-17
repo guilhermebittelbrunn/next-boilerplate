@@ -237,13 +237,58 @@ export const createSessionCookie = async (
 };
 
 /**
- * Resolve the user from a Firebase session cookie (the cross-app credential).
- * Verifies with `checkRevoked: true` so disabling/revoking a user takes effect.
- * Returns null on any benign "no session" reason.
+ * Decoded claims of an ID token, or null on any benign "no session" reason.
+ * Costs local cryptography against the cached public keys — no round trip.
  */
-export const getUserFromSessionCookie = async (
+export const verifyIdTokenClaims = async (
+    idToken: string
+): Promise<DecodedIdToken | null> => {
+    try {
+        return await getAuthInstance().verifyIdToken(idToken);
+    } catch (error) {
+        const code = firebaseAuthErrorCode(error);
+        if (code && benignIdTokenVerifyCodes.has(code)) {
+            return null;
+        }
+        console.error("Error verifying id token:", error);
+        return null;
+    }
+};
+
+/**
+ * Decoded claims of a session cookie **without** asking Firebase whether it was
+ * revoked. Cheap enough to gate work that would otherwise hit the provider.
+ */
+export const decodeSessionCookie = async (
     sessionCookie: string | null
-) => {
+): Promise<DecodedIdToken | null> => {
+    if (!sessionCookie) {
+        return null;
+    }
+
+    try {
+        return await getAuthInstance().verifySessionCookie(
+            sessionCookie,
+            false
+        );
+    } catch (error) {
+        const code = firebaseAuthErrorCode(error);
+        if (code && benignSessionCookieCodes.has(code)) {
+            return null;
+        }
+        console.error("Error decoding session cookie:", error);
+        return null;
+    }
+};
+
+/**
+ * User record **and** claims behind a Firebase session cookie (the cross-app
+ * credential). Verifies with `checkRevoked: true` so disabling/revoking a user
+ * takes effect. Returns null on any benign "no session" reason.
+ */
+export const getSessionFromCookie = async (
+    sessionCookie: string | null
+): Promise<{ user: UserRecord; decoded: DecodedIdToken } | null> => {
     if (!sessionCookie) {
         return null;
     }
@@ -254,7 +299,7 @@ export const getUserFromSessionCookie = async (
             sessionCookie,
             true
         );
-        return await authInstance.getUser(decoded.uid);
+        return { user: await authInstance.getUser(decoded.uid), decoded };
     } catch (error) {
         const code = firebaseAuthErrorCode(error);
         if (code && benignSessionCookieCodes.has(code)) {
@@ -264,6 +309,12 @@ export const getUserFromSessionCookie = async (
         return null;
     }
 };
+
+/** Resolve only the user behind a session cookie. */
+export const getUserFromSessionCookie = async (
+    sessionCookie: string | null
+): Promise<UserRecord | null> =>
+    (await getSessionFromCookie(sessionCookie))?.user ?? null;
 
 /**
  * Revoke all refresh tokens for a user (sign-out propagation across origins:

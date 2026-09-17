@@ -25,6 +25,8 @@ export const sharedUtilsTranslations = {
             AUTH_MISSING_TOKEN: "Token de autenticação ausente.",
             AUTH_FORBIDDEN_ORIGIN: "Origem da requisição não permitida.",
             AUTH_NO_SESSION: "Nenhuma sessão ativa.",
+            AUTH_SESSION_EXPIRED:
+                "Sua sessão atingiu o tempo máximo. Entre novamente.",
             USERS_NOT_FOUND: "Usuário não encontrado.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para atualizar.",
             ACCOUNT_AVATAR_INVALID:
@@ -107,6 +109,8 @@ export const sharedUtilsTranslations = {
             AUTH_MISSING_TOKEN: "Missing authentication token.",
             AUTH_FORBIDDEN_ORIGIN: "Request origin not allowed.",
             AUTH_NO_SESSION: "No active session.",
+            AUTH_SESSION_EXPIRED:
+                "Your session reached its maximum lifetime. Sign in again.",
             USERS_NOT_FOUND: "User not found.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nothing to update.",
             ACCOUNT_AVATAR_INVALID:
@@ -187,6 +191,8 @@ export const sharedUtilsTranslations = {
             AUTH_MISSING_TOKEN: "Falta el token de autenticación.",
             AUTH_FORBIDDEN_ORIGIN: "Origen de la solicitud no permitido.",
             AUTH_NO_SESSION: "No hay sesión activa.",
+            AUTH_SESSION_EXPIRED:
+                "Tu sesión alcanzó el tiempo máximo. Inicia sesión de nuevo.",
             USERS_NOT_FOUND: "Usuario no encontrado.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para actualizar.",
             ACCOUNT_AVATAR_INVALID:

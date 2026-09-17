@@ -10,10 +10,18 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autorização (guards da API)
 
-Toda rota **de negócio** da `apps/api` é embrulhada por um guard que roda **antes** da lógica. As três
-exceções são deliberadas e públicas: `/health` e `/health/ready` são sondas de plataforma, e
-`/webhooks/payments` se autentica pela assinatura da Stripe (`constructEvent`), não por sessão. As 17
-demais passam por um dos dois guards:
+São **22** arquivos de rota em `apps/api/app/(routes)/`. **Onze** exportam o handler embrulhado num guard,
+que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um motivo próprio
+(medido em 2026-09-17, `HEAD` em `bfc4d8f`):
+
+| grupo | quantas | por que não tem guard |
+|-------|---------|------------------------|
+| `/auth/*` — `me`, `sign-in`, `sign-in/google`, `sign-up`, `password/reset`, `password/reset-request`, `email-verification/send`, `email-verification/confirm` | 8 | é a superfície **anterior à sessão**: um guard que exige sessão recusaria justamente quem vem criar uma. `/auth/me` é a exceção dentro da exceção — ela resolve o ator por dentro (`resolveApiActor`, `auth/me/route.ts:6`) e devolve 401 sem ele |
+| `/health`, `/health/ready` | 2 | sondas de plataforma, precisam responder sem credencial |
+| `/webhooks/payments` | 1 | autentica pela assinatura da Stripe (`constructEvent`), não por sessão |
+
+As **onze** rotas de negócio restantes — `account/*` ×3, `entities` ×3, `files`, `users` ×3, `audit-events`
+— passam por um dos dois guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
 - `requireAdminApi` — exige perfil admin.

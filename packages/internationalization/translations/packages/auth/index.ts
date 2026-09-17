@@ -2,6 +2,9 @@ export const authTranslations = {
     "pt-br": {
         provider: {
             onSuccess: "Login realizado com sucesso!",
+            session: {
+                expired: "Sua sessão expirou. Entre novamente para continuar.",
+            },
             firebase: {
                 error: {
                     "auth/email-already-in-use": "Este e-mail já está em uso.",
@@ -26,6 +29,9 @@ export const authTranslations = {
     en: {
         provider: {
             onSuccess: "Login successful!",
+            session: {
+                expired: "Your session has expired. Sign in again to continue.",
+            },
             firebase: {
                 error: {
                     "auth/email-already-in-use":
@@ -51,6 +57,10 @@ export const authTranslations = {
     es: {
         provider: {
             onSuccess: "Inicio de sesión exitoso!",
+            session: {
+                expired:
+                    "Tu sesión ha expirado. Inicia sesión de nuevo para continuar.",
+            },
             firebase: {
                 error: {
                     "auth/email-already-in-use":

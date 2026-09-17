@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { createSessionCookie } from "./server";
+import { createSessionCookie, verifyIdTokenClaims } from "./server";
 
 /**
  * Cross-app session cookie: a Firebase **session cookie** (not a raw ID token),
@@ -24,6 +24,18 @@ const MAX_EXPIRES_DAYS = 14; // Firebase maximum (2 weeks)
 const DEFAULT_MAX_AGE_DAYS = 5;
 const MIN_EXPIRES_MS = MIN_EXPIRES_MINUTES * SECONDS_PER_MINUTE * MS_PER_SECOND;
 const MAX_EXPIRES_MS = MAX_EXPIRES_DAYS * MS_PER_DAY;
+
+const DEFAULT_ABSOLUTE_MAX_AGE_DAYS = 30;
+const MAX_ABSOLUTE_MAX_AGE_DAYS = 90;
+const REFRESH_AFTER_FRACTION = 0.5;
+
+/**
+ * Custom claim carrying the instant of the original authentication across the
+ * cross-app SSO bootstrap. `signInWithCustomToken` is a fresh authentication and
+ * rewrites `auth_time`, so without it opening the second front-end would restart
+ * the absolute lifetime of the session.
+ */
+export const SESSION_ORIGIN_CLAIM = "sessionAuthTime";
 
 /** Session lifetime in ms, from `SESSION_COOKIE_MAX_AGE_DAYS`, clamped to Firebase bounds. */
 function getSessionExpiresMs(): number {
@@ -76,16 +88,88 @@ export function isSameOriginRequest(request: Request): boolean {
     }
 }
 
+/**
+ * Absolute session lifetime in ms, from `SESSION_ABSOLUTE_MAX_AGE_DAYS`. The floor is
+ * the cookie lifetime: a cap shorter than it would only produce valid cookies that the
+ * very next renewal refuses.
+ */
+export function getSessionAbsoluteMaxAgeMs(): number {
+    // `||` and not `??`: `.env.example` ships the variable as `""`, and emptying it is
+    // how a fork opts out — an empty string must read as absent, not as `0`.
+    const days = Number(process.env.SESSION_ABSOLUTE_MAX_AGE_DAYS || undefined);
+    const requested =
+        Number.isFinite(days) && days > 0
+            ? days * MS_PER_DAY
+            : DEFAULT_ABSOLUTE_MAX_AGE_DAYS * MS_PER_DAY;
+    return Math.min(
+        Math.max(requested, getSessionExpiresMs()),
+        MAX_ABSOLUTE_MAX_AGE_DAYS * MS_PER_DAY
+    );
+}
+
+/** Instant of the authentication that originated the session, in seconds. */
+export function resolveSessionOriginSeconds(
+    claims: Record<string, unknown>
+): number | null {
+    const carried = claims[SESSION_ORIGIN_CLAIM];
+    if (typeof carried === "number" && Number.isFinite(carried)) {
+        return carried;
+    }
+    const authTime = claims.auth_time;
+    return typeof authTime === "number" && Number.isFinite(authTime)
+        ? authTime
+        : null;
+}
+
+export function isWithinAbsoluteCap(originSeconds: number | null): boolean {
+    if (originSeconds === null) {
+        // With no readable origin the cookie expiry still governs; refusing here would
+        // invent a sign-out nobody asked for.
+        return true;
+    }
+    return (
+        Date.now() - originSeconds * MS_PER_SECOND <
+        getSessionAbsoluteMaxAgeMs()
+    );
+}
+
+/** Rewriting the cookie before the threshold costs a provider call for no extra life. */
+export function shouldRefreshSession(issuedAtSeconds: number): boolean {
+    const age = Date.now() - issuedAtSeconds * MS_PER_SECOND;
+    return age >= getSessionExpiresMs() * REFRESH_AFTER_FRACTION;
+}
+
+export type MintSessionResult =
+    | { ok: true }
+    | { ok: false; reason: "invalid-token" | "absolute-cap" };
+
 /** Verify the ID token → mint a session cookie → set it with the shared attributes. */
-export async function mintSessionCookie(idToken: string): Promise<void> {
+export async function mintSessionCookie(
+    idToken: string
+): Promise<MintSessionResult> {
+    const claims = await verifyIdTokenClaims(idToken);
+    if (!claims) {
+        return { ok: false, reason: "invalid-token" };
+    }
+    if (!isWithinAbsoluteCap(resolveSessionOriginSeconds(claims))) {
+        return { ok: false, reason: "absolute-cap" };
+    }
+
     const expiresMs = getSessionExpiresMs();
-    const sessionCookie = await createSessionCookie(idToken, expiresMs);
+    let sessionCookie: string;
+    try {
+        sessionCookie = await createSessionCookie(idToken, expiresMs);
+    } catch {
+        return { ok: false, reason: "invalid-token" };
+    }
+
     const cookieStore = await cookies();
     cookieStore.set(
         SESSION_COOKIE_NAME,
         sessionCookie,
         getSessionCookieOptions(Math.floor(expiresMs / MS_PER_SECOND))
     );
+    return { ok: true };
 }
 
 /** Read the raw session cookie value (server-side). */

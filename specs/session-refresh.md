@@ -47,8 +47,8 @@ nada observa o uso.
 - `packages/auth/server.ts:244-266` — `getUserFromSessionCookie` verifica com **`checkRevoked: true`**
   (`:253-256`) e **descarta as claims decodificadas**, devolvendo só `getUser(decoded.uid)` (`:257`). O
   `auth_time`, que é o instante da autenticação original, é lido e jogado fora.
-- `packages/auth/server.ts:272-279` — `revokeUserSessions` chama `revokeRefreshTokens`, e engole a falha
-  registrando no console (`:276-278`).
+- `packages/auth/server.ts:272-278` — `revokeUserSessions` chama `revokeRefreshTokens`, e engole a falha
+  registrando no console (`:276`).
 - **Lacuna:** nada renova. O cookie é gravado no login e nunca mais tocado até ser limpo ou expirar. Não
   existe rota de renovação, não existe teto absoluto separado da vida do cookie, e o dado que permitiria
   impor esse teto (`auth_time`) é descartado dentro do próprio pacote.

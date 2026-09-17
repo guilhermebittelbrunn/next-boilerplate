@@ -170,6 +170,24 @@ emulador serve a consulta com ou sem índice**, então `pnpm emulators` não pro
 `apps/api/__tests__/firestoreIndexes.test.ts` cobre o arquivo versionado, o que pega a entrada apagada e
 não o índice não publicado.
 
+#### 1.6 Índice composto da busca de perfil por `reference_id`
+
+- [ ] índice de `user` publicado no projeto de referência
+- [ ] índice de `user` publicado **no projeto do seu fork**
+
+`userRepository.findByReferenceId(uid)` casa `reference_id` e `deletedAt` na mesma consulta, e é ela que
+todo guard roda para transformar o UID do Firebase Auth no documento de perfil. A entrada está declarada em
+[`firestore.indexes.json`](../firestore.indexes.json) e é coberta por
+`apps/api/__tests__/firestoreIndexes.test.ts`.
+
+| coleção | campos | serve |
+|---------|--------|-------|
+| `user` | `reference_id` + `deletedAt` | resolução do perfil a partir do UID, em todo request autenticado |
+
+Este item **faltava nesta lista até 2026-09-17**: o arquivo versionado declarava seis entradas e o checklist
+descrevia cinco. Quem seguisse só o documento publicaria cinco e descobriria a sexta pelo comportamento — e,
+diferente das outras, esta não tem degradação traduzida, porque ninguém a previu como podendo faltar.
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
@@ -420,8 +438,8 @@ então virar a chave é barato.
 ### 11. Fechar o circuito de observabilidade
 
 A API passou a carimbar `x-request-id` em toda resposta, a emitir log estruturado de uma linha e a expor
-`/health/ready`. Isso cria a trilha; não cria quem a vigia. Os quatro passos abaixo são de console de
-provedor e nenhum deles é código.
+`/health/ready`. Isso cria a trilha; não cria quem a vigia. Os três passos abertos abaixo são de console de
+provedor e nenhum deles é código — o quarto, já resolvido, era.
 
 - [ ] **Apontar o health check da plataforma para `/health/ready`.** `/health` responde enquanto o processo
       estiver de pé, mesmo com o Firestore fora do ar — serve como liveness e nada mais. Quem decide tirar

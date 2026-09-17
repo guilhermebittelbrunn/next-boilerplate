@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: -
-updated: 2026-09-16
+updated: 2026-09-17
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -35,19 +35,20 @@ alguém olhar.
   capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
   `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
   impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-17, rodando o gate sem cache pós-PR #18**): **10 tasks de
-  teste / 1227 testes em 124 arquivos**, todos de unidade/integração estreita — `apps/api` 511 em 46
-  arquivos, `apps/app` 342 em 47, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 44 em 4,
-  `@repo/analytics` 34 em 2, `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27
-  em 3, `@repo/payments` 8 em 1. **Nenhum sobe um app de verdade**, e **nenhuma** das dez configs declara
-  **cobertura**: não existe medida nem baseline para discutir. *(Eram 573 em 63 arquivos, depois 750 em 74,
-  860 em 88, 918 em 94, 981 em 102, 1038 em 107 e 1091 em 112; o crescimento vem das PRs #10 a #18. A PR
-  #18 sozinha acrescentou 8 arquivos em `apps/api` e 4 em `apps/app`. Seguem **10** tasks e
-  **10** configs de Vitest, e não há Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu;
-  a lacuna é a mesma.)*
-  > **Estes números envelhecem a cada PR.** A rodada anterior os gravou dentro da própria PR #16, antes de
-  > os commits de código daquela PR entrarem, e eles nasceram errados. Desta vez a medição saiu depois do
-  > merge da PR #17, com o gate sem cache. Medir dentro da PR que muda o número não vale.
+- Suíte automatizada atual (**remedida em 2026-09-17, rodando o gate sem cache com o `HEAD` em `bfc4d8f`,
+  já com a PR #19 mergeada**): **10 tasks de teste / 1276 testes em 130 arquivos**, todos de
+  unidade/integração estreita — `apps/api` 532 em 48 arquivos, `apps/app` 370 em 51, `@repo/email` 137 em 7,
+  `@repo/auth` 62 em 6, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2, `apps/web` 31 em 5,
+  `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8 em 1. **Nenhum sobe um
+  app de verdade**, e **nenhuma** das dez configs declara **cobertura**: não existe medida nem baseline para
+  discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88, 918 em 94, 981 em 102, 1038 em 107,
+  1091 em 112 e 1227 em 124; o crescimento vem das PRs #10 a #19. A PR #19 acrescentou 2 arquivos em
+  `apps/api` e 4 em `apps/app`. Seguem **10** tasks e **10** configs de Vitest, e não há Playwright, Cypress
+  nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
+  > **Estes números envelhecem a cada PR, e a rodada passada provou isso de novo.** Os valores anteriores
+  > (1227 em 124) foram gravados dentro da própria PR #19, antes de os commits de código dela entrarem — o
+  > mesmo erro que este parágrafo denunciava. Os de agora saíram do gate sem cache com o merge já em `main`.
+  > Medir dentro da PR que muda o número não vale, inclusive quando quem mede é a auditoria.
 - ✅ **O gate instável foi corrigido — e o argumento mais forte desta spec caiu junto.** Em 2026-09-15 a
   auditoria registrou aqui uma falha real: `pnpm turbo run lint typecheck test --force` rodado duas vezes
   seguidas falhou na primeira (`app#test`, 21/23 tasks), com
