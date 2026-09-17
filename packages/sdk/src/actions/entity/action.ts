@@ -3,6 +3,7 @@ import type { Response } from "../../client/type";
 import type {
     CreateEntityRequest,
     EntityDTO,
+    EntitySummaryDTO,
     PageDTO,
     PageQuery,
     UpdateEntityRequest,
@@ -24,6 +25,15 @@ export default class EntityActions {
                 ...(query?.limit ? { limit: query.limit } : {}),
                 ...(query?.cursor ? { cursor: query.cursor } : {}),
             },
+        });
+
+        return data.data;
+    }
+
+    async summary(): Promise<EntitySummaryDTO> {
+        const { data } = await this.client.request<Response<EntitySummaryDTO>>({
+            url: "/entities/summary",
+            method: "GET",
         });
 
         return data.data;
