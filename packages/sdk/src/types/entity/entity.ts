@@ -46,3 +46,13 @@ export type UpdateEntityRequest = {
     birthdate?: string | null;
     enabled?: boolean;
 };
+
+/**
+ * Counted server-side, one aggregation per number. `total` is its own count rather than
+ * the sum of `byType`, so a record stored without a `type` still shows up in the total.
+ */
+export type EntitySummaryDTO = {
+    total: number;
+    enabled: number;
+    byType: Record<EntityType, number>;
+};
