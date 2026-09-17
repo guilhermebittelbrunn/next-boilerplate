@@ -1,5 +1,6 @@
 import { getAuthInstance } from "@repo/auth/server";
-import type { UserDTO, UserType } from "@repo/sdk/src/types";
+import type { UserDTO, UserSummaryDTO } from "@repo/sdk/src/types";
+import { UserType } from "@repo/sdk/src/types";
 import db from "../infra/database";
 import {
     mergeAuthAndFirestore,
@@ -40,6 +41,25 @@ class UserRepository extends BaseRepository<UserDTO> {
         );
 
         return merged.filter((user): user is UserDTO => user !== null);
+    }
+
+    /**
+     * Counts the profiles without joining Firebase Auth. The join is what `list()` uses to
+     * drop profiles whose Auth account is gone, and reproducing it here would mean reading
+     * every profile — the cost the aggregation exists to avoid. The total can therefore be
+     * higher than the number of rows the admin listing shows.
+     */
+    async summary(): Promise<UserSummaryDTO> {
+        const scoped = () =>
+            this.db.collection(this.table).where("deletedAt", "==", null);
+
+        const [total, admin, common] = await Promise.all([
+            this.countQuery(scoped()),
+            this.countQuery(scoped().where("type", "==", UserType.ADMIN)),
+            this.countQuery(scoped().where("type", "==", UserType.COMMON)),
+        ]);
+
+        return { total, byType: { admin, common } };
     }
 
     /**
