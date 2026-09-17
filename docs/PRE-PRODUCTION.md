@@ -200,9 +200,22 @@ fork que sobe com ela fica em posição pior do que se não tivesse banner nenhu
 que existe uma política, e a política não descreve o tratamento real. Quem responde por isso é o fork, não o
 boilerplate.
 
-**A declaração de cookies é parte desse texto.** Hoje o repositório grava **sete**: `bp:cookie-consent`
-(a própria escolha), `x-locale`, `sidebar_state`, os de sessão do Firebase, e — só depois do consentimento —
-`_ga` e `_ga_<id>`. Um fork que acrescente ferramenta acrescenta cookie, e a lista precisa acompanhar.
+**A declaração de cookies é parte desse texto.** Recontado no código em 2026-09-16 — a lista anterior dizia
+"sete" e omitia três nomes. São **sete gravados pelo próprio repositório**, mais dois do Google:
+
+| cookie | onde | categoria |
+|--------|------|-----------|
+| `access-token` | `packages/auth/session.ts:14` | estritamente necessário (sessão) |
+| `bp:panel-request-role` | `apps/app/shared/lib/panelState.ts:18` | estritamente necessário (estado de painel) |
+| `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
+| `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
+| `x-locale` | `packages/internationalization/server.ts:20` · `apps/app/proxy.ts:169,173` · `apps/web/proxy.ts:104,108` | preferência |
+| `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:21` | preferência |
+| `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:28` | preferência |
+| `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
+
+Um fork que acrescente ferramenta acrescenta cookie, e a lista precisa acompanhar. Conte no código antes de
+escrever o número: esta é a terceira contagem de cookies do repositório a sair errada.
 
 **`SESSION_COOKIE_DOMAIN` só importa em subdomínio.** Ela já existe para o SSO entre `web` e `app`; o
 consentimento reaproveita o mesmo valor. Em `localhost` os dois apps compartilham o cookie sem configuração
@@ -253,16 +266,20 @@ O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh a
 ✅ **O pré-requisito que segurava este item caiu.** Entre 2026-09-14 e 2026-09-15 este documento tratava o
 `testTimeout` ausente como bloqueante — o gate tinha falhado de verdade, `app#test` estourando o teto de 5 s
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
-**#13** declarou `testTimeout: 20_000` nas **9** configs.
+**#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-16**, neste workspace:
+Remedido em **2026-09-16**, neste workspace, e **remedido de novo depois do merge da PR #16** — os números
+abaixo são da segunda medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
-| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **9 de 9** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **23/23 tasks**, 0 em cache, **50,4 s** (remedido em 2026-09-16, pós-PR #15) |
-| lint/format | `pnpm check` | **532 arquivos**, 0 correções |
-| suíte | 9 tasks de teste | **981 testes em 102 arquivos** |
+| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **37,9 s** |
+| lint/format | `pnpm check` | **543 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1038 testes em 107 arquivos** |
+
+A PR #16 acrescentou o workspace `@repo/analytics` à suíte (2 arquivos, 34 testes) e é o que move os quatro
+números de uma vez.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
 teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.
