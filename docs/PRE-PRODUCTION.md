@@ -59,6 +59,52 @@ permissivas sem reverter reexpõe a base inteira, o que não é rollback, é o i
 > testadas".** O emulador de **Storage** não foi ligado, então `storage.rules` segue sem teste e sem
 > publicação (§ abaixo).
 
+#### 1.1 Índice composto da listagem paginada de `entity`
+
+- [ ] índice de `entity` publicado no projeto de referência
+- [ ] índice de `entity` publicado **no projeto do seu fork**
+
+`GET /entities` consulta `userId` + `deletedAt` com ordenação por `createdAt`, e o Firestore recusa essa
+combinação enquanto o índice composto não existir. A declaração está em
+[`firestore.indexes.json`](../firestore.indexes.json); publicar é o mesmo comando de sempre:
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:indexes
+```
+
+**Enquanto não rodar, a listagem responde `503 PAGINATION_INDEX_MISSING`** e a tela mostra o estado de
+erro traduzido. O painel continua navegável e a app sobe — a degradação é intencional, para o fork não
+descobrir isso como um 500. Em coleção grande a construção do índice leva alguns minutos, e até terminar a
+consulta continua recusada.
+
+⚠️ **O emulador não cobra índice composto**: ele serve a consulta de qualquer jeito. Rodar contra
+`pnpm emulators` prova ordenação e cursor, mas não prova que a entrada existe. O gate automatizado é
+`apps/api/__tests__/firestoreIndexes.test.ts`, que lê o arquivo versionado — ele pega a entrada apagada,
+não o índice não publicado.
+
+#### 1.2 Backfill de instantes em base que já tem dado
+
+- [ ] backfill rodado, ou confirmado como desnecessário
+
+Só para quem já tem documentos gravados antes desta entrega. Até aqui, o primeiro `PUT` num registro
+reescrevia `createdAt` como string ISO em vez de `Timestamp`; o Firestore ordena por tipo antes de por
+valor, então uma coleção com os dois tipos não volta em ordem cronológica. A causa foi corrigida em
+`BaseRepository.update`, mas o que já está gravado continua como está.
+
+```bash
+pnpm --filter api backfill-instants --collection=entity           # dry-run
+pnpm --filter api backfill-instants --collection=entity --apply
+```
+
+O script converte `createdAt`/`updatedAt`/`deletedAt` de string para `Timestamp` e estampa
+`deletedAt: null` onde o campo está ausente — sem isso o documento some da listagem, porque o Firestore
+não casa campo ausente contra `null`. Rodar duas vezes não muda nada. O projeto de referência roda no
+emulador, cujo estado morre a cada reinício: lá é dispensável.
+
+Ele lê o alvo como os outros scripts de bootstrap: com os hosts do emulador preenchidos, vai no emulador
+sem credencial; com eles vazios, exige o service account de `apps/api/.env` e anuncia no cabeçalho que o
+projeto é real. Confira essa linha antes de repetir o comando com `--apply`.
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
