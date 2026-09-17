@@ -272,56 +272,67 @@ describe("the derived photo url", () => {
     });
 
     it("hands back a legacy external url untouched, without signing it", async () => {
-        listByUserIdMock.mockResolvedValue([
-            { ...baseEntity, photo: LEGACY_URL },
-        ]);
+        listByUserIdMock.mockResolvedValue({
+            items: [{ ...baseEntity, photo: LEGACY_URL }],
+            nextCursorId: null,
+        });
 
         const response = await GET(request("GET"));
         const body = (await response.json()) as {
-            data: { photo: string; photoUrl: string }[];
+            data: { items: { photo: string; photoUrl: string }[] };
         };
 
-        expect(body.data[0].photoUrl).toBe(LEGACY_URL);
+        expect(body.data.items[0].photoUrl).toBe(LEGACY_URL);
         expect(signReadUrlMock).not.toHaveBeenCalled();
     });
 
     it("answers a null url when there is no photo", async () => {
-        listByUserIdMock.mockResolvedValue([baseEntity]);
+        listByUserIdMock.mockResolvedValue({
+            items: [baseEntity],
+            nextCursorId: null,
+        });
 
         const response = await GET(request("GET"));
         const body = (await response.json()) as {
-            data: { photoUrl: string | null }[];
+            data: { items: { photoUrl: string | null }[] };
         };
 
-        expect(body.data[0].photoUrl).toBeNull();
+        expect(body.data.items[0].photoUrl).toBeNull();
     });
 
     it("refuses to sign a stored value that is not a well-formed object path", async () => {
-        listByUserIdMock.mockResolvedValue([
-            { ...baseEntity, photo: "legacy junk that predates validation" },
-        ]);
+        listByUserIdMock.mockResolvedValue({
+            items: [
+                {
+                    ...baseEntity,
+                    photo: "legacy junk that predates validation",
+                },
+            ],
+            nextCursorId: null,
+        });
 
         const response = await GET(request("GET"));
         const body = (await response.json()) as {
-            data: { photoUrl: string | null }[];
+            data: { items: { photoUrl: string | null }[] };
         };
 
-        expect(body.data[0].photoUrl).toBeNull();
+        expect(body.data.items[0].photoUrl).toBeNull();
         expect(signReadUrlMock).not.toHaveBeenCalled();
     });
 
     it("leaves the url null when the fork has no bucket configured", async () => {
         isStorageConfiguredMock.mockReturnValue(false);
-        listByUserIdMock.mockResolvedValue([
-            { ...baseEntity, photo: OWN_OBJECT },
-        ]);
+        listByUserIdMock.mockResolvedValue({
+            items: [{ ...baseEntity, photo: OWN_OBJECT }],
+            nextCursorId: null,
+        });
 
         const response = await GET(request("GET"));
         const body = (await response.json()) as {
-            data: { photoUrl: string | null }[];
+            data: { items: { photoUrl: string | null }[] };
         };
 
-        expect(body.data[0].photoUrl).toBeNull();
+        expect(body.data.items[0].photoUrl).toBeNull();
         expect(signReadUrlMock).not.toHaveBeenCalled();
     });
 });
