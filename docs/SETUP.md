@@ -9,7 +9,14 @@ Como subir o boilerplate do zero e o mapa **real** das variáveis de ambiente. A
 ## Pré-requisitos
 
 - Node `22.12.0` (`nvm use`) · pnpm `10.19.0`
-- **JDK 21+** — só para rodar os emuladores do Firebase (eles são JARs). `java -version` precisa dizer `21` ou mais; o `firebase-tools` recusa versões anteriores. No macOS: `brew install openjdk@21`.
+- **JDK 21+** — só para rodar os emuladores do Firebase (eles são JARs). `java -version` precisa dizer `21` ou mais; o `firebase-tools` recusa versões anteriores. No macOS: `brew install openjdk@21`. A fórmula é **keg-only**: o `brew` instala e não põe no `PATH`, então `java -version` continua respondendo a versão antiga (ou nenhuma) e parece que a instalação falhou. Aponte o `JAVA_HOME` na sessão antes de subir o emulador:
+
+  ```bash
+  export JAVA_HOME=/opt/homebrew/opt/openjdk@21   # Intel: /usr/local/opt/openjdk@21
+  export PATH="$JAVA_HOME/bin:$PATH"
+  ```
+
+  Para não repetir a cada terminal, ponha as duas linhas no `~/.zshrc`.
 - Contas: **Firebase** (Auth + Firestore), **Stripe**, **Resend** — necessárias **para publicar**, não para desenvolver. Para desenvolver local, os emuladores substituem o Firebase (ver [Emulador do Firebase](#emulador-do-firebase-caminho-local-padrão)). Opcional: **Arcjet** (segurança), Google Analytics/PostHog.
 - [Stripe CLI](https://docs.stripe.com/stripe-cli) para webhooks locais.
 
@@ -262,6 +269,9 @@ emuladores existirem — o código não tem default algum, quem é opinativo é 
 - **A primeira execução precisa de internet.** O `firebase-tools` baixa os JARs dos emuladores na primeira
   vez (para `~/.cache/firebase/emulators/`). Da segunda em diante, funciona offline de verdade.
 - **Precisa de JDK 21+.** Com Java 17 o `firebase-tools` recusa com `no longer supports Java version before 21`.
+  Se você instalou pelo `brew`, a fórmula é keg-only e não entra no `PATH` sozinha: exporte `JAVA_HOME` e
+  `PATH` antes de rodar `pnpm emulators` (ver [Pré-requisitos](#pré-requisitos)). Sem isso o `java -version`
+  aponta para o JDK antigo e a mensagem sugere, erradamente, que o 21 não está instalado.
 - **Porta ocupada derruba tudo.** Se a porta da UI (4001) ou qualquer outra estiver em uso, o
   `emulators:start` aborta inteiro, inclusive Auth e Firestore. O erro nomeia a porta; mude-a no bloco
   `emulators` do [`firebase.json`](../firebase.json).

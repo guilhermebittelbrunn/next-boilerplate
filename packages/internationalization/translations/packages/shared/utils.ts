@@ -74,6 +74,10 @@ export const sharedUtilsTranslations = {
             ENTITY_PHOTO_INVALID: "Imagem inválida para esta entidade.",
             HEALTH_DEPENDENCY_UNAVAILABLE:
                 "O serviço está indisponível no momento.",
+            PAGINATION_CURSOR_INVALID:
+                "A navegação expirou. Recarregue a lista.",
+            PAGINATION_INDEX_MISSING:
+                "A listagem está indisponível no momento. Tente de novo em instantes.",
         },
     },
     en: {
@@ -147,6 +151,10 @@ export const sharedUtilsTranslations = {
             ENTITY_PHOTO_INVALID: "Invalid image for this record.",
             HEALTH_DEPENDENCY_UNAVAILABLE:
                 "The service is unavailable right now.",
+            PAGINATION_CURSOR_INVALID:
+                "This page reference expired. Reload the list.",
+            PAGINATION_INDEX_MISSING:
+                "The listing is unavailable right now. Try again shortly.",
         },
     },
     es: {
@@ -227,6 +235,10 @@ export const sharedUtilsTranslations = {
             ENTITY_PHOTO_INVALID: "Imagen no válida para este registro.",
             HEALTH_DEPENDENCY_UNAVAILABLE:
                 "El servicio no está disponible en este momento.",
+            PAGINATION_CURSOR_INVALID:
+                "La navegación expiró. Vuelve a cargar la lista.",
+            PAGINATION_INDEX_MISSING:
+                "El listado no está disponible ahora. Inténtalo de nuevo en unos instantes.",
         },
     },
 };

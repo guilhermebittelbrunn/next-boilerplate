@@ -41,8 +41,10 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
   há onde caber cursor ou `hasMore` sem quebrar o contrato.
 - `apps/app/.../entities/(hooks)/useListEntities.tsx:10-17` — query única, sem parâmetros; é o padrão
   `useListX`/`fetchXList` que todo fork copia.
-- `packages/design-system/components/ui/table.tsx:11-22` — `TableProps` estende `AntdTableProps` sem tratar
-  `pagination`: o que a tela exibe é a **paginação client-side padrão do antd**, sobre o array inteiro.
+- `packages/design-system/components/ui/table.tsx:11-22` — `TableProps` deriva de `AntdTableProps` por
+  `Omit<…, "columns" | "dataSource">` (`:12`), e `pagination` não aparece uma única vez no arquivo: o que a
+  tela exibe é a **paginação client-side padrão do antd**, sobre o array inteiro. *(A redação anterior dizia
+  "estende"; o mecanismo é `Omit`, e a conclusão não muda.)*
 - `firestore.indexes.json:2-11` — deixou de ser vazio em 2026-08-31: versiona **um** índice composto, o de
   `findByReferenceId`. O arquivo e o caminho de deploy agora existem (`docs/SETUP.md:190-200`, com o
   comando de deploy em `:197`), o que **remove o obstáculo** — mas qualquer consulta composta nova

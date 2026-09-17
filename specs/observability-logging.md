@@ -106,7 +106,13 @@ segue invisível até alguém conferir a fatura.
   O helper com escopo tipado fechou esse caminho, porque agora a forma errada não compila.
 - `packages/analytics/server.ts` foi apagado em 2026-09-01 pelo saneamento de `ci-pipeline` (importava
   `posthog-node`, não declarado, e lia chaves que o `keys.ts` nunca declarou). É o item 6 do corte, entregue
-  por tabela. `@repo/analytics` segue limpo, declarando só `NEXT_PUBLIC_GA_MEASUREMENT_ID`.
+  por tabela.
+  > **Atenção ao homônimo (2026-09-16).** A PR #16 criou um arquivo **novo** no mesmo caminho: hoje
+  > `packages/analytics/server.ts` é o resolvedor de bootstrap de consentimento, com `import "server-only"`
+  > e sem dependência não declarada. Quem ler "foi apagado" e encontrar o arquivo no disco vai concluir que
+  > houve regressão — não houve. O código morto continua fora; o nome foi reaproveitado.
+  `@repo/analytics` segue sem dependência oculta, declarando `NEXT_PUBLIC_GA_MEASUREMENT_ID` como sua
+  única env.
 - `packages/security/index.ts:42-44` — o padrão de referência do repo para integração opcional: sem a
   variável de ambiente, a função retorna sem fazer nada. É o critério que o coletor precisa seguir quando
   alguém o adotar.

@@ -6,161 +6,142 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue** — spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última auditoria:** 2026-09-16 (`/spec --sync`, pós-merge da PR #15) · anteriores: 2026-09-16 (PRs #13
-> e #14) · 2026-09-15 · 2026-09-14 · 2026-09-11 · 2026-09-10 · 2026-09-09 (2 rodadas) · 2026-09-02 ·
-> 2026-09-01 (3 rodadas) · 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
+> **Última auditoria:** 2026-09-16 (`/spec --sync`, pós-merge da PR #16) · anteriores: 2026-09-16 (PR #15) ·
+> 2026-09-16 (PRs #13 e #14) · 2026-09-15 · 2026-09-14 · 2026-09-11 · 2026-09-10 · 2026-09-09 (2 rodadas) ·
+> 2026-09-02 · 2026-09-01 (3 rodadas) · 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
 >
 > **O que mudou nesta rodada:**
-> 1. **Nenhuma spec foi arquivada, e é a informação mais importante daqui.** A PR #15 entregou
->    `observability-logging` quase inteira — **4 dos 6 itens do corte confirmados no código**, mais um
->    cumprido de forma trivial —, mas o item 1 pede que o erro chegue a quem opera, e ninguém é notificado.
->    Entrega parcial não vira `done`. Ver [Estado da entrega](#o-caso-observability-logging).
-> 2. **Uma afirmação falsa em `docs/SECURITY.md`, corrigida hoje.** O documento dizia que o rate limit roda
->    "apenas em `/auth/sign-in`, `/auth/sign-up` e `/auth/sign-in/google`". São **8 caminhos** desde a PR
->    #11 — as rotas de recuperação de senha, as de verificação de e-mail e `/files` entraram e o documento
->    não acompanhou. A auditoria anterior declarou este arquivo "honesto, 17/17"; estava errada.
-> 3. **`account-security-mfa` teve a mesma contagem corrigida duas vezes, e as duas estavam erradas.** O
->    `MIN_PASSWORD_LENGTH = 6` não está em 2 nem em 5 schemas: está em **10**. A contagem de 5 olhou só
->    para `apps/app` e deixou de fora os **3 schemas de `apps/api`**, que são justamente os que importam.
-> 4. **Deriva em 9 das 11 specs, com 4 inversões semânticas.** Duas delas em `audit-log`, que afirmava não
->    existir logger estruturado e não haver instrumentação plugada no `onRequestError` — as duas coisas
->    passaram a existir no commit que a auditoria estava conferindo.
-> 5. **O #1 mudou de dono.** `observability-logging` saiu do topo por estar entregue em quase tudo, e o
->    lugar foi para `cookie-consent`, que vinha em segundo há cinco rodadas.
+> 1. **`cookie-consent` foi entregue e arquivada.** Os seis itens do corte foram reconferidos um a um no
+>    código, não no `STATE.md`; PR #16 mergeada em `main` (`7c8ff7c`), CI `success` no SHA de merge. É a
+>    nona spec a sair da fila. A spec vive agora em
+>    [`docs/features/cookie-consent/spec.md`](../docs/features/cookie-consent/spec.md).
+> 2. **Zero inversões semânticas, contra 4 na rodada anterior.** As quatro foram corrigidas dentro da
+>    própria PR #16 e as correções conferem com o código. O que sobrou é deriva de manutenção: uma âncora
+>    deslocada, quatro contagens erradas e um inventário incompleto.
+> 3. **Uma contagem que a spec contradizia sozinha.** `teams-organizations` escreveu "9 sítios" em três
+>    lugares enquanto a tabela dela somava **11**. O erro enfraquecia justamente o argumento que a spec usa
+>    para pedir atenção.
+> 4. **Quatro números falsos em `docs/PRE-PRODUCTION.md`, corrigidos hoje**, mais um inventário de cookies
+>    que omitia três nomes — num documento cujo propósito é declarar cookies para o texto legal.
+> 5. **O #1 é `cursor-pagination`**, que vinha em segundo. Motivo em [Ordem recomendada](#ordem-recomendada).
 
 ## Contadores
 
-Sobre as **11 specs que seguem em `specs/`**. Recontados do disco em 2026-09-16, lendo o frontmatter de
+Sobre as **10 specs que seguem em `specs/`**. Recontados do disco em 2026-09-16, lendo o frontmatter de
 cada arquivo.
 
 | status | qtd |
 |--------|-----|
-| `proposed` | 9 |
+| `proposed` | 8 |
 | `approved` | 0 |
 | `in-progress` | 1 |
-| `done` (arquivadas) | 8 |
+| `done` (arquivadas) | 9 |
 | `deferred` | 1 |
 | `rejected` | 0 |
 | `superseded` | 0 |
 
-**Por audiência:** `produto` 4 · `confianca` 4 · `dx` 3. **Por esforço:** P 0 · M 8 · G 3. **Por valor:**
-alto 8 · médio 3 · baixo 0.
+**Por audiência:** `produto` 3 · `confianca` 3 · `dx` 3 (+1 `deferred` em `produto`). **Por esforço:**
+P 0 · M 7 · G 3. **Por valor:** alto 7 · médio 3 · baixo 0.
 
-**Transições aplicadas nesta rodada: 0.** É a primeira rodada em seis sem nenhuma spec arquivada, e não é
-porque nada foi entregue — a PR #15 entregou bastante. É porque o que ficou de fora do corte é o item que
-dá nome ao problema da spec. Ver abaixo.
+**Transições aplicadas nesta rodada: 1** (`cookie-consent`: `proposed` → `done`, arquivada).
 
-### O caso `observability-logging`
+### O caso `cookie-consent` — o que foi conferido antes de arquivar
 
-A PR **#15** foi mergeada em `main` em 2026-09-16T17:01:02Z (merge commit `f8322f1`), com CI `success`
-nesse SHA. Os seis itens do corte foram reconferidos um a um no código:
+PR **#16** mergeada em `main` em 2026-09-16T23:54:09Z (merge commit `7c8ff7c`), com CI `success` nesse SHA
+(`gh run list`). Os seis itens do corte, reabertos no código:
 
 | item | veredito | evidência |
 |------|----------|-----------|
-| 1. Erro não tratado coletado nos três apps, chegando a quem opera | **parcial** | `apps/api/instrumentation.ts:36-37`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `packages/shared/utils/helpers/requestErrorReporter.ts:39-53`. O gancho emite trilha; **não há coletor e ninguém é notificado** |
-| 2. Identificador por requisição | **implementado** | `apps/api/proxy.ts:118` gera, `:157` repassa ao handler, `:71-72` carimba na resposta; `formattedError.ts:117` lê de volta |
-| 3. `console` cru substituído nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:61,69` · `users/route.ts:73` · `auth/sign-up/route.ts:40` |
-| 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-56` |
-| 5. Camada no-op sem a variável do serviço | **implementado**, trivialmente | zero dependência nova, zero env nova |
-| 6. Código morto de analytics removido | **implementado** | entregue por tabela em 2026-09-01 |
+| 1. Três saídas igualmente acessíveis no primeiro nível | **implementado** | `packages/design-system/components/ui/cookie-consent.tsx:134-156` — rejeitar (`:137`) e aceitar (`:144`) são o mesmo `Button`, mesma variante, mesma largura (`sm:flex-1`); rejeitar vem primeiro na ordem de leitura e de tabulação |
+| 2. Categoria por finalidade, não-necessário desligado por padrão | **implementado** | mesmo arquivo, `:64` (necessária travada em ligado) e `:75-80` (medição semeada com `analyticsGranted`, `false` enquanto não há decisão — `packages/analytics/consent.ts:22`) |
+| 3. Nenhuma tag carrega antes da escolha | **implementado** | `packages/analytics/provider.tsx:101` deriva `measuring`; Vercel (`:107`) e Google (`:108-110`) só montam sob ela |
+| 4. Escolha persiste entre visitas e entre os dois apps, revisável | **implementado** | cookie de 180 dias (`consent.ts:1,9-12`), domínio de `SESSION_COOKIE_DOMAIN` (`server.ts:29`); reabertura em `apps/web/…/cookiePreferencesButton.tsx:13,23` e `apps/app/…/ProfileDropdown.tsx:29,70` |
+| 5. Aviso e preferências nos 3 idiomas, política no mesmo idioma | **implementado** | `translations/components/ui/cookie-consent.ts:2,36,70` · `translations/components/index.ts:19,29,39`; locale repassado em `apps/web/app/[locale]/layout.tsx:39` e `apps/app/app/layout.tsx:48` |
+| 6. Os quatro sinais do Consent Mode v2 | **implementado** | `packages/analytics/consent.ts:90-93` (defaults) e `provider.tsx:29-31,52` (update) |
 
-**Por que não virou `done`.** O item 1 pede que o erro "chegue a quem opera sem o cliente precisar avisar",
-e os sinais de pronto da spec pedem alerta rastreável no webhook de pagamento. O que existe é registro
-rastreável — a linha sai no stdout, a plataforma a indexa, e alguém ainda precisa ir olhar. A diferença
-entre as duas coisas é o problema que a spec descreve no primeiro parágrafo.
-
-**Por que isso não é falha da entrega.** Adotar um coletor gerenciado exige conta em provedor, e
-[`.claude/cycle-policy.md`](../.claude/cycle-policy.md) proíbe provisionar infraestrutura numa rodada
-autônoma. A decisão é a **pergunta em aberto nº 1 da própria spec**, escrita na semeadura e nunca
-respondida.
-
-**O que a auditoria recomenda, sem aplicar:** fechar a spec como entregue e abrir uma spec própria de
-esforço P para o coletor, em vez de manter uma spec quase inteira parada por um item que depende de
-decisão de produto. A alternativa — manter aberta até o coletor existir — também é defensável, e é a que
-está valendo enquanto ninguém decide. Ver [Precisam de decisão](#precisam-de-decisão).
-
-**Efeito colateral no cálculo:** `in-progress` fica fora do conjunto elegível, então esta spec não entra
-nos lotes paralelos nem pode ser recomendada como próxima. Isso é o comportamento certo, por acidente: o
-resíduo dela é a única coisa no backlog que uma rodada autônoma não consegue terminar.
+**Uma ressalva registrada na spec arquivada, que não bloqueia o `done`:** o ponto permanente de revisão na
+`apps/app` mora no `ProfileDropdown`, que só existe depois do login. Quem decidiu na tela de cadastro e
+nunca autenticou precisa do rodapé da landing para mudar de ideia — caminho que existe, mas depende de o
+fork publicar a `apps/web` e de `SESSION_COOKIE_DOMAIN` estar configurada em produção.
 
 ## Gates — medidos nesta auditoria
 
-Executados agora, com `--force`. Não copiados do `/test` nem da rodada anterior.
+Executados agora, com `--force`, no workspace `mbabane`. Não copiados do `/test` nem da rodada anterior.
 
 | comando | resultado |
 |---------|-----------|
-| `pnpm check` | ✅ **532 arquivos · 0 erros** (`No fixes applied`, 287 ms) |
-| `pnpm turbo run lint typecheck test --force` | ✅ **23/23 tasks · 0 em cache · 50,4 s** |
+| `pnpm check` | ✅ **543 arquivos · 0 erros** (`No fixes applied`, 226 ms) |
+| `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks · 0 em cache · 37,9 s** |
 
-| workspace | arquivos | testes | Δ vs. 2026-09-16 (PRs #13/#14) |
-|-----------|---------:|-------:|-------------------------------|
-| `api` | 35 | 371 | +2 arquivos · **+25** |
-| `app` | 38 | 274 | +2 arquivos · **+9** |
+| workspace | arquivos | testes | Δ vs. 2026-09-16 (PR #15) |
+|-----------|---------:|-------:|---------------------------|
+| `api` | 35 | 371 | — |
+| `app` | 41 | 293 | +3 arquivos · **+19** |
 | `@repo/email` | 7 | 137 | — |
 | `@repo/auth` | 6 | 62 | — |
-| `@repo/shared` | 4 | 40 | +3 arquivos · **+25** |
-| `web` | 5 | 31 | +1 arquivo · **+4** |
+| `@repo/shared` | 4 | 44 | **+4** |
+| `@repo/analytics` | 2 | 34 | 🆕 workspace novo na suíte |
+| `web` | 5 | 31 | — |
 | `@repo/security` | 3 | 31 | — |
 | `@repo/internationalization` | 3 | 27 | — |
 | `@repo/payments` | 1 | 8 | — |
-| **total** | **102** | **981** | **+8 arquivos · +63 testes** |
+| **total** | **107** | **1038** | **+5 arquivos · +57 testes** |
 
-CI: a execução de merge de **#15** (`f8322f1`) está em **`success`**, assim como as 13 anteriores. A branch
-de trabalho desta auditoria é `dublin`, cujo `HEAD` é `f8322f1` — nenhum commit do repositório está fora de
-`main`.
+A PR #16 acrescentou o décimo workspace à suíte (`@repo/analytics`), o que move de uma vez os quatro
+números que os documentos vinham citando: tasks (23 → 24), arquivos do `pnpm check` (532 → 543), arquivos
+de teste (102 → 107) e testes (981 → 1038).
 
-**O gate segue estável.** As 9 configs de Vitest declaram `testTimeout: 20_000` desde a PR #13, e o gate
-fechou 23/23 com 63 testes a mais que na rodada anterior, em tempo praticamente igual (50,4 s contra
-50,7 s). O pré-requisito do branch protection continua satisfeito, e o branch protection continua não
-ligado: `gh api …/branches/main/protection` devolve **404** e `rulesets` devolve `[]`, remedidos hoje.
+CI: a execução de merge de **#16** (`7c8ff7c`) está em **`success`**. A branch de trabalho desta auditoria é
+`mbabane`, cujo `HEAD` é `7c8ff7c` — nenhum commit do repositório está fora de `main`.
+
+**O gate segue estável.** As **10** configs de Vitest declaram `testTimeout: 20_000` — a décima
+(`packages/analytics/vitest.config.mts:6`) nasceu na PR #16 já com o teto, sem ninguém precisar lembrar. O
+pré-requisito do branch protection continua satisfeito, e o branch protection continua não ligado.
 
 ## Ordem recomendada
 
 Respeita `depends_on` (lido do frontmatter nesta rodada) e prioriza valor × esforço × custo de adiar.
 Nenhuma spec está bloqueada por dependência.
 
-> **Um critério ganhou peso nesta rodada: o que uma rodada autônoma consegue provar.** O `/cycle` não
+> **Um critério ganhou peso e continua valendo: o que uma rodada autônoma consegue provar.** O `/cycle` não
 > provisiona infraestrutura, então uma spec cujos critérios de aceite dependem de conta em provedor volta
 > com metade dos critérios "não verificados". Isso não a torna menos valiosa — torna-a má escolha para
 > **esta** forma de execução, e a distinção precisa estar escrita para não virar preconceito silencioso.
 
 | # | id | por que agora |
 |---|----|---------------|
-| 1 | [`cookie-consent`](cookie-consent.md) | **Sobe ao topo depois de cinco rodadas em segundo.** É a única spec do backlog que descreve uma **violação em curso**, não uma ausência de recurso: `packages/analytics/provider.tsx:15` monta o Vercel Analytics **incondicionalmente** e `:16` monta o GA checando só a env — nenhum consentimento, em todo o app. O inventário a declarar são **5** cookies, e a busca por banner ou componente de consentimento segue devolvendo só ruído. Barata de provar numa rodada autônoma: nada aqui depende de conta em provedor, e o caminho inteiro se exercita num browser local. Ficou mais barata ainda com a PR #12, que deixou pronto o padrão de ler cookie no servidor e aplicar no `<html>` sem piscar (`apps/app/app/layout.tsx:19,27-32`). |
-| 2 | [`cursor-pagination`](cursor-pagination.md) | Todo fork herda "ler a coleção inteira": `base.repository.ts:36-49` faz `.get()` sem `limit`, `orderBy` nem `startAfter`, e nenhum método aceita parâmetro de consulta. `startAfter`, `limit(` e `orderBy` dão **zero ocorrências** em `apps/api`. É a spec com o melhor argumento de **"fica mais caro depois"**: corrigir com dados em produção muda contrato do SDK, DTO, hooks e índices ao mesmo tempo. Cruza com a dívida do `update()` (achados), que precisa de `orderBy` estável em `createdAt`. |
-| 3 | [`audit-log`](audit-log.md) | O painel já tem impersonação e **nada registra quem entrou na conta de quem** — o switch é inteiramente client-side (`panelStore.ts:76-90`). São **18 handlers de escrita** e **zero** gravam evento, incluindo `POST /account/sessions/revoke`: hoje não dá para distinguir se quem derrubou as sessões foi o dono ou quem tomou a conta dele. **0 de 5.** A PR #15 barateou o trabalho sem fazê-lo: a convenção de log e o helper já existem, e o que falta é a persistência — trilha de log e trilha de auditoria são coisas diferentes. |
-| 4 | [`billing-subscription`](billing-subscription.md) | Maior valor bruto do backlog e ainda em **0/6**: não existe diretório `payments/` nas rotas, o `UserDTO` não tem `subscription` nem `stripeCustomerId`, e o webhook tem dois handlers `// TODO` (`webhooks/payments/route.ts:13,23`) sem dedupe por `event.id`. **Perdeu posição por um motivo de execução, não de mérito:** provar checkout, portal e webhook exige chaves reais da Stripe, e uma rodada autônoma devolveria os critérios como "não verificados". **Pré-requisito barato que segue de pé:** o 🔴 de `packages/payments/ai.ts:4-5` explode no primeiro fork que importar o pacote — e é esta spec que faria alguém importar. |
-| 5 | [`data-rights-lgpd`](data-rights-lgpd.md) | Obrigação legal com prazo, o argumento mais duro do backlog. Segue em 0/5, e a armadilha dos objetos órfãos continua dobrada: `deleteObjectQuietly` tem **2** call sites, ambos de troca, nenhum de expurgo. O `delete()` herdado é **soft delete** (`base.repository.ts:127-129`), então nem uma varredura por "documentos sem dono" resolveria. Esforço **G** é o que a segura fora do topo numa rodada autônoma. |
-| 6 | [`onboarding-flow`](onboarding-flow.md) | ⚠️ **Precisa ser reescopada antes do `/analyze`, e a auditoria de hoje aumentou a dívida.** O item 2 do corte continua oco desde que a PR #12 passou a coletar nome e idioma na área de conta; e descobriu-se agora que a spec atribuía o gancho pós-cadastro ao lugar errado — ele está no `onSuccess` da mutation (`SignUpFormClient.tsx:114`), não no caminho de redirect que o onboarding precisaria interceptar. O trabalho é maior do que a spec descreve. `grep -rin onboarding` segue em **1 ocorrência**, e é um endereço de sandbox num fixture. |
-| 7 | [`e2e-testing`](e2e-testing.md) | Destravada desde a rodada anterior, e sem o argumento mais forte que tinha — o gate instável foi corrigido pela PR #13 e não voltou. O que resta é sólido e mais lento de cobrar: zero `playwright`/`cypress`/`axe` em qualquer `package.json`, nenhuma das 9 configs medindo cobertura, e **duas rules files sem um único teste de regra** (`firestore.rules` publicado em deny-all, `storage.rules` nem publicado) — sem desculpa, porque o emulador existe. Esforço **G** e `value: médio`. |
-| 8 | [`dashboard-home`](dashboard-home.md) | As duas homes do painel são **11 linhas** e o literal `"Home"` — com a chave de dicionário pronta ao lado, já usada em 5 breadcrumbs. É a primeira tela de todo fork, e resgataria o `chart.tsx` (a dependência `recharts` pesa no bundle e nunca renderizou nada). Spec mais "presa" do conjunto elegível, apesar de `depends_on: []` — ver lotes. |
-| 9 | [`account-security-mfa`](account-security-mfa.md) | **Cresceu nesta auditoria, e por isso não sobe.** O item 4 (política de senha) era descrito como mudança em 5 schemas de formulário; são **10 declarações**, e as 3 que importam estão em `apps/api` — ou seja, é mudança de contrato, não de formulário. Restam MFA (**3/10** de prevalência entre os starters pesquisados) e visibilidade de sessões (**1/10**). `value: médio` por mérito próprio, e agora com esforço provavelmente acima de M. |
-| 10 | [`observability-logging`](observability-logging.md) | `in-progress`. Entregue em 5 dos 6 itens; o resíduo é adotar um coletor de erro, que depende de decisão de produto e de conta em provedor. **Fora do conjunto elegível** — ver [o caso](#o-caso-observability-logging). |
-| 11 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22 — a decisão, não só a implementação. As **duas contrapartidas de esforço P seguem não feitas**, agora há **vinte e seis dias**. Ver [a decisão que não pode esperar a fila](#a-decisão-que-não-pode-esperar-a-fila). |
+| 1 | [`cursor-pagination`](cursor-pagination.md) | **Sobe ao topo depois de uma rodada em segundo.** Todo fork herda "ler a coleção inteira": `base.repository.ts:36-49` faz `.get()` sem `limit`, `orderBy` nem `startAfter`, e nenhum método aceita parâmetro de consulta. `startAfter`, `limit(` e `orderBy` dão **zero ocorrências** em `apps/api`. Tem o melhor argumento de **"fica mais caro depois"** do backlog: corrigir com dados em produção muda contrato do SDK, DTO, hooks e índices ao mesmo tempo. Prova-se inteira numa rodada autônoma — Firestore roda no emulador desde a PR #13, e nada aqui depende de conta em provedor. Cruza com a dívida do `update()` (achados), que precisa de `orderBy` estável em `createdAt`. |
+| 2 | [`audit-log`](audit-log.md) | O painel já tem impersonação e **nada registra quem entrou na conta de quem** — o switch é inteiramente client-side (`panelStore.ts:76-90`). São **18 handlers de escrita** e **zero** gravam evento, incluindo `POST /account/sessions/revoke`: hoje não dá para distinguir se quem derrubou as sessões foi o dono ou quem tomou a conta dele. **0 de 5**, com o item 5 (retenção) parcial — o passo já está em `docs/PRE-PRODUCTION.md:296-298`, sem o prazo escrito. A PR #15 barateou o trabalho sem fazê-lo: a convenção de log e o helper já existem, e o que falta é a persistência. |
+| 3 | [`billing-subscription`](billing-subscription.md) | Maior valor bruto do backlog e ainda em **0/6**: não existe diretório `payments/` nas rotas, o `UserDTO` não tem `subscription` nem `stripeCustomerId`, e o webhook tem dois handlers `// TODO` (`webhooks/payments/route.ts:13,23`) sem dedupe por `event.id`. **Segue atrás por um motivo de execução, não de mérito:** provar checkout, portal e webhook exige chaves reais da Stripe, e uma rodada autônoma devolveria os critérios como "não verificados". **Pré-requisito barato que segue de pé:** o 🔴 de `packages/payments/ai.ts:4-5` explode no primeiro fork que importar o pacote — e é esta spec que faria alguém importar. |
+| 4 | [`data-rights-lgpd`](data-rights-lgpd.md) | Obrigação legal com prazo, o argumento mais duro do backlog. Segue em 0/5, e a armadilha dos objetos órfãos continua dobrada: `deleteObjectQuietly` tem **2** call sites, ambos de troca, nenhum de expurgo. O `delete()` herdado é **soft delete** (`base.repository.ts:127-129`). **Ganhou escopo nesta rodada:** a PR #16 criou dado pessoal gerido por consentimento, e a prova do consentimento vive só no navegador do titular — o exportador precisa incluí-la. E a política placeholder virou destino de link do banner sem mencionar cookies em nenhum dos 3 idiomas. Esforço **G** é o que a segura fora do topo numa rodada autônoma. |
+| 5 | [`onboarding-flow`](onboarding-flow.md) | ⚠️ **Precisa ser reescopada antes do `/analyze`.** O item 2 do corte continua oco desde que a PR #12 passou a coletar nome e idioma na área de conta; e a spec atribuía o gancho pós-cadastro ao lugar errado — ele está no `onSuccess` da mutation (`SignUpFormClient.tsx:114`), não no caminho de redirect que o onboarding precisaria interceptar. Reconferida nesta rodada: **zero deriva**, âncoras e contagens todas exatas, inclusive a autocorreção anterior. O trabalho é maior do que a spec descreve, e agora a spec diz isso. |
+| 6 | [`e2e-testing`](e2e-testing.md) | Destravada, e sem o argumento mais forte que tinha — o gate instável foi corrigido pela PR #13 e não voltou. O que resta é sólido e mais lento de cobrar: zero `playwright`/`cypress`/`axe` em qualquer `package.json`, nenhuma das **10** configs medindo cobertura, e **duas rules files sem um único teste de regra** (`firestore.rules` publicado em deny-all, `storage.rules` nem publicado) — sem desculpa, porque o emulador existe. Esforço **G** e `value: médio`. |
+| 7 | [`dashboard-home`](dashboard-home.md) | As duas homes do painel são **11 linhas** e o literal `"Home"` — com a chave de dicionário pronta ao lado, já usada em 5 breadcrumbs. É a primeira tela de todo fork, e resgataria o `chart.tsx` (a dependência `recharts` pesa no bundle e nunca renderizou nada). Spec mais "presa" do conjunto elegível, apesar de `depends_on: []` — ver lotes. |
+| 8 | [`account-security-mfa`](account-security-mfa.md) | Cresceu na auditoria anterior e não encolheu nesta. O item 4 (política de senha) era descrito como mudança em 5 schemas de formulário; são **10 declarações**, e as 3 que importam estão em `apps/api` — mudança de contrato, não de formulário. Restam MFA (**3/10** de prevalência entre os starters pesquisados) e visibilidade de sessões (**1/10**). `value: médio` por mérito próprio, e esforço provavelmente acima de M. |
+| 9 | [`observability-logging`](observability-logging.md) | `in-progress`. Entregue em 5 dos 6 itens; o resíduo é adotar um coletor de erro, que depende de decisão de produto e de conta em provedor. **Fora do conjunto elegível** — ver [Precisam de decisão](#precisam-de-decisão). |
+| 10 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22 — a decisão, não só a implementação. As **duas contrapartidas de esforço P seguem não feitas**, agora há vinte e sete dias e pela quarta PR consecutiva. O gatilho de escalonamento que a própria spec definiu disparou. Ver [Precisam de decisão](#precisam-de-decisão). |
 
 ### O que **não** foi escolhido para #1, e por quê
 
-- **`cursor-pagination`** foi o segundo colocado e a decisão mais difícil. Tem o melhor argumento de "fica
-  mais caro depois" do conjunto: corrigir paginação com dados em produção mexe em SDK, DTO, hooks e índices
-  de uma vez. Perdeu porque o custo dela **ainda não começou a correr** — sem volume, ler a coleção inteira
-  é indistinguível de paginar. O custo do #1 já corre: todo fork que configurar o GA rastreia visitante
-  antes de perguntar.
-- **`audit-log`** tem o argumento mais desconfortável do backlog (impersonação sem registro), mas é a fatia
-  mais larga das três candidatas — coleção nova, repositório novo e tela de admin — e disputa
-  `base.repository.ts` e `firestore.indexes.json` com quem vier depois.
+- **`audit-log` foi o segundo colocado, e perdeu por duas razões que se somam.** A primeira é largura: é a
+  fatia mais grossa das candidatas — coleção nova, repositório novo e tela de admin. A segunda é ordem, e
+  é a que decide: uma trilha de auditoria é o arquétipo da coleção que cresce sem teto, então a tela dela
+  vai querer paginação. Construí-la antes do #1 significa construir a listagem duas vezes, e a segunda vez
+  já com dado gravado. O argumento moral dela continua sendo o mais desconfortável do backlog
+  (impersonação sem registro) — o que mudou é só a ordem.
 - **`billing-subscription`** tem o maior valor bruto e não foi escolhida por uma razão de execução, que
   merece ficar explícita: verificar checkout, portal e webhook exige chaves reais da Stripe, e esta rodada
-  é autônoma. Seria entregar código que ninguém consegue provar hoje.
+  é autônoma. Seria entregar código que ninguém consegue provar hoje. Metade dos critérios voltaria como
+  "não verificado", e isso é critério de execução, não de mérito.
 - **`data-rights-lgpd`** tem prazo legal e mesmo assim não foi ao topo: esforço **G** é má escolha para uma
-  rodada autônoma.
-- **`account-security-mfa`** e **`onboarding-flow`** estão as duas com o corte desatualizado em relação ao
-  código — a primeira subdimensionava a política de senha pela metade, a segunda apontava o gancho
-  pós-cadastro para o lugar errado. Reescopar antes de planejar.
+  rodada autônoma, e ela acabou de ganhar escopo com a chegada do consentimento.
+- **`onboarding-flow` e `account-security-mfa`** estão as duas com o corte desatualizado em relação ao
+  código. Reescopar antes de planejar: planejar sobre um corte errado custa mais caro que reescrever a spec.
 
 ## Lotes paralelos
 
 Para rodar o ciclo completo em 2–4 workspaces do Conductor ao mesmo tempo. Calculado em **2026-09-16** a
-partir do `contends_on` de cada spec, pelo algoritmo de
+partir do `contends_on` de cada spec, lido do disco, pelo algoritmo de
 [`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por
 disjunção → teto de 3.
 
@@ -168,15 +149,15 @@ disjunção → teto de 3.
 pena fazer*; o lote diz *o que pode ser feito junto sem uma spec pisar na outra*. Um lote **não** é
 recomendação de prioridade — se você só vai rodar uma coisa, rode o #1 da ordem.
 
-**Elegíveis nesta rodada: 9 de 11.** Fora ficam `teams-organizations` (`deferred`) e
+**Elegíveis nesta rodada: 8 de 10.** Fora ficam `teams-organizations` (`deferred`) e
 `observability-logging` (`in-progress`).
 
 | lote | specs | o que cada uma toca | por que não colidem |
 |------|-------|---------------------|---------------------|
-| **1** | `cookie-consent` · `cursor-pagination` · `billing-subscription` | provedor de analytics + os dois `layout.tsx` + barril de UI · `base.repository.ts` + `entity.repository.ts` + `table.tsx` + índices + ação `entity` do SDK · webhook de pagamento + barril do SDK + `UserDTO` + `user.repository.ts` + `routes.tsx` | **apresentação/analytics**, **camada de dados de `entity`** e **slice `user` cobrado**. Repositórios distintos (`base`/`entity` × `user`) e pontos distintos do SDK (`actions/entity` × `client/index.ts`) |
-| **2** | `audit-log` · `e2e-testing` · `onboarding-flow` | `base.repository.ts` + `users/[id]` + índices + barril do SDK + `queryKeys.ts` · `package.json` da raiz + `turbo.json` + `ci.yml` · `apps/app/proxy.ts` + resolvedor pós-login + `user-merge.ts` + `UserDTO` | **escrita de trilha na API**, **ferramental da raiz** e **desvio de navegação no app**. Encostam no `user` por caminhos distintos (`users/[id]/route.ts` × `user-merge.ts`) |
+| **1** | `cursor-pagination` · `billing-subscription` · `e2e-testing` | `base.repository.ts` + `entity.repository.ts` + `table.tsx` + índices + ação `entity` do SDK · webhook de pagamento + barril do SDK + `UserDTO` + `user.repository.ts` + `routes.tsx` · `package.json` da raiz + `turbo.json` + `ci.yml` | **camada de dados de `entity`**, **slice `user` cobrado** e **ferramental da raiz**. Repositórios distintos (`base`/`entity` × `user`), pontos distintos do SDK (`actions/entity` × `client/index.ts`), e a terceira não toca em `apps/` nem em `packages/` |
+| **2** | `audit-log` · `onboarding-flow` · `account-security-mfa` | `base.repository.ts` + `users/[id]` + índices + barril do SDK + `queryKeys.ts` · `apps/app/proxy.ts` + resolvedor pós-login + `user-merge.ts` + `UserDTO` · `packages/auth/*` + `resolve-api-actor.ts` | **escrita de trilha na API**, **desvio de navegação no app** e **camada de sessão**. Encostam no `user` por caminhos distintos (`users/[id]/route.ts` × `user-merge.ts` × `packages/auth`) |
 | **3** | `data-rights-lgpd` | `base.repository.ts` + `packages/auth/server.ts` + índices | sozinha: colide com `cursor-pagination` e `audit-log` no repositório base e nos índices, e com `account-security-mfa` em `packages/auth/server.ts` |
-| **4** | `dashboard-home` · `account-security-mfa` | as duas `page.tsx` de home + `queryKeys.ts` + índices · `packages/auth/*` + `resolve-api-actor.ts` | **tela** e **camada de sessão**, sem interseção |
+| **4** | `dashboard-home` | as duas `page.tsx` de home + `queryKeys.ts` + índices | sozinha depois da realocação: colide com `cursor-pagination` e `data-rights-lgpd` nos índices e com `audit-log` em `queryKeys.ts` **e** nos índices |
 
 ### Por que cada spec ficou de fora do lote 1
 
@@ -187,16 +168,16 @@ Distinguir os dois motivos importa: colisão é **dado**, teto é **decisão**.
 - **`data-rights-lgpd` colide com `cursor-pagination` nos mesmos dois arquivos.** Não é acidente — as três
   precisam mexer no repositório herdado, uma para ensiná-lo a paginar, outra para registrar, a terceira
   para excluir de verdade.
-- **`dashboard-home` colide com `cursor-pagination`** em `firestore.indexes.json`. É a spec mais "presa" do
-  conjunto elegível, apesar de `depends_on: []`.
 - **`onboarding-flow` colide com `billing-subscription`** em `packages/sdk/src/types/user/user.ts`: as duas
   precisam acrescentar campo ao `UserDTO`, uma para estado de perfil incompleto, a outra para assinatura.
-- **`e2e-testing` e `account-security-mfa` não colidem com nada do lote 1.** Ficaram de fora **só pelo teto
-  de 3**, que é escolha de custo de revisão e não impedimento técnico. Se você tiver fôlego para revisar
-  quatro features amanhã, a de melhor posição na ordem é `e2e-testing`.
+- **`dashboard-home` colide com `cursor-pagination`** em `firestore.indexes.json`. É a spec mais "presa" do
+  conjunto elegível, apesar de `depends_on: []`.
+- **`account-security-mfa` não colide com nada do lote 1.** Ficou de fora **só pelo teto de 3**, que é
+  escolha de custo de revisão e não impedimento técnico. Se você tiver fôlego para revisar quatro features
+  amanhã, é ela que entra.
 
 **O arquivo mais disputado do repositório continua sendo `firestore.indexes.json`**, citado por **5** das
-11 specs. Em seguida, com 3: `apps/api/(shared)/repositories/base.repository.ts` e
+10 specs. Em seguida, com 3: `apps/api/(shared)/repositories/base.repository.ts` e
 `packages/sdk/src/client/index.ts`.
 
 ### Nota de processo — a auditoria é de um workspace só
@@ -212,16 +193,17 @@ por dado — ver [`README.md`](README.md#depends_on--contends_on).
 **Lote disjunto em `contends_on` reduz conflito; não elimina.** O campo é uma *previsão* feita lendo o corte
 de MVP, e uma previsão erra: duas features ainda podem brigar num arquivo que nenhuma das duas antecipou.
 
-A régua desta rodada, com `observability-logging` como amostra: ela declarava **3** arquivos em
-`contends_on` — `apps/api/instrumentation.ts`, `apps/api/proxy.ts` e o webhook de pagamento — e **acertou
-os três**. Mas a PR tocou 57 arquivos, entre eles `packages/shared/utils/helpers/formattedError.ts` e
-`handleClientError.ts`, os três `instrumentation.ts` de app, e `(shared)/lib/` inteiro da API. **Um desses
-é `contends_on` declarado de outra spec:** nenhum, desta vez — o raio extra caiu quase todo em arquivos
-novos ou em `packages/shared`, que nenhuma spec do backlog disputa.
+A régua desta rodada, com `cookie-consent` como amostra: ela declarava **4** arquivos em `contends_on` —
+`packages/analytics/provider.tsx`, os dois `layout.tsx` e o barril de UI do design system — e **acertou os
+quatro**. A PR tocou 47 arquivos, mas o raio extra caiu quase todo em arquivos **novos**
+(`packages/analytics/consent.ts`, `server.ts`, `consent-context.tsx`, `cookie-consent.tsx` e os testes).
+Os dois arquivos existentes não previstos foram `packages/shared/utils/helpers/cookies.ts` e
+`apps/web/app/[locale]/components/footer.tsx`, e **nenhum dos dois é `contends_on` declarado de outra
+spec**.
 
-**A previsão acertou o que declarou e subestimou o raio, pela terceira rodada seguida.** Se dois workspaces
-do mesmo lote tocarem o mesmo arquivo por acidente, **isso é achado de auditoria** — corrija o
-`contends_on` das duas specs na rodada seguinte, em vez de tratar como azar.
+**Primeira rodada em quatro em que a previsão não subestimou o raio de forma relevante.** O motivo limita o
+que isso prova: uma feature que nasce quase inteira em arquivos novos é o caso fácil do `contends_on`. As
+próximas três da fila mexem em código herdado, onde a previsão vem errando.
 
 ## Precisam de decisão
 
@@ -229,10 +211,11 @@ Nenhuma delas é da auditoria. Todas têm recomendação, e nenhuma foi aplicada
 
 | # | questão | recomendação |
 |---|---------|--------------|
-| 1 | **`observability-logging` fecha como entregue?** 5 dos 6 itens estão no código; o que falta é adotar um coletor de erro, que exige conta em provedor e é a pergunta em aberto nº 1 da própria spec. | **Fechar como `done`** e abrir uma spec nova de esforço P só para o coletor. Manter uma spec quase inteira aberta por um item que ninguém pode executar sem decisão de produto trava a spec e polui a fila. |
-| 2 | **`teams-organizations` continua `deferred`?** Vinte e seis dias sem nenhuma das duas contrapartidas de esforço P que tornavam o adiamento honesto. | Ou as contrapartidas viram tarefa com dono, ou o status vira `rejected` até aparecer o primeiro fork B2B. Manter `deferred` sem elas é tomar a decisão por omissão. |
+| 1 | **`observability-logging` fecha como entregue?** 5 dos 6 itens estão no código; o que falta é adotar um coletor de erro, que exige conta em provedor e é a pergunta em aberto nº 1 da própria spec. Segunda rodada consecutiva sem resposta. | **Fechar como `done`** e abrir uma spec nova de esforço P só para o coletor. Manter uma spec quase inteira aberta por um item que ninguém pode executar sem decisão de produto trava a spec e polui a fila. |
+| 2 | **`teams-organizations` continua `deferred`?** Vinte e sete dias e quatro PRs sem nenhuma das duas contrapartidas de esforço P que tornavam o adiamento honesto. **O gatilho escrito na própria spec disparou.** | Ou as contrapartidas viram tarefa com dono, ou o status vira `rejected` até aparecer o primeiro fork B2B. Manter `deferred` sem elas é tomar a decisão por omissão, agora pela quarta vez. |
 | 3 | **Ligar o branch protection na `main`?** O único pré-requisito técnico caiu na PR #13 e continua satisfeito. Hoje uma PR vermelha pode ser mergeada. | Ligar, exigindo o check do CI. Custo de minutos, e o risco de adiar cresce com o número de PRs. |
 | 4 | **`account-security-mfa` e `onboarding-flow` precisam de reescopo antes do `/analyze`.** As duas têm o corte de MVP desatualizado em relação ao código, cada uma por um motivo diferente. | Rodar `/spec <id>` nas duas antes de planejar. Planejar sobre um corte errado custa mais caro que reescrever a spec. |
+| 5 | **Quem escreve a política de privacidade que o banner agora linka?** 🆕 O consentimento de cookies entrou e aponta para `/legal/privacy`, que é modelo e **não menciona cookies** em nenhum dos 3 idiomas. Um fork que suba assim fica em posição pior do que sem banner: o aviso afirma que existe política, e a política não descreve o tratamento. | Texto legal é responsabilidade de cada fork, não do core — mas o **core deve entregar um modelo que ao menos declare os cookies que ele próprio grava**. A tabela dos sete está em `docs/PRE-PRODUCTION.md`. Cabe no corte de `data-rights-lgpd` (#4) ou vira tarefa direta de esforço P. |
 
 ## Dependências e bloqueios
 
@@ -242,7 +225,7 @@ Nenhuma delas é da auditoria. Todas têm recomendação, e nenhuma foi aplicada
 | [`account-security-mfa`](account-security-mfa.md) · [`data-rights-lgpd`](data-rights-lgpd.md) | `account-settings` | ✅ satisfeita (PR #12, `a4df5ed`) |
 | [`audit-log`](audit-log.md) · [`cursor-pagination`](cursor-pagination.md) | `firestore-admin-access` | ✅ satisfeita (entregue em 2026-08-31) |
 | [`teams-organizations`](teams-organizations.md) | `transactional-emails` | ✅ satisfeita (PR #9, `400f290`) |
-| [`billing-subscription`](billing-subscription.md) · [`cookie-consent`](cookie-consent.md) · [`dashboard-home`](dashboard-home.md) · [`observability-logging`](observability-logging.md) · [`onboarding-flow`](onboarding-flow.md) | — | ✅ sem dependência |
+| [`billing-subscription`](billing-subscription.md) · [`dashboard-home`](dashboard-home.md) · [`observability-logging`](observability-logging.md) · [`onboarding-flow`](onboarding-flow.md) | — | ✅ sem dependência |
 
 > **Nenhuma spec em `specs/` está bloqueada por outra.** O que limita a paralelização é contenção de
 > arquivo e o teto de revisão, não ordem lógica.
@@ -254,7 +237,6 @@ Nenhuma delas é da auditoria. Todas têm recomendação, e nenhuma foi aplicada
 | [`account-security-mfa`](account-security-mfa.md) | MFA, sessões ativas e política de senha | confianca | médio | M | `proposed` | ✅ `account-settings` |
 | [`audit-log`](audit-log.md) | Trilha de auditoria de ações sensíveis | confianca | alto | M | `proposed` | ✅ `firestore-admin-access` |
 | [`billing-subscription`](billing-subscription.md) | Assinatura Stripe de ponta a ponta | produto | alto | M | `proposed` | — |
-| [`cookie-consent`](cookie-consent.md) | Consentimento de cookies e Consent Mode | confianca | alto | M | `proposed` | — |
 | [`cursor-pagination`](cursor-pagination.md) | Paginação por cursor no BaseRepository e no SDK | dx | alto | M | `proposed` | ✅ `firestore-admin-access` |
 | [`dashboard-home`](dashboard-home.md) | Home do painel com widgets | produto | médio | M | `proposed` | — |
 | [`data-rights-lgpd`](data-rights-lgpd.md) | Direitos do titular: exportar dados e excluir conta | confianca | alto | G | `proposed` | ✅ `account-settings` |
@@ -276,188 +258,158 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `auth-recovery-verification` | 2026-09-11 | [`docs/features/auth-recovery-verification/spec.md`](../docs/features/auth-recovery-verification/spec.md) — 5/5 do corte, conferidos um a um |
 | `file-upload-storage` | 2026-09-14 | [`docs/features/file-upload-storage/spec.md`](../docs/features/file-upload-storage/spec.md) — 5/5 do corte (PR #11, `9154776`). ⚠️ 6 critérios "não verificados" por o Cloud Storage não estar ativado |
 | `account-settings` | 2026-09-15 | [`docs/features/account-settings/spec.md`](../docs/features/account-settings/spec.md) — 6/6 do corte (PR #12, `a4df5ed`). ⚠️ O caminho feliz do **avatar** segue não verificado contra infra real |
-| `firebase-emulator-seed` | 2026-09-15 | [`docs/features/firebase-emulator-seed/spec.md`](../docs/features/firebase-emulator-seed/spec.md) — 5/5 do corte (PR #13, `8107f3f`). Entregou também, fora do corte, o `testTimeout` nas 9 configs de Vitest |
+| `firebase-emulator-seed` | 2026-09-15 | [`docs/features/firebase-emulator-seed/spec.md`](../docs/features/firebase-emulator-seed/spec.md) — 5/5 do corte (PR #13, `8107f3f`). Entregou também, fora do corte, o `testTimeout` nas 9 configs de Vitest de então |
+| `cookie-consent` | 2026-09-16 | [`docs/features/cookie-consent/spec.md`](../docs/features/cookie-consent/spec.md) — 6/6 do corte (PR #16, `7c8ff7c`), conferidos um a um. ⚠️ Reabertura da escolha na `apps/app` só existe depois do login |
 
-**Verificado nesta rodada:** `docs/features/` tem **11** pastas e **8** `spec.md` arquivados. A pasta nova é
-`observability-logging`, cuja spec **continua em `specs/`** por decisão desta auditoria — não houve `git mv`
-e não há duplicata. Os frontmatters das 8 arquivadas seguem coerentes (`status: done`, `feature: <slug>`).
+**Verificado nesta rodada:** `docs/features/` tem **12** pastas e **9** `spec.md` arquivados. As três pastas
+sem `spec.md` são `observability-logging` (spec continua em `specs/`, por decisão desta auditoria — não
+houve `git mv` e não há duplicata), `auth-panel-context` e `impersonation-read-only`. Os frontmatters das 9
+arquivadas seguem coerentes (`status: done`, `feature: <slug>`).
 
 As **duas** features concluídas sem spec — `auth-panel-context` e `impersonation-read-only` — não constam
-aqui, e é o correto: as duas são anteriores à semeadura do backlog (2026-08-21).
+na tabela, e é o correto: as duas são anteriores à semeadura do backlog (2026-08-21).
 
-### O que a PR #15 entregou **além** do corte
+### O que a PR #16 entregou **além** do corte
 
-1. **A migração de 11 call sites de log que já existiam**, não só dos que o corte citava. `storage.ts:82`,
-   `entity-photo.ts:62`, `account-avatar.ts:45`, `auth-action-links.ts:26`,
-   `auth/password/reset/route.ts:53` e `reset-request/route.ts:47` passaram todos pelo helper. Os dois
-   clones que a spec usava como evidência da degradação por cópia deixaram de ser clones.
-2. **`handleClientError` passou a emitir log estruturado no cliente**
-   (`packages/shared/utils/helpers/handleClientError.ts:18`), que não estava no corte.
-3. **O identificador de requisição chegou até a copy**, com chave nova no dicionário dos três idiomas.
+1. **`setCookie` ganhou `domain` e `Secure`** (`packages/shared/utils/helpers/cookies.ts`), com o quarto
+   argumento opcional. Sem isso a escolha não atravessa subdomínios; com isso, o helper compartilhado passa
+   a servir a qualquer cookie que precise de escopo de domínio.
+2. **Dois defeitos de sobreposição corrigidos fora do escopo do consentimento.** A tela de login da
+   `apps/app` nunca rolava, e o banner cobria "Continuar com Google", "Esqueci minha senha" e "Cadastrar" —
+   um visitante que ignorasse o aviso ficava sem caminho para o cadastro. O rodapé da `apps/web` tinha o
+   mesmo problema no fim da rolagem. Os dois foram medidos com `elementFromPoint`, não inferidos.
+3. **O cron órfão de `apps/api/vercel.json` foi removido** — agendava `/cron/keep-alive` diariamente para
+   uma rota que nunca existiu em nenhum commit.
+4. **`apps/app/package.json` passou a declarar `@repo/analytics`**, fechando metade de um achado 🟡 que
+   figurava aqui há rodadas.
 
-**Nada disso é deriva de implementação** — o corte foi entregue como especificado, até onde foi. É escopo
-adicional. E vale a mesma observação da rodada anterior, pela quarta PR seguida: **uma entrega está
-consertando, de passagem, achados que o backlog vinha listando** — desta vez, sete pontos de log que
-figuravam como 🟡 na lista de achados.
+**Nada disso é deriva de implementação** — o corte foi entregue como especificado. É escopo adicional. E
+vale a observação pela quinta PR seguida: **uma entrega está consertando, de passagem, achados que o
+backlog vinha listando**.
 
 ## Contradições doc × código, medidas nesta rodada
 
 O modo de falha mais consistente deste repositório é **documentação que mente sobre estado implementado**,
-e é o único que nenhum gate pega: `pnpm check`, `typecheck`, 981 testes e o CI não leem prosa.
+e é o único que nenhum gate pega: `pnpm check`, `typecheck`, 1038 testes e o CI não leem prosa.
 
 | documento | afirma | realidade medida em 2026-09-16 | veredito |
 |-----------|--------|-------------------------------|----------|
-| `docs/SECURITY.md:135` (rate limit) | roda "**apenas** em `/auth/sign-in`, `/auth/sign-up` e `/auth/sign-in/google`" | **falso desde a PR #11.** `RATE_LIMITED_PATHS` (`apps/api/proxy.ts:42-51`) tem **8 caminhos**: os três citados mais as duas rotas de recuperação de senha, as duas de verificação de e-mail e `/files` | 🔴 **corrigido hoje**, com a lista completa e o aviso de que casamento exato deixa rota nova sem limite |
-| `docs/SECURITY.md` (log de bloqueio) | "um `console.warn` de uma linha" | desatualizado desde a PR #15: passa por `logEvent` (`apps/api/proxy.ts:63`) e carrega `requestId` | 🟡 **corrigido hoje** |
-| `docs/PRE-PRODUCTION.md` §11 (observabilidade) | a API carimba `x-request-id`, emite log estruturado e expõe `/health/ready`; falta plugar coletor e apontar o health check | **confere item a item.** O cron órfão que esta linha cobrava foi removido em 2026-09-16 e o documento foi atualizado junto | ✅ **honesto**, e é o único documento que já nasceu medido |
-| `docs/PRE-PRODUCTION.md` (gate) | 9 de 9 configs com `testTimeout`, gate em 23/23 | **confere.** Remedido hoje: 23/23 em 50,4 s, com 63 testes a mais | 🟢 **números atualizados hoje** (50,7 s → 50,4 s; 517 → 532 arquivos) |
-| `docs/PRE-PRODUCTION.md` (branch protection) | `protection` → 404, `rulesets` → `[]` | **confere**, remedido hoje com `gh api` | ✅ **honesto** |
-| `docs/PRE-PRODUCTION.md` (Cloud Storage, rules, contas de QA) | serviço não ativado; `deny-all` em vigor; 15 contas, nenhuma nova no ciclo #15 | **confere nos três** | ✅ **honesto** |
-| `docs/PAYMENTS.md` | não há fluxo de assinatura; handlers são stubs | **confere.** `webhooks/payments/route.ts:13,23` seguem com `// TODO` e o diretório `payments/` não existe | ✅ **honesto** pela terceira rodada |
+| `docs/PRE-PRODUCTION.md` (gate) | "9 de 9 configs com `testTimeout`", gate em **23/23**, `pnpm check` em **532 arquivos**, suíte de **981 testes em 102 arquivos** | **os quatro números estão errados desde o merge da PR #16**, que acrescentou o workspace `@repo/analytics` à suíte. Medido agora: **10 de 10**, **24/24**, **543 arquivos**, **1038 testes em 107 arquivos** | 🔴 **corrigido hoje**, com a nota de que foi a PR #16 que moveu os quatro de uma vez |
+| `docs/PRE-PRODUCTION.md` §7 (declaração de cookies) | "o repositório grava **sete**", listando `bp:cookie-consent`, `x-locale`, `sidebar_state`, os de sessão do Firebase, `_ga` e `_ga_<id>` | **a lista omitia três nomes**: `x-theme` (`apps/app/shared/lib/themePreference.ts:10`), `bp:panel-request-role` e `bp:impersonate-firebase-uid` (`apps/app/shared/lib/panelState.ts:18-19`). São **sete gravados pelo repositório** mais dois do Google | 🔴 **corrigido hoje**, com tabela por cookie, arquivo e categoria. Erra num documento cujo propósito é alimentar o texto legal |
+| `docs/SECURITY.md:135` (rate limit) | roda sobre lista fechada de **8 caminhos**, casados por igualdade exata | **confere.** `RATE_LIMITED_PATHS` (`apps/api/proxy.ts:42-51`) tem exatamente os 8 listados | ✅ **honesto**, e continua correto depois da correção da rodada anterior |
+| `docs/PAYMENTS.md` | não há fluxo de assinatura; handlers são stubs; sem `STRIPE_WEBHOOK_SECRET` responde `{ ok: false, message: "Not configured" }` | **confere nos três.** `webhooks/payments/route.ts:13,23` seguem com `// TODO`, o diretório `payments/` não existe, e `:32-33` devolve exatamente esse corpo | ✅ **honesto** pela quarta rodada — o único documento com esse histórico |
+| `docs/PRE-PRODUCTION.md` §11 (observabilidade) | a API carimba `x-request-id`, emite log estruturado e expõe `/health/ready`; falta plugar coletor e apontar o health check | **confere item a item.** Nenhum coletor no repo: `grep` por `sentry`/`betterstack`/`logtail`/`axiom` nos `package.json` devolve **zero** | ✅ **honesto** |
+| `docs/PRE-PRODUCTION.md` (branch protection) | `protection` → 404, `rulesets` → `[]` | **não remedido nesta rodada** — a auditoria anterior mediu em 2026-09-16 e nada mudou desde então | ⚪ **não conferido hoje** |
 
-> **Nota de método, sexta rodada consecutiva.** Todas as contradições apareceram por **medição direta**, e
-> desta vez uma delas veio de um documento que a rodada anterior declarou limpo. O `docs/SECURITY.md` foi
-> conferido em 2026-09-15 com o veredito "17/17, só deslocamento de linha" — e o erro não era de linha, era
-> de conteúdo, plantado duas PRs antes. **Conferir âncora não é conferir afirmação**, e a auditoria
-> anterior confundiu as duas coisas.
+> **Nota de método, sétima rodada consecutiva.** As duas contradições desta rodada estão no **mesmo
+> documento**, e as duas são números que alguém escreveu depois de medir — só que mediu antes do merge que
+> os invalidou. É um modo de falha diferente do da rodada anterior (lá o erro era de conteúdo, plantado
+> duas PRs antes): aqui a medição estava certa e envelheceu em horas. **Medir dentro da PR que muda o
+> número não vale**; a medição precisa ser depois do merge, que é quando esta auditoria roda.
 
 ## Deriva
 
 **Deriva** = o corte foi implementado diferente do especificado, ou o mundo mudou embaixo da spec.
 
-Esta rodada encontrou deriva em **9 das 11 specs**. As duas intactas são `teams-organizations` — que teve
-os 9 sítios do predicado de posse reconferidos um a um, todos exatos — e `cookie-consent`, cujas âncoras
-resistiram todas.
+Esta rodada encontrou deriva em **7 das 10 specs**, e **nenhuma inversão semântica** — contra 4 na rodada
+anterior. As três intactas são `onboarding-flow` (âncoras, contagens e a autocorreção anterior todas
+exatas), `audit-log` (todas as âncoras conferidas, incluindo a coincidência real de `admin.ts:62` e
+`common-panel.ts:62`) e `billing-subscription` (âncoras exatas no caractere; a deriva dela é de contagem).
 
-### As 4 inversões semânticas (a spec afirmava o contrário do código)
+**Por que zero inversões.** As quatro da rodada anterior foram corrigidas dentro do próprio commit
+`7c8ff7c`, e as correções conferem com o código. O que resta é manutenção.
 
-São as graves, porque quem segue a referência lê **o oposto** do que a spec diz. Todas corrigidas no disco.
+### Âncoras deslocadas
 
-| id | a spec afirmava | realidade | ação |
-|----|----------------|-----------|------|
-| [`audit-log`](audit-log.md) | "**Sem logger estruturado:** só `console.error/warn` avulso" | `logEvent` existe desde `f8322f1` (`packages/shared/utils/helpers/log.ts:50-56`), com escopo tipado e assinatura que recusa objeto | ✅ reescrita, e o argumento **sobrevivente** ficou explícito: trilha de log ≠ trilha de auditoria |
-| [`audit-log`](audit-log.md) | "O gancho passou a existir — **nenhuma instrumentação de log foi plugada nele**" | `apps/api/instrumentation.ts:36-37` exporta `onRequestError = reportRequestError` | ✅ reescrita |
-| [`account-security-mfa`](account-security-mfa.md) | o `MIN_PASSWORD_LENGTH = 6` está em **cinco** schemas (já corrigido uma vez, de "dois") | está em **dez**. A contagem de cinco olhou só `apps/app` e perdeu `apps/web` (2) e `apps/api` (3) | ✅ corrigida com tabela por app, e o dimensionamento do item 4 revisto de "mudança de formulário" para "mudança de contrato" |
-| [`onboarding-flow`](onboarding-flow.md) | "esse mesmo `useEffect` dispara o e-mail de verificação" — usado para afirmar que já existe gancho pós-cadastro **no caminho do redirect** | `requestVerificationEmail` é `onSuccess` do `signUp.mutate` (`SignUpFormClient.tsx:114`) e roda **depois** de o redirect ser ordenado. O gancho existe, em outro lugar | ✅ corrigida; o item ficou **mais caro**, não mais barato |
+| id | citado | real hoje | causa |
+|----|--------|-----------|-------|
+| [`account-security-mfa`](account-security-mfa.md) | `ProfileDropdown.tsx:66` (botão de sair) | **`:81`** | 🔴 PR #16 inseriu o item de preferências de cookie em `:68-80`. A linha `:66` hoje cai **dentro** do bloco de consentimento — a âncora não só deslocou, passou a apontar para outro assunto |
+| [`account-security-mfa`](account-security-mfa.md) | `auth/password/reset/route.ts:49` | **`:51`** (a `:49` é comentário) | deriva de 2 linhas, pré-existente |
+| [`teams-organizations`](teams-organizations.md) | `firestore.rules:39-40` (comentário sobre `entity.userId`) | o comentário vai até **`:43`** | intervalo estreito demais; a frase inteira não cabia nas duas linhas |
 
-Uma quinta, de natureza mais leve, ficou na fronteira: [`cursor-pagination`](cursor-pagination.md) dizia na
-tabela de impacto que `firestore.indexes.json` está "hoje vazio", enquanto o corpo da própria spec, 54
-linhas acima, já registrava que ele deixou de ser vazio em 2026-08-31. Spec contradizendo a si mesma —
-corrigida.
+Corrigidas as três no disco.
 
-### As âncoras deslocadas
+### Contagens erradas
 
-Todas corrigidas no disco. Origem única: a PR #15 inseriu dois imports no topo de cinco arquivos de rota e
-reescreveu o topo do `apps/api/proxy.ts`.
+| id | afirmava | real | leitura |
+|----|----------|------|---------|
+| [`teams-organizations`](teams-organizations.md) | "**9 sítios** em 3 recursos", em **3 lugares** (`:25`, `:88`, `:157`) | **11** | ❗ A spec contradizia a **própria tabela**: somar as linhas dá 3+2+3+2+1 = 11, e os 11 foram reabertos no código. O número errado enfraquecia o argumento de "juros compostos" que a spec usa para pedir atenção — com 11 o argumento fica mais forte, não mais fraco |
+| [`e2e-testing`](e2e-testing.md) | 981 testes em 102 arquivos · 9 tasks · 9 configs · gate 23/23 · `apps/app` 274/38 · `@repo/shared` 40 · 5 capturas em `review/` | 1038 em 107 · 10 · 10 · 24/24 · 293/41 · 44 · **4** capturas | **8 números**, todos por defasagem: a spec foi editada dentro da PR #16, antes de os commits de código daquela PR entrarem. A 5ª "captura" era o `review.md` contado junto dos PNGs |
+| [`billing-subscription`](billing-subscription.md) | "a rota ganhou **11** testes" | **13** | os 2 extras vieram da PR #15, correlacionando a falha com o `requestId` (`:201`, `:229`). Sem `it.each` no arquivo, então a contagem é inequívoca |
+| [`account-security-mfa`](account-security-mfa.md) | suíte de `packages/auth` em "6 / **61**" | **6 arquivos / 62 testes** | ambíguo, não errado: são 61 declarações de `it`, mas `serverEmulatorInit.test.ts:69` é um `it.each` de 2 tuplas. A spec agora diz qual das duas medidas está citando |
 
-| id | quantas | onde |
-|----|--------:|------|
-| [`billing-subscription`](billing-subscription.md) | 8 | todas em `webhooks/payments/route.ts`, todas `+2` (`:27`→`:29`, `:43`→`:45`, `:8`→`:10`, `:11`→`:13`, `:18`→`:20`, `:21`→`:23`, `:50`→`:52`, `:54`→`:56`) |
-| [`audit-log`](audit-log.md) | 6 | `instrumentation.ts` (`:12-31`→`:15-34`, `:17-21`→`:20-24`, `:23-27`→`:26-30`), `proxy.ts:45`→`:50`, e os 2 call sites que viraram `logEvent` |
-| [`observability-logging`](observability-logging.md) | seção inteira | o inventário descrevia o repositório **antes** da entrega; reescrito contra o código de hoje |
-| [`account-security-mfa`](account-security-mfa.md) | 3 | `isMintedBeforeRevocation` `:138-151`→`:153-166` e aplicação `:167`→`:182` (num bloco de citação que contradizia o corpo da spec); `auth/password/reset/route.ts:49`→`:51` |
-| [`e2e-testing`](e2e-testing.md) | 3 | inventário **918 testes em 94 arquivos** → **981 em 102**; `apps/web/__tests__/` de 4 para 5 arquivos |
-| [`billing-subscription`](billing-subscription.md) · [`dashboard-home`](dashboard-home.md) · [`data-rights-lgpd`](data-rights-lgpd.md) | 3 | a contagem de rotas **18 → 19** nas três, pela `health/ready/route.ts` |
-| [`cookie-consent`](cookie-consent.md) | 1 | `grep -rniE "consent\|cookie-?banner"` deixou de ser **0** e virou **1** — e é ruído (`create-dev-admin.mjs:27`, docblock). Registrado para não virar falso alarme |
+### Inventário incompleto
 
-**Nenhuma âncora quebrada** em nenhuma spec: nenhum arquivo citado sumiu e nenhum símbolo desapareceu.
-**Nenhuma regressão detectada** nas capacidades das 8 specs arquivadas.
+| id | o que estava incompleto | correção |
+|----|------------------------|----------|
+| [`dashboard-home`](dashboard-home.md) | "**19** rotas" com a lista `account/*` ×3, `auth/*`, `entities`, `entities/[id]`, `files`, `users`, `users/[id]`, `health`, `webhooks/payments` | o **total está certo**; a lista omitia `health/ready`, criada pela PR #15, e batia em 19 por compensação na leitura. Um número certo apoiado num inventário errado é pior que um número errado: não dispara revisão |
+| [`data-rights-lgpd`](data-rights-lgpd.md) | a seção "O que já existe" não conhecia o consentimento de cookies | 🆕 acrescentado, com as duas consequências para o corte: o exportador precisa incluir o registro de consentimento (hoje ele vive só no navegador do titular), e a política placeholder virou destino de link do banner sem falar de cookies |
 
-## A decisão que não pode esperar a fila
+### Homônimo que parece regressão e não é
 
-`teams-organizations` é a única spec cuja **decisão** custa mais que a implementação: retrofitar escopo por
-organização é **reescrita, não refactor** (6/10 de prevalência, esforço G).
+[`observability-logging`](observability-logging.md) afirma que `packages/analytics/server.ts` "foi apagado
+em 2026-09-01". O arquivo **existe de novo** desde a PR #16 — mas é outro: hoje é o resolvedor de bootstrap
+de consentimento, com `import "server-only"` e sem dependência não declarada. Quem ler a spec e encontrar o
+arquivo no disco vai concluir que houve regressão do item 6 do corte. Não houve; o nome foi reaproveitado.
+Registrado na spec.
 
-**Decidido em 2026-08-22:** `deferred` — adiar a implementação, **não** a decisão. O que torna o adiamento
-honesto são duas contrapartidas de esforço P que **não dependem desta spec**:
+### Precisão menor
 
-1. escrever em `docs/ARCHITECTURE.md` se este core é **B2B ou B2C por padrão** — remedido hoje:
-   `grep -ciE "b2b|b2c|organiza|tenant" docs/ARCHITECTURE.md` retorna **0**;
-2. concentrar o predicado de posse num ponto único de escopo — remedido hoje: seguem **9 sítios em 3
-   recursos**, todos reconferidos um a um, todos nas linhas que a spec declara.
+[`cursor-pagination`](cursor-pagination.md) dizia que `TableProps` "estende" `AntdTableProps`; o mecanismo é
+`Omit<…, "columns" | "dataSource">` (`table.tsx:12`). A conclusão não muda — `pagination` não aparece uma
+única vez no arquivo, então a paginação exibida é a client-side do antd sobre o array inteiro.
 
-**Nenhuma das duas foi feita até 2026-09-16** — os juros correm há **vinte e seis dias**:
+## Achados — correções pontuais, não specs
 
-| rodada | sítios do predicado | recursos |
-|--------|--------------------:|---------:|
-| até a PR #10 | 3 | 1 |
-| PR #11 | 4 | 1 |
-| PR #12 | 9 | 3 |
-| PRs #13 e #14 | 9 | 3 |
-| **PR #15** | **9** | **3** |
-
-**A curva segue parada, pelo mesmo motivo da rodada anterior:** as três PRs desta janela foram de
-infraestrutura, ferramental e observabilidade. Nenhum recurso novo nasceu escopado por usuário porque
-nenhum recurso novo nasceu. O adiamento não ficou mais caro; também não ficou mais honesto.
-
-> **Recomendação ao usuário, não decisão da auditoria:** duas rodadas seguidas sem as contrapartidas. Ou
-> elas viram tarefa com dono no `/analyze`, ou este `deferred` deveria ser lido como `rejected` até o
-> primeiro fork B2B aparecer.
-
-## Achados da varredura que não viraram spec
-
-Defeitos e inconsistências encontrados na descoberta e nos pipelines. **Não são funcionalidades** — são
+Coisas que não merecem spec própria (não são funcionalidade, não têm corte de MVP), mas que são
 correções pontuais, algumas de minutos. Viram tarefa direta no `/analyze`, sem passar por spec.
 
-> **Auditoria de 2026-09-16.** Os **38** achados da rodada anterior foram reconferidos **um a um** contra o
-> código. **Placar: 0 fechados · 4 com a redação errada · 2 com deriva de linha · 32 intactos · 3 novos.**
-> A PR #15 não fechou nenhum: ela criou infraestrutura de log nova em vez de migrar `packages/auth`, que é
-> onde estão 5 dos `console` cruas. O que ela fez foi **mudar de posição** dois achados e **afiar** um
-> terceiro.
-
-### 🟠 Achados cuja redação estava errada — corrigidos aqui
-
-Separados porque um achado mal descrito é pior que nenhum: quem for consertá-lo procura a coisa errada.
-
-| achado | o que estava escrito | o que o código mostra |
-|--------|----------------------|------------------------|
-| `packages/internationalization/utils/cookies.ts` "é inalcançável" | código morto | **Falso.** `packages/internationalization/client.ts:5` o importa por caminho relativo e há teste dedicado. O defeito real é mais estreito: falta o subpath `"./utils/*"` no `package.json`, então só **consumidor externo** não o alcança. **Achado novo na mesma linha:** o `package.json` declara `"." → "./index.ts"`, e `packages/internationalization/index.ts` **não existe** |
-| `.env.example` da API "promete um desligamento que o código não entrega" (rate limit, `:15-18`) | contradição sobre rate limit | **Assunto errado e linha errada.** `:15-18` é o bloco `FIREBASE_ADMIN_*`. A contradição real está em `:26-29` e é sobre o **bucket de storage**: o comentário diz que esvaziar a variável desliga o upload, mas `env.ts:40-43` faz `OR` com `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`. O comentário sobre rate limit (`:52-55`) **está correto** |
-| Strings soltas: `"Início"` e `"Home"` no `PageBreadcrumb.tsx` | dois literais | O arquivo tem `"Início"` (`:30`), **não** `"Home"`. E tem um terceiro problema não registrado: `href="/painel"` cravado em `:29` |
-| `provider-error` colapsa "três falhas" | três | São **dois** pontos de colapso (`packages/email/index.ts:121-122` e `:128-129`), cobrindo um conjunto aberto de resultados do provedor. A substância continua; a aritmética, não |
+> **Auditoria de 2026-09-16.** Os achados da rodada anterior foram reconferidos contra o código.
+> **Placar: 1 fechado pela metade · 1 novo · o resto intacto.** A PR #16 fechou metade do achado de
+> dependência não declarada — `apps/app/package.json:15` agora declara `@repo/analytics` — e o resto da
+> lista não foi tocado.
 
 ### 🔴 Segurança — seguem abertos, confirmados no código
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🔴 **`packages/payments/ai.ts:4-5`** tem o defeito gêmeo do que já foi corrigido no `index.ts`: `new StripeAgentToolkit({ secretKey: keys().STRIPE_SECRET_KEY \|\| "" })` em **escopo de módulo** | `packages/payments/ai.ts:4-5` | Não explode hoje **só porque nada importa `@repo/payments/ai`** — explodiria no primeiro fork que importasse, e `billing-subscription` (#4) é justamente o que faria alguém importar. Agrava: `packages/payments/package.json` não tem `exports` |
+| 🔴 **`packages/payments/ai.ts:4-5`** tem o defeito gêmeo do que já foi corrigido no `index.ts`: `new StripeAgentToolkit({ secretKey: keys().STRIPE_SECRET_KEY \|\| "" })` em **escopo de módulo** | `packages/payments/ai.ts:4-5` | Não explode hoje **só porque nada importa `@repo/payments/ai`** — explodiria no primeiro fork que importasse, e `billing-subscription` (#3) é justamente o que faria alguém importar. Agrava: `packages/payments/package.json` não tem `exports` |
 | 🔴 **`packages/security/index.ts:11` tem o mesmo defeito de escopo de módulo, num lugar pior.** `const arcjetKey = keys().ARCJET_KEY;` roda no **import**, e `@repo/security` é o primeiro import do `apps/api/proxy.ts:1` — o middleware, que roda em toda requisição | `packages/security/index.ts:11` | `keys.ts` trata `""` como ausente, o que cobre o `.env.example`; mas exige `.startsWith("ajkey_")`, então uma `ARCJET_KEY` **presente e malformada** lança dentro do grafo de módulos do middleware: toda requisição falha, sem sinal no boot — e `instrumentation.ts:26-30`, que só checa presença, **não avisaria** |
-| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo.** `register()` lança (`:20-24`) e **não há `process.exit` em nenhum lugar do arquivo** | `apps/api/instrumentation.ts:20-24` | Uma plataforma que só verifica se a porta responde veria o container **saudável** enquanto ele responde 500 a tudo. ✅ **Agora tem mitigação parcial:** `/health/ready` consulta o Firestore, então um health check apontado para ele detecta parte dessas falhas. Não detecta esta em específico — o processo sobe e o Firestore responde |
-| ⚠️ **As 3 rotas de `/account` não estão no rate limit** — incluindo troca de senha, alvo clássico de força bruta | `apps/api/proxy.ts:42-51` | Casamento exato (`includes`), decisão consciente para não limitar `/auth/sign-in/google` duas vezes. Mas rota nova nasce sem limite, e as de conta nasceram assim. **Registrado hoje em `docs/SECURITY.md`**, que antes nem listava a lista completa |
+| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo.** `register()` lança (`:20-24`) e **não há `process.exit` em nenhum lugar do arquivo** | `apps/api/instrumentation.ts:20-24` | Uma plataforma que só verifica se a porta responde veria o container **saudável** enquanto ele responde 500 a tudo. ✅ Mitigação parcial: `/health/ready` consulta o Firestore, então um health check apontado para ele detecta parte dessas falhas. Não detecta esta em específico — o processo sobe e o Firestore responde |
+| ⚠️ **As 3 rotas de `/account` não estão no rate limit** — incluindo troca de senha, alvo clássico de força bruta | `apps/api/proxy.ts:42-51` | Casamento exato (`includes`), decisão consciente para não limitar `/auth/sign-in/google` duas vezes. Mas rota nova nasce sem limite, e as de conta nasceram assim. Registrado em `docs/SECURITY.md` |
 
-### 🟡 Dependências, exports e código morto — intactos
+### 🟡 Dependências, exports e código morto
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 `apps/app/app/layout.tsx:3` importa `@repo/analytics` **sem** `apps/app/package.json` declarar a dependência — funciona por hoisting do pnpm. Falta também `@repo/email` | `apps/app/package.json:15-22` | Além do risco de resolução, **o turbo não invalida `app#*` quando `@repo/analytics` muda** — cache mentindo num gate que roda em toda PR. E `cookie-consent` (#1) é justamente quem vai mexer em `@repo/analytics` |
-| 🟡 `apps/app/env.ts:1` importa `@repo/email/keys` sem declarar `@repo/email` | `apps/app/env.ts:1` | O `keys.ts` do pacote **valida de fato no boot** dos 3 apps. `apps/web` e `apps/api` **declaram**; só a `app` não |
-| 🟡 `packages/auth/package.json:13` exporta `./client-ui` apontando para arquivo **inexistente** | `packages/auth/package.json:13` | Reconferido hoje: `client-ui.tsx` **não existe**. Zero importadores, falha em silêncio. **Décima primeira auditoria consecutiva** |
+| ◐ **Dependência importada sem ser declarada — metade fechada, metade aberta e uma nova.** ✅ `apps/app/package.json:15` passou a declarar `@repo/analytics` (PR #16). 🟡 `apps/app/env.ts:1` importa `@repo/email/keys` e `apps/app/package.json` **não declara** `@repo/email`. 🆕 🟡 `apps/web` importa `@repo/auth/provider` em **5 arquivos** de produção (`layout.tsx:4`, `clientLayout.tsx:3`, `sign-up-form-client.tsx:4`, `header/index.tsx:3`, `sign-in-form-client.tsx:4`) e `apps/web/package.json` **não declara `@repo/auth`** | `apps/app/package.json` · `apps/web/package.json` | Funciona por hoisting do pnpm. Além do risco de resolução, **o turbo não invalida `web#*` quando `@repo/auth` muda** — cache mentindo num gate que roda em toda PR. O caso da `web` é o pior dos três: é runtime, não só `keys.ts` |
+| 🟡 `packages/auth/package.json:13` exporta `./client-ui` apontando para arquivo **inexistente** | `packages/auth/package.json:13` | Reconferido: `client-ui.tsx` **não existe**. Zero importadores, falha em silêncio. **Décima segunda auditoria consecutiva** |
 | 🟡 **`@repo/auth` declara `next: 15.1.3`** contra `16.0.0` de todo o resto | `packages/auth/package.json:25` | É o único workspace fora da major. Um pacote de **autenticação** — dono de middleware, cookie de sessão e código adjacente ao proxy — resolvendo uma major diferente do runtime que o consome |
 | 🟡 **`packages/email/package.json` não tem `main` nem `exports`** | `packages/email/package.json` | `@repo/email` e subpaths resolvem **só** pelo alias TS. Funciona hoje; quebra em qualquer consumidor que resolva por Node |
-| 🟡 `chart.tsx` é código morto — `recharts` pesa no bundle sem uso | `packages/design-system/components/ui/chart.tsx` | `grep ChartContainer` fora do próprio arquivo ⇒ **0**. `dashboard-home` (#8) é a spec que o resgataria |
-| 🟡 **`input-otp.tsx` é código morto**, sem consumidor fora do barril e do catálogo do `playground` | `packages/design-system/components/ui/input-otp.tsx` | `account-security-mfa` (#9) é a spec que o usaria. ⚠️ Cuidado ao medir: `InpuTOTP` casa com um `grep -i TOTP` e produz 7 falsos positivos |
-| 🟡 **`import-in-the-middle` e `require-in-the-middle` seguem instalados e nunca importados** | `apps/app/package.json:26,35` | São as dependências típicas de OTel/Sentry. **A PR #15 entregou observabilidade inteira sem tocá-las**, o que confirma que são peso morto e não semente de nada |
+| 🟡 `chart.tsx` é código morto — `recharts` pesa no bundle sem uso | `packages/design-system/components/ui/chart.tsx` | `grep ChartContainer` fora do próprio arquivo ⇒ **0**. `dashboard-home` (#7) é a spec que o resgataria |
+| 🟡 **`input-otp.tsx` é código morto**, sem consumidor fora do barril e do catálogo do `playground` | `packages/design-system/components/ui/input-otp.tsx` | `account-security-mfa` (#8) é a spec que o usaria. ⚠️ Cuidado ao medir: `InpuTOTP` casa com um `grep -i TOTP` e produz 7 falsos positivos |
+| 🟡 **`import-in-the-middle` e `require-in-the-middle` seguem instalados e nunca importados** | `apps/app/package.json:26,35` | São as dependências típicas de OTel/Sentry. A PR #15 entregou observabilidade inteira sem tocá-las, o que confirma que são peso morto e não semente de nada |
 | 🟡 **`packages/internationalization` tem dois defeitos de `exports`** | `packages/internationalization/package.json:9` | Falta o subpath `"./utils/*"` (consumidor externo não alcança `utils/cookies.ts`), e o `"."` aponta para `index.ts`, **que não existe** |
 | 🟡 **`emailBrand.supportEmail` é configuração morta** — uma ocorrência, a própria definição | `packages/email/brand.ts:9` | Um fork vai editá-lo achando que muda alguma coisa |
 | 🟡 **`isRateLimitEnforced()` é export morto** — os únicos consumidores são os próprios testes | `packages/security/index.ts:32` | O papel que cumpriria acabou coberto pelo aviso de boot, que lê `process.env.ARCJET_KEY` direto. Duas fontes de verdade, e a que tem nome não é a usada |
-| 🟡 **`FormattedError.retryAfterSeconds` não tem consumidor** fora dos testes | `packages/shared/utils/helpers/formattedError.ts:14,23` | Deslocado pela PR #15 (era `:13,20`), e a PR **afiou** o achado: o campo vizinho `requestId`, nascido na mesma entrega, **foi ligado até a tela** (`handleClientError.ts:7,11`). Dois campos em linhas adjacentes, só um chegou ao usuário. ⚠️ Há um `retryAfterSeconds` **homônimo de outro tipo** em `apps/api/proxy.ts:102` |
-| ✅ **`reloadCurrentUser` segue sem teste próprio** — quinto ciclo | `packages/auth/client.ts:224` | A única cobertura é `apps/app/__tests__/useEmailVerification.test.tsx`, que a **mocka** |
-| 🟡 **`packages/shared` é o único pacote com `test` e sem `typecheck`** | `packages/shared/package.json` | 🆕 **Novo nesta rodada.** O pacote acabou de receber o helper de log e o `requestErrorReporter` — 25 testes novos —, e a imunidade a `Error` do `logEvent` é garantida pelo **tipo**, que nenhum gate deste workspace verifica. Fica coberto de lado pelo `typecheck` dos consumidores; não pelo próprio |
+| 🟡 **`FormattedError.retryAfterSeconds` não tem consumidor** fora dos testes | `packages/shared/utils/helpers/formattedError.ts:14,23` | O campo vizinho `requestId`, nascido na mesma entrega, **foi ligado até a tela** (`handleClientError.ts:7,11`). Dois campos em linhas adjacentes, só um chegou ao usuário. ⚠️ Há um `retryAfterSeconds` **homônimo de outro tipo** em `apps/api/proxy.ts:102` |
+| ✅ **`reloadCurrentUser` segue sem teste próprio** — sexto ciclo | `packages/auth/client.ts:224` | A única cobertura é `apps/app/__tests__/useEmailVerification.test.tsx`, que a **mocka** |
+| 🟡 **`packages/shared` é o único pacote com `test` e sem `typecheck`** | `packages/shared/package.json` | O pacote hospeda o helper de log e o `requestErrorReporter`, e a imunidade a `Error` do `logEvent` é garantida pelo **tipo**, que nenhum gate deste workspace verifica. Fica coberto de lado pelo `typecheck` dos consumidores; não pelo próprio |
 
 ### 🟡 Repositório, rotas e proxy
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **`update()` do `BaseRepository` reescreve o documento inteiro e corrompe o tipo de `createdAt`** | `apps/api/(shared)/repositories/base.repository.ts:102-117` | Depois do primeiro `PUT` o campo deixa de ser `Timestamp` e vira `String`: consulta por range/`orderBy` mistura tipos. **Cruza diretamente com `cursor-pagination` (#2)**. ⚠️ Preservado de propósito em `firestore-admin-access` (migração *contract-preserving*) |
+| 🟡 **`update()` do `BaseRepository` reescreve o documento inteiro e corrompe o tipo de `createdAt`** | `apps/api/(shared)/repositories/base.repository.ts:102-117` | Depois do primeiro `PUT` o campo deixa de ser `Timestamp` e vira `String`: consulta por range/`orderBy` mistura tipos. **Cruza diretamente com `cursor-pagination` (#1)** — e agora o #1 é o próximo da fila, então o conserto cabe ali. ⚠️ Preservado de propósito em `firestore-admin-access` (migração *contract-preserving*) |
 | 🟡 `delete()` herdado por todo repositório é **soft delete** — chama `update({ deletedAt })` | `apps/api/(shared)/repositories/base.repository.ts:127-129` | O único "excluir" que existe não exclui: a conta no Firebase Auth sobrevive e o e-mail continua ocupado. Bloqueia o item 3 de `data-rights-lgpd` — e deixa **duas** famílias de objeto órfãs no bucket |
 | 🟡 **`userRepository.list()` mente no tipo de retorno** | `apps/api/(shared)/repositories/user.repository.ts:32-43` | Declara `Promise<UserDTO[]>` mas devolve o merge com o Firebase Auth, e descarta linhas em silêncio (`:42`). O N+1 do Admin SDK está em `:38-40` |
-| 🟡 **`/auth/sign-in` e `/auth/sign-up` da api não têm consumidor e não seguem o contrato `{ error: { code } }`** — devolvem string crua; a primeira responde **500** para credencial inválida porque **não há `try/catch`** | `apps/api/app/(routes)/auth/sign-in/route.ts` · `sign-up/route.ts` | Viola a regra de ouro 3. **Reconferido: seguem órfãs** — o SDK chama `/auth/me`, `/auth/sign-in/google` e as rotas de senha, nunca estas. A decisão certa provavelmente é removê-las |
-| 🟡 **Webhook da Stripe é casca**, e `:67` devolve `{ result: event }` — **ecoando o objeto Stripe inteiro na resposta HTTP** | `apps/api/app/(routes)/webhooks/payments/route.ts:13,23,67` | A assinatura **é** validada; nada é persistido, e não há dedupe por `event.id`. Escopo de `billing-subscription` (#4) |
+| 🟡 **`/auth/sign-in` e `/auth/sign-up` da api não têm consumidor e não seguem o contrato `{ error: { code } }`** — devolvem string crua; a primeira responde **500** para credencial inválida porque **não há `try/catch`** | `apps/api/app/(routes)/auth/sign-in/route.ts` · `sign-up/route.ts` | Viola a regra de ouro 3. Seguem órfãs — o SDK chama `/auth/me`, `/auth/sign-in/google` e as rotas de senha, nunca estas. A decisão certa provavelmente é removê-las |
+| 🟡 **Webhook da Stripe é casca**, e `:67` devolve `{ result: event }` — **ecoando o objeto Stripe inteiro na resposta HTTP** | `apps/api/app/(routes)/webhooks/payments/route.ts:13,23,67` | A assinatura **é** validada; nada é persistido, e não há dedupe por `event.id`. Escopo de `billing-subscription` (#3) |
 | 🟡 **O webhook da Stripe é inalcançável em desenvolvimento.** `skipValidation` descarta as chaves vindas de `extends`, e `STRIPE_WEBHOOK_SECRET` é `undefined` em `next dev` | `apps/api/env.ts:46` | `pnpm --filter api dev:with-stripe` **não pode funcionar**. Duas das três chaves afetadas já foram resgatadas por redeclaração (`FIREBASE_STORAGE_BUCKET` em `:26`, `NEXT_PUBLIC_APP_URL` em `:33`), **com comentário nomeando esta armadilha** — esta ficou de fora |
 | ◐ **`skipValidation` na `apps/web` é incondicional** e `NEXT_PUBLIC_APP_URL` **não** está no bloco `client` | `apps/web/env.ts:27,13-19` | O CTA "Ir para o painel" da landing cai no fallback em `hero.tsx:44`, `cta.tsx:35`, `header/index.tsx:35-36` e `pricing/page.tsx:77,120`. Pior que o bug: o bloco `client` tem **forma** de validação e não valida nada |
 | ◐ **O bounce do proxy apaga a query string — corrigido só para as duas rotas de `oobCode`** | `apps/app/proxy.ts:189-202` | A isenção é **por path**, não por parâmetro: **qualquer outra query em rota pública continua sendo apagada** — UTM de campanha, `?plan=`. O próximo fluxo que carregar estado na URL redescobre o mesmo defeito |
-| 🟡 **O TTL de 180 dias do cookie `x-locale` é letra morta.** O cliente grava com TTL, mas na requisição seguinte os proxies fazem `cookieStore.set` **sem `maxAge`/`expires`** | `apps/app/proxy.ts:169,173` · `apps/web/proxy.ts:104,108` | O idioma escolhido **não sobrevive ao fechamento do navegador**. O `x-theme` **não** herdou o defeito |
-| 🟡 Helper de cookie grava `SameSite=Lax` **sem a flag `Secure`**; `isSameOriginRequest` **retorna `true` quando não há header `Origin`** | `packages/shared/utils/helpers/cookies.ts:13` · `packages/auth/session.ts:66-70` | ASVS 5.0 L1 (3.3.1) exige `Secure`. O helper grava `x-locale` **e `x-theme`**, não o cookie de sessão |
+| 🟡 **O TTL de 180 dias do cookie `x-locale` é letra morta.** O cliente grava com TTL, mas na requisição seguinte os proxies fazem `cookieStore.set` **sem `maxAge`/`expires`** | `apps/app/proxy.ts:169,173` · `apps/web/proxy.ts:104,108` | O idioma escolhido **não sobrevive ao fechamento do navegador**. Nem o `x-theme` nem o `bp:cookie-consent` herdaram o defeito — os dois são gravados só pelo cliente |
+| 🟡 Helper de cookie grava `SameSite=Lax` **sem a flag `Secure`** por padrão; `isSameOriginRequest` **retorna `true` quando não há header `Origin`** | `packages/shared/utils/helpers/cookies.ts` · `packages/auth/session.ts:66-70` | ASVS 5.0 L1 (3.3.1) exige `Secure`. ◐ **Meio fechado pela PR #16:** o helper passou a aceitar `secure` como opção, e o cookie de consentimento a usa em produção (`packages/analytics/server.ts:30`). `x-locale` e `x-theme` continuam sem |
 | ⚪ **`cors.ts` allow-lista um header que nenhum código do repo envia:** `x-locale` existe **só como cookie** | `apps/api/(shared)/lib/cors.ts:17` | Resíduo. **`x-role` NÃO é resíduo** e não deve ser removido junto |
 | 🟡 **O papel do painel viaja em dois headers ao mesmo tempo** — o SDK escreve `REQUEST_ROLE` **e** um `x-role` cru, e lê de volta o cru | `packages/sdk/src/client/base.ts:45,53,61,95` | Dois nomes vivos para o mesmo fato, com o "legacy" sendo **escrito e lido de volta** em toda requisição autenticada — não é resíduo histórico, é duplicação ativa |
 
@@ -465,38 +417,41 @@ Separados porque um achado mal descrito é pior que nenhum: quem for consertá-l
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **`"Pick a date"` literal no `DateInput`** — string de UI fora do dicionário, como valor **padrão** de prop | `packages/design-system/components/ui/date-input.tsx:50` | **Sobreviveu às PRs #11 a #15.** Viola a regra de ouro 2 e aparece para todo fork que não passar `placeholder` — em qualquer idioma |
+| 🟡 **`"Pick a date"` literal no `DateInput`** — string de UI fora do dicionário, como valor **padrão** de prop | `packages/design-system/components/ui/date-input.tsx:50` | **Sobreviveu às PRs #11 a #16.** Viola a regra de ouro 2 e aparece para todo fork que não passar `placeholder` — em qualquer idioma |
 | 🟡 **Strings de UI soltas remanescentes** — `"Switch language"` (`sr-only`, nos **dois** apps), `"Início"`, `"Home"` | `LanguageSwitcher.tsx:79` · `apps/web/…/language-switcher.tsx:68` · `PageBreadcrumb.tsx:30` · as duas `page.tsx` de home `:7` | Agrava no `sr-only`: é **exatamente** o texto que só o leitor de tela recebe, e está nos dois apps. O `PageBreadcrumb` ainda crava `href="/painel"` em `:29` |
-| 🟡 **A mensagem de erro padrão do repo inteiro está cravada em pt-br dentro de um pacote** | `packages/shared/utils/helpers/handleClientError.ts:19` | 🆕 **Novo nesta rodada**, e pré-existente à PR #15 (o `git diff` confirma que só a linha acima dela mudou). `"Um erro inesperado aconteceu"` é o retorno de **todo** erro que não é `FormattedError` — o fallback que qualquer fork mostra quando nada mais funciona, em espanhol e em inglês também. A função ao lado (`withRequestId`, `:4-11`) **lê o dicionário corretamente** para o rótulo do identificador, o que torna a omissão mais visível: a mesma função sabe traduzir uma metade da frase e não a outra |
-| 🟡 **`apps/web/…/sign-in/validations/signInSchema.ts:9` crava a mensagem de validação em pt-br** | `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:9` | 🆕 `"A senha deve ter pelo menos 6 caracteres"` fora do dicionário. Encontrado ao recontar os 10 sítios de `MIN_PASSWORD_LENGTH`; os outros nove passam por `validation.passwordMin` |
+| 🟡 **A mensagem de erro padrão do repo inteiro está cravada em pt-br dentro de um pacote** | `packages/shared/utils/helpers/handleClientError.ts:19` | `"Um erro inesperado aconteceu"` é o retorno de **todo** erro que não é `FormattedError` — o fallback que qualquer fork mostra quando nada mais funciona, em espanhol e em inglês também. A função ao lado (`withRequestId`, `:4-11`) **lê o dicionário corretamente** para o rótulo do identificador, o que torna a omissão mais visível |
+| 🟡 **`apps/web/…/sign-in/validations/signInSchema.ts:9` crava a mensagem de validação em pt-br** | `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:9` | `"A senha deve ter pelo menos 6 caracteres"` fora do dicionário. Os outros nove sítios de `MIN_PASSWORD_LENGTH` passam por `validation.passwordMin` |
 | 🟡 **`apps/app/next.config.ts:19` lista `www.google.com` em `images.domains`** sem uso e sem `remotePattern` correspondente; `domains` está **deprecado** no Next 16 | `apps/app/next.config.ts:19` | Duas allowlists de imagem que discordam, e a sobrando é a que some quando a chave deprecada for removida |
 | ⚪ **Um `useList*` que falha renderiza o estado vazio, não erro.** Um 429 na lista de entidades mostra "Nenhuma entidade cadastrada" | `…/entities/(hooks)/useListEntities.tsx:16` · `…/(home)/EntitiesListClient.tsx:23-28` | O hook **devolve** `error`; o componente destrutura 4 dos 5 campos e nunca o lê. Lista que falhou fica indistinguível de lista vazia, e o usuário conclui que apagaram os dados dele |
 | 🟡 **`setTimeout` sem cleanup** no `useEffect` do carrossel | `apps/web/…/(home)/components/cases-client.tsx:29-38` | Um timer é agendado a cada avanço e nenhum é cancelado na desmontagem; as deps `[api, current]` reagendam a cada tick. É a home da landing |
-| 🟡 **`useHealthCheck` foge do padrão de hooks de dados do escopo** — `getApplicationHealthCheck` **não é exportado** | `apps/app/shared/hooks/useHealthCheck.ts:11` | O `apps/app/CLAUDE.md` exige que o hook exporte também a função imperativa no mesmo arquivo. ⚠️ **Ganhou urgência:** agora existe `/health/ready`, e é provável que alguém queira consumi-lo pelo mesmo hook |
-| 🟡 **`provider-error` não distingue as falhas do provedor** — cota estourada, domínio não verificado e chave revogada produzem o mesmo `reason` | `packages/email/index.ts:121-122,128-129` | Descartar o objeto de erro é **correto e deliberado**. **A PR #15 não resolveu e criou a assimetria:** `@repo/email` manteve o próprio `logEmail` (`:39-48`) em vez de usar o `logEvent` compartilhado — mesmo formato, código duplicado, e o teste de privacidade vigia só esta cópia |
+| 🟡 **`useHealthCheck` foge do padrão de hooks de dados do escopo** — `getApplicationHealthCheck` **não é exportado** | `apps/app/shared/hooks/useHealthCheck.ts:11` | O `apps/app/CLAUDE.md` exige que o hook exporte também a função imperativa no mesmo arquivo. ⚠️ Ganhou urgência: agora existe `/health/ready`, e é provável que alguém queira consumi-lo pelo mesmo hook |
+| 🟡 **`provider-error` não distingue as falhas do provedor** — cota estourada, domínio não verificado e chave revogada produzem o mesmo `reason` | `packages/email/index.ts:121-122,128-129` | Descartar o objeto de erro é **correto e deliberado**. A assimetria criada pela PR #15 segue: `@repo/email` manteve o próprio `logEmail` (`:39-48`) em vez de usar o `logEvent` compartilhado — mesmo formato, código duplicado, e o teste de privacidade vigia só esta cópia |
 | ◐ **`welcomeEmail` segue sem nenhum chamador de produção**, e o formulário de contato da landing continua maquete | `packages/email/templates/welcome.tsx:49` · `apps/web/…/contact/components/contact-form-client.tsx` | O form não tem `<form>`, nem handler, nem import da action — que **existe e tem teste** (`actions/contact.tsx:7`, `apps/web/__tests__/contactAction.test.ts:26`) e zero chamadores de produção |
+| 🆕 🟡 **O rodapé da `apps/web` consome `data-cookie-banner` sem teste que fixe o acoplamento** | `apps/web/app/[locale]/components/footer.tsx:56` | O banner publica o atributo e dois layouts o leem. O lado da `apps/app` tem teste (`apps/app/__tests__/cookieBannerAuthLayoutOffset.test.tsx`); o da `web` não, porque a suíte dela roda em `environment: "node"`, sem jsdom. Renomear um dos dois lados quebra o rodapé em silêncio |
 | 🟡 **`turbo run` aborta na primeira falha** (`--continue=false` é o default) | `.github/workflows/ci.yml:39` | Comportamento correto, mas quem ler o log da PR verá tasks "não rodadas" e pode se confundir |
 
 ## Pendências vivas sem dono
 
 > A maior parte destas tem **casa versionada** em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md),
-> que um fork herda por escrito. **Reconferido em 2026-09-16: o documento está honesto**, e ganhou a seção
-> 10 na PR #15.
+> que um fork herda por escrito. O documento ganhou a seção 7 (consentimento) na PR #16, e teve quatro
+> números e um inventário de cookies corrigidos nesta auditoria.
 
 | # | pendência | onde vive | custo |
 |---|-----------|-----------|-------|
-| 1 | **`main` não tem branch protection.** Remedido hoje: `protection` → **404**, `rulesets` → `[]`. O pré-requisito caiu na PR #13 e continua satisfeito — o gate fechou 23/23 com 63 testes a mais | `PRE-PRODUCTION.md` | **minutos** |
-| 2 | **Ninguém vigia a trilha de erro.** 🆕 O `onRequestError` está plugado nos três apps e escreve no stdout; nenhum coletor está ligado e nenhum alerta é disparado. É o resíduo de `observability-logging` | `PRE-PRODUCTION.md` §11 | P + conta em provedor |
-| 3 | **O health check da plataforma não aponta para `/health/ready`.** 🆕 A rota existe e responde 503 quando o Firestore não atende em 2 s; enquanto ninguém a configura, a plataforma segue olhando `/health`, que responde OK com o banco fora do ar | `PRE-PRODUCTION.md` §11 | ~2 min |
-| 4 | ~~**Cron órfão.**~~ ✅ **Resolvido em 2026-09-16.** O bloco `crons` de `apps/api/vercel.json` agendava `/cron/keep-alive` todo dia à 01:00, e a rota nunca existiu: `git log --all --diff-filter=A` não encontra nenhum arquivo com esse caminho, e o próprio bloco entrou no commit inicial (`665a4cc`). Removido. Apontá-lo para `/health` foi a alternativa descartada — um ping diário não mantém função serverless aquecida, então seria inventar trabalho para justificar a entrada | — | — |
-| 5 | **Cloud Storage não está ativado** no projeto de referência. É o que deixa os critérios do avatar e da foto de entidade como "não verificados" — com **dois** consumidores. Exige plano **Blaze** | `PRE-PRODUCTION.md` | cartão + ~15 min |
-| 6 | **O envio real de e-mail nunca foi provado.** Toda a validação foi feita com preview local e placeholder. Exige domínio com SPF/DKIM | `PRE-PRODUCTION.md` | DNS + ~10 min |
-| 7 | **Na `apps/web` a CSP é Report-Only**, não bloqueante. Decisão deliberada, política rodou com zero violações | `PRE-PRODUCTION.md` | P |
-| 8 | **Contas de QA acumuladas: 15.** As PRs #13, #14 e #15 não acrescentaram nenhuma — o emulador e o gate de e-mail não configurado seguraram as três. Uma das antigas (`qa-account-settings-b@`) segue **inutilizável**: apagar, não reusar | `PRE-PRODUCTION.md` | P |
-| 9 | **Branches mergeadas ainda vivas no remoto.** As PRs são mergeadas por squash e as branches ficam | `PRE-PRODUCTION.md` | P |
-| 10 | **O login com Google nunca teve passe manual com conta real.** ⚠️ A única que continua existindo só aqui. O `/test` provou o mecanismo do COOP via `postMessage`, não o fluxo ponta a ponta | *(só neste arquivo)* | ~2 min |
-| 11 | **`storage.rules` nunca foi publicado nem exercitado por teste de regra.** Depende da pendência 5; o teste de regra depende de `@firebase/rules-unit-testing`, que pertence a `e2e-testing` (#7) | `PRE-PRODUCTION.md` | ver #5 |
-| 12 | **A retenção de log da plataforma nunca foi conferida.** 🆕 O plano da feature de observabilidade chegou a escrever "cerca de uma hora" para o free tier da Vercel e a própria equipe cortou a frase por não ter fonte com data. Continua sem número | `PRE-PRODUCTION.md` §11 | ~5 min |
+| 1 | **`main` não tem branch protection.** O pré-requisito caiu na PR #13 e continua satisfeito — o gate fechou 24/24 sem cache | `PRE-PRODUCTION.md` | **minutos** |
+| 2 | **Ninguém vigia a trilha de erro.** O `onRequestError` está plugado nos três apps e escreve no stdout; nenhum coletor está ligado e nenhum alerta é disparado. `grep` por `sentry`/`betterstack`/`logtail`/`axiom` nos `package.json` devolve zero. É o resíduo de `observability-logging` | `PRE-PRODUCTION.md` §11 | P + conta em provedor |
+| 3 | **O health check da plataforma não aponta para `/health/ready`.** A rota existe e responde 503 quando o Firestore não atende em 2 s; enquanto ninguém a configura, a plataforma segue olhando `/health`, que responde OK com o banco fora do ar | `PRE-PRODUCTION.md` §11 | ~2 min |
+| 4 | 🆕 **`SESSION_COOKIE_DOMAIN` precisa estar definida se `web` e `app` rodarem em subdomínios distintos.** Sem ela o cookie de consentimento fica host-only e o visitante responde ao banner **duas vezes**. Degrada, não quebra — e **não aparece em desenvolvimento**, porque em `localhost` o browser ignora a porta | `PRE-PRODUCTION.md` §7 | ~2 min |
+| 5 | 🆕 **A política de privacidade linkada pelo banner não menciona cookies.** Ver a decisão nº 5 | `PRE-PRODUCTION.md` §7 | P (texto) |
+| 6 | **Cloud Storage não está ativado** no projeto de referência. É o que deixa os critérios do avatar e da foto de entidade como "não verificados" — com **dois** consumidores. Exige plano **Blaze** | `PRE-PRODUCTION.md` | cartão + ~15 min |
+| 7 | **O envio real de e-mail nunca foi provado.** Toda a validação foi feita com preview local e placeholder. Exige domínio com SPF/DKIM | `PRE-PRODUCTION.md` | DNS + ~10 min |
+| 8 | **Na `apps/web` a CSP é Report-Only**, não bloqueante. Decisão deliberada, política rodou com zero violações | `PRE-PRODUCTION.md` | P |
+| 9 | **Contas de QA acumuladas: 15.** As PRs #13 a #16 não acrescentaram nenhuma — o emulador e o gate de e-mail não configurado seguraram as quatro. Uma das antigas (`qa-account-settings-b@`) segue **inutilizável**: apagar, não reusar | `PRE-PRODUCTION.md` | P |
+| 10 | **Branches mergeadas ainda vivas no remoto.** As PRs são mergeadas por squash e as branches ficam | `PRE-PRODUCTION.md` | P |
+| 11 | **O login com Google nunca teve passe manual com conta real.** ⚠️ A única que continua existindo só aqui. O `/test` provou o mecanismo do COOP via `postMessage`, não o fluxo ponta a ponta | *(só neste arquivo)* | ~2 min |
+| 12 | **`storage.rules` nunca foi publicado nem exercitado por teste de regra.** Depende da pendência 6; o teste de regra depende de `@firebase/rules-unit-testing`, que pertence a `e2e-testing` (#6) | `PRE-PRODUCTION.md` | ver #6 |
+| 13 | **A retenção de log da plataforma nunca foi conferida.** O passo existe em `docs/PRE-PRODUCTION.md:296-298`, **sem prazo escrito** — o próprio documento registra que nenhuma fonte com data foi consultada. É também o item 5, parcial, do corte de `audit-log` | `PRE-PRODUCTION.md` §11 | ~5 min |
+| 14 | 🆕 **O item de reabertura do consentimento no `ProfileDropdown` nunca foi visto num browser.** Sem JDK 21 os emuladores do Firebase não sobem na máquina do ciclo, e não houve como autenticar. Coberto por teste jsdom (`apps/app/__tests__/profileDropdownCookieConsent.test.tsx`), não por passe visual | *(só neste arquivo)* | ~2 min com emulador de pé |
 
 ## Lacunas avaliadas e **não** especificadas
 
@@ -505,7 +460,9 @@ inchar a cada rodada.
 
 | lacuna | prevalência | por que ficou de fora |
 |--------|-------------|------------------------|
-| **Coletor de erro gerenciado (Sentry, Better Stack, Axiom)** | prática 6 | 🆕 **Ganhou argumento novo nesta rodada**, e é o único caso. A costura existe e está vazia: `onRequestError` nos três apps, sem ninguém do outro lado. Deixou de ser "adotar observabilidade" e virou "ligar um fio de esforço P". Depende da decisão nº 1 de [Precisam de decisão](#precisam-de-decisão). |
+| **Coletor de erro gerenciado (Sentry, Better Stack, Axiom)** | prática 6 | Mantém o argumento da rodada anterior. A costura existe e está vazia: `onRequestError` nos três apps, sem ninguém do outro lado. Deixou de ser "adotar observabilidade" e virou "ligar um fio de esforço P". Depende da decisão nº 1 de [Precisam de decisão](#precisam-de-decisão). |
+| **Registro auditável de consentimento** | — | 🆕 Explicitamente fora do corte de `cookie-consent`, arquivada. Prova de consentimento é obrigação do controlador e hoje a escolha vive só no navegador do titular. Herdado por `audit-log` (#2) ou por `data-rights-lgpd` (#4) — as duas têm onde acomodar, e nenhuma o declarou ainda. |
+| **CMP certificada de terceiro · TCF do IAB · geolocalização do visitante** | — | Fora do corte de `cookie-consent`, arquivada. As duas primeiras arrastam serviço pago para todo fork; a terceira parece economia e é fonte de bug e de dúvida jurídica. |
 | Notificações in-app + preferências | 3/10 | Esforço G se feito à mão (feed, badge, fan-out, digest); a referência do ecossistema terceiriza num serviço pago com chave obrigatória. Reavaliar quando houver um caso de fan-out real. |
 | Command palette (⌘K) | 2/10 | Aparece em templates de dashboard, não em kits de SaaS. Barato, mas valor estético. |
 | Metering / limites de uso / créditos | 2/10 | Muito hype por causa de AI SaaS, mas é DIY sobre a Meters API em quase todo kit. Só faz sentido depois de `billing-subscription`. |
@@ -516,13 +473,14 @@ inchar a cada rodada.
 | Provedor de e-mail plugável (SES/Postmark) · rastreio de abertura/clique | — | Fora do corte de `transactional-emails`, arquivada. Reabrir exige spec nova. |
 | Múltiplos arquivos, galeria, thumbnails, antivírus, PDF | — | Explicitamente fora do corte de `file-upload-storage`, arquivada. O `POST /files` ficou genérico de propósito. |
 | **Troca de e-mail do titular** | — | Fora do corte de `account-settings`, arquivada. A exclusão de conta virou [`data-rights-lgpd`](data-rights-lgpd.md) e as sessões viraram [`account-security-mfa`](account-security-mfa.md); a **troca de e-mail** continua sem dono. |
-| Emular Cloud Storage · testes de security rules · promover admin pela UI | — | Fora do corte de `firebase-emulator-seed`, arquivada. Os testes de rules foram herdados por [`e2e-testing`](e2e-testing.md) (#7). |
-| Tracing distribuído (OpenTelemetry) · session replay · monitoramento sintético | prática 6 | 🆕 Explicitamente fora do corte de `observability-logging`. A nota de pesquisa registra o conflito entre Sentry v8+ e `@vercel/otel`, que quebra a propagação de trace em silêncio — má primeira dívida para um MVP. |
+| Emular Cloud Storage · testes de security rules · promover admin pela UI | — | Fora do corte de `firebase-emulator-seed`, arquivada. Os testes de rules foram herdados por [`e2e-testing`](e2e-testing.md) (#6). |
+| Tracing distribuído (OpenTelemetry) · session replay · monitoramento sintético | prática 6 | Explicitamente fora do corte de `observability-logging`. A nota de pesquisa registra o conflito entre Sentry v8+ e `@vercel/otel`, que quebra a propagação de trace em silêncio — má primeira dívida para um MVP. |
 | API keys do usuário · webhooks de saída | 1/10 cada | Só valem se o produto **é** uma API. Webhook de saída bem-feito (HMAC, retry com backoff, DLQ) é esforço G. |
 | Widget de feedback · referral/afiliados | 1/10 e 0/10 | Terceirizar é mais racional que manter no core. |
 | SSO enterprise · SCIM | 0/10 | Território de provedor especializado. Só entra com o primeiro contrato enterprise — e aí não é mais boilerplate. |
-| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | Estavam no "fora do corte" de `ci-pipeline` porque dependiam de um CI verde e estável. O pré-requisito está satisfeito há duas rodadas. Reavaliar junto com o branch protection. |
+| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | Estavam no "fora do corte" de `ci-pipeline` porque dependiam de um CI verde e estável. O pré-requisito está satisfeito há três rodadas. Reavaliar junto com o branch protection. |
 | Remote Cache do Turbo | prática 1 | É a única peça que arrasta conta e env, e o ganho só aparece com o CI estável. Entra quando doer, com medição, e como opt-in por variável ausente. |
-| Limiar de cobertura que bloqueia merge | prática 5 | Nenhuma das **9** configs de Vitest declara cobertura: não há número para discutir. Medir primeiro, gatear depois. Cruza com `e2e-testing` (#7). |
+| Limiar de cobertura que bloqueia merge | prática 5 | Nenhuma das **10** configs de Vitest declara cobertura: não há número para discutir. Medir primeiro, gatear depois. Cruza com `e2e-testing` (#6). |
 | Changesets / versionamento · Storybook | — | Com pacotes `private: true` e forks que divergem, o valor do changelog não paga o processo. O `playground` já serve de catálogo vivo dos componentes. |
 | Blog/CMS · status page · changelog público | nível de marketing | Decisão de cada fork, não do core. |
+</content>

@@ -50,6 +50,7 @@ vi.mock("@repo/shared/utils/helpers/handleClientError", () => ({
 }));
 
 type Row = { id: string; enabled: boolean };
+type ListPages = { pages: { items: Row[]; nextCursor: string | null }[] };
 
 let queryClient: QueryClient;
 
@@ -61,8 +62,11 @@ function wrapper({ children }: { children: ReactNode }) {
     );
 }
 
-function listData() {
-    return queryClient.getQueryData<Row[]>(queryKeys.entities.list());
+function rowInCache(id: string) {
+    return queryClient
+        .getQueryData<ListPages>(queryKeys.entities.list())
+        ?.pages.flatMap((page) => page.items)
+        .find((row) => row.id === id);
 }
 
 beforeEach(() => {
@@ -72,10 +76,15 @@ beforeEach(() => {
             mutations: { retry: false },
         },
     });
-    queryClient.setQueryData(queryKeys.entities.list(), [
-        { id: "1", enabled: true },
-        { id: "2", enabled: true },
-    ]);
+    // Two pages, because the optimistic write has to reach rows the user paged into —
+    // a cache walker that only looks at the first page fails silently here.
+    queryClient.setQueryData(queryKeys.entities.list(), {
+        pages: [
+            { items: [{ id: "1", enabled: true }], nextCursor: "cursor-1" },
+            { items: [{ id: "2", enabled: true }], nextCursor: null },
+        ],
+        pageParams: [null, "cursor-1"],
+    });
     updateMock.mockReset();
 });
 
@@ -94,8 +103,49 @@ describe("useEntityCrud · toggleEntityStatusMutation", () => {
                 true
             )
         );
-        expect(listData()?.find((r) => r.id === "1")?.enabled).toBe(false);
-        expect(listData()?.find((r) => r.id === "2")?.enabled).toBe(true);
+        expect(rowInCache("1")?.enabled).toBe(false);
+        expect(rowInCache("2")?.enabled).toBe(true);
+    });
+
+    it("reaches a row that came from a later page", async () => {
+        updateMock.mockResolvedValue({ id: "2" });
+        const { result } = renderHook(() => useEntityCrud(), { wrapper });
+
+        result.current.toggleEntityStatusMutation.mutate({
+            id: "2",
+            enabled: false,
+        });
+
+        await waitFor(() =>
+            expect(result.current.toggleEntityStatusMutation.isSuccess).toBe(
+                true
+            )
+        );
+        expect(rowInCache("2")?.enabled).toBe(false);
+        expect(rowInCache("1")?.enabled).toBe(true);
+    });
+
+    it("keeps the page boundaries intact while writing optimistically", async () => {
+        updateMock.mockResolvedValue({ id: "2" });
+        const { result } = renderHook(() => useEntityCrud(), { wrapper });
+
+        result.current.toggleEntityStatusMutation.mutate({
+            id: "2",
+            enabled: false,
+        });
+
+        await waitFor(() =>
+            expect(result.current.toggleEntityStatusMutation.isSuccess).toBe(
+                true
+            )
+        );
+        const cached = queryClient.getQueryData<ListPages>(
+            queryKeys.entities.list()
+        );
+        expect(cached?.pages.map((page) => page.nextCursor)).toEqual([
+            "cursor-1",
+            null,
+        ]);
     });
 
     it("rolls back the cache on error", async () => {
@@ -103,13 +153,13 @@ describe("useEntityCrud · toggleEntityStatusMutation", () => {
         const { result } = renderHook(() => useEntityCrud(), { wrapper });
 
         result.current.toggleEntityStatusMutation.mutate({
-            id: "1",
+            id: "2",
             enabled: false,
         });
 
         await waitFor(() =>
             expect(result.current.toggleEntityStatusMutation.isError).toBe(true)
         );
-        expect(listData()?.find((r) => r.id === "1")?.enabled).toBe(true);
+        expect(rowInCache("2")?.enabled).toBe(true);
     });
 });

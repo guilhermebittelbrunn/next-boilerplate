@@ -51,6 +51,19 @@ acumula, maior o estrago de uma exclusão feita errado.
   seções genéricas**. "Seus direitos" (`:39`) manda "entrar em contato conosco" — sem dizer com quem.
 - Busca por `encarregado`, `DPO`, `data protection officer` ou endereço de privacidade em `apps/` e
   `packages/`: **zero ocorrências**. Não há canal publicado.
+- 🆕 **Passou a existir consentimento de cookies (PR #16), e ele muda dois pontos desta spec.**
+  `packages/analytics/consent.ts:1,8-13` grava a escolha no cookie `bp:cookie-consent`, versionado e com
+  TTL de 180 dias; `packages/design-system/components/ui/cookie-consent.tsx` entrega banner e
+  preferências; o visitante revoga por `apps/web/app/[locale]/components/cookiePreferencesButton.tsx:13` e
+  `apps/app/shared/components/ui/ProfileDropdown.tsx:29`. As duas consequências:
+  1. **O exportador do item 1 precisa incluir o registro de consentimento.** Prova de consentimento é
+     obrigação do controlador e hoje a escolha vive só no navegador do titular — quem limpar os cookies
+     apaga a única cópia.
+  2. **A política placeholder virou destino de link.** O banner aponta para `/legal/privacy`
+     (`apps/web/app/[locale]/layout.tsx:39`, `apps/app/app/layout.tsx:48`), e
+     `grep -ni cookie packages/internationalization/translations/apps/web/pages/legal/index.ts` devolve
+     **zero**: o produto pede consentimento de cookie e linka uma política que não fala de cookies em
+     nenhum dos 3 idiomas. Isso dá urgência ao item 5 do corte, que a spec tratava como pendência difusa.
 - **Lacuna:** nem exportação, nem exclusão pelo titular, nem tela, nem canal de contato — e o único
   mecanismo de exclusão existente apaga só a marca de um documento.
 

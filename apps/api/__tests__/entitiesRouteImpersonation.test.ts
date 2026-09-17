@@ -170,7 +170,10 @@ beforeEach(() => {
     findByReferenceIdMock.mockImplementation((uid: string) =>
         Promise.resolve(uid === ADMIN_UID ? ADMIN_PROFILE : TARGET_PROFILE)
     );
-    listByUserIdMock.mockResolvedValue([TARGET_ENTITY]);
+    listByUserIdMock.mockResolvedValue({
+        items: [TARGET_ENTITY],
+        nextCursorId: null,
+    });
     findByIdMock.mockResolvedValue(TARGET_ENTITY);
     createMock.mockResolvedValue(TARGET_ENTITY);
     updateMock.mockResolvedValue(undefined);
@@ -187,9 +190,15 @@ describe("entities routes while an admin acts as another user", () => {
 
         expect(response.status).toBe(HTTP_STATUS.OK);
         expect(await response.json()).toEqual({
-            data: [{ ...TARGET_ENTITY, photoUrl: null }],
+            data: {
+                items: [{ ...TARGET_ENTITY, photoUrl: null }],
+                nextCursor: null,
+            },
         });
-        expect(listByUserIdMock).toHaveBeenCalledWith(TARGET_PROFILE.id);
+        expect(listByUserIdMock).toHaveBeenCalledWith(TARGET_PROFILE.id, {
+            limit: 20,
+            cursorId: null,
+        });
     });
 
     it("serves a single record of the impersonated user", async () => {

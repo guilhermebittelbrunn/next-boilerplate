@@ -32,24 +32,32 @@ alguém olhar.
   o fluxo e conferindo responsivo e tema. A regra é reforçada em `:146` e `:155`. A skill vive em
   `.claude/skills/agent-browser`.
 - A prova de que a prática é levada a sério: `docs/features/auth-panel-context/test/e2e/` guarda **22
-  capturas de tela versionadas** (e mais 5 em `review/`), cobrindo desktop e mobile, tema claro e escuro,
-  incluindo o fluxo de impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-16, rodando o gate sem cache**): **9 tasks de teste /
-  981 testes em 102 arquivos**, todos de unidade/integração estreita — `apps/api` 371 em 35 arquivos,
-  `apps/app` 274 em 38, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 40 em 4,
-  `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8
-  em 1. **Nenhum sobe um app de verdade**, e **nenhuma** das nove configs declara **cobertura**: não
-  existe medida nem baseline para discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88 e 918 em 94;
-  o crescimento vem das PRs #10 a #13. Seguem **9** tasks e **9** configs de Vitest, e não há Playwright,
-  Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
+  capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
+  `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
+  impersonação.
+- Suíte automatizada atual (**remedida em 2026-09-16, rodando o gate sem cache pós-PR #16**): **10 tasks de
+  teste / 1038 testes em 107 arquivos**, todos de unidade/integração estreita — `apps/api` 371 em 35
+  arquivos, `apps/app` 293 em 41, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 44 em 4,
+  `@repo/analytics` 34 em 2, `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27
+  em 3, `@repo/payments` 8 em 1. **Nenhum sobe um app de verdade**, e **nenhuma** das dez configs declara
+  **cobertura**: não existe medida nem baseline para discutir. *(Eram 573 em 63 arquivos, depois 750 em 74,
+  860 em 88, 918 em 94 e 981 em 102; o crescimento vem das PRs #10 a #16. Seguem **10** tasks e **10**
+  configs de Vitest, e não há Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a
+  lacuna é a mesma.)*
+  > **Por que os números desta seção saíram errados de novo.** A rodada anterior os mediu e os gravou
+  > dentro da própria PR #16, antes de os commits de código daquela PR entrarem — o workspace novo do
+  > `@repo/analytics` nasceu depois da medição. Recontar aqui é barato; recontar **depois** de a PR fechar
+  > é o que evita repetir.
 - ✅ **O gate instável foi corrigido — e o argumento mais forte desta spec caiu junto.** Em 2026-09-15 a
   auditoria registrou aqui uma falha real: `pnpm turbo run lint typecheck test --force` rodado duas vezes
   seguidas falhou na primeira (`app#test`, 21/23 tasks), com
   `apps/app/__tests__/accountSecurityForm.test.tsx > "só encerra as sessões depois da confirmação no
   diálogo"` estourando o default de 5000 ms do Vitest. Taxa de falha observada: 1 em 2.
-  **A PR #13 declarou `testTimeout: 20_000` nas 9 configs** (de `apps/api/vitest.config.mts:11` a
-  `packages/shared/vitest.config.mts:10`), e a auditoria de **2026-09-16** remediu: o gate completo fechou
-  **23/23 tasks, 0 em cache, em 50,7 s**, e o teste que estourava rodou em **1273 ms**.
+  **A PR #13 declarou `testTimeout: 20_000` nas 9 configs de então** (de `apps/api/vitest.config.mts:11` a
+  `packages/shared/vitest.config.mts:10`); hoje são **10 de 10**, porque
+  `packages/analytics/vitest.config.mts:6` nasceu na PR #16 já com o teto. A auditoria de **2026-09-16**
+  remediu: o gate completo fechou **24/24 tasks, 0 em cache**, e o teste que estourava rodou em
+  **1273 ms**.
   Duas coisas que o episódio ensinou sobrevivem à correção. A primeira: o teto do
   Vitest é medido **sob contenção do turbo**, não isolado — o mesmo teste levava 390–986 ms sozinho.
   A segunda: durante a discussão toda a suspeita apontava para os dois `securityPolicySources.test.ts`,

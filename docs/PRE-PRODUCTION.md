@@ -59,6 +59,52 @@ permissivas sem reverter reexpõe a base inteira, o que não é rollback, é o i
 > testadas".** O emulador de **Storage** não foi ligado, então `storage.rules` segue sem teste e sem
 > publicação (§ abaixo).
 
+#### 1.1 Índice composto da listagem paginada de `entity`
+
+- [ ] índice de `entity` publicado no projeto de referência
+- [ ] índice de `entity` publicado **no projeto do seu fork**
+
+`GET /entities` consulta `userId` + `deletedAt` com ordenação por `createdAt`, e o Firestore recusa essa
+combinação enquanto o índice composto não existir. A declaração está em
+[`firestore.indexes.json`](../firestore.indexes.json); publicar é o mesmo comando de sempre:
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:indexes
+```
+
+**Enquanto não rodar, a listagem responde `503 PAGINATION_INDEX_MISSING`** e a tela mostra o estado de
+erro traduzido. O painel continua navegável e a app sobe — a degradação é intencional, para o fork não
+descobrir isso como um 500. Em coleção grande a construção do índice leva alguns minutos, e até terminar a
+consulta continua recusada.
+
+⚠️ **O emulador não cobra índice composto**: ele serve a consulta de qualquer jeito. Rodar contra
+`pnpm emulators` prova ordenação e cursor, mas não prova que a entrada existe. O gate automatizado é
+`apps/api/__tests__/firestoreIndexes.test.ts`, que lê o arquivo versionado — ele pega a entrada apagada,
+não o índice não publicado.
+
+#### 1.2 Backfill de instantes em base que já tem dado
+
+- [ ] backfill rodado, ou confirmado como desnecessário
+
+Só para quem já tem documentos gravados antes desta entrega. Até aqui, o primeiro `PUT` num registro
+reescrevia `createdAt` como string ISO em vez de `Timestamp`; o Firestore ordena por tipo antes de por
+valor, então uma coleção com os dois tipos não volta em ordem cronológica. A causa foi corrigida em
+`BaseRepository.update`, mas o que já está gravado continua como está.
+
+```bash
+pnpm --filter api backfill-instants --collection=entity           # dry-run
+pnpm --filter api backfill-instants --collection=entity --apply
+```
+
+O script converte `createdAt`/`updatedAt`/`deletedAt` de string para `Timestamp` e estampa
+`deletedAt: null` onde o campo está ausente — sem isso o documento some da listagem, porque o Firestore
+não casa campo ausente contra `null`. Rodar duas vezes não muda nada. O projeto de referência roda no
+emulador, cujo estado morre a cada reinício: lá é dispensável.
+
+Ele lê o alvo como os outros scripts de bootstrap: com os hosts do emulador preenchidos, vai no emulador
+sem credencial; com eles vazios, exige o service account de `apps/api/.env` e anuncia no cabeçalho que o
+projeto é real. Confira essa linha antes de repetir o comando com `--apply`.
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
@@ -200,9 +246,22 @@ fork que sobe com ela fica em posição pior do que se não tivesse banner nenhu
 que existe uma política, e a política não descreve o tratamento real. Quem responde por isso é o fork, não o
 boilerplate.
 
-**A declaração de cookies é parte desse texto.** Hoje o repositório grava **sete**: `bp:cookie-consent`
-(a própria escolha), `x-locale`, `sidebar_state`, os de sessão do Firebase, e — só depois do consentimento —
-`_ga` e `_ga_<id>`. Um fork que acrescente ferramenta acrescenta cookie, e a lista precisa acompanhar.
+**A declaração de cookies é parte desse texto.** Recontado no código em 2026-09-16 — a lista anterior dizia
+"sete" e omitia três nomes. São **sete gravados pelo próprio repositório**, mais dois do Google:
+
+| cookie | onde | categoria |
+|--------|------|-----------|
+| `access-token` | `packages/auth/session.ts:14` | estritamente necessário (sessão) |
+| `bp:panel-request-role` | `apps/app/shared/lib/panelState.ts:18` | estritamente necessário (estado de painel) |
+| `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
+| `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
+| `x-locale` | `packages/internationalization/server.ts:20` · `apps/app/proxy.ts:169,173` · `apps/web/proxy.ts:104,108` | preferência |
+| `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:21` | preferência |
+| `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:28` | preferência |
+| `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
+
+Um fork que acrescente ferramenta acrescenta cookie, e a lista precisa acompanhar. Conte no código antes de
+escrever o número: esta é a terceira contagem de cookies do repositório a sair errada.
 
 **`SESSION_COOKIE_DOMAIN` só importa em subdomínio.** Ela já existe para o SSO entre `web` e `app`; o
 consentimento reaproveita o mesmo valor. Em `localhost` os dois apps compartilham o cookie sem configuração
@@ -253,16 +312,20 @@ O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh a
 ✅ **O pré-requisito que segurava este item caiu.** Entre 2026-09-14 e 2026-09-15 este documento tratava o
 `testTimeout` ausente como bloqueante — o gate tinha falhado de verdade, `app#test` estourando o teto de 5 s
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
-**#13** declarou `testTimeout: 20_000` nas **9** configs.
+**#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-16**, neste workspace:
+Remedido em **2026-09-16**, neste workspace, e **remedido de novo depois do merge da PR #16** — os números
+abaixo são da segunda medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
-| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **9 de 9** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **23/23 tasks**, 0 em cache, **50,4 s** (remedido em 2026-09-16, pós-PR #15) |
-| lint/format | `pnpm check` | **532 arquivos**, 0 correções |
-| suíte | 9 tasks de teste | **981 testes em 102 arquivos** |
+| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **37,9 s** |
+| lint/format | `pnpm check` | **543 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1038 testes em 107 arquivos** |
+
+A PR #16 acrescentou o workspace `@repo/analytics` à suíte (2 arquivos, 34 testes) e é o que move os quatro
+números de uma vez.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
 teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.
