@@ -5,8 +5,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Row = Record<string, unknown>;
 type Clause = [string, string, unknown];
+type Order = [string, string];
 
 const MISSING = Symbol("missing");
+
+const DOCUMENT_ID_FIELD = "__name__";
+
+/** Firestore's canonical value ordering: timestamps sort before strings. */
+const VALUE_TYPE_RANK = {
+    nullish: 0,
+    boolean: 1,
+    number: 2,
+    instant: 3,
+    string: 4,
+    other: 5,
+} as const;
 
 /**
  * In-memory stand-in for the firebase-admin Firestore surface the repositories rely on.
@@ -15,7 +28,12 @@ const MISSING = Symbol("missing");
  */
 const { fakeDb } = vi.hoisted(() => {
     const collections = new Map<string, Map<string, Record<string, unknown>>>();
-    const emittedQueries: { table: string; clauses: Clause[] }[] = [];
+    const emittedQueries: {
+        table: string;
+        clauses: Clause[];
+        orders: Order[];
+        limit: number | null;
+    }[] = [];
     let autoId = 0;
 
     const table = (name: string) => {
@@ -38,19 +56,146 @@ const { fakeDb } = vi.hoisted(() => {
             return actual === value;
         });
 
-    const makeQuery = (name: string, clauses: Clause[]) => ({
+    /**
+     * Firestore sorts by value type before value, which is why a collection holding
+     * `createdAt` both as a Timestamp and as an ISO string comes back in an order that is
+     * not chronological. The ranks below follow that ordering: timestamps precede strings.
+     */
+    const typeRank = (value: unknown) => {
+        if (value === null || value === undefined) {
+            return VALUE_TYPE_RANK.nullish;
+        }
+        if (typeof value === "boolean") {
+            return VALUE_TYPE_RANK.boolean;
+        }
+        if (typeof value === "number") {
+            return VALUE_TYPE_RANK.number;
+        }
+        if (instantMillis(value) !== null) {
+            return VALUE_TYPE_RANK.instant;
+        }
+        if (typeof value === "string") {
+            return VALUE_TYPE_RANK.string;
+        }
+        return VALUE_TYPE_RANK.other;
+    };
+
+    function instantMillis(value: unknown): number | null {
+        if (value instanceof Date) {
+            return value.getTime();
+        }
+        if (
+            typeof value === "object" &&
+            value !== null &&
+            typeof (value as { toDate?: unknown }).toDate === "function"
+        ) {
+            return (value as { toDate: () => Date }).toDate().getTime();
+        }
+        return null;
+    }
+
+    const compareValues = (a: unknown, b: unknown) => {
+        const rankDelta = typeRank(a) - typeRank(b);
+        if (rankDelta !== 0) {
+            return rankDelta;
+        }
+        const millisA = instantMillis(a);
+        if (millisA !== null) {
+            return millisA - (instantMillis(b) ?? 0);
+        }
+        if (typeof a === "number" && typeof b === "number") {
+            return a - b;
+        }
+        if (typeof a === "string" && typeof b === "string") {
+            return a.localeCompare(b);
+        }
+        return 0;
+    };
+
+    type Entry = { id: string; row: Record<string, unknown> };
+
+    const orderValue = (entry: Entry, field: string) =>
+        field === DOCUMENT_ID_FIELD ? entry.id : entry.row[field];
+
+    const compareEntries = (a: Entry, b: Entry, orders: Order[]) => {
+        for (const [field, direction] of orders) {
+            const delta = compareValues(
+                orderValue(a, field),
+                orderValue(b, field)
+            );
+            if (delta !== 0) {
+                return direction === "desc" ? -delta : delta;
+            }
+        }
+        return 0;
+    };
+
+    type QueryState = {
+        table: string;
+        clauses: Clause[];
+        orders: Order[];
+        limit: number | null;
+        after: Entry | null;
+    };
+
+    const makeQuery = (state: QueryState) => ({
         where(field: string, op: string, value: unknown) {
-            return makeQuery(name, [...clauses, [field, op, value]]);
+            return makeQuery({
+                ...state,
+                clauses: [...state.clauses, [field, op, value]],
+            });
+        },
+        orderBy(field: unknown, direction = "asc") {
+            const path = typeof field === "string" ? field : DOCUMENT_ID_FIELD;
+            return makeQuery({
+                ...state,
+                orders: [...state.orders, [path, direction] as Order],
+            });
+        },
+        limit(count: number) {
+            return makeQuery({ ...state, limit: count });
+        },
+        startAfter(snapshot: { id: string; data: () => Row | undefined }) {
+            return makeQuery({
+                ...state,
+                after: { id: snapshot.id, row: snapshot.data() ?? {} },
+            });
         },
         get() {
-            emittedQueries.push({ table: name, clauses });
-            const docs = [...table(name).entries()]
+            const { table: name, clauses, orders, after } = state;
+            const limitTo = state.limit;
+
+            emittedQueries.push({
+                table: name,
+                clauses,
+                orders,
+                limit: limitTo,
+            });
+
+            let entries: Entry[] = [...table(name).entries()]
                 .filter(([, row]) => matches(row, clauses))
-                .map(([id, row]) => ({
-                    id,
-                    exists: true,
-                    data: () => ({ ...row }),
-                }));
+                .map(([id, row]) => ({ id, row }));
+
+            if (orders.length > 0) {
+                entries.sort((a, b) => compareEntries(a, b, orders));
+            }
+
+            if (after) {
+                entries = entries.filter(
+                    (entry) => compareEntries(entry, after, orders) > 0
+                );
+            }
+
+            if (limitTo !== null) {
+                entries = entries.slice(0, limitTo);
+            }
+
+            const docs = entries.map(({ id, row }) => ({
+                id,
+                exists: true,
+                data: () => ({ ...row }),
+            }));
+
             return Promise.resolve({ docs, empty: docs.length === 0 });
         },
     });
@@ -58,7 +203,13 @@ const { fakeDb } = vi.hoisted(() => {
     const db = {
         collection(name: string) {
             return {
-                ...makeQuery(name, []),
+                ...makeQuery({
+                    table: name,
+                    clauses: [],
+                    orders: [],
+                    limit: null,
+                    after: null,
+                }),
                 doc(id: string) {
                     return {
                         id,
@@ -115,7 +266,7 @@ vi.mock("@repo/auth/server", () => ({
     getCurrentUser: vi.fn(),
 }));
 
-const { BaseRepository } = await import(
+const { BaseRepository, PaginationCursorError } = await import(
     "@/(shared)/repositories/base.repository"
 );
 const { entityMapper } = await import("@/(shared)/mappers/entity.mapper");
@@ -151,6 +302,20 @@ function entityRow(overrides: Row = {}): Row {
 /** Stand-in for a firebase-admin Timestamp: only `toDate()` is relied upon. */
 function adminTimestamp(iso: string) {
     return { toDate: () => new Date(iso) };
+}
+
+/**
+ * Four rows of the same owner sharing one instant — the shape the emulator seed produces,
+ * and the case that repeats or skips records when the cursor has no tie-break.
+ */
+function seedTiedEntities() {
+    for (const id of ["doc-a", "doc-b", "doc-c", "doc-d"]) {
+        fakeDb.seed(
+            "entity",
+            id,
+            entityRow({ createdAt: adminTimestamp(CREATED_AT_ISO) })
+        );
+    }
 }
 
 function authRecord(uid: string) {
@@ -241,6 +406,8 @@ describe("BaseRepository.findAll", () => {
         expect(fakeDb.queries.at(-1)).toEqual({
             table: "entity",
             clauses: [["deletedAt", "==", null]],
+            orders: [],
+            limit: null,
         });
     });
 
@@ -305,16 +472,24 @@ describe("BaseRepository.update and delete", () => {
         expect(stored?.updatedAt).toBeInstanceOf(Date);
     });
 
-    it("rewrites the whole document, so createdAt lands back as an ISO string", async () => {
-        fakeDb.seed(
-            "entity",
-            "e1",
-            entityRow({ createdAt: adminTimestamp(CREATED_AT_ISO) })
-        );
+    it("leaves createdAt in the stored type instead of writing the mapped string back", async () => {
+        const storedInstant = adminTimestamp(CREATED_AT_ISO);
+        fakeDb.seed("entity", "e1", entityRow({ createdAt: storedInstant }));
+
+        await repository.update({ id: "e1", name: "Renamed" });
+        await repository.update({ id: "e1", name: "Renamed again" });
+
+        expect(fakeDb.read("entity", "e1")?.createdAt).toBe(storedInstant);
+    });
+
+    it("writes only the fields it was given", async () => {
+        fakeDb.seed("entity", "e1", entityRow());
 
         await repository.update({ id: "e1", name: "Renamed" });
 
-        expect(fakeDb.read("entity", "e1")?.createdAt).toBe(CREATED_AT_ISO);
+        const stored = fakeDb.read("entity", "e1");
+        expect(stored?.name).toBe("Renamed");
+        expect(stored?.description).toBe("an entity");
     });
 
     it("soft-deletes instead of removing the document", async () => {
@@ -330,6 +505,8 @@ describe("BaseRepository.update and delete", () => {
 });
 
 describe("EntityRepository.listByUserId", () => {
+    const firstPage = { limit: 20, cursorId: null };
+
     it("scopes by userId, drops soft-deleted rows and sorts by createdAt desc", async () => {
         fakeDb.seed(
             "entity",
@@ -352,13 +529,127 @@ describe("EntityRepository.listByUserId", () => {
             entityRow({ userId: "profile-2" })
         );
 
-        const rows = await entityRepository.listByUserId("profile-1");
+        const page = await entityRepository.listByUserId(
+            "profile-1",
+            firstPage
+        );
 
-        expect(rows.map((row) => row.id)).toEqual(["newer", "older"]);
+        expect(page.items.map((row) => row.id)).toEqual(["newer", "older"]);
+        expect(page.nextCursorId).toBeNull();
+    });
+
+    it("pushes the soft-delete filter, the ordering and the size into the query", async () => {
+        fakeDb.seed("entity", "kept", entityRow());
+
+        await entityRepository.listByUserId("profile-1", {
+            limit: 2,
+            cursorId: null,
+        });
+
         expect(fakeDb.queries.at(-1)).toEqual({
             table: "entity",
-            clauses: [["userId", "==", "profile-1"]],
+            clauses: [
+                ["userId", "==", "profile-1"],
+                ["deletedAt", "==", null],
+            ],
+            orders: [
+                ["createdAt", "desc"],
+                [DOCUMENT_ID_FIELD, "desc"],
+            ],
+            // One more than asked, which is how the page learns there is a next one
+            // without counting the collection.
+            limit: 3,
         });
+    });
+
+    it("hands back the requested size plus a cursor when more rows exist", async () => {
+        seedTiedEntities();
+
+        const page = await entityRepository.listByUserId("profile-1", {
+            limit: 2,
+            cursorId: null,
+        });
+
+        expect(page.items.map((row) => row.id)).toEqual(["doc-d", "doc-c"]);
+        expect(page.nextCursorId).toBe("doc-c");
+    });
+
+    it("walks every row exactly once when createdAt is identical across the page break", async () => {
+        seedTiedEntities();
+
+        const first = await entityRepository.listByUserId("profile-1", {
+            limit: 2,
+            cursorId: null,
+        });
+        const second = await entityRepository.listByUserId("profile-1", {
+            limit: 2,
+            cursorId: first.nextCursorId,
+        });
+
+        expect([...first.items, ...second.items].map((row) => row.id)).toEqual([
+            "doc-d",
+            "doc-c",
+            "doc-b",
+            "doc-a",
+        ]);
+        expect(second.nextCursorId).toBeNull();
+    });
+
+    it("keeps anchoring on a row that was soft-deleted after the page was served", async () => {
+        seedTiedEntities();
+        fakeDb.seed(
+            "entity",
+            "doc-c",
+            entityRow({
+                createdAt: adminTimestamp(CREATED_AT_ISO),
+                deletedAt: new Date("2024-07-01T00:00:00.000Z"),
+            })
+        );
+
+        const page = await entityRepository.listByUserId("profile-1", {
+            limit: 2,
+            cursorId: "doc-c",
+        });
+
+        expect(page.items.map((row) => row.id)).toEqual(["doc-b", "doc-a"]);
+    });
+
+    it("refuses a cursor whose anchor is not there", async () => {
+        seedTiedEntities();
+
+        await expect(
+            entityRepository.listByUserId("profile-1", {
+                limit: 2,
+                cursorId: "never-existed",
+            })
+        ).rejects.toBeInstanceOf(PaginationCursorError);
+    });
+
+    it("never returns another owner's rows when the cursor points at their document", async () => {
+        seedTiedEntities();
+        fakeDb.seed(
+            "entity",
+            "doc-intruder",
+            entityRow({
+                createdAt: adminTimestamp(CREATED_AT_ISO),
+                userId: "profile-2",
+            })
+        );
+
+        const page = await entityRepository.listByUserId("profile-1", {
+            limit: 20,
+            cursorId: "doc-intruder",
+        });
+
+        expect(page.items.map((row) => row.id)).toEqual([
+            "doc-d",
+            "doc-c",
+            "doc-b",
+            "doc-a",
+        ]);
+        expect(page.items.every((row) => row.userId === "profile-1")).toBe(
+            true
+        );
     });
 });
 
@@ -379,6 +670,8 @@ describe("UserRepository.findByReferenceId", () => {
                 ["reference_id", "==", "auth-uid-1"],
                 ["deletedAt", "==", null],
             ],
+            orders: [],
+            limit: null,
         });
     });
 
