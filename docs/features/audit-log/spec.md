@@ -1,7 +1,7 @@
 ---
 id: audit-log
 title: Trilha de auditoria de ações sensíveis
-status: proposed
+status: done
 value: alto
 effort: M
 audience: confianca
@@ -9,16 +9,22 @@ area: [apps/api, apps/app, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, "apps/api/app/(routes)/users/[id]/route.ts", firestore.indexes.json, packages/sdk/src/client/index.ts, apps/app/shared/lib/queryKeys.ts]
-feature: -
-updated: 2026-09-16
+feature: audit-log
+updated: 2026-09-17
 ---
 
 # Trilha de auditoria de ações sensíveis
 
+> **Entregue em 2026-09-17.** PR **#18** mergeada em `main` (merge commit `f08a84f`,
+> `2026-09-17T12:42:26Z`), CI `success` nesse SHA. Os cinco itens do corte foram reabertos um a um no
+> código durante o `/spec --sync`; o resultado está em [Corte de MVP — verificação](#corte-de-mvp--verificação-na-entrega),
+> logo abaixo da proposta. Três desvios em relação ao que esta spec descrevia estão registrados na mesma
+> seção.
+
 > **Nota de auditoria (2026-08-22):** a parte de **autorização** que esta spec citava como buraco aberto —
 > mutação pelas rotas comuns durante impersonação — foi fechada em
-> `docs/features/impersonation-read-only/`. O corte de MVP daqui (o **registro**) segue integralmente
-> pendente.
+> `docs/features/impersonation-read-only/`. O corte de MVP daqui (o **registro**) era o que seguia
+> pendente, e é o que a PR #18 entregou.
 
 ## Problema
 
@@ -134,16 +140,47 @@ nem mensagem de commit deste repo.
 
 ## Proposta — corte de MVP
 
-- [ ] Ações sensíveis geram evento persistido: início/fim de impersonação, exclusão de usuário e alteração
+- [x] Ações sensíveis geram evento persistido: início/fim de impersonação, exclusão de usuário e alteração
       de perfil por admin.
-- [ ] Cada evento identifica **ator, sujeito, ação, alvo e momento** — quem agiu × em nome de quem.
-- [ ] A trilha é consultável na área admin, filtrável por período e usuário, traduzida nos três idiomas.
-- [ ] O registro é somente-adição: nenhuma rota permite editar ou apagar evento gravado.
-- [~] A retenção do log de acesso de infra (6 meses) vira passo do checklist de fork, com o prazo escrito.
-      — **parcial desde antes desta spec entrar em execução, e a spec não registrava isso.**
-      `docs/PRE-PRODUCTION.md:296-298` já traz o passo ("conferir a retenção de log da plataforma de
-      deploy"), mas sem prazo: `:298` diz que o número exato precisa ser lido no painel do provedor porque
-      nenhuma fonte com data foi consultada. Falta escrever o prazo, não criar o passo.
+- [x] Cada evento identifica **ator, sujeito, ação, alvo e momento** — quem agiu × em nome de quem.
+- [x] A trilha é consultável na área admin, filtrável por período e usuário, traduzida nos três idiomas.
+- [x] O registro é somente-adição: nenhuma rota permite editar ou apagar evento gravado.
+- [x] A retenção do log de acesso de infra (6 meses) vira passo do checklist de fork, com o prazo escrito.
+      O passo já existia sem prazo; a PR #18 escreveu o prazo e a fonte.
+
+### Corte de MVP — verificação na entrega
+
+Medida em 2026-09-17 contra `f08a84f`, sem confiar no `status` gravado.
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. Ações sensíveis geram evento persistido | **implementado** | Cinco call sites: impersonação em `apps/api/app/(guards)/common-panel.ts:86`; alteração de perfil por admin em `apps/api/app/(routes)/users/[id]/route.ts:84-94`; exclusão de usuário em `:119-128`; revogação de sessão em `apps/api/app/(routes)/account/sessions/revoke/route.ts:12`; troca de senha em `apps/api/app/(routes)/account/password/route.ts:68`. Persistência em `apps/api/(shared)/repositories/audit-event.repository.ts:37-39` |
+| 2. Ator, sujeito, ação, alvo e momento | **implementado** | `packages/sdk/src/types/audit/audit.ts:16-39` — `actorUserId`/`actorUid`/`actorLabel`, `onBehalfOfUserId` (o sujeito), `action`, `targetType`/`targetUserId`/`targetLabel`, `createdAt`. `users/[id]/route.ts:115` lê o rótulo do alvo **antes** do `delete`, para o registro sobreviver à exclusão |
+| 3. Consultável na admin, com filtro de período e usuário, nos 3 idiomas | **implementado** | Tela em `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/audit/`, filtros em `(components)/AuditFilters.tsx`; `GET /audit-events` sob `requireAdminApi` (`apps/api/app/(routes)/audit-events/route.ts:10`), filtros aplicados em `audit-event.repository.ts:75-87`; i18n nos três idiomas em `packages/internationalization/translations/apps/app/pages/admin/auditTrail.ts:2,36,70` |
+| 4. Somente-adição | **implementado** | `audit-events/route.ts` exporta **só** `GET` (`:10`); `audit-event.repository.ts:92-106` faz `update`, `updateBulk`, `delete` e `deleteBulk` lançarem `AuditEventImmutableError` |
+| 5. Retenção do log de acesso no checklist de fork, com o prazo | **implementado** | `docs/PRE-PRODUCTION.md:395-409` — o passo agora traz os 6 meses do art. 15 do Marco Civil, a definição de registro de acesso (art. 5º, VIII), a porta lógica exigida pelo Decreto 12.975/2026, e as três distinções que evitam a generalização falsa que esta spec alertava |
+
+### Desvios entre o que a spec pediu e o que foi entregue
+
+1. **Impersonação é registrada por janela, não por início e fim.** A spec pedia "início/fim"; a
+   implementação grava um documento por par ator–sujeito a cada janela de 15 minutos, com id determinístico
+   (`imp_<actorUid>_<subjectUid>_<janela>`) e `doc().create()`, que falha em `ALREADY_EXISTS`
+   (`apps/api/(shared)/lib/audit-recorder.ts:56-67`, `:122-170`). Um endpoint de marco `start`/`end` foi
+   descartado porque a própria spec proíbe escrita exposta ao cliente, e porque
+   `assertReadOnlyWhileImpersonating` recusaria o `POST` com o contexto ativo. **Custo aceito:** não há
+   instante exato de saída. `windowEndsAt` é o fim da janela, não o momento em que o admin saiu.
+2. **Cinco ações instrumentadas, não três.** Além das três que o corte lista, entraram
+   `account.sessions.revoke` e `account.password.change` — que o corpo desta spec (linhas 53-66) já
+   apresentava como o argumento que mudou de natureza com a PR #12. Custo marginal de uma chamada por
+   handler.
+3. **Um sinal de pronto desta spec ficou impossível de executar.** "Um admin entra no contexto de um
+   usuário, **altera algo** e sai" não é mais alcançável: alterar sob impersonação foi bloqueado em
+   `docs/features/impersonation-read-only/`. O roteiro verificável é entrar, ler e sair.
+
+**Ressalvas que não bloquearam a entrega:** a gravação é fail-open (nunca derruba a ação principal; em
+falha o evento vai para o stdout via `logEvent("audit", "write-failed", …)` com o mesmo `requestId`), e o
+índice composto de `auditEvent` **precisa ser publicado** no projeto do fork — o emulador não cobra índice
+composto, então nenhum gate local pega a falta.
 
 ### Fora do corte
 
