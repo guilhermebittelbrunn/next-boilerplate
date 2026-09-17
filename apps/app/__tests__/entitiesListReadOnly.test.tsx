@@ -166,6 +166,10 @@ beforeEach(() => {
         isLoading: false,
         isFetching: false,
         refetch: vi.fn(),
+        error: null,
+        fetchNextPage: vi.fn(),
+        hasNextPage: false,
+        isFetchingNextPage: false,
     });
 });
 

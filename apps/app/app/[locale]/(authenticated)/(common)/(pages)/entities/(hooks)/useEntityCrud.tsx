@@ -3,11 +3,16 @@ import { getDictionary } from "@repo/internationalization/client";
 import type {
     CreateEntityRequest,
     EntityDTO,
+    PageDTO,
     UpdateEntityRequest,
 } from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+    type InfiniteData,
+    useMutation,
+    useQueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import {
@@ -19,8 +24,10 @@ type UpdateEntityMutationInput = EntityFormValues & { id: string };
 
 type ToggleEntityStatusInput = { id: string; enabled: boolean };
 
+type EntityListPages = InfiniteData<PageDTO<EntityDTO>>;
+
 type ToggleEntityStatusContext = {
-    previousList?: EntityDTO[];
+    previousList?: EntityListPages;
     previousDetail?: EntityDTO;
 };
 
@@ -101,21 +108,27 @@ export const useEntityCrud = () => {
                 queryKey: queryKeys.entities.detail(input.id),
             });
 
-            const previousList = queryClient.getQueryData<EntityDTO[]>(
+            const previousList = queryClient.getQueryData<EntityListPages>(
                 queryKeys.entities.list()
             );
             const previousDetail = queryClient.getQueryData<EntityDTO>(
                 queryKeys.entities.detail(input.id)
             );
 
-            queryClient.setQueryData<EntityDTO[]>(
+            queryClient.setQueryData<EntityListPages>(
                 queryKeys.entities.list(),
                 (old) =>
-                    old?.map((row) =>
-                        row.id === input.id
-                            ? { ...row, enabled: input.enabled }
-                            : row
-                    )
+                    old && {
+                        ...old,
+                        pages: old.pages.map((page) => ({
+                            ...page,
+                            items: page.items.map((row) =>
+                                row.id === input.id
+                                    ? { ...row, enabled: input.enabled }
+                                    : row
+                            ),
+                        })),
+                    }
             );
             queryClient.setQueryData<EntityDTO>(
                 queryKeys.entities.detail(input.id),

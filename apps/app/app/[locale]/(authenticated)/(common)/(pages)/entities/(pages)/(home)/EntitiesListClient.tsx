@@ -9,6 +9,8 @@ import ResponsiveImage from "@repo/design-system/components/ui/responsive-image"
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { getDictionary } from "@repo/internationalization/client";
 import { type EntityDTO, EntityType } from "@repo/sdk/src/types";
+import FormattedError from "@repo/shared/utils/helpers/formattedError";
+import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
@@ -25,6 +27,10 @@ export function EntitiesListClient() {
         isLoading,
         refetch,
         isFetching,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        error: listError,
     } = useListEntities();
     const router = useRouter();
     const { isImpersonating } = useAuthRequestPanel();
@@ -34,6 +40,9 @@ export function EntitiesListClient() {
 
     const routes = COMMON_ROUTES(dictionary, locale);
     const entitiesList = dictionary.apps.app.pages.common.entities.list;
+    const listLoadError = listError
+        ? handleClientError(new FormattedError(listError, locale))
+        : null;
 
     const typeLabel = (type: EntityType) => {
         if (type === EntityType.FRANCHISE) {
@@ -140,19 +149,18 @@ export function EntitiesListClient() {
                     />
                 }
             />
-            <Container loading={isLoading}>
+            <Container loadError={listLoadError} loading={isLoading}>
                 <div className="mx-auto flex w-full flex-col gap-4">
                     <ImpersonationReadOnlyNotice />
                     <Table<EntityDTO>
                         columns={columns}
-                        dataSource={entities ?? []}
+                        dataSource={entities}
+                        hasMore={hasNextPage}
+                        loadMoreLoading={isFetchingNextPage}
                         locale={{ emptyText: entitiesList.empty }}
+                        onLoadMore={() => fetchNextPage()}
                         onRefresh={() => refetch()}
-                        pagination={{
-                            pageSize: 10,
-                            showSizeChanger: true,
-                            hideOnSinglePage: true,
-                        }}
+                        pagination={false}
                         refreshLoading={isFetching}
                         rowKey={(row) => row.id}
                         searchFields={["name", "description"]}
