@@ -82,7 +82,41 @@ consulta continua recusada.
 `apps/api/__tests__/firestoreIndexes.test.ts`, que lê o arquivo versionado — ele pega a entrada apagada,
 não o índice não publicado.
 
-#### 1.2 Backfill de instantes em base que já tem dado
+#### 1.2 Índice composto do filtro por usuário da trilha de auditoria
+
+- [ ] índice de `auditEvent` publicado no projeto de referência
+- [ ] índice de `auditEvent` publicado **no projeto do seu fork**
+
+A tela `/admin/audit` filtra por usuário com `involvedUserIds array-contains`, ordenando por `createdAt`
+decrescente. Essa combinação exige índice composto; a declaração está em
+[`firestore.indexes.json`](../firestore.indexes.json) e sobe no mesmo comando do item anterior.
+
+**Sem o índice, só o filtro por usuário falha.** A tela abre, a listagem completa funciona e o filtro de
+período também, porque os dois usam índice de campo único. Escolher um usuário responde
+`503 PAGINATION_INDEX_MISSING`, exibido como "A listagem está indisponível no momento. Tente de novo em
+instantes." nos três idiomas. Nenhuma resposta é 500.
+
+Para conferir depois de publicar: `npx -y firebase-tools@latest firestore:indexes` lista a entrada de
+`auditEvent`; na tela, escolher um usuário no filtro devolve a lista em vez do alerta. Vale o mesmo aviso
+do índice de `entity` — o emulador serve a consulta indexada ou não, então nenhum gate local pega a falta.
+
+#### 1.3 Retenção da coleção `auditEvent`
+
+- [ ] prazo de retenção decidido e expurgo configurado
+
+A trilha só cresce: nenhuma rota edita ou apaga evento, por desenho. Cada documento é pequeno e nada
+quebra sem esta configuração, mas o armazenamento é herdado por todo fork.
+
+Os documentos não têm campo `expiresAt`, então a TTL policy nativa do Firestore não se aplica: o expurgo é
+manual ou por job do fork. Para contar o que já existe, use a contagem de documentos de `auditEvent` no
+console do Firestore.
+
+⚠️ **Não existe prazo legal para trilha de auditoria de negócio no Brasil.** O Decreto 8.771/2016, art. 13
+§2º aponta no sentido oposto: reter a menor quantidade possível de dado pessoal e excluir assim que a
+finalidade for atingida. O prazo é decisão de cada fork, com finalidade declarada — "a lei exige 6 meses"
+é generalização falsa e vem da confusão com o registro de acesso a aplicações (§11), que é outra coisa.
+
+#### 1.4 Backfill de instantes em base que já tem dado
 
 - [ ] backfill rodado, ou confirmado como desnecessário
 
@@ -314,18 +348,20 @@ O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh a
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-16**, neste workspace, e **remedido de novo depois do merge da PR #16** — os números
-abaixo são da segunda medição:
+Remedido em **2026-09-16**, neste workspace, e **remedido de novo depois do merge da PR #17** — os números
+abaixo são da terceira medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **37,9 s** |
-| lint/format | `pnpm check` | **543 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1038 testes em 107 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **31,9 s** |
+| lint/format | `pnpm check` | **555 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1091 testes em 112 arquivos** |
 
-A PR #16 acrescentou o workspace `@repo/analytics` à suíte (2 arquivos, 34 testes) e é o que move os quatro
-números de uma vez.
+Dois destes números mudam a cada entrega. A PR #16 tinha acrescentado o workspace `@repo/analytics` à suíte
+e movido os quatro de uma vez; a PR #17 acrescentou 53 testes em 5 arquivos (paginação: repositório, query,
+rota, hook e tabela) e 12 arquivos ao alcance do `pnpm check`. **Remedir antes de citar** — a contagem de
+tasks e a de configs são as únicas que ficaram estáveis.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
 teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.
@@ -358,7 +394,19 @@ provedor e nenhum deles é código.
       `reportRequestError` e traz a env correspondente.
 - [ ] **Conferir a retenção de log da plataforma de deploy.** No free tier a janela costuma ser curta o
       bastante para servir a um incidente em andamento e não a um post-mortem do dia seguinte. O número
-      exato precisa ser lido no painel do provedor: nenhuma fonte com data foi consultada para ele aqui.
+      exato precisa ser lido no painel do provedor.
+
+      **Há um piso normativo no Brasil, e ele vale para o log de acesso, não para a trilha de auditoria.**
+      Provedor de aplicações de internet constituído como pessoa jurídica com fins econômicos deve guardar
+      os registros de acesso a aplicações por **6 meses** (Marco Civil, Lei 12.965/2014, art. 15). Registro
+      de acesso a aplicação é a data e a hora de uso a partir de um determinado IP (art. 5º, VIII), e desde
+      o Decreto 12.975/2026 o IP guardado precisa incluir a porta lógica de origem.
+
+      Três distinções que costumam ser confundidas: o art. 13 (1 ano) é **registro de conexão**, obrigação
+      de provedor de acesso, não sua; a **trilha de auditoria** de `/admin/audit` é registro de ação de
+      negócio e não tem prazo legal (§1.3); e o log de acesso é responsabilidade de **infra**, resolvida na
+      retenção do bucket do provedor, não em código da aplicação. No GCP, o bucket `_Default` retém 30
+      dias, insuficiente para os 6 meses.
 - [x] ~~**Decidir o destino do cron órfão.**~~ Resolvido em **2026-09-16**: o bloco `crons` de
       `apps/api/vercel.json` agendava `/cron/keep-alive` às 01:00 e a rota nunca existiu — nem no commit
       que introduziu o agendamento (`665a4cc`), nem em nenhum outro. A entrada foi removida. Apontá-la
