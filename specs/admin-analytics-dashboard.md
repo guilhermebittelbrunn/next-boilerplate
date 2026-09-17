@@ -29,11 +29,12 @@ curva aponta. Nenhuma das três tem resposta hoje, porque nada no produto agrega
 [`dashboard-home`](dashboard-home.md) entregou as peças e o padrão. Esta spec estende aquilo em vez de
 começar do zero.
 
-> ⚠️ **`dashboard-home` foi entregue na branch `feat/dashboard-home` e ainda não está em `main`.** A spec
-> dela segue em `specs/` com `status: proposed` e só será arquivada na auditoria posterior ao merge. As
-> âncoras abaixo foram medidas nessa branch em 2026-09-17.
+> **`dashboard-home` está em `main` desde 2026-09-17** (PR #19, merge `bfc4d8f`, CI verde no SHA de merge) e
+> a spec dela foi arquivada em [`docs/features/dashboard-home/spec.md`](../docs/features/dashboard-home/spec.md).
+> As âncoras abaixo foram remedidas contra `main` nessa data. A dependência está satisfeita; o que ainda
+> bloqueia esta spec é [`user-activity-tracking`](user-activity-tracking.md).
 
-- `apps/api/app/(routes)/users/summary/route.ts:6-19` — `GET /users/summary` sob `requireAdminApi`, devolve
+- `apps/api/app/(routes)/users/summary/route.ts:6-20` — `GET /users/summary` sob `requireAdminApi`, devolve
   `userRepository.summary()` e degrada para `SUMMARY_INDEX_MISSING` com 503 quando falta índice
   (`:12-17`). É o molde de rota de agregado, incluindo a degradação traduzível.
 - `apps/api/(shared)/repositories/user.repository.ts:52-63` — `summary()` roda **três contagens em
@@ -53,9 +54,9 @@ começar do zero.
   suporta invalidação por prefixo.
 - `firestore.indexes.json` — **6 índices**, dois deles na coleção `user` (`reference_id`+`deletedAt`;
   `deletedAt`+`type`). **Nenhum cobre consulta por instante.**
-- `packages/analytics/` é só consentimento: `keys.ts:4-18` declara apenas `NEXT_PUBLIC_GA_MEASUREMENT_ID`;
+- `packages/analytics/` é só consentimento: `keys.ts:4-19` declara apenas `NEXT_PUBLIC_GA_MEASUREMENT_ID`;
   `provider.tsx:103-112` monta `VercelAnalytics` e `GoogleAnalytics` **somente quando o consentimento foi
-  concedido**; `server.ts:15-29` resolve o estado do banner. **Nada lê agregado de volta** — o pacote
+  concedido**; `server.ts:15-30` resolve o estado do banner. **Nada lê agregado de volta** — o pacote
   publica evento, não consulta número.
 - **Lacuna:** tudo que se agrega hoje é cabeça por tipo. Não existe noção de atividade, não existe série
   temporal, e não existe nenhuma leitura de visita à `apps/web` em lugar nenhum do repositório.
@@ -122,10 +123,10 @@ porque não tem caminho decidido.
   eixo para agregar, e os KPIs viram contagem de cadastro com outro nome.
 - **"Usuário ativo" é uma definição, não uma medida.** Escolher mal produz um número que todo mundo cita e
   ninguém consegue reproduzir. É por isso que colocar a definição na tela está no corte e não em polimento.
-- **Índice composto, de novo.** Contar por instante pede índice, e o repositório já tem **dois índices
-  versionados e não publicados** como pendência viva. O emulador **não cobra índice composto**, então nenhum
-  gate local pega isso: o sintoma aparece só em produção, como 503 de degradação. Um terceiro entra na mesma
-  fila.
+- **Índice composto, de novo.** Contar por instante pede índice, e a fila de índices versionados e não
+  publicados já tem **cinco entradas** (`docs/PRE-PRODUCTION.md` §1.1, §1.2 e §1.5), recontadas em
+  2026-09-17 depois da PR #19. O emulador **não cobra índice composto**, então nenhum gate local pega isso:
+  o sintoma aparece só em produção, como 503 de degradação. Um sexto entra na mesma fila.
 - **O gráfico é a parte cara, e é onde o custo escapa.** Um balde por dia não sai de uma agregação só: ou
   são N agregações (uma por balde), ou se lê documento, que é exatamente o que `countQuery` existe para
   evitar. A granularidade escolhida decide o custo, e a decisão é do `/analyze`.

@@ -1,7 +1,7 @@
 ---
 id: dashboard-home
 title: Home do painel com widgets
-status: proposed
+status: done
 value: médio
 effort: M
 audience: produto
@@ -9,11 +9,16 @@ area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 contends_on: ["apps/app/app/[locale]/(authenticated)/(common)/(pages)/page.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx", apps/app/shared/lib/queryKeys.ts, firestore.indexes.json]
-feature: -
-updated: 2026-09-16
+feature: dashboard-home
+updated: 2026-09-17
 ---
 
 # Home do painel com widgets
+
+> **Entregue em 2026-09-17.** PR **#19** mergeada em `main` (merge commit `bfc4d8f`, 2026-09-17T18:46:32Z),
+> CI `success` nesse SHA. Os cinco itens do corte foram reabertos um a um no código pela auditoria
+> `/spec --sync` — o relatório está em [Entrega](#entrega--o-que-foi-conferido), no fim deste arquivo, junto
+> dos três desvios e do escopo extra.
 
 ## Problema
 
@@ -72,7 +77,7 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`specs/research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - Prevalência: **3 de 10** starters entregam "dashboard de métricas do produto" — valor **médio**,
   esforço **M**. A nota registra ainda que command palette e afins "aparecem em templates de dashboard,
   não em kits de SaaS", ou seja, tela cheia de widget é decoração em boa parte do mercado.
@@ -146,3 +151,47 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
   de trocar; métricas neutras entregam menos e ensinam menos.
 - Vale um cartão de métrica reutilizável no design-system, ou fica local no app? — **recomendação:**
   local no app no primeiro corte; promover ao pacote só quando um segundo consumidor aparecer.
+
+## Entrega — o que foi conferido
+
+Auditoria de 2026-09-17, com o `HEAD` em `bfc4d8f`. Cada item do corte foi reaberto no código-fonte.
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. Home comum com saudação e 2–3 cartões | **implementado** | `CommonHomeClient.tsx:62-64` monta a saudação com o primeiro nome vindo de `useMyAccount`, com recuo para `useAuth`; `:131-142` renderiza os cartões de total e ativas sobre `EntitySummaryDTO` |
+| 2. Um bloco é gráfico, exercitando o `chart.tsx` | **implementado** | `packages/design-system/components/ui/category-bar-chart.tsx:6,40` consome `ChartContainer` do `chart.tsx`; `EntityTypeChart.tsx:40` é o primeiro consumidor de produto. O `recharts` deixou de ser peso morto depois de estar instalado sem uso desde o fork |
+| 3. Números vêm de agregação no servidor | **implementado** | `base.repository.ts:122-124` expõe `countQuery` sobre `query.count().get()`; `entity.repository.ts:29-52` roda cinco agregações em paralelo sem ler documento; rota em `entities/summary/route.ts:6-8`, sob `requireCommonPanelApi` |
+| 4. Home do admin com equivalente operacional | **implementado** | `users/summary/route.ts:6-8` sob `requireAdminApi`; `user.repository.ts:52-63` conta total, admins e comuns; `AdminHomeClient.tsx:33-55` monta os três cartões |
+| 5. Vazio, carregando e erro + 3 idiomas, sem o literal `"Home"` | **implementado** | `CommonHomeClient.tsx:75-126` cobre erro, carregando e vazio; dicionários em `translations/apps/app/pages/common/home.ts` e `admin/home.ts`; as duas homes passaram a ler `routes.root.label` (`CommonHomeClient.tsx:167`, `AdminHomeClient.tsx:61`) e `grep '"Home"'` na `apps/app` devolve zero |
+
+### Desvios entre o especificado e o entregue
+
+| especificado | entregue | leitura |
+|--------------|----------|---------|
+| "exercitando o `chart.tsx` que já está no design-system" | O app não consome `chart.tsx` direto: a PR criou `category-bar-chart.tsx` **no próprio pacote**, e o app consome esse wrapper | **A implementação desviou, com motivo registrado no handoff:** `recharts` não é dependência declarada da `apps/app`, então importá-lo de lá funcionaria só por hoisting do pnpm. O efeito colateral é bom — o wrapper temático é reutilizável e as duas specs de painel novas já o citam como peça |
+| "possivelmente um cartão de métrica reutilizável" no design-system, com a recomendação de manter local | `MetricCard.tsx` ficou em `apps/app/shared/components/ui/` | **A recomendação foi seguida.** Registrado só para contraste com a linha acima: dos dois componentes novos, um foi para o pacote e o outro não, e o critério foi a dependência, não a estética |
+| "estados vazio, carregando e erro tratados nos widgets" | A home comum tem os três; a do admin tem carregando e erro, sem estado vazio | **A spec estava errada.** Não existe painel admin com zero usuários — quem está olhando a tela é um deles. Um estado vazio ali seria código inalcançável |
+
+### Além do corte
+
+1. **Prefetch no servidor com `HydrationBoundary`**, e o prefetch é **pulado durante impersonação**
+   (`(common)/(pages)/page.tsx:14-25`): a chamada do servidor carrega só o Bearer do admin, então contaria
+   os registros dele e mostraria o número errado por um instante antes da correção no cliente.
+2. **O gráfico entra por `dynamic` com `ssr: false`** (`CommonHomeClient.tsx:38-44`), respondendo ao risco
+   que a própria spec levantou: `recharts` não faz tree-shaking e chegaria inteiro no chunk da tela mais
+   visitada do painel.
+3. **`SUMMARY_INDEX_MISSING` com degradação traduzida nos 3 idiomas**
+   (`translations/packages/shared/utils.ts:81,160,246`), no mesmo padrão que `cursor-pagination` inaugurou.
+4. **Dois `loading.tsx`**, um por painel, e três índices compostos novos em `firestore.indexes.json`,
+   cobertos por `apps/api/__tests__/firestoreIndexes.test.ts`.
+
+### Ressalvas que sobrevivem ao `done`
+
+- **Os três índices compostos precisam ser publicados** antes de a home funcionar em produção; até lá as
+  duas rotas respondem 503 e os cartões mostram o erro traduzido. Está em `docs/PRE-PRODUCTION.md` §1.5.
+- **`userRepository.summary()` conta sem juntar com o Firebase Auth** (`user.repository.ts:46-51`
+  documenta a escolha): um perfil cujo usuário do Auth foi apagado por fora entra na contagem e não aparece
+  na listagem. O total do cartão pode passar do número de linhas da tabela, de propósito.
+- **O predicado de posse foi copiado, não reusado** — `summaryByUserId` repete o
+  `where("userId", "==", userId)` que `listByUserId` já fazia. Isso engorda o argumento de
+  [`teams-organizations`](../../../specs/teams-organizations.md), que conta os sítios de escopo por usuário.

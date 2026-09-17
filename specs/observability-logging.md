@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-16
+updated: 2026-09-17
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -148,7 +148,8 @@ provedor, e `.claude/cycle-policy.md` proíbe provisionar infraestrutura numa ro
 
 O resíduo é pequeno e bem delimitado: acrescentar a chamada do provedor dentro de `reportRequestError` e a
 variável correspondente, no padrão opt-in do `ARCJET_KEY`. Está registrado como passo de console em
-[`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md), seção 10.
+[`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md), seção 11 ("Fechar o circuito de observabilidade") —
+o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/web`.
 
 ## Evidência de mercado
 

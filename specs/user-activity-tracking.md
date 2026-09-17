@@ -44,7 +44,7 @@ Esta seção mudou o desenho da spec, então merece ser lida antes do corte.
   comportamento do SDK cliente — não presumi.
 - `packages/sdk/src/types/user/user.ts:12-22` — o `UserDTO`, que é o perfil no Firestore, tem `createdAt`,
   `updatedAt` e `deletedAt`, e **nenhum campo de acesso**.
-- `apps/api/(shared)/mappers/user.mapper.ts:30-45` — `serializeFirestoreValue` já normaliza `Timestamp` para
+- `apps/api/(shared)/mappers/user.mapper.ts:30-47` — `serializeFirestoreValue` já normaliza `Timestamp` para
   ISO recursivamente, inclusive dentro de objeto e de array. Um campo de instante novo não precisa de
   tratamento próprio.
 - **Curiosidade que evita um mal-entendido:** `apps/api/__tests__/userProfileSerialization.test.ts:48-53` já
@@ -167,5 +167,6 @@ mal citado:
   atual e não histórico, e some com a exclusão da conta. Se alguém quiser expurgo antes disso, aí é
   histórico disfarçado e cai em "fora do corte".
 - **A coluna deve ser ordenável pelo servidor?** — **recomendação:** não no primeiro corte. Ordenar por esse
-  campo no servidor pede índice composto, e o repositório já tem **dois índices versionados e não
-  publicados** na fila de pendências. Acrescentar um terceiro por uma ordenação é caro no momento errado.
+  campo no servidor pede índice composto, e a fila de índices versionados e não publicados já tem **cinco
+  entradas** (`docs/PRE-PRODUCTION.md` §1.1, §1.2 e §1.5), recontadas em 2026-09-17 depois da PR #19.
+  Acrescentar um sexto por uma ordenação é caro no momento errado.

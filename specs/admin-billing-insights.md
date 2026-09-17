@@ -50,15 +50,16 @@ como não verificados.
 
 ## O que já existe no repo
 
-- As peças da home, entregues por [`dashboard-home`](dashboard-home.md) na branch `feat/dashboard-home` e
-  ainda não mergeadas em `main`: `apps/app/shared/components/ui/MetricCard.tsx:11-17` (cartão de métrica com
+- As peças da home, entregues por `dashboard-home` e em `main` desde 2026-09-17 (PR #19, merge `bfc4d8f`;
+  spec arquivada em [`docs/features/dashboard-home/spec.md`](../docs/features/dashboard-home/spec.md)):
+  `apps/app/shared/components/ui/MetricCard.tsx:11-17` (cartão de métrica com
   esqueleto), `packages/design-system/components/ui/category-bar-chart.tsx:25-72` (gráfico de barras já
   temático e com rótulo acessível),
   `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx:33-55` (o
   arranjo de cartões) e `apps/app/shared/lib/queryKeys.ts:11-46` (a factory de chaves).
 - `apps/api/(shared)/repositories/base.repository.ts:122-124` — `countQuery` com `query.count().get()`, para
   contar assinatura por plano sem ler documento.
-- `apps/api/app/(routes)/users/summary/route.ts:6-19` — o molde de rota de agregado sob `requireAdminApi`,
+- `apps/api/app/(routes)/users/summary/route.ts:6-20` — o molde de rota de agregado sob `requireAdminApi`,
   com degradação traduzível quando falta índice.
 - `packages/payments/` existe e expõe `getStripe`, consumido pelo webhook (`route.ts:2-3`).
 - **Lacuna:** não há nenhum dado de cobrança persistido na base do fork. O webhook recebe o evento, despacha
@@ -143,7 +144,8 @@ Cobre o item **e** inteiro do pedido: contratações recentes, planos mais vendi
   e conversão está fora do corte. A saída é declarar a moeda e, se houver mais de uma, mostrar separado em
   vez de somar errado.
 - **Índice composto de novo.** Agregar por mês pede índice, e a fila de índices versionados e não publicados
-  já tem dois.
+  já tem **cinco entradas** (`docs/PRE-PRODUCTION.md` §1.1, §1.2 e §1.5), recontadas em 2026-09-17 depois da
+  PR #19.
 - **Modo de produto.** `mode: subscription` — um fork `simple` não instala isto, e a seção precisa sumir
   inteira em vez de mostrar zeros.
 

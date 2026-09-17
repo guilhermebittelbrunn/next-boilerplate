@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/app/(routes)/webhooks/payments/route.ts, packages/sdk/src/client/index.ts, packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts, "apps/app/app/[locale]/(authenticated)/(common)/routes.tsx"]
 feature: -
-updated: 2026-09-16
+updated: 2026-09-17
 ---
 
 # Assinatura Stripe de ponta a ponta
@@ -28,7 +28,7 @@ Quem precisar faturar escreve a integração inteira à mão, justamente a parte
 - `packages/payments/keys.ts:7-8` — `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, ambos `.optional()`; `:14` desliga a validação inteira quando não há secret.
 - `apps/api/app/(routes)/webhooks/payments/route.ts:29` — o POST **valida a assinatura** do evento (`:45`, `constructEvent`). Essa metade está pronta. Já `:10` e `:20` são **stubs com `// TODO`** (`:13`, `:23`): checam `data.customer` e retornam sem persistir nada. Só dois eventos são roteados (`:52` `checkout.session.completed`, `:56` `subscription_schedule.canceled`). *(Refs de linha corrigidas em 2026-09-01; a variável morta `customerId` que existia aqui foi removida pelo saneamento de `ci-pipeline`, e a rota ganhou testes.)* **A rota tem hoje 13 casos** em `apps/api/__tests__/paymentsWebhookRoute.test.ts` — recontado em 2026-09-16; a spec dizia 11, número que era certo quando foi escrito e que a PR #15 aumentou ao correlacionar a falha com o `requestId` (`:201`, `:229`).
 - `apps/api/app/(guards)/common-panel.ts:31` (`requireCommonPanelApi`), `apps/api/package.json:6` (`dev:with-stripe`) e `.claude/skills/payments-flow/SKILL.md` — guard, listener local de webhook e procedimento de implementação já existem.
-- **Lacuna:** `apps/api/app/(routes)/` tem **20** `route.ts` (remedido em 2026-09-17; a PR #18 acrescentou `audit-events`) e **nenhuma** sob `payments/` — o diretório não existe; `packages/sdk/src/client/index.ts:14-20` registra `application` (`:14`), `authApi` (`:15`), `user` (`:16`), `entity` (`:17`), `file` (`:18`), `account` (`:19`) e `audit` (`:20`) — **sete** actions, e nenhuma delas é `payments`; `UserDTO` (`packages/sdk/src/types/user/user.ts:12-22`) e `UserWithAuthDTO` (`:38-60`) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
+- **Lacuna:** `apps/api/app/(routes)/` tem **22** `route.ts` (remedido em 2026-09-17; a PR #19 acrescentou `entities/summary` e `users/summary`) e **nenhuma** sob `payments/` — o diretório não existe; `packages/sdk/src/client/index.ts:14-20` registra `application` (`:14`), `authApi` (`:15`), `user` (`:16`), `entity` (`:17`), `file` (`:18`), `account` (`:19`) e `audit` (`:20`) — **sete** actions, e nenhuma delas é `payments`; `UserDTO` (`packages/sdk/src/types/user/user.ts:12-22`) e `UserWithAuthDTO` (`:48-70`, empurrado pelo `UserSummaryDTO` da PR #19) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
 
 ### ✅ A divergência doc × código foi RESOLVIDA — por terceiros, em 2026-09-15
 
@@ -53,7 +53,8 @@ medição** ao lado), que é o que impede a mentira de voltar.
 Outro efeito colateral da PR #12: a entrada "Billing" **deixou de ser `url: "#"`**. Hoje
 `(common)/routes.tsx:52-53` aponta para `routes.account.billing.url` → `/account?tab=billing`
 (`paths.ts:54-56`), servida por `AccountBillingPlaceholder.tsx` — um empty state de 22 linhas com copy já
-traduzida nos 3 idiomas (`translations/apps/app/pages/common/account.ts:170`).
+traduzida nos 3 idiomas (`translations/apps/app/pages/common/account.ts:78` pt-br, `:167` en, `:257` es —
+a âncora anterior apontava para o meio do bloco em inglês).
 
 Isso **encolhe** o corte em uma tela e muda o verbo: a UI de assinatura já tem endereço, rota, aba e copy
 de espera. Falta o conteúdo.
