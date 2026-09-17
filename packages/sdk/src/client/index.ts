@@ -3,6 +3,7 @@
 import { UserRoleLevel } from "@repo/auth/types";
 import AccountActions from "../actions/account/action";
 import ApplicationActions from "../actions/application/application";
+import AuditActions from "../actions/audit/action";
 import AuthActions from "../actions/auth/action";
 import EntityActions from "../actions/entity/action";
 import FileActions from "../actions/file/action";
@@ -16,6 +17,7 @@ export class Client extends BaseClient {
     entity!: EntityActions;
     file!: FileActions;
     account!: AccountActions;
+    audit!: AuditActions;
 
     constructor(config: Config) {
         super(config);
@@ -25,6 +27,7 @@ export class Client extends BaseClient {
         this.user = new UserActions(this);
         this.entity = new EntityActions(this);
         this.file = new FileActions(this);
+        this.audit = new AuditActions(this);
     }
 
     get isAdminContext(): boolean {
