@@ -115,6 +115,15 @@ export class BaseRepository<DTO> {
         };
     }
 
+    /**
+     * Firestore bills an aggregation by the index entries it scans, not by document, so
+     * this stays cheap where `findAll().length` would charge for the whole collection.
+     */
+    protected async countQuery(query: Query): Promise<number> {
+        const snapshot = await query.count().get();
+        return snapshot.data().count;
+    }
+
     async findById(id: string): Promise<DTO | null> {
         const snap = await this.db.collection(this.table).doc(id).get();
         if (!snap.exists) {
