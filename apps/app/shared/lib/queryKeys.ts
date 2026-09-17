@@ -13,6 +13,19 @@ export const queryKeys = {
         all: ["account"] as const,
         me: () => [...queryKeys.account.all, "me"] as const,
     },
+    auditEvents: {
+        all: ["auditEvents"] as const,
+        // The filters belong in the key because the API resolves each combination as a
+        // different query; without them the cache would mix periods and users.
+        list: (filters?: { userId?: string; from?: string; to?: string }) =>
+            [
+                ...queryKeys.auditEvents.all,
+                "list",
+                filters?.userId ?? "all",
+                filters?.from ?? "",
+                filters?.to ?? "",
+            ] as const,
+    },
     entities: {
         all: ["entities"] as const,
         list: () => [...queryKeys.entities.all, "list"] as const,
