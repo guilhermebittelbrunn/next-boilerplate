@@ -19,6 +19,11 @@ export interface TableProps<T extends object = Record<string, unknown>>
   onRefresh?: () => void;
   refreshLoading?: boolean;
   refreshLabel?: string;
+  /** Server-driven paging: renders a button under the table while more pages exist. */
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  loadMoreLoading?: boolean;
+  loadMoreLabel?: string;
 }
 
 export function TableRefreshButton({
@@ -54,7 +59,12 @@ export function Table<T extends Record<string, unknown>>({
   onRefresh,
   refreshLoading,
   refreshLabel,
+  onLoadMore,
+  hasMore,
+  loadMoreLoading,
+  loadMoreLabel,
   dataSource,
+  locale,
   ...rest
 }: TableProps<T>) {
   const { dictionary } = getDictionary();
@@ -96,6 +106,17 @@ export function Table<T extends Record<string, unknown>>({
     (searchFields && searchFields.length > 0) || onRefresh
   );
 
+  // The search only sees the rows already fetched, so an empty result while pages are
+  // still pending does not mean the record is absent — saying "nothing here" would be
+  // false.
+  const searchMissesPendingPages = Boolean(
+    searchFields?.length && search.trim() && hasMore
+  );
+
+  const resolvedLocale = searchMissesPendingPages
+    ? { ...locale, emptyText: tableCopy.searchPendingPages }
+    : locale;
+
   return (
     <div className="flex w-full flex-col gap-3">
       {showToolbar ? (
@@ -130,10 +151,24 @@ export function Table<T extends Record<string, unknown>>({
         className={cn("w-full", className)}
         columns={columnsWithKey}
         dataSource={filteredDataSource}
+        locale={resolvedLocale}
         onChange={onChange}
         scroll={{ x: "max-content" }}
         {...rest}
       />
+      {onLoadMore && hasMore ? (
+        <div className="flex justify-center">
+          <Button
+            disabled={loadMoreLoading}
+            loading={loadMoreLoading}
+            onClick={onLoadMore}
+            type="button"
+            variant="outline"
+          >
+            {loadMoreLabel ?? tableCopy.loadMore}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
