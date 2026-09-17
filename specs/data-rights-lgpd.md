@@ -28,17 +28,21 @@ acumula, maior o estrago de uma exclusão feita errado.
 
 ## O que já existe no repo
 
-- `apps/api/app/(routes)/users/[id]/route.ts:75` — existe um `DELETE`, mas sob `requireAdminApi`: **rota
-  administrativa**, não autoatendimento do titular. O usuário comum não a alcança.
+- `apps/api/app/(routes)/users/[id]/route.ts:101` — existe um `DELETE`, mas sob `requireAdminApi`: **rota
+  administrativa**, não autoatendimento do titular. O usuário comum não a alcança. ⚠️ **Âncora atualizada
+  em 2026-09-17:** a PR #18 acrescentou a gravação da trilha ao `PUT` acima, empurrando o `DELETE` de
+  `:75` para cá. A rota agora também registra a exclusão na trilha (`:119-128`), lendo o rótulo do alvo
+  antes de apagar — o que não a torna autoatendimento.
 - `apps/api/(shared)/repositories/base.repository.ts:196-198` — o `delete()` herdado por todo repositório
   é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:197`) e nada mais. A conta no Firebase
   Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui. ⚠️ **Âncora atualizada em
   2026-09-16:** a PR #17 acrescentou `paginate` e reescreveu `update` no mesmo arquivo, empurrando o
   `delete()` de `:127-129` para cá. O comportamento não mudou.
-- `apps/api/app/(routes)/` — o inventário completo é `account` (PR #12), `auth`, `health`, `users`,
-  `entities`, `files` (PR #11) e `webhooks` — **7 grupos, 19 `route.ts`**. **Nenhuma rota de exportação e
-  nenhum `DELETE` de auto-serviço:** `account/` expõe só `GET`/`PUT` (`route.ts:97,107`),
-  `POST /account/password` (`:15`) e `POST /account/sessions/revoke` (`:4`).
+- `apps/api/app/(routes)/` — o inventário completo é `account` (PR #12), `audit-events` (PR #18), `auth`,
+  `health`, `users`, `entities`, `files` (PR #11) e `webhooks` — **8 grupos, 20 `route.ts`**. **Nenhuma
+  rota de exportação e nenhum `DELETE` de auto-serviço:** `account/` expõe só `GET`/`PUT`
+  (`route.ts:97,107`), `POST /account/password` (`:18`) e `POST /account/sessions/revoke` (`:7`).
+  *(Contagem e âncoras remedidas em 2026-09-17.)*
 - ✅ **A área de conta passou a existir (PR #12), e isso barateia esta spec.**
   ⚠️ *A versão anterior desta linha afirmava "**Não existe área de conta**" — falso desde `a4df5ed`.*
   `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/` tem 10 arquivos e 4 abas (perfil,

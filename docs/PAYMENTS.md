@@ -16,7 +16,7 @@ Como o fluxo de assinatura funciona neste boilerplate e o que falta implementar 
 
 **O que NÃO existe** (e que versões anteriores deste documento afirmavam existir):
 
-- ❌ **Os handlers de evento são stubs vazios** (`route.ts:8-25`, com `TODO`). Nenhum evento muda nada: assinatura paga não vira acesso.
+- ❌ **Os handlers de evento são stubs vazios** (`route.ts:10-27`, com `TODO`). Nenhum evento muda nada: assinatura paga não vira acesso.
 - ❌ **Nenhuma persistência**: não há `UserDTO.subscription`, `stripeCustomerId` nem `updateSubscriptionByReferenceId` em lugar nenhum do repo.
 - ❌ **Nenhuma rota de plano, checkout ou portal** — `GET /payments/plans`, `POST /payments/checkout` e `POST /payments/portal` não existem.
 - ❌ **Nada no SDK**: não há `apiClient.payments`.

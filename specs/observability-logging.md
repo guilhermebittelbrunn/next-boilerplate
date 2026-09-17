@@ -37,16 +37,19 @@ segue invisível até alguém conferir a fatura.
 
 ### O que a PR #15 entregou
 
-- **Helper de log compartilhado, com escopo fechado.** `packages/shared/utils/helpers/log.ts:50-56` expõe
+- **Helper de log compartilhado, com escopo fechado.** `packages/shared/utils/helpers/log.ts:51-57` expõe
   `logEvent(scope, event, fields)` e emite uma linha `[escopo] evento chave=valor`. O escopo é uma união
-  fechada de oito valores (`:5-13`), então um call site novo precisa declarar onde pertence em vez de
-  inventar um prefixo. A assinatura **não aceita objeto** (`:20`): passar um `Error` não compila, o que
-  transforma em erro de tipo o vazamento que antes dependia de disciplina. `sanitizeValue` (`:26-28`) troca
+  fechada de **nove** valores (`:5-14`), então um call site novo precisa declarar onde pertence em vez de
+  inventar um prefixo. A assinatura **não aceita objeto** (`:21`): passar um `Error` não compila, o que
+  transforma em erro de tipo o vazamento que antes dependia de disciplina. `sanitizeValue` (`:27-29`) troca
   espaço em branco por `_`, de modo que um valor com quebra de linha não consiga forjar uma segunda entrada.
-- **As variações de formato acabaram.** Os **14** pontos de log deliberado passam todos pelo helper, entre
+  *(Âncoras e contagem remedidas em 2026-09-17: a PR #18 acrescentou o escopo `audit` à união, deslocando o
+  restante do arquivo em uma linha.)*
+- **As variações de formato acabaram.** Os **16** pontos de log deliberado passam todos pelo helper, entre
   eles `apps/api/proxy.ts:63`, `webhooks/payments/route.ts:61,69`, `users/route.ts:73`,
   `auth/sign-up/route.ts:40`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
-  `(shared)/lib/storage.ts:82`, `account-avatar.ts:45` e `entity-photo.ts:62`. Os dois clones que esta spec
+  `(shared)/lib/storage.ts:82`, `account-avatar.ts:45`, `entity-photo.ts:62` e os dois que a PR #18 trouxe
+  em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
 - **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:118` gera o UUID, `:157` o
@@ -59,7 +62,7 @@ segue invisível até alguém conferir a fatura.
   linha estruturada e só então repassa o objeto de erro. `pathWithoutQuery` (`:21-23`) descarta a query
   string antes de logar, porque ela carrega o que o usuário digitou.
 - **Prontidão separada de vida.** `health/route.ts:3` fixa `force-dynamic`, então a rota deixou de ser
-  pré-renderizada; `health/ready/route.ts` consulta o Firestore via `(shared)/lib/readiness.ts:31-56`, com
+  pré-renderizada; `health/ready/route.ts` consulta o Firestore via `(shared)/lib/readiness.ts:31-57`, com
   teto de 2 s (`:9`), e responde um booleano nu — sem nome de dependência, sem versão, sem mensagem do
   driver.
 - **Nada disso custa nada a um fork.** Zero dependência nova, zero variável de ambiente nova, zero linha
@@ -74,10 +77,10 @@ segue invisível até alguém conferir a fatura.
   sobraram (`:191`, `:204`, `:220`, `:263`, `:276`), todas passando o objeto de erro e sem prefixo — num
   pacote de autenticação, que é onde o objeto de erro tem mais chance de carregar identificador de usuário.
   Recontagem de 2026-09-16, depois da PR #17: **14 chamadas `console.*` em 10 arquivos**, das quais 2 são o
-  próprio helper (`log.ts:55`) e o repasse deliberado do erro não tratado (`requestErrorReporter.ts:52`).
+  próprio helper (`log.ts:56`) e o repasse deliberado do erro não tratado (`requestErrorReporter.ts:52`).
   Sobram **12 em 8 arquivos**, contra 24 em 19 antes da PR #15. *(A rodada anterior escreveu "9 arquivos":
   subtraiu as 2 chamadas do total e esqueceu de subtrair os 2 arquivos que as hospedam.)*
-- **`packages/email` mantém um helper próprio.** `packages/email/index.ts:39-48` (`logEmail`) produz
+- **`packages/email` mantém um helper próprio.** `packages/email/index.ts:39-49` (`logEmail`) produz
   exatamente o mesmo formato do `logEvent`, com `console.warn` direto. Não é divergência de formato, é
   duplicação de código — e o teste que reprova quem logar o objeto de erro
   (`packages/email/__tests__/logPrivacy.test.ts`) vigia só esta cópia.
@@ -133,7 +136,7 @@ continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário
 | 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:36-37`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
 | 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:118,157,71-72` · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
 | 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:61,69` · `users/route.ts:73` · `auth/sign-up/route.ts:40`, todos com `requestId` |
-| 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-56`, booleano nu, teto de 2 s em `:9` |
+| 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-57`, booleano nu, teto de 2 s em `:9` |
 | 5. Camada no-op sem a variável do serviço | **implementado**, por não haver serviço | zero dependência nova, zero env nova, zero linha em `.env.example` |
 | 6. Código morto de analytics removido | **implementado** | entregue por tabela em 2026-09-01 |
 
@@ -177,7 +180,7 @@ variável correspondente, no padrão opt-in do `ARCJET_KEY`. Está registrado co
       `users/route.ts:73`, `auth/sign-up/route.ts:40`.
 - [x] O endpoint de saúde deixa de mentir: distingue "o processo está de pé" de "as dependências
       respondem", e não é pré-renderizado. — `health/route.ts:3` e `health/ready/route.ts`, sobre
-      `(shared)/lib/readiness.ts:31-56`.
+      `(shared)/lib/readiness.ts:31-57`.
 - [x] Toda essa camada é **no-op quando a variável do serviço não existe** — um fork sem conta continua
       rodando, apenas sem coleta remota. — cumprido de forma trivial: não há serviço, nem env, nem
       dependência nova.
