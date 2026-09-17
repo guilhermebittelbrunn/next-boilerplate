@@ -161,6 +161,28 @@ const { fakeDb } = vi.hoisted(() => {
                 after: { id: snapshot.id, row: snapshot.data() ?? {} },
             });
         },
+        count() {
+            const { table: name, clauses } = state;
+
+            return {
+                get() {
+                    emittedQueries.push({
+                        table: name,
+                        clauses,
+                        orders: [],
+                        limit: null,
+                    });
+
+                    const matched = [...table(name).values()].filter((row) =>
+                        matches(row, clauses)
+                    );
+
+                    return Promise.resolve({
+                        data: () => ({ count: matched.length }),
+                    });
+                },
+            };
+        },
         get() {
             const { table: name, clauses, orders, after } = state;
             const limitTo = state.limit;
@@ -778,5 +800,150 @@ describe("UserRepository.update and delete", () => {
         await expect(
             userRepository.findByReferenceId("auth-1")
         ).resolves.toBeNull();
+    });
+});
+
+describe("EntityRepository.summaryByUserId", () => {
+    const LIVE_OWNED_ENTITIES = 3;
+    const AGGREGATIONS_PER_SUMMARY = 5;
+
+    function seedSummaryFixture() {
+        fakeDb.seed(
+            "entity",
+            "own-franchise",
+            entityRow({ type: EntityType.FRANCHISE })
+        );
+        fakeDb.seed(
+            "entity",
+            "own-customer",
+            entityRow({ type: EntityType.CUSTOMER })
+        );
+        fakeDb.seed(
+            "entity",
+            "own-collaborator-off",
+            entityRow({ type: EntityType.COLLABORATOR, enabled: false })
+        );
+        fakeDb.seed(
+            "entity",
+            "own-deleted",
+            entityRow({ type: EntityType.CUSTOMER, deletedAt: new Date() })
+        );
+        fakeDb.seed(
+            "entity",
+            "someone-else",
+            entityRow({ userId: "profile-2", type: EntityType.CUSTOMER })
+        );
+    }
+
+    it("counts only the caller's live records", async () => {
+        seedSummaryFixture();
+
+        const summary = await entityRepository.summaryByUserId("profile-1");
+
+        expect(summary.total).toBe(LIVE_OWNED_ENTITIES);
+        expect(summary.enabled).toBe(2);
+        expect(summary.byType).toEqual({
+            franchise: 1,
+            customer: 1,
+            collaborator: 1,
+        });
+    });
+
+    it("scopes every count by owner and soft delete", async () => {
+        seedSummaryFixture();
+
+        await entityRepository.summaryByUserId("profile-1");
+
+        expect(fakeDb.queries).toHaveLength(AGGREGATIONS_PER_SUMMARY);
+        for (const query of fakeDb.queries) {
+            expect(query.table).toBe("entity");
+            expect(query.clauses).toEqual(
+                expect.arrayContaining([
+                    ["userId", "==", "profile-1"],
+                    ["deletedAt", "==", null],
+                ])
+            );
+        }
+    });
+
+    it("takes the total from its own count, not from the sum of the types", async () => {
+        fakeDb.seed(
+            "entity",
+            "typed",
+            entityRow({ type: EntityType.CUSTOMER })
+        );
+        // Written outside the API, so it carries no `type` and falls out of all three
+        // per-type counts. The total is what must not lose it.
+        fakeDb.seed("entity", "untyped", {
+            userId: "profile-1",
+            name: "No type",
+            enabled: true,
+            createdAt: new Date(CREATED_AT_ISO),
+            updatedAt: new Date(CREATED_AT_ISO),
+            deletedAt: null,
+        });
+
+        const summary = await entityRepository.summaryByUserId("profile-1");
+
+        expect(summary.total).toBe(2);
+        expect(
+            summary.byType.franchise +
+                summary.byType.customer +
+                summary.byType.collaborator
+        ).toBe(1);
+    });
+
+    it("never reads the documents it is counting", async () => {
+        seedSummaryFixture();
+
+        await entityRepository.summaryByUserId("profile-1");
+
+        expect(fakeDb.queries.every((query) => query.limit === null)).toBe(
+            true
+        );
+        expect(fakeDb.queries.every((query) => query.orders.length === 0)).toBe(
+            true
+        );
+    });
+});
+
+describe("UserRepository.summary", () => {
+    const LIVE_PROFILES = 3;
+
+    function profileRow(overrides: Row = {}): Row {
+        return {
+            reference_id: "auth-1",
+            type: UserType.COMMON,
+            createdAt: new Date(CREATED_AT_ISO),
+            updatedAt: new Date(CREATED_AT_ISO),
+            deletedAt: null,
+            ...overrides,
+        };
+    }
+
+    it("counts live profiles by type", async () => {
+        fakeDb.seed("user", "p1", profileRow({ type: UserType.ADMIN }));
+        fakeDb.seed("user", "p2", profileRow());
+        fakeDb.seed("user", "p3", profileRow());
+        fakeDb.seed("user", "p4", profileRow({ deletedAt: new Date() }));
+
+        const summary = await userRepository.summary();
+
+        expect(summary.total).toBe(LIVE_PROFILES);
+        expect(summary.byType).toEqual({ admin: 1, common: 2 });
+    });
+
+    it("counts a profile whose Firebase Auth account is gone, unlike the listing", async () => {
+        fakeDb.seed("user", "p1", profileRow());
+        getUserMock.mockRejectedValue(
+            Object.assign(new Error("no such user"), {
+                code: "auth/user-not-found",
+            })
+        );
+
+        await expect(userRepository.list()).resolves.toHaveLength(0);
+        await expect(userRepository.summary()).resolves.toMatchObject({
+            total: 1,
+        });
     });
 });

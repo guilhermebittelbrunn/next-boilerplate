@@ -35,6 +35,16 @@ export type AdminUpdateUserRequest = {
     disabled?: boolean;
 };
 
+/**
+ * Counted straight from the profile collection, with no Firebase Auth join. A profile
+ * whose Auth account was deleted outside the app is dropped from `GET /users` but still
+ * counted here, so the total can exceed the number of rows in the admin listing.
+ */
+export type UserSummaryDTO = {
+    total: number;
+    byType: Record<UserType, number>;
+};
+
 export type UserWithAuthDTO = UserDTO & {
     uid: string;
     email: string | null;

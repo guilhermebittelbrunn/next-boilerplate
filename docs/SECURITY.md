@@ -10,7 +10,10 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autorização (guards da API)
 
-Toda rota da `apps/api` é embrulhada por um guard que roda **antes** da lógica:
+Toda rota **de negócio** da `apps/api` é embrulhada por um guard que roda **antes** da lógica. As três
+exceções são deliberadas e públicas: `/health` e `/health/ready` são sondas de plataforma, e
+`/webhooks/payments` se autentica pela assinatura da Stripe (`constructEvent`), não por sessão. As 17
+demais passam por um dos dois guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
 - `requireAdminApi` — exige perfil admin.
@@ -138,7 +141,7 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 
 - **Sem `ARCJET_KEY` o limite é um no-op explícito**: nada é contado, nenhuma chamada de rede é feita, e a API avisa **uma vez, no boot**. Nunca há contador em memória — em serverless ele não limita nada.
 - ⚠️ **Isto não protege o formulário de login.** O login por e-mail/senha das duas front-ends vai do browser direto para `identitytoolkit.googleapis.com` e **nunca toca a `apps/api`**; quem limita esse caminho é a proteção nativa do Firebase (`USERS_AUTH_RATE_LIMITED`). O limite aqui cobre a **superfície da API**.
-- Bloqueio é registrado pelo helper de log compartilhado, numa linha só (`logEvent("security", "blocked", …)` em `apps/api/proxy.ts:63`, saindo como `[security] blocked reason=… path=… method=… requestId=…`), **sem IP, e-mail, body ou token** — IP é dado pessoal sob LGPD. A assinatura do helper não aceita objeto (`packages/shared/utils/helpers/log.ts:20`), então não há como passar o erro inteiro por descuido.
+- Bloqueio é registrado pelo helper de log compartilhado, numa linha só (`logEvent("security", "blocked", …)` em `apps/api/proxy.ts:63`, saindo como `[security] blocked reason=… path=… method=… requestId=…`), **sem IP, e-mail, body ou token** — IP é dado pessoal sob LGPD. A assinatura do helper não aceita objeto (`packages/shared/utils/helpers/log.ts:21`), então não há como passar o erro inteiro por descuido.
 
 ## Pagamentos (Stripe)
 
@@ -149,7 +152,7 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 ## Segredos e configuração
 
 - Não commite `.env`/`.env.local`. As vars reais estão em [`docs/SETUP.md`](SETUP.md).
-- **Higiene pendente**: limpar `apps/api/.env.example` (chaves do upstream que não são usadas: Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub).
+- ~~**Higiene pendente**: limpar `apps/api/.env.example`.~~ **Feito.** Conferido em 2026-09-17: o arquivo não contém nenhuma chave herdada do upstream (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub), só as variáveis realmente usadas.
 - `@repo/security` (Arcjet + nosecone) fornece rate limiting e secure headers — habilite `ARCJET_KEY` em produção e defina `CORS_ORIGIN` **antes** do primeiro deploy da API.
 
 ## Checklist ao revisar mudanças sensíveis

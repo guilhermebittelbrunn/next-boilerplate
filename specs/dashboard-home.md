@@ -32,9 +32,10 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
   existe (`translations/apps/app/pages/common/routes/index.ts:3` pt-br, `:23` en, `:43` es — âncoras
   remedidas em 2026-09-15; a PR #12 inseriu as chaves de `settingsItems` no meio do arquivo). A chave
   **não é morta** — é consumida via `(common)/paths.ts:12` e renderizada no breadcrumb de **5** telas
-  (playground, conta, lista/edição/criação de entidades). *(Correção de 2026-09-15: a spec dizia **8**.
-  São 8 breadcrumbs que usam `routes.root.label`, mas **3 deles são do painel admin**, cujo rótulo vem de
-  `admin.routes.administration` — outra chave. O número certo para esta chave é **5**.)* A home é a
+  (playground, conta, lista/edição/criação de entidades). *(Recontado em 2026-09-17: são **9** breadcrumbs
+  usando `routes.root.label` no repositório, dos quais **4 são do painel admin** — a PR #18 acrescentou o
+  da trilha de auditoria —, e o rótulo do admin vem de `admin.routes.administration`, outra chave. O número
+  desta chave continua **5**.)* A home é a
   **única** tela que a ignora e escreve o literal.
 - `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/page.tsx:7` — **idêntica**, mesma string
   literal.
@@ -48,18 +49,21 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
   nenhum**: a única outra ocorrência de "chart" no app é a string `"chart"` dentro do catálogo de nomes
   de componentes em `.../(common)/(pages)/playground/page.tsx:130` — uma lista de texto, não um gráfico.
   Hoje é dependência paga e não usada.
-- `apps/app/shared/hooks/` tem **6** hooks (remedido em 2026-09-15; eram 3, depois 5):
-  `useAuthorizedQuery.ts`, `useEmailVerification.ts` (PR #10), `useFileUpload.ts` (PR #11),
-  `useMyAccount.ts` (PR #12), `useHealthCheck.ts:19` (que ainda usa `useQuery` direto) e
-  `useListUsers.ts:25`. As duas linhas citadas seguem corretas — o que morre a cada rodada é o **número**.
+- `apps/app/shared/hooks/` tem **7** hooks (remedido em 2026-09-17; eram 3, depois 5, depois 6):
+  `useAuthorizedQuery.ts`, `useAuthorizedInfiniteQuery.ts` (PR #17), `useEmailVerification.ts` (PR #10),
+  `useFileUpload.ts` (PR #11), `useMyAccount.ts` (PR #12), `useHealthCheck.ts:19` (que ainda usa `useQuery`
+  direto) e `useListUsers.ts:25`. As duas linhas citadas seguem corretas — o que morre a cada rodada é o
+  **número**.
   *(Registro honesto: ele foi corrigido em duas auditorias seguidas e voltou a envelhecer em um dia. A
   premissa "a pasta é rasa" **enfraquece** a cada ciclo; vale reconferir antes de usá-la como argumento.)*
-- `apps/app/shared/lib/queryKeys.ts:11` — factory tipada com **4** grupos: `account` (`:12-15`, novo na
-  PR #12), `entities` (`:16`), `users` (`:22`) e `health` (`:30`); a hierarquia já suporta invalidação por
-  prefixo. É onde as chaves de um widget entrariam.
-- `apps/api/app/(routes)/` — **19** rotas: `account/*` ×3, `auth/*` ×8, `entities`, `entities/[id]`,
-  `files`, `users`, `users/[id]`, `health`, `health/ready`, `webhooks/payments`. Nenhuma devolve agregado;
-  contagem só existe implicitamente no tamanho da lista.
+- `apps/app/shared/lib/queryKeys.ts:11` — factory tipada com **5** grupos: `account` (`:12-15`, novo na
+  PR #12), `auditEvents` (`:16-28`, novo na PR #18), `entities` (`:29`), `users` (`:35`) e `health`
+  (`:43`); a hierarquia já suporta invalidação por prefixo. É onde as chaves de um widget entrariam.
+  *(Âncoras remedidas em 2026-09-17: a PR #18 inseriu `auditEvents` no meio do arquivo e empurrou os três
+  grupos seguintes para baixo.)*
+- `apps/api/app/(routes)/` — **20** rotas: `account/*` ×3, `audit-events`, `auth/*` ×8, `entities`,
+  `entities/[id]`, `files`, `users`, `users/[id]`, `health`, `health/ready`, `webhooks/payments`. Nenhuma
+  devolve agregado; contagem só existe implicitamente no tamanho da lista.
   > **Correção de 2026-09-16 — o total estava certo e o inventário, errado.** A lista anterior omitia
   > `health/ready`, criada pela PR #15, e o total continuou batendo em 19 por compensação na leitura. Um
   > número certo apoiado num inventário errado é pior que um número errado: não dispara revisão.

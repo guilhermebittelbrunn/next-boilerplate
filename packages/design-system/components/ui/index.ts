@@ -6,6 +6,7 @@ export * from './native-select';
 export * from './skeleton';
 export * from './add-button';
 export * from './chart';
+export * from './category-bar-chart';
 export * from './form';
 export * from './navigation-menu';
 export * from './slider';

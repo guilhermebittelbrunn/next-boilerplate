@@ -29,6 +29,7 @@ export const queryKeys = {
     entities: {
         all: ["entities"] as const,
         list: () => [...queryKeys.entities.all, "list"] as const,
+        summary: () => [...queryKeys.entities.all, "summary"] as const,
         detail: (id: string) =>
             [...queryKeys.entities.all, "detail", id] as const,
     },
@@ -38,6 +39,7 @@ export const queryKeys = {
         // the admin list and the impersonation (common-only) list are different data.
         list: (type?: string) =>
             [...queryKeys.users.all, "list", type ?? "all"] as const,
+        summary: () => [...queryKeys.users.all, "summary"] as const,
         detail: (id: string) => [...queryKeys.users.all, "detail", id] as const,
     },
     health: () => ["health"] as const,

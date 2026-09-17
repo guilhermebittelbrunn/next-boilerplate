@@ -78,6 +78,8 @@ export const sharedUtilsTranslations = {
                 "A navegação expirou. Recarregue a lista.",
             PAGINATION_INDEX_MISSING:
                 "A listagem está indisponível no momento. Tente de novo em instantes.",
+            SUMMARY_INDEX_MISSING:
+                "O resumo está indisponível no momento. Tente de novo em instantes.",
         },
     },
     en: {
@@ -155,6 +157,8 @@ export const sharedUtilsTranslations = {
                 "This page reference expired. Reload the list.",
             PAGINATION_INDEX_MISSING:
                 "The listing is unavailable right now. Try again shortly.",
+            SUMMARY_INDEX_MISSING:
+                "The summary is unavailable right now. Try again shortly.",
         },
     },
     es: {
@@ -239,6 +243,8 @@ export const sharedUtilsTranslations = {
                 "La navegación expiró. Vuelve a cargar la lista.",
             PAGINATION_INDEX_MISSING:
                 "El listado no está disponible ahora. Inténtalo de nuevo en unos instantes.",
+            SUMMARY_INDEX_MISSING:
+                "El resumen no está disponible ahora. Inténtalo de nuevo en unos instantes.",
         },
     },
 };

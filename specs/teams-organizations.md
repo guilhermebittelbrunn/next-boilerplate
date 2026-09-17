@@ -68,14 +68,17 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
 ## O que já existe no repo
 
 - **Zero ocorrências** de `organizationId`, `workspace`, `tenant`, `membership` ou `invite` em `apps/` e
-  `packages/`. A única palavra "organization" no repo é `packages/seo/schema.ts:6`
-  (`organizationSchema`), que é marcação schema.org da landing — nada a ver.
+  `packages/`. A palavra "organization" no repo aparece só em `packages/seo/schema.ts` — no identificador
+  `organizationSchema` (`:6`) e no tipo schema.org `Organization` (`:1`, `:5`, `:11`, `:14`) —, que é
+  marcação da landing, nada a ver.
 - `packages/sdk/src/types/user/user.ts:2` — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
   O papel é **global**, não relativo a um grupo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
   (`:27`) trata `ADMIN` como papel de plataforma.
-- `apps/api/app/(guards)/` — dois arquivos: `admin.ts` (`requireAdminApi`, `:27`) e `common-panel.ts`
-  (`requireCommonPanelApi`, `:29`). Nenhum resolve "pertence a este grupo".
+- `apps/api/app/(guards)/` — dois arquivos: `admin.ts` (`requireAdminApi`, `:29`) e `common-panel.ts`
+  (`requireCommonPanelApi`, `:31`). Nenhum resolve "pertence a este grupo". ⚠️ **Âncoras atualizadas em
+  2026-09-17:** a PR #18 acrescentou `actorProfile` ao contexto do guard de admin e a gravação da trilha de
+  impersonação ao de painel comum, empurrando as duas assinaturas duas linhas para baixo.
 - **A posse é por usuário, repetida em cada handler**:
   `apps/api/app/(routes)/entities/[id]/route.ts:24`, `:40` e `:102` — o mesmo
   `row.userId !== ctx.subjectProfile.id` → 404, três vezes, num único arquivo de um único recurso.

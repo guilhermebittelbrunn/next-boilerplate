@@ -139,6 +139,37 @@ Ele lê o alvo como os outros scripts de bootstrap: com os hosts do emulador pre
 sem credencial; com eles vazios, exige o service account de `apps/api/.env` e anuncia no cabeçalho que o
 projeto é real. Confira essa linha antes de repetir o comando com `--apply`.
 
+#### 1.5 Índices compostos dos resumos da home
+
+- [ ] os três índices publicados no projeto de referência
+- [ ] os três índices publicados **no projeto do seu fork**
+
+As duas homes do painel contam registros no servidor em vez de trazer a lista inteira para o navegador.
+Cada contagem é uma agregação com filtro de igualdade em mais de um campo, e o Firestore cobra índice
+composto por isso — agregação não escapa da regra. São três entradas novas em
+[`firestore.indexes.json`](../firestore.indexes.json), publicadas pelo mesmo comando das anteriores:
+
+| coleção | campos | serve |
+|---------|--------|-------|
+| `entity` | `userId` + `deletedAt` + `enabled` | cartão "ativas" da home comum |
+| `entity` | `userId` + `deletedAt` + `type` | as três barras do gráfico por tipo |
+| `user` | `deletedAt` + `type` | cartão de administradores da home admin |
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:indexes
+```
+
+**Sem eles, `GET /entities/summary` e `GET /users/summary` respondem `503 SUMMARY_INDEX_MISSING`** e os
+widgets mostram o erro traduzido nos três idiomas. A saudação continua na tela, o painel continua
+navegável e nenhuma resposta é 500 — a degradação é intencional. Enquanto o índice está sendo construído,
+a recusa persiste.
+
+Para conferir depois de publicar: `npx -y firebase-tools@latest firestore:indexes` lista as três entradas;
+na tela, os cartões mostram números em vez do alerta. Vale o mesmo aviso dos índices anteriores — **o
+emulador serve a consulta com ou sem índice**, então `pnpm emulators` não prova que a entrada existe.
+`apps/api/__tests__/firestoreIndexes.test.ts` cobre o arquivo versionado, o que pega a entrada apagada e
+não o índice não publicado.
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
@@ -354,14 +385,22 @@ abaixo são da terceira medição:
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **31,9 s** |
-| lint/format | `pnpm check` | **555 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1091 testes em 112 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 30 s** |
+| lint/format | `pnpm check` | **601 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1276 testes em 130 arquivos** |
 
-Dois destes números mudam a cada entrega. A PR #16 tinha acrescentado o workspace `@repo/analytics` à suíte
-e movido os quatro de uma vez; a PR #17 acrescentou 53 testes em 5 arquivos (paginação: repositório, query,
-rota, hook e tabela) e 12 arquivos ao alcance do `pnpm check`. **Remedir antes de citar** — a contagem de
-tasks e a de configs são as únicas que ficaram estáveis.
+Distribuição da suíte, medida em 2026-09-17 com `--force`: `apps/api` 532 em 48 arquivos, `apps/app` 370 em
+51, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2,
+`apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8 em 1.
+
+Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@repo/analytics` à suíte; a #17
+somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou
+49 testes em 6 arquivos (2 na `apps/api`, 4 na `apps/app`) e 18 arquivos ao alcance do `pnpm check`.
+**Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
+uma das quatro últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
+são medidos corretamente e invalidados pela entrega seguinte. Desta vez a defasagem nasceu dentro da
+própria rodada — a auditoria mediu 583 e 1227, e a feature que ela mesma elegeu levou a 601 e 1276. Leia-os
+como "medido em tal data", nunca como fato corrente.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
 teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.

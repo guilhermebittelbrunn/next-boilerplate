@@ -165,7 +165,7 @@ eficácia.
 - [~] O usuário **encerra sessões**: uma específica ou todas as outras, mantendo a atual. E o logout
       comum deixa de ser um "sair de todos" silencioso.
       ◐ **Metade entregue por `account-settings` (PR #12), e a metade que falta é justamente a difícil.**
-      Já existe `POST /account/sessions/revoke` (`apps/api/app/(routes)/account/sessions/revoke/route.ts:4`,
+      Já existe `POST /account/sessions/revoke` (`apps/api/app/(routes)/account/sessions/revoke/route.ts:7`,
       sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:49`) e acionável pela UI
       (`AccountSecurityForm.tsx:137`). **Mas é tudo-ou-nada**, e o próprio código declara o porquê em
       `AccountSecurityForm.tsx:53-54`: *"Firebase cannot revoke sessions selectively, so both actions below

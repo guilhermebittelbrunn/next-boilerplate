@@ -3,6 +3,7 @@ import { getDictionary } from "@repo/internationalization/client";
 import type {
     CreateEntityRequest,
     EntityDTO,
+    EntitySummaryDTO,
     PageDTO,
     UpdateEntityRequest,
 } from "@repo/sdk/src/types";
@@ -29,6 +30,7 @@ type EntityListPages = InfiniteData<PageDTO<EntityDTO>>;
 type ToggleEntityStatusContext = {
     previousList?: EntityListPages;
     previousDetail?: EntityDTO;
+    previousSummary?: EntitySummaryDTO;
 };
 
 export const useEntityCrud = () => {
@@ -60,6 +62,9 @@ export const useEntityCrud = () => {
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.entities.list(),
             });
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.entities.summary(),
+            });
             successAlert(messages.created);
         },
         onError: (error) => errorAlert(formatClientError(error)),
@@ -88,6 +93,10 @@ export const useEntityCrud = () => {
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.entities.detail(variables.id),
             });
+            // The type may have changed, and with it the chart.
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.entities.summary(),
+            });
             successAlert(messages.updated);
         },
         onError: (error) => errorAlert(formatClientError(error)),
@@ -107,12 +116,18 @@ export const useEntityCrud = () => {
             await queryClient.cancelQueries({
                 queryKey: queryKeys.entities.detail(input.id),
             });
+            await queryClient.cancelQueries({
+                queryKey: queryKeys.entities.summary(),
+            });
 
             const previousList = queryClient.getQueryData<EntityListPages>(
                 queryKeys.entities.list()
             );
             const previousDetail = queryClient.getQueryData<EntityDTO>(
                 queryKeys.entities.detail(input.id)
+            );
+            const previousSummary = queryClient.getQueryData<EntitySummaryDTO>(
+                queryKeys.entities.summary()
             );
 
             queryClient.setQueryData<EntityListPages>(
@@ -134,8 +149,16 @@ export const useEntityCrud = () => {
                 queryKeys.entities.detail(input.id),
                 (old) => (old ? { ...old, enabled: input.enabled } : old)
             );
+            queryClient.setQueryData<EntitySummaryDTO>(
+                queryKeys.entities.summary(),
+                (old) =>
+                    old && {
+                        ...old,
+                        enabled: old.enabled + (input.enabled ? 1 : -1),
+                    }
+            );
 
-            return { previousList, previousDetail };
+            return { previousList, previousDetail, previousSummary };
         },
         onError: (error, input, context) => {
             if (context?.previousList) {
@@ -148,6 +171,12 @@ export const useEntityCrud = () => {
                 queryClient.setQueryData(
                     queryKeys.entities.detail(input.id),
                     context.previousDetail
+                );
+            }
+            if (context?.previousSummary) {
+                queryClient.setQueryData(
+                    queryKeys.entities.summary(),
+                    context.previousSummary
                 );
             }
             errorAlert(formatClientError(error));
@@ -165,6 +194,9 @@ export const useEntityCrud = () => {
             });
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.entities.detail(id),
+            });
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.entities.summary(),
             });
             successAlert(messages.deleted);
         },
