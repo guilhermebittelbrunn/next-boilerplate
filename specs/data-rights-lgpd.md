@@ -30,9 +30,11 @@ acumula, maior o estrago de uma exclusão feita errado.
 
 - `apps/api/app/(routes)/users/[id]/route.ts:75` — existe um `DELETE`, mas sob `requireAdminApi`: **rota
   administrativa**, não autoatendimento do titular. O usuário comum não a alcança.
-- `apps/api/(shared)/repositories/base.repository.ts:127-129` — o `delete()` herdado por todo repositório
-  é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:128`) e nada mais. A conta no Firebase
-  Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui.
+- `apps/api/(shared)/repositories/base.repository.ts:196-198` — o `delete()` herdado por todo repositório
+  é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:197`) e nada mais. A conta no Firebase
+  Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui. ⚠️ **Âncora atualizada em
+  2026-09-16:** a PR #17 acrescentou `paginate` e reescreveu `update` no mesmo arquivo, empurrando o
+  `delete()` de `:127-129` para cá. O comportamento não mudou.
 - `apps/api/app/(routes)/` — o inventário completo é `account` (PR #12), `auth`, `health`, `users`,
   `entities`, `files` (PR #11) e `webhooks` — **7 grupos, 19 `route.ts`**. **Nenhuma rota de exportação e
   nenhum `DELETE` de auto-serviço:** `account/` expõe só `GET`/`PUT` (`route.ts:97,107`),

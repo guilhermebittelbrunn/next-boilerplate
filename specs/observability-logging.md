@@ -73,9 +73,10 @@ segue invisível até alguém conferir a fatura.
 - **`packages/auth/server.ts` não foi migrado** e concentra **5** das 12 chamadas de `console` cruas que
   sobraram (`:191`, `:204`, `:220`, `:263`, `:276`), todas passando o objeto de erro e sem prefixo — num
   pacote de autenticação, que é onde o objeto de erro tem mais chance de carregar identificador de usuário.
-  Recontagem de hoje: **14 chamadas `console.*` em 10 arquivos**, das quais 2 são o próprio helper
-  (`log.ts:55`) e o repasse deliberado do erro não tratado (`requestErrorReporter.ts:52`). Sobram **12 em 9
-  arquivos**, contra 24 em 19 antes da PR #15.
+  Recontagem de 2026-09-16, depois da PR #17: **14 chamadas `console.*` em 10 arquivos**, das quais 2 são o
+  próprio helper (`log.ts:55`) e o repasse deliberado do erro não tratado (`requestErrorReporter.ts:52`).
+  Sobram **12 em 8 arquivos**, contra 24 em 19 antes da PR #15. *(A rodada anterior escreveu "9 arquivos":
+  subtraiu as 2 chamadas do total e esqueceu de subtrair os 2 arquivos que as hospedam.)*
 - **`packages/email` mantém um helper próprio.** `packages/email/index.ts:39-48` (`logEmail`) produz
   exatamente o mesmo formato do `logEvent`, com `console.warn` direto. Não é divergência de formato, é
   duplicação de código — e o teste que reprova quem logar o objeto de erro
@@ -85,8 +86,9 @@ segue invisível até alguém conferir a fatura.
   correto e deliberado (ele carrega o endereço do destinatário), mas ninguém distingue "acabou a cota" de
   "revogaram a chave" sem abrir o painel do provedor.
 - **`import-in-the-middle` e `require-in-the-middle` seguem declarados e nunca importados**
-  (`apps/app/package.json:26,35`). São as dependências típicas de OTel/Sentry e continuam sendo peso morto:
-  a PR #15 entregou observabilidade **sem** tocá-las.
+  (`apps/app/package.json:27,36` — as duas linhas desceram uma posição na PR #16, que acrescentou
+  `@repo/analytics`). São as dependências típicas de OTel/Sentry e continuam sendo peso morto: a PR #15
+  entregou observabilidade **sem** tocá-las.
 
 ### Histórico, preservado por ser o argumento que sustentou a spec
 
@@ -121,6 +123,10 @@ segue invisível até alguém conferir a fatura.
 
 **Auditado em 2026-09-16 contra o código, não contra o `status` gravado.** PR **#15** mergeada em `main` em
 2026-09-16T17:01:02Z (merge commit `f8322f1`), CI `success` nesse SHA.
+
+**Reconferido depois do merge da PR #17** (`c36e084`): a tabela abaixo continua valendo item a item, e a
+busca por `sentry`/`betterstack`/`logtail`/`axiom` nos `package.json` segue devolvendo zero. O item 1
+continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário pela terceira rodada.
 
 | item do corte | veredito | evidência |
 |---------------|----------|-----------|
