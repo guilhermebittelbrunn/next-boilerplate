@@ -1,7 +1,7 @@
 ---
 id: cursor-pagination
 title: Paginação por cursor no BaseRepository e no SDK
-status: proposed
+status: done
 value: alto
 effort: M
 audience: dx
@@ -9,9 +9,18 @@ area: [apps/api, packages/sdk, apps/app, packages/design-system]
 mode: ambos
 depends_on: [firestore-admin-access]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, apps/api/(shared)/repositories/entity.repository.ts, packages/design-system/components/ui/table.tsx, firestore.indexes.json, packages/sdk/src/actions/entity/action.ts]
-feature: -
+feature: cursor-pagination
 updated: 2026-09-16
 ---
+
+> **Entregue.** PR **#17**, merge commit `c36e084` em `main` (2026-09-17T02:35:23Z), CI `success` nesse SHA.
+> Os cinco itens do corte foram reabertos um a um no código pelo `/spec --sync` — a evidência está em cada
+> item da seção "Proposta". Arquivada aqui pelo mesmo comando.
+>
+> A seção "O que já existe no repo" descreve o repositório **antes** da entrega e continua como estava: é o
+> diagnóstico que sustentou a spec, e reescrevê-la em tempo presente apagaria o argumento. As âncoras
+> `arquivo.ts:linha` dela apontam para o código anterior à PR #17 — não confira contra o `HEAD` atual. As
+> âncoras válidas hoje estão na seção "Proposta".
 
 # Paginação por cursor no BaseRepository e no SDK
 
@@ -71,15 +80,53 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
 
 ## Proposta — corte de MVP
 
-- [ ] O repositório base lê uma "página" de uma coleção — tamanho pedido pelo chamador, ordenação estável,
+Verificado item a item no código em 2026-09-16, depois do merge da PR #17 — não pelo `status` gravado.
+
+- [x] O repositório base lê uma "página" de uma coleção — tamanho pedido pelo chamador, ordenação estável,
       ponto de retomada opaco — com filtro e ordenação **no Firestore**, não em memória.
-- [ ] As listagens da API respondem em **envelope** (itens + cursor da próxima página) em vez de array cru,
+      — `base.repository.ts:80-116`: `paginate()` ordena por `createdAt desc` e desempata por
+      `FieldPath.documentId()` (`:84-86`), retoma de um snapshot do documento âncora (`:89-98`) e busca uma
+      linha extra para saber se há próxima página (`:101-105`).
+- [x] As listagens da API respondem em **envelope** (itens + cursor da próxima página) em vez de array cru,
       com teto de tamanho aplicado no servidor mesmo quando o cliente pede mais.
-- [ ] O SDK expõe o envelope como contrato tipado e o slice `entity` é migrado inteiro (repositório → rota
+      — `entities/route.ts:30-37` devolve `{ items, nextCursor }`; `pagination.schema.ts:49-52` limita o
+      tamanho a `PAGE_SIZE_MAX = 100` (`:6`) em vez de recusar o pedido, e `:41`/`:62` respondem
+      `PAGINATION_CURSOR_INVALID` para cursor malformado.
+- [x] O SDK expõe o envelope como contrato tipado e o slice `entity` é migrado inteiro (repositório → rota
       → SDK → hook → tela), virando o template que os forks copiam.
-- [ ] A tabela do design system opera em modo servidor (carregar mais / próxima-anterior) sem perder busca
+      — `packages/sdk/src/types/pagination/pagination.ts:1-10` (`PageDTO`/`PageQuery`),
+      `actions/entity/action.ts:17-30`, `entity.repository.ts:15-26`, `useListEntities.tsx:14-40` sobre
+      `useAuthorizedInfiniteQuery` e `EntitiesListClient.tsx:152-161`.
+- [x] A tabela do design system opera em modo servidor (carregar mais / próxima-anterior) sem perder busca
       e refresh.
-- [ ] Os índices compostos exigidos por essas consultas passam a viver versionados no repositório.
+      — `table.tsx:22-26` (props `onLoadMore`/`hasMore`/`loadMoreLoading`) e `:159-171` (o botão). A busca
+      por `searchFields` continua funcionando e `:112-118` troca o texto de lista vazia quando o termo não
+      apareceu nas páginas já carregadas, em vez de afirmar que não existe registro.
+- [x] Os índices compostos exigidos por essas consultas passam a viver versionados no repositório.
+      — `firestore.indexes.json:3-11`: `entity` com `userId` + `deletedAt` + `createdAt desc`, que é
+      exatamente a consulta de `listByUserId`. `isMissingIndexError` (`(shared)/lib/pagination.ts:59-77`)
+      degrada a falta de índice para `PAGINATION_INDEX_MISSING` em vez de 500.
+
+Os dois códigos de erro novos estão nos três idiomas em
+`translations/packages/shared/utils.ts:77-80` (pt-br), `:154-157` (en) e `:238-241` (es); os rótulos da
+tabela, em `translations/components/ui/table.ts`.
+
+### O que a entrega decidiu, das perguntas em aberto
+
+- **Cursor opaco**, como recomendado: `encodeCursor`/`decodeCursor` (`(shared)/lib/pagination.ts:29-53`)
+  embrulham o id do documento em base64url com um campo de versão.
+- **Só `entity` foi migrado**, como recomendado. `user.repository.ts:32-43` continua lendo a coleção
+  inteira e pagando o N+1 do Admin SDK.
+- **`findAll()` foi mantido**, com o aviso no lugar do nome: o docblock em `base.repository.ts:63` manda
+  preferir `paginate` para qualquer coleção que o usuário faça crescer.
+
+### Entregue fora do corte
+
+`update()` deixou de reler o documento e reescrevê-lo inteiro (`base.repository.ts:169-186`). O
+round-trip pelo mapper gravava `createdAt` como string ISO, e o Firestore ordena por tipo antes de valor —
+um único `PUT` bastava para quebrar qualquer ordenação sobre esse campo. Era um achado aberto no backlog e
+virou pré-requisito do cursor. Junto veio `apps/api/scripts/backfill-instants.mjs`, para as bases que já
+gravaram instantes como string.
 
 ### Fora do corte
 
