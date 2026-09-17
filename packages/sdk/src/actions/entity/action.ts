@@ -3,6 +3,8 @@ import type { Response } from "../../client/type";
 import type {
     CreateEntityRequest,
     EntityDTO,
+    PageDTO,
+    PageQuery,
     UpdateEntityRequest,
 } from "../../types";
 
@@ -12,10 +14,16 @@ export default class EntityActions {
         this.client = client;
     }
 
-    async list(): Promise<EntityDTO[]> {
-        const { data } = await this.client.request<Response<EntityDTO[]>>({
+    async list(query?: PageQuery): Promise<PageDTO<EntityDTO>> {
+        const { data } = await this.client.request<
+            Response<PageDTO<EntityDTO>>
+        >({
             url: "/entities",
             method: "GET",
+            params: {
+                ...(query?.limit ? { limit: query.limit } : {}),
+                ...(query?.cursor ? { cursor: query.cursor } : {}),
+            },
         });
 
         return data.data;
