@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-type IndexField = { fieldPath: string; order?: string };
+type IndexField = {
+    fieldPath: string;
+    order?: string;
+    arrayConfig?: string;
+};
 type CompositeIndex = {
     collectionGroup: string;
     queryScope: string;
@@ -31,6 +35,17 @@ describe("firestore.indexes.json", () => {
             fields: [
                 { fieldPath: "userId", order: "ASCENDING" },
                 { fieldPath: "deletedAt", order: "ASCENDING" },
+                { fieldPath: "createdAt", order: "DESCENDING" },
+            ],
+        });
+    });
+
+    it("declares the index the audit trail's user filter needs", () => {
+        expect(indexes).toContainEqual({
+            collectionGroup: "auditEvent",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "involvedUserIds", arrayConfig: "CONTAINS" },
                 { fieldPath: "createdAt", order: "DESCENDING" },
             ],
         });

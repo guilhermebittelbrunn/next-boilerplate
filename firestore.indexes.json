@@ -16,6 +16,14 @@
         { "fieldPath": "reference_id", "order": "ASCENDING" },
         { "fieldPath": "deletedAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "auditEvent",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "involvedUserIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
