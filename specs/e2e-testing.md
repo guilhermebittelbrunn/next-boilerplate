@@ -35,19 +35,18 @@ alguém olhar.
   capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
   `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
   impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-16, rodando o gate sem cache pós-PR #16**): **10 tasks de
-  teste / 1038 testes em 107 arquivos**, todos de unidade/integração estreita — `apps/api` 371 em 35
-  arquivos, `apps/app` 293 em 41, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 44 em 4,
+- Suíte automatizada atual (**remedida em 2026-09-16, rodando o gate sem cache pós-PR #17**): **10 tasks de
+  teste / 1091 testes em 112 arquivos**, todos de unidade/integração estreita — `apps/api` 410 em 38
+  arquivos, `apps/app` 307 em 43, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 44 em 4,
   `@repo/analytics` 34 em 2, `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27
   em 3, `@repo/payments` 8 em 1. **Nenhum sobe um app de verdade**, e **nenhuma** das dez configs declara
   **cobertura**: não existe medida nem baseline para discutir. *(Eram 573 em 63 arquivos, depois 750 em 74,
-  860 em 88, 918 em 94 e 981 em 102; o crescimento vem das PRs #10 a #16. Seguem **10** tasks e **10**
-  configs de Vitest, e não há Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a
-  lacuna é a mesma.)*
-  > **Por que os números desta seção saíram errados de novo.** A rodada anterior os mediu e os gravou
-  > dentro da própria PR #16, antes de os commits de código daquela PR entrarem — o workspace novo do
-  > `@repo/analytics` nasceu depois da medição. Recontar aqui é barato; recontar **depois** de a PR fechar
-  > é o que evita repetir.
+  860 em 88, 918 em 94, 981 em 102 e 1038 em 107; o crescimento vem das PRs #10 a #17. Seguem **10** tasks e
+  **10** configs de Vitest, e não há Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu;
+  a lacuna é a mesma.)*
+  > **Estes números envelhecem a cada PR.** A rodada anterior os gravou dentro da própria PR #16, antes de
+  > os commits de código daquela PR entrarem, e eles nasceram errados. Desta vez a medição saiu depois do
+  > merge da PR #17, com o gate sem cache. Medir dentro da PR que muda o número não vale.
 - ✅ **O gate instável foi corrigido — e o argumento mais forte desta spec caiu junto.** Em 2026-09-15 a
   auditoria registrou aqui uma falha real: `pnpm turbo run lint typecheck test --force` rodado duas vezes
   seguidas falhou na primeira (`app#test`, 21/23 tasks), com

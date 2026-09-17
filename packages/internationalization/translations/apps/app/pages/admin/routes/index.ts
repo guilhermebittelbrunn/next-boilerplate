@@ -8,6 +8,9 @@ export const adminRoutesTranslations = {
                 create: "Criar Usuário",
                 update: "Editar Usuário",
             },
+            audit: {
+                list: "Auditoria",
+            },
             settings: {
                 list: "Configurações",
                 create: "Criar Configuração",
@@ -24,6 +27,9 @@ export const adminRoutesTranslations = {
                 create: "Create User",
                 update: "Edit User",
             },
+            audit: {
+                list: "Audit trail",
+            },
             settings: {
                 list: "Settings",
                 create: "Create Setting",
@@ -39,6 +45,9 @@ export const adminRoutesTranslations = {
                 list: "Usuarios",
                 create: "Crear Usuario",
                 update: "Editar Usuario",
+            },
+            audit: {
+                list: "Auditoría",
             },
             settings: {
                 list: "Configuración",

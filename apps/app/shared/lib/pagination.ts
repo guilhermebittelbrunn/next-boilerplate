@@ -3,3 +3,5 @@
  * the same size without pulling the browser-side API client into its bundle.
  */
 export const ENTITIES_PAGE_SIZE = 20;
+
+export const AUDIT_EVENTS_PAGE_SIZE = 20;

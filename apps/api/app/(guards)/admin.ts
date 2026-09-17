@@ -1,4 +1,4 @@
-import { UserType } from "@repo/sdk/src/types";
+import { type UserDTO, UserType } from "@repo/sdk/src/types";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 import {
@@ -12,6 +12,8 @@ import { userRepository } from "@/(shared)/repositories/user.repository";
 export type AdminAuthContext = {
     user: UserRecord;
     authRequest: ResolvedAuthRequestContext;
+    /** Firestore profile of the admin making the call, whose id identifies them in records. */
+    actorProfile: UserDTO;
 };
 
 type RouteContext = Record<string, unknown> | undefined;
@@ -71,6 +73,7 @@ export function requireAdminApi<TRouteContext extends RouteContext = undefined>(
             ...(routeContext ?? {}),
             user: userRecord,
             authRequest: resolved.data,
+            actorProfile: profile,
         } as AdminAuthContext &
             (TRouteContext extends undefined
                 ? Record<string, never>

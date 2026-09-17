@@ -1,7 +1,7 @@
 "use client";
 
 import { getDictionaryForLocale } from "@repo/internationalization/client";
-import { UsersIcon } from "lucide-react";
+import { ScrollTextIcon, UsersIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import type { NavItem } from "@/shared/components/ui/Sidebar";
@@ -24,10 +24,18 @@ export function useAdminNavRoutes(): { SIDEBAR_ELEMENTS: NavItem[] } {
                 icon: UsersIcon,
                 isActive: true,
             },
+            {
+                title: dictionary.apps.app.pages.admin.routes.platform.audit
+                    .list,
+                url: routes.audit.list.url,
+                icon: ScrollTextIcon,
+            },
         ],
         [
             dictionary.apps.app.pages.admin.routes.platform.users,
+            dictionary.apps.app.pages.admin.routes.platform.audit,
             routes.users.list.url,
+            routes.audit.list.url,
         ]
     );
 

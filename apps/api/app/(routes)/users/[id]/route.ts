@@ -1,4 +1,8 @@
 import { getAuthInstance } from "@repo/auth/server";
+import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { resolveUserAuditLabel } from "@/(shared)/lib/audit-label";
+import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import {
     type RouteIdParamsContext,
@@ -9,8 +13,18 @@ import {
     getMergedUserByUid,
 } from "@/(shared)/lib/user-merge";
 import { userRepository } from "@/(shared)/repositories/user.repository";
-import { parseAdminUpdateUserInput } from "@/(shared)/validation/user-admin.schema";
+import {
+    type AdminUpdateUserInput,
+    parseAdminUpdateUserInput,
+} from "@/(shared)/validation/user-admin.schema";
 import { requireAdminApi } from "@/app/(guards)/admin";
+
+/** Names only: recording the old and new values would copy the very data that changed. */
+function changedFieldsOf(patch: AdminUpdateUserInput): string[] {
+    return Object.keys(patch).filter(
+        (field) => patch[field as keyof AdminUpdateUserInput] !== undefined
+    );
+}
 
 export const GET = requireAdminApi<RouteIdParamsContext>(async (_req, ctx) => {
     const id = await resolveIdFromContext(ctx);
@@ -67,13 +81,25 @@ export const PUT = requireAdminApi<RouteIdParamsContext>(async (req, ctx) => {
         await getAuthInstance().updateUser(profile.reference_id, authUpdate);
     }
 
+    await recordAuditEvent({
+        action: AuditAction.USER_UPDATE,
+        actorUserId: ctx.actorProfile.id,
+        actorUid: ctx.user.uid,
+        actorLabel: ctx.user.email ?? ctx.user.displayName ?? null,
+        targetType: AuditTargetType.USER,
+        targetUserId: id,
+        targetLabel: await resolveUserAuditLabel(profile.reference_id),
+        changedFields: changedFieldsOf(parsed.value),
+        requestId: requestIdFrom(req),
+    });
+
     const merged = await getMergedUserByFirestoreDocId(id);
 
     return Response.json({ data: merged });
 });
 
 export const DELETE = requireAdminApi<RouteIdParamsContext>(
-    async (_req, ctx) => {
+    async (req, ctx) => {
         const id = await resolveIdFromContext(ctx);
         const profile = await userRepository.findById(id);
 
@@ -84,7 +110,22 @@ export const DELETE = requireAdminApi<RouteIdParamsContext>(
             );
         }
 
+        // Read while the account is still there: the record that has to outlive the
+        // deletion would otherwise be unable to name who was deleted.
+        const targetLabel = await resolveUserAuditLabel(profile.reference_id);
+
         await userRepository.delete(id);
+
+        await recordAuditEvent({
+            action: AuditAction.USER_DELETE,
+            actorUserId: ctx.actorProfile.id,
+            actorUid: ctx.user.uid,
+            actorLabel: ctx.user.email ?? ctx.user.displayName ?? null,
+            targetType: AuditTargetType.USER,
+            targetUserId: id,
+            targetLabel,
+            requestId: requestIdFrom(req),
+        });
 
         return new Response(null, { status: 204 });
     }

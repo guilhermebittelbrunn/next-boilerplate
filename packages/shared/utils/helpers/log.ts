@@ -4,6 +4,7 @@
  */
 export type LogScope =
     | "account"
+    | "audit"
     | "auth"
     | "auth-action-link"
     | "email"

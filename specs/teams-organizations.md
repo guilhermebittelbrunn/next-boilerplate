@@ -33,7 +33,7 @@ updated: 2026-09-16
 >    |---------|--------|----------------|
 >    | `entities/[id]/route.ts` | `:24`, `:40`, `:102` | posse do **registro** (`row.userId !== ctx.subjectProfile.id`) |
 >    | `entities/[id]/route.ts` | `:67`, `:86` | posse do **objeto no bucket** (`isUsablePhotoReference`, `isOwnStorageObject`) |
->    | `entities/route.ts` | `:16`, `:36`, `:44` | escopo da listagem, posse do objeto, gravação do dono |
+>    | `entities/route.ts` | `:26`, `:71`, `:79` | escopo da listagem, posse do objeto, gravação do dono — as três desceram na PR #17, que paginou o `GET` |
 >    | `account/route.ts` | `:41`, `:154` | posse do objeto — 🆕 **PR #12** |
 >    | `files/route.ts` | `:27` | derivação do caminho pelo dono (`buildObjectPath`) |
 >
@@ -42,15 +42,16 @@ updated: 2026-09-16
 > Sem essas duas, adiar é só acumular juros. Reabrir esta spec exige argumento novo — tipicamente o
 > primeiro fork B2B real.
 >
-> **Auditoria de 2026-09-16 (pós-PR #16) — as duas contrapartidas seguem sem nenhum código, pela quarta
+> **Auditoria de 2026-09-16 (pós-PR #17) — as duas contrapartidas seguem sem nenhum código, pela quinta
 > rodada.** (1) `docs/ARCHITECTURE.md` existe, mas não contém "B2B", "B2C", "tenant" nem "organização": a
 > decisão continua implícita no código. (2) O predicado de posse continua espalhado pelos 11 sítios da
-> tabela acima, reabertos um a um — nenhum foi consolidado. As quatro PRs desta janela (#13 a #16) não
-> tocaram em nenhum deles, então o adiamento não ficou mais caro, mas também não ficou mais honesto.
+> tabela acima, reabertos um a um — nenhum foi consolidado. A PR #17 mexeu em três deles e **os moveu de
+> lugar sem consolidá-los**, que é o comportamento que a spec prevê: o custo do retrofit não subiu, mas a
+> manutenção das referências virou trabalho recorrente de auditoria.
 >
-> **O gatilho que a rodada anterior definiu disparou.** A condição escrita era "se o padrão se repetir na
-> próxima rodada"; repetiu. A pergunta vai ao usuário nesta auditoria: ou as contrapartidas viram tarefa
-> com dono, ou o `deferred` deveria ser lido como `rejected` até o primeiro fork B2B aparecer.
+> **O gatilho que a rodada anterior definiu disparou, e agora se repetiu.** A condição escrita era "se o
+> padrão se repetir na próxima rodada". A pergunta vai ao usuário nesta auditoria: ou as contrapartidas
+> viram tarefa com dono, ou o `deferred` deveria ser lido como `rejected` até o primeiro fork B2B aparecer.
 
 ## Problema
 
@@ -85,8 +86,11 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   **A lição de método é a interessante**: este é o terceiro ciclo em que uma referência a este arquivo
   aparece errada — é sintoma de que o predicado não tem nome nem casa, exatamente o que a spec propõe
   resolver.
-- `apps/api/(shared)/repositories/entity.repository.ts:11` — `listByUserId` consulta com
-  `where("userId", "==", userId)` (`:14`). A listagem é escopada por usuário na origem.
+- `apps/api/(shared)/repositories/entity.repository.ts:15` — `listByUserId` consulta com
+  `where("userId", "==", userId)` (`:22`). A listagem é escopada por usuário na origem. ⚠️ **Âncoras
+  atualizadas em 2026-09-16:** a PR #17 trocou o corpo do método por uma chamada a `paginate`, e o
+  predicado de posse virou o primeiro `where` da query passada adiante — continua sendo um sítio, agora
+  quatro linhas abaixo.
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
   `allow read, write: if false;` em `:33`); o comentário em `:39-43` já registra a sutileza de que
   `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
