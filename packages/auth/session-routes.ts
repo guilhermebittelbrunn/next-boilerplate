@@ -1,14 +1,22 @@
 import "server-only";
+import { HTTP_STATUS } from "@repo/shared/utils";
 import {
     createCustomToken,
+    decodeSessionCookie,
+    getSessionFromCookie,
     getUserFromSessionCookie,
     revokeUserSessions,
 } from "./server";
 import {
     clearSessionCookie,
     isSameOriginRequest,
+    isWithinAbsoluteCap,
+    type MintSessionResult,
     mintSessionCookie,
     readSessionCookie,
+    resolveSessionOriginSeconds,
+    SESSION_ORIGIN_CLAIM,
+    shouldRefreshSession,
 } from "./session";
 
 /**
@@ -16,6 +24,10 @@ import {
  * Each app re-exports these from its own `app/api/auth/.../route.ts` so the
  * cross-app session logic lives in one place ("genérico no pacote").
  */
+
+function jsonError(code: string, status: number): Response {
+    return Response.json({ error: { code } }, { status });
+}
 
 function extractIdToken(body: unknown): string | null {
     if (
@@ -29,44 +41,85 @@ function extractIdToken(body: unknown): string | null {
     return null;
 }
 
+async function readIdToken(request: Request): Promise<string | null> {
+    try {
+        return extractIdToken(await request.json());
+    } catch {
+        return null;
+    }
+}
+
+async function mintFailureResponse(
+    minted: Extract<MintSessionResult, { ok: false }>
+): Promise<Response> {
+    if (minted.reason === "absolute-cap") {
+        await clearSessionCookie();
+        return jsonError("AUTH_SESSION_EXPIRED", HTTP_STATUS.UNAUTHORIZED);
+    }
+    return jsonError("AUTH_INVALID_TOKEN", HTTP_STATUS.UNAUTHORIZED);
+}
+
 /** POST /api/auth/session — exchange a Firebase ID token for the shared session cookie. */
 export async function sessionPOST(request: Request): Promise<Response> {
     if (!isSameOriginRequest(request)) {
-        return Response.json(
-            { error: { code: "AUTH_FORBIDDEN_ORIGIN" } },
-            { status: 403 }
-        );
+        return jsonError("AUTH_FORBIDDEN_ORIGIN", HTTP_STATUS.FORBIDDEN);
     }
 
-    let body: unknown;
-    try {
-        body = await request.json();
-    } catch {
-        return Response.json(
-            { error: { code: "AUTH_MISSING_TOKEN" } },
-            { status: 400 }
-        );
-    }
-
-    const idToken = extractIdToken(body);
+    const idToken = await readIdToken(request);
     if (!idToken) {
-        return Response.json(
-            { error: { code: "AUTH_MISSING_TOKEN" } },
-            { status: 400 }
-        );
+        return jsonError("AUTH_MISSING_TOKEN", HTTP_STATUS.BAD_REQUEST);
     }
 
-    try {
-        await mintSessionCookie(idToken);
-    } catch {
-        // Invalid/expired ID token (createSessionCookie rejects it).
-        return Response.json(
-            { error: { code: "AUTH_INVALID_TOKEN" } },
-            { status: 401 }
-        );
+    const minted = await mintSessionCookie(idToken);
+    if (!minted.ok) {
+        return await mintFailureResponse(minted);
     }
 
     return Response.json({ ok: true });
+}
+
+/**
+ * POST /api/auth/session/refresh — slide the session forward from a still-valid
+ * cookie. Ordered so that the hot path (a cookie minted moments ago) costs local
+ * cryptography and nothing else: that ordering is also what keeps the route from
+ * being worth hammering.
+ */
+export async function sessionRefreshPOST(request: Request): Promise<Response> {
+    if (!isSameOriginRequest(request)) {
+        return jsonError("AUTH_FORBIDDEN_ORIGIN", HTTP_STATUS.FORBIDDEN);
+    }
+
+    const idToken = await readIdToken(request);
+    if (!idToken) {
+        return jsonError("AUTH_MISSING_TOKEN", HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const current = await readSessionCookie();
+    if (!current) {
+        return jsonError("AUTH_NO_SESSION", HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const claims = await decodeSessionCookie(current);
+    if (!claims) {
+        await clearSessionCookie();
+        return jsonError("AUTH_NO_SESSION", HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    if (!shouldRefreshSession(claims.iat)) {
+        return Response.json({ refreshed: false });
+    }
+
+    if (!(await getSessionFromCookie(current))) {
+        await clearSessionCookie();
+        return jsonError("AUTH_NO_SESSION", HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const minted = await mintSessionCookie(idToken);
+    if (!minted.ok) {
+        return await mintFailureResponse(minted);
+    }
+
+    return Response.json({ refreshed: true });
 }
 
 /** DELETE /api/auth/session — sign out everywhere (revoke + clear the shared cookie). */
@@ -90,13 +143,22 @@ export async function sessionDELETE(): Promise<Response> {
  */
 export async function customTokenPOST(): Promise<Response> {
     const sessionCookie = await readSessionCookie();
-    const user = await getUserFromSessionCookie(sessionCookie);
-    if (!user) {
-        return Response.json(
-            { error: { code: "AUTH_NO_SESSION" } },
-            { status: 401 }
-        );
+    const session = await getSessionFromCookie(sessionCookie);
+    if (!session) {
+        return jsonError("AUTH_NO_SESSION", HTTP_STATUS.UNAUTHORIZED);
     }
-    const token = await createCustomToken(user.uid);
+
+    const originSeconds = resolveSessionOriginSeconds(session.decoded);
+    if (!isWithinAbsoluteCap(originSeconds)) {
+        await clearSessionCookie();
+        return jsonError("AUTH_SESSION_EXPIRED", HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const token = await createCustomToken(
+        session.user.uid,
+        originSeconds === null
+            ? undefined
+            : { [SESSION_ORIGIN_CLAIM]: originSeconds }
+    );
     return Response.json({ token });
 }
