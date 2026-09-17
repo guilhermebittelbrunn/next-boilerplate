@@ -1,5 +1,8 @@
 import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import {
     IdentityToolkitError,
     identitySignInWithPassword,
@@ -61,6 +64,17 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
     // Every session of this account is dropped, including the caller's: Firebase cannot
     // revoke selectively, and leaving a stolen session alive would defeat the change.
     await revokeUserSessions(ctx.user.uid);
+
+    await recordAuditEvent({
+        action: AuditAction.ACCOUNT_PASSWORD_CHANGE,
+        actorUserId: ctx.subjectProfile.id,
+        actorUid: ctx.user.uid,
+        actorLabel: email,
+        targetType: AuditTargetType.ACCOUNT,
+        targetUserId: ctx.subjectProfile.id,
+        targetLabel: email,
+        requestId: requestIdFrom(req),
+    });
 
     return Response.json({ data: { confirmed: true } });
 });
