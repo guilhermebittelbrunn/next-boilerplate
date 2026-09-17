@@ -22,8 +22,12 @@ updated: 2026-09-16
 >
 > 1. escrever, em `docs/ARCHITECTURE.md`, se este core é **B2B ou B2C por padrão** — hoje a resposta está
 >    implícita no código e ninguém a declarou;
-> 2. concentrar o predicado de posse num ponto único de escopo. **Recontado em 2026-09-15: são 9 sítios em
->    3 recursos** — e eram 4 em 1 recurso na rodada anterior.
+> 2. concentrar o predicado de posse num ponto único de escopo. **Recontado em 2026-09-16: são 11 sítios
+>    em 3 recursos** — e eram 4 em 1 recurso duas rodadas atrás.
+>
+>    > **Correção — a spec contradizia a própria tabela.** As rodadas anteriores escreveram "9", mas somar
+>    > as linhas da tabela abaixo dá 3 + 2 + 3 + 2 + 1 = **11**, e os 11 foram reabertos um a um no código.
+>    > O número errado enfraquecia justamente o argumento que a spec usa para pedir atenção.
 >
 >    | recurso | sítios | o que expressa |
 >    |---------|--------|----------------|
@@ -38,12 +42,14 @@ updated: 2026-09-16
 > Sem essas duas, adiar é só acumular juros. Reabrir esta spec exige argumento novo — tipicamente o
 > primeiro fork B2B real.
 >
-> **Auditoria de 2026-09-16 — as duas contrapartidas seguem sem nenhum código, pela terceira rodada.**
-> (1) `docs/ARCHITECTURE.md` existe, mas não contém "B2B", "B2C", "tenant" nem "organização": a decisão
-> continua implícita no código. (2) O predicado de posse continua espalhado exatamente pelos 9 sítios da
-> tabela acima, reconferidos um a um — nenhum foi consolidado. As três PRs desta janela (#13, #14 e #15) não
+> **Auditoria de 2026-09-16 (pós-PR #16) — as duas contrapartidas seguem sem nenhum código, pela quarta
+> rodada.** (1) `docs/ARCHITECTURE.md` existe, mas não contém "B2B", "B2C", "tenant" nem "organização": a
+> decisão continua implícita no código. (2) O predicado de posse continua espalhado pelos 11 sítios da
+> tabela acima, reabertos um a um — nenhum foi consolidado. As quatro PRs desta janela (#13 a #16) não
 > tocaram em nenhum deles, então o adiamento não ficou mais caro, mas também não ficou mais honesto.
-> Se o padrão se repetir na próxima rodada, vale a pergunta ao usuário: ou as contrapartidas viram tarefa
+>
+> **O gatilho que a rodada anterior definiu disparou.** A condição escrita era "se o padrão se repetir na
+> próxima rodada"; repetiu. A pergunta vai ao usuário nesta auditoria: ou as contrapartidas viram tarefa
 > com dono, ou o `deferred` deveria ser lido como `rejected` até o primeiro fork B2B aparecer.
 
 ## Problema
@@ -82,11 +88,11 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
 - `apps/api/(shared)/repositories/entity.repository.ts:11` — `listByUserId` consulta com
   `where("userId", "==", userId)` (`:14`). A listagem é escopada por usuário na origem.
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
-  `allow read, write: if false;` em `:33`); o comentário em `:39-40` já registra a sutileza de que
+  `allow read, write: if false;` em `:33`); o comentário em `:39-43` já registra a sutileza de que
   `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
 - **Lacuna:** não existe grupo, não existe papel dentro de grupo, não existe convite. E o escopo por
-  usuário está espalhado por handler, repositório e regras — **9 sítios em 3 recursos** (tabela acima),
-  contra 4 em 1 na rodada anterior. A PR #11 passou a codificar a posse também no **prefixo do caminho no
+  usuário está espalhado por handler, repositório e regras — **11 sítios em 3 recursos** (tabela acima),
+  contra 4 em 1 duas rodadas atrás. A PR #11 passou a codificar a posse também no **prefixo do caminho no
   bucket** (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath`/`isOwnedBy`, espelhado em
   `storage.rules`), e a PR #12 replicou esse mesmo padrão num terceiro recurso (`account/route.ts:41,154`).
   **O custo do retrofit mais que dobrou em um único ciclo**, e a curva é o argumento: cada recurso novo que
@@ -154,8 +160,8 @@ ponta a ponta, não entregar administração de times completa.
   recurso já construído, mais os índices, mais as regras — em código que já está em produção. A nota de
   pesquisa chama isso de reescrita, e a evidência local confirma com uma série temporal, não com uma
   medição só: o predicado de posse foi de **3 sítios em 1 recurso** (até a PR #10) para **4 em 1**
-  (PR #11) e para **9 em 3** (PR #12) — ver a tabela acima. **Triplicou em dois ciclos, sem que ninguém
-  decidisse nada a respeito.** É a definição de juros compostos: o custo de adotar cresce a cada entrega
+  (PR #11) e para **11 em 3** (PR #12) — ver a tabela acima. **Quase quadruplicou em dois ciclos, sem que
+  ninguém decidisse nada a respeito.** É a definição de juros compostos: o custo de adotar cresce a cada entrega
   que não tem nada a ver com organizações.
 - **Vazamento entre organizações é a falha crítica.** Uma consulta sem o filtro de escopo entrega dado de
   outro cliente, e com a autorização espalhada por handler basta um handler novo esquecer. Isso empurra

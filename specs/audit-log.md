@@ -139,7 +139,11 @@ nem mensagem de commit deste repo.
 - [ ] Cada evento identifica **ator, sujeito, ação, alvo e momento** — quem agiu × em nome de quem.
 - [ ] A trilha é consultável na área admin, filtrável por período e usuário, traduzida nos três idiomas.
 - [ ] O registro é somente-adição: nenhuma rota permite editar ou apagar evento gravado.
-- [ ] A retenção do log de acesso de infra (6 meses) vira passo do checklist de fork, com o prazo escrito.
+- [~] A retenção do log de acesso de infra (6 meses) vira passo do checklist de fork, com o prazo escrito.
+      — **parcial desde antes desta spec entrar em execução, e a spec não registrava isso.**
+      `docs/PRE-PRODUCTION.md:296-298` já traz o passo ("conferir a retenção de log da plataforma de
+      deploy"), mas sem prazo: `:298` diz que o número exato precisa ser lido no painel do provedor porque
+      nenhuma fonte com data foi consultada. Falta escrever o prazo, não criar o passo.
 
 ### Fora do corte
 

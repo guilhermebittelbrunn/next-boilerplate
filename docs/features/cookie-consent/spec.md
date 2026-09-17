@@ -1,7 +1,7 @@
 ---
 id: cookie-consent
 title: Consentimento de cookies e Consent Mode
-status: proposed
+status: done
 value: alto
 effort: M
 audience: confianca
@@ -9,9 +9,13 @@ area: [apps/app, apps/web, packages/analytics, packages/design-system, packages/
 mode: ambos
 depends_on: []
 contends_on: [packages/analytics/provider.tsx, apps/app/app/layout.tsx, "apps/web/app/[locale]/layout.tsx", packages/design-system/components/ui/index.ts]
-feature: -
+feature: cookie-consent
 updated: 2026-09-16
 ---
+
+> **Entregue.** PR **#16**, merge commit `7c8ff7c` em `main` (2026-09-16T23:54:09Z), CI `success` nesse SHA.
+> Os seis itens do corte foram reconferidos um a um no código pelo `/spec --sync` — a evidência está em
+> cada item da seção "Proposta". Arquivada aqui pelo mesmo comando.
 
 # Consentimento de cookies e Consent Mode
 
@@ -62,6 +66,11 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
   > existe para evitar. Vale a nota de método: banner de consentimento também precisa cobrir armazenamento
   > local, mas em outra seção e com outra base legal — não misturado com a lista de cookies.
 
+  > **Correção da auditoria de fechamento (2026-09-16).** São **6** cookies, não 5: falta `sidebar_state`
+  > na tabela acima (`packages/design-system/components/ui/sidebar.tsx:28,108`). O `/analyze` achou a
+  > omissão e a tabela corrigida foi para a seção 2 do `analyze/plan.md`. Terceira contagem de cookies
+  > desta spec a sair errada — o inventário é exatamente o tipo de fato que não se escreve de memória.
+
   `packages/internationalization/utils/cookies.ts:1` é só um `getCookie` **genérico**, sem nomear locale
   nenhum.
 - `packages/shared/utils/helpers/cookies.ts:2,16,31` — `setCookie` / `getCookie` / `removeCookie` já
@@ -98,19 +107,41 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
 
 ## Proposta — corte de MVP
 
-- [ ] O visitante vê, na primeira visita, um aviso com **três saídas igualmente acessíveis**: aceitar
+- [x] O visitante vê, na primeira visita, um aviso com **três saídas igualmente acessíveis**: aceitar
       todos, **rejeitar todos os não necessários** e abrir as preferências. Nada de botão único, nada de
-      "aceitar" em destaque e "rejeitar" escondido.
-- [ ] No segundo nível, o visitante escolhe **por categoria de finalidade**, com tudo que não é
-      estritamente necessário **desligado por padrão**.
-- [ ] **Nenhuma tag de medição carrega antes da escolha.** Enquanto não houver decisão, o produto funciona
-      normalmente e não mede nada além do estritamente necessário.
-- [ ] A escolha **persiste entre visitas e entre os dois apps** e pode ser **revista a qualquer momento**
-      por um ponto de acesso permanente — consentimento que não se pode retirar não é consentimento.
-- [ ] O aviso e as preferências existem nos **3 idiomas** do repo, e apontam para a política de
-      privacidade no mesmo idioma.
-- [ ] Os sinais de consentimento chegam ao Google no formato que ele espera, **incluindo os quatro do
-      Consent Mode v2**, para o tráfego que os exige.
+      "aceitar" em destaque e "rejeitar" escondido. — `packages/design-system/components/ui/cookie-consent.tsx:134-156`:
+      rejeitar (`:137`) e aceitar (`:144`) são o mesmo `Button`, com a mesma variante e a mesma largura
+      (`sm:flex-1`); rejeitar vem antes na ordem de leitura e de tabulação. Gerenciar preferências é o
+      terceiro (`:149-155`).
+- [x] No segundo nível, o visitante escolhe **por categoria de finalidade**, com tudo que não é
+      estritamente necessário **desligado por padrão**. — mesmo arquivo, `:43-94`: categoria necessária
+      travada em ligado (`:64`, `checked disabled`), medição em `Switch` livre (`:75-80`) semeado com
+      `analyticsGranted`, que vale `false` enquanto não há decisão (`packages/analytics/consent.ts:22`,
+      `NO_CONSENT`).
+- [x] **Nenhuma tag de medição carrega antes da escolha.** Enquanto não houver decisão, o produto funciona
+      normalmente e não mede nada além do estritamente necessário. — `packages/analytics/provider.tsx:101`
+      calcula `measuring = snapshot.decided && snapshot.analytics`, e tanto o Vercel Analytics (`:107`)
+      quanto o Google Analytics (`:108-110`) só montam sob essa condição.
+- [x] A escolha **persiste entre visitas e entre os dois apps** e pode ser **revista a qualquer momento**
+      por um ponto de acesso permanente — consentimento que não se pode retirar não é consentimento. —
+      cookie `bp:cookie-consent` com TTL de 180 dias (`packages/analytics/consent.ts:1,9-12`), gravado com
+      o domínio de `SESSION_COOKIE_DOMAIN` (`server.ts:29`), o mesmo mecanismo que já une `web` e `app` na
+      sessão. Reabertura em `apps/web/app/[locale]/components/cookiePreferencesButton.tsx:13,23` e em
+      `apps/app/shared/components/ui/ProfileDropdown.tsx:29,70`.
+- [x] O aviso e as preferências existem nos **3 idiomas** do repo, e apontam para a política de
+      privacidade no mesmo idioma. — `packages/internationalization/translations/components/ui/cookie-consent.ts:2,36,70`
+      (pt-br/en/es), ligadas ao dicionário em `translations/components/index.ts:19,29,39`. O link recebe o
+      locale corrente em `apps/web/app/[locale]/layout.tsx:39` e `apps/app/app/layout.tsx:48`.
+- [x] Os sinais de consentimento chegam ao Google no formato que ele espera, **incluindo os quatro do
+      Consent Mode v2**, para o tráfego que os exige. — `packages/analytics/consent.ts:90-93` emite os
+      quatro no script de defaults; `provider.tsx:29-31,52` repete os quatro no `gtag('consent','update')`.
+
+> **Nota de entrega — reabertura na superfície não autenticada da `apps/app`.** O ponto permanente de
+> revisão da escolha está no `ProfileDropdown`, que só existe depois do login. Quem decidiu na tela de
+> cadastro e nunca autenticou não tem onde mudar de ideia dentro da `apps/app`; precisa do rodapé da
+> landing. Como o cookie é compartilhado entre os dois apps quando `SESSION_COOKIE_DOMAIN` está
+> configurada, o caminho existe — mas depende de o fork publicar a `apps/web`. Registrado como achado da
+> auditoria, não como item pendente do corte.
 
 ### Fora do corte
 

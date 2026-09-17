@@ -57,10 +57,12 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 - `apps/app/shared/lib/queryKeys.ts:11` — factory tipada com **4** grupos: `account` (`:12-15`, novo na
   PR #12), `entities` (`:16`), `users` (`:22`) e `health` (`:30`); a hierarquia já suporta invalidação por
   prefixo. É onde as chaves de um widget entrariam.
-- `apps/api/app/(routes)/` — **19** rotas (`account/*` ×3, `auth/*`, `entities`, `entities/[id]`, `files`,
-  `users`, `users/[id]`, `health`, `webhooks/payments`) — remedido em 2026-09-15, depois de a PR #12
-  acrescentar as três de `account/`. Nenhuma devolve agregado; contagem só existe implicitamente no
-  tamanho da lista.
+- `apps/api/app/(routes)/` — **19** rotas: `account/*` ×3, `auth/*` ×8, `entities`, `entities/[id]`,
+  `files`, `users`, `users/[id]`, `health`, `health/ready`, `webhooks/payments`. Nenhuma devolve agregado;
+  contagem só existe implicitamente no tamanho da lista.
+  > **Correção de 2026-09-16 — o total estava certo e o inventário, errado.** A lista anterior omitia
+  > `health/ready`, criada pela PR #15, e o total continuou batendo em 19 por compensação na leitura. Um
+  > número certo apoiado num inventário errado é pior que um número errado: não dispara revisão.
 - **Lacuna:** não há tela de visão geral, não há dado agregado, e o único primitivo de visualização do
   design system nunca foi exercitado.
 

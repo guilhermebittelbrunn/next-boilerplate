@@ -31,8 +31,10 @@ eficácia.
 - `packages/auth/server.ts:272` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE` o chama
   em `packages/auth/session-routes.ts:79`, montado em `apps/app/app/api/auth/session/route.ts:13` e
   `apps/web/app/api/auth/session/route.ts:12`, alcançado pelo botão de sair
-  (`apps/app/shared/components/ui/ProfileDropdown.tsx:66` → `packages/auth/provider.tsx:238-239`, a
-  mutation `signOutMutation`/`mutationFn: logout`). Não é
+  (`apps/app/shared/components/ui/ProfileDropdown.tsx:81` → `packages/auth/provider.tsx:238-239`, a
+  mutation `signOutMutation`/`mutationFn: logout`). ⚠️ *Âncora corrigida em 2026-09-16: era `:66`,
+  deslocada pela PR #16, que inseriu o item de preferências de cookie logo acima (`:68-80`). A linha `:66`
+  hoje aponta para código de consentimento.* Não é
   código morto — **o efeito colateral é que todo logout é um "sair de todos os dispositivos"**, sem
   granularidade e sem aviso ao usuário.
 - ✅ **A janela de revogação foi FECHADA em 2026-09-15 pela entrega de `account-settings` (PR #12).**
@@ -118,7 +120,8 @@ eficácia.
 >
 > Até a PR #10, `revokeUserSessions` só era chamada pelo logout global
 > (`packages/auth/session-routes.ts:79`) — gesto deliberado de quem já está com a conta na mão. A PR #10 a
-> pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:49`), o
+> pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:51`, a
+> `:49` é comentário), o
 > fluxo canônico de "minha conta foi comprometida", e com isso o furo saiu da dívida teórica e entrou num
 > caminho de segurança real: **a vítima redefinia a senha e o ID token do atacante continuava passando no
 > guard da API por até uma hora.**
@@ -141,7 +144,9 @@ eficácia.
 > (`packages/auth/client.ts:224-235`), que força `reload(user)` + `getIdToken(true)`. É o primeiro
 > precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
 > do lado do browser. A suíte de `packages/auth` deixou de ser o ponto cego que esta nota apontava: passou
-> de 2 arquivos / 29 testes para **6 / 61** (remedido em 2026-09-16), com a revogação coberta por 9 casos — mas `reloadCurrentUser` em si segue
+> de 2 arquivos / 29 testes para **6 arquivos / 62 testes** (recontado em 2026-09-16 — são 61 declarações
+> de `it`, mas `serverEmulatorInit.test.ts:69` é um `it.each` de 2 tuplas, então o runner executa 62), com
+> a revogação coberta por 9 casos — mas `reloadCurrentUser` em si segue
 > sem teste próprio, exercitada só por mock em `apps/app/__tests__/useEmailVerification.test.tsx`.
 
 ## Proposta — corte de MVP
