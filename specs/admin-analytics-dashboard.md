@@ -26,7 +26,7 @@ curva aponta. Nenhuma das três tem resposta hoje, porque nada no produto agrega
 
 ## O que já existe no repo
 
-[`dashboard-home`](dashboard-home.md) entregou as peças e o padrão. Esta spec estende aquilo em vez de
+[`dashboard-home`](../docs/features/dashboard-home/spec.md) entregou as peças e o padrão. Esta spec estende aquilo em vez de
 começar do zero.
 
 > **`dashboard-home` está em `main` desde 2026-09-17** (PR #19, merge `bfc4d8f`, CI verde no SHA de merge) e

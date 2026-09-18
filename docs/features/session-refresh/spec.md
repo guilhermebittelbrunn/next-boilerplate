@@ -1,7 +1,7 @@
 ---
 id: session-refresh
 title: Renovação deslizante da sessão
-status: proposed
+status: done
 value: alto
 effort: M
 audience: confianca
@@ -9,11 +9,16 @@ area: [packages/auth, apps/app, apps/web, packages/internationalization]
 mode: ambos
 depends_on: []
 contends_on: [packages/auth/session.ts, packages/auth/session-routes.ts, packages/auth/server.ts]
-feature: -
+feature: session-refresh
 updated: 2026-09-17
 ---
 
 # Renovação deslizante da sessão
+
+> **Entregue em 2026-09-17** pela PR #20 (`cc93229`), com CI `success` no SHA de merge. Os seis itens do
+> corte foram reconferidos no código, um a um, na auditoria de fechamento — a tabela está em
+> [Entrega](#entrega-—-o-que-foi-conferido). O texto abaixo é o da spec original, preservado; as
+> divergências entre o que ela pedia e o que foi construído estão registradas ao final.
 
 ## Problema
 
@@ -161,3 +166,38 @@ sessão eterna, e é exatamente esse o defeito que se introduz quando a spec só
   o destino original para retomar depois. Cuidado medido: o bounce do proxy apaga a query string fora das
   duas rotas de `oobCode` (`apps/app/proxy.ts:189-202`), então a retomada precisa ser conferida em vez de
   presumida.
+
+## Entrega — o que foi conferido
+
+PR **#20** mergeada em `main` em 2026-09-17T23:37:55Z (merge commit `cc93229`), CI `success` nesse SHA.
+Os seis itens do corte, reabertos no código:
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. Caminho de renovação servido pelo mesmo pacote das rotas de sessão | **implementado** | `sessionRefreshPOST` em `packages/auth/session-routes.ts:87-123`, montado pelos dois front-ends em `apps/app/app/api/auth/session/refresh/route.ts` e `apps/web/app/api/auth/session/refresh/route.ts` |
+| 2. Renovação só depois de uma fração da vida do cookie | **implementado** | `shouldRefreshSession` (`session.ts:137-140`) compara a idade do `iat` contra `REFRESH_AFTER_FRACTION = 0.5` (`:30`); antes do limiar a rota devolve `{ refreshed: false }` sem chamar o provedor (`session-routes.ts:108-110`) |
+| 3. Teto absoluto contado do `auth_time`, por env com padrão e grampeado | **implementado** | `getSessionAbsoluteMaxAgeMs` (`session.ts:96-108`): padrão de 30 dias, piso na vida do cookie, teto de 90 dias. `resolveSessionOriginSeconds` (`:111-122`) lê a claim `sessionAuthTime` e recua para `auth_time`. `SESSION_ABSOLUTE_MAX_AGE_DAYS` está em `apps/app/.env.example:40` e `apps/web/.env.example:36` |
+| 4. Renovação respeita a revogação e limpa o cookie quando o provedor recusa | **implementado** | `session-routes.ts:112-115` chama `getSessionFromCookie`, que verifica com `checkRevoked: true` (`server.ts:298-301`), e limpa o cookie na recusa. `mintFailureResponse` (`:52-60`) limpa e responde `AUTH_SESSION_EXPIRED` quando o teto estoura |
+| 5. Renovação em segundo plano, sem bloquear a navegação | **implementado** | `refreshSessionCookie` em `packages/auth/provider.tsx:204-230`, chamada dentro de `applySignedInUser` (`:270`); a falha genérica vira `"error"` e não desloga ninguém — só o código `AUTH_SESSION_EXPIRED` aciona `handleSessionExpired` |
+| 6. Texto novo nos 3 idiomas | **implementado** | `packages.auth.provider.session.expired` em `translations/packages/auth/index.ts:6,33,61`; `AUTH_SESSION_EXPIRED` e `AUTH_NO_SESSION` em `translations/packages/shared/utils.ts:27-28,111-112,193-194` |
+
+### Deriva — o que saiu diferente do especificado
+
+| especificado | implementado | leitura |
+|--------------|--------------|---------|
+| "**Lacuna:** nada renova. O cookie é gravado no login e nunca mais tocado" | Já renovava. `onIdTokenChanged` → `applySignedInUser` → `POST /api/auth/session` regravava o cookie de hora em hora, sem teto e sem ninguém ter decidido isso | **A spec estava errada, e o erro mudou o desenho.** O problema real não era a ausência de renovação: era renovação silenciosa e ilimitada. O item de maior valor do corte passou a ser o teto absoluto, não o caminho de renovação — que já existia de fato, sem nome |
+| O teto vive no caminho de renovação | O teto é imposto em `mintSessionCookie` (`session.ts:154-156`), não na rota nova | **A implementação desviou, e o desvio é mais forte que a spec.** Só na rota o teto seria decorativo: o `provider.tsx` chama `sessionPOST` direto e passaria por cima dele |
+| "A renovação nunca estende a sessão além de um prazo contado a partir da autenticação original" | A checagem do teto roda **depois** do limiar de renovação, então uma sessão pode sobreviver ao teto por até metade da vida do cookie — 32,5 dias com os padrões de 5 e 30 | **A implementação desviou, medido e registrado.** A sessão não é *estendida* além do teto, mas persiste além dele até o cookie expirar sozinho. Inverter a ordem custaria uma chamada ao provedor em toda navegação. Mantida de propósito; a decisão é de produto |
+
+### Ressalvas que sobrevivem à entrega
+
+- **A revogação ponta a ponta não foi verificada.** O emulador de Auth aceita o cookie depois de
+  `revokeRefreshTokens`, o que atinge igualmente o `getUserFromSessionCookie` que o proxy já usava antes
+  desta entrega. O caminho tem teste unitário; a prova ponta a ponta exige projeto Firebase real. Está
+  classificado como 🔒 no relatório de teste — nem aprovado, nem reprovado.
+- **A rota de renovação nasceu fora do rate limit**, como a própria spec antecipou nos riscos: o limitador
+  deste repositório roda no proxy da `apps/api`, sobre uma lista fechada de caminhos, e as rotas de sessão
+  vivem na `apps/app` e na `apps/web`. O throttle do servidor reduz o custo de cada chamada, mas não é um
+  limite de frequência por origem.
+- **`SESSION_ABSOLUTE_MAX_AGE_DAYS` na Vercel** é o único pré-requisito de infra, e só para quem quiser um
+  teto diferente de 30 dias. Nenhum critério de aceite dependeu dele.

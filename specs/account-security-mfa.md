@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
-updated: 2026-09-16
+updated: 2026-09-17
 ---
 
 # MFA, sessões ativas e política de senha
@@ -28,15 +28,15 @@ eficácia.
 
 ## O que já existe no repo
 
-- `packages/auth/server.ts:272` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE` o chama
-  em `packages/auth/session-routes.ts:79`, montado em `apps/app/app/api/auth/session/route.ts:13` e
-  `apps/web/app/api/auth/session/route.ts:12`, alcançado pelo botão de sair
-  (`apps/app/shared/components/ui/ProfileDropdown.tsx:81` → `packages/auth/provider.tsx:238-239`, a
-  mutation `signOutMutation`/`mutationFn: logout`). ⚠️ *Âncora corrigida em 2026-09-16: era `:66`,
-  deslocada pela PR #16, que inseriu o item de preferências de cookie logo acima (`:68-80`). A linha `:66`
-  hoje aponta para código de consentimento.* Não é
-  código morto — **o efeito colateral é que todo logout é um "sair de todos os dispositivos"**, sem
-  granularidade e sem aviso ao usuário.
+- `packages/auth/server.ts:323` — `revokeUserSessions` existe **e está em uso**: `sessionDELETE`
+  (`packages/auth/session-routes.ts:126`) o chama em `:132`, montado em
+  `apps/app/app/api/auth/session/route.ts:13` e `apps/web/app/api/auth/session/route.ts:12`, alcançado pelo
+  botão de sair (`apps/app/shared/components/ui/ProfileDropdown.tsx:81` →
+  `packages/auth/provider.tsx:372-373`, a mutation `signOutMutation`/`mutationFn: logout`).
+  ⚠️ *Âncoras recorrigidas em 2026-09-17: a PR #20 acrescentou ~90 linhas a `server.ts` e ~130 a
+  `session-routes.ts`, deslocando todas as referências deste bloco. É a segunda vez que ele envelhece por
+  inserção no meio de arquivo alheio.* Não é código morto — **o efeito colateral é que todo logout é um
+  "sair de todos os dispositivos"**, sem granularidade e sem aviso ao usuário.
 - ✅ **A janela de revogação foi FECHADA em 2026-09-15 pela entrega de `account-settings` (PR #12).**
   Esta seção afirmava o contrário até esta auditoria; a afirmação antiga **é falsa desde `a4df5ed`**.
   `packages/auth/server.ts:180` de fato segue chamando `verifyIdToken(token)` **sem** o segundo argumento —
@@ -44,21 +44,24 @@ eficácia.
   aplica `isMintedBeforeRevocation` (`:153-166`), que recusa o token quando `decodedToken.auth_time` é
   anterior a `user.tokensValidAfterTime`. O registro do usuário já estava carregado, então isso não custa
   round trip extra — o porquê está escrito em `:147-152`. O caminho do cookie já fazia o certo com
-  `verifySessionCookie(sessionCookie, true)` (`:253-256`). Cobertura: 9 casos em
-  `packages/auth/__tests__/serverSessionRevocation.test.ts`.
+  `verifySessionCookie(sessionCookie, true)` (`:298-301`, dentro de `getSessionFromCookie:289`).
+  Cobertura: 9 casos em `packages/auth/__tests__/serverSessionRevocation.test.ts`.
   A ordem em `apps/api/(shared)/lib/resolve-api-actor.ts` **continua** bearer (`:23-32`) antes do cookie
   (`:34-37`) — mas isso **deixou de ser um furo**, porque o primeiro ramo agora recusa token revogado.
-  > ⚠️ **Armadilha de conferência, pela terceira rodada seguida.** `grep -n checkRevoked
-  > packages/auth/server.ts` devolve **uma única linha, a `:241` — e ela é comentário**, descrevendo o
+  > ⚠️ **Armadilha de conferência, pela quarta rodada seguida.** `grep -n checkRevoked
+  > packages/auth/server.ts` devolve **uma única linha, a `:286` — e ela é comentário**, descrevendo o
   > caminho do **cookie**. Quem conferir por esse grep conclui o oposto do que o código faz. A checagem do
   > bearer **não usa a palavra `checkRevoked`**: ela está em `isMintedBeforeRevocation`, `:153-166`.
+  > *(A linha do comentário era `:241` até a PR #20.)*
 - `packages/auth/session.ts:14` — `SESSION_COOKIE_NAME = "access-token"`; `:22` e `:23` já clampam a
   duração aos limites do Firebase (5 min / 14 dias), com padrão de 5 dias (`:24`). O tipo declara os
-  atributos em `:39` (`httpOnly`) e `:41` (`sameSite: "lax"`), mas os valores de fato são atribuídos no
-  bloco `:51-53` — é dali que vem o já citado `:52` (`secure` **apenas em produção**).
-- `packages/auth/session.ts:66` — `isSameOriginRequest` é a **única** proteção contra CSRF no
-  `sessionPOST` (`packages/auth/session-routes.ts:34`), e ela **retorna `true` quando não há cabeçalho
-  `Origin`**. **Não há validação de csrfToken.**
+  atributos em `:51` (`httpOnly`) e `:53` (`sameSite: "lax"`), mas os valores de fato são atribuídos no
+  bloco `:62-70` — é dali que vem o já citado `:64` (`secure` **apenas em produção**).
+- `packages/auth/session.ts:78` — `isSameOriginRequest` é a **única** proteção contra CSRF no
+  `sessionPOST` (`packages/auth/session-routes.ts:64`) **e agora também no `sessionRefreshPOST` (`:88`)**,
+  e ela **retorna `true` quando não há cabeçalho `Origin`**. **Não há validação de csrfToken.** A PR #20
+  acrescentou uma segunda superfície que grava cookie por trás dessa mesma guarda — o custo de não ter
+  csrfToken dobrou sem que ninguém decidisse isso.
 - `apps/app/.../sign-up/validations/signUpSchema.ts:6` — `MIN_PASSWORD_LENGTH = 6`. A validação é só
   tamanho mínimo + conferência de confirmação. Sem complexidade, sem verificação de senha vazada.
 - Busca por palavra inteira (`grep -riw`) por `multiFactor`, `MFA`, `TOTP`, `2FA` e `passkey` em `apps/` e
@@ -84,6 +87,11 @@ eficácia.
   > dimensionando o item 4 como mudança de formulário, e ele é mudança de contrato — o que empurra o
   > esforço para cima e pede que a regra nasça em `@repo/shared`, consumida pelas três camadas, em vez de
   > virar uma décima primeira constante copiada.
+  >
+  > **Nota de 2026-09-17.** A contenção que mantinha esta spec sozinha no lote paralelo **caiu**. Os três
+  > arquivos de `packages/auth` do `contends_on` eram exatamente os de `session-refresh`, agora entregue e
+  > arquivada em [`docs/features/session-refresh/spec.md`](../docs/features/session-refresh/spec.md). Resta
+  > a colisão com `data-rights-lgpd`, e só em `packages/auth/server.ts`.
   >
   > Achado lateral, fora do escopo desta spec:
   > `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:9` tem a mensagem em pt-br cravada no código
@@ -119,7 +127,8 @@ eficácia.
 > porque a trajetória é o aprendizado, não o desfecho.**
 >
 > Até a PR #10, `revokeUserSessions` só era chamada pelo logout global
-> (`packages/auth/session-routes.ts:79`) — gesto deliberado de quem já está com a conta na mão. A PR #10 a
+> (`packages/auth/session-routes.ts:132`, dentro de `sessionDELETE:126`) — gesto deliberado de quem já está
+> com a conta na mão. A PR #10 a
 > pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:51`, a
 > `:49` é comentário), o
 > fluxo canônico de "minha conta foi comprometida", e com isso o furo saiu da dívida teórica e entrou num
@@ -135,19 +144,25 @@ eficácia.
 > ⚠️ **A armadilha de conferência sobreviveu ao conserto, e é o que merece atenção agora.** Por três
 > rodadas, uma referência a `packages/auth/server.ts` foi conferida errado, sempre pelo mesmo mecanismo: a
 > linha citada cai sobre um **comentário que menciona `checkRevoked`**, e a conferência superficial dá
-> "confere". Hoje `grep -n checkRevoked packages/auth/server.ts` devolve **uma única linha, a `:241`, e ela
+> "confere". Hoje `grep -n checkRevoked packages/auth/server.ts` devolve **uma única linha, a `:286`, e ela
 > é comentário** — descrevendo o caminho do **cookie**. A checagem do bearer não usa essa palavra em lugar
 > nenhum: chama-se `isMintedBeforeRevocation` (`:153-166`) e é aplicada em `:182`. Quem auditar por
 > palavra-chave vai concluir o oposto do que o código faz, nas duas direções.
+>
+> ⚠️ **E a armadilha ganhou uma camada com a PR #20.** `session-refresh` acrescentou `decodeSessionCookie`
+> (`:262`), que verifica o cookie com `checkRevoked: false` de propósito, para baratear o throttle. Duas
+> funções vizinhas leem o mesmo cookie com garantias opostas, e só uma delas tem a palavra no nome. A
+> renovação chama a barata primeiro e a cara depois (`session-routes.ts:102` e `:112`) — correto, e fácil
+> de inverter sem ninguém perceber.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
 > (`packages/auth/client.ts:224-235`), que força `reload(user)` + `getIdToken(true)`. É o primeiro
 > precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
 > do lado do browser. A suíte de `packages/auth` deixou de ser o ponto cego que esta nota apontava: passou
-> de 2 arquivos / 29 testes para **6 arquivos / 62 testes** (recontado em 2026-09-16 — são 61 declarações
-> de `it`, mas `serverEmulatorInit.test.ts:69` é um `it.each` de 2 tuplas, então o runner executa 62), com
-> a revogação coberta por 9 casos — mas `reloadCurrentUser` em si segue
-> sem teste próprio, exercitada só por mock em `apps/app/__tests__/useEmailVerification.test.tsx`.
+> de 2 arquivos / 29 testes para **8 arquivos / 101 testes** (recontado em 2026-09-17, rodando o gate sem
+> cache; a PR #20 acrescentou `sessionAbsoluteCap.test.ts` e `sessionRefreshRoute.test.ts`), com a revogação
+> coberta por 9 casos — mas `reloadCurrentUser` em si segue sem teste próprio, exercitada só por mock em
+> `apps/app/__tests__/useEmailVerification.test.tsx`.
 
 ## Proposta — corte de MVP
 
@@ -156,7 +171,7 @@ eficácia.
       ✅ **Entregue por `account-settings` em 2026-09-15**, nos **dois** transportes: o bearer ID token
       passou a ser recusado quando `auth_time` é anterior a `tokensValidAfterTime`
       (`packages/auth/server.ts:153-166`, aplicado em `getCurrentUser:182`), e o session cookie já era
-      verificado com `checkRevoked` (`packages/auth/server.ts:253-256`). Antes disso, um token emitido
+      verificado com `checkRevoked` (`packages/auth/server.ts:298-301`). Antes disso, um token emitido
       antes da revogação seguia aceito **até expirar — por até uma hora**. Coberto por
       `packages/auth/__tests__/serverSessionRevocation.test.ts` (9 casos); o teste **falha** se a checagem
       for removida (verificado por mutação).
