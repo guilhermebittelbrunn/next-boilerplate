@@ -108,6 +108,42 @@ describe("mergeAuthAndFirestore", () => {
         expect(payload.updatedAt).toBe(CREATED_AT_ISO);
     });
 
+    /**
+     * The auth account is spread over the profile document, and `lastAccessAt` only exists
+     * on the Firestore side: if it were dropped or left as a Timestamp here, the listing
+     * would read every account as never accessed or print an invalid date.
+     */
+    it("carries the last access stamp to the client as an ISO string", () => {
+        const LAST_ACCESS_ISO = "2026-09-17T14:45:00.000Z";
+
+        const merged = mergeAuthAndFirestore(authRecord(), {
+            id: "profile-1",
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+            lastAccessAt: Timestamp.fromDate(new Date(LAST_ACCESS_ISO)),
+        });
+
+        const payload = overTheWire(merged);
+
+        expect(payload.lastAccessAt).toBe(LAST_ACCESS_ISO);
+        expect(JSON.stringify(payload)).not.toContain("_seconds");
+    });
+
+    it("leaves the last access stamp absent for a profile that predates the field", () => {
+        const merged = mergeAuthAndFirestore(authRecord(), {
+            id: "profile-1",
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+
+        expect(merged.lastAccessAt).toBeUndefined();
+    });
+
     it("keeps a Firestore side already stored as ISO strings untouched", () => {
         const merged = mergeAuthAndFirestore(authRecord(), {
             id: "profile-1",
