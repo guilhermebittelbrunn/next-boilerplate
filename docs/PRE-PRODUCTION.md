@@ -397,28 +397,32 @@ O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh a
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-16**, neste workspace, e **remedido de novo depois do merge da PR #17** — os números
-abaixo são da terceira medição:
+Remedido em **2026-09-17**, neste workspace, com o `HEAD` em `cc93229` (PR #20 já mergeada) — os números
+abaixo são da quarta medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 30 s** |
-| lint/format | `pnpm check` | **601 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1276 testes em 130 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **30,6 s** |
+| lint/format | `pnpm check` | **607 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1325 testes em 134 arquivos** |
 
-Distribuição da suíte, medida em 2026-09-17 com `--force`: `apps/api` 532 em 48 arquivos, `apps/app` 370 em
-51, `@repo/email` 137 em 7, `@repo/auth` 62 em 6, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2,
+Distribuição da suíte, medida em 2026-09-17 com `--force`: `apps/api` 532 em 48 arquivos, `apps/app` 380 em
+53, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2,
 `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8 em 1.
 
 Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@repo/analytics` à suíte; a #17
 somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou
-49 testes em 6 arquivos (2 na `apps/api`, 4 na `apps/app`) e 18 arquivos ao alcance do `pnpm check`.
+49 testes em 6 arquivos e 18 arquivos ao alcance do `pnpm check`; a renovação de sessão somou 49 testes em
+4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`.
 **Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
-uma das quatro últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
-são medidos corretamente e invalidados pela entrega seguinte. Desta vez a defasagem nasceu dentro da
-própria rodada — a auditoria mediu 583 e 1227, e a feature que ela mesma elegeu levou a 601 e 1276. Leia-os
-como "medido em tal data", nunca como fato corrente.
+uma das cinco últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
+são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
+fato corrente.
+
+O tempo do gate caiu de 1 min 30 s para 30,6 s entre as duas últimas medições, com a suíte 49 testes maior.
+Mesma máquina, mesmo `--force`: a diferença é contenção do momento, não ganho de suíte. Não use este número
+para dimensionar CI.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
 teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.
@@ -473,6 +477,42 @@ provedor e nenhum deles é código — o quarto, já resolvido, era.
 ---
 
 ## 🧹 Higiene
+
+### Declaração — o campo `lastAccessAt` do perfil
+
+Não é pendência: é o que o fork precisa saber sobre um dado pessoal que ele herda ligado.
+
+**Para que serve.** Medir uso do produto para operar a base — identificar conta parada, decidir contato.
+A listagem do admin é o único consumidor hoje. Nada de perfilamento, nada de decisão automatizada.
+
+**O que o campo guarda.** Data e hora, e só. Sem IP, sem user-agent, sem dispositivo, sem localização.
+Isso importa juridicamente: o Marco Civil (art. 5º, VIII) define registro de acesso como data e hora de
+uso **a partir de um determinado endereço IP**, então o prazo de 6 meses do art. 15 não alcança este
+campo. Vale o regime finalístico da LGPD (arts. 15, 16 e 6º, III), sem prazo fixo, com o Decreto
+8.771/2016 (art. 13, § 2º) mandando reter o mínimo.
+
+**Retenção.** Enquanto a conta existir. O campo é estado atual, não série histórica: cada gravação
+substitui a anterior, e não há segundo lugar guardando o valor antigo.
+
+**Onde ele mora.** Chave de primeiro nível no documento da coleção `user`. Sem coleção própria, sem
+subcoleção, sem espelho na trilha de auditoria, sem derivado gravado. Um export do documento de perfil
+já leva o campo junto; uma exclusão do documento já o apaga.
+
+**O que hoje ainda não é verdade.** `DELETE /users/[id]` é soft delete: carimba `deletedAt` e mantém o
+documento, com o `lastAccessAt` dentro. A exclusão de verdade depende de `specs/data-rights-lgpd.md`,
+que ainda não foi implementada. Um fork que prometer "apagamos seu último acesso ao excluir a conta"
+está prometendo o que o código ainda não faz.
+
+**Precisão.** `ACTIVITY_WINDOW_MINUTES` vale **15**, em
+`apps/api/(shared)/lib/activity-recorder.ts`. Esse número é o erro máximo do campo: o valor exibido pode
+estar até 15 minutos atrás do acesso real. Qualquer métrica derivada herda essa precisão. Um fork que
+precise de mais resolução paga em escritas no Firestore.
+
+**Custo de escrita.** Uma escrita por usuário por janela no caso normal. Requisições simultâneas do mesmo
+usuário que cheguem antes da primeira escrita da janela leem o perfil ainda sem carimbo e gravam cada uma
+— o desenho não usa transação, então o piso é uma escrita por janela e o teto é o paralelismo do momento.
+Medido em 2026-09-17 contra o emulador: 110 requisições autenticadas em duas janelas produziram 3
+escritas, das quais 2 vieram de um par concorrente na abertura da primeira janela.
 
 - [ ] **Contas de QA acumuladas** no projeto Firebase de desenvolvimento (`next-boilerplate-576d0`).
       Todas `example.com`, sem PII real e sem senha em arquivo. Limpar em Authentication **e** o doc `user`
