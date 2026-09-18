@@ -19,6 +19,12 @@ export type UserDTO = {
     phone?: string | null;
     avatar?: string | null;
     preferences?: UserPreferences | null;
+    /**
+     * Stamped by the API on authenticated requests, once per activity window, so it trails
+     * real use by up to that window. Requests racing on a profile that has no stamp yet can
+     * each write once. Absent on profiles that predate the field.
+     */
+    lastAccessAt?: Date | null;
 };
 
 export type AdminCreateUserRequest = {
