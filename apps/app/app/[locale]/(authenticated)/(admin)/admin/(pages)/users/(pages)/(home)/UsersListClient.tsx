@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { useListUsers } from "@/shared/hooks/useListUsers";
+import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { ADMIN_ROUTES } from "../../../../paths";
 import { useUserCrud } from "../../(hooks)/useUserCrud";
 
@@ -25,10 +26,41 @@ export function UsersListClient() {
     const routes = ADMIN_ROUTES(dictionary, locale);
     const adminUsersList = dictionary.apps.app.pages.admin.users.list;
 
+    const lastAccessLabels = adminUsersList.lastAccess;
+
     const typeLabel = (type: UserType) =>
         type === UserType.ADMIN
             ? adminUsersList.typeLabels.admin
             : adminUsersList.typeLabels.common;
+
+    /**
+     * `lastRefreshTime` measures a Firebase Auth token refresh, not product use, so it is
+     * shown dimmed and labelled: reading it as a real access would answer the question the
+     * column header asks with a different number.
+     */
+    const renderLastAccess = (record: UserWithAuthDTO) => {
+        if (record.lastAccessAt) {
+            return <span>{formatDisplayDateTime(record.lastAccessAt)}</span>;
+        }
+
+        const fromProvider = record.metadata?.lastRefreshTime;
+        if (fromProvider) {
+            return (
+                <span
+                    className="text-muted-foreground italic"
+                    title={lastAccessLabels.approximate}
+                >
+                    {formatDisplayDateTime(fromProvider)}
+                </span>
+            );
+        }
+
+        return (
+            <span className="text-muted-foreground">
+                {lastAccessLabels.never}
+            </span>
+        );
+    };
 
     const columns = [
         {
@@ -89,6 +121,12 @@ export function UsersListClient() {
                     />
                 </div>
             ),
+        },
+        {
+            title: adminUsersList.columns.lastAccess,
+            dataIndex: "lastAccessAt",
+            render: (_: unknown, record: UserWithAuthDTO) =>
+                renderLastAccess(record),
         },
         {
             title: adminUsersList.columns.actions,
