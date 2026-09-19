@@ -43,11 +43,35 @@ responsabilidade de quem escreve a mensagem.
   para a rota nova (schema + repo + mapper) e outro para o guard/autorização; na `app`, um para os hooks
   de dados e outro para a página/formulário. Testes acompanham o commit da funcionalidade que cobrem.
 - **Artefatos do fluxo:** `docs/features/<slug>/` é versionado (histórico da feature) e entra como
-  **último commit**, separado do código: `docs(features): <slug>`. Nunca commite credencial que tenha
-  vazado para print ou roteiro de teste.
+  **último commit**, separado do código: `docs(features): <slug>`.
+  - ⛔ **Varra o artefato por segredo antes de incluí-lo no plano.** `docs/features/` é versionado e vai
+    para todo fork. Isso já vazou duas vezes: um `test/report.md` gravou a senha `NovaSenha2026!x` **no
+    mesmo arquivo** em que afirmava "nenhuma senha foi gravada em arquivo", e outro gravou `qaAudit2026!`.
+    Senha, token, chave e e-mail real de pessoa não entram — nem em roteiro de teste, nem em bloco de log
+    colado, nem em nome de arquivo. Credencial de dev reutilizável vive em
+    `.claude/dev-credentials.local.md` (gitignored).
+  - Screenshot é descartado pelo `.gitignore` (`docs/features/**/screenshots/`,
+    `docs/features/**/test/e2e/`) — então o print **não** é evidência que sobrevive, e prova em imagem tem
+    de virar texto no markdown da etapa. Print com e-mail, nome ou foto de pessoa real não se justifica.
 - **Épicos (tarefas com subtarefas):** branch do épico `feat/<epic-slug>` (a partir de `main`); cada
   subtarefa é uma sub-branch `<project>/feat/<epic-slug>-<subtask>` que faz PR **para a branch do
   épico**; ao final, um PR do épico para `main`. Dentro de cada subtarefa vale o "um commit por app".
+
+## Executar o plano de commits — confira o índice
+
+`git add <arquivo> && git commit` **não restringe o commit a `<arquivo>`**: commita tudo que estiver no
+índice. Se algo já foi preparado antes (um `git mv` de outra etapa, um `git add` anterior), vai junto em
+silêncio e o commit cruza assuntos que o plano tinha separado.
+
+Aconteceu: uma rodada do `/cycle` deixou no índice o `git mv` de uma spec arquivada, e o primeiro commit —
+que devia ter só o contrato do SDK — levou o rename junto.
+
+- **Antes do primeiro commit:** `git diff --cached --stat` tem de sair **vazio**. Se não sair, descubra o
+  que está preparado e decida a qual commit do plano aquilo pertence. Não siga em frente.
+- **Depois de cada commit:** `git show --stat --oneline HEAD` conferido contra a lista de arquivos do
+  plano. Divergiu, corrija **antes** do próximo.
+- Ainda não pushado → `git reset <base>` (mixed, preserva o working tree) e refaça. Depois do push, não
+  reescreva histórico.
 
 ## Push
 
