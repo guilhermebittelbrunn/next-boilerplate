@@ -10,7 +10,13 @@ export const adminUsersPageTranslations = {
                 email: "E-mail",
                 type: "Tipo",
                 status: "Ativo",
+                lastAccess: "Último acesso",
                 actions: "Ações",
+            },
+            lastAccess: {
+                never: "Nunca acessou",
+                approximate:
+                    "Valor aproximado, vindo do provedor de autenticação",
             },
             typeLabels: {
                 admin: "Administrador",
@@ -54,7 +60,13 @@ export const adminUsersPageTranslations = {
                 email: "Email",
                 type: "Type",
                 status: "Active",
+                lastAccess: "Last access",
                 actions: "Actions",
+            },
+            lastAccess: {
+                never: "Never accessed",
+                approximate:
+                    "Approximate value, from the authentication provider",
             },
             typeLabels: {
                 admin: "Administrator",
@@ -98,7 +110,12 @@ export const adminUsersPageTranslations = {
                 email: "Correo",
                 type: "Tipo",
                 status: "Activo",
+                lastAccess: "Último acceso",
                 actions: "Acciones",
+            },
+            lastAccess: {
+                never: "Nunca accedió",
+                approximate: "Valor aproximado, del proveedor de autenticación",
             },
             typeLabels: {
                 admin: "Administrador",

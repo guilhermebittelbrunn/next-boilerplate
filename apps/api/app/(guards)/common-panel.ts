@@ -2,6 +2,7 @@ import { type UserDTO, UserType } from "@repo/sdk/src/types";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
+import { recordUserActivity } from "@/(shared)/lib/activity-recorder";
 import { recordImpersonationSession } from "@/(shared)/lib/audit-recorder";
 import {
     type ResolvedAuthRequestContext,
@@ -79,6 +80,11 @@ export function requireCommonPanelApi<
                 { status: 403 }
             );
         }
+
+        // The actor, never the subject: an admin opening someone's screen is the one using
+        // the product, and stamping the subject would mark a dormant account as active
+        // exactly when the operator is looking for dormant accounts.
+        await recordUserActivity(actorProfile);
 
         // Recorded on the server, from the headers the impersonation needs anyway, so the
         // admin has no way of operating on someone's account without leaving the window.

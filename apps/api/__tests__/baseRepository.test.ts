@@ -803,6 +803,58 @@ describe("UserRepository.update and delete", () => {
     });
 });
 
+describe("UserRepository.touchLastAccess", () => {
+    const ACCESS_AT_ISO = "2026-09-17T14:45:00.000Z";
+
+    function seedProfile() {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-1",
+            type: UserType.COMMON,
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+    }
+
+    it("writes the stamp on the profile document", async () => {
+        seedProfile();
+
+        await userRepository.touchLastAccess("p1", new Date(ACCESS_AT_ISO));
+
+        const stored = fakeDb.read("user", "p1");
+        expect((stored?.lastAccessAt as Date).toISOString()).toBe(
+            ACCESS_AT_ISO
+        );
+    });
+
+    /**
+     * An access is not an edit of the profile: `updatedAt` has to stay on the instant of
+     * the last real change, which is what the screens that show it mean by the word.
+     */
+    it("leaves updatedAt on the instant of the last real edit", async () => {
+        seedProfile();
+
+        await userRepository.touchLastAccess("p1", new Date(ACCESS_AT_ISO));
+
+        const stored = fakeDb.read("user", "p1");
+        expect(stored?.updatedAt).toBeInstanceOf(Timestamp);
+        expect((stored?.updatedAt as Timestamp).toDate().toISOString()).toBe(
+            CREATED_AT_ISO
+        );
+    });
+
+    it("touches no other field of the profile", async () => {
+        seedProfile();
+
+        await userRepository.touchLastAccess("p1", new Date(ACCESS_AT_ISO));
+
+        const stored = fakeDb.read("user", "p1");
+        expect(stored?.type).toBe(UserType.COMMON);
+        expect(stored?.reference_id).toBe("auth-1");
+        expect(stored?.deletedAt).toBeNull();
+    });
+});
+
 describe("EntityRepository.summaryByUserId", () => {
     const LIVE_OWNED_ENTITIES = 3;
     const AGGREGATIONS_PER_SUMMARY = 5;

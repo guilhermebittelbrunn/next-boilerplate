@@ -46,8 +46,9 @@ e, se encontrado, o caminho da pasta de feature. Peça para:
   objetiva** quando for discordar de um comentário;
 - tratar como `📦 Fora de escopo` o que **muda o contrato do `@repo/sdk`** ou a API pública do
   `@repo/design-system` — isso atinge todos os apps e não cabe numa correção pontual de thread;
-- **validar visualmente** com `agent-browser` (comandos em sequência) antes de marcar `✅ Corrigido` numa
-  correção de UI/layout;
+- **não executar o produto** (§7 do checklist): numa correção de UI/layout que só se confirma vendo a
+  tela, marque `✅ Corrigido` e registre que a verificação visual fica **pendente de `/test`** — este
+  comando roda fora do pipeline e não tem QA depois;
 - salvar o **markdown de replies**: um bloco por comentário, pronto para colar na thread; quando o
   comentário trouxer checklist, **um item por ponto**, cada um com o **status** do vocabulário fechado
   (`✅ Corrigido`, `🩹 Corrigido parcialmente`, `✔️ Já contemplado`, `❌ Não procede`, `📦 Fora de escopo`,

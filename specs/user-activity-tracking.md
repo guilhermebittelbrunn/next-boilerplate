@@ -119,13 +119,13 @@ mal citado:
 | `apps/api` | Escrita limitada por janela no repositório de usuário; o mapper já serializa instante sem mudança. |
 | `apps/app` | Coluna nova na listagem do admin. Nenhuma tela nova. |
 | `apps/web` | N/A. |
-| `packages/*` | `auth`: o gancho de carimbo fica no caminho de sessão que [`session-refresh`](session-refresh.md) cria. i18n nos 3 idiomas. |
+| `packages/*` | `auth`: o gancho de carimbo fica no caminho de sessão que `session-refresh` **já criou** — spec entregue, em [`docs/features/session-refresh/spec.md`](../docs/features/session-refresh/spec.md). i18n nos 3 idiomas. |
 | Infra/env | Nenhuma variável nova e nenhum serviço externo. Sem índice novo **neste** corte: a coluna não ordena no servidor. |
 
 ## Riscos e trade-offs
 
 - **Custo de escrita, que é a armadilha desta spec.** Carimbar a cada requisição significa **uma escrita no
-  Firestore por requisição** — a mesma família de armadilha que [`dashboard-home`](dashboard-home.md) teve
+  Firestore por requisição** — a mesma família de armadilha que [`dashboard-home`](../docs/features/dashboard-home/spec.md) teve
   de evitar do lado da contagem, e que naquele caso foi resolvida com agregação
   (`base.repository.ts:122-124`). Aqui não existe agregação que salve: a mitigação é a janela, e ela precisa
   estar no corte, não numa otimização futura. O custo residual, mesmo com a janela, é uma escrita por
@@ -136,10 +136,17 @@ mal citado:
 - **A precisão é a da janela, e isso contamina o que vem depois.** Com janela de 15 minutos, "último acesso"
   pode estar 15 minutos desatualizado, e um KPI de "ativos na última hora" herda essa folga. Quem ler o
   número precisa saber disso.
-- **Dependência de ordem real.** Sem [`session-refresh`](session-refresh.md) não existe batimento periódico
-  onde carimbar: o único caminho que grava o cookie hoje é o login (`session.ts:80-89`, um chamador). Se
-  esta spec for feita antes, o carimbo acaba pendurado em algum outro lugar (um interceptador de requisição,
-  por exemplo), que é justamente o desenho que produz uma escrita por requisição.
+- ✅ **A dependência de ordem foi satisfeita em 2026-09-17, e o argumento dela se inverteu.** Esta spec
+  dizia que sem `session-refresh` não existia batimento periódico onde carimbar, porque "o único caminho que
+  grava o cookie é o login". Os dois fatos mudaram: `mintSessionCookie` (`packages/auth/session.ts:147`)
+  agora tem **dois** chamadores — `sessionPOST:73` e `sessionRefreshPOST:117` —, e o segundo é exatamente o
+  batimento periódico que faltava, já com throttle próprio (`shouldRefreshSession`, `session.ts:137-140`,
+  metade da vida do cookie).
+  **O que isso muda para o `/analyze`:** a janela de gravação que esta spec exige no corte **já tem um
+  candidato natural**, e ele não é um número novo a escolher — é o limiar que a renovação usa. Carimbar
+  dentro do ramo `{ refreshed: true }` produz no máximo uma escrita por usuário a cada meia vida de cookie,
+  sem inventar mecanismo. Cuidado a registrar: o ramo `{ refreshed: false }` é o caminho quente e **não**
+  deve carimbar, ou a garantia de custo desaparece.
 - **Contenção conhecida:** `packages/sdk/src/types/user/user.ts` é disputado com
   [`billing-subscription`](billing-subscription.md) e [`onboarding-flow`](onboarding-flow.md), que também
   acrescentam campo ao `UserDTO`.

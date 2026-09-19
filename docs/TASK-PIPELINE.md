@@ -38,9 +38,9 @@ deixou, sem depender da conversa.
 |---------|-------|-----------|
 | `/spec [ideia \| --sync \| --next]` | Estrategista de Produto | Varre o repo, confronta com padrões de mercado (**com fontes**) e escreve/atualiza as specs em `specs/`. `--sync` reconcilia o backlog com o código **e arquiva as specs entregues**; `--next` recomenda a próxima. |
 | `/analyze <nome-da-spec>` | PO + Tech Lead | **O argumento padrão é o nome de uma spec** (`/analyze audit-log`). Também aceita descrição livre ou ID/link do ClickUp; vazio, oferece as specs aprovadas do backlog. Salva **o plano** em `analyze/plan.md` + inicializa o `STATE.md`. |
-| `/develop [slug? / --force]` | Desenvolvedor | Lê o plano e **implementa** o slice vertical (SDK → API → app/web → i18n); valida visualmente; escreve `develop/handoff.md`. Não cria branch nem commita. |
-| `/review [foco? / --force]` | Revisor | Revisa o diff contra [`review-checklist.md`](review-checklist.md), valida visualmente, aplica correções, **resolve a branch**, escreve `review/review.md`, **pede aprovação antes de commitar** e, ao final, pergunta se deve dar **push**. |
-| `/test [foco? / manual / --force]` | QA | Gera os critérios de aceite (§9.1) **E** roda os testes Vitest dos workspaces afetados + `pnpm test` do root; cria os testes que faltam; dirige o app com `agent-browser`. |
+| `/develop [slug? / --force]` | Desenvolvedor | Lê o plano e **implementa** o slice vertical (SDK → API → app/web → i18n); smoke local; escreve `develop/handoff.md` declarando o instrumento de cada afirmação. Não cria branch nem commita. |
+| `/review [foco? / --force]` | Revisor | Revisa o diff contra [`review-checklist.md`](review-checklist.md) **por leitura** + gates estáticos, aplica correções, deixa a lista "Verificar no `/test`", **resolve a branch**, escreve `review/review.md`, **pede aprovação antes de commitar** e, ao final, pergunta se deve dar **push**. |
+| `/test [foco? / manual / --force]` | QA | Gera os critérios de aceite (§9.1) **E** roda os testes Vitest dos workspaces afetados + `pnpm test` do root; cria os testes que faltam; dirige o app com `agent-browser`. **Única etapa que executa o produto.** |
 | `/observe [slug?]` | Observador *(opcional)* | Observação final de 2–3 parágrafos em linguagem de negócio, pronta para colar num card. Exige só o `/review`. |
 | `/mediate [PR?]` | Mediador de PR *(avulso)* | Triagem dos comentários de uma PR aberta → markdown de replies com status por item. **Independente** do pipeline. |
 | `/cycle [id? / --audit-only / --max-rounds N]` | Orquestrador do ciclo | Roda a linha inteira — `/spec --sync` → `/analyze` → `/develop` → `/review` → `/test` — **sem parar para perguntar**, acumulando as decisões para um relatório final. Para quando você **não vai acompanhar**. Detalhes em [`AI-WORKFLOW.md`](AI-WORKFLOW.md#cycle--o-ciclo-inteiro-numa-tacada). |
@@ -86,16 +86,17 @@ Use via `@menção` para rodar isolado/em paralelo, ou deixe os comandos os acio
   spec entregue (`spec.md` + o campo `spec:` no `STATE.md`).
 - **`planejador-tarefa`** — análise PO+TechLead; lê ClickUp/links; escreve `analyze/plan.md` + `STATE.md`;
   devolve blueprint + "Perguntas em aberto".
-- **`desenvolvedor`** — lê o plano, implementa na ordem SDK → API → app/web → i18n, valida visualmente,
+- **`desenvolvedor`** — lê o plano, implementa na ordem SDK → API → app/web → i18n, faz smoke local,
   escreve `develop/handoff.md`; **não cria branch nem commita**.
 - **`revisor-codigo`** — revisa o diff + handoff, aplica correções, **é o dono da branch**, escreve
   `review/review.md`, devolve o plano de commits (**não commita nem pusha**).
-- **`analista-qa`** — roda e cria testes, gera critérios em `test/`, dirige o app com `agent-browser`;
-  **não cria/nomeia branch nem commita**.
+- **`analista-qa`** — roda e cria testes, gera critérios em `test/`, dirige o app com `agent-browser`.
+  **Único agent que executa o produto**, e herda a desconfiança do pipeline: começa pela lista "Verificar
+  no `/test`" do `review.md`. **Não cria/nomeia branch nem commita**.
 - **`observador-tarefa`** — observação final de negócio (`observacao.md`).
 - **`mediador-pr`** — triagem de comentários de PR (`pr-review/pr-<n>.md`).
 - **`code-reviewer`** — revisor **read-only** avulso ("revise o diff"), mesmo checklist do
-  `revisor-codigo`, sem tocar em arquivos nem em branch.
+  `revisor-codigo`, sem tocar em arquivos, em branch nem no produto.
 
 ## Regras que valem para todos
 
@@ -107,11 +108,18 @@ cada árvore, + [`AGENTS.md`](../AGENTS.md) para design system/RHF. O destilado 
 **Roteiro de análise** — [`feature-analysis-guide.md`](feature-analysis-guide.md): o checklist de tech lead
 que o `/analyze` preenche e do qual o `/test` deriva os critérios de aceite (formato obrigatório na §9.1).
 
-**Validação visual** — regra de ouro 11: front-end não está pronto sem validação visual com
-`agent-browser`. É gate no `/develop`, no `/review` e no `/test`. Rode os comandos do `agent-browser`
-**estritamente em sequência**; confira **light + dark + mobile**. **Quem sobe, derruba**: o agent checa a
-porta antes (`lsof -ti tcp:3000`), reutiliza o que já estiver de pé (é ambiente do usuário) e mata só os
-PIDs que ele mesmo abriu, inclusive quando a validação falha. ⛔ Nunca `pkill -f node`/`killall node`.
+**Quem executa o produto** — regra de ouro 11: front-end não está pronto sem ser percorrido com
+`agent-browser`, e isso acontece **uma vez**, no `/test`. O `/develop` faz smoke para se desbloquear; o
+`/review` lê código e roda os gates estáticos. Nenhum dos dois sobe app nem tira screenshot. Rode os
+comandos do `agent-browser` **estritamente em sequência**; confira **light + dark + mobile** e os 3
+idiomas. **Quem sobe, derruba**: checa a porta antes (`lsof -ti tcp:3000`), reutiliza o que já estiver de
+pé (é ambiente do usuário) e mata só os PIDs que abriu, inclusive quando a validação falha. ⛔ Nunca
+`pkill -f node`/`killall node`. Divisão e evidência na §7 de [`review-checklist.md`](review-checklist.md).
+
+**A desconfiança entre etapas tem dono** (§7.1 do checklist): em 15 das 17 features entregues o handoff
+afirmou algo que a etapa seguinte derrubou. O `/review` derruba por **leitura** o que conseguir e converte
+o resto na lista **"Verificar no `/test`"**, com repro sugerido; o `/test` começa por ela. Afirmação
+herdada sem medição própria não vira ✅ — vira 🔒 não verificado.
 
 **Escrita** ([`.claude/rules/writing-skills.md`](../.claude/rules/writing-skills.md)) — duas superfícies,
 duas skills. O que **fica no repo** (plano, handoff, review, critérios, relatório, spec, observação,
@@ -186,6 +194,20 @@ o plano inteiro + o diff inteiro.
 > Estar no repo, porém, **não** autoriza comentário de código a apontar para lá — ver
 > [`.claude/rules/code-comments.md`](../.claude/rules/code-comments.md).
 
+### O `STATE.md` tem de fechar
+
+O `revisor-codigo` deixa `review = in-progress` de propósito: quem aprova e commita é o orquestrador do
+`/review`, e é ele quem marca `done`. Só que ele esquece — três features entregues estão com
+`review = in-progress` **e** `test = done`, o que é impossível pelo gate sequencial. Pelo mesmo motivo,
+três `review.md` seguem com `_A preencher pelo orquestrador._` no campo dos commits realizados, com os
+commits já em `main`.
+
+- **`/review`, depois do último commit aprovado**: marque `review = done` no `STATE.md` e preencha os
+  commits realizados no `review.md`. Faz parte de commitar, não é opcional.
+- **`/test`, ao gravar o seu `STATE.md`**: se `review` ainda estiver `in-progress` e **já houver commits
+  da feature**, o orquestrador anterior deixou a etapa aberta. Registre isso no retorno em vez de marcar
+  `test = done` por cima e seguir — um gate que mente é pior que um gate ausente.
+
 ## Épicos (tarefas grandes com subtarefas)
 
 Quando a tarefa tem **subtarefas**, o `/analyze` a trata como **épico**. Ele gera:
@@ -216,7 +238,7 @@ Depois, **cada subtarefa roda o pipeline completo**: `/develop <subtask> → /re
    → implementa SDK → API → app → i18n; typecheck + pnpm check + paridade de i18n;
      valida no browser (light/dark/mobile); escreve develop/handoff.md; develop=done.
 3. /review
-   → revisa (handoff + diff + raio de impacto), valida visualmente, corrige, cria a branch
+   → revisa (handoff + diff + raio de impacto) por leitura, corrige, cria a branch
      app/feat/user-notifications, propõe os commits e commita bloco a bloco após sua aprovação;
      no fim pergunta se deve dar push; review=done.
 4. /test
@@ -239,7 +261,7 @@ Catálogo completo em [`AI-WORKFLOW.md`](AI-WORKFLOW.md). As que o fluxo aciona 
 | `/new-crud` · `/new-api-route` | `/develop` — scaffolding do slice |
 | `/i18n-sync` | `/develop` — toda chave de UI e todo `error.code` novo |
 | `/write-tests` | `/develop` e `/test` |
-| `agent-browser` | `/develop`, `/review`, `/test` — validação visual (obrigatória) |
+| `agent-browser` | `/test` — e2e (exclusivo do `analista-qa`) |
 | `humanizer` · `caveman` | todos — arquivo humanizado, conversa comprimida |
 | `/code-review` | `/review` — passada genérica de bugs/simplificação |
 | `brainstorming` | antes do `/develop`, quando a tarefa cria UI nova |

@@ -1,6 +1,7 @@
 import { type UserDTO, UserType } from "@repo/sdk/src/types";
 import type { UserRecord } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
+import { recordUserActivity } from "@/(shared)/lib/activity-recorder";
 import {
     type ResolvedAuthRequestContext,
     resolveAuthRequestContext,
@@ -68,6 +69,8 @@ export function requireAdminApi<TRouteContext extends RouteContext = undefined>(
         if (readOnlyRefusal) {
             return readOnlyRefusal;
         }
+
+        await recordUserActivity(profile);
 
         const enrichedContext = {
             ...(routeContext ?? {}),

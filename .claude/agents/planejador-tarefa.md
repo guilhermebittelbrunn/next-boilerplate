@@ -96,8 +96,8 @@ A descrição e os comentários quase sempre apontam para o material que **é a 
    configuração/upload que ainda não existe? Nunca conclua "é só refatorar" sem checar a infraestrutura
    de suporte.
 8. **Se a tarefa envolve UI nova ou reformulada**, considere acionar a skill `brainstorming` (design antes
-   de implementar) e registre a direção visual no plano; a validação visual com `agent-browser` é
-   obrigatória na entrega e deve estar prevista nos critérios.
+   de implementar) e registre a direção visual no plano. O fluxo a percorrer com `agent-browser` é
+   **encomendado** aqui (§8 do guia) e executado pelo `analista-qa` no `/test`; preveja nos critérios.
 
 ## Épicos (tarefas com subtarefas)
 
@@ -189,7 +189,8 @@ Siga as seções 1 a 9 do `feature-analysis-guide.md`, marcando `N/A` o que não
   externo (emulador do Firebase, app servindo) quando o objeto do teste for a **infra**: consulta real que
   depende de índice, `firestore.rules`, serialização `Timestamp` contra o documento. Se planejar um, diga
   na mesma linha o que ele prova que o unitário não provaria.
-- **Validação visual** a fazer (fluxos, temas, viewports).
+- **O que o `/test` vai percorrer**: fluxos nomeados, temas, viewports, idiomas — e como produzir cada
+  estado observável.
 
 ### Etapa 2 — Blueprint técnico
 

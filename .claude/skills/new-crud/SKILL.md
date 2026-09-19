@@ -43,8 +43,8 @@ Use [`/i18n-sync`](../i18n-sync/SKILL.md): crie `translations/apps/app/pages/<co
 
 ## 6. Fechamento
 - Rode `pnpm check` e `pnpm --filter app typecheck` + `pnpm --filter api typecheck`.
-- **Validação visual (obrigatória — é CRUD, toca UI)**: com a skill **`agent-browser`**, suba `pnpm --filter app dev` (+ `pnpm --filter api dev`) e percorra os fluxos de lista/criar/editar/excluir/toggle; tire screenshots e cheque layout, estados de erro/vazio, responsivo (mobile+desktop) e tema (light/dark).
-- Considere chamar o agente **`code-reviewer`** sobre o diff para validar as convenções (ele também roda a validação visual).
+- **Smoke local**: abra as telas de lista/criar/editar o suficiente para saber se o slice está de pé. Não guarde screenshot — a validação que vira evidência é do `/test`, que percorre os fluxos de lista/criar/editar/excluir/toggle com o `agent-browser` e cobre estados de erro/vazio, responsivo e tema. Registre no handoff o que não conseguiu medir, como "a verificar no `/test`".
+- Considere chamar o agente **`code-reviewer`** sobre o diff para validar as convenções.
 
 ## Mapa de arquivos do recurso de referência (`entity`)
 ```

@@ -36,8 +36,8 @@ Documentação de produto/infra: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`SETUP
 | `estrategista-produto` | Descobre e especifica o que vale construir → `specs/<id>.md` + `specs/BACKLOG.md`. |
 | `planejador-tarefa` | Analisa e planeja (PO + Tech Lead) → `analyze/plan.md`. |
 | `desenvolvedor` | Implementa o slice vertical → `develop/handoff.md`. |
-| `revisor-codigo` | Revisa e corrige o diff, **dono da branch**, propõe os commits → `review/review.md`. |
-| `analista-qa` | Roda/cria testes, critérios de aceite e validação e2e → `test/`. |
+| `revisor-codigo` | Revisa e corrige o diff por **leitura** + gates estáticos, **dono da branch**, propõe os commits → `review/review.md`. Não executa o produto. |
+| `analista-qa` | Roda/cria testes, critérios de aceite e e2e → `test/`. **Único agent que executa o produto** (app, `agent-browser`, screenshot, suíte). |
 | `observador-tarefa` | Observação final em linguagem de negócio → `observacao.md`. |
 | `mediador-pr` | Triagem de comentários de PR → `pr-review/pr-<n>.md`. |
 | `code-reviewer` | Revisão **read-only** avulsa ("revise o diff"), sem tocar em arquivos nem em branch. |
@@ -81,9 +81,9 @@ Instaladas via `npx skills add ...` e **movidas para `.claude/skills/`** para o 
 auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude Code):
 
 - **`agent-browser`** — automação de browser (CDP) para navegar, preencher, clicar, **tirar screenshots** e
-  testar o app. Base da validação visual descrita abaixo. É um stub de descoberta: carregue o uso real com
-  `agent-browser skills get core` (e `... get dogfood` para QA exploratório). Requer instalação global:
-  `npm i -g agent-browser && agent-browser install`.
+  testar o app. Base do e2e descrito abaixo, e **exclusiva do `analista-qa`**. É um stub de descoberta:
+  carregue o uso real com `agent-browser skills get core` (e `... get dogfood` para QA exploratório).
+  Requer instalação global: `npm i -g agent-browser && agent-browser install`.
 - **`vercel-react-best-practices`** — 70 regras de performance React/Next da Vercel (waterfalls, bundle,
   RSC, re-render). Auto-aciona ao escrever, revisar ou refatorar componentes/data fetching.
 - **`frontend-design`** — direção de design visual (paleta, tipografia, layout) para UI distintiva,
@@ -110,33 +110,54 @@ auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude
 > resultante de `.agents/skills/<nome>` para `.claude/skills/<nome>`** (é lá que o Claude Code descobre
 > skills do projeto).
 
-## Validação visual com `agent-browser` (obrigatória)
+## Quem executa o produto (uma etapa, não quatro)
 
-**Política** (regra de ouro 11): todo fluxo que toca front-end (`apps/app`, `apps/web`,
-`packages/design-system`) **e** toda entrega de código passam por validação visual. Front-end não é
-"pronto" só porque compila e o lint passa.
+**Política** (regra de ouro 11): fluxo que toca front-end (`apps/app`, `apps/web`,
+`packages/design-system`) não está pronto sem ser percorrido com `agent-browser` — e isso acontece **uma
+vez**, no `/test`, pelo `analista-qa`.
 
-Como validar:
+| etapa | executa | evidência que persiste |
+|-------|---------|------------------------|
+| `/develop` | smoke local, só para se desbloquear | nenhuma |
+| `/review` | `pnpm check` · `typecheck` · paridade de i18n | nenhuma |
+| `/test` | suíte Vitest **e** e2e com `agent-browser` | o **texto** do `test/report.md` |
+
+Até 2026-09-18 os quatro agents validavam visualmente. A medição sobre as 17 features entregues derrubou
+a prática: a validação visual do `/review` rendeu **4** achados no total e **zero em 13 delas**, enquanto
+custava uma terceira passada pelo mesmo fluxo, uma conta de QA a mais por rodada e screenshots que o
+`.gitignore` descarta. Os achados graves da revisão vieram de **remedir afirmação do handoff** — com
+`curl`, cronômetro, `elementFromPoint`, leitura do documento no Firestore —, não de olhar imagem.
+
+**A desconfiança entre etapas não sumiu, mudou de dono.** Em 15 das 17 features o `develop/handoff.md`
+afirmou algo que a etapa seguinte derrubou, e **7 dessas eram afirmações de validação visual**: o
+`/develop` tirou print, olhou e concluiu errado. Então:
+
+- o **`/develop`** declara o **instrumento** de cada afirmação (comando, consulta, contagem). Sem
+  instrumento, escreve "a verificar no `/test`";
+- o **`/review`** derruba por leitura o que conseguir e converte o resto na lista **"Verificar no
+  `/test`"**, com repro sugerido;
+- o **`/test`** começa por essa lista. Afirmação herdada é **hipótese**: ou o QA mede, ou o critério fica
+  🔒 não verificado — nunca ✅.
+
+Operacional do e2e, no `/test`:
 
 1. **Cheque a porta antes de subir** (`lsof -ti tcp:3000`): ocupada significa que o ambiente é seu — o
    agent reutiliza e **não derruba**. Livre, ele sobe guardando o PID: `pnpm --filter app dev` (3000) /
    `pnpm --filter web dev` (3001) — e `pnpm --filter api dev` (3002) quando o fluxo carrega dados.
 2. Carregue o workflow da skill: `agent-browser skills get core` (e `... get dogfood` para QA
    exploratório/bug hunt).
-3. Abra o app e **percorra os fluxos tocados** pela mudança: navegue, preencha formulários, dispare as
-   ações, **observe o resultado**.
-4. **Tire screenshots** e confira: layout, estados de erro/vazio, **responsividade** (mobile + desktop) e
-   **tema** (light/dark/system). O `Table` é antd — confirme que respeita o tema.
-5. ⚠️ **Rode os comandos do `agent-browser` estritamente em sequência.** Chamadas concorrentes travam o
+3. **Uma passada, bem feita**: os fluxos do diff, os 3 idiomas, light/dark/mobile e os cenários dos
+   critérios de aceite na mesma execução. Diff sem superfície de runtime (só API, só config, só teste)
+   **não sobe nada**.
+4. ⚠️ **Rode os comandos do `agent-browser` estritamente em sequência.** Chamadas concorrentes travam o
    daemon e os screenshots passam a sair da aba errada, silenciosamente.
-6. **Devolva as portas**: mate os PIDs que o agent abriu, inclusive quando a validação falha ou é
+5. **Devolva as portas**: mate os PIDs que o agent abriu, inclusive quando a validação falha ou é
    abortada. ⛔ Nada de `pkill -f node` ou `killall node`, que derrubariam seu editor e os outros
    workspaces. Detalhe na §7 de [`review-checklist.md`](review-checklist.md).
-7. Registre o que foi validado (telas/fluxos + screenshots) e qualquer regressão. Se o `agent-browser` não
-   estiver instalado, **sinalize** que a validação não foi feita — não conte como aprovado.
-
-Os agents `desenvolvedor`, `revisor-codigo`, `analista-qa` e `code-reviewer` já executam esse passo quando
-o diff é de front-end.
+6. **Screenshot é instrumento, não entregável.** O `.gitignore` descarta
+   `docs/features/**/screenshots/` e `**/test/e2e/` desde 2026-09-09 — o print serve para o agent olhar
+   agora. O que prova comportamento é o **texto** do `report.md`: o valor medido, o rótulo exato, o
+   status, o contraste. Hoje 8 dos 17 `review.md` apontam para prints que já não existem.
 
 ## Skills globais úteis
 
@@ -197,7 +218,8 @@ Informal, para mudanças pequenas:
 3. Ao concluir: `pnpm turbo run lint typecheck test` — é o mesmo comando que o CI roda em toda PR
    ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), cobre lint, tipos, testes e a paridade de
    i18n de uma vez, e é cacheado. (⚠️ `turbo build` depende de `test`, e o `build` **não** está no CI.)
-4. **Se tocou front-end**: valide visualmente com `agent-browser` (fluxos, screenshots, responsivo + tema).
+4. **Se tocou front-end**: percorra o fluxo com `agent-browser` (light/dark/mobile, 3 idiomas). No
+   pipeline formal isso é do `/test`; numa mudança informal, quem fizer a mudança faz a passada.
 5. Passe o agente `code-reviewer` (ou `/code-review`) no diff. Para mudanças sensíveis (auth, pagamentos,
    dados), rode `/security-review`.
 
@@ -233,9 +255,10 @@ aquilo, e como verificar. O relatório da conversa some quando você fecha a jan
 Três comportamentos do `/cycle` parecem paranoia e são cicatriz de rodada real:
 
 - **Cada etapa reverifica a afirmação de maior risco da anterior.** Um handoff já deu como validado um
-  fallback de imagem que na verdade **derrubava a página inteira** — apareceu porque o revisor não aceitou o
-  screenshot de terceiro. Se a etapa anterior diz "X funciona" e X é o coração da feature, a seguinte abre o
-  browser e olha.
+  fallback de imagem que na verdade **derrubava a página inteira** — apareceu porque o revisor não aceitou
+  o screenshot de terceiro. Vale para 15 das 17 features entregues, e o instrumento é definido por etapa:
+  o `/review` derruba o que conseguir **lendo código** e passa o resto para a lista "Verificar no
+  `/test`"; o `/test` mede. Quem abre o browser é o QA.
 - **Defeito de produção achado no `/test` volta ao `/review`**, não vira nota de rodapé — e a correção que o
   QA sugere é tratada como **hipótese**: o revisor implementa, **mede**, e reverte se não funcionar. Numa
   rodada a correção sugerida não resolvia e a alternativa óbvia era uma regressão de segurança disfarçada.

@@ -24,7 +24,7 @@ reexecutados à mão numa revisão**, e um "está verde" só vale como resposta 
 
 A consequência prática é onde a revisão humana precisa se concentrar — e é o resto deste arquivo:
 convenção de camada, autorização, ownership, escolha de `queryKey`, string de UI que existe nos 3 idiomas
-mas está **errada**, e validação visual. Nada disso um linter enxerga.
+mas está **errada**, e afirmação de comportamento que ninguém mediu. Nada disso um linter enxerga.
 
 ⚠️ **O `build` não está no CI**: `apps/api` exige as `FIREBASE_ADMIN_*` para buildar. Mudança que pode
 quebrar o build (import em escopo de módulo que lê env, `next.config`, dependência nova) continua sendo
@@ -171,26 +171,49 @@ responsabilidade da revisão e do deploy da Vercel.
 - [ ] ⚠️ `turbo build` depende de `test` — teste quebrado bloqueia build. E o CI roda `test` em toda PR,
       então teste quebrado também bloqueia o merge.
 
-## 7. Validação visual (bloqueante em front-end)
+## 7. Execução — quem roda o quê
 
-Diff que toca `apps/app`, `apps/web` ou `packages/design-system` **não está revisado** sem isto
-(regra de ouro 11):
+**A revisão não executa o produto.** Ela lê código, confere invariantes e roda os gates estáticos. Rodar
+teste — de unidade ou de ponta a ponta — é do `analista-qa` (`/test`), único dono do `agent-browser` e de
+screenshot.
 
-- [ ] App no ar (`pnpm --filter app dev` / `--filter web dev`) e fluxos do diff percorridos de fato com a
-      skill `agent-browser` — navegar, preencher, submeter, **observar o resultado**. "Compilou e serviu"
-      não é validação.
-- [ ] Conferido em **light + dark + mobile** (o `Table` é antd: confirme que respeita o tema).
-- [ ] Screenshots do estado normal, vazio, erro e submit em andamento.
-- [ ] Comandos do `agent-browser` rodados **em sequência** — chamadas concorrentes travam o daemon e os
-      screenshots saem da aba errada.
-- [ ] Se o `agent-browser` não estiver disponível, **sinalize explicitamente** que a validação visual não
-      foi feita — não trate como aprovada.
+| etapa | executa | evidência que persiste |
+|-------|---------|------------------------|
+| `/develop` | smoke local, só para se desbloquear | nenhuma |
+| `/review` | `pnpm check` · `typecheck` · paridade de i18n | nenhuma |
+| `/test` | suíte Vitest **e** fluxo ponta a ponta com `agent-browser` | o **texto** do `test/report.md` |
+
+O screenshot não é evidência que sobrevive: o `.gitignore` descarta `docs/features/**/screenshots/` e
+`docs/features/**/test/e2e/` desde 2026-09-09. Ele serve para o agent olhar durante a execução. O que
+prova comportamento depois é a descrição escrita — o valor medido, o rótulo exato, o status, o contraste.
+Hoje **8 dos 17** `review.md` apontam para prints que já não existem em disco.
+
+Por que assim, medido sobre as 17 features entregues: a validação visual do `/review` rendeu **4** achados,
+e em **13 delas rendeu zero** — enquanto custava uma terceira passada pelo mesmo fluxo, uma conta de QA a
+mais por rodada e screenshots que o `.gitignore` descarta de qualquer jeito. Os achados graves do `/review`
+vieram de **remedir afirmação do handoff** com `curl`, cronômetro ou leitura do documento, não de olhar
+imagem. Essa desconfiança continua obrigatória — só mudou de dono. Ver §7.1.
+
+### 7.1 Afirmação da etapa anterior não se verifica sozinha
+
+Em **15 das 17** features entregues o `develop/handoff.md` afirmou algo que a etapa seguinte derrubou, e
+**7 dessas eram afirmações de validação visual** — o `/develop` tirou print, olhou e concluiu errado.
+
+- [ ] **`/develop`**: não declare "validado" o que você não mediu. Afirmação de comportamento vai ao
+      handoff com **o instrumento que a produziu** (comando, consulta, contagem). Sem instrumento, escreva
+      "a verificar no `/test`".
+- [ ] **`/review`**: toda afirmação de comportamento do handoff que você **não consegue confirmar lendo o
+      código** vira item da lista **"Verificar no `/test`"**, com o repro sugerido. Você não executa —
+      nomeia o que precisa ser executado.
+- [ ] **`/test`**: começa por essa lista. Afirmação herdada é **hipótese**, não critério aprovado: ou o QA
+      mede, ou o critério fica 🔒 não verificado.
 
 ### Portas: derrube só o que você subiu
 
-Agents e usuário disputam as mesmas portas — **3000** `app` · **3001** `web` · **3002** `api` ·
-**3003** `email` · **9099** Auth emulator · **8080** Firestore emulator · **4001** UI do emulador. Processo
-pendurado no fim da validação quebra o próximo `pnpm dev` do usuário, e o processo é do agent.
+Vale para quem sobe processo — na prática, o `analista-qa`. Agents e usuário disputam as mesmas portas —
+**3000** `app` · **3001** `web` · **3002** `api` · **3003** `email` · **9099** Auth emulator · **8080**
+Firestore emulator · **4001** UI do emulador. Processo pendurado no fim da validação quebra o próximo
+`pnpm dev` do usuário, e o processo é do agent.
 
 - [ ] **Checou a porta antes de subir**: `lsof -ti tcp:3000` (vazio = livre).
 - [ ] **Porta ocupada → reutilizou e não derrubou.** O ambiente é do usuário; derrubá-lo no meio do
@@ -220,8 +243,8 @@ pendurado no fim da validação quebra o próximo `pnpm dev` do usuário, e o pr
 ### ✅ OK
 - <o que está conforme as convenções>
 
-### 👁 Validação visual
-- <fluxos percorridos + screenshots, ou o motivo de não ter sido possível>
+### 👁 Verificar no `/test`
+- <afirmação do handoff que não dá para confirmar lendo o código> — repro sugerido: <como medir>
 ```
 
 Se nada for bloqueante, diga claramente. **Não invente problemas**: só reporte o que conseguir confirmar

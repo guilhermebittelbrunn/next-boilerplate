@@ -30,6 +30,17 @@ class UserRepository extends BaseRepository<UserDTO> {
         };
     }
 
+    /**
+     * Kept out of `BaseRepository.update` on purpose: that one stamps `updatedAt` alongside
+     * whatever it writes, and an access is not an edit of the profile.
+     */
+    async touchLastAccess(id: string, at: Date): Promise<void> {
+        await this.db
+            .collection(this.table)
+            .doc(id)
+            .update({ lastAccessAt: at });
+    }
+
     async list(options?: { type?: UserType }): Promise<UserDTO[]> {
         const users = await this.findAll();
         const scoped = options?.type

@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
 feature: -
-updated: 2026-09-16
+updated: 2026-09-17
 ---
 
 # Onboarding pós-cadastro
@@ -48,9 +48,16 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   `/{locale}/admin` (`:92-93`); `resolveDefaultPostLoginForApp` (`:104`); e `resolveAppPostLoginPath`
   (`:112`), que honra `?redirect=` em `:124-126`.
   **O gancho natural para desviar um usuário incompleto mudou de endereço — é `destinationForAccount:80`.**
-  E há um **quarto** caminho, `packages/auth/provider.tsx:80-94`, que todo fork herda do pacote: um plano
-  de onboarding precisa decidir explicitamente se intercepta nos dois ou se promove a decisão a um lugar
-  só. Essa fragmentação é custo novo que a spec não orçava.
+  E há um **quarto** caminho, `packages/auth/provider.tsx:128-144` (`redirectPath` +
+  `resolvePostLoginPath`), que todo fork herda do pacote: um plano de onboarding precisa decidir
+  explicitamente se intercepta nos dois ou se promove a decisão a um lugar só. Essa fragmentação é custo
+  novo que a spec não orçava. *(A âncora era `:80-94` até a PR #20 inserir a renovação de sessão acima
+  dela.)*
+  ⚠️ **E apareceu um quinto caminho em 2026-09-17.** A entrega de `session-refresh` acrescentou
+  `handleSessionExpired` (`provider.tsx:235`), que manda para `/{locale}/sign-in` com um `?redirect=`
+  próprio, montado por `expiredSessionOrigin` (`:72`). É mais um lugar decidindo destino de navegação
+  autenticada, e o primeiro que decide isso **saindo** do produto em vez de entrando. A fragmentação que
+  esta spec vinha orçando em quatro caminhos agora são cinco.
 - `packages/auth/redirect.ts:10` — `postAuthRedirectTarget` já sanitiza o deep link (guard de
   open-redirect, coberto por `apps/app/__tests__/postAuthRedirectTarget.test.ts`). Um fluxo retomável
   precisa exatamente disso para voltar ao destino original ao terminar.
@@ -96,7 +103,7 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 > Prevalência baixa (3/10) é o argumento **a favor**, não contra: a nota é explícita em que a raridade é
 > lacuna de mercado, não sinal de irrelevância. Mesmo assim o valor aqui não se sustenta em benchmark —
 > sustenta-se em dois fatos deste repo: o perfil criado em `user-merge.ts:47` não tem dado nenhum de
-> produto, e a tela de destino está vazia (ver [`dashboard-home`](dashboard-home.md)).
+> produto, e a tela de destino está vazia (ver [`dashboard-home`](../docs/features/dashboard-home/spec.md)).
 
 ## Proposta — corte de MVP
 

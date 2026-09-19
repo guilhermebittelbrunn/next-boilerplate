@@ -32,9 +32,9 @@ abaixo de forma resumida. O fluxo completo está em
 |---------|---------|----------|-----------|
 | `/spec` | [`spec.md`](spec.md) | `estrategista-produto` | Descobre e especifica o que vale construir → `specs/<id>.md` + `BACKLOG.md`. `--sync` reconcilia o backlog **com o código** e arquiva as specs entregues; `--next` recomenda a próxima. |
 | `/analyze` | [`analyze.md`](analyze.md) | `planejador-tarefa` | Transforma uma spec em **plano técnico** → `docs/features/<slug>/analyze/plan.md` + `STATE.md`. |
-| `/develop` | [`develop.md`](develop.md) | `desenvolvedor` | **Implementa** o slice vertical (SDK → API → app/web → i18n) → `develop/handoff.md`. |
-| `/review` | [`review.md`](review.md) | `revisor-codigo` | Revisa o diff, **corrige**, resolve a branch, propõe os commits → `review/review.md`. |
-| `/test` | [`test.md`](test.md) | `analista-qa` | Critérios de aceite (§9.1) + testes Vitest + validação e2e no browser → `test/`. |
+| `/develop` | [`develop.md`](develop.md) | `desenvolvedor` | **Implementa** o slice vertical (SDK → API → app/web → i18n) → `develop/handoff.md`. Smoke local, sem evidência persistida. |
+| `/review` | [`review.md`](review.md) | `revisor-codigo` | Lê o diff, **corrige**, roda os gates estáticos, resolve a branch, propõe os commits → `review/review.md`. Não executa o produto. |
+| `/test` | [`test.md`](test.md) | `analista-qa` | Critérios de aceite (§9.1) + testes Vitest + e2e no browser → `test/`. **Única etapa que executa o produto.** |
 | `/observe` | [`observe.md`](observe.md) | `observador-tarefa` | *(opcional)* Resumo de 2–3 parágrafos em linguagem de negócio → `observacao.md`. |
 | `/mediate` | [`mediate.md`](mediate.md) | `mediador-pr` | *(avulso)* Triagem dos comentários de uma PR → markdown de replies. Independente do pipeline. |
 | `/cycle` | [`cycle.md`](cycle.md) | todos | Roda o ciclo inteiro **sem parar para perguntar**. Para quando você não vai acompanhar. |
@@ -54,6 +54,22 @@ Três permissões que separam os papéis, e que **nenhum** comando pode contorna
 "rodar o `/cycle`" não é essa aprovação. ⛔ Nunca em `main`/`master`/`production`/`production-backup`; o
 hook `block-protected-branch-write.sh` é a rede, não a verificação. O `/review` também **valida o nome da
 branch** contra o padrão do repo antes dos commits: nome fora do formato barra o plano de commits.
+
+## Quem executa o produto
+
+Uma etapa só. Subir app, dirigir o `agent-browser`, tirar screenshot e rodar a suíte são do `/test`
+(§7 de [`../../docs/review-checklist.md`](../../docs/review-checklist.md)):
+
+| etapa | executa | evidência que persiste |
+|---|---|---|
+| `/develop` | smoke local, só para se desbloquear | nenhuma |
+| `/review` | `pnpm check` · `typecheck` · paridade de i18n | nenhuma |
+| `/test` | suíte Vitest **e** fluxo ponta a ponta com `agent-browser` | o **texto** do `test/report.md` |
+
+A desconfiança entre etapas não sumiu, mudou de dono: o `/develop` escreve cada afirmação com o
+instrumento que a produziu (ou "a verificar no `/test`"), o `/review` transforma em lista
+**"Verificar no `/test`"** o que não confirma lendo código, e o `/test` trata afirmação herdada como
+hipótese — ou mede, ou o critério fica 🔒 não verificado.
 
 ## Como eles escrevem
 

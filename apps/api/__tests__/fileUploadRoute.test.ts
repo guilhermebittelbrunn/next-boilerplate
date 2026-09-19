@@ -34,6 +34,7 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     userRepository: {
         findByReferenceId: (...args: unknown[]) =>
             findByReferenceIdMock(...args),
+        touchLastAccess: vi.fn(),
     },
 }));
 
