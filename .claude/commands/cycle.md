@@ -138,20 +138,28 @@ Além das obrigações normais do `/develop`, o prompt carrega três coisas:
 - **Implementar e validar o caminho degradado** quando houver pré-requisito de infra pendente. É o que a
   maioria dos forks vai ver no primeiro `pnpm dev`, e costuma ser um item do corte. Não travar a entrega
   esperando credencial, **não inventar credencial**.
-- **Validação visual obrigatória** se tocar front-end (regra de ouro 11): light + dark + mobile, nos 3
-  idiomas, com screenshots. ⚠️ `agent-browser` **estritamente em sequência**.
+- **Smoke local, não validação.** Ele abre o que escreveu só para saber se dá para seguir, e não persiste
+  screenshot. Quem executa o produto e guarda evidência é o `analista-qa`, no Passo 5. Em compensação,
+  **toda afirmação do handoff vem com o instrumento que a produziu** (comando, consulta, contagem); sem
+  instrumento, ela é escrita como **"a verificar no `/test`"**. Numa rodada autônoma ninguém está lendo o
+  handoff no meio do caminho — "validado" sem medição vira fato falso que atravessa até o relatório final.
 
 ## Passo 4 — `/review`
 
 Acione o **`revisor-codigo`**. Ele aplica o [`review-checklist.md`](../../docs/review-checklist.md),
 **corrige** o que encontra, decide a branch e devolve o plano de commits.
 
+Ele roda **só os gates estáticos** — `pnpm check`, `typecheck`, paridade de i18n, **sem `--force`** (o
+cache do turbo vale: ~300 ms contra ~50 s, mesmo número). Não sobe app, não dirige `agent-browser`, não
+tira screenshot.
+
 Duas instruções que só existem no modo loop:
 
-- **Não confie no "validado" do `/develop`.** Reverifique você mesmo a afirmação de **maior risco** do
-  handoff. Numa rodada, o handoff dava como validado um fallback de imagem que na verdade **derrubava a
-  página inteira** — só apareceu porque o revisor não aceitou o screenshot de terceiro. Se o handoff diz
-  "X funciona" e X é o coração da feature, **abra o browser e olhe**.
+- **Não confie no "validado" do `/develop`.** Toda afirmação de comportamento do handoff que ele não
+  conseguir confirmar **lendo o código** vira item da lista **"Verificar no `/test`"**, com o repro
+  sugerido, e o Passo 5 começa por ela. Numa rodada, o handoff dava como validado um fallback de imagem
+  que na verdade **derrubava a página inteira** — o que pegou não foi o print, foi ninguém ter aceitado a
+  afirmação de terceiro. A desconfiança continua; só quem mede mudou.
 - **Separe os assuntos no plano de commits.** O working tree quase sempre carrega mais de um: o código da
   feature, a auditoria do backlog (`docs(specs)`), correções de documentação (`docs`), e os artefatos da
   feature (`docs(features)`, sempre o **último**). Um commit por app/pacote, na ordem de dependência.
@@ -161,11 +169,22 @@ Duas instruções que só existem no modo loop:
 Acione o **`analista-qa`**: critérios de aceite no formato §9.1, testes dos workspaces afetados +
 `pnpm test` da raiz, criação dos testes que faltam, e validação executável dirigindo o app.
 
-Duas instruções que a rodada autônoma tende a atropelar, e que custam caro depois:
+**É a única etapa da rodada que executa o produto**, e a única que guarda evidência: `test/e2e/` +
+`test/report.md`. Instruções que a rodada autônoma tende a atropelar, e que custam caro depois:
 
+- **Comece pela lista "Verificar no `/test`"** que o Passo 4 deixou. Afirmação herdada é hipótese: ou ele
+  mede, ou o critério fica 🔒. Lacuna de teste herdada do `review.md` sai com veredito — fechada, aberta
+  ou fora de escopo —, nunca copiada adiante.
+- **Uma passada de browser, bem feita.** É a única da rodada, então ela cobre o fluxo inteiro, os estados
+  de erro e vazio, light + dark + mobile, nos 3 idiomas. ⚠️ `agent-browser` **estritamente em sequência**
+  (chamadas concorrentes travam o daemon e o screenshot sai da aba errada). Diff sem superfície de runtime
+  — só teste, documentação, `specs/`, tooling — não abre browser nenhum; registre o motivo no `report.md`.
 - **Teste no nível mais barato que prova o comportamento.** Rodada sem ninguém olhando é onde nasce o
   teste caro por precaução. Teste que exige processo externo de pé (emulador, app servindo) só quando a
-  **infra for o objeto do teste** — e com o motivo escrito no `report.md`.
+  **infra for o objeto do teste** — e com o motivo escrito no `report.md`. Gates **sem `--force`**.
+- **`test/criterios-aceite.md` e `test/report.md` são obrigatórios**, gravados direto com `Write`. A
+  diretriz genérica de "não criar arquivo de relatório" não se aplica a eles — ela já deixou 5 features
+  sem registro nenhum, e numa rodada autônoma esse arquivo é a única coisa que o usuário tem para ler.
 - **Devolva as portas.** Ele checa a porta antes de subir; ocupada = reutiliza e não derruba, livre = sobe,
   guarda o PID e mata no fim, **inclusive quando o e2e falha**. Numa rodada autônoma ninguém está na frente
   da tela para perceber processo pendurado — o usuário só descobre no próximo `pnpm dev`. ⛔ Nunca

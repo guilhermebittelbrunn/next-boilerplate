@@ -254,15 +254,17 @@ Uma rota = um arquivo `app/(routes)/<recurso>/route.ts` (e `[id]/route.ts`). Han
 
 ---
 
-## 8. Validação visual (obrigatória em front-end)
+## 8. O que o `/test` vai ter de percorrer
 
-Regra de ouro 11 do repo: **front-end não está pronto sem validação visual.**
+Regra de ouro 11: front-end não está pronto sem ser percorrido com `agent-browser` — **uma vez**, no
+`/test`. Aqui o plano **encomenda** essa passada; quem executa é o `analista-qa`.
 
-- [ ] Fluxos a percorrer com a skill `agent-browser` (suba `pnpm --filter app dev` / `--filter web dev`).
-- [ ] Conferir em **light + dark + mobile** (o `Table` é antd: cheque que respeita o tema).
-- [ ] Screenshots de: estado normal, vazio, erro, formulário inválido, submit em andamento.
-- [ ] Rodar os comandos do `agent-browser` **em sequência** (chamadas concorrentes travam o daemon e os
-      screenshots saem da aba errada).
+- [ ] Fluxos a percorrer, nomeados (qual tela, qual ação, qual resultado esperado).
+- [ ] Estados que precisam existir para o fluxo ser observável: normal, vazio, erro, formulário inválido,
+      submit em andamento — e **como produzir cada um** (seed, dado de QA, requisição forçada).
+- [ ] Combinações que o diff torna arriscadas: **light + dark + mobile**, os 3 idiomas, comum × admin ×
+      admin personificando (o `Table` é antd: cheque que respeita o tema).
+- [ ] O que **não** dá para observar sem infra externa — já marcado, para virar 🔒 em vez de reprovar.
 
 ---
 
@@ -333,7 +335,8 @@ Compare o entregue com a análise e o blueprint. O checklist operacional de revi
 - [ ] Cada critério de aceite foi verificado — por unit, integração, e2e ou manual? Anexe evidência.
 - [ ] `pnpm check` e `pnpm --filter <app> typecheck` limpos no escopo.
 - [ ] Paridade de i18n nos 3 idiomas (`pnpm --filter @repo/internationalization test`).
-- [ ] Validação visual feita (screenshots), light/dark/mobile.
+- [ ] Fluxo percorrido pelo `/test` (light/dark/mobile, 3 idiomas), com o observado descrito **em texto**
+      no `report.md` — o screenshot é gitignored e não sobrevive.
 - [ ] Melhorias detectadas durante a revisão documentadas (mesmo que fiquem fora de escopo).
 
 ---

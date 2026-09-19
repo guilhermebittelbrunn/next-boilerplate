@@ -220,11 +220,13 @@ Regras do formato:
   resposta da API) ou a **API pública do `@repo/design-system`**, trate como `📦 Fora de escopo` por
   padrão — isso atinge todos os apps e precisa de checagem de compatibilidade, não de correção pontual numa
   thread.
-- Se aplicou correção em front-end e o comentário era sobre UI/layout, **valide visualmente** com a skill
-  `agent-browser` antes de marcar `✅ Corrigido` (comandos em sequência). Cheque a porta antes de subir
-  (`lsof -ti tcp:3000`): ocupada = ambiente do usuário, reutilize e **não derrube**; livre = você sobe,
-  guarda o PID e mata no final. ⛔ Nunca `pkill -f node`/`killall node`. Procedimento completo na §7 de
-  [`docs/review-checklist.md`](../../docs/review-checklist.md).
+- **Você não executa o produto** (§7 de [`docs/review-checklist.md`](../../docs/review-checklist.md)): não
+  sobe app, não dirige `agent-browser`, não tira screenshot. Correção que você consegue justificar **lendo
+  o código** vira `✅ Corrigido` normalmente.
+- Se aplicou correção em front-end e o comentário era sobre **UI/layout** — algo que só se confirma vendo a
+  tela —, marque `✅ Corrigido` e acrescente, no mesmo bloco, que a verificação visual está **pendente de
+  `/test`**. Você roda fora do pipeline e não tem etapa de QA depois; afirmar "validado" sem ter olhado é
+  exatamente o erro que derrubou 7 das 15 afirmações de handoff neste repo.
 
 ## Retorno (para o orquestrador, não para o usuário final)
 

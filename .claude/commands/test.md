@@ -1,5 +1,5 @@
 ---
-description: QA unificado — gera os critérios de aceite (formato §9.1) E roda os testes Vitest dos workspaces afetados (+ pnpm test do root, que gateia o build); sob demanda gera o roteiro manual e valida dirigindo o app com agent-browser. Foco opcional; por padrão usa as mudanças atuais + a feature mais recente.
+description: QA unificado e única etapa que executa o produto — gera os critérios de aceite (formato §9.1), roda os testes Vitest dos workspaces afetados (+ pnpm test do root, que gateia o build) e valida o fluxo ponta a ponta dirigindo o app com agent-browser, com screenshots em test/e2e/. Foco opcional; por padrão usa as mudanças atuais + a feature mais recente.
 argument-hint: "[opcional: slug/foco | 'manual' | --force]"
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill
 ---
@@ -10,6 +10,11 @@ Foco (opcional): **$ARGUMENTS**
 
 Você é o orquestrador (loop principal) do papel **Analista de QA**. Este comando **unifica** geração de
 critérios de aceite + execução de testes + validação executável.
+
+**É a única etapa do pipeline que executa o produto.** O `/develop` faz smoke e não guarda nada; o
+`/review` roda gates estáticos e lê código. Subir app, dirigir `agent-browser`, tirar screenshot e rodar a
+suíte são seus — e a evidência que sobrevive é o **texto** do `test/report.md`, não o print (§7 de
+[`docs/review-checklist.md`](../../docs/review-checklist.md)).
 
 ## Regras de escrita (`humanizer` + `caveman`)
 
@@ -47,6 +52,10 @@ arquivos alterados**, os **caminhos** do `develop/handoff.md`, do `review/review
 da pasta da feature, e o foco. Instrua-o a **ler ele mesmo o diff, o handoff e o review** — não cole esse
 conteúdo no prompt. Peça para, **na mesma execução**:
 
+- **Começar pela lista "Verificar no `/test`"** do `review/review.md`, mais o que o handoff marcou como
+  "a verificar". Afirmação herdada é **hipótese**, não critério aprovado: ou ele mede, ou o critério fica
+  **🔒 não verificado**. Cada item volta com veredito — confirmado, derrubado ou impossível de medir sem
+  infra externa. Em 15 das 17 features entregues o handoff afirmou algo que a etapa seguinte derrubou;
 - **Gerar os critérios de aceite** no formato **§9.1** de
   [`docs/feature-analysis-guide.md`](../../docs/feature-analysis-guide.md) e salvar em
   `docs/features/<slug>/test/criterios-aceite.md`;
@@ -55,7 +64,9 @@ conteúdo no prompt. Peça para, **na mesma execução**:
   `pnpm test` no root — `turbo build` **depende de `test`**, é isso que se está antecipando. Se o diff
   tocou i18n ou adicionou `error.code`, rode também
   `pnpm --filter @repo/internationalization test` (paridade dos 3 idiomas). Mais
-  `pnpm --filter <app> typecheck` nos apps afetados;
+  `pnpm --filter <app> typecheck` nos apps afetados. **Sem `--force`**: o cache do turbo vale aqui, o gate
+  com cache sai em ~300 ms contra ~50 s e o número é idêntico — reserve o `--force` para quando suspeitar
+  de cache sujo, e diga no relatório por que suspeitou;
 - **Criar os testes que faltam** (skill `/write-tests`), cobrindo caminho feliz e **cada** caminho de erro
   — validação, não encontrado, sem permissão e **ownership de outro usuário (404)** — sempre no **nível
   mais barato que prova o comportamento**. Schema, mapper, hook e rota com `vi.mock` do repositório e do
@@ -64,7 +75,14 @@ conteúdo no prompt. Peça para, **na mesma execução**:
   de índice, `firestore.rules`, serialização `Timestamp` contra o documento. Se a rota já tem teste e o
   contrato de infra não mudou, **rodar o que existe** vale mais que somar cenário. Cada decisão dessas vai
   registrada no `report.md`;
+- **Dar veredito às lacunas de teste herdadas** do `review/review.md`: cada uma sai como **fechada** (o
+  teste foi criado), **aberta** (fica como follow-up, com o motivo) ou **fora de escopo** (com a razão).
+  Copiar a lacuna adiante sem veredito é o que a faz atravessar o pipeline inteira sem dono;
 - **Validação executável** dirigindo o app com `agent-browser`, quando houver fluxo de usuário (Passo 4);
+- **Gravar os artefatos**: `test/criterios-aceite.md` e `test/report.md` são **entregáveis obrigatórios do
+  pipeline**, escritos direto com a ferramenta `Write`. A diretriz genérica de "não criar arquivo de
+  relatório" **não se aplica a eles** — ela já bloqueou a gravação em 5 features, que terminaram sem
+  registro nenhum;
 - Ao final, atualizar o `STATE.md` (`test = done`; `blocked` se algum teste falhar).
 
 > O `analista-qa` **não cria branch, não nomeia branch e não commita** — isso é do `revisor-codigo`
@@ -73,8 +91,12 @@ conteúdo no prompt. Peça para, **na mesma execução**:
 
 ## Passo 2 — Apresentar
 
-Mostre, juntos: o resultado dos testes (pass/fail + lacunas), o checklist de critérios de aceite **com o
-status por item** e o resultado do `pnpm test` do root.
+Mostre, juntos: o veredito de cada item da lista **"Verificar no `/test`"**, o resultado dos testes
+(pass/fail + lacunas, cada lacuna herdada com seu veredito), o checklist de critérios de aceite **com o
+status por item** (✅ aprovado · ❌ reprovado · 🔒 não verificado) e o resultado do `pnpm test` do root.
+
+Critério que ninguém conseguiu medir sem infra externa fica **🔒 não verificado** — nem aprovado, nem
+reprovado. Marcá-lo como aprovado é mentira; como reprovado, é alarme falso que some no ruído.
 
 ## Passo 3 — Critérios/teste manual (sob demanda)
 
@@ -85,8 +107,16 @@ gerar esse roteiro também.
 ## Passo 4 — Validação executável end-to-end (com confirmação)
 
 O objetivo é **acessar o app rodando e percorrer o fluxo como usuário**, não só buildar. Se fizer sentido,
-**pergunte antes** (`AskUserQuestion`) — especialmente se puder alterar estado real. Ao autorizar, instrua
-o `analista-qa` a:
+**pergunte antes** (`AskUserQuestion`) — especialmente se puder alterar estado real.
+
+**Uma passada, bem feita.** O pipeline inteiro tem direito a uma única sessão de browser, e ela é esta —
+o `/develop` e o `/review` não abrem outra. Então vale gastar tempo nela: o fluxo de ponta a ponta, os
+estados de erro e vazio, light + dark + mobile.
+
+**E nenhuma quando não há o que dirigir.** Diff que só toca teste, documentação, `specs/` ou tooling não
+tem superfície de runtime — subir o app ali é custo sem achado. Pule e registre o motivo no `report.md`.
+
+Ao autorizar, instrua o `analista-qa` a:
 
 - **checar a porta antes de subir qualquer coisa** (`lsof -ti tcp:3000`): ocupada = o ambiente é seu,
   ele **reutiliza e não derruba**; livre = ele sobe, guarda o PID e **mata no final** — inclusive quando o

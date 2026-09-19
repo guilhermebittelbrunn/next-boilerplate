@@ -67,7 +67,7 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 8. **Hooks de dados**: listas `useListX` + `fetchXList`; por id `useFindXById` + `findXById` no mesmo arquivo, com `enabled` coerente. Toggle de `enabled` só faz `setQueryData` (sem `invalidateQueries`).
 9. **Nomes de arquivo (apps/app)**: módulos de feature em camelCase (`userFormFields.tsx`); componente React exportado em PascalCase. Variáveis de dictionary com nome descritivo (nunca `t`/`d`).
 10. **Mudanças mínimas + Server Components por padrão.** `"use client"` só com estado/eventos/browser API. Não refatore arquivos fora da tarefa. Rode `pnpm check` antes de concluir.
-11. **Validação visual em front-end.** Todo fluxo que toca UI/layout (`apps/app`, `apps/web`, `packages/design-system`) **e** toda entrega de código devem ser validados visualmente com a skill **`agent-browser`** (suba o app, percorra o fluxo, tire screenshots, cheque responsivo + tema). Front-end não é "pronto" sem isso.
+11. **Quem executa o produto é o QA.** Fluxo que toca UI/layout (`apps/app`, `apps/web`, `packages/design-system`) não está pronto sem ser percorrido com a skill **`agent-browser`** (light + dark + mobile, 3 idiomas) — mas isso acontece **uma vez**, no `/test`, pelo `analista-qa`. O `/develop` faz smoke para se desbloquear; o `/review` lê código e roda os gates estáticos. Nenhum dos dois sobe app, dirige browser ou tira screenshot. O que a revisão não confirma lendo código vira a lista **"Verificar no `/test`"**, e afirmação herdada sem medição própria não conta como aprovada. Divisão e evidência na §7 de [`docs/review-checklist.md`](docs/review-checklist.md).
 
 **Referência viva**: o CRUD de exemplo `entity` cobre o slice inteiro de ponta a ponta — use como template:
 - API: `apps/api/app/(routes)/entities/`, `apps/api/(shared)/repositories/entity.repository.ts`, `.../mappers/entity.mapper.ts`, `.../validation/entity.schema.ts`
@@ -143,7 +143,7 @@ os artefatos do fluxo no código) e
 - **`/payments-flow`** — fluxo de assinatura Stripe (planos, checkout, portal, webhook). Ver [`docs/PAYMENTS.md`](docs/PAYMENTS.md).
 - **`/write-tests`** — testes Vitest (schema, mapper, rota, hook, componente) no setup do repo. Sempre no **nível mais barato que prova o comportamento**: teste que exige emulador ou app de pé só quando a infra for o objeto do teste.
 - **`caveman`** — modo comprimido para a **conversa** (retorno de subagent, mensagem de comando). Nunca em arquivo, código ou commit; o par dela é a `humanizer` (global), obrigatória antes de salvar prosa. Regra em [`.claude/rules/writing-skills.md`](.claude/rules/writing-skills.md).
-- **`agent-browser`** — automação de browser para **validar layouts e fluxos** (QA/dogfooding). **Obrigatório** em fluxos de front-end e antes de entregas (ver regra de ouro 11).
+- **`agent-browser`** — automação de browser para **validar layouts e fluxos** (QA/dogfooding). Dono exclusivo é o `analista-qa`, no `/test` (ver regra de ouro 11).
 - **`vercel-react-best-practices`** — guia de performance React/Next (auto-aciona ao escrever/refatorar componentes, data fetching, bundle).
 - **`frontend-design`** — direção de design visual ao criar/reformular UI (útil principalmente na `apps/web`).
 - **`web-design-guidelines`** — revisão de UI contra guidelines de interface/acessibilidade.
@@ -152,5 +152,5 @@ os artefatos do fluxo no código) e
 - **`ui-ux-pro-max`** — base de design UI/UX (estilos, paletas, tipografia, guidelines) ao criar/refatorar telas.
 - **`seo-audit`** — auditoria de SEO técnico/on-page (útil na `apps/web`).
 - **`ai-seo`** — otimização de conteúdo para AI search / citação por LLMs (AEO/GEO), na `apps/web`.
-- Agente **`code-reviewer`** — revisão **read-only** avulsa, afinada às convenções deste repo, **com validação visual via `agent-browser`** em diffs de front-end (peça "revise o diff"). Aplica o mesmo checklist do `revisor-codigo`, mas não edita arquivos nem toca na branch.
+- Agente **`code-reviewer`** — revisão **read-only** avulsa, afinada às convenções deste repo (peça "revise o diff"). Aplica o mesmo checklist do `revisor-codigo`, mas não edita arquivos, não toca na branch e não executa o produto.
 - Skills globais úteis: `/code-review`, `/security-review`, `/verify`.

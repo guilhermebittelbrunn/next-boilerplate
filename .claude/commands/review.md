@@ -1,5 +1,5 @@
 ---
-description: Revisa o diff atual contra o checklist de convenções do repo, valida visualmente o front-end, aplica correções, garante que nada seja commitado em main/production (branch de feature + PR) e prepara os commits — pedindo sua aprovação antes de commitar e, ao final, se deve dar push. Foco opcional; por padrão usa as mudanças atuais + o handoff da feature mais recente.
+description: Revisa o diff atual contra o checklist de convenções do repo, aplica correções, roda os gates estáticos, lista o que o /test precisa medir, garante que nada seja commitado em main/production (branch de feature + PR) e prepara os commits — pedindo sua aprovação antes de commitar e, ao final, se deve dar push. Foco opcional; por padrão usa as mudanças atuais + o handoff da feature mais recente.
 argument-hint: '[opcional: slug/foco | --force — padrão: mudanças atuais + feature mais recente]'
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill
 ---
@@ -73,13 +73,18 @@ profunda) — não cole esse conteúdo no prompt. Peça para:
 - aplicar o checklist de [`docs/review-checklist.md`](../../docs/review-checklist.md);
 - **resolver a branch** (ele é o dono: cria a branch de feature se a atual for protegida, ou reutiliza a
   branch da feature);
-- **validar visualmente com `agent-browser`** se o diff toca front-end (bloqueante);
 - aplicar correções dos problemas claros;
 - **apontar** lacunas de teste do escopo (sem rodar/criar testes — isso é do `/test`);
-- rodar `pnpm --filter <app> typecheck`, `pnpm check` e, se tocou i18n, a paridade
-  (`pnpm --filter @repo/internationalization test`);
+- rodar **só os gates estáticos**: `pnpm --filter <app> typecheck`, `pnpm check` e, se tocou i18n, a
+  paridade (`pnpm --filter @repo/internationalization test`). **Sem `--force`** — o cache do turbo vale
+  aqui, o gate com cache sai em ~300 ms contra ~50 s e o número é o mesmo;
+- **não executar o produto**: subir app, dirigir `agent-browser` e tirar screenshot é do `analista-qa`, no
+  `/test` (§7 de [`docs/review-checklist.md`](../../docs/review-checklist.md));
+- transformar em lista **"Verificar no `/test`"** toda afirmação de comportamento do handoff que ele
+  **não conseguir confirmar lendo o código**, cada item com o **repro sugerido**. Ele nomeia o que precisa
+  ser medido; quem mede é o QA;
 - escrever o resultado em `review/review.md`, deixar o `STATE.md` com `review = in-progress` e devolver
-  achados + **decisões em aberto** + **plano de commits proposto**.
+  achados + **decisões em aberto** + a lista **"Verificar no `/test`"** + **plano de commits proposto**.
 
 (O `review = done` é você, orquestrador, que marca no Passo 3, após os commits.)
 
@@ -88,9 +93,9 @@ profunda) — não cole esse conteúdo no prompt. Peça para:
 - Apresente os achados e, **explicitamente, as correções aplicadas pelo revisor** — arquivo + o que mudou.
   O usuário deve **conseguir revisar o que foi alterado antes de qualquer commit**; correções **nunca** são
   commitadas automaticamente.
-- Diga o que foi **validado visualmente** (fluxos, temas, viewports) ou por que não foi. Se o diff é de
-  front-end e a validação não aconteceu, trate como pendência aberta — não avance para o commit sem
-  avisar.
+- Entregue a lista **"Verificar no `/test`"** — cada afirmação de comportamento que a revisão não confirmou
+  lendo código, com o repro sugerido. É por ela que o `/test` começa, e sem ela o QA recomeça a
+  desconfiança do zero.
 - Se houver "decisões em aberto" (correções ambíguas que mudam comportamento), faça-as ao usuário com
   `AskUserQuestion` e aplique conforme a resposta.
 
@@ -138,13 +143,20 @@ Regras de commit (ver [`.claude/rules/git-commits.md`](../rules/git-commits.md))
 ordem, e **para cada um**: a **mensagem final** e os **arquivos exatos**. Use `AskUserQuestion` para o
 usuário aprovar o plano (agrupamento, arquivos e mensagens).
 
+**Índice limpo antes de começar:** `git add <arquivo> && git commit` commita **tudo** que estiver no
+índice, não só o que você acabou de stagear. Siga a seção "Executar o plano de commits — confira o índice"
+de [`.claude/rules/git-commits.md`](../rules/git-commits.md): `git diff --cached --stat` tem de sair
+**vazio** antes do primeiro commit, e `git show --stat` é conferido contra o plano depois de cada um.
+
 **Commit bloco a bloco, com preview (só após aprovação):** para **cada commit**, na ordem:
 
 1. `git add <arquivos-daquele-bloco>` — **stagea apenas os arquivos do bloco** e mostre a mensagem
    proposta, para o usuário **visualizar no git (staged changes) o que entra naquele commit antes de
    confirmar**. (Se ajudar, mostre `git diff --staged --stat` do bloco.)
 2. Confirme aquele bloco com o usuário; **só então** `git commit -m "type(project): ..."`.
-3. Siga para o próximo bloco. Se o usuário recusar/ajustar um bloco, **pare** e reorganize antes de
+3. Confira `git show --stat --oneline HEAD` contra a lista de arquivos daquele bloco. Divergiu, corrija
+   **antes** do próximo (`git reset <base>` preserva o working tree, enquanto nada foi pushado).
+4. Siga para o próximo bloco. Se o usuário recusar/ajustar um bloco, **pare** e reorganize antes de
    prosseguir.
 
 Garanta que o staging contenha **somente** os arquivos do bloco corrente (não arraste mudanças não
@@ -171,6 +183,8 @@ ficaram locais. Se o usuário não commitou nada, deixe `review = in-progress`.
 Os commits estão no histórico do git e o `review/review.md` + `STATE.md` registram a revisão. Pode
 `/compact` (ou `/clear`) antes do `/test` — o `analista-qa` lê o diff, o handoff e o review do disco/git,
 não da conversa. Em tarefas simples você pode **pular o `/test`** e seguir direto para `/observe`
-(opcional) — o `/observe` só exige que o `review` tenha rodado.
+(opcional) — o `/observe` só exige que o `review` tenha rodado. Mas o `/test` é a única etapa que executa
+o produto: pulá-lo com a lista "Verificar no `/test`" cheia deixa a feature entregue sem ninguém ter
+medido nada.
 
 Mantenha tudo em português.

@@ -113,5 +113,8 @@ exemplos de `entity`).
 - **Handoff** — o resumo conciso que uma etapa deixa para a próxima (`develop/handoff.md`,
   `review/review.md`), para que ela não precise reler o plano e o diff inteiros.
 - **Validação visual** — subir o app e percorrer o fluxo com a skill `agent-browser`, conferindo
-  light/dark/mobile. É **bloqueante** em front-end (regra de ouro 11).
+  light/dark/mobile e os 3 idiomas. É **bloqueante** em front-end (regra de ouro 11) e acontece **uma
+  vez**, no `/test`: o `analista-qa` é o único agent que executa o produto.
+- **Verificar no `/test`** — a lista que o `/review` deixa no `review.md` com as afirmações do handoff que
+  não dá para confirmar lendo código, cada uma com repro sugerido. É por onde o QA começa.
 - **Branch protegida** — `main`, `master`, `production`, `production-backup`. Nunca recebem commit direto.

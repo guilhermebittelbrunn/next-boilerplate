@@ -1,5 +1,5 @@
 ---
-description: Implementa uma tarefa já planejada (lê o plano gerado pelo /analyze em analyze/plan.md) seguindo os padrões do repo — SDK → API → app/web → i18n, com validação visual obrigatória em front-end. Não cria branch nem commita — isso é do /review.
+description: Implementa uma tarefa já planejada (lê o plano gerado pelo /analyze em analyze/plan.md) seguindo os padrões do repo — SDK → API → app/web → i18n, com smoke local só para se desbloquear. Não cria branch nem commita (isso é do /review); quem executa o produto e guarda evidência é o /test.
 argument-hint: '[slug/caminho da feature | vazio = feature mais recente | --force]'
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill
 ---
@@ -16,9 +16,8 @@ Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as ski
 `allowed-tools`.
 
 - **`caveman` no que chega até o usuário**: o que foi implementado, resultado de typecheck/lint/testes,
-  o que foi validado visualmente, decisões em aberto. Estilo restrito a este comando — **não** fixe o modo
-  na sessão. Saia do estilo nas decisões em aberto e em qualquer aviso de que a validação visual não
-  aconteceu.
+  o que ficou para o `/test` medir, decisões em aberto. Estilo restrito a este comando — **não** fixe o
+  modo na sessão. Saia do estilo nas decisões em aberto e na lista do que não foi medido.
 - **`humanizer` em qualquer prosa que você acrescente** ao `develop/handoff.md` ou ao `STATE.md` depois do
   subagent. ⛔ Nunca em código, comentário ou chave de i18n.
 - **Repita as duas regras no prompt do `desenvolvedor`.**
@@ -51,10 +50,16 @@ Invoque o subagent **`desenvolvedor`** (Agent tool, `subagent_type: "desenvolved
 - usar as skills do repo quando couber (`/new-crud`, `/new-api-route`, `/i18n-sync`, `/write-tests`);
 - rodar `pnpm --filter <app> typecheck`, `pnpm check` e, se tocou i18n ou adicionou `error.code`,
   `pnpm --filter @repo/internationalization test`;
-- **validar visualmente com `agent-browser`** se tocou `apps/app`, `apps/web` ou
-  `packages/design-system` — percorrer o fluxo, light + dark + mobile, screenshots (comandos **em
-  sequência**). **Checar a porta antes de subir** (`lsof -ti tcp:3000`): ocupada = ambiente seu, reutiliza
-  e não derruba; livre = sobe, guarda o PID e mata no final. ⛔ Nunca `pkill -f node`/`killall node`;
+- fazer no máximo um **smoke local** para se desbloquear: abrir o que acabou de escrever e saber se dá
+  para seguir. Smoke **não persiste evidência** — nada de screenshot em `docs/features/` (o `.gitignore`
+  descarta essas pastas de qualquer jeito). Quem executa o produto, dirige o `agent-browser` e guarda
+  evidência é o `analista-qa`, no `/test` (§7 de
+  [`docs/review-checklist.md`](../../docs/review-checklist.md)). Se precisar subir algo, **checar a porta
+  antes** (`lsof -ti tcp:3000`): ocupada = ambiente do usuário, reutiliza e não derruba; livre = sobe,
+  guarda o PID e mata no final. ⛔ Nunca `pkill -f node`/`killall node`;
+- escrever cada afirmação de comportamento do handoff **com o instrumento que a produziu** — o comando, a
+  consulta, a contagem. Sem instrumento, a afirmação vira **"a verificar no `/test`"**. O que o smoke
+  mostrou não é "validado";
 - criar teste sempre no **nível mais barato que prova o comportamento** — teste que exige emulador ou app
   servindo só quando a infra for o objeto do teste;
 - **sem criar branch e sem commitar**;
@@ -63,12 +68,12 @@ Invoque o subagent **`desenvolvedor`** (Agent tool, `subagent_type: "desenvolved
 
 ## Passo 2 — Apresentar e perguntar
 
-- Apresente o que foi implementado (mapeado ao plano), o resultado de typecheck/lint/testes e **o que foi
-  validado visualmente** (ou por que não foi).
+- Apresente o que foi implementado (mapeado ao plano) e o resultado de typecheck/lint/testes.
+- Liste à parte as afirmações que ficaram como **"a verificar no `/test`"** — o que o handoff não
+  conseguiu medir agora. Essa lista é o insumo do QA; apresentar suposição como fato é o que o `/review` e
+  o `/test` derrubaram em 15 das 17 features entregues.
 - Se houver "decisões em aberto" (ambiguidades surgidas na implementação), faça-as ao usuário com
   `AskUserQuestion` e ajuste conforme a resposta.
-- Se a validação visual **não** foi feita num diff de front-end, diga isso explicitamente — não apresente
-  como concluído. Pergunte se deve subir o app e validar agora.
 
 ## Passo 3 — Próximo passo
 
