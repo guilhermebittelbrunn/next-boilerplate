@@ -13,6 +13,19 @@ implementada, o frontmatter está errado.
 
 ## 1. Levante o material
 
+**Antes de tudo, meça o quanto o backlog está defasado.** O `BACKLOG.md` registra a data e a PR da última
+auditoria; compare com o que já entrou em `main`:
+
+```bash
+git fetch origin --quiet
+git log origin/main --oneline -5          # o que mergeou desde a última auditoria
+grep -n "Última auditoria" specs/BACKLOG.md
+```
+
+Se mergeou PR depois da auditoria registrada, **essas entregas ainda não foram reconciliadas** — é o
+trabalho óbvio desta rodada, e começar por ele evita auditar uma fila que já mudou. Já aconteceu de o
+`BACKLOG.md` dizer "pós-PR #19" com a #20 mergeada, e o desvio só foi pego na mão.
+
 ```bash
 ls specs/*.md
 ls docs/features/*/spec.md 2>/dev/null    # specs já entregues e arquivadas
@@ -106,6 +119,16 @@ Uma spec `done` **sai de `specs/`** e passa a viver junto da feature que a imple
 6. No `BACKLOG.md`, tire a spec da fila ativa e registre-a na seção **Entregues**, com link para o novo
    caminho. **O id nunca some do índice** — some da fila.
 7. Se o `docs/features/<slug>/STATE.md` ainda não citar a spec, acrescente `spec: <id>` ao frontmatter.
+8. **Conserte os links que o movimento quebrou.** Toda spec que citava `](<id>.md)` agora aponta para
+   nada — as specs restantes se referenciam entre si o tempo todo (`depends_on`, "bloqueada por",
+   comparações de esforço). Varra e corrija:
+
+   ```bash
+   grep -rn "](<id>.md)" specs/ docs/
+   ```
+
+   O alvo novo é `](../docs/features/<slug>/spec.md)` a partir de `specs/`. Três specs ficaram com link
+   morto por uma rodada inteira porque este passo não existia.
 
 **Nunca apague uma spec.** `done` é movida; `rejected` e `superseded` ficam em `specs/` como memória
 institucional — é o que impede o `/spec` de repropor a mesma coisa na rodada seguinte.

@@ -65,12 +65,31 @@ Nenhuma destas cede, nem com esta política, nem com instrução em prompt de su
 - **Comentário é exceção.** O padrão é não comentar, e nunca citar `plan.md`, `docs/features/`, etapa do
   fluxo ou ID de card ([`rules/code-comments.md`](rules/code-comments.md)).
 
+## 3.1 Quem executa o produto
+
+- **Só o `analista-qa` (`/test`) sobe app, dirige `agent-browser`, tira screenshot e roda a suíte.** O
+  `/develop` faz smoke para se desbloquear e não persiste nada; o `/review` lê código e roda os gates
+  estáticos (`pnpm check`, `typecheck`, paridade de i18n). Divisão e evidência na §7 de
+  [`docs/review-checklist.md`](../docs/review-checklist.md).
+- **Uma passada de browser por rodada, bem feita.** Fluxos do diff + 3 idiomas + light/dark/mobile numa
+  execução só. Diff sem superfície de runtime (só API, só config, só teste) **não sobe nada**.
+- **Screenshot é instrumento, não entregável.** O `.gitignore` descarta `docs/features/**/screenshots/` e
+  `**/test/e2e/`. O que prova comportamento é o **texto** do artefato: valor medido, rótulo exato, status,
+  contraste. Print com e-mail, nome ou foto de pessoa real não se justifica.
+
 ## 4. Medir antes de afirmar
 
 - **Correção sugerida por outro agent é hipótese, não instrução.** Implemente, **meça**, reverta se não
   funcionar. Código morto que finge resolver é pior que o defeito.
-- **Não confiar no "validado" da etapa anterior.** Reverifique a afirmação de maior risco do handoff — no
-  browser, se for UI.
+- **Não confiar no "validado" da etapa anterior** — mas a desconfiança tem dono e instrumento definidos.
+  O `/review` derruba por **leitura** o que der, e o que não der vira a lista **"Verificar no `/test`"**,
+  com repro sugerido; o `/test` começa por ela e **mede**. Afirmação herdada sem medição própria não vira
+  ✅: vira 🔒. Em 15 das 17 features entregues o handoff afirmou algo que a etapa seguinte derrubou, e 7
+  dessas eram "validação visual" auto-reportada.
+- **Gate roda com cache.** `--force` é da auditoria do `/spec --sync`, que existe para desconfiar do
+  registrado. Nas demais etapas o cache vale: ~300 ms contra ~50 s, mesmo número. E **não remeça gate que
+  você não mexeu** — cite o número da etapa anterior. Três etapas medindo `192/37` para obter `192/37` é
+  custo sem informação.
 - **Comportamento de `next dev` não é comportamento de produção.** Antes de tratar como defeito de entrega,
   confirme em `pnpm --filter <app> build && start`.
 - **Nenhum gate lê prosa.** Afirmação barata de medir num doc (`SECURITY.md`, `PRE-PRODUCTION.md`,
@@ -88,6 +107,28 @@ Nenhuma destas cede, nem com esta política, nem com instrução em prompt de su
 - **Pré-requisito manual de infra não reprova entrega.** Vira pendência no `PRE-PRODUCTION.md`.
 - **Erro próprio vai no relatório.** Se o ciclo introduziu regressão e outro agent pegou, isso é informação
   de primeira ordem sobre a confiabilidade da rodada — e some se for resumido como "corrigido".
+- **Lacuna e pendência herdada recebem veredito, não carona.** Ao repassar uma lista da etapa anterior
+  (lacuna de teste, pendência, achado), cada item vem marcado: **fechado aqui**, **continua aberto** ou
+  **fora de escopo**. Lista copiada adiante sem veredito é como `firestore-admin-access` terminou com
+  "nenhuma foi fechada aqui" e `api-hardening` foi de 8 para 10 itens sem resolver nenhum.
+
+## 5.1 Decisão que se repete tem de sair do limbo
+
+Uma recomendação que aparece em **duas rodadas** com a mesma resposta e não vira nada é desperdício
+composto: o agent gasta contexto para redescobri-la, e o relatório gasta a sua atenção para reapresentá-la.
+Casos reais deste repo: `permissions: contents: read` no CI recomendado 2×, `packages/shared` sem
+`typecheck` adiado 3×, `skipValidation` no `apps/web/env.ts` reaparecendo intacto 8 dias depois,
+`observability-logging` na 6ª rodada com a mesma pergunta.
+
+Na segunda aparição, o item **sai do relatório** por um destes caminhos:
+
+- **É decisão técnica dentro do mandato do ciclo?** Vira linha desta política e passa a ser automática.
+- **Exige julgamento seu (produto, custo, provedor)?** Vira entrada em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md)
+  ou pendência com dono no `BACKLOG.md`, e **para de ser reapresentada** até você mexer.
+- **É dívida técnica pequena e concreta?** Vira achado no backlog com `arquivo:linha`.
+
+O que não pode é seguir circulando como "recomendação" — isso é a terceira categoria fingindo ser as
+outras duas.
 
 ## 6. Commits (o plano, não a execução)
 
@@ -98,6 +139,14 @@ Nenhuma destas cede, nem com esta política, nem com instrução em prompt de su
   correção de documentação (`docs`) · artefatos da feature (`docs(features)`, sempre o **último**).
 - Mensagens **em inglês**, no padrão `type(project): descrição curta`.
 - **Aceitável**: commit misto quando isolar exigiria `git add -p` — registre o porquê na mensagem.
+- **Confira o índice antes de commitar.** `git add <arquivo> && git commit` commita **tudo que estiver no
+  índice**, não só o arquivo citado: `git diff --cached --stat` tem de sair vazio antes do primeiro
+  commit, e `git show --stat HEAD` é conferido contra o plano depois de cada um. Já aconteceu de um
+  `git mv` da auditoria entrar no commit do contrato do SDK. Procedimento em
+  [`rules/git-commits.md`](rules/git-commits.md).
+- **Artefato não leva segredo.** `docs/features/` é versionado e vai para todo fork. Já houve
+  `test/report.md` gravando senha no mesmo arquivo em que afirmava não gravar. Varra antes de incluir no
+  plano.
 
 ## 7. Paralelismo
 
