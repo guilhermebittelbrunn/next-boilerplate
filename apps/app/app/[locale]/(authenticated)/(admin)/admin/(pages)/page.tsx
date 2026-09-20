@@ -14,10 +14,16 @@ export default async function AdminHome() {
     if (!(await isImpersonating())) {
         const client = await getServerApiClient("admin");
         if (client) {
-            await queryClient.prefetchQuery({
-                queryKey: queryKeys.users.summary(),
-                queryFn: () => client.user.summary(),
-            });
+            await Promise.all([
+                queryClient.prefetchQuery({
+                    queryKey: queryKeys.users.summary(),
+                    queryFn: () => client.user.summary(),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: queryKeys.users.activitySummary(),
+                    queryFn: () => client.user.activitySummary(),
+                }),
+            ]);
         }
     }
 
