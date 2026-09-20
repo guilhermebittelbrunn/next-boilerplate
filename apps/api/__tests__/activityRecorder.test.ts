@@ -17,9 +17,12 @@ const {
     activityWindowStartMs,
     activityWindowKey,
     isStampedInWindow,
-    ACTIVITY_WINDOW_MINUTES,
     ACTIVITY_WINDOW_MS,
 } = await import("@/(shared)/lib/activity-recorder");
+
+const { ACTIVITY_WINDOW_MINUTES } = await import(
+    "@/(shared)/lib/activity-windows"
+);
 
 const NOW = "2026-09-17T14:03:00.000Z";
 const WINDOW_START = "2026-09-17T14:00:00.000Z";
