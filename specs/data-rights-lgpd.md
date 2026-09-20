@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-17
+updated: 2026-09-19
 ---
 
 # Direitos do titular: exportar dados e excluir conta
@@ -105,6 +105,18 @@ acumula, maior o estrago de uma exclusão feita errado.
       e metadados de conta — em formato legível por máquina, sem pedir nada a ninguém e sem custo.
 - [ ] O titular **solicita a exclusão da própria conta** com confirmação explícita: uma ação do produto,
       com estado visível e resultado observável, não um e-mail para alguém.
+
+> 🆕 **Obrigação transferida em 2026-09-19 — o carimbo de último acesso.** Os dois itens acima precisam
+> cobrir `lastAccessAt`, o campo que a PR #21 acrescentou ao perfil
+> (`packages/sdk/src/types/user/user.ts:27`). O corte de
+> [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) pedia que o campo entrasse no
+> export e na exclusão, e **não havia onde ligá-lo**: não existe rota de export,
+> `apps/api/app/(routes)/account/route.ts` não tem `DELETE` (só `GET:97` e `PUT:107`), e o `delete()`
+> herdado é soft delete (`apps/api/(shared)/repositories/base.repository.ts:205-207`), que preserva o
+> documento inteiro. Aquela spec entregou a declaração escrita (`docs/PRE-PRODUCTION.md:497-504`, que
+> enumera o que ainda **não** é verdade) e foi arquivada com o item parcial. **Fechá-lo é responsabilidade
+> desta spec** — e o custo é próximo de zero, porque o campo vive no mesmo documento de perfil que o export
+> e a exclusão já vão tratar. O que ele acrescenta é uma linha de teste, não um fluxo.
 - [ ] A exclusão é **coordenada, não parcial**: encerra o acesso, remove ou anonimiza os dados e **não
       deixa órfãos** — assinatura ativa e arquivos do fork são cancelados/limpos no mesmo fluxo, e o que a
       lei obriga a reter fica retido de forma justificada, não por esquecimento.

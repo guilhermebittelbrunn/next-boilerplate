@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-17
+updated: 2026-09-19
 ---
 
 # Organizações, membros e convites
@@ -22,13 +22,15 @@ updated: 2026-09-17
 >
 > 1. escrever, em `docs/ARCHITECTURE.md`, se este core é **B2B ou B2C por padrão** — hoje a resposta está
 >    implícita no código e ninguém a declarou;
-> 2. concentrar o predicado de posse num ponto único de escopo. **Recontado em 2026-09-17: são 13 sítios
+> 2. concentrar o predicado de posse num ponto único de escopo. **Recontado em 2026-09-19: são 14 sítios
 >    em 3 recursos** — e eram 4 em 1 recurso três rodadas atrás. Os dois últimos são da PR #19, que
 >    construiu o resumo da home copiando o predicado em vez de reusá-lo.
 >
->    > **Correção — a spec contradizia a própria tabela.** As rodadas anteriores escreveram "9", mas somar
->    > as linhas da tabela abaixo dá 3 + 2 + 3 + 2 + 1 = **11**, e os 11 foram reabertos um a um no código.
->    > O número errado enfraquecia justamente o argumento que a spec usa para pedir atenção.
+>    > **Correção, segunda vez — e as duas por omissão.** As rodadas até 2026-09-16 escreveram "9"; somar as
+>    > linhas da tabela abaixo dá 3 + 2 + 3 + 2 + 1 = **11**, mais os 2 que a PR #19 criou = 13. Só que a
+>    > conta de 13 pulava o `where("userId", "==", userId)` de `listByUserId`
+>    > (`entity.repository.ts:23`), que a spec descreve em prosa e nunca numerou. **São 14.** O número
+>    > errado enfraquecia justamente o argumento que a spec usa para pedir atenção.
 >
 >    | recurso | sítios | o que expressa |
 >    |---------|--------|----------------|
@@ -76,10 +78,11 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   O papel é **global**, não relativo a um grupo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
   (`:27`) trata `ADMIN` como papel de plataforma.
-- `apps/api/app/(guards)/` — dois arquivos: `admin.ts` (`requireAdminApi`, `:29`) e `common-panel.ts`
-  (`requireCommonPanelApi`, `:31`). Nenhum resolve "pertence a este grupo". ⚠️ **Âncoras atualizadas em
-  2026-09-17:** a PR #18 acrescentou `actorProfile` ao contexto do guard de admin e a gravação da trilha de
-  impersonação ao de painel comum, empurrando as duas assinaturas duas linhas para baixo.
+- `apps/api/app/(guards)/` — dois arquivos: `admin.ts` (`requireAdminApi`, `:30`) e `common-panel.ts`
+  (`requireCommonPanelApi`, `:32`). Nenhum resolve "pertence a este grupo". ⚠️ **Âncoras reconferidas em
+  2026-09-19.** A nota anterior dizia que a PR #18 tinha empurrado as assinaturas "duas linhas para baixo" e
+  errava o número; a PR #21 acrescentou a chamada de `recordUserActivity` aos dois guards (`admin.ts:73`,
+  `common-panel.ts:87`) e empurrou mais uma vez.
 - **A posse é por usuário, repetida em cada handler**:
   `apps/api/app/(routes)/entities/[id]/route.ts:24`, `:40` e `:102` — o mesmo
   `row.userId !== ctx.subjectProfile.id` → 404, três vezes, num único arquivo de um único recurso.
@@ -94,23 +97,27 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   `where("userId", "==", userId)` (`:23`). A listagem é escopada por usuário na origem. ⚠️ **Âncoras
   atualizadas em 2026-09-17:** a PR #17 trocou o corpo do método por uma chamada a `paginate`, e a PR #19
   acrescentou um import no topo do arquivo, empurrando tudo mais uma linha.
-- 🆕 `apps/api/(shared)/repositories/entity.repository.ts:33` — `summaryByUserId` repete o mesmo
+- `apps/api/(shared)/repositories/entity.repository.ts:33` — `summaryByUserId` repete o mesmo
   `where("userId", "==", userId)` num segundo método, agora dentro de um closure `scoped()` reaproveitado
-  por cinco agregações. É o **décimo segundo** sítio de posse, e nasceu literalmente copiado do décimo.
-- 🆕 `apps/api/app/(routes)/entities/summary/route.ts:9` — o handler passa `ctx.subjectProfile.id` como
-  chave de escopo para o repositório. **Décimo terceiro sítio**, criado pela PR #19.
+  por cinco agregações. É o **décimo terceiro** sítio de posse, e nasceu literalmente copiado do décimo.
+- `apps/api/app/(routes)/entities/summary/route.ts:9` — o handler passa `ctx.subjectProfile.id` como
+  chave de escopo para o repositório. **Décimo quarto sítio**, criado pela PR #19.
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
   `allow read, write: if false;` em `:33`); o comentário em `:39-43` já registra a sutileza de que
   `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
 - **Lacuna:** não existe grupo, não existe papel dentro de grupo, não existe convite. E o escopo por
-  usuário está espalhado por handler, repositório e regras — **13 sítios em 3 recursos** (recontados em
-  2026-09-17: os 11 da tabela acima mais os dois que a PR #19 criou no resumo da home), contra 4 em 1 três
-  rodadas atrás. A PR #11 passou a codificar a posse também no **prefixo do caminho no
-  bucket** (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath`/`isOwnedBy`, espelhado em
-  `storage.rules`), e a PR #12 replicou esse mesmo padrão num terceiro recurso (`account/route.ts:41,154`).
-  **O custo do retrofit mais que dobrou em um único ciclo**, e a curva é o argumento: cada recurso novo que
-  aceita upload acrescenta 2 sítios, em duas camadas diferentes (handler e regra de bucket), onde o
-  retrofit não é `find & replace`.
+  usuário está espalhado por handler e repositório — **14 sítios em 3 recursos**, recontados em 2026-09-19.
+  ⚠️ **O número era 13 e estava errado desde 2026-09-17**, por omissão: a contagem pulava o
+  `where("userId", "==", userId)` de `listByUserId` (`entity.repository.ts:23`), que a própria spec descreve
+  em prosa mas nunca numerou. São 4 três rodadas atrás e 14 hoje.
+  A PR #11 passou a codificar a posse também no **prefixo do caminho no bucket**
+  (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath:37`/`isOwnedBy:43`), e a PR #12 replicou esse padrão
+  num terceiro recurso (`account/route.ts:41,154`).
+  ⚠️ **Correção de fato, medida em 2026-09-19:** a versão anterior afirmava que esse prefixo está
+  "espelhado em `storage.rules`". Não está. O arquivo é negação total (`allow read, write: if false` em
+  `:28`) e não menciona `userId`, `uid` nem dono. A posse por prefixo existe só no código da API. Isso
+  **reduz** o custo de retrofit que a spec alegava: cada recurso novo que aceita upload acrescenta sítios
+  numa camada, não em duas — a segunda camada ainda não foi escrita.
 
 ## Evidência de mercado
 

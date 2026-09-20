@@ -1,7 +1,7 @@
 ---
 id: user-activity-tracking
 title: Último acesso do usuário
-status: proposed
+status: done
 value: médio
 effort: M
 audience: produto
@@ -9,9 +9,13 @@ area: [packages/sdk, apps/api, apps/app, packages/internationalization]
 mode: ambos
 depends_on: [session-refresh]
 contends_on: [packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts, "apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/users/(pages)/(home)/UsersListClient.tsx"]
-feature: -
-updated: 2026-09-17
+feature: user-activity-tracking
+updated: 2026-09-19
 ---
+
+> **Entregue na PR #21**, mergeada em `main` em 2026-09-19T16:53:15Z (merge commit `e656331`), CI
+> `success` nesse SHA. Cinco dos seis itens do corte foram confirmados no código na auditoria de
+> 2026-09-19; o sexto está parcial e o motivo está em [Estado da entrega](#estado-da-entrega).
 
 # Último acesso do usuário
 
@@ -58,18 +62,18 @@ Esta seção mudou o desenho da spec, então merece ser lida antes do corte.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) (coletada em
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (coletada em
   2026-08-21, dentro da validade) para a parte de dado pessoal e retenção.
 
 **O benchmark não sustenta esta spec.** Em
-[`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md) não existe linha
+[`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md) não existe linha
 para "último acesso" nem para rastreio de atividade de usuário. A linha mais próxima é "Admin/super-admin
 (listar, banir)", com **4 em 10** e valor classificado como operacional — que é o painel onde a coluna
 entraria, não a coluna em si. Não medi prevalência de coluna de último acesso entre os starters, e não vou
 apresentar um número que não levantei.
 
 O que sustenta a spec é interno: é o menor dado que destrava as métricas de atividade pedidas em
-[`admin-analytics-dashboard`](admin-analytics-dashboard.md), e metade dele (a coluna) custa renderizar
+[`admin-analytics-dashboard`](../../../specs/admin-analytics-dashboard.md), e metade dele (a coluna) custa renderizar
 informação que a API já entrega. O `value: médio` reflete isso — o valor está quase todo a jusante.
 
 **O que a nota de conformidade obriga a escrever**, porque é o item que ela própria classifica como o mais
@@ -85,18 +89,18 @@ mal citado:
 
 ## Proposta — corte de MVP
 
-- [ ] A listagem de usuários do admin ganha uma **coluna de último acesso**, com data e hora formatadas por
+- [x] A listagem de usuários do admin ganha uma **coluna de último acesso**, com data e hora formatadas por
       idioma e um estado explícito para quem nunca acessou (não um campo em branco nem um zero).
-- [ ] O perfil do usuário passa a guardar um instante de último acesso, carimbado **pelo servidor** no
+- [x] O perfil do usuário passa a guardar um instante de último acesso, carimbado **pelo servidor** no
       caminho de sessão, e exposto no contrato do SDK.
-- [ ] **A gravação é limitada por janela.** No máximo uma escrita por usuário a cada N minutos; dentro da
+- [x] **A gravação é limitada por janela.** No máximo uma escrita por usuário a cada N minutos; dentro da
       janela a escrita é **descartada**, não enfileirada. O valor de N fica num único lugar e aparece na
       documentação, porque ele define a precisão de tudo que for derivado do campo.
-- [ ] O campo entra no que a conta do titular exporta e no que a exclusão de conta apaga, junto do resto do
-      perfil — a costura com [`data-rights-lgpd`](data-rights-lgpd.md) é declarada, não deixada implícita.
-- [ ] A finalidade e a retenção do campo ficam escritas em `docs/PRE-PRODUCTION.md`, junto das outras
+- [~] O campo entra no que a conta do titular exporta e no que a exclusão de conta apaga, junto do resto do
+      perfil — a costura com [`data-rights-lgpd`](../../../specs/data-rights-lgpd.md) é declarada, não deixada implícita.
+- [x] A finalidade e a retenção do campo ficam escritas em `docs/PRE-PRODUCTION.md`, junto das outras
       decisões de dado pessoal que um fork herda.
-- [ ] Texto da coluna e do estado vazio no dictionary nos 3 idiomas.
+- [x] Texto da coluna e do estado vazio no dictionary nos 3 idiomas.
 
 ### Fora do corte
 
@@ -109,7 +113,7 @@ mal citado:
 - Backfill retroativo para bases que já têm dado: quem nunca acessou depois da entrega aparece como "nunca
   acessou", e está correto.
 - Os KPIs e o gráfico construídos sobre o campo — são de
-  [`admin-analytics-dashboard`](admin-analytics-dashboard.md).
+  [`admin-analytics-dashboard`](../../../specs/admin-analytics-dashboard.md).
 
 ## Impacto por camada
 
@@ -119,13 +123,13 @@ mal citado:
 | `apps/api` | Escrita limitada por janela no repositório de usuário; o mapper já serializa instante sem mudança. |
 | `apps/app` | Coluna nova na listagem do admin. Nenhuma tela nova. |
 | `apps/web` | N/A. |
-| `packages/*` | `auth`: o gancho de carimbo fica no caminho de sessão que `session-refresh` **já criou** — spec entregue, em [`docs/features/session-refresh/spec.md`](../docs/features/session-refresh/spec.md). i18n nos 3 idiomas. |
+| `packages/*` | `auth`: o gancho de carimbo fica no caminho de sessão que `session-refresh` **já criou** — spec entregue, em [`docs/features/session-refresh/spec.md`](../session-refresh/spec.md). i18n nos 3 idiomas. |
 | Infra/env | Nenhuma variável nova e nenhum serviço externo. Sem índice novo **neste** corte: a coluna não ordena no servidor. |
 
 ## Riscos e trade-offs
 
 - **Custo de escrita, que é a armadilha desta spec.** Carimbar a cada requisição significa **uma escrita no
-  Firestore por requisição** — a mesma família de armadilha que [`dashboard-home`](../docs/features/dashboard-home/spec.md) teve
+  Firestore por requisição** — a mesma família de armadilha que [`dashboard-home`](../dashboard-home/spec.md) teve
   de evitar do lado da contagem, e que naquele caso foi resolvida com agregação
   (`base.repository.ts:122-124`). Aqui não existe agregação que salve: a mitigação é a janela, e ela precisa
   estar no corte, não numa otimização futura. O custo residual, mesmo com a janela, é uma escrita por
@@ -148,7 +152,7 @@ mal citado:
   sem inventar mecanismo. Cuidado a registrar: o ramo `{ refreshed: false }` é o caminho quente e **não**
   deve carimbar, ou a garantia de custo desaparece.
 - **Contenção conhecida:** `packages/sdk/src/types/user/user.ts` é disputado com
-  [`billing-subscription`](billing-subscription.md) e [`onboarding-flow`](onboarding-flow.md), que também
+  [`billing-subscription`](../../../specs/billing-subscription.md) e [`onboarding-flow`](../../../specs/onboarding-flow.md), que também
   acrescentam campo ao `UserDTO`.
 
 ## Sinais de pronto
@@ -177,3 +181,45 @@ mal citado:
   campo no servidor pede índice composto, e a fila de índices versionados e não publicados já tem **cinco
   entradas** (`docs/PRE-PRODUCTION.md` §1.1, §1.2 e §1.5), recontadas em 2026-09-17 depois da PR #19.
   Acrescentar um sexto por uma ordenação é caro no momento errado.
+  → **Respondida na entrega: não ordena no servidor.** A fila de índices continua em **seis** entradas
+  (`firestore.indexes.json`, recontado em 2026-09-19); a PR #21 não acrescentou nenhum.
+
+## Estado da entrega
+
+Conferido item a item contra o código em 2026-09-19, com o `HEAD` em `e656331`.
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. Coluna de último acesso, formatada por idioma, com estado para quem nunca acessou | **implementado** | A tabela passou de 6 para **7 colunas**: o objeto da coluna começa em `UsersListClient.tsx:125`, com `dataIndex: "lastAccessAt"` em `:127`. Formatação por `Intl.DateTimeFormat` em `shared/lib/formatDisplayDateTime.ts:24`, mapa pt-BR/en/es em `:6-14`. O rótulo de "nunca acessou" sai em `UsersListClient.tsx:58-62` |
+| 2. Instante no perfil, carimbado pelo servidor, exposto no SDK | **implementado** | Campo `lastAccessAt` em `packages/sdk/src/types/user/user.ts:27`, opcional. Escrita em `apps/api/(shared)/repositories/user.repository.ts:37-42`, deliberadamente fora de `BaseRepository.update` para não mexer no `updatedAt`. Instante do servidor em `apps/api/(shared)/lib/activity-recorder.ts:89` |
+| 3. Janela de gravação, valor único, documentado | **implementado** | `ACTIVITY_WINDOW_MINUTES = 15` em `apps/api/(shared)/lib/activity-windows.ts:8`, definição única confirmada por `grep`. Dentro da janela a escrita é descartada em dois pontos — cache de processo (`activity-recorder.ts:71-73`) e instante já gravado no documento (`:78-81`) —, sem fila e sem retry. O número está em `docs/PRE-PRODUCTION.md:536-539` |
+| 4. O campo entra no export e na exclusão de conta | **parcial** | A **declaração** da costura foi entregue (`docs/PRE-PRODUCTION.md:497-504`), inclusive dizendo o que ainda não é verdade. O **comportamento** não existe, e não podia existir: não há rota de export no repo, `apps/api/app/(routes)/account/route.ts` não tem `DELETE` (só `GET:97` e `PUT:107`), e o `delete()` herdado é soft delete (`base.repository.ts:205-207`). As duas superfícies pertencem a [`data-rights-lgpd`](../../../specs/data-rights-lgpd.md) |
+| 5. Finalidade e retenção em `docs/PRE-PRODUCTION.md` | **implementado** | Seção em `docs/PRE-PRODUCTION.md:481`. Finalidade em `:485-486`, retenção em `:494-495`, e o argumento de por que o prazo do Marco Civil não se aplica em `:488-492` |
+| 6. Texto da coluna e do estado vazio nos 3 idiomas | **implementado** | `packages/internationalization/translations/apps/app/pages/admin/users.ts` — pt-br `:13,17,18-19`, en `:63,67,68-69`, es `:113,117,118`. Paridade completa nas três chaves |
+
+Cobertura: 25 casos em `apps/api/__tests__/activityRecorder.test.ts`, 14 em `apps/api/__tests__/guardsStampActivity.test.ts`, 9 em `apps/app/__tests__/usersListLastAccess.test.tsx`, mais 3 em `apps/api/__tests__/baseRepository.test.ts:806`.
+
+**Por que a spec fecha com o item 4 parcial.** A metade construível do item — declarar a costura por escrito — foi
+entregue, e com mais honestidade do que a spec pedia: o documento enumera o que ainda **não** é verdade. A outra
+metade depende de duas superfícies que não existem no repositório. Manter a spec aberta por ela criaria um estado
+absorvente: o item só poderia fechar quando `data-rights-lgpd` entregasse, e enquanto isso
+`admin-analytics-dashboard` continuaria se declarando bloqueada por algo que já está em `main`. Existe precedente
+no repositório — `ci-pipeline` foi arquivada com um item do corte em aberto. O que a auditoria fez em troca foi
+transferir a obrigação: `data-rights-lgpd` passou a listar `lastAccessAt` entre os campos que o export e a
+exclusão precisam cobrir.
+
+## Deriva de implementação
+
+A spec recomendava um caminho e a entrega escolheu outro. Não é erro de execução — é uma troca com ganho e
+custo, e os dois estão medidos.
+
+| especificado | implementado | leitura |
+|--------------|--------------|---------|
+| Carimbar dentro do ramo `{ refreshed: true }` de `sessionRefreshPOST`, reusando `shouldRefreshSession` como janela — "sem inventar mecanismo" | `packages/auth/session-routes.ts` **não foi tocado**. O gancho ficou nos guards da API: `apps/api/app/(guards)/admin.ts:73` e `apps/api/app/(guards)/common-panel.ts:87` | **A implementação desviou, e o desvio mede a coisa certa.** O gatilho passou a ser toda requisição autenticada à API, não a renovação do cookie — que é o que a pergunta "quem ainda usa isto" de fato pede. Cobre também o painel comum, não só o admin |
+| A janela "não é um número novo a escolher — é o limiar que a renovação usa" | Janela própria de **15 minutos**, independente do throttle da sessão (`activity-windows.ts:8`), com bucket determinístico em `activity-recorder.ts:25-27` | **A spec errou a previsão de custo.** Com o gancho nos guards, o throttle da sessão não serve de janela: ele governa a renovação do cookie, não a requisição. O 15 veio do precedente interno de `audit-log`, que é precedente e não evidência de mercado |
+| Garantia de "no máximo uma escrita por usuário por janela" | Não há transação. Requisições concorrentes do mesmo usuário na virada da janela podem gravar mais de uma vez | **A garantia é mais fraca do que a spec prometia, e o desvio está assumido no código** (`packages/sdk/src/types/user/user.ts:24-25`) e medido em `docs/PRE-PRODUCTION.md:511-515`: 110 requisições produziram 3 escritas, duas delas de um par concorrente |
+
+Fora do corte, a entrega acrescentou um **fallback de exibição**: perfis ainda não carimbados mostram
+`metadata.lastRefreshTime` em itálico esmaecido, rotulado como aproximado (`UsersListClient.tsx:46-56`). É
+exatamente a recomendação da pergunta em aberto sobre a fonte da verdade, e evita uma coluna inteira vazia no
+dia da entrega.

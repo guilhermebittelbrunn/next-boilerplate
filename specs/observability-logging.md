@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-17
+updated: 2026-09-19
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -73,13 +73,17 @@ segue invisível até alguém conferir a fatura.
 - **Ninguém é notificado.** Não há coletor plugado no `onRequestError`: a linha sai no stdout e a plataforma
   a indexa. Descobrir um erro continua dependendo de alguém abrir o painel. É o item 1 do corte, e é a
   razão de esta spec não estar fechada — detalhe em [Estado da entrega](#estado-da-entrega).
-- **`packages/auth/server.ts` não foi migrado** e concentra **5** das 12 chamadas de `console` cruas que
-  sobraram (`:191`, `:204`, `:220`, `:263`, `:276`), todas passando o objeto de erro e sem prefixo — num
-  pacote de autenticação, que é onde o objeto de erro tem mais chance de carregar identificador de usuário.
-  Recontagem de 2026-09-16, depois da PR #17: **14 chamadas `console.*` em 10 arquivos**, das quais 2 são o
+- **`packages/auth/server.ts` não foi migrado** e concentra **7** das 14 chamadas de `console` cruas que
+  sobraram (`:191`, `:204`, `:220`, `:253`, `:279`, `:308`, `:327`), todas passando o objeto de erro e sem
+  prefixo — num pacote de autenticação, que é onde o objeto de erro tem mais chance de carregar
+  identificador de usuário.
+  Recontagem de 2026-09-19, depois da PR #21: **16 chamadas `console.*` em 10 arquivos**, das quais 2 são o
   próprio helper (`log.ts:56`) e o repasse deliberado do erro não tratado (`requestErrorReporter.ts:52`).
-  Sobram **12 em 8 arquivos**, contra 24 em 19 antes da PR #15. *(A rodada anterior escreveu "9 arquivos":
-  subtraiu as 2 chamadas do total e esqueceu de subtrair os 2 arquivos que as hospedam.)*
+  Sobram **14 em 8 arquivos**, contra 24 em 19 antes da PR #15. ⚠️ **O número piorou, e a causa é a
+  PR #20**, que acrescentou duas chamadas cruas (`:308`, `:327`) ao mesmo arquivo que esta spec vinha
+  apontando há cinco rodadas. *(As âncoras `:263` e `:276` da versão anterior deslocaram para `:253` e
+  `:279`. E a rodada de 2026-09-16 escreveu "9 arquivos": subtraiu as 2 chamadas do total e esqueceu de
+  subtrair os 2 arquivos que as hospedam.)*
 - **`packages/email` mantém um helper próprio.** `packages/email/index.ts:39-49` (`logEmail`) produz
   exatamente o mesmo formato do `logEvent`, com `console.warn` direto. Não é divergência de formato, é
   duplicação de código — e o teste que reprova quem logar o objeto de erro
@@ -99,7 +103,9 @@ segue invisível até alguém conferir a fatura.
   (`firestore-admin-access`): o `register()` roda no boot e resolve a instância do Firestore, para que a
   falta de credencial mate o processo em vez de degradar. Desde `api-hardening` ele também derruba o boot
   quando falta `CORS_ORIGIN` em produção (`:20-24`) e emite um aviso de boot quando o rate limit está
-  desligado (`:26-30`) — este último é o único `console` cru que sobrou na `apps/api`.
+  desligado (`:26-30`). ⚠️ **Correção de 2026-09-19:** a versão anterior dizia que este era "o único
+  `console` cru que sobrou na `apps/api`". Não é — `apps/api/app/global-error.tsx:15` também tem um
+  `console.error("Global error:", error)`.
 - **A tese que sustentou esta spec por cinco rodadas, e que a PR #15 resolveu.** A convenção de log —
   linha única, prefixo entre colchetes, pares `chave=valor`, nenhum dado pessoal — emergiu sozinha em
   `api-hardening` e `transactional-emails`, e depois se propagou **por cópia**. Cada entrega nova a repetia

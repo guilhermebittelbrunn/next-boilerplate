@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: -
-updated: 2026-09-17
+updated: 2026-09-19
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -29,22 +29,30 @@ alguém olhar.
 
 - **Validação visual é obrigatória e funciona.** `CLAUDE.md:70` (regra de ouro 11) exige que todo fluxo que
   toca UI e toda entrega de código sejam validados com a skill `agent-browser` — subindo o app, percorrendo
-  o fluxo e conferindo responsivo e tema. A regra é reforçada em `:146` e `:155`. A skill vive em
+  o fluxo e conferindo responsivo e tema. A regra é reforçada em `:70` e `:146` — as duas únicas menções a `agent-browser` no arquivo. A skill vive em
   `.claude/skills/agent-browser`.
 - A prova de que a prática é levada a sério: `docs/features/auth-panel-context/test/e2e/` guarda **22
   capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
   `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
   impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-17, rodando o gate sem cache com o `HEAD` em `cc93229`,
-  já com a PR #20 mergeada**): **10 tasks de teste / 1325 testes em 134 arquivos**, todos de
-  unidade/integração estreita — `apps/api` 532 em 48 arquivos, `apps/app` 380 em 53, `@repo/email` 137 em 7,
+- Suíte automatizada atual (**remedida em 2026-09-19, rodando o gate sem cache com o `HEAD` em `e656331`,
+  já com a PR #21 mergeada**): **10 tasks de teste / 1378 testes em 137 arquivos**, todos de
+  unidade/integração estreita — `apps/api` 576 em 50 arquivos, `apps/app` 389 em 54, `@repo/email` 137 em 7,
   `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2, `apps/web` 31 em 5,
   `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8 em 1. **Nenhum sobe um
   app de verdade**, e **nenhuma** das dez configs declara **cobertura**: não existe medida nem baseline para
   discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88, 918 em 94, 981 em 102, 1038 em 107,
-  1091 em 112, 1227 em 124 e 1276 em 130; o crescimento vem das PRs #10 a #20. A PR #20 acrescentou 2
-  arquivos em `packages/auth` e 2 em `apps/app`. Seguem **10** tasks e **10** configs de Vitest, e não há
-  Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
+  1091 em 112, 1227 em 124, 1276 em 130 e 1325 em 134; o crescimento vem das PRs #10 a #21. A PR #21
+  acrescentou 2 arquivos em `apps/api` e 1 em `apps/app`. Seguem **10** tasks e **10** configs de Vitest, e
+  não há Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
+  > 🆕 **E a lacuna cobrou preço em 2026-09-19, pela primeira vez de forma medível.** A execução de CI da
+  > PR #21 (`gh run 35456187047`) fechou **vermelha** por um teste instável, não por regressão:
+  > `apps/api/__tests__/baseRepository.test.ts:477` afirma `created.updatedAt === created.createdAt`, e
+  > `apps/api/(shared)/repositories/base.repository.ts:150-151` produz os dois instantes com duas chamadas
+  > separadas a `new Date()`. Na virada do milissegundo eles diferem — foi o que aconteceu
+  > (`'…:32.532Z'` contra `'…:32.531Z'`). A asserção existe desde a PR #4 e ficou latente 17 PRs. Nenhum
+  > gate do repositório detecta instabilidade: rodar a suíte uma vez não distingue teste que passa de teste
+  > que passa quase sempre.
   > **Estes números envelhecem a cada PR, e o método de medição finalmente pegou.** Os valores anteriores
   > (1227 em 124) tinham sido gravados dentro da própria PR #19, antes de os commits de código dela
   > entrarem. Os de 2026-09-17 e estes saíram do gate sem cache com o merge já em `main` — duas rodadas
