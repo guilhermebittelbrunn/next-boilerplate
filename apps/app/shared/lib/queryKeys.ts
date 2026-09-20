@@ -40,6 +40,8 @@ export const queryKeys = {
         list: (type?: string) =>
             [...queryKeys.users.all, "list", type ?? "all"] as const,
         summary: () => [...queryKeys.users.all, "summary"] as const,
+        activitySummary: () =>
+            [...queryKeys.users.all, "activitySummary"] as const,
         detail: (id: string) => [...queryKeys.users.all, "detail", id] as const,
     },
     health: () => ["health"] as const,
