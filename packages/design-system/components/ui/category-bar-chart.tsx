@@ -48,6 +48,11 @@ export function CategoryBarChart({
         <XAxis
           axisLine={false}
           dataKey="category"
+          // One tick per category, always. The recharts default is `preserveEnd`, which
+          // drops a tick whose text would touch its neighbour and leaves that bar unnamed
+          // with nothing on screen saying a label is missing. Short labels are the caller's
+          // job: this axis will not hide one to make room.
+          interval={0}
           tickFormatter={(value: string) =>
             String(config[value]?.label ?? value)
           }

@@ -5,6 +5,7 @@ import type { Response } from "../../../client/type";
 import type {
     AdminCreateUserRequest,
     AdminUpdateUserRequest,
+    UserActivitySummaryDTO,
     UserSummaryDTO,
     UserType,
     UserWithAuthDTO,
@@ -34,6 +35,17 @@ export default class UserActions {
     async summary(): Promise<UserSummaryDTO> {
         const { data } = await this.client.request<Response<UserSummaryDTO>>({
             url: "/users/summary",
+            method: "GET",
+        });
+
+        return data.data;
+    }
+
+    async activitySummary(): Promise<UserActivitySummaryDTO> {
+        const { data } = await this.client.request<
+            Response<UserActivitySummaryDTO>
+        >({
+            url: "/users/activity-summary",
             method: "GET",
         });
 

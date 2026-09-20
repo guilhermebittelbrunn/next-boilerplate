@@ -1,15 +1,10 @@
 import { normalizeFirestoreInstant } from "@repo/shared/utils";
 import { logEvent } from "@repo/shared/utils/helpers/log";
+import { ACTIVITY_WINDOW_MINUTES } from "@/(shared)/lib/activity-windows";
 import { userRepository } from "@/(shared)/repositories/user.repository";
 
 const MINUTE_MS = 60_000;
 
-/**
- * The last access stamp is written at most once per window, per user. The window is the
- * precision of everything derived from the field: at 15 minutes, "last access" can be up
- * to 15 minutes behind the real one.
- */
-export const ACTIVITY_WINDOW_MINUTES = 15;
 export const ACTIVITY_WINDOW_MS = ACTIVITY_WINDOW_MINUTES * MINUTE_MS;
 
 const DEDUPE_CACHE_MAX = 500;

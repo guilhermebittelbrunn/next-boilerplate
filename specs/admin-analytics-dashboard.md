@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [user-activity-tracking, dashboard-home]
 contends_on: ["apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx", apps/app/shared/lib/queryKeys.ts, apps/api/app/(routes)/users/summary/route.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-17
+updated: 2026-09-19
 ---
 
 # Métricas de atividade na home do admin
@@ -29,16 +29,27 @@ curva aponta. Nenhuma das três tem resposta hoje, porque nada no produto agrega
 [`dashboard-home`](../docs/features/dashboard-home/spec.md) entregou as peças e o padrão. Esta spec estende aquilo em vez de
 começar do zero.
 
-> **`dashboard-home` está em `main` desde 2026-09-17** (PR #19, merge `bfc4d8f`, CI verde no SHA de merge) e
-> a spec dela foi arquivada em [`docs/features/dashboard-home/spec.md`](../docs/features/dashboard-home/spec.md).
-> As âncoras abaixo foram remedidas contra `main` nessa data. A dependência está satisfeita; o que ainda
-> bloqueia esta spec é [`user-activity-tracking`](user-activity-tracking.md).
+> ✅ **As duas dependências estão satisfeitas desde 2026-09-19 — esta spec está destravada.**
+> `dashboard-home` entrou em `main` em 2026-09-17 (PR #19, merge `bfc4d8f`) e
+> [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) em 2026-09-19 (PR #21, merge
+> `e656331`), as duas com CI verde no SHA de merge. As âncoras abaixo foram remedidas contra `main` em
+> 2026-09-19.
+>
+> **O que a entrega de ontem mudou para esta spec:** o eixo temporal passou a existir. `lastAccessAt`
+> está no `UserDTO` (`packages/sdk/src/types/user/user.ts:27`), é carimbado pelos guards da API
+> (`apps/api/app/(guards)/admin.ts:73`, `common-panel.ts:87`) através de
+> `apps/api/(shared)/lib/activity-recorder.ts`, e já aparece na listagem do admin
+> (`UsersListClient.tsx:127`). Falta agregá-lo — que é exatamente o corte desta spec.
+>
+> ⚠️ **A precisão do campo é de 15 minutos**, não instantânea: `ACTIVITY_WINDOW_MINUTES`
+> (`activity-windows.ts:8`). Todo KPI construído aqui herda essa folga, e o texto da tela precisa dizer
+> isso — ver os riscos.
 
 - `apps/api/app/(routes)/users/summary/route.ts:6-20` — `GET /users/summary` sob `requireAdminApi`, devolve
   `userRepository.summary()` e degrada para `SUMMARY_INDEX_MISSING` com 503 quando falta índice
   (`:12-17`). É o molde de rota de agregado, incluindo a degradação traduzível.
-- `apps/api/(shared)/repositories/user.repository.ts:52-63` — `summary()` roda **três contagens em
-  paralelo** e não lê documento; o comentário em `:46-51` registra por que a contagem não refaz o join com
+- `apps/api/(shared)/repositories/user.repository.ts:63-71` — `summary()` roda **três contagens em
+  paralelo** e não lê documento; o comentário em `:57-62` registra por que a contagem não refaz o join com
   o Firebase Auth.
 - `apps/api/(shared)/repositories/base.repository.ts:122-124` — `countQuery` usa `query.count().get()`, a
   agregação do próprio Firestore. É o helper que mantém o custo fora da leitura por documento.
@@ -58,8 +69,12 @@ começar do zero.
   `provider.tsx:103-112` monta `VercelAnalytics` e `GoogleAnalytics` **somente quando o consentimento foi
   concedido**; `server.ts:15-30` resolve o estado do banner. **Nada lê agregado de volta** — o pacote
   publica evento, não consulta número.
-- **Lacuna:** tudo que se agrega hoje é cabeça por tipo. Não existe noção de atividade, não existe série
-  temporal, e não existe nenhuma leitura de visita à `apps/web` em lugar nenhum do repositório.
+- **Lacuna, reescrita em 2026-09-19:** tudo que se **agrega** hoje é cabeça por tipo. ⚠️ A versão anterior
+  dizia "não existe noção de atividade", e isso ficou falso com a PR #21: o instante por usuário existe
+  (`lastAccessAt`), só não há nada que o leia em conjunto. `grep -rni "activeUsers|inactiveUsers"` devolve
+  **zero**, o `UserSummaryDTO` (`packages/sdk/src/types/user/user.ts:49-52`) segue com `total` + `byType`,
+  e `queryKeys.users` (`:36-44`) não ganhou chave nova. Continuam sem existir: série temporal e qualquer
+  leitura de visita à `apps/web`.
 
 ## Evidência de mercado
 
@@ -76,7 +91,7 @@ acesso. Não medi prevalência desses itens em separado.
 
 O que sustenta a spec é a combinação de duas coisas internas. A primeira é que a home do admin já existe e
 já tem o padrão de cartão, gráfico e rota de agregado, então o custo marginal desta entrega é baixo. A
-segunda é que [`user-activity-tracking`](user-activity-tracking.md) produz um dado cujo valor é quase todo
+segunda é que [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) produz um dado cujo valor é quase todo
 aqui: carimbar o último acesso e nunca agregá-lo entrega uma coluna e para.
 
 ## Proposta — corte de MVP
@@ -119,8 +134,11 @@ porque não tem caminho decidido.
 
 ## Riscos e trade-offs
 
-- **Nasce bloqueada sem [`user-activity-tracking`](user-activity-tracking.md).** Sem o carimbo não existe
-  eixo para agregar, e os KPIs viram contagem de cadastro com outro nome.
+- ✅ **O bloqueio caiu em 2026-09-19.** Este risco dizia que sem o carimbo de
+  [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) não existiria eixo para
+  agregar, e os KPIs virariam contagem de cadastro com outro nome. O carimbo entrou na PR #21. O que
+  sobra do risco é **a precisão herdada**: o campo tem folga de 15 minutos e não é backfillado, então na
+  estreia a maior parte da base aparece como "nunca acessou" até que cada usuário volte.
 - **"Usuário ativo" é uma definição, não uma medida.** Escolher mal produz um número que todo mundo cita e
   ninguém consegue reproduzir. É por isso que colocar a definição na tela está no corte e não em polimento.
 - **Índice composto, de novo.** Contar por instante pede índice, e a fila de índices versionados e não
@@ -151,7 +169,7 @@ porque não tem caminho decidido.
      **concedeu consentimento** (`analytics/provider.tsx:103-111`), então o número subestima por construção.
   2. **Contador próprio no Firestore**, incrementado no servidor da `apps/web`. Sem provedor externo e sem
      env nova; em troca, **uma escrita por visita** (a mesma armadilha de custo de
-     [`user-activity-tracking`](user-activity-tracking.md)) e a necessidade de tratar robô e recarga.
+     [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md)) e a necessidade de tratar robô e recarga.
   3. **Provedor de analytics dedicado** com leitura de volta. `@vercel/analytics` já está montado
      (`provider.tsx:109`) e nada é lido dele hoje; adotar a leitura arrasta conta, e possivelmente plano
      pago, para todo fork.

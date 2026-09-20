@@ -1,7 +1,18 @@
 import { getAuthInstance } from "@repo/auth/server";
-import type { UserDTO, UserSummaryDTO } from "@repo/sdk/src/types";
+import type {
+    UserActivitySummaryDTO,
+    UserDTO,
+    UserSummaryDTO,
+} from "@repo/sdk/src/types";
 import { UserType } from "@repo/sdk/src/types";
 import db from "../infra/database";
+import {
+    ACTIVE_WINDOW_DAYS,
+    ACTIVITY_WINDOW_MINUTES,
+    type ActivityRange,
+    buildActivityRecencyRanges,
+    INACTIVE_AFTER_DAYS,
+} from "../lib/activity-windows";
 import {
     mergeAuthAndFirestore,
     serializeFirestoreData,
@@ -71,6 +82,54 @@ class UserRepository extends BaseRepository<UserDTO> {
         ]);
 
         return { total, byType: { admin, common } };
+    }
+
+    /**
+     * A profile that was never stamped has no `lastAccessAt` field, and Firestore leaves a
+     * document out of every index that covers a field it does not carry. The `never` bucket
+     * is therefore the remainder of the total, not a query of its own.
+     */
+    async activitySummary(now = new Date()): Promise<UserActivitySummaryDTO> {
+        const scoped = () =>
+            this.db.collection(this.table).where("deletedAt", "==", null);
+
+        const ranges = buildActivityRecencyRanges(now);
+        const inRange = ({ from, to }: ActivityRange) => {
+            const lowerBounded = scoped().where("lastAccessAt", ">=", from);
+            return to
+                ? lowerBounded.where("lastAccessAt", "<", to)
+                : lowerBounded;
+        };
+
+        const [total, last7Days, from8To30Days, from31To90Days, over90Days] =
+            await Promise.all([
+                this.countQuery(scoped()),
+                this.countQuery(inRange(ranges.last7Days)),
+                this.countQuery(inRange(ranges.from8To30Days)),
+                this.countQuery(inRange(ranges.from31To90Days)),
+                this.countQuery(inRange(ranges.over90Days)),
+            ]);
+
+        const stamped = last7Days + from8To30Days + from31To90Days + over90Days;
+
+        return {
+            active: last7Days,
+            inactive: from31To90Days + over90Days,
+            byRecency: {
+                last7Days,
+                from8To30Days,
+                from31To90Days,
+                over90Days,
+                // The five counts are not transactional: a profile created between the
+                // total and the buckets would otherwise drive this below zero.
+                never: Math.max(0, total - stamped),
+            },
+            thresholds: {
+                activeDays: ACTIVE_WINDOW_DAYS,
+                inactiveDays: INACTIVE_AFTER_DAYS,
+                precisionMinutes: ACTIVITY_WINDOW_MINUTES,
+            },
+        };
     }
 
     /**

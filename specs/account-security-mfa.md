@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
-updated: 2026-09-17
+updated: 2026-09-19
 ---
 
 # MFA, sessões ativas e política de senha
@@ -53,8 +53,11 @@ eficácia.
   > caminho do **cookie**. Quem conferir por esse grep conclui o oposto do que o código faz. A checagem do
   > bearer **não usa a palavra `checkRevoked`**: ela está em `isMintedBeforeRevocation`, `:153-166`.
   > *(A linha do comentário era `:241` até a PR #20.)*
-- `packages/auth/session.ts:14` — `SESSION_COOKIE_NAME = "access-token"`; `:22` e `:23` já clampam a
-  duração aos limites do Firebase (5 min / 14 dias), com padrão de 5 dias (`:24`). O tipo declara os
+- `packages/auth/session.ts:14` — `SESSION_COOKIE_NAME = "access-token"`. ⚠️ **Correção de 2026-09-19:** a
+  versão anterior dizia que `:22` e `:23` "já clampam a duração". Elas só **declaram** os limites
+  (`MIN_EXPIRES_MINUTES`, `MAX_EXPIRES_DAYS`); o `Math.min(Math.max(...))` que de fato clampa está em
+  `:47`, limitando a duração aos limites do Firebase (5 min / 14 dias), com padrão de 5 dias (`:24`).
+  O tipo declara os
   atributos em `:51` (`httpOnly`) e `:53` (`sameSite: "lax"`), mas os valores de fato são atribuídos no
   bloco `:62-70` — é dali que vem o já citado `:64` (`secure` **apenas em produção**).
 - `packages/auth/session.ts:78` — `isSameOriginRequest` é a **única** proteção contra CSRF no
@@ -129,8 +132,9 @@ eficácia.
 > Até a PR #10, `revokeUserSessions` só era chamada pelo logout global
 > (`packages/auth/session-routes.ts:132`, dentro de `sessionDELETE:126`) — gesto deliberado de quem já está
 > com a conta na mão. A PR #10 a
-> pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:51`, a
-> `:49` é comentário), o
+> pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:51`; o
+> comentário que explica o porquê é `:46-48` — a versão anterior desta spec dizia que `:49` era comentário
+> e errava, `:49` já é o `try`), o
 > fluxo canônico de "minha conta foi comprometida", e com isso o furo saiu da dívida teórica e entrou num
 > caminho de segurança real: **a vítima redefinia a senha e o ID token do atacante continuava passando no
 > guard da API por até uma hora.**

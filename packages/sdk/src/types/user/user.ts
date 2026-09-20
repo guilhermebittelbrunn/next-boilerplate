@@ -74,3 +74,27 @@ export type UserWithAuthDTO = UserDTO & {
     customClaims: Record<string, unknown> | null;
     tokensValidAfterTime?: string;
 };
+
+export type UserActivityBucket =
+    | "last7Days"
+    | "from8To30Days"
+    | "from31To90Days"
+    | "over90Days"
+    | "never";
+
+/**
+ * Counted from `lastAccessAt`, which the API stamps once per activity window, so every
+ * number here trails real use by up to `thresholds.precisionMinutes`. A profile that was
+ * never stamped carries no field at all and falls out of every range query, which is why
+ * `never` is derived from the total instead of counted.
+ */
+export type UserActivitySummaryDTO = {
+    active: number;
+    inactive: number;
+    byRecency: Record<UserActivityBucket, number>;
+    thresholds: {
+        activeDays: number;
+        inactiveDays: number;
+        precisionMinutes: number;
+    };
+};

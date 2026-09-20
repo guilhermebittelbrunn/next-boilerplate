@@ -145,10 +145,14 @@ export class BaseRepository<DTO> {
     }
 
     async create(data: CreateRequest<DTO>): Promise<DTO> {
+        // A record that was never edited must read as untouched, so both stamps share one
+        // instant: two `new Date()` calls can straddle a millisecond and make `updatedAt`
+        // look newer than `createdAt` on a document nobody has updated.
+        const createdAt = new Date();
         const dataToCreate = {
             ...data,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt,
+            updatedAt: createdAt,
             deletedAt: null,
         } as DocumentData;
 

@@ -11,6 +11,7 @@ import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
 import { MetricCard } from "@/shared/components/ui/MetricCard";
 import { ADMIN_ROUTES } from "../../paths";
 import { useUserSummary } from "../(hooks)/useUserSummary";
+import { UserActivitySection } from "./UserActivitySection";
 
 export function AdminHomeClient() {
     const { data: summary, isLoading, error } = useUserSummary();
@@ -85,6 +86,7 @@ export function AdminHomeClient() {
                             ))}
                         </div>
                     )}
+                    <UserActivitySection />
                 </div>
             </Container>
         </>

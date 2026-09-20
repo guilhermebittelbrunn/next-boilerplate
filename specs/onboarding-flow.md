@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
 feature: -
-updated: 2026-09-17
+updated: 2026-09-19
 ---
 
 # Onboarding pós-cadastro
@@ -53,11 +53,25 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   explicitamente se intercepta nos dois ou se promove a decisão a um lugar só. Essa fragmentação é custo
   novo que a spec não orçava. *(A âncora era `:80-94` até a PR #20 inserir a renovação de sessão acima
   dela.)*
-  ⚠️ **E apareceu um quinto caminho em 2026-09-17.** A entrega de `session-refresh` acrescentou
+  ⚠️ **E apareceu mais um caminho em 2026-09-17.** A entrega de `session-refresh` acrescentou
   `handleSessionExpired` (`provider.tsx:235`), que manda para `/{locale}/sign-in` com um `?redirect=`
   próprio, montado por `expiredSessionOrigin` (`:72`). É mais um lugar decidindo destino de navegação
-  autenticada, e o primeiro que decide isso **saindo** do produto em vez de entrando. A fragmentação que
-  esta spec vinha orçando em quatro caminhos agora são cinco.
+  autenticada, e o primeiro que decide isso **saindo** do produto em vez de entrando.
+
+  ⚠️ **Recontagem de 2026-09-19 — a fragmentação é maior do que esta spec vinha dizendo.** Os números
+  "quatro" e depois "cinco" saíram de uma contagem que colapsava duas funções numa só. Pelo critério da
+  própria spec (função nomeada que decide destino), são **seis no cliente**: `destinationForAccount`
+  (`postLoginNavigation.ts:80`), `resolveDefaultPostLoginForApp` (`:104`), `resolveAppPostLoginPath`
+  (`:112`), `redirectPath` (`provider.tsx:128`), `resolvePostLoginPath` (`provider.tsx:130`) e
+  `handleSessionExpired` (`provider.tsx:235`). `redirectPath` é o fallback síncrono e
+  `resolvePostLoginPath` é a decisão assíncrona — são duas, não uma.
+
+  E há **três decisões no servidor que esta spec nunca contou**, justamente na camada onde ela diz que o
+  desvio precisa nascer: o proxy manda para `sign-in?redirect=<pathname>` quando não há sessão
+  (`apps/app/proxy.ts:185-186`); o proxy faz o bounce do visitante autenticado em rota pública
+  (`:189-202`); e **`(common)/layout.tsx:31-34` desvia admin para `/{locale}/admin`**. O último é o que mais
+  muda o plano: é o único desvio de destino já implementado no servidor e é o padrão que o onboarding
+  deveria seguir. **Total: 6 no cliente, 9 contando o servidor.**
 - `packages/auth/redirect.ts:10` — `postAuthRedirectTarget` já sanitiza o deep link (guard de
   open-redirect, coberto por `apps/app/__tests__/postAuthRedirectTarget.test.ts`). Um fluxo retomável
   precisa exatamente disso para voltar ao destino original ao terminar.
@@ -75,7 +89,7 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
   (`OOB_ACTION_PATHS:89`, `isOobActionPath:101`, consumido em `:189`), porque o redirect de visitante
   autenticado apaga a query string (`:200`). Um passo de onboarding que carregue token na URL herda
   exatamente esse problema — e agora herda também a solução.
-- `packages/sdk/src/types/user/user.ts:12-22` — o `UserDTO` tem `id`, `type`, `reference_id`, timestamps e,
+- `packages/sdk/src/types/user/user.ts:12-28` — o `UserDTO` tem `id`, `type`, `reference_id`, timestamps e,
   desde as PRs #11/#12, **`phone` (`:19`), `avatar` (`:20`) e `preferences` (`:21`)**. *(Âncora remedida em
   2026-09-15: era `:7`, que hoje é o início de `UserPreferences`.)*
 - 🔴 **O item 2 do corte perdeu quase todo o conteúdo — e isso precisa ser decidido antes do `/analyze`.**

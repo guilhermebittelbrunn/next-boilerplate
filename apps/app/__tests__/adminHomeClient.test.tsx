@@ -20,6 +20,15 @@ vi.mock(
     "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/(hooks)/useUserSummary",
     () => ({ useUserSummary: () => summaryMock() })
 );
+// The activity block owns its own request and its own failure, and is covered by
+// `userActivitySection.test.tsx`. Here it stands in as a marker, so these cases can assert
+// that the counts and the activity block fail independently of each other.
+vi.mock(
+    "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/UserActivitySection",
+    () => ({
+        UserActivitySection: () => <div data-testid="activity-section" />,
+    })
+);
 
 const { AdminHomeClient } = await import(
     "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient"
@@ -131,5 +140,13 @@ describe("AdminHomeClient when the summary fails", () => {
         ).toBeTruthy();
         expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
         expect(screen.queryByText("Administradores")).toBeNull();
+    });
+
+    it("keeps the activity block on screen, since it loads on its own", () => {
+        givenSummary({ data: null, error: missingIndexRejection() });
+
+        render(<AdminHomeClient />);
+
+        expect(screen.getByTestId("activity-section")).toBeTruthy();
     });
 });
