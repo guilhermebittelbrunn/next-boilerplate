@@ -188,6 +188,35 @@ Este item **faltava nesta lista até 2026-09-17**: o arquivo versionado declarav
 descrevia cinco. Quem seguisse só o documento publicaria cinco e descobriria a sexta pelo comportamento — e,
 diferente das outras, esta não tem degradação traduzida, porque ninguém a previu como podendo faltar.
 
+#### 1.7 Índice composto das faixas de recência de acesso
+
+- [ ] índice de `user` publicado no projeto de referência
+- [ ] índice de `user` publicado **no projeto do seu fork**
+
+O bloco de atividade da home do admin distribui os perfis em faixas de último acesso. Cada faixa é uma
+agregação que combina igualdade em `deletedAt` com um intervalo em `lastAccessAt`, e o Firestore cobra
+índice composto por isso. A entrada está declarada em
+[`firestore.indexes.json`](../firestore.indexes.json) e é coberta por
+`apps/api/__tests__/firestoreIndexes.test.ts`.
+
+| coleção | campos | serve |
+|---------|--------|-------|
+| `user` | `deletedAt` + `lastAccessAt` | as quatro contagens por faixa de `GET /users/activity-summary` |
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:indexes
+```
+
+**Sem ele, `GET /users/activity-summary` responde `503 SUMMARY_INDEX_MISSING`.** O bloco de atividade
+mostra a mensagem traduzida nos três idiomas; os três cartões de contagem, a saudação e a navegação
+continuam funcionando, porque o agregado de atividade é uma rota separada da de `GET /users/summary`.
+Nenhuma resposta é 500. Enquanto o índice está sendo construído, a recusa persiste.
+
+Para conferir depois de publicar: `npx -y firebase-tools@latest firestore:indexes` lista a entrada de
+`user` com `lastAccessAt`; na tela, os dois cartões e o gráfico mostram números em vez do alerta. Vale o
+mesmo aviso das outras entradas — **o emulador serve a consulta com ou sem índice**, então `pnpm emulators`
+não prova que ela existe.
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
@@ -483,7 +512,8 @@ provedor e nenhum deles é código — o quarto, já resolvido, era.
 Não é pendência: é o que o fork precisa saber sobre um dado pessoal que ele herda ligado.
 
 **Para que serve.** Medir uso do produto para operar a base — identificar conta parada, decidir contato.
-A listagem do admin é o único consumidor hoje. Nada de perfilamento, nada de decisão automatizada.
+Dois consumidores hoje: a listagem do admin, que mostra o instante por pessoa, e o bloco de atividade da
+home do admin, que só publica contagens agregadas. Nada de perfilamento, nada de decisão automatizada.
 
 **O que o campo guarda.** Data e hora, e só. Sem IP, sem user-agent, sem dispositivo, sem localização.
 Isso importa juridicamente: o Marco Civil (art. 5º, VIII) define registro de acesso como data e hora de
@@ -504,7 +534,7 @@ que ainda não foi implementada. Um fork que prometer "apagamos seu último aces
 está prometendo o que o código ainda não faz.
 
 **Precisão.** `ACTIVITY_WINDOW_MINUTES` vale **15**, em
-`apps/api/(shared)/lib/activity-recorder.ts`. Esse número é o erro máximo do campo: o valor exibido pode
+`apps/api/(shared)/lib/activity-windows.ts`. Esse número é o erro máximo do campo: o valor exibido pode
 estar até 15 minutos atrás do acesso real. Qualquer métrica derivada herda essa precisão. Um fork que
 precise de mais resolução paga em escritas no Firestore.
 
