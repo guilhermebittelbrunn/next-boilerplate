@@ -44,6 +44,14 @@
       ]
     },
     {
+      "collectionGroup": "user",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "lastAccessAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "auditEvent",
       "queryScope": "COLLECTION",
       "fields": [

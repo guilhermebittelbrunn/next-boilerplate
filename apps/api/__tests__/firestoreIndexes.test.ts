@@ -72,6 +72,17 @@ describe("firestore.indexes.json", () => {
         });
     });
 
+    it("declares the index the activity recency buckets need", () => {
+        expect(indexes).toContainEqual({
+            collectionGroup: "user",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "deletedAt", order: "ASCENDING" },
+                { fieldPath: "lastAccessAt", order: "ASCENDING" },
+            ],
+        });
+    });
+
     it("declares the index the audit trail's user filter needs", () => {
         expect(indexes).toContainEqual({
             collectionGroup: "auditEvent",
