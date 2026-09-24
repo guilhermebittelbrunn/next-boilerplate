@@ -301,6 +301,39 @@ describe("api proxy rate limit", () => {
         expect(checkRateLimitMock).toHaveBeenCalledTimes(recoveryPaths.length);
     });
 
+    it("counts the data rights endpoints", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "GET",
+                path: "/account/export",
+            })
+        );
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "POST",
+                path: "/account/deletion",
+            })
+        );
+
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("leaves the rest of the account area unlimited", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        for (const path of ["/account", "/account/password", "/account/"]) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "POST", path })
+            );
+        }
+
+        expect(checkRateLimitMock).not.toHaveBeenCalled();
+    });
+
     it("matches the recovery endpoints exactly, not by prefix", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
 
