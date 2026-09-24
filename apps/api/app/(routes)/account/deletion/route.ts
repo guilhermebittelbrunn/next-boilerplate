@@ -78,6 +78,18 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
         requestId,
     });
 
+    // Billing runs first and a failure there stops the erasure before anything is gone,
+    // so the account is still whole and the subject can simply try again.
+    const billingFailed = report.some(
+        (step) => step.step === "billing" && step.status === "failed"
+    );
+    if (billingFailed) {
+        return Response.json(
+            { error: { code: "ACCOUNT_DELETION_BILLING_FAILED" } },
+            { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
+        );
+    }
+
     const signInWasRevoked = report.some(
         (step) => step.step === "authAccount" && step.status === "done"
     );

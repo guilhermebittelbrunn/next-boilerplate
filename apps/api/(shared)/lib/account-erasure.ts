@@ -1,9 +1,12 @@
 import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { getStripe } from "@repo/payments";
 import type { UserDTO } from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { auditEventRepository } from "../repositories/audit-event.repository";
 import { entityRepository } from "../repositories/entity.repository";
 import { userRepository } from "../repositories/user.repository";
+import { cancelSubscriptionForErasure } from "./billing";
+import { isLiveSubscription } from "./billing-state";
 import {
     deleteObjectsByPrefix,
     isStorageConfigured,
@@ -65,35 +68,49 @@ function eraseStorage(profileId: string): Promise<ErasureStepResult> {
 }
 
 /**
- * Extension point. Nothing ties a profile to a payment customer yet, so there is no
- * subscription to cancel even where a Stripe key is configured. A fork that adds the
- * link fills this in, and the report says out loud that it has not been filled in.
+ * A live subscription with Stripe switched off is a failure, not a skip: erasing the
+ * profile would drop the only link to a customer who keeps being charged.
  */
-function cancelBilling(): ErasureStepResult {
-    return {
-        step: "billing",
-        status: "skipped",
-        reason: "billing-not-linked",
-    };
+function cancelBilling(profile: UserDTO): Promise<ErasureStepResult> {
+    const subscription = profile.subscription;
+
+    if (!(subscription && isLiveSubscription(subscription))) {
+        return Promise.resolve({
+            step: "billing",
+            status: "skipped",
+            reason: "no-subscription",
+        });
+    }
+
+    const stripe = getStripe();
+    if (!stripe) {
+        return Promise.resolve({
+            step: "billing",
+            status: "failed",
+            reason: "billing-not-configured",
+        });
+    }
+
+    return runStep("billing", () =>
+        cancelSubscriptionForErasure(stripe, subscription.subscriptionId)
+    );
 }
 
-/**
- * Erases what the data subject asked to be erased, one named step at a time, and answers
- * what each step did.
- *
- * A failed step does not stop the ones after it. Stopping halfway would leave the account
- * alive with part of its data already gone, which is worse than either finishing or not
- * starting. The account in Firebase Auth goes last, so nothing is destroyed underneath a
- * session that can still sign in.
- */
-export async function runAccountErasure(
+const STEPS_AFTER_BILLING: ErasureStepName[] = [
+    "storage",
+    "entities",
+    "auditTrail",
+    "profile",
+    "authAccount",
+];
+
+async function eraseData(
     input: AccountErasureInput
 ): Promise<ErasureStepResult[]> {
     const profileId = input.profile.id;
 
-    const report: ErasureStepResult[] = [
+    return [
         await eraseStorage(profileId),
-        cancelBilling(),
         await runStep("entities", () =>
             entityRepository.purgeAllByUserId(profileId)
         ),
@@ -106,6 +123,37 @@ export async function runAccountErasure(
             await getAuthInstance().deleteUser(input.uid);
         }),
     ];
+}
+
+/**
+ * Erases what the data subject asked to be erased, one named step at a time, and answers
+ * what each step did.
+ *
+ * Billing runs first and is the only step that can stop the run: until it lands nothing
+ * has been destroyed, so refusing leaves the account whole and the request repeatable.
+ * After it, a failed step does not stop the ones that follow. Stopping halfway would leave
+ * the account alive with part of its data already gone, which is worse than either
+ * finishing or not starting. The account in Firebase Auth goes last, so nothing is
+ * destroyed underneath a session that can still sign in.
+ */
+export async function runAccountErasure(
+    input: AccountErasureInput
+): Promise<ErasureStepResult[]> {
+    const billing = await cancelBilling(input.profile);
+
+    const report: ErasureStepResult[] =
+        billing.status === "failed"
+            ? [
+                  billing,
+                  ...STEPS_AFTER_BILLING.map(
+                      (step): ErasureStepResult => ({
+                          step,
+                          status: "skipped",
+                          reason: "billing-failed",
+                      })
+                  ),
+              ]
+            : [billing, ...(await eraseData(input))];
 
     for (const step of report) {
         logEvent("account", "erasure-step", {
