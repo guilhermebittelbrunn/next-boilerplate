@@ -1,74 +1,150 @@
 # Pagamentos & assinaturas (Stripe)
 
-Como o fluxo de assinatura funciona neste boilerplate e o que falta implementar em cada fork. Para o passo a passo de implementação, use a skill `/payments-flow`. Aspectos de segurança em [`docs/SECURITY.md`](SECURITY.md).
+Como o fluxo de assinatura funciona neste boilerplate e o que cada fork configura. Para estender o fluxo,
+use a skill `/payments-flow`. Aspectos de segurança em [`docs/SECURITY.md`](SECURITY.md). Os passos de
+console da Stripe estão em [`docs/PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item "Stripe".
 
-## Estado atual (medido em 2026-09-14)
+## Estado atual (medido em 2026-09-24)
 
-> ⚠️ **Não há fluxo de assinatura funcionando.** O que existe é o encanamento da borda: o cliente Stripe e
-> um webhook que valida assinatura de evento mas **não persiste nada**. Tudo abaixo de "Fluxo alvo" é
-> **projeto**, não estado — a entrega está no backlog como
-> [`specs/billing-subscription.md`](../specs/billing-subscription.md).
+O fluxo existe de ponta a ponta no modo de produto `subscription`: o usuário comum escolhe um plano na aba
+`/account?tab=billing`, paga no Stripe Checkout, volta para o app e vê o plano, a situação e o fim do
+período gravados no próprio perfil. Quem já assina abre o Customer Portal pela mesma aba.
 
-**O que existe:**
+**Peças, por camada:**
 
-- `@repo/payments` expõe `getStripe()` (`packages/payments/index.ts:14`, server-only), que constrói o cliente sob demanda e devolve `null` quando não há `STRIPE_SECRET_KEY` — por isso o build da API não quebra num ambiente sem chave. Toda rota que usa o cliente precisa tratar o `null`. Expõe também um `paymentsAgentToolkit` (`packages/payments/ai.ts:4`) para criar produtos/preços/payment links.
-- **Uma** rota: `POST /webhooks/payments` (`apps/api/app/(routes)/webhooks/payments/route.ts`). Ela valida a assinatura com `constructEvent` e despacha **dois** eventos — `checkout.session.completed` e `subscription_schedule.canceled`. Sem `STRIPE_WEBHOOK_SECRET` responde `{ ok: false, message: "Not configured" }`.
+| Camada | Onde | O que faz |
+|--------|------|-----------|
+| Config | `packages/payments/keys.ts` | `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, string vazia lida como ausência. Chave com prefixo errado (`pk_` no lugar de `sk_`) falha a validação: o `next build` da API sai com erro e, em runtime, toda requisição responde 500 com `Invalid environment variables` no log. |
+| Cliente | `packages/payments/index.ts` | `getStripe()` (devolve `null` sem chave), `getWebhookSecret()` e `isPaymentsConfigured()` (as duas chaves ou nada). |
+| Toolkit | `packages/payments/ai.ts` | `getPaymentsAgentToolkit()`, construído sob demanda; devolve `null` sem chave. Serve para semear produtos e preços. |
+| Contrato | `packages/sdk/src/types/payments/`, `actions/payments/action.ts` | `PlanDTO`, `SubscriptionState`, `LIVE_SUBSCRIPTION_STATUSES`; `apiClient.payments.listPlans()`, `.createCheckout()`, `.openPortal()`. |
+| Rotas | `apps/api/app/(routes)/payments/{plans,checkout,portal}` | Catálogo, sessão de checkout e sessão de portal, todas com `requireCommonPanelApi`. |
+| Lógica | `apps/api/(shared)/lib/billing.ts`, `billing-state.ts` | Fala com a Stripe; converte assinatura e preço em snapshot/DTO; decide se um evento pode sobrescrever o estado gravado. |
+| Webhook | `apps/api/app/(routes)/webhooks/payments/route.ts` | Verifica a assinatura, deduplica por `event.id` e reconcilia o perfil. |
+| UI | `apps/app/.../account/(components)/AccountBillingPanel.tsx` | Planos, plano atual, badge de status, avisos de retorno do checkout. |
+| Web | `apps/web/shared/lib/pricingCta.ts` | Os CTAs dos dois primeiros planos do `/pricing` levam a `<app>/<locale>/account?tab=billing`. |
 
-**O que NÃO existe** (e que versões anteriores deste documento afirmavam existir):
+**"Cobrança ligada"** exige quatro coisas ao mesmo tempo: `NEXT_PUBLIC_PRODUCT_MODE` diferente de `simple`,
+as duas chaves Stripe e `NEXT_PUBLIC_APP_URL` na API (é a base das URLs de retorno). Faltando qualquer uma:
 
-- ❌ **Os handlers de evento são stubs vazios** (`route.ts:10-27`, com `TODO`). Nenhum evento muda nada: assinatura paga não vira acesso.
-- ❌ **Nenhuma persistência**: não há `UserDTO.subscription`, `stripeCustomerId` nem `updateSubscriptionByReferenceId` em lugar nenhum do repo.
-- ❌ **Nenhuma rota de plano, checkout ou portal** — `GET /payments/plans`, `POST /payments/checkout` e `POST /payments/portal` não existem.
-- ❌ **Nada no SDK**: não há `apiClient.payments`.
-- ❌ **Nenhuma UI de assinatura com conteúdo** na `apps/app` — existe o **lugar**, não o conteúdo: a aba `/account?tab=billing` (`AccountTabs.tsx:23,76-77`, alcançada por `routes.tsx:53` → `paths.ts:54-56`) renderiza o `AccountBillingPlaceholder`, um empty state traduzido nos 3 idiomas. ⚠️ *Corrigido em 2026-09-15: a versão anterior desta linha dizia "nenhuma UI de assinatura **e nenhum modo `subscription`**", e as duas metades eram falsas — o modo `subscription` existe e é o **padrão** (`packages/next-config/product-mode.ts:12` declara o tipo, `:14` o torna default em `DEFAULT_PRODUCT_MODE`, `:23` expõe `isSubscriptionMode()`, consumido em `apps/web/…/header/index.tsx:38`). Este documento errou na direção oposta à de sempre: afirmou ausência onde havia presença.*
-- ❌ O webhook **não** trata `customer.subscription.updated|deleted`.
+| Superfície | Resposta |
+|------------|----------|
+| `GET /payments/plans` | 200 `{ "enabled": false, "plans": [] }`, sem chamar a Stripe |
+| `POST /payments/checkout`, `POST /payments/portal` | 503 `PAYMENTS_NOT_CONFIGURED` |
+| Aba billing | O mesmo placeholder "Cobrança em breve" que existia antes da feature |
+| Modo `simple` | Aba billing e item da sidebar somem; `?tab=billing` abre o perfil |
 
-**Consequência prática para um fork:** ligar as chaves da Stripe hoje faz o webhook responder `200` e
-descartar o evento em silêncio. Idempotência, dedup de `customer` e reconciliação por UID são decisões que
-ainda **não foram tomadas** — não são dívida a endurecer, são código a escrever.
+O webhook depende só das duas chaves, porque um evento que chega precisa ser reconciliado em qualquer modo.
+Sem elas responde 503 `PAYMENTS_NOT_CONFIGURED`, e a Stripe reentrega por até 3 dias. Com só uma das duas
+chaves, a API avisa no boot: `[payments] billing is DISABLED (no STRIPE_WEBHOOK_SECRET)`.
 
-## Fluxo alvo (ponta a ponta)
+## Fluxo
 
 ```
-  Front (app/web)                 apps/api                        Stripe
-  ───────────────                 ────────                        ──────
-  [Ver planos]  ───── SDK ──────► GET /payments/plans ──────────► prices.list
-  [Assinar]     ───── SDK ──────► POST /payments/checkout ──────► checkout.sessions.create
+  apps/app                        apps/api                        Stripe
+  ────────                        ────────                        ──────
+  aba billing ──── SDK ─────────► GET /payments/plans ──────────► prices.list (recorrentes ativos)
+  [Assinar]   ──── SDK ─────────► POST /payments/checkout ──────► customers.create (1ª vez, idempotente)
+                                                                  checkout.sessions.create
         ◄──────── { url } ───────────────────────────────────────┘
-  redirect p/ Stripe Checkout ──────────────────────────────────► (pagamento)
-                                                                     │ webhook
-  perfil atualizado ◄── userRepository ◄── POST /webhooks/payments ◄┘ checkout.session.completed
-  [Gerenciar]   ───── SDK ──────► POST /payments/portal ────────► billingPortal.sessions.create
-        ◄──────── { url } ───────────────────────────────────────┘
-  redirect p/ Customer Portal (cancelar/trocar plano/reembolso)
+  redirect p/ Checkout ─────────────────────────────────────────► pagamento
+  volta com ?checkout=success                                        │ webhook
+  relê GET /account a cada 3 s ◄── user.subscription ◄── POST /webhooks/payments ◄┘
+  [Gerenciar] ──── SDK ─────────► POST /payments/portal ────────► billingPortal.sessions.create
 ```
 
-## Conceitos-chave
+## Dados
 
-- **Customer ↔ usuário**: salve `stripeCustomerId` no perfil (coleção `user`) no primeiro checkout. É o que permite ao webhook reconciliar o pagamento com o usuário (junto com `metadata.userId`).
-- **Checkout/Portal são server-side**: criados na API (com guard), nunca no front. O front só recebe a `url` e redireciona. A `STRIPE_SECRET_KEY` nunca vai ao cliente.
-- **Webhook é a fonte de verdade do estado**: a assinatura só é considerada ativa quando `checkout.session.completed` chega e é persistida. Trate reentregas de forma idempotente.
+Coleção `user`, dois campos opcionais:
 
-## Eventos de webhook a tratar
+- `stripeCustomerId`: gravado no primeiro checkout, antes de a sessão existir, para que todo evento ache o
+  perfil pelo `customer`.
+- `subscription`: último estado conhecido, escrito só pelo webhook. Guarda `subscriptionId`, `status`,
+  `priceId`, `productId`, `unitAmount`, `currency`, `interval`, `intervalCount`, `currentPeriodEnd`,
+  `cancelAtPeriodEnd` e `lastEventAt`. O preço fica no snapshot para o card "Plano atual" funcionar mesmo
+  com o preço arquivado ou com a listagem de planos fora do ar.
 
-| Evento | Ação no perfil |
-|--------|----------------|
-| `checkout.session.completed` | marca assinatura ativa (plano, status, fim do período) |
-| `customer.subscription.updated` | atualiza plano/status (ex.: `past_due`) |
-| `customer.subscription.deleted` / `subscription_schedule.canceled` | marca cancelada |
+Perfil sem os dois campos lê como "sem assinatura". Não há backfill.
 
-## Cancelamento e reembolso (conformidade legal)
+Coleção `paymentEvent`: um documento por evento processado, com id igual ao `event.id`, `type`,
+`createdAt` e `expiresAt` (30 dias depois, para uma política de TTL opcional).
 
-- O **Customer Portal** (configurável no Dashboard → Billing → Customer portal) cobre cancelamento e troca de plano sem código. Habilite o cancelamento e, conforme a legislação aplicável (ex.: direito de arrependimento de 7 dias no CDC brasileiro), permita reembolso na janela devida.
-- Reembolsos programáticos: `stripe.refunds.create({ payment_intent })` numa rota **admin** (`requireAdminApi`).
-- Documente a política de reembolso na `apps/web` (use `/copywriting` para a copy).
+## Eventos de webhook
 
-## Planos
+| Evento | Ação |
+|--------|------|
+| `checkout.session.completed` | Liga o `customer` ao perfil de `client_reference_id` (ou `metadata.profileId`) se o vínculo faltar |
+| `customer.subscription.created` / `updated` / `deleted` | Acha o perfil pelo `customer` (fallback `metadata.profileId`) e grava o snapshot numa transação |
+| qualquer outro | Registra `webhook-unhandled-event` e responde 200 |
 
-- Defina produtos/preços no Stripe (Dashboard ou `paymentsAgentToolkit`). Exponha-os ao front via rota (`prices.list`) ou via config tipada no app (mais simples/barato). Mapeie para um `PlanDTO` no `@repo/sdk`.
-- Pricing público (`apps/web`) e seleção de plano (`apps/app`) consomem o mesmo contrato.
+`subscription_schedule.canceled` não é tratado: cancelar um schedule não cancela a assinatura. O
+cancelamento real chega como `customer.subscription.deleted`.
 
-## Ambiente e teste local
+**Idempotência e ordem.** Evento com `id` já processado responde 200 `{ duplicate: true }` sem rodar
+handler. O evento é marcado só depois de o handler terminar; se o handler lança, a rota responde 500 e a
+Stripe reentrega. A escrita do snapshot segue `decideSubscriptionWrite`:
 
-- Vars: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (ver [`docs/SETUP.md`](SETUP.md)).
-- Local: `pnpm --filter api dev:with-stripe` sobe a API e o `stripe listen`. Dispare eventos com `stripe trigger checkout.session.completed` e use cartões de teste (`4242 4242 4242 4242`).
+1. Nada gravado, ou outra assinatura gravada: aplica, a menos que a gravada esteja viva e a nova não (um
+   `deleted` atrasado de uma assinatura antiga não derruba a atual).
+2. Mesma assinatura já `canceled` ou `incomplete_expired`: ignora. A Stripe não tira uma assinatura desses
+   estados.
+3. Mesma assinatura e evento `created`: ignora (é o estado mais antigo e empata no segundo com o primeiro
+   `updated`).
+4. Mesma assinatura e `event.created` anterior a `lastEventAt`: ignora.
+5. Caso contrário, aplica.
+
+Perfil não encontrado responde 200, registra `webhook-profile-not-found` e marca o evento.
+
+**Versão de API do endpoint.** O fim do período é lido de `items.data[0].current_period_end`, que é onde a
+versão `2025-09-30.clover` (fixada em `getStripe()`) o entrega. Um endpoint registrado numa versão anterior a
+2025-03-31 manda o campo em outro lugar, e o snapshot grava `currentPeriodEnd: null`; a UI então omite a
+data.
+
+## Checkout, portal e erros
+
+- O checkout recusa quem já tem assinatura viva (`active`, `trialing`, `past_due`, `unpaid`, `paused`) com
+  409 `PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE`: trocar de plano é pelo portal.
+- Na volta com `?checkout=success`, enquanto o webhook não grava a assinatura, os botões "Assinar" ficam
+  desabilitados. A recusa acima só enxerga o que já está no perfil, então é a UI que cobre essa janela.
+- Duas abas pagas antes de qualquer webhook ainda geram duas assinaturas na Stripe. O perfil guarda a mais
+  recente e o expurgo cancela só essa. É um risco aceito para o MVP; a correção, para quem precisar dela
+  antes do release, está no item 12 do [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md#12-stripe--só-se-o-fork-cobra-assinatura).
+- O `priceId` do corpo só nomeia o preço. A API consulta a Stripe e recusa preço inexistente, inativo,
+  avulso ou de produto arquivado com 404 `PAYMENTS_PLAN_NOT_FOUND`.
+- O cliente Stripe é criado com a chave de idempotência `customer-<profileId>`, então clique duplo não gera
+  dois clientes.
+- O portal exige `stripeCustomerId`: sem ele, 409 `PAYMENTS_CUSTOMER_NOT_FOUND`.
+- Qualquer outra falha da Stripe (chave recusada, rede, 5xx) vira 503 `PAYMENTS_PROVIDER_UNAVAILABLE`.
+- Personificação é só leitura: checkout e portal respondem 403 `AUTH_REQUEST_IMPERSONATION_READ_ONLY`, e os
+  botões ficam desabilitados.
+
+Os códigos novos têm tradução nos 3 idiomas em `apiErrors`.
+
+## Exclusão e exportação de conta
+
+- O passo `billing` do expurgo roda **primeiro**. Com assinatura viva, cancela na Stripe
+  (`subscriptions.cancel`, imediato, sem reembolso proporcional); assinatura que a Stripe já não tem conta
+  como feita. Se o cancelamento falhar, ou se a Stripe estiver desligada com assinatura viva gravada, nada
+  é apagado e `POST /account/deletion` responde 503 `ACCOUNT_DELETION_BILLING_FAILED`.
+- A exportação leva `account.subscription` e `account.stripeCustomerId`, com `null` quando não existem.
+
+## Fora do corte
+
+Trial, cupom, downgrade proporcional, reembolso e faturas em UI própria; bloquear acesso por plano ou em
+`past_due` (o status só é exibido); cobrança por organização; nome e descrição de plano traduzidos (vêm da
+Stripe num idioma só); cancelar a assinatura quando o **admin** faz soft delete de um usuário
+(`apps/api/app/(routes)/users/[id]/route.ts`), que hoje não cancela.
+
+Reembolso programático, se um fork precisar: `stripe.refunds.create({ payment_intent })` numa rota com
+`requireAdminApi`. Política de reembolso (ex.: arrependimento de 7 dias do CDC) se configura no Customer
+Portal.
+
+## Teste local
+
+- Sem conta Stripe, a suíte cobre o fluxo com cliente mockado, e o teste do webhook assina payloads com
+  `stripe.webhooks.generateTestHeaderString`, que calcula o HMAC localmente.
+- Com conta de teste: preencha as duas chaves no `.env` da API e rode `pnpm --filter api dev:with-stripe`
+  (API + `stripe listen`). Dispare eventos com `stripe trigger customer.subscription.created` e pague com o
+  cartão `4242 4242 4242 4242`.
+- O segredo que o `stripe listen` imprime (`whsec_…`) é o que vai em `STRIPE_WEBHOOK_SECRET` localmente;
+  ele é diferente do segredo do endpoint registrado no Dashboard.
