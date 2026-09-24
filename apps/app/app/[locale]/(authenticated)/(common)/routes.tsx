@@ -1,6 +1,7 @@
 "use client";
 
 import { getDictionaryForLocale } from "@repo/internationalization/client";
+import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import { LayersIcon, Settings2Icon, SquareTerminalIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
@@ -48,10 +49,14 @@ export function useCommonNavRoutes(): NavItem[] {
                         title: settingsItems.preferences,
                         url: routes.account.preferences.url,
                     },
-                    {
-                        title: settingsItems.billing,
-                        url: routes.account.billing.url,
-                    },
+                    ...(isSubscriptionMode()
+                        ? [
+                              {
+                                  title: settingsItems.billing,
+                                  url: routes.account.billing.url,
+                              },
+                          ]
+                        : []),
                     {
                         title: settingsItems.privacy,
                         url: routes.account.privacy.url,
