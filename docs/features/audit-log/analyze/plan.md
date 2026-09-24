@@ -1,6 +1,6 @@
 # Plano — Trilha de auditoria de ações sensíveis
 
-- **Spec de origem**: [`specs/audit-log.md`](../../../../specs/audit-log.md)
+- **Spec de origem**: [`specs/audit-log.md`](../spec.md)
 - **Slug**: `audit-log`
 - **Guia seguido**: [`docs/feature-analysis-guide.md`](../../../feature-analysis-guide.md) (seções 1 a 10)
 - **Base**: branch `provo`, `HEAD` = `c36e084` (PR #17, paginação por cursor)

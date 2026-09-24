@@ -1,9 +1,12 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { getDictionary } from "@repo/internationalization/server";
+import { resolveLocale } from "@repo/internationalization/utils";
+import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import { Check, Minus, MoveRight, PhoneCall } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { env } from "@/env";
+import { resolvePlanCtaHref } from "@/shared/lib/pricingCta";
 import { buildLocaleMetadata } from "@/shared/lib/seo";
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -18,11 +21,23 @@ export const generateMetadata = async (): Promise<Metadata> => {
     });
 };
 
-const Pricing = async () => {
+type PricingProps = {
+    readonly params: Promise<{ locale: string }>;
+};
+
+const Pricing = async ({ params }: PricingProps) => {
+    const { locale: routeLocale } = await params;
     const { dictionary, locale } = await getDictionary();
     const pricingCopy = dictionary.apps.web.pages.pricing;
     const featuresTable = pricingCopy.featuresTable;
     const enterprise = pricingCopy.items[2];
+    const planCtaHref = resolvePlanCtaHref({
+        appUrl: env.NEXT_PUBLIC_APP_URL,
+        // The `x-locale` cookie is written on this same response, so on a language switch
+        // it still names the previous locale; the URL segment is the current one.
+        locale: resolveLocale(routeLocale),
+        subscriptionMode: isSubscriptionMode(),
+    });
 
     return (
         <div className="w-full py-20 lg:py-40">
@@ -72,12 +87,7 @@ const Pricing = async () => {
                                 icon={<MoveRight />}
                                 variant="outline"
                             >
-                                <Link
-                                    href={
-                                        env.NEXT_PUBLIC_APP_URL ||
-                                        `/${locale}/sign-up`
-                                    }
-                                >
+                                <Link href={planCtaHref}>
                                     {
                                         dictionary.apps.web.pages.pricing
                                             .items[0].linkButton
@@ -115,12 +125,7 @@ const Pricing = async () => {
                                 </span>
                             </p>
                             <Button className="mt-8 gap-4" icon={<MoveRight />}>
-                                <Link
-                                    href={
-                                        env.NEXT_PUBLIC_APP_URL ||
-                                        `/${locale}/sign-up`
-                                    }
-                                >
+                                <Link href={planCtaHref}>
                                     {
                                         dictionary.apps.web.pages.pricing
                                             .items[1].linkButton

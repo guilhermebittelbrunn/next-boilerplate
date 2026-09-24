@@ -1,38 +1,148 @@
-/** biome-ignore-all lint/suspicious/useAwait: os handlers de evento são stubs aguardados pelo despacho abaixo; a assinatura async é o contrato que a persistência futura vai preencher. */
 import type { Stripe } from "@repo/payments";
-import { getStripe } from "@repo/payments";
+import { getStripe, getWebhookSecret } from "@repo/payments";
+import type { UserDTO } from "@repo/sdk/src/types";
+import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { env } from "@/env";
+import { toSubscriptionState } from "@/(shared)/lib/billing-state";
+import { paymentEventRepository } from "@/(shared)/repositories/payment-event.repository";
+import { userRepository } from "@/(shared)/repositories/user.repository";
 
-const handleCheckoutSessionCompleted = async (
-    data: Stripe.Checkout.Session
-) => {
-    // TODO: Implement user subscription logic with Firebase Auth
-    // You can get user info from Firebase using the customer ID
-    if (!data.customer) {
-        return;
+const idOf = (
+    value: string | { id: string } | null | undefined
+): string | null => {
+    if (!value) {
+        return null;
     }
+    return typeof value === "string" ? value : value.id;
 };
 
-const handleSubscriptionScheduleCanceled = async (
-    data: Stripe.SubscriptionSchedule
-) => {
-    // TODO: Implement user unsubscription logic with Firebase Auth
-    if (!data.customer) {
+const logProfileNotFound = (eventType: string, requestId: string | null) =>
+    logEvent("payments", "webhook-profile-not-found", {
+        eventType,
+        requestId,
+    });
+
+async function linkCheckoutCustomer(
+    session: Stripe.Checkout.Session,
+    requestId: string | null
+): Promise<void> {
+    const customerId = idOf(session.customer);
+    const profileId =
+        session.client_reference_id ?? session.metadata?.profileId ?? null;
+
+    if (!(customerId && profileId)) {
         return;
     }
-};
 
+    const profile = await userRepository.findById(profileId);
+    if (!profile) {
+        logProfileNotFound("checkout.session.completed", requestId);
+        return;
+    }
+
+    if (!profile.stripeCustomerId) {
+        await userRepository.linkStripeCustomer(profile.id, customerId);
+    }
+}
+
+async function findSubscriptionOwner(
+    subscription: Stripe.Subscription
+): Promise<UserDTO | null> {
+    const customerId = idOf(subscription.customer);
+    const byCustomer = customerId
+        ? await userRepository.findByStripeCustomerId(customerId)
+        : null;
+    if (byCustomer) {
+        return byCustomer;
+    }
+
+    const profileId = subscription.metadata?.profileId;
+    if (!profileId) {
+        return null;
+    }
+
+    const byMetadata = await userRepository.findById(profileId);
+    if (byMetadata && customerId && !byMetadata.stripeCustomerId) {
+        await userRepository.linkStripeCustomer(byMetadata.id, customerId);
+    }
+    return byMetadata;
+}
+
+async function reconcileSubscription(
+    event: Stripe.Event,
+    subscription: Stripe.Subscription,
+    requestId: string | null
+): Promise<void> {
+    const profile = await findSubscriptionOwner(subscription);
+    if (!profile) {
+        logProfileNotFound(event.type, requestId);
+        return;
+    }
+
+    const result = await userRepository.applySubscriptionState(
+        profile.id,
+        toSubscriptionState(subscription, event.created),
+        event.type
+    );
+
+    logEvent("payments", "webhook-subscription-reconciled", {
+        eventType: event.type,
+        result,
+        requestId,
+    });
+}
+
+async function dispatch(
+    event: Stripe.Event,
+    requestId: string | null
+): Promise<void> {
+    switch (event.type) {
+        case "checkout.session.completed": {
+            await linkCheckoutCustomer(event.data.object, requestId);
+            break;
+        }
+        case "customer.subscription.created":
+        case "customer.subscription.updated":
+        case "customer.subscription.deleted": {
+            await reconcileSubscription(event, event.data.object, requestId);
+            break;
+        }
+        default: {
+            logEvent("payments", "webhook-unhandled-event", {
+                eventType: event.type,
+            });
+        }
+    }
+}
+
+const failure = () =>
+    NextResponse.json(
+        { message: "something went wrong", ok: false },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+    );
+
+/**
+ * Answering 503 while unconfigured makes Stripe keep retrying for up to three days, so no
+ * event is lost while a fork finishes setting up. An event is marked processed only after
+ * its handler finished: a failure answers 500 and Stripe delivers it again.
+ */
 export const POST = async (request: Request): Promise<Response> => {
     const stripe = getStripe();
+    const secret = getWebhookSecret();
 
-    if (!(stripe && env.STRIPE_WEBHOOK_SECRET)) {
-        return NextResponse.json({ message: "Not configured", ok: false });
+    if (!(stripe && secret)) {
+        return NextResponse.json(
+            { error: { code: "PAYMENTS_NOT_CONFIGURED" } },
+            { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
+        );
     }
 
+    const requestId = requestIdFrom(request);
+
+    let event: Stripe.Event;
     try {
         const body = await request.text();
         const headerPayload = await headers();
@@ -42,40 +152,26 @@ export const POST = async (request: Request): Promise<Response> => {
             throw new Error("missing stripe-signature header");
         }
 
-        const event = stripe.webhooks.constructEvent(
-            body,
-            signature,
-            env.STRIPE_WEBHOOK_SECRET
-        );
+        event = stripe.webhooks.constructEvent(body, signature, secret);
+    } catch {
+        logEvent("payments", "webhook-failed", { requestId });
+        return failure();
+    }
 
-        switch (event.type) {
-            case "checkout.session.completed": {
-                await handleCheckoutSessionCompleted(event.data.object);
-                break;
-            }
-            case "subscription_schedule.canceled": {
-                await handleSubscriptionScheduleCanceled(event.data.object);
-                break;
-            }
-            default: {
-                logEvent("payments", "webhook-unhandled-event", {
-                    eventType: event.type,
-                });
-            }
+    try {
+        if (await paymentEventRepository.wasProcessed(event.id)) {
+            return NextResponse.json({ ok: true, duplicate: true });
         }
 
-        return NextResponse.json({ result: event, ok: true });
+        await dispatch(event, requestId);
+        await paymentEventRepository.markProcessed(event);
     } catch {
-        logEvent("payments", "webhook-failed", {
-            requestId: requestIdFrom(request),
+        logEvent("payments", "webhook-handler-failed", {
+            eventType: event.type,
+            requestId,
         });
-
-        return NextResponse.json(
-            {
-                message: "something went wrong",
-                ok: false,
-            },
-            { status: 500 }
-        );
+        return failure();
     }
+
+    return NextResponse.json({ result: event, ok: true });
 };

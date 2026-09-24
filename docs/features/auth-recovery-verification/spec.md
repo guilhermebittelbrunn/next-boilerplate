@@ -57,7 +57,7 @@ começar**. Isso reduz o escopo desta spec, e de um jeito que a redação acima 
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - Prevalência: **10/10** — "e-mail+senha, OAuth social, verificação de e-mail e recuperação de senha aparecem em todos, sem exceção". É o único item do painel com prevalência total, classificado como **bloqueador** e esforço **P**. Não entregar não é diferencial, é lacuna.
 - A mesma nota observa que kits antigos (ShipFast, Nextacular) tratam verificação como opcional — "e isso vira vetor de spam em signup aberto".
 - Fontes: <https://firebase.google.com/docs/reference/rest/auth> · <https://www.better-auth.com/docs/authentication/email-password>

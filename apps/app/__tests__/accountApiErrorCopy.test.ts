@@ -12,7 +12,7 @@ const GENERIC_COPY: Record<(typeof LOCALES)[number], string> = {
     es: "Ocurrió un error inesperado",
 };
 
-/** Every code the routes under `/account` can answer with. */
+/** Every code the account area can answer with, the billing tab under `/payments` included. */
 const ACCOUNT_ERROR_CODES = [
     "ACCOUNT_NOTHING_TO_UPDATE",
     "ACCOUNT_AVATAR_INVALID",
@@ -34,6 +34,12 @@ const ACCOUNT_ERROR_CODES = [
     "AUTH_REQUEST_IMPERSONATION_READ_ONLY",
     "STORAGE_NOT_CONFIGURED",
     "UPLOAD_FAILED",
+    "ACCOUNT_DELETION_BILLING_FAILED",
+    "PAYMENTS_NOT_CONFIGURED",
+    "PAYMENTS_PLAN_NOT_FOUND",
+    "PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE",
+    "PAYMENTS_CUSTOMER_NOT_FOUND",
+    "PAYMENTS_PROVIDER_UNAVAILABLE",
 ] as const;
 
 function apiError(status: number, code: string): AxiosError {

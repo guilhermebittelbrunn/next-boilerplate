@@ -1,6 +1,6 @@
 # Análise e blueprint: onboarding pós-cadastro
 
-- **Spec de origem:** [`specs/onboarding-flow.md`](../../../../specs/onboarding-flow.md) (inclui o bloco "Reescopo que o
+- **Spec de origem:** [`docs/features/onboarding-flow/spec.md`](../spec.md) (inclui o bloco "Reescopo que o
   `/analyze` deve aplicar", auditoria de 2026-09-23, adotado como base do corte).
 - **Rodada:** autônoma, dentro de um `/cycle`. As decisões que pediriam pergunta foram tomadas pela escada
   spec → padrão do repo → menor raio de impacto e estão listadas no fim, com a alternativa descartada.

@@ -1,6 +1,6 @@
 # Plano — Renovação deslizante da sessão
 
-- **Spec de origem**: [`specs/session-refresh.md`](../../../../specs/session-refresh.md)
+- **Spec de origem**: [`specs/session-refresh.md`](../spec.md)
 - **Slug**: `session-refresh`
 - **Rodada**: autônoma (`/cycle`). As perguntas em aberto da spec já vêm decididas — ver a seção final.
 - **Contenção**: `packages/auth/session.ts`, `session-routes.ts`, `server.ts`. A spec

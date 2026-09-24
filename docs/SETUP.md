@@ -96,7 +96,10 @@ Identidade da marca para metadata/Open Graph/JSON-LD. Todas opcionais (defaults 
 | `STRIPE_SECRET_KEY` | p/ pagamentos | Stripe Dashboard → Developers → API keys (`sk_...`) |
 | `STRIPE_WEBHOOK_SECRET` | p/ webhooks | `stripe listen` imprime `whsec_...`, ou Dashboard → Webhooks |
 
-Se `STRIPE_SECRET_KEY` não estiver setada, a validação é pulada (o app sobe sem Stripe).
+Opcionais: vazias ou ausentes, a API sobe com a cobrança desligada (a aba billing mostra o placeholder e as
+rotas de pagamento respondem `PAYMENTS_NOT_CONFIGURED`). Preencha as duas ou nenhuma; com só uma, a API avisa
+no boot. Uma chave com prefixo errado (`pk_` como secret, por exemplo) falha a validação. Passo a passo em
+[`docs/PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 12.
 
 ### Resend — e-mail · pacote `@repo/email` (`packages/email/keys.ts`)
 `RESEND_TOKEN` (API key `re_...`) e `RESEND_FROM` (remetente verificado).

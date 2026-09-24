@@ -94,7 +94,7 @@ admin — uma das razões de existir deste boilerplate — só abre editando um 
 
 ## Evidência de mercado
 
-- Nota: [`research/engineering-baseline.md`](research/engineering-baseline.md)
+- Nota: [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md)
 - **Prática 4 (seed / dados de demo)** — *consolidada*, esforço P–M; a dor que evita é exatamente a daqui:
   "onboarding de dias; ambiente irreprodutível".
 - **Prática 3 (testes de regras do Firestore)** — **obrigatória com Firebase** e uma das quatro

@@ -10,6 +10,8 @@ const {
     revokeUserSessionsMock,
     deleteUserMock,
     logEventMock,
+    getStripeMock,
+    cancelSubscriptionMock,
 } = vi.hoisted(() => ({
     isStorageConfiguredMock: vi.fn(),
     deleteObjectsByPrefixMock: vi.fn(),
@@ -19,6 +21,8 @@ const {
     revokeUserSessionsMock: vi.fn(),
     deleteUserMock: vi.fn(),
     logEventMock: vi.fn(),
+    getStripeMock: vi.fn(),
+    cancelSubscriptionMock: vi.fn(),
 }));
 
 /** Records the order the orchestrator touched each collaborator in. */
@@ -73,6 +77,15 @@ vi.mock("@repo/auth/server", () => ({
     },
 }));
 
+vi.mock("@repo/payments", () => ({
+    getStripe: () => getStripeMock(),
+    isPaymentsConfigured: () => true,
+}));
+
+vi.mock("@/env", () => ({
+    env: { NEXT_PUBLIC_APP_URL: "http://localhost:3000" },
+}));
+
 vi.mock("@repo/shared/utils/helpers/log", () => ({
     logEvent: (...args: unknown[]) => logEventMock(...args),
 }));
@@ -89,6 +102,29 @@ const PROFILE = {
 };
 
 const INPUT = { profile: PROFILE, uid: "uid-1", requestId: "req-1" };
+
+function inputWithSubscription(status: string) {
+    return {
+        ...INPUT,
+        profile: {
+            ...PROFILE,
+            stripeCustomerId: "cus_qa",
+            subscription: {
+                subscriptionId: "sub_qa",
+                status,
+                priceId: "price_pro",
+                productId: "prod_pro",
+                unitAmount: 2900,
+                currency: "brl",
+                interval: "month" as const,
+                intervalCount: 1,
+                currentPeriodEnd: null,
+                cancelAtPeriodEnd: false,
+                lastEventAt: new Date(),
+            },
+        },
+    } as typeof INPUT;
+}
 
 const PURGED_ENTITIES = 2;
 const ANONYMIZED_EVENTS = 3;
@@ -112,9 +148,20 @@ beforeEach(() => {
         revokeUserSessionsMock,
         deleteUserMock,
         logEventMock,
+        getStripeMock,
+        cancelSubscriptionMock,
     ]) {
         mock.mockReset();
     }
+    getStripeMock.mockReturnValue({
+        subscriptions: {
+            cancel: (...args: unknown[]) => {
+                calls.push("billing");
+                return cancelSubscriptionMock(...args);
+            },
+        },
+    });
+    cancelSubscriptionMock.mockResolvedValue({ status: "canceled" });
     isStorageConfiguredMock.mockReturnValue(false);
     purgeAllByUserIdMock.mockResolvedValue(PURGED_ENTITIES);
     anonymizeUserLabelsMock.mockResolvedValue(ANONYMIZED_EVENTS);
@@ -136,12 +183,12 @@ describe("runAccountErasure", () => {
         ]);
     });
 
-    it("relata um passo por alvo, sempre na mesma ordem", async () => {
+    it("relata um passo por alvo, sempre na mesma ordem, com a cobrança primeiro", async () => {
         const report = await runAccountErasure(INPUT);
 
         expect(report.map((result) => result.step)).toEqual([
-            "storage",
             "billing",
+            "storage",
             "entities",
             "auditTrail",
             "profile",
@@ -176,14 +223,95 @@ describe("runAccountErasure", () => {
         });
     });
 
-    it("declara a assinatura como ponto de extensão, não como sucesso", async () => {
+    it("pula a cobrança e diz por quê quando não há assinatura viva", async () => {
         const report = await runAccountErasure(INPUT);
 
         expect(statusOf(report, "billing")).toEqual({
             step: "billing",
             status: "skipped",
-            reason: "billing-not-linked",
+            reason: "no-subscription",
         });
+        expect(cancelSubscriptionMock).not.toHaveBeenCalled();
+    });
+
+    it("pula a cobrança de uma assinatura já cancelada", async () => {
+        const report = await runAccountErasure(
+            inputWithSubscription("canceled")
+        );
+
+        expect(statusOf(report, "billing")?.status).toBe("skipped");
+        expect(cancelSubscriptionMock).not.toHaveBeenCalled();
+    });
+
+    it("cancela a assinatura viva antes de apagar qualquer dado", async () => {
+        const report = await runAccountErasure(
+            inputWithSubscription("past_due")
+        );
+
+        expect(cancelSubscriptionMock).toHaveBeenCalledWith("sub_qa");
+        expect(statusOf(report, "billing")).toEqual({
+            step: "billing",
+            status: "done",
+        });
+        expect(calls[0]).toBe("billing");
+        expect(calls).toContain("authAccount");
+    });
+
+    it("conta como feita a assinatura que a Stripe já não tem", async () => {
+        cancelSubscriptionMock.mockRejectedValue(
+            Object.assign(new Error("No such subscription"), {
+                code: "resource_missing",
+            })
+        );
+
+        const report = await runAccountErasure(inputWithSubscription("active"));
+
+        expect(statusOf(report, "billing")?.status).toBe("done");
+        expect(deleteUserMock).toHaveBeenCalledWith("uid-1");
+    });
+
+    it("para o expurgo inteiro quando o cancelamento falha: nada é apagado", async () => {
+        class StripeConnectionError extends Error {
+            constructor() {
+                super("network down, owner@example.com");
+                this.name = "StripeConnectionError";
+            }
+        }
+        cancelSubscriptionMock.mockRejectedValue(new StripeConnectionError());
+
+        const report = await runAccountErasure(inputWithSubscription("active"));
+
+        expect(statusOf(report, "billing")).toEqual({
+            step: "billing",
+            status: "failed",
+            reason: "StripeConnectionError",
+        });
+        expect(calls).toEqual(["billing"]);
+        expect(purgeProfileMock).not.toHaveBeenCalled();
+        expect(deleteUserMock).not.toHaveBeenCalled();
+        for (const step of report.slice(1)) {
+            expect(step).toMatchObject({
+                status: "skipped",
+                reason: "billing-failed",
+            });
+        }
+        expect(JSON.stringify(logEventMock.mock.calls)).not.toContain(
+            "owner@example.com"
+        );
+    });
+
+    it("recusa apagar quem tem assinatura viva com a Stripe desligada", async () => {
+        getStripeMock.mockReturnValue(null);
+
+        const report = await runAccountErasure(inputWithSubscription("active"));
+
+        expect(statusOf(report, "billing")).toEqual({
+            step: "billing",
+            status: "failed",
+            reason: "billing-not-configured",
+        });
+        expect(calls).toEqual([]);
+        expect(deleteUserMock).not.toHaveBeenCalled();
     });
 
     it("segue apagando depois de um passo que falhou", async () => {

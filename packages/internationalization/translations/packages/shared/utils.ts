@@ -48,6 +48,17 @@ export const sharedUtilsTranslations = {
                 "Esta conta não tem senha para confirmar a exclusão. Use o canal de privacidade.",
             ACCOUNT_DELETION_FAILED:
                 "Não foi possível concluir a exclusão da conta. Tente de novo.",
+            ACCOUNT_DELETION_BILLING_FAILED:
+                "Não conseguimos cancelar a sua assinatura, então a conta não foi excluída. Tente de novo em instantes.",
+            PAYMENTS_NOT_CONFIGURED:
+                "A cobrança não está disponível neste ambiente.",
+            PAYMENTS_PLAN_NOT_FOUND: "Este plano não está mais disponível.",
+            PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE:
+                "Você já tem uma assinatura ativa. Use Gerenciar assinatura para trocar de plano.",
+            PAYMENTS_CUSTOMER_NOT_FOUND:
+                "Não há assinatura para gerenciar nesta conta.",
+            PAYMENTS_PROVIDER_UNAVAILABLE:
+                "O serviço de pagamento não respondeu. Tente de novo em instantes.",
             ONBOARDING_STEP_NOT_SKIPPABLE: "Este passo não pode ser pulado.",
             ONBOARDING_STEP_OUT_OF_ORDER:
                 "Seu progresso mudou em outra aba. Atualizamos para o passo certo.",
@@ -147,6 +158,17 @@ export const sharedUtilsTranslations = {
                 "This account has no password to confirm the deletion. Use the privacy channel.",
             ACCOUNT_DELETION_FAILED:
                 "The account deletion could not be completed. Try again.",
+            ACCOUNT_DELETION_BILLING_FAILED:
+                "We couldn't cancel your subscription, so the account was not deleted. Try again in a moment.",
+            PAYMENTS_NOT_CONFIGURED:
+                "Billing is not available in this environment.",
+            PAYMENTS_PLAN_NOT_FOUND: "This plan is no longer available.",
+            PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE:
+                "You already have an active subscription. Use Manage subscription to change plans.",
+            PAYMENTS_CUSTOMER_NOT_FOUND:
+                "There is no subscription to manage on this account.",
+            PAYMENTS_PROVIDER_UNAVAILABLE:
+                "The payment service did not respond. Try again in a moment.",
             ONBOARDING_STEP_NOT_SKIPPABLE: "This step cannot be skipped.",
             ONBOARDING_STEP_OUT_OF_ORDER:
                 "Your progress changed in another tab. We moved you to the right step.",
@@ -245,6 +267,17 @@ export const sharedUtilsTranslations = {
                 "Esta cuenta no tiene contraseña para confirmar la eliminación. Usa el canal de privacidad.",
             ACCOUNT_DELETION_FAILED:
                 "No se pudo completar la eliminación de la cuenta. Inténtalo de nuevo.",
+            ACCOUNT_DELETION_BILLING_FAILED:
+                "No pudimos cancelar tu suscripción, así que la cuenta no se eliminó. Inténtalo de nuevo en unos instantes.",
+            PAYMENTS_NOT_CONFIGURED:
+                "La facturación no está disponible en este entorno.",
+            PAYMENTS_PLAN_NOT_FOUND: "Este plan ya no está disponible.",
+            PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE:
+                "Ya tienes una suscripción activa. Usa Gestionar suscripción para cambiar de plan.",
+            PAYMENTS_CUSTOMER_NOT_FOUND:
+                "No hay ninguna suscripción que gestionar en esta cuenta.",
+            PAYMENTS_PROVIDER_UNAVAILABLE:
+                "El servicio de pago no respondió. Inténtalo de nuevo en unos instantes.",
             ONBOARDING_STEP_NOT_SKIPPABLE: "Este paso no se puede omitir.",
             ONBOARDING_STEP_OUT_OF_ORDER:
                 "Tu progreso cambió en otra pestaña. Te llevamos al paso correcto.",

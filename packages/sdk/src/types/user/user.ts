@@ -1,4 +1,6 @@
 /** biome-ignore-all lint/style/noEnum: enums for role */
+import type { SubscriptionState } from "../payments/payments";
+
 export enum UserType {
     ADMIN = "admin",
     COMMON = "common",
@@ -57,6 +59,10 @@ export type UserDTO = {
     lastAccessAt?: Date | null;
     /** Absent on profiles that predate the flow, which count as done. */
     onboarding?: OnboardingState | null;
+    /** Linked on the first checkout, so every later payment event can find this profile. */
+    stripeCustomerId?: string | null;
+    /** Written only by the payments webhook. Absent means the profile never subscribed. */
+    subscription?: SubscriptionState | null;
 };
 
 export type AdminCreateUserRequest = {

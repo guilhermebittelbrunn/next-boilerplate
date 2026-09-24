@@ -152,7 +152,7 @@ mal citado:
   sem inventar mecanismo. Cuidado a registrar: o ramo `{ refreshed: false }` é o caminho quente e **não**
   deve carimbar, ou a garantia de custo desaparece.
 - **Contenção conhecida:** `packages/sdk/src/types/user/user.ts` é disputado com
-  [`billing-subscription`](../../../specs/billing-subscription.md) e [`onboarding-flow`](../../../specs/onboarding-flow.md), que também
+  [`billing-subscription`](../../../specs/billing-subscription.md) e [`onboarding-flow`](../onboarding-flow/spec.md), que também
   acrescentam campo ao `UserDTO`.
 
 ## Sinais de pronto

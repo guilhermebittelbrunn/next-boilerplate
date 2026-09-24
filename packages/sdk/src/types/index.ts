@@ -4,4 +4,5 @@ export * from "./audit";
 export * from "./entity";
 export * from "./file";
 export * from "./pagination";
+export * from "./payments";
 export * from "./user";

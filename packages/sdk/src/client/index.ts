@@ -7,6 +7,7 @@ import AuditActions from "../actions/audit/action";
 import AuthActions from "../actions/auth/action";
 import EntityActions from "../actions/entity/action";
 import FileActions from "../actions/file/action";
+import PaymentsActions from "../actions/payments/action";
 import UserActions from "../actions/user/user/action";
 import BaseClient, { type Config } from "./base";
 
@@ -18,6 +19,7 @@ export class Client extends BaseClient {
     file!: FileActions;
     account!: AccountActions;
     audit!: AuditActions;
+    payments!: PaymentsActions;
 
     constructor(config: Config) {
         super(config);
@@ -28,6 +30,7 @@ export class Client extends BaseClient {
         this.entity = new EntityActions(this);
         this.file = new FileActions(this);
         this.audit = new AuditActions(this);
+        this.payments = new PaymentsActions(this);
     }
 
     get isAdminContext(): boolean {

@@ -1,11 +1,13 @@
 import type { EntityDTO } from "../entity/entity";
+import type { SubscriptionStateDTO } from "../payments/payments";
 import type { UserPreferences, UserWithAuthDTO } from "../user/user";
 
-export type AccountDTO = UserWithAuthDTO & {
+export type AccountDTO = Omit<UserWithAuthDTO, "subscription"> & {
     phone: string | null;
     avatar: string | null;
     avatarUrl: string | null;
     preferences: UserPreferences;
+    subscription?: SubscriptionStateDTO | null;
 };
 
 export type UpdateAccountRequest = {

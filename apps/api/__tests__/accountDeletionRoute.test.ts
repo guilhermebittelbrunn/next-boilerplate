@@ -76,8 +76,8 @@ const PASSWORD_PROVIDER = [{ providerId: "password", uid: OWNER_EMAIL }];
 const GOOGLE_PROVIDER = [{ providerId: "google.com", uid: "g-1" }];
 
 const DONE_REPORT = [
+    { step: "billing", status: "skipped", reason: "no-subscription" },
     { step: "storage", status: "skipped", reason: "storage-not-configured" },
-    { step: "billing", status: "skipped", reason: "billing-not-linked" },
     { step: "entities", status: "done", count: 2 },
     { step: "auditTrail", status: "done", count: 3 },
     { step: "profile", status: "done" },
@@ -248,6 +248,27 @@ describe("POST /account/deletion", () => {
 
         expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
         expect(await codeOf(response)).toBe("ACCOUNT_DELETION_FAILED");
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
+    });
+
+    it("responde 503 sem gravar a exclusão quando a assinatura não foi cancelada", async () => {
+        runAccountErasureMock.mockResolvedValue([
+            {
+                step: "billing",
+                status: "failed",
+                reason: "StripeConnectionError",
+            },
+            ...DONE_REPORT.slice(1).map((step) => ({
+                step: step.step,
+                status: "skipped",
+                reason: "billing-failed",
+            })),
+        ]);
+
+        const response = await deleteAccount(request(VALID_BODY));
+
+        expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
+        expect(await codeOf(response)).toBe("ACCOUNT_DELETION_BILLING_FAILED");
         expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 

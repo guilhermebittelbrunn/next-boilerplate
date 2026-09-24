@@ -49,12 +49,22 @@ function toExportAccount(
             : null;
     const phone =
         typeof merged.phone === "string" && merged.phone ? merged.phone : null;
+    const stripeCustomerId =
+        typeof merged.stripeCustomerId === "string" && merged.stripeCustomerId
+            ? merged.stripeCustomerId
+            : null;
+    const subscription =
+        merged.subscription && typeof merged.subscription === "object"
+            ? (merged.subscription as AccountDTO["subscription"])
+            : null;
 
     return {
         ...(withoutSignedUrl as unknown as Omit<AccountDTO, "avatarUrl">),
         phone,
         avatar,
         preferences: resolvePreferences(merged.preferences),
+        stripeCustomerId,
+        subscription,
     };
 }
 

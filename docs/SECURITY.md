@@ -156,7 +156,8 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 ## Pagamentos (Stripe)
 
 - O webhook (`apps/api/app/(routes)/webhooks/payments/route.ts`) **verifica a assinatura** (`stripe.webhooks.constructEvent` com `STRIPE_WEBHOOK_SECRET`) — mantenha isso; nunca processe o corpo sem verificar a assinatura.
-- Os handlers de `checkout.session.completed` / `subscription_schedule.canceled` estão como **TODO** (persistir assinatura no perfil do usuário). Ver a skill `/payments-flow` e [`docs/PAYMENTS.md`](PAYMENTS.md).
+- O webhook só confia no evento assinado: o perfil vem do `customer` ou do `client_reference_id`/`metadata.profileId` que chegam **dentro** do evento verificado. Reentrega é deduplicada por `event.id` (coleção `paymentEvent`) e evento fora de ordem não sobrescreve estado mais novo. Detalhes em [`docs/PAYMENTS.md`](PAYMENTS.md).
+- Checkout e portal usam sempre o perfil do guard (`ctx.subjectProfile`), nunca um id do corpo, e são recusados durante personificação (403 `AUTH_REQUEST_IMPERSONATION_READ_ONLY`).
 - Nunca exponha `STRIPE_SECRET_KEY` no cliente; criação de checkout/portal é **server-side** (na API).
 
 ## Segredos e configuração

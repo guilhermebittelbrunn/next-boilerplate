@@ -1,5 +1,6 @@
 import { getAuthInstance } from "@repo/auth/server";
 import type {
+    SubscriptionState,
     UserActivitySummaryDTO,
     UserDTO,
     UserSummaryDTO,
@@ -13,6 +14,7 @@ import {
     buildActivityRecencyRanges,
     INACTIVE_AFTER_DAYS,
 } from "../lib/activity-windows";
+import { decideSubscriptionWrite } from "../lib/billing-state";
 import {
     mergeAuthAndFirestore,
     serializeFirestoreData,
@@ -39,6 +41,62 @@ class UserRepository extends BaseRepository<UserDTO> {
             ...(querySnapshot.docs[0].data() as UserDTO),
             id: querySnapshot.docs[0].id,
         };
+    }
+
+    /**
+     * A single-field query, so the automatic index serves it. The soft-delete filter runs
+     * in memory: adding it to the query would demand a composite index, and a customer
+     * maps to one profile, rarely two.
+     */
+    async findByStripeCustomerId(customerId: string): Promise<UserDTO | null> {
+        const querySnapshot = await this.db
+            .collection(this.table)
+            .where("stripeCustomerId", "==", customerId)
+            .get();
+
+        const live = querySnapshot.docs.find(
+            (docSnap) => docSnap.data().deletedAt == null
+        );
+
+        return live ? { ...(live.data() as UserDTO), id: live.id } : null;
+    }
+
+    async linkStripeCustomer(id: string, customerId: string): Promise<void> {
+        await this.update({ id, stripeCustomerId: customerId });
+    }
+
+    /**
+     * Read and write inside one transaction, so two deliveries racing on the same profile
+     * cannot both pass the ordering check against the same stored snapshot.
+     */
+    applySubscriptionState(
+        id: string,
+        next: SubscriptionState,
+        eventType: string
+    ): Promise<"applied" | "skipped" | "missing"> {
+        const ref = this.db.collection(this.table).doc(id);
+
+        return this.db.runTransaction(async (transaction) => {
+            const snapshot = await transaction.get(ref);
+            if (!snapshot.exists) {
+                return "missing";
+            }
+
+            const decision = decideSubscriptionWrite(
+                snapshot.data()?.subscription,
+                next,
+                eventType
+            );
+            if (decision.kind === "skip") {
+                return "skipped";
+            }
+
+            transaction.update(ref, {
+                subscription: next,
+                updatedAt: new Date(),
+            });
+            return "applied";
+        });
     }
 
     /**

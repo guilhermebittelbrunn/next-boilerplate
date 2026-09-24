@@ -1,7 +1,7 @@
 ---
 id: onboarding-flow
 title: Onboarding pós-cadastro
-status: proposed
+status: done
 value: alto
 effort: M
 audience: produto
@@ -9,8 +9,8 @@ area: [apps/app, apps/api, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: []
 contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts, "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx"]
-feature: -
-updated: 2026-09-23
+feature: onboarding-flow
+updated: 2026-09-24
 ---
 
 # Onboarding pós-cadastro
@@ -107,7 +107,7 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - Prevalência: **3 de 10** starters do painel entregam onboarding pós-signup multi-step.
 - Valor atribuído na nota: **muito alto** — descrito como o **maior desequilíbrio valor/prevalência de
   todo o painel**: "é onde o usuário decide se fica, e quase nenhum kit entrega".
@@ -117,18 +117,18 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 > Prevalência baixa (3/10) é o argumento **a favor**, não contra: a nota é explícita em que a raridade é
 > lacuna de mercado, não sinal de irrelevância. Mesmo assim o valor aqui não se sustenta em benchmark —
 > sustenta-se em dois fatos deste repo: o perfil criado em `user-merge.ts:47` não tem dado nenhum de
-> produto, e a tela de destino está vazia (ver [`dashboard-home`](../docs/features/dashboard-home/spec.md)).
+> produto, e a tela de destino está vazia (ver [`dashboard-home`](../dashboard-home/spec.md)).
 
 ## Proposta — corte de MVP
 
-- [ ] Ao entrar no painel com o perfil ainda incompleto, o usuário é levado a um fluxo de onboarding em
+- [x] Ao entrar no painel com o perfil ainda incompleto, o usuário é levado a um fluxo de onboarding em
       vez do destino normal — decidido no servidor, não por redirect no cliente.
-- [ ] Fluxo de 2 a 3 passos, com progresso visível, coletando o mínimo genérico: nome de exibição e uma
+- [x] Fluxo de 2 a 3 passos, com progresso visível, coletando o mínimo genérico: nome de exibição e uma
       preferência que qualquer fork usa (idioma).
-- [ ] **Retomável:** o progresso é persistido a cada passo; fechar a aba e voltar cai no passo em que
+- [x] **Retomável:** o progresso é persistido a cada passo; fechar a aba e voltar cai no passo em que
       parou, e o deep link original (`?redirect=`) é honrado ao concluir.
-- [ ] Concluir marca o perfil como completo e nunca mais intercepta.
-- [ ] Um passo pode ser pulado quando o fork configurar assim, sem deixar o usuário preso.
+- [x] Concluir marca o perfil como completo e nunca mais intercepta.
+- [x] Um passo pode ser pulado quando o fork configurar assim, sem deixar o usuário preso.
 
 ### Reescopo que o `/analyze` deve aplicar (auditoria de 2026-09-23)
 
@@ -172,8 +172,8 @@ mínima que torna o corte planejável. Os cinco itens acima continuam valendo; o
   produto, e cada fork tem o seu.
 - Coleta de dados de domínio (empresa, cargo, segmento) — não é genérico; é código do fork, que apenas
   encaixa um passo a mais no fluxo.
-- Convite de colegas ([`teams-organizations`](teams-organizations.md)), upload de avatar
-  ([`file-upload-storage`](../docs/features/file-upload-storage/spec.md) — **entregue**, PR #11) e
+- Convite de colegas ([`teams-organizations`](../../../specs/teams-organizations.md)), upload de avatar
+  ([`file-upload-storage`](../file-upload-storage/spec.md) — **entregue**, PR #11) e
   e-mail de boas-vindas (`transactional-emails`).
 
 ## Impacto por camada
@@ -217,3 +217,32 @@ mínima que torna o corte planejável. Os cinco itens acima continuam valendo; o
   configuração; um core de MVPs deve entregar o caminho bom por default.
 - Perfis antigos entram como completos ou incompletos? — **recomendação:** completos, para não
   interceptar quem já usa o fork.
+
+## Estado da entrega
+
+Auditado em 2026-09-24 pelo `/spec --sync`. PR **#24** mergeada em `main` em 2026-09-24T11:26:50Z (merge
+commit `d52c4f0`), com CI `success` nesse SHA (`gh run 35993064246`, `headSha` = `d52c4f0e…`). Os cinco
+itens do corte foram reabertos no código, lidos pelo bloco de reescopo acima:
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. Perfil incompleto é levado ao onboarding, com a decisão no servidor | **implementado** | O layout da área comum chama `resolveOnboardingRedirect` logo depois do desvio de admin (`apps/app/app/[locale]/(authenticated)/(common)/layout.tsx:38-41`). A regra fica em `apps/app/lib/server/onboarding.ts:18-30`: interruptor desligado, perfil que não é comum (admin, inclusive personificando) ou estado ausente devolvem `null`. A rota do fluxo é irmã de `(common)` (`(authenticated)/onboarding/page.tsx`), então o desvio não intercepta a si mesmo |
+| 2. Fluxo de 2 a 3 passos, com progresso visível, coletando nome de exibição e idioma | **implementado** | Dois passos declarados em `packages/sdk/src/types/user/user.ts:17-20`. Rótulo "Passo N de M" e barra em `OnboardingClient.tsx:102-104` e `:169-175`. O passo 1 grava o nome e o passo 2 grava o idioma pelo mesmo `PUT /account` da área de conta (`OnboardingClient.tsx:112-146`), sem campo de coleta novo no `UserDTO` |
+| 3. Retomável, com o deep link honrado ao concluir | **implementado**, com deriva | O estado nasce em `createDefaultUserProfile` (`apps/api/(shared)/lib/user-merge.ts:52`) e avança por `POST /account/onboarding` (`apps/api/app/(routes)/account/onboarding/route.ts:14`, regra em `apps/api/(shared)/lib/onboarding.ts:71-109`). A página abre no passo gravado (`onboarding/page.tsx:45-67`), e o hook grava a conta antes de avançar o passo, então o passo volta preenchido (`useOnboardingMutations.tsx:34-42`). O proxy repassa o caminho no header `x-app-path` (`apps/app/proxy.ts:214-216`) e o destino passa por `postAuthRedirectTarget` (`apps/app/shared/lib/onboarding.ts:85-105`). A query string do destino se perde (ver deriva) |
+| 4. Concluir marca o perfil como completo e nunca mais intercepta | **implementado** | O último passo grava `completedAt` (`apps/api/(shared)/lib/onboarding.ts:105-108`); com ele preenchido, `resolvePendingOnboarding` devolve `null` e a página redireciona para o destino (`onboarding/page.tsx:45-48`) |
+| 5. Passo pulável quando o fork configurar, sem prender o usuário | **implementado** | `skippable` por passo em `ONBOARDING_STEPS` (`user.ts:17-20`), com recusa `400 ONBOARDING_STEP_NOT_SKIPPABLE` na API (`route.ts:41-46`). O interruptor do recurso inteiro é `ONBOARDING_ENABLED` (`apps/app/env.ts:11`), com vazio tratado como ligado (`apps/app/shared/lib/onboarding.ts:54-56`) |
+
+Cobertura: `accountOnboardingRoute.test.ts` (12 casos), `onboardingState.test.ts` (14),
+`signUpProfile.test.ts` e o caso novo de `googleSignInProfile.test.ts` na `apps/api`;
+`onboardingClient.test.tsx` (12), `onboardingRedirect.test.ts` (8), `onboardingState.test.ts` (16) e o caso
+novo de `proxy.test.ts` na `apps/app`. Os códigos de erro novos estão em `apiErrors` nos 3 idiomas
+(`translations/packages/shared/utils.ts:51-55`, `:150-154`, `:248-252`). O `/test` fechou 20 de 20
+critérios sob o emulador de Auth e Firestore, sem chave nem serviço externo (`test/report.md`, rodada 2).
+
+## Deriva de implementação
+
+| especificado | implementado | leitura |
+|--------------|--------------|---------|
+| "O deep link original (`?redirect=`) é honrado ao concluir" | O proxy grava só o `pathname` em `x-app-path` (`apps/app/proxy.ts:215`). `/pt-br/entities?page=2` vira `?redirect=%2Fpt-br%2Fentities` (observação O2 do `/test`) | **A implementação desviou**, por pouco. O caminho é honrado e a query não. Registrado como achado no `BACKLOG.md` |
+| O estado nasce em `createDefaultUserProfile` | Nasce ali, e `POST /auth/sign-up` passou a chamar o helper em vez de gravar o perfil direto (`apps/api/app/(routes)/auth/sign-up/route.ts:35`). A criação pelo admin (`POST /users`) continua sem o estado, e esse perfil conta como concluído | **A spec estava incompleta**: não sabia que o cadastro por senha contornava o helper. As duas escolhas estão registradas como D3 e D4 no plano |
+| `contends_on` com 5 arquivos | Tocou 4 deles. `postLoginNavigation.ts` ficou intacto, como o reescopo previa. Tocou sem declarar `packages/sdk/src/actions/account/action.ts`, `apps/api/(shared)/validation/account.schema.ts`, `auth/sign-up/route.ts`, `apps/app/env.ts` e `translations/packages/shared/utils.ts` | Mesmo padrão das entregas anteriores: o arquivo que falta é vizinho dos declarados, na mesma camada |

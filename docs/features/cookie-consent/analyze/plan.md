@@ -1,6 +1,6 @@
 # Consentimento de cookies e Consent Mode — análise e blueprint
 
-Spec de origem: [`specs/cookie-consent.md`](../../../../specs/cookie-consent.md). Roteiro:
+Spec de origem: [`specs/cookie-consent.md`](../spec.md). Roteiro:
 [`docs/feature-analysis-guide.md`](../../../feature-analysis-guide.md).
 
 Rodada autônoma do `/cycle`: onde faltava decisão, o plano decidiu. A lista completa está na seção

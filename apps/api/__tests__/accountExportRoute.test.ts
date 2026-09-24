@@ -207,6 +207,38 @@ describe("GET /account/export", () => {
         });
     });
 
+    it("leva o estado da assinatura e o cliente Stripe do titular", async () => {
+        const subscription = {
+            subscriptionId: "sub_qa",
+            status: "active",
+            priceId: "price_pro",
+            productId: "prod_pro",
+            unitAmount: 2900,
+            currency: "brl",
+            interval: "month",
+            intervalCount: 1,
+            currentPeriodEnd: "2026-10-24T12:00:00.000Z",
+            cancelAtPeriodEnd: false,
+            lastEventAt: "2026-09-24T12:00:00.000Z",
+        };
+        mergedUserMock.mockResolvedValue(
+            mergedAccount({ stripeCustomerId: "cus_qa", subscription })
+        );
+
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(payload.account.stripeCustomerId).toBe("cus_qa");
+        expect(payload.account.subscription).toEqual(subscription);
+    });
+
+    it("escreve null na assinatura e no cliente de quem nunca assinou", async () => {
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(payload.account.stripeCustomerId).toBeNull();
+        expect(payload.account.subscription).toBeNull();
+        expect("subscription" in payload.account).toBe(true);
+    });
+
     it("deixa a URL assinada do avatar fora do arquivo", async () => {
         mergedUserMock.mockResolvedValue(
             mergedAccount({ avatarUrl: "https://signed.example/a1b2.jpg" })

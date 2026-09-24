@@ -7,17 +7,18 @@ import {
     TabsTrigger,
 } from "@repo/design-system/components/ui/tabs";
 import { getDictionary } from "@repo/internationalization/client";
+import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import type { AccountDTO } from "@repo/sdk/src/types";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
-import { AccountBillingPlaceholder } from "./AccountBillingPlaceholder";
+import { AccountBillingPanel } from "./AccountBillingPanel";
 import { AccountPreferencesForm } from "./AccountPreferencesForm";
 import { AccountPrivacyPanel } from "./AccountPrivacyPanel";
 import { AccountProfileForm } from "./AccountProfileForm";
 import { AccountSecurityForm } from "./AccountSecurityForm";
 
-const accountTabValues = [
+const allAccountTabValues = [
     "profile",
     "security",
     "preferences",
@@ -25,7 +26,13 @@ const accountTabValues = [
     "privacy",
 ] as const;
 
-type AccountTabValue = (typeof accountTabValues)[number];
+type AccountTabValue = (typeof allAccountTabValues)[number];
+
+// A product without subscriptions has nothing to bill, so the tab is not rendered at all
+// and a link to `?tab=billing` lands on the profile.
+const accountTabValues: readonly AccountTabValue[] = isSubscriptionMode()
+    ? allAccountTabValues
+    : allAccountTabValues.filter((value) => value !== "billing");
 
 const resolveTab = (raw: string | null): AccountTabValue =>
     accountTabValues.includes(raw as AccountTabValue)
@@ -81,9 +88,11 @@ export function AccountTabs({ account }: AccountTabsProps) {
             <TabsContent value="preferences">
                 <AccountPreferencesForm account={account} />
             </TabsContent>
-            <TabsContent value="billing">
-                <AccountBillingPlaceholder />
-            </TabsContent>
+            {accountTabValues.includes("billing") ? (
+                <TabsContent value="billing">
+                    <AccountBillingPanel account={account} />
+                </TabsContent>
+            ) : null}
             <TabsContent value="privacy">
                 <AccountPrivacyPanel account={account} />
             </TabsContent>

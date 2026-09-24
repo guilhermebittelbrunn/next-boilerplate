@@ -436,6 +436,97 @@ curl -s -L -H 'Cookie: bp:cookie-consent=v1:analytics=granted' http://localhost:
 # "analytics_storage":"granted" — a escolha já nasce no primeiro script, sem esperar update
 ```
 
+### 12. Stripe — só se o fork cobra assinatura
+
+Numerado depois dos recomendados para não mudar a numeração que outros documentos citam. É bloqueador
+para quem vende assinatura; quem não vende pula inteiro.
+
+- [ ] Produtos e preços **recorrentes** criados no Dashboard da Stripe
+- [ ] Customer Portal configurado (cancelamento, troca de plano, cartão; reembolso conforme a lei)
+- [ ] Endpoint `https://<api>/webhooks/payments` registrado na versão `2025-09-30.clover`, com os quatro eventos
+- [ ] `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` na `apps/api` (Vercel)
+- [ ] `NEXT_PUBLIC_APP_URL` na `apps/api` e na `apps/web`; `NEXT_PUBLIC_PRODUCT_MODE` igual nos três apps
+- [ ] Opcional: TTL do Firestore em `paymentEvent.expiresAt`
+- [ ] Antes do release, decidir se o checkout passa a consultar a Stripe contra assinatura duplicada (ver
+      "Risco aceito" abaixo)
+
+**Por que existe.** O código de assinatura está pronto, mas catálogo, portal e endpoint de webhook vivem na
+conta Stripe de cada fork, e nenhum teste alcança essa conta.
+
+**O que acontece sem ela (comportamento projetado, não bug).** O app sobe e o build passa. A aba
+`/account?tab=billing` mostra o placeholder "Cobrança em breve", `GET /payments/plans` responde
+`{ "enabled": false, "plans": [] }`, checkout e portal respondem 503 `PAYMENTS_NOT_CONFIGURED`, e o webhook
+responde 503 com o mesmo código. Com só uma das duas chaves, a API loga no boot
+`[payments] billing is DISABLED (no <chave que falta>)` e continua desligada. Sem catálogo mas com as
+chaves, a aba diz que não há planos. Com o endpoint numa versão de API anterior a 2025-03-31, a assinatura
+é gravada mas sem data de renovação (`currentPeriodEnd: null`).
+
+**Risco aceito: assinatura duplicada.** O checkout só recusa com 409 `PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE`
+quando o perfil já tem uma assinatura viva gravada (`apps/api/app/(routes)/payments/checkout/route.ts:41`).
+Se a pessoa abrir o checkout em duas abas e pagar nas duas antes de o primeiro webhook chegar, a Stripe cria
+duas assinaturas. O perfil fica com a mais recente (`decideSubscriptionWrite`,
+`apps/api/(shared)/lib/billing-state.ts:141-147`) e a exclusão de conta cancela só essa
+(`apps/api/(shared)/lib/account-erasure.ts:95`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
+a sobrescrita foi aceita. Quem precisar fechar o caso antes do release:
+
+1. Em `POST /payments/checkout`, quando o perfil já tem `stripeCustomerId`, chamar
+   `stripe.subscriptions.list({ customer: stripeCustomerId })` antes de criar a sessão. Sem filtro de
+   status, a Stripe omite as canceladas.
+2. Se alguma estiver num dos `LIVE_SUBSCRIPTION_STATUSES` (`packages/sdk/src/types/payments/payments.ts:20`),
+   responder 409 `PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE`, o mesmo código que a rota já usa.
+3. Acrescentar em `apps/api/__tests__/paymentsCheckoutRoute.test.ts` o caso "perfil sem assinatura gravada,
+   Stripe com uma viva".
+
+O custo é uma chamada a mais à Stripe por checkout. Para saber se já aconteceu numa conta em produção,
+`stripe subscriptions list --status active --limit 100` na Stripe CLI e procurar `customer` repetido.
+
+**Passo a passo:**
+
+1. **Catálogo.** Dashboard → Product catalog → *Add product*, com preço **recorrente** (mensal, anual…). A
+   aba lista os preços recorrentes ativos cujo produto está ativo, do mais barato ao mais caro; nome,
+   descrição e *marketing features* do produto aparecem no card, no idioma em que foram escritos. Preço
+   avulso não aparece.
+2. **Customer Portal.** Dashboard → Settings → Billing → Customer portal. Habilite cancelamento, atualização
+   de forma de pagamento e troca de plano (adicione os produtos à lista). Se o produto está sujeito ao CDC,
+   configure o reembolso da janela de arrependimento.
+3. **Endpoint do webhook.** Dashboard → Developers → Webhooks → *Add endpoint*:
+   - URL: `https://<host-da-api>/webhooks/payments`
+   - Versão de API: **`2025-09-30.clover`** (a mesma de `packages/payments/index.ts`)
+   - Eventos: `checkout.session.completed`, `customer.subscription.created`,
+     `customer.subscription.updated`, `customer.subscription.deleted`
+
+   Copie o *Signing secret* (`whsec_…`).
+4. **Variáveis**, no painel da Vercel de cada app:
+   - `apps/api` → `STRIPE_SECRET_KEY` (`sk_live_…` ou `sk_test_…`) e `STRIPE_WEBHOOK_SECRET` (passo 3)
+   - `apps/api` e `apps/web` → `NEXT_PUBLIC_APP_URL` com o host real da `apps/app`
+   - `NEXT_PUBLIC_PRODUCT_MODE` com o mesmo valor em `apps/api`, `apps/app` e `apps/web` (ausente vale
+     `subscription`)
+
+   Uma chave com o prefixo errado (`pk_` no lugar de `sk_`) derruba o `next build` da API com
+   `Invalid environment variables`. `apps/app` e `apps/web` não leem as chaves da Stripe.
+5. **TTL (opcional).** A coleção `paymentEvent` guarda um documento por evento processado. Para ela não
+   crescer para sempre:
+   ```bash
+   gcloud firestore fields ttls update expiresAt \
+     --collection-group=paymentEvent --enable-ttl --project=<project-id>
+   ```
+
+**Como verificar**, com a API publicada:
+
+```bash
+# sem sessão: o guard responde antes da Stripe
+curl -s -o /dev/null -w '%{http_code}\n' https://<api>/payments/plans      # 401
+
+# webhook sem assinatura: a configuração está lida (sem chaves seria 503)
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<api>/webhooks/payments -d '{}'   # 500
+```
+
+Com a Stripe CLI logada na conta de teste, `stripe trigger customer.subscription.created` cria um cliente e
+uma assinatura de teste; em Developers → Webhooks → endpoint, a entrega aparece com resposta 200 (nenhum
+perfil tem aquele cliente, então a API registra `webhook-profile-not-found`). Depois, com um usuário de
+teste, assine um plano com o cartão `4242 4242 4242 4242`: de volta ao app, a aba mostra "Confirmando o
+pagamento" e troca para o card "Plano atual" quando o webhook chega.
+
 ---
 
 ## ⚠️ Fortemente recomendados
@@ -477,32 +568,32 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-23**, com o `HEAD` em `ab11a5b` (PR #23 já mergeada) — os números abaixo são da
-quinta medição:
+Remedido em **2026-09-24**, com o `HEAD` em `d52c4f0` (PR #24 já mergeada). Os números abaixo são da
+sexta medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 12,4 s** |
-| lint/format | `pnpm check` | **648 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1547 testes em 158 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 2,7 s** |
+| lint/format | `pnpm check` | **666 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1615 testes em 164 arquivos** |
 
-Distribuição da suíte, medida em 2026-09-23 com `--force`: `apps/api` 651 em 57 arquivos, `apps/app` 462 em
-65, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
+Distribuição da suíte, medida em 2026-09-24 com `--force`: `apps/api` 680 em 60 arquivos, `apps/app` 501 em
+68, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
 em 5, `apps/web` 35 em 6, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 8 em 1.
 
 Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@repo/analytics` à suíte; a #17
 somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou
 49 testes em 6 arquivos e 18 arquivos ao alcance do `pnpm check`; a renovação de sessão somou 49 testes em
-4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #23, a suíte
-foi de 1325 para 1547 testes e o `pnpm check`, de 607 para 648 arquivos.
+4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #24, a suíte
+foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos.
 **Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
-uma das cinco últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
+uma das seis últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
 são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
 fato corrente.
 
-O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s e agora 1 min 12,4 s, com a suíte sempre
-maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
+O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s e agora 1 min 2,7 s, com a
+suíte sempre maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
 dimensionar CI.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
@@ -567,13 +658,12 @@ some inteira.
 `runAccountErasure` (`apps/api/(shared)/lib/account-erasure.ts`) roda seis passos nomeados e devolve o
 estado de cada um. Quatro apagam de verdade no boilerplate como ele vem: os registros de `entity` do
 titular, os rótulos pessoais na trilha de auditoria, o documento de perfil e a conta no Firebase Auth —
-que é o que libera o e-mail para um novo cadastro. Dois reportam `skipped`, e continuarão reportando até
-que o fork resolva a infra:
+que é o que libera o e-mail para um novo cadastro. Os outros dois dependem de infra do fork:
 
 | Passo | Estado no boilerplate | O que destrava |
 |---|---|---|
+| `billing` | Roda **primeiro**. `skipped: no-subscription` para quem não tem assinatura viva; com assinatura viva, cancela na Stripe (imediato, sem reembolso proporcional) e reporta `done`. | Configurar a Stripe (item 12). Se o cancelamento falhar, ou se a Stripe estiver desligada e o perfil tiver assinatura viva gravada, o expurgo **para antes de apagar qualquer coisa**: os outros passos saem como `skipped: billing-failed` e a rota responde 503 `ACCOUNT_DELETION_BILLING_FAILED`. Apagar o perfil com a assinatura ativa deixaria a pessoa sendo cobrada sem vínculo para descobrir de quem é a assinatura. O cliente Stripe (e-mail e histórico de faturas) **continua** na Stripe: apagá-lo é decisão fiscal e jurídica de cada fork. |
 | `storage` | `skipped: storage-not-configured` | Ativar o Cloud Storage (item 6). Sem bucket não existe objeto para apagar. |
-| `billing` | `skipped: billing-not-linked` | Nenhum perfil guarda referência a cliente de pagamento hoje, então não há assinatura a cancelar nem com chave da Stripe configurada. Um fork que ligue perfil↔cliente preenche o passo. |
 
 O relatório inteiro vai para o log estruturado como `[account] erasure-step`, uma linha por passo,
 correlacionada por `requestId`, com nome do passo, estado e contagem — nunca valores. Ele não volta na

@@ -60,14 +60,14 @@ nada observa o uso.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) (coletada em
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (coletada em
   2026-08-21, revalidar após 2027-08-21 — dentro da validade).
 
 **O benchmark de starters não sustenta esta spec, e vale dizer isso antes de qualquer outra coisa.** A
-linha mais próxima em [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+linha mais próxima em [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 é "Sessões/dispositivos gerenciáveis", com prevalência de **1 em 10** e valor classificado como baixo — e
 ela descreve outra funcionalidade (a tela onde o usuário vê e encerra sessões), que pertence a
-[`account-security-mfa`](account-security-mfa.md). Renovação de sessão não é item de prevalência naquele
+[`account-security-mfa`](../../../specs/account-security-mfa.md). Renovação de sessão não é item de prevalência naquele
 levantamento, e não vou inventar um número para ela.
 
 O que sustenta a spec é o limite do provedor e o conjunto de requisitos que a renovação não pode quebrar:
@@ -108,13 +108,13 @@ sessão eterna, e é exatamente esse o defeito que se introduz quando a spec só
 ### Fora do corte
 
 - Tela de sessões e dispositivos ativos, com encerramento individual — é de
-  [`account-security-mfa`](account-security-mfa.md), que já declara os mesmos três arquivos de
+  [`account-security-mfa`](../../../specs/account-security-mfa.md), que já declara os mesmos três arquivos de
   `packages/auth` no `contends_on`.
 - Rotação de refresh token com detecção de reuso: o refresh token é do Firebase, não do repositório, e não
   há onde implementar isso sem sair do provedor.
 - "Continuar conectado" como escolha do usuário no login, e autenticação reforçada para operação sensível.
 - Aviso de inatividade com contagem regressiva na tela.
-- Carimbo de último acesso — é [`user-activity-tracking`](user-activity-tracking.md), que usa a renovação
+- Carimbo de último acesso — é [`user-activity-tracking`](../user-activity-tracking/spec.md), que usa a renovação
   como gancho.
 
 ## Impacto por camada
@@ -141,7 +141,7 @@ sessão eterna, e é exatamente esse o defeito que se introduz quando a spec só
   de pesquisa. A renovação não piora isso, mas também não resolve, e não deve ser vendida como se
   resolvesse.
 - **Contenção alta.** Os três arquivos que esta spec altera são exatamente os que
-  [`account-security-mfa`](account-security-mfa.md) declara. As duas não podem rodar no mesmo lote.
+  [`account-security-mfa`](../../../specs/account-security-mfa.md) declara. As duas não podem rodar no mesmo lote.
 - Custo herdado por fork que não usa: baixo. Nenhum serviço pago, nenhuma dependência nova, e a variável
   nova tem padrão — um fork que ignore o assunto continua funcionando.
 

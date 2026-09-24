@@ -1,6 +1,6 @@
 # Métricas de atividade na home do admin
 
-Plano da spec [`admin-analytics-dashboard`](../../../../specs/admin-analytics-dashboard.md), no formato de
+Plano da spec [`admin-analytics-dashboard`](../spec.md), no formato de
 [`docs/feature-analysis-guide.md`](../../../feature-analysis-guide.md).
 
 Analisado contra `HEAD` = `origin/main` = `e656331`, em 2026-09-19. Toda âncora `arquivo:linha` abaixo foi

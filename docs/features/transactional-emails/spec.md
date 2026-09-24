@@ -32,7 +32,7 @@ Consequência prática: toda funcionalidade que precise falar com o usuário for
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - A nota é explícita sobre a armadilha exata deste repo: **"i18n real — 4/10: a armadilha recorrente é traduzir a UI e esquecer e-mails transacionais e mensagens de erro da API"**. Este boilerplate já resolveu a segunda metade (erro por `error.code` traduzido) e deixou a primeira intacta.
 - Prevalência indireta: os e-mails que esta spec habilita sustentam os dois itens mais universais do painel — auth completo (**10/10**, que inclui verificação e recuperação) e assinatura (**9/10**). O valor não é do e-mail em si; é de ser **pré-requisito** deles.
 - Convite por e-mail (5/10) e notificações (3/10) dependem da mesma base — e a nota registra que o next-forge terceiriza notificação no Knock, "o que traz chave/serviço externo obrigatório".

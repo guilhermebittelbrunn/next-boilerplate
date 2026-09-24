@@ -80,6 +80,41 @@ export const commonAccountPageTranslations = {
             emptyTitle: "Cobrança em breve",
             emptyDescription:
                 "Planos, assinatura e faturas aparecerão aqui quando a cobrança for ativada.",
+            description: "Escolha um plano ou gerencie a sua assinatura.",
+            plansTitle: "Planos",
+            noPlans: "Nenhum plano disponível no momento.",
+            loadError: "Não foi possível carregar os planos.",
+            subscribe: "Assinar",
+            manage: "Gerenciar assinatura",
+            currentPlan: "Plano atual",
+            unknownPlan: "Plano contratado",
+            pricePerInterval: "{price} / {interval}",
+            pricePerIntervals: "{price} a cada {count} {interval}",
+            interval: {
+                day: { one: "dia", other: "dias" },
+                week: { one: "semana", other: "semanas" },
+                month: { one: "mês", other: "meses" },
+                year: { one: "ano", other: "anos" },
+            },
+            status: {
+                active: "Ativa",
+                trialing: "Em teste",
+                past_due: "Pagamento pendente",
+                unpaid: "Não paga",
+                paused: "Pausada",
+                incomplete: "Incompleta",
+                incomplete_expired: "Expirada",
+                canceled: "Cancelada",
+            },
+            renewsOn: "Renova em {date}",
+            endsOn: "Termina em {date}",
+            pastDueHint:
+                "O último pagamento não foi aprovado. Atualize o cartão para manter a assinatura.",
+            checkoutPending:
+                "Confirmando o pagamento. A assinatura aparece aqui em instantes.",
+            checkoutConfirmed: "Assinatura ativa.",
+            checkoutCanceled:
+                "Pagamento cancelado. Nenhuma cobrança foi feita.",
         },
         privacy: {
             description:
@@ -206,6 +241,40 @@ export const commonAccountPageTranslations = {
             emptyTitle: "Billing coming soon",
             emptyDescription:
                 "Plans, subscription and invoices will show up here once billing is enabled.",
+            description: "Pick a plan or manage your subscription.",
+            plansTitle: "Plans",
+            noPlans: "No plans available right now.",
+            loadError: "We couldn't load the plans.",
+            subscribe: "Subscribe",
+            manage: "Manage subscription",
+            currentPlan: "Current plan",
+            unknownPlan: "Subscribed plan",
+            pricePerInterval: "{price} / {interval}",
+            pricePerIntervals: "{price} every {count} {interval}",
+            interval: {
+                day: { one: "day", other: "days" },
+                week: { one: "week", other: "weeks" },
+                month: { one: "month", other: "months" },
+                year: { one: "year", other: "years" },
+            },
+            status: {
+                active: "Active",
+                trialing: "Trial",
+                past_due: "Payment due",
+                unpaid: "Unpaid",
+                paused: "Paused",
+                incomplete: "Incomplete",
+                incomplete_expired: "Expired",
+                canceled: "Canceled",
+            },
+            renewsOn: "Renews on {date}",
+            endsOn: "Ends on {date}",
+            pastDueHint:
+                "Your last payment was declined. Update your card to keep the subscription.",
+            checkoutPending:
+                "Confirming your payment. Your subscription will show up here in a moment.",
+            checkoutConfirmed: "Subscription active.",
+            checkoutCanceled: "Payment canceled. You were not charged.",
         },
         privacy: {
             description:
@@ -333,6 +402,40 @@ export const commonAccountPageTranslations = {
             emptyTitle: "Facturación próximamente",
             emptyDescription:
                 "Planes, suscripción y facturas aparecerán aquí cuando se active la facturación.",
+            description: "Elige un plan o gestiona tu suscripción.",
+            plansTitle: "Planes",
+            noPlans: "No hay planes disponibles por ahora.",
+            loadError: "No pudimos cargar los planes.",
+            subscribe: "Suscribirse",
+            manage: "Gestionar suscripción",
+            currentPlan: "Plan actual",
+            unknownPlan: "Plan contratado",
+            pricePerInterval: "{price} / {interval}",
+            pricePerIntervals: "{price} cada {count} {interval}",
+            interval: {
+                day: { one: "día", other: "días" },
+                week: { one: "semana", other: "semanas" },
+                month: { one: "mes", other: "meses" },
+                year: { one: "año", other: "años" },
+            },
+            status: {
+                active: "Activa",
+                trialing: "En prueba",
+                past_due: "Pago pendiente",
+                unpaid: "Impaga",
+                paused: "Pausada",
+                incomplete: "Incompleta",
+                incomplete_expired: "Vencida",
+                canceled: "Cancelada",
+            },
+            renewsOn: "Se renueva el {date}",
+            endsOn: "Termina el {date}",
+            pastDueHint:
+                "Tu último pago fue rechazado. Actualiza la tarjeta para mantener la suscripción.",
+            checkoutPending:
+                "Confirmando el pago. La suscripción aparecerá aquí en unos instantes.",
+            checkoutConfirmed: "Suscripción activa.",
+            checkoutCanceled: "Pago cancelado. No se realizó ningún cobro.",
         },
         privacy: {
             description:

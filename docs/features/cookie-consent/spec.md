@@ -87,9 +87,9 @@ legal em cada visita desde o primeiro dia no ar — dívida que só aparece quan
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) (controle 5)
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (controle 5)
 - **Prevalência entre starters não é o argumento** — banner de cookies não aparece na tabela de 28
-  funcionalidades de [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md),
+  funcionalidades de [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md),
   e "analytics plugado" aparece em **6/10** justamente na forma sem consentimento que o repo já tem. Aqui
   o mercado é o mau exemplo; a obrigação é normativa.
 - **Quem exige o consentimento é a ePrivacy 2002/58/CE art. 5(3)** (alterada em 2009), com exceção do
