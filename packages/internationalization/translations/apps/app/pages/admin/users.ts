@@ -26,6 +26,12 @@ export const adminUsersPageTranslations = {
                 active: "Ativo",
                 disabled: "Desativado",
             },
+            archive: {
+                action: "Arquivar",
+                confirmTitle: "Arquivar usuário",
+                confirmDescription:
+                    "O usuário sai da listagem e perde o acesso, mas o cadastro é preservado e o e-mail continua ocupado.",
+            },
         },
         form: {
             email: "E-mail",
@@ -45,7 +51,7 @@ export const adminUsersPageTranslations = {
         messages: {
             created: "Usuário criado com sucesso.",
             updated: "Usuário atualizado com sucesso.",
-            deleted: "Usuário removido com sucesso.",
+            deleted: "Usuário arquivado com sucesso.",
             loadError: "Não foi possível carregar o usuário.",
         },
     },
@@ -76,6 +82,12 @@ export const adminUsersPageTranslations = {
                 active: "Active",
                 disabled: "Disabled",
             },
+            archive: {
+                action: "Archive",
+                confirmTitle: "Archive user",
+                confirmDescription:
+                    "The user leaves the listing and loses access, but the record is kept and the email stays taken.",
+            },
         },
         form: {
             email: "Email",
@@ -95,7 +107,7 @@ export const adminUsersPageTranslations = {
         messages: {
             created: "User created successfully.",
             updated: "User updated successfully.",
-            deleted: "User removed successfully.",
+            deleted: "User archived successfully.",
             loadError: "Could not load the user.",
         },
     },
@@ -125,6 +137,12 @@ export const adminUsersPageTranslations = {
                 active: "Activo",
                 disabled: "Desactivado",
             },
+            archive: {
+                action: "Archivar",
+                confirmTitle: "Archivar usuario",
+                confirmDescription:
+                    "El usuario sale del listado y pierde el acceso, pero el registro se conserva y el correo sigue ocupado.",
+            },
         },
         form: {
             email: "Correo",
@@ -144,7 +162,7 @@ export const adminUsersPageTranslations = {
         messages: {
             created: "Usuario creado correctamente.",
             updated: "Usuario actualizado correctamente.",
-            deleted: "Usuario eliminado correctamente.",
+            deleted: "Usuario archivado correctamente.",
             loadError: "No se pudo cargar el usuario.",
         },
     },
