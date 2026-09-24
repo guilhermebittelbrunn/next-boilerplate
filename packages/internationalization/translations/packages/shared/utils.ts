@@ -48,6 +48,11 @@ export const sharedUtilsTranslations = {
                 "Esta conta não tem senha para confirmar a exclusão. Use o canal de privacidade.",
             ACCOUNT_DELETION_FAILED:
                 "Não foi possível concluir a exclusão da conta. Tente de novo.",
+            ONBOARDING_STEP_NOT_SKIPPABLE: "Este passo não pode ser pulado.",
+            ONBOARDING_STEP_OUT_OF_ORDER:
+                "Seu progresso mudou em outra aba. Atualizamos para o passo certo.",
+            ONBOARDING_UPDATE_FAILED:
+                "Não foi possível salvar seu progresso. Tente de novo.",
             USERS_NOTHING_TO_UPDATE: "Nenhum dado para atualizar.",
             VALIDATION_FAILED: "Dados inválidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este e-mail já está em uso.",
@@ -142,6 +147,11 @@ export const sharedUtilsTranslations = {
                 "This account has no password to confirm the deletion. Use the privacy channel.",
             ACCOUNT_DELETION_FAILED:
                 "The account deletion could not be completed. Try again.",
+            ONBOARDING_STEP_NOT_SKIPPABLE: "This step cannot be skipped.",
+            ONBOARDING_STEP_OUT_OF_ORDER:
+                "Your progress changed in another tab. We moved you to the right step.",
+            ONBOARDING_UPDATE_FAILED:
+                "Your progress could not be saved. Try again.",
             USERS_NOTHING_TO_UPDATE: "Nothing to update.",
             VALIDATION_FAILED: "Invalid data.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "This email is already in use.",
@@ -235,6 +245,11 @@ export const sharedUtilsTranslations = {
                 "Esta cuenta no tiene contraseña para confirmar la eliminación. Usa el canal de privacidad.",
             ACCOUNT_DELETION_FAILED:
                 "No se pudo completar la eliminación de la cuenta. Inténtalo de nuevo.",
+            ONBOARDING_STEP_NOT_SKIPPABLE: "Este paso no se puede omitir.",
+            ONBOARDING_STEP_OUT_OF_ORDER:
+                "Tu progreso cambió en otra pestaña. Te llevamos al paso correcto.",
+            ONBOARDING_UPDATE_FAILED:
+                "No se pudo guardar tu progreso. Inténtalo de nuevo.",
             USERS_NOTHING_TO_UPDATE: "No hay datos para actualizar.",
             VALIDATION_FAILED: "Datos no válidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este correo ya está en uso.",
