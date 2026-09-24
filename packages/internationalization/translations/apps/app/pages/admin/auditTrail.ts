@@ -17,6 +17,8 @@ export const adminAuditTrailPageTranslations = {
                 "user.delete": "Usuário excluído",
                 "account.sessions.revoke": "Sessões encerradas",
                 "account.password.change": "Senha alterada",
+                "account.data.export": "Dados exportados",
+                "account.delete": "Conta excluída pelo titular",
             },
         },
         filters: {
@@ -51,6 +53,8 @@ export const adminAuditTrailPageTranslations = {
                 "user.delete": "User deleted",
                 "account.sessions.revoke": "Sessions signed out",
                 "account.password.change": "Password changed",
+                "account.data.export": "Data exported",
+                "account.delete": "Account deleted by its owner",
             },
         },
         filters: {
@@ -85,6 +89,8 @@ export const adminAuditTrailPageTranslations = {
                 "user.delete": "Usuario eliminado",
                 "account.sessions.revoke": "Sesiones cerradas",
                 "account.password.change": "Contraseña modificada",
+                "account.data.export": "Datos exportados",
+                "account.delete": "Cuenta eliminada por su titular",
             },
         },
         filters: {

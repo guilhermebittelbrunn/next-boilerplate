@@ -7,6 +7,7 @@ export const commonAccountPageTranslations = {
             security: "Segurança",
             preferences: "Preferências",
             billing: "Cobrança",
+            privacy: "Privacidade",
         },
         profile: {
             displayName: "Nome de exibição",
@@ -80,11 +81,47 @@ export const commonAccountPageTranslations = {
             emptyDescription:
                 "Planos, assinatura e faturas aparecerão aqui quando a cobrança for ativada.",
         },
+        privacy: {
+            description:
+                "Baixe uma cópia dos seus dados ou apague a sua conta. As duas ações valem só para a sua conta.",
+            deadline:
+                "Pedidos enviados pelo canal de privacidade são respondidos em até 15 dias.",
+            policyLink: "Ver a política de privacidade",
+            export: {
+                title: "Baixar meus dados",
+                description:
+                    "Gera um arquivo com o seu perfil, os seus registros e o histórico de ações da sua conta.",
+                action: "Baixar meus dados",
+                filenameHint:
+                    "O download vem em JSON, um formato que outros sistemas conseguem ler.",
+            },
+            delete: {
+                title: "Excluir minha conta",
+                description:
+                    "Apaga o seu perfil, os seus registros e o seu acesso. Não há como desfazer.",
+                action: "Excluir minha conta",
+                dialogTitle: "Excluir a sua conta?",
+                dialogDescription:
+                    "Os seus dados serão apagados e você perde o acesso na hora. Confirme com a sua senha.",
+                currentPassword: "Senha atual",
+                confirm: "Excluir para sempre",
+                cancel: "Cancelar",
+                unsupportedTitle: "Exclusão pelo canal de privacidade",
+                unsupportedDescription:
+                    "A sua conta entra pelo Google e não tem senha para confirmar a exclusão. Peça a exclusão pelo canal de privacidade da política.",
+                validation: {
+                    required: "Informe a senha.",
+                    min: "A senha deve ter ao menos 6 caracteres.",
+                },
+            },
+        },
         messages: {
             profileUpdated: "Perfil atualizado.",
             passwordChanged: "Senha alterada. Entre novamente para continuar.",
             preferencesUpdated: "Preferências atualizadas.",
             sessionsRevoked: "Todas as sessões foram encerradas.",
+            dataExported: "Os seus dados foram baixados.",
+            accountDeleted: "A sua conta foi excluída.",
             loadError: "Não foi possível carregar a sua conta.",
         },
     },
@@ -96,6 +133,7 @@ export const commonAccountPageTranslations = {
             security: "Security",
             preferences: "Preferences",
             billing: "Billing",
+            privacy: "Privacy",
         },
         profile: {
             displayName: "Display name",
@@ -169,11 +207,47 @@ export const commonAccountPageTranslations = {
             emptyDescription:
                 "Plans, subscription and invoices will show up here once billing is enabled.",
         },
+        privacy: {
+            description:
+                "Download a copy of your data or delete your account. Both actions apply to your account only.",
+            deadline:
+                "Requests sent through the privacy channel are answered within 15 days.",
+            policyLink: "Read the privacy policy",
+            export: {
+                title: "Download my data",
+                description:
+                    "Builds a file with your profile, your records and the history of actions on your account.",
+                action: "Download my data",
+                filenameHint:
+                    "The download comes as JSON, a format other systems can read.",
+            },
+            delete: {
+                title: "Delete my account",
+                description:
+                    "Erases your profile, your records and your access. This cannot be undone.",
+                action: "Delete my account",
+                dialogTitle: "Delete your account?",
+                dialogDescription:
+                    "Your data will be erased and you lose access right away. Confirm with your password.",
+                currentPassword: "Current password",
+                confirm: "Delete forever",
+                cancel: "Cancel",
+                unsupportedTitle: "Deletion through the privacy channel",
+                unsupportedDescription:
+                    "Your account signs in with Google and has no password to confirm the deletion. Ask for it through the privacy channel in the policy.",
+                validation: {
+                    required: "Enter the password.",
+                    min: "The password must have at least 6 characters.",
+                },
+            },
+        },
         messages: {
             profileUpdated: "Profile updated.",
             passwordChanged: "Password changed. Sign in again to continue.",
             preferencesUpdated: "Preferences updated.",
             sessionsRevoked: "Every session has been ended.",
+            dataExported: "Your data has been downloaded.",
+            accountDeleted: "Your account has been deleted.",
             loadError: "Your account could not be loaded.",
         },
     },
@@ -185,6 +259,7 @@ export const commonAccountPageTranslations = {
             security: "Seguridad",
             preferences: "Preferencias",
             billing: "Facturación",
+            privacy: "Privacidad",
         },
         profile: {
             displayName: "Nombre visible",
@@ -259,12 +334,48 @@ export const commonAccountPageTranslations = {
             emptyDescription:
                 "Planes, suscripción y facturas aparecerán aquí cuando se active la facturación.",
         },
+        privacy: {
+            description:
+                "Descarga una copia de tus datos o elimina tu cuenta. Ambas acciones se aplican solo a tu cuenta.",
+            deadline:
+                "Las solicitudes enviadas por el canal de privacidad se responden en un plazo de 15 días.",
+            policyLink: "Ver la política de privacidad",
+            export: {
+                title: "Descargar mis datos",
+                description:
+                    "Genera un archivo con tu perfil, tus registros y el historial de acciones de tu cuenta.",
+                action: "Descargar mis datos",
+                filenameHint:
+                    "La descarga llega en JSON, un formato que otros sistemas pueden leer.",
+            },
+            delete: {
+                title: "Eliminar mi cuenta",
+                description:
+                    "Borra tu perfil, tus registros y tu acceso. No se puede deshacer.",
+                action: "Eliminar mi cuenta",
+                dialogTitle: "¿Eliminar tu cuenta?",
+                dialogDescription:
+                    "Tus datos se borrarán y perderás el acceso de inmediato. Confirma con tu contraseña.",
+                currentPassword: "Contraseña actual",
+                confirm: "Eliminar para siempre",
+                cancel: "Cancelar",
+                unsupportedTitle: "Eliminación por el canal de privacidad",
+                unsupportedDescription:
+                    "Tu cuenta entra con Google y no tiene contraseña para confirmar la eliminación. Solicítala por el canal de privacidad de la política.",
+                validation: {
+                    required: "Indica la contraseña.",
+                    min: "La contraseña debe tener al menos 6 caracteres.",
+                },
+            },
+        },
         messages: {
             profileUpdated: "Perfil actualizado.",
             passwordChanged:
                 "Contraseña cambiada. Vuelve a entrar para continuar.",
             preferencesUpdated: "Preferencias actualizadas.",
             sessionsRevoked: "Se cerraron todas las sesiones.",
+            dataExported: "Tus datos se han descargado.",
+            accountDeleted: "Tu cuenta se ha eliminado.",
             loadError: "No se pudo cargar tu cuenta.",
         },
     },
