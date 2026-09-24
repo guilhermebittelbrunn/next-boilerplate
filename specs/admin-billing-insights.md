@@ -10,7 +10,7 @@ mode: subscription
 depends_on: [billing-subscription, dashboard-home]
 contends_on: ["apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx", apps/app/shared/lib/queryKeys.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
 feature: -
-updated: 2026-09-19
+updated: 2026-09-23
 ---
 
 # Seção de billing na home do admin
@@ -25,7 +25,7 @@ O painel da Stripe responde em termos de cliente e de cobrança, não em termos 
 usuário do fork é qual `customer`, nem o nome que o produto dá aos planos. Cruzar as duas coisas vira
 trabalho manual, repetido toda semana, feito fora do sistema que tem a resposta.
 
-## Por que esta spec está separada de [`admin-analytics-dashboard`](admin-analytics-dashboard.md)
+## Por que esta spec está separada de [`admin-analytics-dashboard`](../docs/features/admin-analytics-dashboard/spec.md)
 
 Porque amarrar as duas faria a parte construível nascer bloqueada.
 
@@ -53,10 +53,10 @@ como não verificados.
 - As peças da home, entregues por `dashboard-home` e em `main` desde 2026-09-17 (PR #19, merge `bfc4d8f`;
   spec arquivada em [`docs/features/dashboard-home/spec.md`](../docs/features/dashboard-home/spec.md)):
   `apps/app/shared/components/ui/MetricCard.tsx:11-17` (cartão de métrica com
-  esqueleto), `packages/design-system/components/ui/category-bar-chart.tsx:25-72` (gráfico de barras já
+  esqueleto), `packages/design-system/components/ui/category-bar-chart.tsx:25-77` (gráfico de barras já
   temático e com rótulo acessível),
-  `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx:33-55` (o
-  arranjo de cartões) e `apps/app/shared/lib/queryKeys.ts:11-46` (a factory de chaves).
+  `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx:34-56` (o
+  arranjo de cartões) e `apps/app/shared/lib/queryKeys.ts:11-48` (a factory de chaves).
 - `apps/api/(shared)/repositories/base.repository.ts:122-124` — `countQuery` com `query.count().get()`, para
   contar assinatura por plano sem ler documento.
 - `apps/api/app/(routes)/users/summary/route.ts:6-20` — o molde de rota de agregado sob `requireAdminApi`,

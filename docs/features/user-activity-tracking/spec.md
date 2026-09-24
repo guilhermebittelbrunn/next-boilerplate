@@ -73,7 +73,7 @@ entraria, não a coluna em si. Não medi prevalência de coluna de último acess
 apresentar um número que não levantei.
 
 O que sustenta a spec é interno: é o menor dado que destrava as métricas de atividade pedidas em
-[`admin-analytics-dashboard`](../../../specs/admin-analytics-dashboard.md), e metade dele (a coluna) custa renderizar
+[`admin-analytics-dashboard`](../admin-analytics-dashboard/spec.md), e metade dele (a coluna) custa renderizar
 informação que a API já entrega. O `value: médio` reflete isso — o valor está quase todo a jusante.
 
 **O que a nota de conformidade obriga a escrever**, porque é o item que ela própria classifica como o mais
@@ -113,7 +113,7 @@ mal citado:
 - Backfill retroativo para bases que já têm dado: quem nunca acessou depois da entrega aparece como "nunca
   acessou", e está correto.
 - Os KPIs e o gráfico construídos sobre o campo — são de
-  [`admin-analytics-dashboard`](../../../specs/admin-analytics-dashboard.md).
+  [`admin-analytics-dashboard`](../admin-analytics-dashboard/spec.md).
 
 ## Impacto por camada
 

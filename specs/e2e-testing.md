@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: -
-updated: 2026-09-19
+updated: 2026-09-23
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -35,33 +35,45 @@ alguém olhar.
   capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
   `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
   impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-19, rodando o gate sem cache com o `HEAD` em `e656331`,
-  já com a PR #21 mergeada**): **10 tasks de teste / 1378 testes em 137 arquivos**, todos de
-  unidade/integração estreita — `apps/api` 576 em 50 arquivos, `apps/app` 389 em 54, `@repo/email` 137 em 7,
-  `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2, `apps/web` 31 em 5,
-  `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8 em 1. **Nenhum sobe um
+- Suíte automatizada atual (**remedida em 2026-09-23, rodando o gate sem cache com o `HEAD` em `03498ae`,
+  já com a PR #22 mergeada**): **10 tasks de teste / 1434 testes em 145 arquivos**, todos de
+  unidade/integração estreita — `apps/api` 597 em 53 arquivos, `apps/app` 418 em 58, `@repo/email` 137 em 7,
+  `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2, `@repo/internationalization` 33
+  em 4, `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/payments` 8 em 1. **Nenhum sobe um
   app de verdade**, e **nenhuma** das dez configs declara **cobertura**: não existe medida nem baseline para
   discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88, 918 em 94, 981 em 102, 1038 em 107,
-  1091 em 112, 1227 em 124, 1276 em 130 e 1325 em 134; o crescimento vem das PRs #10 a #21. A PR #21
-  acrescentou 2 arquivos em `apps/api` e 1 em `apps/app`. Seguem **10** tasks e **10** configs de Vitest, e
-  não há Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
-  > 🆕 **E a lacuna cobrou preço em 2026-09-19, pela primeira vez de forma medível.** A execução de CI da
-  > PR #21 (`gh run 35456187047`) fechou **vermelha** por um teste instável, não por regressão:
-  > `apps/api/__tests__/baseRepository.test.ts:477` afirma `created.updatedAt === created.createdAt`, e
-  > `apps/api/(shared)/repositories/base.repository.ts:150-151` produz os dois instantes com duas chamadas
-  > separadas a `new Date()`. Na virada do milissegundo eles diferem — foi o que aconteceu
-  > (`'…:32.532Z'` contra `'…:32.531Z'`). A asserção existe desde a PR #4 e ficou latente 17 PRs. Nenhum
-  > gate do repositório detecta instabilidade: rodar a suíte uma vez não distingue teste que passa de teste
-  > que passa quase sempre.
-  > **Estes números envelhecem a cada PR, e o método de medição finalmente pegou.** Os valores anteriores
+  1091 em 112, 1227 em 124, 1276 em 130, 1325 em 134 e 1378 em 137; o crescimento vem das PRs #10 a #22. A
+  PR #22 acrescentou 3 arquivos em `apps/api`, 4 em `apps/app` e 1 em `@repo/internationalization`. Seguem
+  **10** tasks e **10** configs de Vitest, e não há Playwright, Cypress nem `axe` em `package.json` nenhum.
+  O número subiu; a lacuna é a mesma.)*
+  > ✅ **O teste instável de 2026-09-19 foi consertado, e com ele caiu o argumento mais concreto que esta
+  > spec tinha.** A execução de CI da PR #21 (`gh run 35456187047`) havia fechado vermelha porque
+  > `apps/api/__tests__/baseRepository.test.ts:477` afirma `created.updatedAt === created.createdAt` e o
+  > repositório produzia os dois instantes com duas chamadas separadas a `new Date()`. O primeiro commit da
+  > PR #22 trocou isso por um `const createdAt` único, reusado nos dois campos
+  > (`apps/api/(shared)/repositories/base.repository.ts:151-155`), com a regra escrita em `:148-150`. A CI
+  > da branch da PR #22 fechou `success` (`gh run 35544220556`) e a de merge também (`gh run 35544765975`).
+  > **O que continua verdadeiro é a parte estrutural, e é menor:** nenhum gate deste repositório distingue
+  > teste que passa de teste que passa quase sempre. A diferença é que agora não há caso concreto em
+  > aberto, só a ausência do mecanismo. Uma ocorrência consertada não sustenta esforço **G**.
+
+  > **Estes números envelhecem a cada PR, e o método de medição pegou.** Os valores anteriores
   > (1227 em 124) tinham sido gravados dentro da própria PR #19, antes de os commits de código dela
-  > entrarem. Os de 2026-09-17 e estes saíram do gate sem cache com o merge já em `main` — duas rodadas
-  > seguidas medindo depois, e não durante.
+  > entrarem. Os de 2026-09-17, os de 2026-09-19 e estes saíram do gate sem cache com o merge já em `main`
+  > — três rodadas seguidas medindo depois, e não durante.
   > **O maior salto foi em `@repo/auth`: 62 → 101 testes, 6 → 8 arquivos** — 39 dos 49 que a PR #20 somou.
   > E é um argumento para esta spec, não contra: o caminho que ganhou os 39 testes é justamente aquele cuja
   > verificação ponta a ponta ficou 🔒, porque o emulador de Auth aceita o cookie depois de
   > `revokeRefreshTokens`. Os testes provam o que o emulador alcança. O que ele não alcança continua sem
   > prova, e é disso que esta spec trata.
+- 🆕 **`@repo/design-system` não tem task de teste, e isso já empurrou um teste para o workspace errado.**
+  `packages/design-system/package.json` declara só `clean` e `typecheck`. A PR #22 precisou fixar um limite
+  de largura de rótulo do `CategoryBarChart` e, sem onde pôr o teste, gravou-o em
+  `packages/internationalization/__tests__/chartAxisLabels.test.ts`: ele lê o dicionário da home do admin e
+  recusa rótulo com mais de 7 caracteres, com a aritmética de 375 px, 52 px por categoria e fonte de 12 px
+  escrita no comentário. O teste roda e protege a tela, mas afirma algo sobre um componente que ele não
+  importa, num pacote que não é o dele. O pacote de UI compartilhada é o que mais se beneficiaria de teste
+  de componente, e é o único sem infraestrutura para tê-lo.
 - ✅ **O gate instável foi corrigido — e o argumento mais forte desta spec caiu junto.** Em 2026-09-15 a
   auditoria registrou aqui uma falha real: `pnpm turbo run lint typecheck test --force` rodado duas vezes
   seguidas falhou na primeira (`app#test`, 21/23 tasks), com
