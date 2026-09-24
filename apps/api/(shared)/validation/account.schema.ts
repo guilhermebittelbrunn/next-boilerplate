@@ -1,3 +1,4 @@
+import { ONBOARDING_STEPS, type OnboardingStepId } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { z } from "zod";
 
@@ -60,9 +61,23 @@ export const deleteAccountSchema = z
     })
     .strict();
 
+const onboardingStepIds = ONBOARDING_STEPS.map(({ id }) => id) as [
+    OnboardingStepId,
+    ...OnboardingStepId[],
+];
+
+/** Same `.strict()` guard: the profile that advances is the one the token resolves to. */
+export const advanceOnboardingSchema = z
+    .object({
+        step: z.enum(onboardingStepIds),
+        outcome: z.enum(["completed", "skipped"]),
+    })
+    .strict();
+
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+export type AdvanceOnboardingInput = z.infer<typeof advanceOnboardingSchema>;
 
 const validationFailed = (): Response =>
     Response.json(
@@ -124,6 +139,18 @@ export function parseDeleteAccount(
                 { status: HTTP_STATUS.BAD_REQUEST }
             ),
         };
+    }
+    return { ok: true, value: parsed.data };
+}
+
+export function parseAdvanceOnboarding(
+    body: unknown
+):
+    | { ok: true; value: AdvanceOnboardingInput }
+    | { ok: false; response: Response } {
+    const parsed = advanceOnboardingSchema.safeParse(body);
+    if (!parsed.success) {
+        return { ok: false, response: validationFailed() };
     }
     return { ok: true, value: parsed.data };
 }
