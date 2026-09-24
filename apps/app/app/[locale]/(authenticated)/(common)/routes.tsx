@@ -52,6 +52,10 @@ export function useCommonNavRoutes(): NavItem[] {
                         title: settingsItems.billing,
                         url: routes.account.billing.url,
                     },
+                    {
+                        title: settingsItems.privacy,
+                        url: routes.account.privacy.url,
+                    },
                 ],
             },
         ];
