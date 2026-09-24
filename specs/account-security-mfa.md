@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
-updated: 2026-09-19
+updated: 2026-09-23
 ---
 
 # MFA, sessões ativas e política de senha
@@ -81,7 +81,7 @@ eficácia.
   >
   > | app | onde |
   > |-----|------|
-  > | `apps/app` | `sign-up/validations/signUpSchema.ts:6` · `reset-password/validations/resetPasswordSchema.ts:6` · `sign-in/validations/signInSchema.ts:6` · `admin/(pages)/users/(validations)/userFormSchema.ts:7` · `account/(validations)/accountFormSchema.ts:9` |
+  > | `apps/app` | `sign-up/validations/signUpSchema.ts:6` · `reset-password/validations/resetPasswordSchema.ts:6` · `sign-in/validations/signInSchema.ts:6` · `admin/(pages)/users/(validations)/userFormSchema.ts:7` · `account/(validations)/accountFormSchema.ts:9` · `account/(validations)/accountDeletionSchema.ts:6` (PR #23) |
   > | `apps/web` | `sign-up/validations/signUp.ts:3` · `sign-in/validations/signInSchema.ts:3` |
   > | `apps/api` | `(shared)/validation/auth.schema.ts:6` · `(shared)/validation/account.schema.ts:7` · `(shared)/validation/user-admin.schema.ts:4` |
   >
@@ -91,10 +91,18 @@ eficácia.
   > esforço para cima e pede que a regra nasça em `@repo/shared`, consumida pelas três camadas, em vez de
   > virar uma décima primeira constante copiada.
   >
+  > **Nota de 2026-09-23 — a décima primeira apareceu.** A PR #23 criou
+  > `account/(validations)/accountDeletionSchema.ts`, que declara a própria `MIN_PASSWORD_LENGTH = 6`.
+  > `git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/` devolve **11** declarações (eram 10 no
+  > `03498ae`); a busca sem o `=` devolve **28** ocorrências (eram 25). Os dois números medem coisas
+  > diferentes, e o que conta para o item 4 é o de declarações: cada uma é um lugar a mudar.
+  >
   > **Nota de 2026-09-17.** A contenção que mantinha esta spec sozinha no lote paralelo **caiu**. Os três
   > arquivos de `packages/auth` do `contends_on` eram exatamente os de `session-refresh`, agora entregue e
   > arquivada em [`docs/features/session-refresh/spec.md`](../docs/features/session-refresh/spec.md). Resta
-  > a colisão com `data-rights-lgpd`, e só em `packages/auth/server.ts`.
+  > a colisão com `data-rights-lgpd`, e só em `packages/auth/server.ts`. *(2026-09-23: essa colisão também
+  > caiu. `data-rights-lgpd` foi entregue pela PR #23 e não alterou nenhum arquivo de `packages/auth`: o
+  > expurgo apenas chama `revokeUserSessions` e `deleteUser`.)*
   >
   > Achado lateral, fora do escopo desta spec:
   > `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:9` tem a mensagem em pt-br cravada no código
@@ -185,7 +193,7 @@ eficácia.
       comum deixa de ser um "sair de todos" silencioso.
       ◐ **Metade entregue por `account-settings` (PR #12), e a metade que falta é justamente a difícil.**
       Já existe `POST /account/sessions/revoke` (`apps/api/app/(routes)/account/sessions/revoke/route.ts:7`,
-      sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:49`) e acionável pela UI
+      sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:81`, âncora remedida em 2026-09-23) e acionável pela UI
       (`AccountSecurityForm.tsx:137`). **Mas é tudo-ou-nada**, e o próprio código declara o porquê em
       `AccountSecurityForm.tsx:53-54`: *"Firebase cannot revoke sessions selectively, so both actions below
       end the current one too"*. Ou seja: o usuário ganhou um botão explícito de "sair de todos" — o que
@@ -207,7 +215,12 @@ eficácia.
 - **MFA obrigatório por política** (para admins ou para todo o fork) — decisão de cada fork, não do core.
 - **Reautenticação para ações sensíveis** (excluir conta, trocar e-mail, cancelar assinatura) — depende
   desta spec e de `data-rights-lgpd`; vira iteração própria, com o contrato de "sessão recente" definido
-  num lugar só.
+  num lugar só. *(2026-09-23: a exclusão de conta já nasceu com reautenticação própria, pedindo a senha de
+  novo em vez de confiar na idade da sessão — `apps/api/app/(routes)/account/deletion/route.ts:55-72`. O
+  motivo está no código: entrar pelo cookie de sessão compartilhado regrava o instante de autenticação, então
+  uma sessão roubada se apresenta como recente. Quem desenhar o contrato de "sessão recente" precisa partir
+  dessa restrição, e a conta sem provedor de senha fica sem caminho: a rota recusa com
+  `ACCOUNT_DELETION_REAUTH_UNSUPPORTED` em `:48-53`.)*
 - Detecção de login suspeito, alerta de novo dispositivo e bloqueio por tentativa — pertencem a
   `observability-logging`/`audit-log` e a anti-abuso. Verificação contra bases de senhas vazadas depende
   de serviço externo.

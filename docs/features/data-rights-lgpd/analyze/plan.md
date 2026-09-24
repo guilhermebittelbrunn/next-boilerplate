@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Spec de origem | [`specs/data-rights-lgpd.md`](../../../../specs/data-rights-lgpd.md) |
+| Spec de origem | [`specs/data-rights-lgpd.md`](../spec.md) |
 | Esforço declarado na spec | G |
 | Data da análise | 2026-09-23 |
 | Branch | a definir pelo `/review` (a atual, `kathmandu-v1`, não segue o padrão do repo) |

@@ -8,9 +8,9 @@ audience: produto
 area: [apps/app, apps/api, packages/sdk, packages/internationalization]
 mode: ambos
 depends_on: []
-contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts]
+contends_on: [apps/app/proxy.ts, apps/app/shared/lib/postLoginNavigation.ts, apps/api/(shared)/lib/user-merge.ts, packages/sdk/src/types/user/user.ts, "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx"]
 feature: -
-updated: 2026-09-19
+updated: 2026-09-23
 ---
 
 # Onboarding pós-cadastro
@@ -129,6 +129,42 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
       parou, e o deep link original (`?redirect=`) é honrado ao concluir.
 - [ ] Concluir marca o perfil como completo e nunca mais intercepta.
 - [ ] Um passo pode ser pulado quando o fork configurar assim, sem deixar o usuário preso.
+
+### Reescopo que o `/analyze` deve aplicar (auditoria de 2026-09-23)
+
+A auditoria contestou este corte em três rodadas seguidas (item 2 esvaziado pela PR #12; nove pontos de
+decisão de destino contra os cinco declarados). Em vez de esperar uma reescrita completa, esta é a leitura
+mínima que torna o corte planejável. Os cinco itens acima continuam valendo; o que muda é **onde** e
+**com o quê** cada um se cumpre.
+
+1. **Item 1 — o desvio mora no layout da área comum, não no proxy nem no cliente.**
+   `apps/app/app/[locale]/(authenticated)/(common)/layout.tsx:30-35` já desvia admin para `/{locale}/admin`
+   no servidor, lendo o perfil que `resolvePanelSnapshot` resolve via `/auth/me`
+   (`apps/app/lib/server/panelSnapshot.ts:23-38`, `apps/app/lib/server/authSession.ts:15-27`). Toda
+   entrada na área comum passa por esse layout: login por senha, Google, sessão já existente e deep link.
+   Decidir ali torna os seis resolvedores do cliente e as três decisões do proxy irrelevantes para o
+   desvio, e nenhum deles precisa mudar. A pergunta em aberto "proxy ou resolvedor pós-login" fica
+   respondida por uma terceira via, que é o padrão que o repositório já usa.
+   As rotas do onboarding ficam **fora** do grupo `(common)` (irmãs dele dentro de `(authenticated)/`),
+   senão o desvio intercepta a si mesmo. Admin sai pelo desvio que já existe antes de chegar ao novo;
+   admin personificando um usuário incompleto **não** é interceptado, porque a impersonação é só leitura.
+2. **Item 2 — nada novo a coletar.** Nome de exibição e idioma já são gravados por `PUT /account`
+   (`apps/api/app/(routes)/account/route.ts:107`). O fluxo reaproveita essa escrita; o que ele acrescenta
+   é a obrigatoriedade e a ordem, não campos. Nenhum campo de coleta novo no `UserDTO`.
+3. **Item 3 — o único campo novo do perfil é o estado do onboarding** (passo atual e conclusão), nascendo
+   em `createDefaultUserProfile` (`apps/api/(shared)/lib/user-merge.ts:47`). **Ressalva sobre o deep
+   link:** um layout do App Router não recebe o caminho da requisição. Honrar `?redirect=` ao concluir exige
+   que `apps/app/proxy.ts` repasse o caminho num header de requisição, ou que o corte aceite honrar o deep
+   link só quando a entrada passou pelo login. A recomendação é o header, que é uma linha no proxy e é o
+   motivo de `proxy.ts` seguir no `contends_on`. O destino final passa por `postAuthRedirectTarget`
+   (`packages/auth/redirect.ts:10`), que já recusa open redirect.
+4. **Item 4** sem mudança.
+5. **Item 5 — um interruptor para o recurso inteiro e um "pular" por passo.** A variável que desliga o
+   onboarding trata valor vazio como ausente, como o resto do repositório; ausente significa o padrão do
+   core, que a spec recomenda ser ligado.
+6. **Perfis legados:** campo ausente conta como concluído (recomendação da própria spec, adotada).
+7. **Verificabilidade:** todos os critérios se provam sob o emulador de Auth e Firestore do
+   `firebase-emulator-seed`, sem chave e sem serviço externo.
 
 ### Fora do corte
 

@@ -35,23 +35,23 @@ alguém olhar.
   capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
   `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
   impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-23, rodando o gate sem cache com o `HEAD` em `03498ae`,
-  já com a PR #22 mergeada**): **10 tasks de teste / 1434 testes em 145 arquivos**, todos de
-  unidade/integração estreita — `apps/api` 597 em 53 arquivos, `apps/app` 418 em 58, `@repo/email` 137 em 7,
-  `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2, `@repo/internationalization` 33
-  em 4, `apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/payments` 8 em 1. **Nenhum sobe um
+- Suíte automatizada atual (**remedida em 2026-09-23, rodando o gate sem cache com o `HEAD` em `ab11a5b`,
+  já com a PR #23 mergeada**): **10 tasks de teste / 1547 testes em 158 arquivos**, todos de
+  unidade/integração estreita — `apps/api` 651 em 57 arquivos, `apps/app` 462 em 65, `@repo/email` 137 em 7,
+  `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44 em 5, `apps/web` 35 em 6,
+  `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 8 em 1. **Nenhum sobe um
   app de verdade**, e **nenhuma** das dez configs declara **cobertura**: não existe medida nem baseline para
   discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88, 918 em 94, 981 em 102, 1038 em 107,
-  1091 em 112, 1227 em 124, 1276 em 130, 1325 em 134 e 1378 em 137; o crescimento vem das PRs #10 a #22. A
-  PR #22 acrescentou 3 arquivos em `apps/api`, 4 em `apps/app` e 1 em `@repo/internationalization`. Seguem
-  **10** tasks e **10** configs de Vitest, e não há Playwright, Cypress nem `axe` em `package.json` nenhum.
-  O número subiu; a lacuna é a mesma.)*
+  1091 em 112, 1227 em 124, 1276 em 130, 1325 em 134, 1378 em 137 e 1434 em 145; o crescimento vem das PRs
+  #10 a #23. A PR #23 acrescentou 4 arquivos em `apps/api`, 7 em `apps/app`, 1 em
+  `@repo/internationalization` e 1 em `apps/web`. Seguem **10** tasks e **10** configs de Vitest, e não há
+  Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
   > ✅ **O teste instável de 2026-09-19 foi consertado, e com ele caiu o argumento mais concreto que esta
   > spec tinha.** A execução de CI da PR #21 (`gh run 35456187047`) havia fechado vermelha porque
   > `apps/api/__tests__/baseRepository.test.ts:477` afirma `created.updatedAt === created.createdAt` e o
   > repositório produzia os dois instantes com duas chamadas separadas a `new Date()`. O primeiro commit da
   > PR #22 trocou isso por um `const createdAt` único, reusado nos dois campos
-  > (`apps/api/(shared)/repositories/base.repository.ts:151-155`), com a regra escrita em `:148-150`. A CI
+  > (`apps/api/(shared)/repositories/base.repository.ts:167-171`, âncora remedida em 2026-09-23), com a regra escrita em `:164-166`. A CI
   > da branch da PR #22 fechou `success` (`gh run 35544220556`) e a de merge também (`gh run 35544765975`).
   > **O que continua verdadeiro é a parte estrutural, e é menor:** nenhum gate deste repositório distingue
   > teste que passa de teste que passa quase sempre. A diferença é que agora não há caso concreto em
@@ -59,13 +59,20 @@ alguém olhar.
 
   > **Estes números envelhecem a cada PR, e o método de medição pegou.** Os valores anteriores
   > (1227 em 124) tinham sido gravados dentro da própria PR #19, antes de os commits de código dela
-  > entrarem. Os de 2026-09-17, os de 2026-09-19 e estes saíram do gate sem cache com o merge já em `main`
-  > — três rodadas seguidas medindo depois, e não durante.
+  > entrarem. Os de 2026-09-17, os de 2026-09-19, os da rodada pós-PR #22 e estes saíram do gate sem
+  > cache com o merge já em `main` — quatro rodadas seguidas medindo depois, e não durante.
   > **O maior salto foi em `@repo/auth`: 62 → 101 testes, 6 → 8 arquivos** — 39 dos 49 que a PR #20 somou.
   > E é um argumento para esta spec, não contra: o caminho que ganhou os 39 testes é justamente aquele cuja
   > verificação ponta a ponta ficou 🔒, porque o emulador de Auth aceita o cookie depois de
   > `revokeRefreshTokens`. Os testes provam o que o emulador alcança. O que ele não alcança continua sem
   > prova, e é disso que esta spec trata.
+- 🆕 **A PR #23 trouxe um caso concreto novo, e ele é do tipo que esta spec existe para pegar.** A quinta aba
+  da área de conta fez a faixa de abas medir 429 px num viewport de 375 px, e a página inteira ganhou
+  rolagem horizontal (`docs/features/data-rights-lgpd/test/report.md`, defeito D1). Nenhum teste da suíte
+  acusou: quem pegou foi a passada manual de browser do `/test`. A correção veio com
+  um teste jsdom (`apps/app/__tests__/accountTabsOverflow.test.tsx`), que fixa a classe do contêiner e não
+  mede largura nenhuma, porque jsdom não faz layout. É a mesma lacuna vista do outro lado: regressão de
+  layout só é detectada por quem renderiza de verdade.
 - 🆕 **`@repo/design-system` não tem task de teste, e isso já empurrou um teste para o workspace errado.**
   `packages/design-system/package.json` declara só `clean` e `typecheck`. A PR #22 precisou fixar um limite
   de largura de rótulo do `CategoryBarChart` e, sem onde pôr o teste, gravou-o em
@@ -74,6 +81,12 @@ alguém olhar.
   escrita no comentário. O teste roda e protege a tela, mas afirma algo sobre um componente que ele não
   importa, num pacote que não é o dele. O pacote de UI compartilhada é o que mais se beneficiaria de teste
   de componente, e é o único sem infraestrutura para tê-lo.
+  **Segundo caso, na PR #23 (remedido em 2026-09-23):** o `ActionsMenu`
+  (`packages/design-system/components/ui/action-menu.tsx`) ganhou uma prop opcional para o chamador trocar
+  os rótulos, com volta ao dicionário compartilhado quando ninguém a passa. O único teste que exercita a
+  mudança (`apps/app/__tests__/usersListArchiveLabels.test.tsx:37`) **substitui o componente por um mock** e
+  confere só as props que a tela entrega. O caminho de volta ao dicionário, que é o que todo outro chamador
+  usa, não tem teste. `git grep "components/ui/action-menu"` nos diretórios `__tests__` devolve zero.
 - ✅ **O gate instável foi corrigido — e o argumento mais forte desta spec caiu junto.** Em 2026-09-15 a
   auditoria registrou aqui uma falha real: `pnpm turbo run lint typecheck test --force` rodado duas vezes
   seguidas falhou na primeira (`app#test`, 21/23 tasks), com

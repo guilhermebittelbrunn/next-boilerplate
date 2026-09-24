@@ -1,7 +1,7 @@
 ---
 id: data-rights-lgpd
 title: "Direitos do titular: exportar dados e excluir conta"
-status: proposed
+status: done
 value: alto
 effort: G
 audience: confianca
@@ -9,7 +9,7 @@ area: [apps/api, apps/app, apps/web, packages/sdk, packages/auth, packages/inter
 mode: ambos
 depends_on: [account-settings]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
-feature: -
+feature: data-rights-lgpd
 updated: 2026-09-23
 ---
 
@@ -78,8 +78,8 @@ acumula, maior o estrago de uma exclusão feita errado.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) (controles 1, 2,
-  3, 4, 6, 7, 8, 9 e 19) · [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (controles 1, 2,
+  3, 4, 6, 7, 8, 9 e 19) · [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - **Prevalência é baixa e isso não é desculpa:** exclusão de conta aparece em **4/10** starters e
   exportação de dados em **0/10**. A obrigação não vem do mercado, vem da lei — e é por quase ninguém
   entregar que isso vira diferencial de confiança do core.
@@ -111,7 +111,7 @@ acumula, maior o estrago de uma exclusão feita errado.
 > 🆕 **Obrigação transferida em 2026-09-19 — o carimbo de último acesso.** Os dois itens acima precisam
 > cobrir `lastAccessAt`, o campo que a PR #21 acrescentou ao perfil
 > (`packages/sdk/src/types/user/user.ts:27`). O corte de
-> [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) pedia que o campo entrasse no
+> [`user-activity-tracking`](../user-activity-tracking/spec.md) pedia que o campo entrasse no
 > export e na exclusão, e **não havia onde ligá-lo**: não existe rota de export,
 > `apps/api/app/(routes)/account/route.ts` não tem `DELETE` (só `GET:97` e `PUT:107`), e o `delete()`
 > herdado é soft delete (`apps/api/(shared)/repositories/base.repository.ts:209-211`), que preserva o
@@ -198,3 +198,39 @@ acumula, maior o estrago de uma exclusão feita errado.
 - Exclusão exige **reautenticação recente** e exportação é **síncrona**? — **recomendação:** sim para as
   duas; a reautenticação alinhada ao que `account-security-mfa` definir para ações sensíveis, e a
   exportação só vira assíncrona quando o volume medido de um fork exigir.
+
+## Estado da entrega
+
+Auditado em 2026-09-23 pelo `/spec --sync`. PR **#23** mergeada em `main` em 2026-09-24T02:32:17Z (merge
+commit `ab11a5b`), com CI `success` nesse SHA (`gh run 35947675147`). Os cinco itens do corte, reabertos no
+código:
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. O titular baixa um arquivo com os próprios dados, sem pedir a ninguém | **implementado** | `GET /account/export` sob `requireCommonPanelApi` (`apps/api/app/(routes)/account/export/route.ts:9`), recusado durante impersonação (`:12-17`) e registrado na trilha (`:29-38`). O conteúdo sai de `buildAccountDataExport` (`apps/api/(shared)/lib/account-export.ts:95-129`): perfil, registros criados, eventos da trilha sem o e-mail de operador (`:66-76`) e objetos do bucket, com teto de 5000 por bloco declarado como `truncated` (`:20`, `:118-126`). O navegador anexa a escolha de cookies, que só existe no cookie (`useAccountDataRights.tsx:23-36`). SDK em `packages/sdk/src/actions/account/action.ts:51`; botão em `AccountPrivacyPanel.tsx:83-103`. `lastAccessAt` sai no arquivo, coberto em `apps/api/__tests__/accountExportRoute.test.ts:203` |
+| 2. O titular solicita a exclusão da própria conta, com confirmação explícita e resultado visível | **implementado** | `POST /account/deletion` sob `requireCommonPanelApi` (`apps/api/app/(routes)/account/deletion/route.ts:19`), com senha digitada de novo em vez de confiar na idade da sessão (`:55-72`) e recusa quando sujeito e ator divergem (`:23-28`). Diálogo destrutivo em `AccountPrivacyPanel.tsx:123-171`; ao concluir, aviso e saída da sessão (`useAccountDataRights.tsx:61-71`). SDK em `action.ts:67` |
+| 3. Exclusão coordenada, sem órfãos, com retenção justificada | **implementado**, com uma metade não verificável e outra transferida | Seis passos nomeados em `apps/api/(shared)/lib/account-erasure.ts:89-121`, a conta de Auth por último (`:104-107`). Registros apagados de verdade, inclusive os já arquivados (`entity.repository.ts:62-66` sobre `base.repository.ts:243-262`); perfil apagado (`user.repository.ts:60-61`), o que leva `lastAccessAt` junto; trilha retida com o rótulo do titular anonimizado (`audit-event.repository.ts:149`). **Arquivos:** varredura por prefixo de dono (`account-erasure.ts:53-65`, `storage.ts:103`), que responde `skipped` sem bucket configurado e nunca rodou contra Cloud Storage real. **Assinatura:** ponto de extensão que responde `skipped` com `billing-not-linked` (`account-erasure.ts:67-78`), porque não existe vínculo perfil↔cliente Stripe. A obrigação passou para [`billing-subscription`](../../../specs/billing-subscription.md), que é quem cria esse vínculo |
+| 4. A resposta declara o prazo aplicável, nos 3 idiomas | **implementado** | 15 dias, a recomendação da própria spec: `translations/apps/app/pages/common/account.ts:87-88` (pt-br), `:213-214` (en), `:340-341` (es), e na política em `translations/apps/web/pages/legal/index.ts:57`, `:117`, `:177` |
+| 5. Canal de privacidade publicado, com conteúdo real no lugar do placeholder | **implementado**, com deriva | `NEXT_PUBLIC_PRIVACY_CONTACT` (`apps/web/env.ts:19,27`, `apps/web/.env.example:63`) vira `mailto:`; vazia, o canal cai no formulário de contato (`apps/web/shared/lib/privacyContact.ts:10-19`). A página de privacidade publica o canal (`apps/web/app/[locale]/legal/privacy/page.tsx:16-31`) e a política ganhou as seções de cookies e de direitos nos 3 idiomas (`legal/index.ts:51-58` em pt-br). Ver a deriva abaixo |
+
+Cobertura: `accountExportRoute.test.ts`, `accountDeletionRoute.test.ts`, `accountErasure.test.ts` e
+`auditTrailAnonymization.test.ts` na `apps/api`, mais o crescimento de `baseRepository.test.ts`;
+`accountPrivacyPanel.test.tsx`, `useAccountDataRights.test.tsx`, `accountDeletionSchema.test.ts` e
+`downloadJsonFile.test.ts` na `apps/app`; `privacyContact.test.ts` na `apps/web`; `legalSections.test.ts` no
+pacote de tradução. O `/test` rodou o expurgo contra o emulador de Auth e Firestore e provou o recadastro
+com o mesmo e-mail depois da exclusão (`test/report.md`).
+
+**Por que a spec fecha com o item 3 dividido.** A própria spec previa isto nos riscos: "quem entregar por
+último paga a integração — daí a exclusão nascer com pontos de extensão". O ponto de extensão de cobrança
+existe, é visível no relatório de cada exclusão e tem dono. Manter a spec aberta por ele criaria o mesmo
+estado absorvente que `user-activity-tracking` evitou ao transferir o item 4 para esta spec: ela só
+fecharia quando `billing-subscription` entregasse.
+
+## Deriva de implementação
+
+| especificado | implementado | leitura |
+|--------------|--------------|---------|
+| "Conteúdo real substituindo o placeholder de aviso de privacidade e termos" | A política continua modelo, com o aviso "Este é um modelo do boilerplate" mantido nos 3 idiomas (`legal/index.ts:40`, `:100`, `:160`), mas passou a declarar os cookies que o código grava e os direitos que o produto oferece. Os termos não mudaram | **A spec estava errada.** O core não tem como escrever o texto legal de cada fork, e o próprio backlog já dizia isso na decisão sobre quem escreve a política. O que cabe ao core é um modelo que não minta sobre o código, e isso foi entregue |
+| Exportação e exclusão "sem pedir nada a ninguém" | O titular que entrou só com Google não tem senha para reconfirmar, e a rota recusa a exclusão com `ACCOUNT_DELETION_REAUTH_UNSUPPORTED` (`deletion/route.ts:48-53`); a tela troca o botão pelo aviso de usar o canal de privacidade (`AccountPrivacyPanel.tsx:40-48`, `:106-114`) | **A implementação restringiu, de propósito.** Reautenticar conta federada exige outro fluxo. O canal publicado no item 5 cobre o caso, mas é pedido a alguém, não autoatendimento |
+| Soft delete do admin como armadilha a remover | O `DELETE` administrativo continua sendo soft delete e virou **Arquivar** na tela (`UsersListClient.tsx`, `action-menu.tsx`), para não se confundir com o interruptor "Ativo/Desativado" do Firebase Auth | **Escolha deliberada, pedida pelo usuário.** O expurgo real existe só no caminho do titular |
+| `contends_on`: `base.repository.ts`, `packages/auth/server.ts`, `firestore.indexes.json` | Tocou `base.repository.ts`; **não** tocou `packages/auth/server.ts` nem `firestore.indexes.json` (nenhum índice novo, de propósito). Tocou, sem declarar, `entity.repository.ts`, `user.repository.ts`, `audit-event.repository.ts`, `storage.ts`, `apps/api/proxy.ts`, `(common)/routes.tsx`, `(common)/paths.ts`, `Footer.tsx`, `PageFormFooter.tsx`, `action-menu.tsx` e `apps/web/env.ts` | **Previsão errada nas duas direções.** Dois dos três declarados sobraram; os repositórios vizinhos faltaram, de novo |
