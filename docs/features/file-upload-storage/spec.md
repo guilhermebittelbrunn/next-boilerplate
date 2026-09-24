@@ -55,7 +55,7 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - Prevalência: **6 de 10** starters entregam perfil com avatar/upload por padrão. É a faixa
   "esperado, não diferencial" — a nota classifica o valor para o usuário como **alto** e o esforço como
   **P**, e observa que o recurso "traz consigo storage de arquivo".
@@ -133,7 +133,7 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
   gasto real seja **$0,00/mês** no cenário de um MVP. O risco é de **plano e atrito de cadastro**, não de
   cota. Segue verdade que egress é cobrado por download e que URL expirável ajuda no controle de acesso,
   não na conta. Números, comparativo com S3/R2 e cenários de 10×/100×:
-  [`research/object-storage-costs.md`](research/object-storage-costs.md).
+  [`research/object-storage-costs.md`](../../../specs/research/object-storage-costs.md).
 - **Regras do bucket são um segundo modelo de autorização.** Hoje o repo concentra tudo na API
   (`firestore.rules:32-33`, `match /{document=**}` com `allow read, write: if false;`, nega todo acesso
   direto de cliente). Se o cliente subir direto ao bucket, a
@@ -159,7 +159,7 @@ quem improvisa acaba com bucket público, arquivo validado só no navegador, ou 
   upload direto só se o limite de corpo virar problema medido.
 - Firebase Storage ou provedor S3-compatível? — **recomendação:** Firebase Storage, para não introduzir
   um segundo provedor num repo que já roda Auth e Firestore em Firebase.
-  ✅ **Pesquisado e confirmado em 2026-09-14** ([`research/object-storage-costs.md`](research/object-storage-costs.md)):
+  ✅ **Pesquisado e confirmado em 2026-09-14** ([`research/object-storage-costs.md`](../../../specs/research/object-storage-costs.md)):
   no cenário de MVP o custo é **$0,00** no Cloud Storage, **$0,10** no S3 e **$0,00** no R2 — **S3 não é
   mais barato**, é a única das três que cobra no MVP e a única cujo free tier expira. Custo de dependência
   do Firebase segue **zero** (`@google-cloud/storage` já vem com o `firebase-admin`). **Ressalva que a

@@ -1,7 +1,7 @@
 # Análise + Blueprint — Recuperação de senha e verificação de e-mail
 
 - **Slug**: `auth-recovery-verification`
-- **Spec de origem**: [`specs/auth-recovery-verification.md`](../../../../specs/auth-recovery-verification.md) (#1 da fila do `specs/BACKLOG.md`)
+- **Spec de origem**: [`specs/auth-recovery-verification.md`](../spec.md) (#1 da fila do `specs/BACKLOG.md`)
 - **Dependência**: `transactional-emails` — **satisfeita em `main`** (PR #9, commit `400f290`)
 - **Card / wiki / Figma / print**: nenhum. **Referências não lidas: nenhuma.**
 - **Data**: 2026-09-10

@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # MFA, sessões ativas e política de senha
@@ -83,7 +83,7 @@ eficácia.
   > |-----|------|
   > | `apps/app` | `sign-up/validations/signUpSchema.ts:6` · `reset-password/validations/resetPasswordSchema.ts:6` · `sign-in/validations/signInSchema.ts:6` · `admin/(pages)/users/(validations)/userFormSchema.ts:7` · `account/(validations)/accountFormSchema.ts:9` · `account/(validations)/accountDeletionSchema.ts:6` (PR #23) |
   > | `apps/web` | `sign-up/validations/signUp.ts:3` · `sign-in/validations/signInSchema.ts:3` |
-  > | `apps/api` | `(shared)/validation/auth.schema.ts:6` · `(shared)/validation/account.schema.ts:7` · `(shared)/validation/user-admin.schema.ts:4` |
+  > | `apps/api` | `(shared)/validation/auth.schema.ts:6` · `(shared)/validation/account.schema.ts:8` · `(shared)/validation/user-admin.schema.ts:4` |
   >
   > **O que muda, além do número.** Os três de `apps/api` são os que a política de senha realmente precisa
   > alcançar: validação de cliente é conveniência, e a borda da API é o que ninguém contorna. A spec vinha
@@ -193,7 +193,7 @@ eficácia.
       comum deixa de ser um "sair de todos" silencioso.
       ◐ **Metade entregue por `account-settings` (PR #12), e a metade que falta é justamente a difícil.**
       Já existe `POST /account/sessions/revoke` (`apps/api/app/(routes)/account/sessions/revoke/route.ts:7`,
-      sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:81`, âncora remedida em 2026-09-23) e acionável pela UI
+      sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:98`, âncora remedida em 2026-09-24) e acionável pela UI
       (`AccountSecurityForm.tsx:137`). **Mas é tudo-ou-nada**, e o próprio código declara o porquê em
       `AccountSecurityForm.tsx:53-54`: *"Firebase cannot revoke sessions selectively, so both actions below
       end the current one too"*. Ou seja: o usuário ganhou um botão explícito de "sair de todos" — o que

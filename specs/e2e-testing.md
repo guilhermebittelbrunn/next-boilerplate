@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: -
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -35,16 +35,15 @@ alguém olhar.
   capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
   `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
   impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-23, rodando o gate sem cache com o `HEAD` em `ab11a5b`,
-  já com a PR #23 mergeada**): **10 tasks de teste / 1547 testes em 158 arquivos**, todos de
-  unidade/integração estreita — `apps/api` 651 em 57 arquivos, `apps/app` 462 em 65, `@repo/email` 137 em 7,
+- Suíte automatizada atual (**remedida em 2026-09-24, rodando o gate sem cache com o `HEAD` em `d52c4f0`,
+  já com a PR #24 mergeada**): **10 tasks de teste / 1615 testes em 164 arquivos**, todos de
+  unidade/integração estreita — `apps/api` 680 em 60 arquivos, `apps/app` 501 em 68, `@repo/email` 137 em 7,
   `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44 em 5, `apps/web` 35 em 6,
   `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 8 em 1. **Nenhum sobe um
   app de verdade**, e **nenhuma** das dez configs declara **cobertura**: não existe medida nem baseline para
   discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88, 918 em 94, 981 em 102, 1038 em 107,
-  1091 em 112, 1227 em 124, 1276 em 130, 1325 em 134, 1378 em 137 e 1434 em 145; o crescimento vem das PRs
-  #10 a #23. A PR #23 acrescentou 4 arquivos em `apps/api`, 7 em `apps/app`, 1 em
-  `@repo/internationalization` e 1 em `apps/web`. Seguem **10** tasks e **10** configs de Vitest, e não há
+  1091 em 112, 1227 em 124, 1276 em 130, 1325 em 134, 1378 em 137, 1434 em 145 e 1547 em 158; o crescimento
+  vem das PRs #10 a #24. A PR #24 acrescentou 3 arquivos em `apps/api` e 3 em `apps/app`. Seguem **10** tasks e **10** configs de Vitest, e não há
   Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
   > ✅ **O teste instável de 2026-09-19 foi consertado, e com ele caiu o argumento mais concreto que esta
   > spec tinha.** A execução de CI da PR #21 (`gh run 35456187047`) havia fechado vermelha porque
@@ -73,6 +72,13 @@ alguém olhar.
   um teste jsdom (`apps/app/__tests__/accountTabsOverflow.test.tsx`), que fixa a classe do contêiner e não
   mede largura nenhuma, porque jsdom não faz layout. É a mesma lacuna vista do outro lado: regressão de
   layout só é detectada por quem renderiza de verdade.
+- 🆕 **A PR #24 mudou o primeiro fluxo do corte.** Desde o onboarding, quem se cadastra não cai no painel:
+  o layout da área comum desvia a conta nova para `/{locale}/onboarding` (`apps/app/app/[locale]/(authenticated)/(common)/layout.tsx:38-41`).
+  O fluxo "cadastro" do item 1 passa a atravessar dois passos a mais, ou precisa rodar com
+  `ONBOARDING_ENABLED="false"`. As contas do seed não têm o campo e contam como concluídas, então o fluxo
+  "login" segue igual. O `/test` da PR #24 fechou 20 critérios dirigindo o browser à mão, e dois deles só
+  caíram nessa passada (o idioma pré-selecionado errado e o 409 que não voltava de passo). A mesma passada
+  achou a perda da query string no deep link, que nenhum teste da suíte cobre.
 - 🆕 **`@repo/design-system` não tem task de teste, e isso já empurrou um teste para o workspace errado.**
   `packages/design-system/package.json` declara só `clean` e `typecheck`. A PR #22 precisou fixar um limite
   de largura de rótulo do `CategoryBarChart` e, sem onde pôr o teste, gravou-o em
@@ -216,6 +222,8 @@ alguém olhar.
 
 ## Perguntas em aberto
 
+- ~~Adotar Playwright, `@axe-core/playwright` e um provedor de cobertura do Vitest como dependências de
+  desenvolvimento?~~ **Aprovado pelo usuário em 2026-09-24**, como `devDependencies`.
 - Executar E2E em toda PR ou só quando o diff toca `apps/`? — **recomendação:** só quando toca app ou
   design system; PRs de documentação não devem esperar por navegador.
 - Quais fluxos entram nos 5–10 iniciais? — **recomendação:** cadastro, login, CRUD do slice de referência,

@@ -1,6 +1,6 @@
 # Análise e blueprint — Último acesso do usuário
 
-- **Spec**: [`specs/user-activity-tracking.md`](../../../../specs/user-activity-tracking.md)
+- **Spec**: [`specs/user-activity-tracking.md`](../spec.md)
 - **Rodada**: autônoma (`/cycle`). Ninguém foi consultado; as decisões estão no fim, com a alternativa
   descartada em cada uma.
 - **Dependência**: `session-refresh`, entregue e mergeada em `cc93229` (PR #20).
@@ -49,7 +49,7 @@ requisição autenticada. A justificativa completa está em 4.1.
 ### Objetivos
 
 - Responder "quem ainda está usando isto" na tela onde o operador já está.
-- Criar o instante que os KPIs de [`admin-analytics-dashboard`](../../../../specs/admin-analytics-dashboard.md)
+- Criar o instante que os KPIs de [`admin-analytics-dashboard`](../../admin-analytics-dashboard/spec.md)
   vão agregar depois.
 - Manter o custo de escrita sob controle. O campo existe para ser gravado com frequência, então o limite de
   escrita é restrição de projeto, e não uma otimização para depois.
@@ -209,7 +209,7 @@ export type UserDTO = {
 
 **Contenção declarada pela spec**: `packages/sdk/src/types/user/user.ts` é disputado com
 [`billing-subscription`](../../../../specs/billing-subscription.md) e
-[`onboarding-flow`](../../../../specs/onboarding-flow.md), que também acrescentam campo ao `UserDTO`. Como
+[`onboarding-flow`](../../onboarding-flow/spec.md), que também acrescentam campo ao `UserDTO`. Como
 os três são acréscimos de campo opcional em pontos diferentes do mesmo type, o conflito é textual, não
 semântico — resolve-se no merge.
 

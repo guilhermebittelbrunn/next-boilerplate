@@ -1,6 +1,6 @@
 # Análise e blueprint — Pipeline de CI no GitHub Actions
 
-> Origem: [`specs/ci-pipeline.md`](../../../../specs/ci-pipeline.md) (`status: approved`, `value: alto`,
+> Origem: [`specs/ci-pipeline.md`](../spec.md) (`status: approved`, `value: alto`,
 > `effort: M`, `audience: dx`, `depends_on: []`). O **problema**, a **evidência de mercado** e o **corte de
 > MVP** são decisão de produto já tomada — este documento responde só ao *como*. Divergências viraram
 > pergunta ao usuário, não decisão unilateral; as **sete respostas** estão em §11 e o blueprint já as

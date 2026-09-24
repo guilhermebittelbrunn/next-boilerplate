@@ -10,7 +10,7 @@ mode: subscription
 depends_on: [billing-subscription, dashboard-home]
 contends_on: ["apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx", apps/app/shared/lib/queryKeys.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
 feature: -
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # Seção de billing na home do admin
@@ -37,7 +37,9 @@ Porque amarrar as duas faria a parte construível nascer bloqueada.
   `entities/[id]`, `entities/summary`, `files`, `health`, `health/ready`, `users`, `users/[id]`,
   `users/summary` e `webhooks/payments`. *(O backlog registrava 20 na auditoria da manhã; `entities/summary`
   e `users/summary` são da `dashboard-home`, entregue nesta branch e ainda fora de `main`.)*
-- `packages/sdk/src/types/user/user.ts:12-28` — o `UserDTO` **não tem** `subscription` nem
+  *(Remedido em 2026-09-24: são **26**. As PRs #22, #23 e #24 acrescentaram `users/activity-summary`,
+  `account/export`, `account/deletion` e `account/onboarding`, e `payments/` continua sem existir.)*
+- `packages/sdk/src/types/user/user.ts:42-60` — o `UserDTO` **não tem** `subscription` nem
   `stripeCustomerId`.
 - `packages/sdk/src/client/index.ts:13-31` — são **7 actions** (`application`, `authApi`, `user`, `entity`,
   `file`, `account`, `audit`). Não existe `payments`.

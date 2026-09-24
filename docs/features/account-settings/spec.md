@@ -62,7 +62,7 @@ Três consequências práticas, medidas no código:
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - Prevalência: **perfil + avatar/upload em 6/10 dos starters**, com valor "alto" e esforço "P" — bom retorno. A nota alerta que o avatar "traz consigo storage de arquivo (validar MIME e tamanho **no servidor**, bucket não público)".
 - **Dark mode: 9/10**, commodity. Aqui existe, mas por navegador; persistir por usuário é o delta real.
 - **Exclusão de conta: 4/10** (confiança/legal), com a armadilha registrada: "deletar o usuário e deixar órfãos (assinatura Stripe ativa, arquivos no bucket, membros de organização). O correto é anonimizar + cancelar + limpar" — motivo pelo qual fica fora deste corte.

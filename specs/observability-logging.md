@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -47,7 +47,7 @@ segue invisível até alguém conferir a fatura.
   restante do arquivo em uma linha.)*
 - **As variações de formato acabaram.** Os **16** pontos de log deliberado passam todos pelo helper, entre
   eles `apps/api/proxy.ts:67`, `webhooks/payments/route.ts:61,69`, `users/route.ts:73`,
-  `auth/sign-up/route.ts:40`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
+  `auth/sign-up/route.ts:38`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
   `(shared)/lib/storage.ts:89`, `account-avatar.ts:45`, `entity-photo.ts:62` e os dois que a PR #18 trouxe
   em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). *(Âncoras de `proxy.ts` e `storage.ts` remedidas em 2026-09-23: a PR #23 deslocou as duas. A mesma PR
   acrescentou dois pontos novos pelo helper, `account-export.ts:90` e `account-erasure.ts:111`: `git grep "logEvent("`
@@ -145,7 +145,7 @@ continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário
 |---------------|----------|-----------|
 | 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:36-37`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
 | 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:122,161,75-76` · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
-| 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:61,69` · `users/route.ts:73` · `auth/sign-up/route.ts:40`, todos com `requestId` |
+| 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:61,69` · `users/route.ts:73` · `auth/sign-up/route.ts:38`, todos com `requestId` |
 | 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-57`, booleano nu, teto de 2 s em `:9` |
 | 5. Camada no-op sem a variável do serviço | **implementado**, por não haver serviço | zero dependência nova, zero env nova, zero linha em `.env.example` |
 | 6. Código morto de analytics removido | **implementado** | entregue por tabela em 2026-09-01 |
@@ -188,7 +188,7 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
       gera, `:161` repassa ao handler, `:75-76` carimba na resposta; `formattedError.ts:117` lê de volta.
 - [x] Os pontos que hoje usam `console` em fluxos críticos (webhook de pagamento, criação de perfil)
       passam a emitir log estruturado com esse identificador. — `webhooks/payments/route.ts:61,69`,
-      `users/route.ts:73`, `auth/sign-up/route.ts:40`.
+      `users/route.ts:73`, `auth/sign-up/route.ts:38`.
 - [x] O endpoint de saúde deixa de mentir: distingue "o processo está de pé" de "as dependências
       respondem", e não é pré-renderizado. — `health/route.ts:3` e `health/ready/route.ts`, sobre
       `(shared)/lib/readiness.ts:31-57`.

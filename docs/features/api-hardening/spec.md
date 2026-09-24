@@ -56,8 +56,8 @@ invadida.
 
 ## Evidência de mercado
 
-- Notas: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) ·
-  [`research/engineering-baseline.md`](research/engineering-baseline.md)
+- Notas: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) ·
+  [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md)
 - **Controle 13 — "Security headers + CSP"**: boa prática **OWASP A02**, esforço **P**, e a nota aponta
   exatamente `packages/security/middleware.ts` como o lugar onde se materializa. É o melhor custo/benefício
   da lista inteira: o código já está no repo, desligado.

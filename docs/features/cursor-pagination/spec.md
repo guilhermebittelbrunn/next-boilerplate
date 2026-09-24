@@ -70,7 +70,7 @@ E corrigir depois de haver dados em produção muda contrato do SDK, DTO, hooks 
 
 ## Evidência de mercado
 
-- Nota: [`research/engineering-baseline.md`](research/engineering-baseline.md)
+- Nota: [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md)
 - **Prática 11 (paginação por cursor)** — *padrão de facto no Firestore* e uma das quatro práticas que a
   nota considera indispensáveis aqui, porque o `offset` do Firestore **cobra os documentos que pulou**.
 - Armadilhas registradas na mesma prática, que a proposta precisa absorver: cursor exige **`orderBy`

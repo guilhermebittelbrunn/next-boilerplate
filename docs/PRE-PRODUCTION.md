@@ -568,32 +568,32 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-23**, com o `HEAD` em `ab11a5b` (PR #23 já mergeada) — os números abaixo são da
-quinta medição:
+Remedido em **2026-09-24**, com o `HEAD` em `d52c4f0` (PR #24 já mergeada). Os números abaixo são da
+sexta medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 12,4 s** |
-| lint/format | `pnpm check` | **648 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1547 testes em 158 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 2,7 s** |
+| lint/format | `pnpm check` | **666 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1615 testes em 164 arquivos** |
 
-Distribuição da suíte, medida em 2026-09-23 com `--force`: `apps/api` 651 em 57 arquivos, `apps/app` 462 em
-65, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
+Distribuição da suíte, medida em 2026-09-24 com `--force`: `apps/api` 680 em 60 arquivos, `apps/app` 501 em
+68, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
 em 5, `apps/web` 35 em 6, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 8 em 1.
 
 Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@repo/analytics` à suíte; a #17
 somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou
 49 testes em 6 arquivos e 18 arquivos ao alcance do `pnpm check`; a renovação de sessão somou 49 testes em
-4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #23, a suíte
-foi de 1325 para 1547 testes e o `pnpm check`, de 607 para 648 arquivos.
+4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #24, a suíte
+foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos.
 **Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
-uma das cinco últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
+uma das seis últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
 são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
 fato corrente.
 
-O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s e agora 1 min 12,4 s, com a suíte sempre
-maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
+O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s e agora 1 min 2,7 s, com a
+suíte sempre maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
 dimensionar CI.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o

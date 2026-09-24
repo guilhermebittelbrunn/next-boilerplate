@@ -1,6 +1,6 @@
 # Plano — Paginação por cursor no `BaseRepository` e no SDK
 
-- **Spec de origem**: [`specs/cursor-pagination.md`](../../../../specs/cursor-pagination.md)
+- **Spec de origem**: [`specs/cursor-pagination.md`](../spec.md)
 - **Slug**: `cursor-pagination`
 - **Guia seguido**: [`docs/feature-analysis-guide.md`](../../../feature-analysis-guide.md) (seções 1 a 10)
 - **Rodada**: `/cycle` autônomo — as ambiguidades foram decididas e estão registradas em

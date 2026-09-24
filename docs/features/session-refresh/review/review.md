@@ -179,7 +179,7 @@ acrescentei. Nenhum teste existente foi editado, desativado ou afrouxado.
 
 ## Correspondência com o corte de MVP
 
-Os sete itens do corte de [`specs/session-refresh.md`](../../../../specs/session-refresh.md) estão
+Os sete itens do corte de [`specs/session-refresh.md`](../spec.md) estão
 atendidos pelo código. O item "a renovação respeita a revogação" está implementado
 (`session-routes.ts:112-115`: `getSessionFromCookie` com `checkRevoked` antes do mint, e limpeza do cookie
 quando o provedor recusa) e coberto por teste unitário, mas não é verificável no emulador. Isso não é

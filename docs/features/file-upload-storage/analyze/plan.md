@@ -1,7 +1,7 @@
 # Análise + Blueprint — Upload de arquivos e storage
 
 - **Slug**: `file-upload-storage`
-- **Spec de origem**: [`specs/file-upload-storage.md`](../../../../specs/file-upload-storage.md) (#1 da fila do `specs/BACKLOG.md` após o `/spec --sync` de 2026-09-11)
+- **Spec de origem**: [`specs/file-upload-storage.md`](../spec.md) (#1 da fila do `specs/BACKLOG.md` após o `/spec --sync` de 2026-09-11)
 - **Desbloqueia**: `account-settings` → `account-security-mfa` · `data-rights-lgpd` (cadeia de 3 níveis)
 - **Card / wiki / Figma / print**: nenhum. **Referências não lidas: nenhuma.**
 - **Data**: 2026-09-11

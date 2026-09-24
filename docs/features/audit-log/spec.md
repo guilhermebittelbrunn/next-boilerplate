@@ -95,8 +95,8 @@ suporte mais poderoso do produto operando sem contrapartida.
 
 ## Evidência de mercado
 
-- Notas: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) ·
-  [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Notas: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) ·
+  [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - **Prevalência da impersonação: 2/10 starters.** O benchmark é direto: "maior ROI para suporte e maior
   risco: exige log de auditoria (quem, quem, quando), sessão marcada e proibição de ações
   destrutivas/billing". Este repo entregou o recurso raro e ficou devendo as contrapartidas.
