@@ -5,6 +5,8 @@ export enum AuditAction {
     USER_DELETE = "user.delete",
     ACCOUNT_SESSIONS_REVOKE = "account.sessions.revoke",
     ACCOUNT_PASSWORD_CHANGE = "account.password.change",
+    ACCOUNT_DATA_EXPORT = "account.data.export",
+    ACCOUNT_DELETE = "account.delete",
 }
 
 export enum AuditTargetType {
