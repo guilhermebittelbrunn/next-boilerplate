@@ -6,7 +6,10 @@ import { z } from "zod";
 
 export const env = createEnv({
     extends: [core(), email(), security()],
-    server: {},
+    server: {
+        // Post-sign-up onboarding. Empty or absent keeps it on; only "false" turns it off.
+        ONBOARDING_ENABLED: z.string().optional(),
+    },
     // Public Firebase and analytics settings the proxy needs to name the exact
     // third-party origins the browser is allowed to reach.
     client: {
@@ -20,6 +23,7 @@ export const env = createEnv({
         NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
     },
     runtimeEnv: {
+        ONBOARDING_ENABLED: process.env.ONBOARDING_ENABLED,
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:
             process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
         NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST:
