@@ -4,8 +4,10 @@ import type {
     AccountConfirmation,
     AccountDataExportDTO,
     AccountDTO,
+    AdvanceOnboardingRequest,
     ChangePasswordRequest,
     DeleteAccountRequest,
+    OnboardingStateDTO,
     UpdateAccountRequest,
 } from "../../types";
 
@@ -71,6 +73,21 @@ export default class AccountActions {
             Response<AccountConfirmation>
         >({
             url: "/account/deletion",
+            method: "POST",
+            data: body,
+        });
+
+        return data.data;
+    }
+
+    /** `null` means there is nothing left to do: the profile predates the flow. */
+    async advanceOnboarding(
+        body: AdvanceOnboardingRequest
+    ): Promise<OnboardingStateDTO | null> {
+        const { data } = await this.client.request<
+            Response<OnboardingStateDTO | null>
+        >({
+            url: "/account/onboarding",
             method: "POST",
             data: body,
         });
