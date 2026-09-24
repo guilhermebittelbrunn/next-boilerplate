@@ -3,6 +3,7 @@ import { type UserDTO, UserType } from "@repo/sdk/src/types";
 import type { UserRecord } from "firebase-admin/auth";
 import { mergeAuthAndFirestore } from "../mappers/user.mapper";
 import { userRepository } from "../repositories/user.repository";
+import { initialOnboardingState } from "./onboarding";
 
 export const USER_COLLECTION = "user";
 
@@ -48,6 +49,7 @@ export function createDefaultUserProfile(uid: string, dto?: Partial<UserDTO>) {
     const defaultProps = {
         type: UserType.COMMON,
         reference_id: uid,
+        onboarding: initialOnboardingState(),
         ...dto,
     };
 

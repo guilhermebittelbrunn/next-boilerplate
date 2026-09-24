@@ -105,4 +105,20 @@ describe("POST /auth/sign-in/google", () => {
             })
         );
     });
+
+    it("creates the profile with the onboarding pending at the first step", async () => {
+        findByReferenceIdMock.mockResolvedValue(null);
+        createMock.mockResolvedValue(existingProfile());
+
+        const { POST } = await import(
+            "@/app/(routes)/auth/sign-in/google/route"
+        );
+        await POST(googleRequest());
+
+        expect(createMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                onboarding: { step: "profile", completedAt: null },
+            })
+        );
+    });
 });

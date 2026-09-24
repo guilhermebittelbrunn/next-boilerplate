@@ -1,13 +1,14 @@
 import { getAuthInstance } from "@repo/auth/server";
-import { UserType } from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import {
     IdentityToolkitError,
     identitySignUp,
 } from "@/(shared)/lib/firebase-identity-toolkit";
-import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
-import { userRepository } from "@/(shared)/repositories/user.repository";
+import {
+    createDefaultUserProfile,
+    getMergedUserByUid,
+} from "@/(shared)/lib/user-merge";
 
 export async function POST(req: Request) {
     const { email, password } = await req.json();
@@ -31,10 +32,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        await userRepository.create({
-            reference_id: localId,
-            type: UserType.COMMON,
-        });
+        await createDefaultUserProfile(localId);
     } catch {
         await getAuthInstance().deleteUser(localId);
         logEvent("auth", "profile-create-failed", {
