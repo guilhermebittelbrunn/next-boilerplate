@@ -14,9 +14,16 @@ export type ActionMenuItem = {
     onClick?: () => void;
 };
 
+export type ActionMenuDeleteLabels = {
+    action?: string;
+    confirmTitle?: string;
+    confirmDescription?: string;
+};
+
 interface ActionsMenuProps {
     onEdit?: () => void;
     onDelete?: () => void;
+    deleteLabels?: ActionMenuDeleteLabels;
     items?: ActionMenuItem[];
     className?: string;
 }
@@ -24,11 +31,18 @@ interface ActionsMenuProps {
 export function ActionsMenu({
     onEdit,
     onDelete,
+    deleteLabels,
     items,
     className,
 }: ActionsMenuProps) {
     const { dictionary } = getDictionary();
     const translation = dictionary.components.actionMenu;
+    const deleteAction = deleteLabels?.action ?? translation.delete;
+    const deleteConfirmTitle =
+        deleteLabels?.confirmTitle ?? translation.deleteConfirmTitle;
+    const deleteConfirmDescription =
+        deleteLabels?.confirmDescription ??
+        translation.deleteConfirmDescription;
 
     return (
         <Dropdown
@@ -68,14 +82,14 @@ export function ActionsMenu({
                                 key: "delete",
                                 label: (
                                     <Popconfirm
-                                        title={translation.deleteConfirmTitle}
-                                        description={translation.deleteConfirmDescription}
+                                        title={deleteConfirmTitle}
+                                        description={deleteConfirmDescription}
                                         onConfirm={onDelete}
                                         okText={translation.deleteConfirmOk}
                                         cancelText={translation.deleteConfirmCancel}
                                         className="flex items-center justify-between gap-2 "
                                     >
-                                        <span>{translation.delete}</span>
+                                        <span>{deleteAction}</span>
                                     </Popconfirm>
                                 ),
                                 style: { margin: 4, fontSize: 14 },
