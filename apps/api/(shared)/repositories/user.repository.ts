@@ -52,6 +52,15 @@ class UserRepository extends BaseRepository<UserDTO> {
             .update({ lastAccessAt: at });
     }
 
+    /**
+     * Erases the profile document. The soft delete the admin listing performs keeps the
+     * phone, the avatar reference, the preferences and the last access inside it, which
+     * is exactly what a request for erasure asks to be gone.
+     */
+    purgeProfile(id: string): Promise<void> {
+        return this.purge(id);
+    }
+
     async list(options?: { type?: UserType }): Promise<UserDTO[]> {
         const users = await this.findAll();
         const scoped = options?.type

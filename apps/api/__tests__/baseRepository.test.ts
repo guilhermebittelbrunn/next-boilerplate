@@ -28,6 +28,7 @@ const VALUE_TYPE_RANK = {
  */
 const { fakeDb } = vi.hoisted(() => {
     const collections = new Map<string, Map<string, Record<string, unknown>>>();
+    const committedBatchSizes: number[] = [];
     const emittedQueries: {
         table: string;
         clauses: Clause[];
@@ -214,6 +215,7 @@ const { fakeDb } = vi.hoisted(() => {
 
             const docs = entries.map(({ id, row }) => ({
                 id,
+                ref: { id, table: name },
                 exists: true,
                 data: () => ({ ...row }),
             }));
@@ -223,6 +225,21 @@ const { fakeDb } = vi.hoisted(() => {
     });
 
     const db = {
+        batch() {
+            const removals: { id: string; table: string }[] = [];
+            return {
+                delete(ref: { id: string; table: string }) {
+                    removals.push(ref);
+                },
+                commit() {
+                    for (const ref of removals) {
+                        table(ref.table).delete(ref.id);
+                    }
+                    committedBatchSizes.push(removals.length);
+                    return Promise.resolve([]);
+                },
+            };
+        },
         collection(name: string) {
             return {
                 ...makeQuery({
@@ -253,6 +270,10 @@ const { fakeDb } = vi.hoisted(() => {
                             table(name).set(id, { ...row, ...patch });
                             return Promise.resolve({});
                         },
+                        delete() {
+                            table(name).delete(id);
+                            return Promise.resolve({});
+                        },
                     };
                 },
                 add(data: Row) {
@@ -270,9 +291,14 @@ const { fakeDb } = vi.hoisted(() => {
             return table(name).get(id);
         },
         queries: emittedQueries,
+        batches: committedBatchSizes,
+        count(name: string) {
+            return table(name).size;
+        },
         reset() {
             collections.clear();
             emittedQueries.length = 0;
+            committedBatchSizes.length = 0;
             autoId = 0;
         },
     };
@@ -288,9 +314,8 @@ vi.mock("@repo/auth/server", () => ({
     getCurrentUser: vi.fn(),
 }));
 
-const { BaseRepository, PaginationCursorError } = await import(
-    "@/(shared)/repositories/base.repository"
-);
+const { BaseRepository, PaginationCursorError, PurgeNotFinishedError } =
+    await import("@/(shared)/repositories/base.repository");
 const { entityMapper } = await import("@/(shared)/mappers/entity.mapper");
 const { entityRepository } = await import(
     "@/(shared)/repositories/entity.repository"
@@ -997,5 +1022,169 @@ describe("UserRepository.summary", () => {
         await expect(userRepository.summary()).resolves.toMatchObject({
             total: 1,
         });
+    });
+});
+
+/** Exposes the protected sweep so the bounded loop can be exercised directly. */
+class PurgeableRepository extends BaseRepository<EntityDTO> {
+    purgeEverything(): Promise<number> {
+        return this.purgeAll(
+            this.db.collection(this.table) as unknown as Parameters<
+                PurgeableRepository["purgeAll"]
+            >[0]
+        );
+    }
+}
+
+/**
+ * A collection whose batch deletes never take effect, so every pass reads a full page
+ * again. It is the shape of a sweep that would spin forever without a pass ceiling.
+ */
+function undrainableDb() {
+    const PAGE = 500;
+    const state = { committedBatches: 0 };
+
+    const page = Array.from({ length: PAGE }, (_, index) => ({
+        id: `stuck-${index}`,
+        ref: { id: `stuck-${index}` },
+        exists: true,
+        data: () => ({}),
+    }));
+
+    const query = {
+        where: () => query,
+        orderBy: () => query,
+        startAfter: () => query,
+        limit: () => query,
+        get: () => Promise.resolve({ docs: page, empty: false }),
+    };
+
+    const db = {
+        collection: () => query,
+        batch: () => ({
+            delete: () => {
+                // Nothing leaves the collection, on purpose.
+            },
+            commit: () => {
+                state.committedBatches += 1;
+                return Promise.resolve([]);
+            },
+        }),
+    };
+
+    return {
+        db,
+        get committedBatches() {
+            return state.committedBatches;
+        },
+    };
+}
+
+describe("purge vs. delete", () => {
+    const BATCH_LIMIT = 500;
+
+    it("keeps `delete` a soft delete, stamping instead of removing", async () => {
+        fakeDb.seed("entity", "e1", entityRow());
+
+        await repository.delete("e1");
+
+        expect(fakeDb.read("entity", "e1")).toBeDefined();
+        expect(fakeDb.read("entity", "e1")?.deletedAt).toBeInstanceOf(Date);
+    });
+
+    it("removes the profile document for good", async () => {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-1",
+            type: UserType.COMMON,
+            phone: "+55 51 99999-0000",
+            lastAccessAt: new Date(CREATED_AT_ISO),
+            deletedAt: null,
+        });
+
+        await userRepository.purgeProfile("p1");
+
+        expect(fakeDb.read("user", "p1")).toBeUndefined();
+    });
+
+    it("erases the owner's records, soft-deleted ones included", async () => {
+        fakeDb.seed("entity", "e1", entityRow());
+        fakeDb.seed(
+            "entity",
+            "e2",
+            entityRow({ deletedAt: new Date("2024-04-01T00:00:00.000Z") })
+        );
+        fakeDb.seed("entity", "e3", entityRow({ userId: "profile-2" }));
+
+        const removed = await entityRepository.purgeAllByUserId("profile-1");
+
+        expect(removed).toBe(2);
+        expect(fakeDb.read("entity", "e1")).toBeUndefined();
+        expect(fakeDb.read("entity", "e2")).toBeUndefined();
+        expect(fakeDb.read("entity", "e3")).toBeDefined();
+    });
+
+    it("drains the collection in batches of 500", async () => {
+        for (let index = 0; index < BATCH_LIMIT + 1; index++) {
+            fakeDb.seed("entity", `e${index}`, entityRow());
+        }
+
+        const removed = await entityRepository.purgeAllByUserId("profile-1");
+
+        expect(removed).toBe(BATCH_LIMIT + 1);
+        expect(fakeDb.batches).toEqual([BATCH_LIMIT, 1]);
+        expect(fakeDb.count("entity")).toBe(0);
+    });
+
+    it("never orders the erasure query, so it needs no composite index", async () => {
+        fakeDb.seed("entity", "e1", entityRow());
+
+        await entityRepository.purgeAllByUserId("profile-1");
+
+        for (const query of fakeDb.queries.filter(
+            (emitted) => emitted.table === "entity"
+        )) {
+            expect(query.orders).toEqual([]);
+        }
+    });
+
+    it("stops and reports instead of looping when the query never drains", async () => {
+        const MAX_PASSES = 100;
+        const undrainable = undrainableDb();
+        const repositoryOverUndrainable = new PurgeableRepository(
+            undrainable.db as never,
+            "entity"
+        );
+
+        await expect(
+            repositoryOverUndrainable.purgeEverything()
+        ).rejects.toBeInstanceOf(PurgeNotFinishedError);
+        expect(undrainable.committedBatches).toBe(MAX_PASSES);
+    });
+});
+
+describe("EntityRepository.findAllByUserId", () => {
+    it("reads every record of the owner, soft-deleted ones included", async () => {
+        fakeDb.seed("entity", "e1", entityRow());
+        fakeDb.seed(
+            "entity",
+            "e2",
+            entityRow({ deletedAt: new Date("2024-04-01T00:00:00.000Z") })
+        );
+        fakeDb.seed("entity", "e3", entityRow({ userId: "profile-2" }));
+
+        const page = await entityRepository.findAllByUserId("profile-1", 10);
+
+        expect(page.items.map((item) => item.id).sort()).toEqual(["e1", "e2"]);
+        expect(page.truncated).toBe(false);
+    });
+
+    it("reports truncation instead of silently dropping records", async () => {
+        fakeDb.seed("entity", "e1", entityRow());
+        fakeDb.seed("entity", "e2", entityRow());
+
+        const page = await entityRepository.findAllByUserId("profile-1", 1);
+
+        expect(page.items).toHaveLength(1);
+        expect(page.truncated).toBe(true);
     });
 });
