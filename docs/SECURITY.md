@@ -10,9 +10,9 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autorização (guards da API)
 
-São **22** arquivos de rota em `apps/api/app/(routes)/`. **Onze** exportam o handler embrulhado num guard,
+São **26** arquivos de rota em `apps/api/app/(routes)/`. **Quinze** exportam o handler embrulhado num guard,
 que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um motivo próprio
-(medido em 2026-09-17, `HEAD` em `bfc4d8f`):
+(medido em 2026-09-24, sobre `ab11a5b` mais a rota `account/onboarding`):
 
 | grupo | quantas | por que não tem guard |
 |-------|---------|------------------------|
@@ -20,7 +20,7 @@ que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um
 | `/health`, `/health/ready` | 2 | sondas de plataforma, precisam responder sem credencial |
 | `/webhooks/payments` | 1 | autentica pela assinatura da Stripe (`constructEvent`), não por sessão |
 
-As **onze** rotas de negócio restantes — `account/*` ×3, `entities` ×3, `files`, `users` ×3, `audit-events`
+As **quinze** rotas de negócio restantes — `account/*` ×6, `entities` ×3, `files`, `users` ×4, `audit-events`
 — passam por um dos dois guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
@@ -143,9 +143,11 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 
 ### Limite de requisições
 
-`checkRateLimit()` (Arcjet, `slidingWindow` de **20 req/60 s por IP**) roda no proxy da API sobre uma lista fechada de **8 caminhos**, casados por igualdade exata (`apps/api/proxy.ts:42-51`): `/auth/sign-in`, `/auth/sign-up`, `/auth/sign-in/google`, `/auth/password/reset-request`, `/auth/password/reset`, `/auth/email-verification/send`, `/auth/email-verification/confirm` e `/files`. Estouro devolve `429 AUTH_RATE_LIMITED` + `Retry-After`. Ficam de fora `/auth/me` (autenticada, hot path), `/webhooks/payments` (a Stripe faz retry agressivo; um 429 nosso viraria assinatura perdida), `/health` e `/health/ready`.
+`checkRateLimit()` (Arcjet, `slidingWindow` de **20 req/60 s por IP**) roda no proxy da API sobre uma lista fechada de **10 caminhos**, casados por igualdade exata (`apps/api/proxy.ts:44-55`, medido em 2026-09-23): `/auth/sign-in`, `/auth/sign-up`, `/auth/sign-in/google`, `/auth/password/reset-request`, `/auth/password/reset`, `/auth/email-verification/send`, `/auth/email-verification/confirm`, `/files`, `/account/export` e `/account/deletion`. Estouro devolve `429 AUTH_RATE_LIMITED` + `Retry-After`. Ficam de fora `/auth/me` (autenticada, hot path), `/webhooks/payments` (a Stripe faz retry agressivo; um 429 nosso viraria assinatura perdida), `/health` e `/health/ready`.
 
-⚠️ **Casamento exato significa que rota nova nasce sem limite.** As três rotas de `/account` — incluindo a troca de senha — não estão na lista. Quem acrescentar um endpoint sensível precisa acrescentá-lo ali também.
+⚠️ **Casamento exato significa que rota nova nasce sem limite.** Quatro das seis rotas de `/account` — o perfil, a troca de senha, o encerramento de sessões e o avanço do onboarding — não estão na lista; a exportação de dados e a exclusão de conta estão. Quem acrescentar um endpoint sensível precisa acrescentá-lo ali também.
+
+⚠️ **O limite só alcança a `apps/api`.** `POST /api/auth/session/refresh` (`packages/auth/session-routes.ts:87`), reexportado pela `apps/app` e pela `apps/web`, regrava o cookie de sessão e vive nos front-ends, fora deste proxy. A única barreira dele é `isSameOriginRequest` (`packages/auth/session.ts:78-81`), que aceita a requisição quando não há header `Origin`. Antes de renovar, a rota exige um ID token e confere a sessão atual no Firebase Admin.
 
 - **Sem `ARCJET_KEY` o limite é um no-op explícito**: nada é contado, nenhuma chamada de rede é feita, e a API avisa **uma vez, no boot**. Nunca há contador em memória — em serverless ele não limita nada.
 - ⚠️ **Isto não protege o formulário de login.** O login por e-mail/senha das duas front-ends vai do browser direto para `identitytoolkit.googleapis.com` e **nunca toca a `apps/api`**; quem limita esse caminho é a proteção nativa do Firebase (`USERS_AUTH_RATE_LIMITED`). O limite aqui cobre a **superfície da API**.

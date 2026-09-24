@@ -57,7 +57,7 @@ como não verificados.
   temático e com rótulo acessível),
   `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx:34-56` (o
   arranjo de cartões) e `apps/app/shared/lib/queryKeys.ts:11-48` (a factory de chaves).
-- `apps/api/(shared)/repositories/base.repository.ts:122-124` — `countQuery` com `query.count().get()`, para
+- `apps/api/(shared)/repositories/base.repository.ts:138-141` — `countQuery` com `query.count().get()`, para
   contar assinatura por plano sem ler documento.
 - `apps/api/app/(routes)/users/summary/route.ts:6-20` — o molde de rota de agregado sob `requireAdminApi`,
   com degradação traduzível quando falta índice.

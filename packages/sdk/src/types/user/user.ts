@@ -9,6 +9,36 @@ export type UserPreferences = {
     locale: "pt-br" | "en" | "es";
 };
 
+/**
+ * The order of the flow. A stored step that a fork later removes is read as the first one,
+ * so a profile pointing at a step that no longer exists restarts the flow instead of
+ * trapping the user.
+ */
+export const ONBOARDING_STEPS = [
+    { id: "profile", skippable: false },
+    { id: "preferences", skippable: true },
+] as const;
+
+export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number]["id"];
+
+/** `step` is the next step to show, not the last one finished. */
+export type OnboardingState = {
+    step: OnboardingStepId;
+    completedAt: Date | null;
+};
+
+export type OnboardingStateDTO = {
+    step: OnboardingStepId;
+    completedAt: string | null;
+};
+
+export type OnboardingStepOutcome = "completed" | "skipped";
+
+export type AdvanceOnboardingRequest = {
+    step: OnboardingStepId;
+    outcome: OnboardingStepOutcome;
+};
+
 export type UserDTO = {
     id: string;
     type: UserType;
@@ -25,6 +55,8 @@ export type UserDTO = {
      * each write once. Absent on profiles that predate the field.
      */
     lastAccessAt?: Date | null;
+    /** Absent on profiles that predate the flow, which count as done. */
+    onboarding?: OnboardingState | null;
 };
 
 export type AdminCreateUserRequest = {

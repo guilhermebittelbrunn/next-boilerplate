@@ -4,6 +4,7 @@ import { emailVerificationTranslations } from "./emailVerification";
 import { forgotPasswordTranslations } from "./forgotPassword";
 import { impersonationTranslations } from "./impersonation";
 import { navbarTranslations } from "./navbar";
+import { onboardingTranslations } from "./onboarding";
 import { resetPasswordTranslations } from "./resetPassword";
 import { signInTranslations } from "./signIn";
 import { signUpTranslations } from "./signUp";
@@ -19,6 +20,7 @@ export const pagesTranslations = {
         admin: adminTranslations["pt-br"],
         navbar: navbarTranslations["pt-br"],
         impersonation: impersonationTranslations["pt-br"],
+        onboarding: onboardingTranslations["pt-br"],
     },
     en: {
         signIn: signInTranslations.en,
@@ -30,6 +32,7 @@ export const pagesTranslations = {
         admin: adminTranslations.en,
         navbar: navbarTranslations.en,
         impersonation: impersonationTranslations.en,
+        onboarding: onboardingTranslations.en,
     },
     es: {
         signIn: signInTranslations.es,
@@ -41,5 +44,6 @@ export const pagesTranslations = {
         admin: adminTranslations.es,
         navbar: navbarTranslations.es,
         impersonation: impersonationTranslations.es,
+        onboarding: onboardingTranslations.es,
     },
 };

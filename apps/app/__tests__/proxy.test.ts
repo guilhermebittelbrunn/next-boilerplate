@@ -197,3 +197,36 @@ describe("proxy bounce off the public paths", () => {
         }
     });
 });
+
+describe("proxy requested path", () => {
+    it("forwards the path of an authenticated request to the server components", async () => {
+        const response = await proxy(signedIn("/pt-br/entities/create"));
+
+        expect(response.headers.get("x-middleware-request-x-app-path")).toBe(
+            "/pt-br/entities/create"
+        );
+    });
+
+    it("still stores the locale cookie when it forwards the request headers", async () => {
+        const response = await proxy(signedIn("/en/entities"));
+
+        expect(cookieSetMock).toHaveBeenCalledWith("x-locale", "en");
+        expect(response.headers.get("x-middleware-request-x-app-path")).toBe(
+            "/en/entities"
+        );
+        expect(response.headers.get("x-middleware-override-headers")).toContain(
+            "x-app-path"
+        );
+    });
+
+    it("replaces a value the browser sent instead of trusting it", async () => {
+        const request = signedIn("/pt-br/entities");
+        request.headers.set("x-app-path", "/pt-br/forged");
+
+        const response = await proxy(request);
+
+        expect(response.headers.get("x-middleware-request-x-app-path")).toBe(
+            "/pt-br/entities"
+        );
+    });
+});

@@ -82,6 +82,7 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 | `SESSION_COOKIE_DOMAIN` | `app`, `web` | **Vazio em dev** (cookie host-only em `localhost`, compartilhado entre portas). Em prod: domínio registrável pai (`example.com`) para `app.example.com` + `example.com` compartilharem a sessão. Nunca um public suffix (`vercel.app`). |
 | `SESSION_COOKIE_MAX_AGE_DAYS` | `app`, `web` | Duração da sessão em dias (Firebase: ~0.0035–14). Default 5. |
 | `SESSION_ABSOLUTE_MAX_AGE_DAYS` | `app`, `web` | Teto absoluto da sessão em dias, contado da autenticação original. Enquanto a aba está aberta o cookie é renovado; passado o teto a renovação é recusada com `AUTH_SESSION_EXPIRED` e o cookie é limpo. Default 30, grampeado entre `SESSION_COOKIE_MAX_AGE_DAYS` e 90. |
+| `ONBOARDING_ENABLED` | `app` | Fluxo de onboarding depois do cadastro (nome de exibição e idioma), lido em `apps/app/env.ts`. Vazio ou ausente: ligado. `"false"`: ninguém é desviado e `/onboarding` redireciona para o painel. A API continua gravando o estado inicial em perfis novos, então quem se cadastrar com a variável em `"false"` passa pelo fluxo uma vez se ela voltar a ficar vazia. |
 
 ### SEO (apenas `apps/web`) · `@repo/seo`
 Identidade da marca para metadata/Open Graph/JSON-LD. Todas opcionais (defaults neutros): `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_AUTHOR`, `NEXT_PUBLIC_APP_AUTHOR_URL`, `NEXT_PUBLIC_TWITTER_HANDLE`.

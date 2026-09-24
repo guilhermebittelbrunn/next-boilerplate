@@ -404,7 +404,7 @@ O que a spec exige escrito, e que vai para `docs/PRE-PRODUCTION.md`:
 - **Honestidade sobre a exclusão, que a spec não previu**: hoje `DELETE /users/[id]` é **soft delete**
   (`base.repository.ts:205-207`), então o documento permanece no Firestore com `deletedAt` preenchido e o
   `lastAccessAt` junto. "Some com a exclusão da conta" só vira verdade quando
-  [`data-rights-lgpd`](../../../../specs/data-rights-lgpd.md) entregar a exclusão coordenada — essa spec
+  [`data-rights-lgpd`](../../data-rights-lgpd/spec.md) entregar a exclusão coordenada — essa spec
   está `status: proposed`, não implementada.
 
 ### 6.4 Costura com `data-rights-lgpd`, declarada
@@ -953,7 +953,7 @@ discordar sem ter acompanhado.
 7. **A retenção declarada admite que a exclusão hoje é soft delete.**
    A spec afirma que o campo "some com a exclusão da conta". Medido: `DELETE /users/[id]` chama
    `BaseRepository.delete`, que carimba `deletedAt` e mantém o documento (`base.repository.ts:205-207`).
-   Registrei a afirmação como **dependente de [`data-rights-lgpd`](../../../../specs/data-rights-lgpd.md)**,
+   Registrei a afirmação como **dependente de [`data-rights-lgpd`](../../data-rights-lgpd/spec.md)**,
    que está `status: proposed`. Não mudei o corte — só não escrevi no `PRE-PRODUCTION.md` algo que o código
    ainda não faz.
 

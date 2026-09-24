@@ -8,9 +8,9 @@ audience: produto
 area: [packages/sdk, apps/api, apps/app, apps/web, packages/payments, packages/internationalization]
 mode: subscription
 depends_on: []
-contends_on: [apps/api/app/(routes)/webhooks/payments/route.ts, packages/sdk/src/client/index.ts, packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts, "apps/app/app/[locale]/(authenticated)/(common)/routes.tsx"]
+contends_on: [apps/api/app/(routes)/webhooks/payments/route.ts, packages/sdk/src/client/index.ts, packages/sdk/src/types/user/user.ts, apps/api/(shared)/repositories/user.repository.ts, "apps/app/app/[locale]/(authenticated)/(common)/routes.tsx", apps/api/(shared)/lib/account-erasure.ts]
 feature: -
-updated: 2026-09-19
+updated: 2026-09-23
 ---
 
 # Assinatura Stripe de ponta a ponta
@@ -28,7 +28,7 @@ Quem precisar faturar escreve a integração inteira à mão, justamente a parte
 - `packages/payments/keys.ts:7-8` — `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, ambos `.optional()`; `:14` desliga a validação inteira quando não há secret.
 - `apps/api/app/(routes)/webhooks/payments/route.ts:29` — o POST **valida a assinatura** do evento (`:45`, `constructEvent`). Essa metade está pronta. Já `:10` e `:20` são **stubs com `// TODO`** (`:13`, `:23`): checam `data.customer` e retornam sem persistir nada. Só dois eventos são roteados (`:52` `checkout.session.completed`, `:56` `subscription_schedule.canceled`). *(Refs de linha corrigidas em 2026-09-01; a variável morta `customerId` que existia aqui foi removida pelo saneamento de `ci-pipeline`, e a rota ganhou testes.)* **A rota tem hoje 13 casos** em `apps/api/__tests__/paymentsWebhookRoute.test.ts` — recontado em 2026-09-16; a spec dizia 11, número que era certo quando foi escrito e que a PR #15 aumentou ao correlacionar a falha com o `requestId` (`:201`, `:229`).
 - `apps/api/app/(guards)/common-panel.ts:32` (`requireCommonPanelApi`), `apps/api/package.json:6` (`dev:with-stripe`) e `.claude/skills/payments-flow/SKILL.md` — guard, listener local de webhook e procedimento de implementação já existem.
-- **Lacuna:** `apps/api/app/(routes)/` tem **22** `route.ts` (remedido em 2026-09-17; a PR #19 acrescentou `entities/summary` e `users/summary`) e **nenhuma** sob `payments/` — o diretório não existe; `packages/sdk/src/client/index.ts:14-20` registra `application` (`:14`), `authApi` (`:15`), `user` (`:16`), `entity` (`:17`), `file` (`:18`), `account` (`:19`) e `audit` (`:20`) — **sete** actions, e nenhuma delas é `payments`; `UserDTO` (`packages/sdk/src/types/user/user.ts:12-28`) e `UserWithAuthDTO` (`:54-76`, empurrado pelo `UserSummaryDTO` da PR #19 e pelo `lastAccessAt` da PR #21) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
+- **Lacuna:** `apps/api/app/(routes)/` tem **25** `route.ts` (remedido em 2026-09-23; as PRs #19, #22 e #23 acrescentaram `entities/summary`, `users/summary`, `users/activity-summary`, `account/export` e `account/deletion`) e **nenhuma** sob `payments/` — o diretório não existe; `packages/sdk/src/client/index.ts:14-20` registra `application` (`:14`), `authApi` (`:15`), `user` (`:16`), `entity` (`:17`), `file` (`:18`), `account` (`:19`) e `audit` (`:20`) — **sete** actions, e nenhuma delas é `payments`; `UserDTO` (`packages/sdk/src/types/user/user.ts:12-28`) e `UserWithAuthDTO` (`:54-76`, empurrado pelo `UserSummaryDTO` da PR #19 e pelo `lastAccessAt` da PR #21) não têm assinatura nem `stripeCustomerId`; `apps/web/app/[locale]/pricing/page.tsx:75-85` e `:118-128` mandam o CTA para a raiz do app (`env.NEXT_PUBLIC_APP_URL`), não para um fluxo de compra.
 
 ### ✅ A divergência doc × código foi RESOLVIDA — por terceiros, em 2026-09-15
 
@@ -53,7 +53,7 @@ medição** ao lado), que é o que impede a mentira de voltar.
 Outro efeito colateral da PR #12: a entrada "Billing" **deixou de ser `url: "#"`**. Hoje
 `(common)/routes.tsx:52-53` aponta para `routes.account.billing.url` → `/account?tab=billing`
 (`paths.ts:54-56`), servida por `AccountBillingPlaceholder.tsx` — um empty state de 22 linhas com copy já
-traduzida nos 3 idiomas (`translations/apps/app/pages/common/account.ts:78` pt-br, `:167` en, `:257` es —
+traduzida nos 3 idiomas (`translations/apps/app/pages/common/account.ts:79` pt-br, `:205` en, `:332` es, remedidas em 2026-09-23 depois de a PR #23 acrescentar a aba de privacidade —
 a âncora anterior apontava para o meio do bloco em inglês).
 
 Isso **encolhe** o corte em uma tela e muda o verbo: a UI de assinatura já tem endereço, rota, aba e copy
@@ -74,6 +74,11 @@ de espera. Falta o conteúdo.
 - [ ] O webhook deixa de ser stub: assinatura criada/atualizada/cancelada reconcilia esse estado, e um evento reentregue não produz efeito duplicado.
 - [ ] O usuário com assinatura ativa abre o portal da Stripe para trocar plano, atualizar cartão ou cancelar.
 - [ ] Os CTAs do `pricing` da `apps/web` levam ao fluxo real quando o fork está em modo `subscription`.
+
+> 🆕 **Obrigação transferida em 2026-09-23 — o passo `billing` da exclusão de conta.** O item 3 acima cria o
+> vínculo perfil↔cliente Stripe, e é esse vínculo que falta para a exclusão de conta cancelar a assinatura
+> (`apps/api/(shared)/lib/account-erasure.ts:67-78`, hoje `skipped`). Fechar isso é desta spec. O detalhe
+> está em [Riscos e trade-offs](#riscos-e-trade-offs).
 
 ### Fora do corte
 
@@ -97,7 +102,16 @@ de espera. Falta o conteúdo.
 
 - **Custo herdado por todo fork:** Stripe é serviço pago (taxa por transação) e a conta precisa existir antes do primeiro deploy útil. Em modo `simple` nada disso é obrigatório — mas o `skipValidation` de `keys.ts:14` hoje **esconde** a má configuração: um fork em modo `subscription` sem `STRIPE_WEBHOOK_SECRET` sobe calado e nunca reconcilia. Falhar cedo e visível é parte do escopo.
 - **Estado divergente é o risco central.** Webhook que falha vira usuário que paga sem acesso, ou que cancela e continua com acesso. Sem dedupe por evento, um retry reprocessa.
-- **O perfil vira dono de dado financeiro.** Assinatura no doc `user` acopla cobrança ao cadastro: `data-rights-lgpd` passa a ter de cancelar antes de excluir — a nota lista isso como a armadilha central da exclusão de conta.
+- **O perfil vira dono de dado financeiro.** Assinatura no doc `user` acopla cobrança ao cadastro: a exclusão de conta passa a ter de cancelar antes de excluir — a nota lista isso como a armadilha central da exclusão de conta.
+  🆕 **Obrigação transferida em 2026-09-23, e com endereço.** `data-rights-lgpd` foi entregue pela PR #23 e
+  arquivada em [`docs/features/data-rights-lgpd/spec.md`](../docs/features/data-rights-lgpd/spec.md). O
+  expurgo da conta roda em passos nomeados, e o passo `billing` é um ponto de extensão que hoje responde
+  `skipped` com motivo `billing-not-linked` (`apps/api/(shared)/lib/account-erasure.ts:67-78`), porque não
+  existe vínculo perfil↔cliente Stripe para cancelar. **Quem criar esse vínculo é esta spec, então é ela
+  que preenche o passo**: cancelar a assinatura ativa antes de o perfil ser apagado, e acrescentar o
+  estado de assinatura ao arquivo de exportação (`apps/api/(shared)/lib/account-export.ts:95-129`). Sem
+  isso, a primeira conta com assinatura que for excluída continua sendo cobrada. É o mesmo tipo de
+  transferência que `user-activity-tracking` fez para `data-rights-lgpd`, e aquela foi paga.
 - ~~Enquanto `docs/PAYMENTS.md` não for corrigido, toda pessoa e todo agent que ler o repo parte de premissa falsa.~~ **Risco extinto em 2026-09-15** — a PR #12 corrigiu o documento. Registrado porque ele foi, por três rodadas, o achado 🔴 mais citado deste backlog.
 
 ## Sinais de pronto

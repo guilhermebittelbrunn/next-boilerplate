@@ -3,6 +3,7 @@ import { secure } from "@repo/security";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { env } from "@/env";
+import { resolveOnboardingRedirect } from "@/lib/server/onboarding";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
 import { resolveSidebarDefaultOpen } from "@/lib/server/sidebarState";
 import { EmailNotVerifiedNotice } from "@/shared/components/ui/EmailNotVerifiedNotice";
@@ -32,6 +33,11 @@ const AppLayout = async ({ children, params }: AppLayoutProperties) => {
         !isImpersonatingSnapshot(snapshot)
     ) {
         redirect(`/${locale}/admin`);
+    }
+
+    const onboardingPath = await resolveOnboardingRedirect(locale);
+    if (onboardingPath) {
+        redirect(onboardingPath);
     }
 
     return (

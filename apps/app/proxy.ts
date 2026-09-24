@@ -10,6 +10,7 @@ import { handleClientError } from "@repo/shared/utils";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
+import { APP_PATH_HEADER } from "@/shared/lib/onboarding";
 
 const IDENTITY_TOOLKIT_ORIGIN = "https://identitytoolkit.googleapis.com";
 /** Refreshes the ID token roughly hourly; blocking it kills the session long after sign-in. */
@@ -208,5 +209,9 @@ async function route(request: NextRequest) {
         return arcjetResponse;
     }
 
-    return NextResponse.next();
+    // Layouts cannot read the URL, so the path travels as a request header. Set, never
+    // appended: a value the browser sent must not reach the server components.
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(APP_PATH_HEADER, pathname);
+    return NextResponse.next({ request: { headers: requestHeaders } });
 }

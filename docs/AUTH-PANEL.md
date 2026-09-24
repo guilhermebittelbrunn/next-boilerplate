@@ -38,6 +38,8 @@ layout redireciona — em vez de deixar o usuário numa área que não funciona.
 proxy.ts                  default-deny: tudo exige sessão, exceto /sign-in e /sign-up
   └── (authenticated)/layout.tsx     requireSession()      → sem sessão: /sign-in
         ├── (common)/layout.tsx      admin não-impersonando → /{locale}/admin
+        │                            comum com onboarding pendente → /{locale}/onboarding
+        ├── onboarding/page.tsx      nada pendente (ou admin) → destino do ?redirect=
         └── (admin)/admin/layout.tsx requireAdmin()        → não-admin: /{locale}
               └── guard da API       requireAdminApi / requireCommonPanelApi
 ```
@@ -57,6 +59,12 @@ proxy.ts                  default-deny: tudo exige sessão, exceto /sign-in e /s
   listagem já vem restrita a usuários comuns pelo contexto da request, então nada de admin vaza.
 - **UI oculta nunca é proteção.** Cada camada acima é redundante de propósito; a última palavra é sempre
   o guard da API, que revalida papel e alvo a cada request.
+- **Onboarding pós-cadastro.** O layout comum desvia o usuário comum cujo perfil tem
+  `onboarding.completedAt: null` para `/{locale}/onboarding`, levando o caminho pedido em `?redirect=`.
+  O layout não lê a URL: o proxy repassa o `pathname` no header de requisição `x-app-path`, sempre
+  sobrescrevendo o que o navegador mandou. Perfil sem o campo (legado, seed, criado pelo admin) conta
+  como concluído. Admin personificando nunca é desviado, porque o `/auth/me` do servidor resolve o ator.
+  `ONBOARDING_ENABLED="false"` desliga o desvio e a página; vazio ou ausente mantém ligado.
 - O proxy **não** conhece o papel (ele está no Firestore, não no cookie de sessão): resolver isso ali
   custaria uma chamada de API no caminho quente. Ele manda todo mundo para `/{locale}` e o layout comum
   encaminha admins para `/admin` — um hop server-side, sem flash.

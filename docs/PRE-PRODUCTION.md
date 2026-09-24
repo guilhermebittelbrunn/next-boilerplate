@@ -477,32 +477,33 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-17**, neste workspace, com o `HEAD` em `cc93229` (PR #20 já mergeada) — os números
-abaixo são da quarta medição:
+Remedido em **2026-09-23**, com o `HEAD` em `ab11a5b` (PR #23 já mergeada) — os números abaixo são da
+quinta medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **30,6 s** |
-| lint/format | `pnpm check` | **607 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1325 testes em 134 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 12,4 s** |
+| lint/format | `pnpm check` | **648 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1547 testes em 158 arquivos** |
 
-Distribuição da suíte, medida em 2026-09-17 com `--force`: `apps/api` 532 em 48 arquivos, `apps/app` 380 em
-53, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/analytics` 34 em 2,
-`apps/web` 31 em 5, `@repo/security` 31 em 3, `@repo/internationalization` 27 em 3, `@repo/payments` 8 em 1.
+Distribuição da suíte, medida em 2026-09-23 com `--force`: `apps/api` 651 em 57 arquivos, `apps/app` 462 em
+65, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
+em 5, `apps/web` 35 em 6, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 8 em 1.
 
 Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@repo/analytics` à suíte; a #17
 somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou
 49 testes em 6 arquivos e 18 arquivos ao alcance do `pnpm check`; a renovação de sessão somou 49 testes em
-4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`.
+4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #23, a suíte
+foi de 1325 para 1547 testes e o `pnpm check`, de 607 para 648 arquivos.
 **Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
 uma das cinco últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
 são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
 fato corrente.
 
-O tempo do gate caiu de 1 min 30 s para 30,6 s entre as duas últimas medições, com a suíte 49 testes maior.
-Mesma máquina, mesmo `--force`: a diferença é contenção do momento, não ganho de suíte. Não use este número
-para dimensionar CI.
+O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s e agora 1 min 12,4 s, com a suíte sempre
+maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
+dimensionar CI.
 
 O teste que estourava roda hoje em **1273 ms** dentro do arquivo de 3322 ms — folga de mais de 15× contra o
 teto novo. Nada impede mais tornar o check `verify` obrigatório na `main`.
@@ -606,6 +607,23 @@ desta feature, e por isso não foi tratada junto dela.
 **Como verificar que o fork está coberto:** com `NEXT_PUBLIC_PRODUCT_MODE=simple`, entre como usuário
 comum e tente chegar a `/{locale}/account?tab=privacy`. Se não chegar, confirme que as páginas legais
 publicam um canal que alguém lê.
+
+### Declaração — por quanto tempo uma sessão pode ser renovada
+
+`SESSION_ABSOLUTE_MAX_AGE_DAYS` (nos `.env.example` da `apps/app` e da `apps/web`) define o teto absoluto
+da sessão, contado a partir do login original. Vazia ou ausente, vale **30 dias**; o valor é grampeado
+entre a vida do cookie e **90 dias** (`packages/auth/session.ts:28-29`, `:96-107`). Nada quebra se o fork
+não definir: ele só herda uma política de sessão que talvez nunca tenha lido.
+
+**O teto pode ser ultrapassado por até metade da vida do cookie.** A renovação só é tentada depois de o
+cookie cumprir metade da vida (`session.ts:30`, `:137-139`), e é nessa tentativa que o teto é conferido (`:154`).
+Com os padrões (cookie de 5 dias, teto de 30), uma sessão pode seguir válida até cerca de 32,5 dias depois
+do login: ela não é renovada além do teto, mas o último cookie emitido vive até expirar sozinho. Conferir o
+teto a cada navegação custaria uma chamada ao provedor em toda requisição, e por isso ficou assim de
+propósito.
+
+**Como decidir:** se o produto precisa de um corte rígido (conta compartilhada, dado sensível), reduza
+`SESSION_COOKIE_MAX_AGE_DAYS` junto com o teto, porque a folga é proporcional à vida do cookie.
 
 ### Declaração — o campo `lastAccessAt` do perfil
 

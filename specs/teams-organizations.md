@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-19
+updated: 2026-09-23
 ---
 
 # Organizações, membros e convites
@@ -97,9 +97,15 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   `where("userId", "==", userId)` (`:23`). A listagem é escopada por usuário na origem. ⚠️ **Âncoras
   atualizadas em 2026-09-17:** a PR #17 trocou o corpo do método por uma chamada a `paginate`, e a PR #19
   acrescentou um import no topo do arquivo, empurrando tudo mais uma linha.
-- `apps/api/(shared)/repositories/entity.repository.ts:33` — `summaryByUserId` repete o mesmo
+- `apps/api/(shared)/repositories/entity.repository.ts:68` — `summaryByUserId` repete o mesmo
   `where("userId", "==", userId)` num segundo método, agora dentro de um closure `scoped()` reaproveitado
   por cinco agregações. É o **décimo terceiro** sítio de posse, e nasceu literalmente copiado do décimo.
+  ⚠️ **Âncora e contagem remedidas em 2026-09-23:** a PR #23 inseriu dois métodos acima deste, empurrando-o
+  de `:33` para `:68`, e os dois repetem o predicado: `findAllByUserId` (`:40`, para exportar os registros
+  do titular) e `purgeAllByUserId` (`:64`, para apagá-los). O arquivo passou a ter **quatro** cópias de
+  `where("userId", "==", userId)` (`:23`, `:40`, `:64`, `:72`). **Os 14 sítios contados em 2026-09-19 são
+  piso, não número**: a auditoria desta rodada não recontou o resto pelo critério da tabela acima, só
+  confirmou que o total subiu em pelo menos dois.
 - `apps/api/app/(routes)/entities/summary/route.ts:9` — o handler passa `ctx.subjectProfile.id` como
   chave de escopo para o repositório. **Décimo quarto sítio**, criado pela PR #19.
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
