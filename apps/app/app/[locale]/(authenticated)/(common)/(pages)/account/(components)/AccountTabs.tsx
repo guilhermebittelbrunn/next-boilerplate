@@ -13,6 +13,7 @@ import { useState } from "react";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
 import { AccountBillingPlaceholder } from "./AccountBillingPlaceholder";
 import { AccountPreferencesForm } from "./AccountPreferencesForm";
+import { AccountPrivacyPanel } from "./AccountPrivacyPanel";
 import { AccountProfileForm } from "./AccountProfileForm";
 import { AccountSecurityForm } from "./AccountSecurityForm";
 
@@ -21,6 +22,7 @@ const accountTabValues = [
     "security",
     "preferences",
     "billing",
+    "privacy",
 ] as const;
 
 type AccountTabValue = (typeof accountTabValues)[number];
@@ -54,13 +56,19 @@ export function AccountTabs({ account }: AccountTabsProps) {
 
     return (
         <Tabs onValueChange={selectTab} value={activeTab}>
-            <TabsList>
-                {accountTabValues.map((value) => (
-                    <TabsTrigger key={value} value={value}>
-                        {accountCopy.tabs[value]}
-                    </TabsTrigger>
-                ))}
-            </TabsList>
+            {/* The strip sizes itself to the tabs and has no scroll of its own, so on a
+                narrow screen it grows past the viewport and takes the whole page with it.
+                Scrolling it here keeps the page width independent of how long the
+                translated labels are. */}
+            <div className="w-full overflow-x-auto overflow-y-hidden">
+                <TabsList>
+                    {accountTabValues.map((value) => (
+                        <TabsTrigger key={value} value={value}>
+                            {accountCopy.tabs[value]}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </div>
 
             <ImpersonationReadOnlyNotice />
 
@@ -75,6 +83,9 @@ export function AccountTabs({ account }: AccountTabsProps) {
             </TabsContent>
             <TabsContent value="billing">
                 <AccountBillingPlaceholder />
+            </TabsContent>
+            <TabsContent value="privacy">
+                <AccountPrivacyPanel account={account} />
             </TabsContent>
         </Tabs>
     );

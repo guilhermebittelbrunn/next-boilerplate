@@ -40,8 +40,15 @@ export const buildObjectPath = (ownerId: string, extension: string): string =>
 export const isStorageObjectPath = (value: string): boolean =>
     STORAGE_OBJECT_PATH_RE.test(value);
 
+/**
+ * Everything an owner ever uploaded lives under this one prefix, whatever the resource,
+ * which is what lets an erasure sweep by prefix instead of gaining a step per feature.
+ */
+export const ownerPrefix = (ownerId: string): string =>
+    `${UPLOAD_PREFIX}/${ownerId}/`;
+
 export const isOwnedBy = (path: string, ownerId: string): boolean =>
-    path.startsWith(`${UPLOAD_PREFIX}/${ownerId}/`);
+    path.startsWith(ownerPrefix(ownerId));
 
 export async function putObject(
     path: string,
@@ -81,4 +88,24 @@ export async function deleteObjectQuietly(path: string): Promise<void> {
     } catch {
         logEvent("storage", "delete-failed", { path });
     }
+}
+
+export async function listObjectPaths(prefix: string): Promise<string[]> {
+    const [files] = await bucket().getFiles({ prefix });
+    return files.map((file) => file.name);
+}
+
+/**
+ * Lists before deleting so the caller learns how many objects went. `deleteFiles` would
+ * do the sweep in one call but reports nothing, and an erasure that cannot say what it
+ * removed is not worth much as a record.
+ */
+export async function deleteObjectsByPrefix(prefix: string): Promise<number> {
+    const [files] = await bucket().getFiles({ prefix });
+
+    await Promise.all(
+        files.map((file) => file.delete({ ignoreNotFound: true }))
+    );
+
+    return files.length;
 }

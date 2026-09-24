@@ -46,8 +46,23 @@ export const changePasswordSchema = z
     })
     .strict();
 
+/**
+ * Same `.strict()` guard as the payloads above, and the same reason: the account being
+ * erased comes from the token, so a body carrying `id` or `uid` is an attempt to erase
+ * someone else and has to fail loudly.
+ */
+export const deleteAccountSchema = z
+    .object({
+        currentPassword: z
+            .string()
+            .min(MIN_PASSWORD_LENGTH)
+            .max(MAX_PASSWORD_LENGTH),
+    })
+    .strict();
+
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
 
 const validationFailed = (): Response =>
     Response.json(
@@ -93,6 +108,22 @@ export function parseChangePassword(
     const parsed = changePasswordSchema.safeParse(body);
     if (!parsed.success) {
         return { ok: false, response: validationFailed() };
+    }
+    return { ok: true, value: parsed.data };
+}
+
+export function parseDeleteAccount(
+    body: unknown
+): { ok: true; value: DeleteAccountInput } | { ok: false; response: Response } {
+    const parsed = deleteAccountSchema.safeParse(body);
+    if (!parsed.success) {
+        return {
+            ok: false,
+            response: Response.json(
+                { error: { code: "ACCOUNT_DELETION_CONFIRMATION_INVALID" } },
+                { status: HTTP_STATUS.BAD_REQUEST }
+            ),
+        };
     }
     return { ok: true, value: parsed.data };
 }

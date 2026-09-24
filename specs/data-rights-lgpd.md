@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [apps/api/(shared)/repositories/base.repository.ts, packages/auth/server.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-19
+updated: 2026-09-23
 ---
 
 # Direitos do titular: exportar dados e excluir conta
@@ -33,17 +33,19 @@ acumula, maior o estrago de uma exclusão feita errado.
   em 2026-09-17:** a PR #18 acrescentou a gravação da trilha ao `PUT` acima, empurrando o `DELETE` de
   `:75` para cá. A rota agora também registra a exclusão na trilha (`:119-128`), lendo o rótulo do alvo
   antes de apagar — o que não a torna autoatendimento.
-- `apps/api/(shared)/repositories/base.repository.ts:205-207` — o `delete()` herdado por todo repositório
+- `apps/api/(shared)/repositories/base.repository.ts:209-211` — o `delete()` herdado por todo repositório
   é **soft delete**: `this.update({ id, deletedAt: new Date() })` (`:206`) e nada mais. A conta no Firebase
   Auth continua existindo e o e-mail continua ocupado. Hoje "excluir" não exclui. ⚠️ **Âncora atualizada em
-  2026-09-17:** a PR #17 já havia empurrado o `delete()` de `:127-129` para `:196-198`, e a PR #19 o levou
-  para `:205-207` ao inserir `countQuery` em `:122`. O comportamento não mudou em nenhuma das duas.
+  2026-09-23:** a PR #17 já havia empurrado o `delete()` de `:127-129` para `:196-198`, a PR #19 o levou
+  para `:205-207` ao inserir `countQuery` em `:122`, e a PR #22 o empurrou para `:209-211` ao reescrever o
+  `create()`. O comportamento não mudou em nenhuma das três.
 - `apps/api/app/(routes)/` — o inventário completo é `account` (PR #12), `audit-events` (PR #18), `auth`,
-  `health`, `users`, `entities`, `files` (PR #11) e `webhooks` — **8 grupos, 22 `route.ts`** (a PR #19
-  acrescentou `entities/summary` e `users/summary`, sem criar grupo novo). **Nenhuma
-  rota de exportação e nenhum `DELETE` de auto-serviço:** `account/` expõe só `GET`/`PUT`
-  (`route.ts:97,107`), `POST /account/password` (`:18`) e `POST /account/sessions/revoke` (`:7`).
-  *(Contagem e âncoras remedidas em 2026-09-17.)*
+  `health`, `users`, `entities`, `files` (PR #11) e `webhooks` — **8 grupos, 23 `route.ts`** (a PR #19
+  acrescentou `entities/summary` e `users/summary`, a PR #22 acrescentou `users/activity-summary`, nenhuma
+  delas criou grupo novo). **Nenhuma rota de exportação e nenhum `DELETE` de auto-serviço:** `account/`
+  expõe só `GET`/`PUT` (`route.ts:97,107`), `POST /account/password` (`:18`) e
+  `POST /account/sessions/revoke` (`:7`).
+  *(Contagem e âncoras remedidas em 2026-09-23.)*
 - ✅ **A área de conta passou a existir (PR #12), e isso barateia esta spec.**
   ⚠️ *A versão anterior desta linha afirmava "**Não existe área de conta**" — falso desde `a4df5ed`.*
   `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/` tem 10 arquivos e 4 abas (perfil,
@@ -112,7 +114,7 @@ acumula, maior o estrago de uma exclusão feita errado.
 > [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) pedia que o campo entrasse no
 > export e na exclusão, e **não havia onde ligá-lo**: não existe rota de export,
 > `apps/api/app/(routes)/account/route.ts` não tem `DELETE` (só `GET:97` e `PUT:107`), e o `delete()`
-> herdado é soft delete (`apps/api/(shared)/repositories/base.repository.ts:205-207`), que preserva o
+> herdado é soft delete (`apps/api/(shared)/repositories/base.repository.ts:209-211`), que preserva o
 > documento inteiro. Aquela spec entregou a declaração escrita (`docs/PRE-PRODUCTION.md:497-504`, que
 > enumera o que ainda **não** é verdade) e foi arquivada com o item parcial. **Fechá-lo é responsabilidade
 > desta spec** — e o custo é próximo de zero, porque o campo vive no mesmo documento de perfil que o export

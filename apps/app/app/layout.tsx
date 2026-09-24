@@ -8,9 +8,9 @@ import { getDictionary } from "@repo/internationalization/server";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
-import { env } from "@/env";
 import { getAppSessionUser } from "@/lib/server/authSession";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
+import { privacyPolicyUrl } from "@/shared/lib/privacyPolicyUrl";
 import { AppDesignProvider } from "@/shared/providers/AppDesignProvider";
 import ClientLayout from "./[locale]/clientLayout";
 
@@ -43,11 +43,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             resolveConsentBootstrap(),
         ]);
 
-    // The privacy policy lives in the marketing app; without its URL the notice drops
-    // the link and keeps working.
-    const privacyPolicyHref = env.NEXT_PUBLIC_WEB_URL
-        ? `${env.NEXT_PUBLIC_WEB_URL}/${locale}/legal/privacy`
-        : null;
+    const privacyPolicyHref = privacyPolicyUrl(locale);
 
     // Resolved on the server so the panel is already correct on the first paint.
     const initialPanel = {

@@ -37,6 +37,11 @@ export function Footer({
     const { dictionary } = getDictionary();
     const footerCopy = dictionary.components.footer;
 
+    // `Button` applies its own `disabled={loading}` before spreading the props it was
+    // given, so an explicit `disabled` overrides it and a pending submit would still take
+    // a second click. Both states are merged here instead.
+    const isBlocked = disabled || isLoading;
+
     const handleBack = onBack ?? (() => router.back());
     const resolvedBackLabel = backLabel ?? footerCopy.back;
     const resolvedConfirmLabel = confirmLabel ?? footerCopy.confirm;
@@ -55,7 +60,7 @@ export function Footer({
             ) : null}
             {onConfirm ? (
                 <Button
-                    disabled={disabled}
+                    disabled={isBlocked}
                     loading={isLoading}
                     onClick={onConfirm}
                     type="button"
@@ -63,7 +68,7 @@ export function Footer({
                     {resolvedConfirmLabel}
                 </Button>
             ) : (
-                <Button disabled={disabled} loading={isLoading} type="submit">
+                <Button disabled={isBlocked} loading={isLoading} type="submit">
                     {resolvedConfirmLabel}
                 </Button>
             )}

@@ -38,6 +38,16 @@ export const sharedUtilsTranslations = {
                 "Não foi possível salvar a sua conta. Tente de novo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "Não foi possível encerrar as sessões. Tente de novo.",
+            ACCOUNT_EXPORT_IMPERSONATION_FORBIDDEN:
+                "Não é possível exportar os dados enquanto você atua como outro usuário.",
+            ACCOUNT_EXPORT_FAILED:
+                "Não foi possível gerar o arquivo com os seus dados. Tente de novo.",
+            ACCOUNT_DELETION_CONFIRMATION_INVALID:
+                "Informe a sua senha atual para confirmar a exclusão.",
+            ACCOUNT_DELETION_REAUTH_UNSUPPORTED:
+                "Esta conta não tem senha para confirmar a exclusão. Use o canal de privacidade.",
+            ACCOUNT_DELETION_FAILED:
+                "Não foi possível concluir a exclusão da conta. Tente de novo.",
             USERS_NOTHING_TO_UPDATE: "Nenhum dado para atualizar.",
             VALIDATION_FAILED: "Dados inválidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este e-mail já está em uso.",
@@ -122,6 +132,16 @@ export const sharedUtilsTranslations = {
                 "Your account could not be saved. Try again.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "The sessions could not be ended. Try again.",
+            ACCOUNT_EXPORT_IMPERSONATION_FORBIDDEN:
+                "Data cannot be exported while you are acting as another user.",
+            ACCOUNT_EXPORT_FAILED:
+                "Your data file could not be generated. Try again.",
+            ACCOUNT_DELETION_CONFIRMATION_INVALID:
+                "Enter your current password to confirm the deletion.",
+            ACCOUNT_DELETION_REAUTH_UNSUPPORTED:
+                "This account has no password to confirm the deletion. Use the privacy channel.",
+            ACCOUNT_DELETION_FAILED:
+                "The account deletion could not be completed. Try again.",
             USERS_NOTHING_TO_UPDATE: "Nothing to update.",
             VALIDATION_FAILED: "Invalid data.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "This email is already in use.",
@@ -205,6 +225,16 @@ export const sharedUtilsTranslations = {
                 "No se pudo guardar tu cuenta. Inténtalo de nuevo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "No se pudieron cerrar las sesiones. Inténtalo de nuevo.",
+            ACCOUNT_EXPORT_IMPERSONATION_FORBIDDEN:
+                "No se pueden exportar los datos mientras actúas como otro usuario.",
+            ACCOUNT_EXPORT_FAILED:
+                "No se pudo generar el archivo con tus datos. Inténtalo de nuevo.",
+            ACCOUNT_DELETION_CONFIRMATION_INVALID:
+                "Indica tu contraseña actual para confirmar la eliminación.",
+            ACCOUNT_DELETION_REAUTH_UNSUPPORTED:
+                "Esta cuenta no tiene contraseña para confirmar la eliminación. Usa el canal de privacidad.",
+            ACCOUNT_DELETION_FAILED:
+                "No se pudo completar la eliminación de la cuenta. Inténtalo de nuevo.",
             USERS_NOTHING_TO_UPDATE: "No hay datos para actualizar.",
             VALIDATION_FAILED: "Datos no válidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este correo ya está en uso.",

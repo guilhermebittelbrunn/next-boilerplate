@@ -35,7 +35,9 @@ const securityOptions = buildApiOptions();
  *
  * `/files` is the exception that is authenticated: a guard is no budget when the caller
  * is a legitimate user in a loop, and every accepted request writes to the fork's bucket
- * and is billed as storage and egress.
+ * and is billed as storage and egress. The two data-rights endpoints are the same kind of
+ * exception: the export reads the whole dossier on every call, and the deletion spends
+ * Identity Toolkit quota on each password attempt.
  *
  * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
@@ -48,6 +50,8 @@ const RATE_LIMITED_PATHS = [
     "/auth/email-verification/send",
     "/auth/email-verification/confirm",
     "/files",
+    "/account/export",
+    "/account/deletion",
 ];
 
 function isRateLimitedPath(pathname: string): boolean {

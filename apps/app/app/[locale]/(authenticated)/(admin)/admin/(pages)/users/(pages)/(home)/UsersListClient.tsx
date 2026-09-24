@@ -134,6 +134,12 @@ export function UsersListClient() {
             align: "center" as const,
             render: (_: unknown, record: UserWithAuthDTO) => (
                 <ActionsMenu
+                    deleteLabels={{
+                        action: adminUsersList.archive.action,
+                        confirmTitle: adminUsersList.archive.confirmTitle,
+                        confirmDescription:
+                            adminUsersList.archive.confirmDescription,
+                    }}
                     onDelete={() => deleteUserMutation.mutate(record.id)}
                     onEdit={() =>
                         router.push(routes.users.update(record.id).url)

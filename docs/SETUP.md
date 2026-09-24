@@ -78,6 +78,7 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 | Var | App | Para quê |
 |-----|-----|----------|
 | `NEXT_PUBLIC_PRODUCT_MODE` | `app`, `web` | `subscription` (usuário opera no painel; assinatura Stripe) \| `simple` (usuário opera na web; painel admin-only). Default `subscription`. Dirige roteamento/navbar/áreas — ver [`docs/AUTH-SSO.md`](AUTH-SSO.md) e [`docs/PAYMENTS.md`](PAYMENTS.md). |
+| `NEXT_PUBLIC_PRIVACY_CONTACT` | `web` | Endereço publicado como canal de privacidade nas páginas legais. Vazio: o canal cai no formulário de `/contact`, que entrega em `ownerInbox()`. |
 | `SESSION_COOKIE_DOMAIN` | `app`, `web` | **Vazio em dev** (cookie host-only em `localhost`, compartilhado entre portas). Em prod: domínio registrável pai (`example.com`) para `app.example.com` + `example.com` compartilharem a sessão. Nunca um public suffix (`vercel.app`). |
 | `SESSION_COOKIE_MAX_AGE_DAYS` | `app`, `web` | Duração da sessão em dias (Firebase: ~0.0035–14). Default 5. |
 | `SESSION_ABSOLUTE_MAX_AGE_DAYS` | `app`, `web` | Teto absoluto da sessão em dias, contado da autenticação original. Enquanto a aba está aberta o cookie é renovado; passado o teto a renovação é recusada com `AUTH_SESSION_EXPIRED` e o cookie é limpo. Default 30, grampeado entre `SESSION_COOKIE_MAX_AGE_DAYS` e 90. |

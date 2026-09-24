@@ -24,6 +24,11 @@ export function PageFormFooter({
     submitDisabled = false,
     className,
 }: PageFormFooterProps) {
+    // `Button` applies its own `disabled={loading}` before spreading the props it was
+    // given, so an explicit `disabled` overrides it and a pending submit would still take
+    // a second click. Both states are merged here instead.
+    const isBlocked = submitDisabled || isSubmitting;
+
     return (
         <div
             className={cn(
@@ -34,11 +39,7 @@ export function PageFormFooter({
             <Button onClick={onCancel} type="button" variant="outline">
                 {cancelLabel}
             </Button>
-            <Button
-                disabled={submitDisabled}
-                loading={isSubmitting}
-                type="submit"
-            >
+            <Button disabled={isBlocked} loading={isSubmitting} type="submit">
                 {submitLabel}
             </Button>
         </div>

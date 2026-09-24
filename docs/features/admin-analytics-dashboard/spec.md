@@ -1,7 +1,7 @@
 ---
 id: admin-analytics-dashboard
 title: Métricas de atividade na home do admin
-status: proposed
+status: done
 value: médio
 effort: M
 audience: produto
@@ -9,9 +9,14 @@ area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: [user-activity-tracking, dashboard-home]
 contends_on: ["apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx", apps/app/shared/lib/queryKeys.ts, apps/api/app/(routes)/users/summary/route.ts, firestore.indexes.json]
-feature: -
-updated: 2026-09-19
+feature: admin-analytics-dashboard
+updated: 2026-09-23
 ---
+
+> **Entregue na PR #22**, mergeada em `main` em 2026-09-20T23:28:49Z (merge commit `03498ae`), CI
+> `success` nesse SHA (`gh run 35544765975`). Os cinco itens do corte foram reabertos um a um no código na
+> auditoria de 2026-09-23 e todos fecharam. O que mudou de forma entre o especificado e o construído está
+> em [Deriva de implementação](#deriva-de-implementação).
 
 # Métricas de atividade na home do admin
 
@@ -26,12 +31,12 @@ curva aponta. Nenhuma das três tem resposta hoje, porque nada no produto agrega
 
 ## O que já existe no repo
 
-[`dashboard-home`](../docs/features/dashboard-home/spec.md) entregou as peças e o padrão. Esta spec estende aquilo em vez de
+[`dashboard-home`](../dashboard-home/spec.md) entregou as peças e o padrão. Esta spec estende aquilo em vez de
 começar do zero.
 
 > ✅ **As duas dependências estão satisfeitas desde 2026-09-19 — esta spec está destravada.**
 > `dashboard-home` entrou em `main` em 2026-09-17 (PR #19, merge `bfc4d8f`) e
-> [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) em 2026-09-19 (PR #21, merge
+> [`user-activity-tracking`](../user-activity-tracking/spec.md) em 2026-09-19 (PR #21, merge
 > `e656331`), as duas com CI verde no SHA de merge. As âncoras abaixo foram remedidas contra `main` em
 > 2026-09-19.
 >
@@ -78,7 +83,7 @@ começar do zero.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
   (coletada em 2026-08-21, revalidar após 2027-02-21 — dentro da validade).
 - Prevalência: **3 em 10** starters entregam "dashboard de métricas do produto", valor **médio**, esforço
   **M**. A mesma nota registra que tela cheia de widget "aparece em templates de dashboard, não em kits de
@@ -91,7 +96,7 @@ acesso. Não medi prevalência desses itens em separado.
 
 O que sustenta a spec é a combinação de duas coisas internas. A primeira é que a home do admin já existe e
 já tem o padrão de cartão, gráfico e rota de agregado, então o custo marginal desta entrega é baixo. A
-segunda é que [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) produz um dado cujo valor é quase todo
+segunda é que [`user-activity-tracking`](../user-activity-tracking/spec.md) produz um dado cujo valor é quase todo
 aqui: carimbar o último acesso e nunca agregá-lo entrega uma coluna e para.
 
 ## Proposta — corte de MVP
@@ -99,27 +104,27 @@ aqui: carimbar o último acesso e nunca agregá-lo entrega uma coluna e para.
 Cobre os itens **a**, **b** e **d** do pedido. O item **c** (visitas à web) está nas perguntas em aberto,
 porque não tem caminho decidido.
 
-- [ ] **KPI de usuários ativos**, contados por uma definição explícita (acessaram nos últimos N dias),
+- [x] **KPI de usuários ativos**, contados por uma definição explícita (acessaram nos últimos N dias),
       agregado no servidor sob `requireAdminApi`, sem ler a coleção.
-- [ ] **KPI de usuários inativos**, com o X de "sem acesso há X dias" **visível na tela**, não escondido no
+- [x] **KPI de usuários inativos**, com o X de "sem acesso há X dias" **visível na tela**, não escondido no
       código.
-- [ ] **Gráfico de acesso dos usuários** ao longo de um período, reaproveitando o gráfico do design-system.
-- [ ] Os dois KPIs usam `MetricCard`, entram no grupo `users` de `queryKeys.ts` e tratam carregando, vazio e
+- [x] **Gráfico de acesso dos usuários** ao longo de um período, reaproveitando o gráfico do design-system.
+- [x] Os dois KPIs usam `MetricCard`, entram no grupo `users` de `queryKeys.ts` e tratam carregando, vazio e
       erro no padrão que o `AdminHomeClient` já usa.
-- [ ] Todo texto nos 3 idiomas, **incluindo a definição de "ativo" como `hint` do cartão**. Número cuja
+- [x] Todo texto nos 3 idiomas, **incluindo a definição de "ativo" como `hint` do cartão**. Número cuja
       definição não está na tela é número que cada pessoa interpreta de um jeito.
 
 ### Fora do corte
 
 - **Item c, visitas à `apps/web`** — sem caminho decidido; ver as perguntas em aberto.
 - Seção de billing (contratações, planos mais vendidos, receita) — é
-  [`admin-billing-insights`](admin-billing-insights.md), separada porque
-  [`billing-subscription`](billing-subscription.md) está em 0/6.
+  [`admin-billing-insights`](../../../specs/admin-billing-insights.md), separada porque
+  [`billing-subscription`](../../../specs/billing-subscription.md) está em 0/6.
 - Tempo real, atualização automática e notificação de variação.
 - Exportar as métricas, comparar com período anterior, filtro de intervalo escolhido pelo usuário.
 - Segmentação (por tipo, por origem, por plano) e detalhamento por usuário a partir do número.
 - Métricas de plataforma, como erro e latência — pertencem a
-  [`observability-logging`](observability-logging.md).
+  [`observability-logging`](../../../specs/observability-logging.md).
 
 ## Impacto por camada
 
@@ -135,7 +140,7 @@ porque não tem caminho decidido.
 ## Riscos e trade-offs
 
 - ✅ **O bloqueio caiu em 2026-09-19.** Este risco dizia que sem o carimbo de
-  [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md) não existiria eixo para
+  [`user-activity-tracking`](../user-activity-tracking/spec.md) não existiria eixo para
   agregar, e os KPIs virariam contagem de cadastro com outro nome. O carimbo entrou na PR #21. O que
   sobra do risco é **a precisão herdada**: o campo tem folga de 15 minutos e não é backfillado, então na
   estreia a maior parte da base aparece como "nunca acessou" até que cada usuário volte.
@@ -169,7 +174,7 @@ porque não tem caminho decidido.
      **concedeu consentimento** (`analytics/provider.tsx:103-111`), então o número subestima por construção.
   2. **Contador próprio no Firestore**, incrementado no servidor da `apps/web`. Sem provedor externo e sem
      env nova; em troca, **uma escrita por visita** (a mesma armadilha de custo de
-     [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md)) e a necessidade de tratar robô e recarga.
+     [`user-activity-tracking`](../user-activity-tracking/spec.md)) e a necessidade de tratar robô e recarga.
   3. **Provedor de analytics dedicado** com leitura de volta. `@vercel/analytics` já está montado
      (`provider.tsx:109`) e nada é lido dele hoje; adotar a leitura arrasta conta, e possivelmente plano
      pago, para todo fork.
@@ -187,3 +192,52 @@ porque não tem caminho decidido.
 - **Os cartões novos entram no mesmo agregado de `GET /users/summary` ou numa rota vizinha?** —
   **recomendação:** rota vizinha. O `summary()` atual é barato e previsível (três contagens); misturar nele
   uma consulta que depende de índice faria a home inteira degradar quando só a parte de atividade falhasse.
+
+## Estado da entrega
+
+Conferido no código em 2026-09-23, com o `HEAD` em `03498ae`. Cada item foi reaberto no arquivo, não
+herdado do `STATE.md` da feature nem do `status` gravado.
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. KPI de ativos, definição explícita, agregado no servidor sob `requireAdminApi`, sem ler a coleção | **implementado** | `GET /users/activity-summary` em `apps/api/app/(routes)/users/activity-summary/route.ts:6`, embrulhado em `requireAdminApi`. O número sai de `userRepository.activitySummary()` (`user.repository.ts:92`), que roda **cinco** `countQuery` em paralelo (`:104-111`) sobre `base.repository.ts:122`, ou seja, `query.count().get()` e nenhum documento lido. `active: last7Days` em `:116` |
+| 2. KPI de inativos, com o X de "sem acesso há X dias" na tela | **implementado** | `inactive: from31To90Days + over90Days` em `user.repository.ts:117`. O X viaja do servidor: `thresholds.inactiveDays` em `:129`, lido de `INACTIVE_AFTER_DAYS = 30` (`activity-windows.ts:14`), e entra no texto do cartão por interpolação em `UserActivitySection.tsx:56-60`. O número na tela e o número que a consulta usa são o mesmo valor, não duas cópias |
+| 3. Gráfico de acesso reaproveitando o componente do design-system | **implementado**, com desvio de forma | `UserRecencyChart.tsx:48-54` monta o `CategoryBarChart` de `packages/design-system/components/ui/category-bar-chart.tsx` com cinco faixas (`:40-46`). Não é série temporal: ver a deriva 1 |
+| 4. `MetricCard`, grupo `users` de `queryKeys.ts`, e carregando/vazio/erro no padrão do `AdminHomeClient` | **implementado** | `MetricCard` em `UserActivitySection.tsx:90-101`; chave nova em `queryKeys.ts:43-44`, dentro do grupo `users`. Carregando em `:67-85` (esqueleto nos dois cartões e no gráfico), erro em `:63-65` via `FormattedError` + `handleClientError` + `LoadErrorState`, base sem carimbo nenhum em `:112-118`, que mostra quantos perfis ainda não têm registro e diz quando o registro começa |
+| 5. Texto nos 3 idiomas, com a definição de "ativo" como `hint` | **implementado** | `translations/apps/app/pages/admin/home.ts` — pt-br `:19-46`, en `:65-92`, es `:111-138`. O `hint` de ativo traz os dois números interpolados, dias e precisão (`:25`, `:71`, `:117`); o de inativo traz os dias e diz que não conta quem nunca acessou (`:29`, `:75`, `:121`) |
+
+Cobertura somada pela entrega: 8 casos em `userActivitySummaryRepository.test.ts`, 6 em
+`usersActivitySummaryRoute.test.ts`, 6 em `activityWindows.test.ts`, 6 em `firestoreIndexes.test.ts`,
+9 em `userActivitySection.test.tsx`, 6 em `userRecencyChart.test.tsx`, 8 em `adminHomePrefetch.test.tsx`
+e 5 em `adminHomeActivityDegraded.test.tsx`.
+
+**A pergunta em aberto sobre visitas à `apps/web` foi respondida na tela, não no código.** O corte a
+deixou de fora, e a recomendação era que o texto dissesse que as métricas cobrem o painel. Cumprido:
+`home.ts:21` diz "Quem acessou o painel e há quanto tempo", e a descrição do gráfico (`:34-35`) explica
+que cada perfil aparece numa faixa só. A decisão sobre como medir a landing continua sem resposta.
+
+## Deriva de implementação
+
+Três, sendo que a primeira contradiz o corte e a spec é que estava errada.
+
+| especificado | implementado | leitura |
+|--------------|--------------|---------|
+| "Gráfico de acesso dos usuários **ao longo de um período**", com a recomendação de granularidade semanal ao longo de 12 semanas | Histograma de **recência** em cinco faixas: 0-7d, 8-30d, 31-90d, +90d e "nunca" (`activity-windows.ts:34-48`, `UserRecencyChart.tsx:40-46`) | **A spec estava errada, e o erro é de modelo de dados.** `lastAccessAt` guarda **um** instante por perfil, o último. Série temporal de acessos não sai desse campo: exigiria uma coleção de eventos, que `user-activity-tracking` descartou de propósito. O histograma de recência é a pergunta que o dado responde, e responde com cinco agregações em vez de doze |
+| "Provável índice composto novo" | Um índice (`user`: `deletedAt` + `lastAccessAt`, `firestore.indexes.json`) **e um teste que exige a declaração** (`apps/api/__tests__/firestoreIndexes.test.ts`, 6 casos) | **A implementação foi além, e resolveu um problema que a spec só descrevia.** O risco escrito era que o emulador serve consulta indexada ou não, então nenhum gate local pega índice faltando. O teste não prova que o índice está **publicado**, mas prova que está **declarado** — é o primeiro gate do repositório sobre essa fila |
+| O `contends_on` declarava `apps/api/app/(routes)/users/summary/route.ts` | Esse arquivo **não foi tocado**. A entrega criou a rota vizinha `users/activity-summary/route.ts`, seguindo a recomendação da própria spec | **Erro de previsão por excesso, o primeiro registrado.** As três rodadas anteriores erraram o `contends_on` por **falta**; esta errou por sobra. A causa é a mesma nas quatro: o campo foi preenchido listando arquivos lembrados, não a camada. Os arquivos que a entrega tocou e nenhuma spec previa continuam sendo vizinhos de camada: `user.repository.ts`, `base.repository.ts` e `category-bar-chart.tsx` |
+
+### O que a PR #22 entregou além do corte
+
+1. **Consertou o teste instável que derrubou o CI da PR #21.** `base.repository.ts:151` agora cria um
+   `const createdAt` único e o usa nos dois campos (`:154-155`), em vez de duas chamadas a `new Date()`. O
+   comentário em `:148-150` registra a regra. Era o achado 🔴 da auditoria anterior, e foi fechado de
+   passagem por uma PR que não tinha isso no escopo.
+2. **O `recharts` sai do caminho crítico.** `UserActivitySection.tsx:22-28` carrega o gráfico por
+   `next/dynamic` com `ssr: false` e esqueleto, para que os cartões pintem sem esperar uma biblioteca que
+   não faz tree-shaking. A home do admin é a primeira tela que um administrador abre.
+3. **O balde "nunca" é subtração, não consulta, e a subtração está protegida.** Um perfil sem
+   `lastAccessAt` não entra em índice nenhum, então ele é o resto do total (`user.repository.ts:125`). O
+   `Math.max(0, …)` existe porque as cinco contagens não são transacionais, e o motivo está escrito em
+   `:123-124`.
+4. **Prefetch no servidor.** `page.tsx:22-25` pré-carrega o novo agregado junto do antigo, dentro do mesmo
+   `Promise.all`, e só quando ninguém está personificando (`:14`).

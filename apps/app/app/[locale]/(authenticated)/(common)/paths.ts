@@ -55,6 +55,10 @@ export const COMMON_ROUTES = (
                 label: dictionary?.apps.app.pages.common.account.tabs.billing,
                 url: buildPath("/account?tab=billing"),
             },
+            privacy: {
+                label: dictionary?.apps.app.pages.common.account.tabs.privacy,
+                url: buildPath("/account?tab=privacy"),
+            },
         },
     };
 };

@@ -24,7 +24,7 @@ Sem estes, ou o produto está **inseguro**, ou uma funcionalidade central **não
 **Estado hoje: a base do projeto de referência está fechada.** O `deny-all` de
 [`firestore.rules`](../firestore.rules) **está publicado e em vigor** — medido em **2026-09-11** (o `curl`
 de [`SECURITY.md`](SECURITY.md#verificar-que-o-furo-está-fechado) devolveu **403**) e reconferido em
-**2026-09-14** lendo as rules publicadas direto do projeto, que batem com o arquivo versionado.
+**2026-09-14** lendo as rules publicadas direto do projeto, que batem com o arquivo versionado. Reconferido pela terceira vez em **2026-09-23**, pelo `curl` desta seção: **403** em `entity`, `user` e `auditEvent`.
 
 > ⚠️ **Versões anteriores deste documento afirmavam o contrário** ("nunca foi publicado", "a base está
 > aberta") e tratavam isso como a pendência #1 de segurança. **Era falso.** Se você leu aquela versão, não
@@ -217,6 +217,34 @@ Para conferir depois de publicar: `npx -y firebase-tools@latest firestore:indexe
 mesmo aviso das outras entradas — **o emulador serve a consulta com ou sem índice**, então `pnpm emulators`
 não prova que ela existe.
 
+#### 1.8 Quais das sete entradas já estão publicadas
+
+Medido em **2026-09-23** neste workspace, com `npx -y firebase-tools@latest firestore:indexes --project
+next-boilerplate-576d0`, contra as **7** entradas declaradas em
+[`firestore.indexes.json`](../firestore.indexes.json).
+
+| coleção | campos | publicado no projeto de referência |
+|---------|--------|-----------------------------------|
+| `user` | `reference_id` + `deletedAt` | **sim** |
+| `entity` | `userId` + `deletedAt` + `createdAt` | não |
+| `entity` | `userId` + `deletedAt` + `enabled` | não |
+| `entity` | `userId` + `deletedAt` + `type` | não |
+| `user` | `deletedAt` + `type` | não |
+| `user` | `deletedAt` + `lastAccessAt` | não |
+| `auditEvent` | `involvedUserIds` + `createdAt` | não |
+
+**Uma de sete.** As subseções acima marcam cada índice como pendente uma a uma, o que estava certo em
+substância e escondia que a de `reference_id` já tinha subido — provavelmente junto com a publicação das
+rules. Publicar as seis restantes é o mesmo comando único, e ele é idempotente para a que já existe.
+
+⛔ **Não leia esta tabela como estado do seu fork.** Ela descreve o projeto de referência
+(`next-boilerplate-576d0`). Um fork roda em outro projeto Firebase, onde **nenhuma** das sete existe.
+
+Uma consulta que esta entrega acrescentou **não** entrou nessa fila, de propósito: o expurgo da trilha
+ordena por `FieldPath.documentId()` sobre um `array-contains`, e todo índice de campo único termina em
+`__name__`. Sondada em leitura contra o projeto real em 2026-09-23, com e sem cursor: nenhuma
+`FAILED_PRECONDITION`.
+
 ### 2. Service account do Firebase Admin
 
 - [ ] `FIREBASE_ADMIN_PROJECT_ID` · `FIREBASE_ADMIN_CLIENT_EMAIL` · `FIREBASE_ADMIN_PRIVATE_KEY`
@@ -271,6 +299,7 @@ deploy por bem-sucedido. Ou o health check distingue 5xx, ou vale trocar o `thro
 - [ ] `roles/storage.objectAdmin` concedido à service account
 - [ ] `storage.rules` publicado
 - [ ] Verificado que o objeto **não** abre sem assinatura
+- [ ] Verificado que a exclusão de conta apaga os objetos sob `uploads/<profileId>/`
 
 **Este item é pulável, e pular é uma escolha legítima.** A capacidade é opt-in por env: sem as variáveis o
 app sobe, o build passa e o fork **continua no plano Spark, sem cartão**. Só siga adiante se o produto
@@ -282,6 +311,7 @@ precisa de upload.
 |---|---|
 | Foto da entidade de exemplo (`entities`) | O campo volta a ser uma caixa de URL de texto. |
 | **Foto de perfil na área de conta** (`/account`, aba Perfil) | O campo de avatar **não aparece**; o resto da aba (nome, telefone) funciona normalmente. |
+| **Exclusão de conta pelo titular** (`POST /account/deletion`) | O passo `storage` do expurgo reporta `skipped: storage-not-configured`. Sem bucket não há objeto para deixar para trás; o que fica pendente é conferir esse passo **depois** de ativar o Storage. A permissão que ele exige (listar e apagar por prefixo) já vem de `roles/storage.objectAdmin`, acima. |
 
 Se as variáveis estiverem preenchidas mas o serviço **não** estiver ativado, o upload responde **503 com
 `error.code` traduzido** — nunca 500, e nunca uma tela quebrada.
@@ -345,7 +375,8 @@ existe, e diz isso em voz alta em vez de fingir.
 ### 7. Consentimento de cookies — o texto legal e o domínio
 
 - [ ] Reescrever a política de privacidade com os dados reais do fork
-- [ ] Declarar os cookies que o fork grava, no texto da política
+- [ ] Acrescentar à seção de cookies os que o fork gravar além dos do core
+- [ ] `NEXT_PUBLIC_PRIVACY_CONTACT` com o endereço do fork (vazio: o canal cai no formulário de `/contact`)
 - [ ] `SESSION_COOKIE_DOMAIN` definida em produção, **se** `web` e `app` rodam em subdomínios distintos
 - [ ] Conferir no painel do Google que o Consent Mode chega como esperado
 
@@ -358,8 +389,13 @@ fork que sobe com ela fica em posição pior do que se não tivesse banner nenhu
 que existe uma política, e a política não descreve o tratamento real. Quem responde por isso é o fork, não o
 boilerplate.
 
-**A declaração de cookies é parte desse texto.** Recontado no código em 2026-09-16 — a lista anterior dizia
-"sete" e omitia três nomes. São **sete gravados pelo próprio repositório**, mais dois do Google:
+**A declaração de cookies é parte desse texto, e o modelo já a carrega.** A política em `apps/web` tem uma
+seção "Cookies que usamos" nos 3 idiomas, com os sete nomes abaixo; o teste
+`packages/internationalization/__tests__/legalSections.test.ts` falha se um deles sumir de algum idioma. O
+que o fork acrescenta é o que ele mesmo gravar.
+
+Recontado no código em 2026-09-16 — a lista anterior dizia "sete" e omitia três nomes. São **sete gravados
+pelo próprio repositório**, mais dois do Google:
 
 | cookie | onde | categoria |
 |--------|------|-----------|
@@ -420,6 +456,21 @@ nome do fork** — e a fatura do provedor é do fork.
 
 O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh api …/branches/main/protection`
 → **404**, rulesets → `[]`). Ligar exigindo o check `verify` fecha isto.
+
+✅ **O segundo pré-requisito também caiu, e este item não tem mais nenhum.** A auditoria de 2026-09-19
+acrescentou uma condição que não existia antes: exigir o check do CI com um teste instável no repositório
+transformaria um defeito de milissegundo em merge bloqueado ao acaso, e a reação previsível seria desligar
+a proteção de novo. O teste era
+`apps/api/__tests__/baseRepository.test.ts:477`, que afirmava `created.updatedAt === created.createdAt`
+enquanto o `create()` produzia os dois instantes com duas chamadas separadas a `new Date()`. Ele derrubou o
+CI da PR #21 e estava latente desde a PR #4.
+
+A PR #22 corrigiu: `apps/api/(shared)/repositories/base.repository.ts:151` agora usa um `const createdAt`
+único para os dois carimbos. Reconferido no código em **2026-09-23**, com o `HEAD` em `03498ae`, e o estado
+da proteção remedido no mesmo dia (`protection` → **404**, `rulesets` → `[]`, **22** PRs mergeadas).
+
+Não há mais nada técnico entre hoje e ligar a proteção. O que falta é a decisão, e ela é do dono do
+repositório.
 
 ✅ **O pré-requisito que segurava este item caiu.** Entre 2026-09-14 e 2026-09-15 este documento tratava o
 `testTimeout` ausente como bloqueante — o gate tinha falhado de verdade, `app#test` estourando o teto de 5 s
@@ -507,6 +558,55 @@ provedor e nenhum deles é código — o quarto, já resolvido, era.
 
 ## 🧹 Higiene
 
+### Declaração — até onde a exclusão de conta alcança
+
+Não é pendência de configuração: é o que o fork precisa saber antes de prometer ao titular que a conta
+some inteira.
+
+`runAccountErasure` (`apps/api/(shared)/lib/account-erasure.ts`) roda seis passos nomeados e devolve o
+estado de cada um. Quatro apagam de verdade no boilerplate como ele vem: os registros de `entity` do
+titular, os rótulos pessoais na trilha de auditoria, o documento de perfil e a conta no Firebase Auth —
+que é o que libera o e-mail para um novo cadastro. Dois reportam `skipped`, e continuarão reportando até
+que o fork resolva a infra:
+
+| Passo | Estado no boilerplate | O que destrava |
+|---|---|---|
+| `storage` | `skipped: storage-not-configured` | Ativar o Cloud Storage (item 6). Sem bucket não existe objeto para apagar. |
+| `billing` | `skipped: billing-not-linked` | Nenhum perfil guarda referência a cliente de pagamento hoje, então não há assinatura a cancelar nem com chave da Stripe configurada. Um fork que ligue perfil↔cliente preenche o passo. |
+
+O relatório inteiro vai para o log estruturado como `[account] erasure-step`, uma linha por passo,
+correlacionada por `requestId`, com nome do passo, estado e contagem — nunca valores. Ele não volta na
+resposta: quem pediu a exclusão não precisa da operação, e a resposta é `{ "confirmed": true }`.
+
+**A exclusão não tem janela de arrependimento.** É imediata e irreversível, e não há de onde restaurar.
+
+### Pendência — no modo `simple` o titular não alcança a aba de privacidade
+
+**Em aberto. Precisa de decisão de produto antes de um fork em modo `simple` ir para produção.**
+
+A exportação e a exclusão de conta vivem na aba Privacidade da área de conta, que fica sob o painel comum
+(`apps/app/app/[locale]/(authenticated)/(common)/`). Quando `NEXT_PUBLIC_PRODUCT_MODE` é `simple`, o painel
+comum fica restrito a administradores, então o usuário final não tem rota até a aba.
+
+**O que isso significa na prática.** Num fork `simple`, o titular exerce os direitos do art. 18 apenas pelo
+canal publicado nas páginas legais (`NEXT_PUBLIC_PRIVACY_CONTACT`, item 7) — e alguém do outro lado atende
+na mão. A obrigação legal continua de pé; o que muda é que ela deixa de ser autoatendimento.
+
+**Por que ficou assim.** Nenhum arquivo da entrega de direitos do titular lê `NEXT_PUBLIC_PRODUCT_MODE`: a
+aba herda o alcance do painel que a hospeda. É consequência do desenho de modos de produto, não um defeito
+desta feature, e por isso não foi tratada junto dela.
+
+**Saídas possíveis, nenhuma escolhida:**
+
+1. Expor a aba de privacidade fora do painel comum, numa rota que o modo `simple` alcance.
+2. Manter como está e exigir que todo fork `simple` preencha `NEXT_PUBLIC_PRIVACY_CONTACT` com um endereço
+   monitorado — hoje o vazio cai no formulário de `/contact`, que entrega em `ownerInbox()`.
+3. Declarar que o modo `simple` não atende titular final e serve só a ferramenta interna.
+
+**Como verificar que o fork está coberto:** com `NEXT_PUBLIC_PRODUCT_MODE=simple`, entre como usuário
+comum e tente chegar a `/{locale}/account?tab=privacy`. Se não chegar, confirme que as páginas legais
+publicam um canal que alguém lê.
+
 ### Declaração — o campo `lastAccessAt` do perfil
 
 Não é pendência: é o que o fork precisa saber sobre um dado pessoal que ele herda ligado.
@@ -528,10 +628,11 @@ substitui a anterior, e não há segundo lugar guardando o valor antigo.
 subcoleção, sem espelho na trilha de auditoria, sem derivado gravado. Um export do documento de perfil
 já leva o campo junto; uma exclusão do documento já o apaga.
 
-**O que hoje ainda não é verdade.** `DELETE /users/[id]` é soft delete: carimba `deletedAt` e mantém o
-documento, com o `lastAccessAt` dentro. A exclusão de verdade depende de `specs/data-rights-lgpd.md`,
-que ainda não foi implementada. Um fork que prometer "apagamos seu último acesso ao excluir a conta"
-está prometendo o que o código ainda não faz.
+**O que é verdade, e por qual caminho.** São dois sentidos de "excluir", e eles não fazem a mesma coisa.
+A exclusão pedida pelo titular (`POST /account/deletion`, aba Privacidade de `/account`) apaga o documento
+de perfil de fato, e o `lastAccessAt` vai junto. O `DELETE /users/[id]` do admin continua sendo soft
+delete: carimba `deletedAt` e mantém o documento, com o campo dentro. Um fork que prometa "apagamos seu
+último acesso ao excluir a conta" acerta sobre o primeiro caminho e erra sobre o segundo.
 
 **Precisão.** `ACTIVITY_WINDOW_MINUTES` vale **15**, em
 `apps/api/(shared)/lib/activity-windows.ts`. Esse número é o erro máximo do campo: o valor exibido pode

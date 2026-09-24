@@ -39,6 +39,22 @@ export class PaginationCursorError extends Error {
     }
 }
 
+/** Firestore refuses a batch with more than 500 writes. */
+const PURGE_BATCH_SIZE = 500;
+/**
+ * Bounds the erasure loop: a document the batch reports as deleted but the next query
+ * still returns would otherwise spin forever.
+ */
+const PURGE_MAX_PASSES = 100;
+
+/** The erasure ran out of passes with documents still matching the query. */
+export class PurgeNotFinishedError extends Error {
+    constructor(table: string, removed: number) {
+        super(`Purge did not drain ${table} after ${removed} documents`);
+        this.name = "PurgeNotFinishedError";
+    }
+}
+
 export class BaseRepository<DTO> {
     constructor(
         protected readonly db: Firestore,
@@ -208,6 +224,40 @@ export class BaseRepository<DTO> {
 
     async delete(id: string): Promise<void> {
         await this.update({ id, deletedAt: new Date() } as UpdateRequest<DTO>);
+    }
+
+    /**
+     * Removes the document for good, unlike `delete()`, which only stamps `deletedAt`.
+     * `protected` because erasure is never a default: each repository decides whether it
+     * has a caller entitled to destroy its records.
+     */
+    protected async purge(id: string): Promise<void> {
+        await this.db.collection(this.table).doc(id).delete();
+    }
+
+    /**
+     * Erases everything the query matches, one batch at a time, and answers how many
+     * documents went. Re-running the same query after each batch is what keeps the pass
+     * bounded without an `orderBy`, which would demand a composite index.
+     */
+    protected async purgeAll(query: Query): Promise<number> {
+        let removed = 0;
+
+        for (let pass = 0; pass < PURGE_MAX_PASSES; pass++) {
+            const snapshot = await query.limit(PURGE_BATCH_SIZE).get();
+            if (snapshot.empty) {
+                return removed;
+            }
+
+            const batch = this.db.batch();
+            for (const docSnap of snapshot.docs) {
+                batch.delete(docSnap.ref);
+            }
+            await batch.commit();
+            removed += snapshot.docs.length;
+        }
+
+        throw new PurgeNotFinishedError(this.table, removed);
     }
 
     async deleteBulk(ids: string[]): Promise<void> {
