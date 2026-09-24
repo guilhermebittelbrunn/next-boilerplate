@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    type MockInstance,
+    vi,
+} from "vitest";
 
 const { getFirestoreAdminMock } = vi.hoisted(() => ({
     getFirestoreAdminMock: vi.fn(),
@@ -46,6 +54,73 @@ describe("instrumentation register", () => {
         });
 
         await expect(register()).rejects.toThrow(MISSING_CREDENTIALS_MESSAGE);
+    });
+
+    describe("half-configured Stripe", () => {
+        let warn: MockInstance<typeof console.warn>;
+
+        beforeEach(() => {
+            process.env.NEXT_RUNTIME = "nodejs";
+            vi.stubEnv("ARCJET_KEY", "ajkey_qa");
+            warn = vi.spyOn(console, "warn").mockImplementation(() => {
+                // asserted below, kept out of the test output
+            });
+        });
+
+        afterEach(() => {
+            vi.unstubAllEnvs();
+            warn.mockRestore();
+        });
+
+        const paymentsWarnings = () =>
+            warn.mock.calls.filter(([line]) =>
+                String(line).startsWith("[payments]")
+            );
+
+        it("names the missing webhook secret when only the secret key is set", async () => {
+            vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_offline_qa");
+            vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+
+            await register();
+
+            expect(paymentsWarnings()).toEqual([
+                [
+                    "[payments] billing is DISABLED (no STRIPE_WEBHOOK_SECRET). Set both Stripe keys or neither.",
+                ],
+            ]);
+        });
+
+        it("names the missing secret key when only the webhook secret is set", async () => {
+            vi.stubEnv("STRIPE_SECRET_KEY", "");
+            vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_offline_qa");
+
+            await register();
+
+            expect(paymentsWarnings()).toEqual([
+                [
+                    "[payments] billing is DISABLED (no STRIPE_SECRET_KEY). Set both Stripe keys or neither.",
+                ],
+            ]);
+        });
+
+        it("stays silent with both keys", async () => {
+            vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_offline_qa");
+            vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_offline_qa");
+
+            await register();
+
+            expect(paymentsWarnings()).toEqual([]);
+        });
+
+        it("stays silent with neither, which is the shipped default", async () => {
+            vi.stubEnv("STRIPE_SECRET_KEY", "");
+            vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+
+            await register();
+
+            expect(paymentsWarnings()).toEqual([]);
+            expect(getFirestoreAdminMock).toHaveBeenCalledTimes(1);
+        });
     });
 
     it("stays out of the way on the edge runtime", async () => {
