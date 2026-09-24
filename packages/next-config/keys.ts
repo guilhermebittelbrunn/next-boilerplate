@@ -33,6 +33,11 @@ export const keys = () =>
             NEXT_PUBLIC_PRODUCT_MODE: z
                 .enum(["subscription", "simple"])
                 .optional(),
+            /**
+             * Address the legal pages publish as the privacy channel. Empty, they link
+             * the contact form instead, which every fork already has working.
+             */
+            NEXT_PUBLIC_PRIVACY_CONTACT: z.string().optional(),
         },
         runtimeEnv: {
             ANALYZE: process.env.ANALYZE,
@@ -49,6 +54,8 @@ export const keys = () =>
             NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL,
             NEXT_PUBLIC_DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE,
             NEXT_PUBLIC_PRODUCT_MODE: process.env.NEXT_PUBLIC_PRODUCT_MODE,
+            NEXT_PUBLIC_PRIVACY_CONTACT:
+                process.env.NEXT_PUBLIC_PRIVACY_CONTACT,
         },
         skipValidation: true,
     });
