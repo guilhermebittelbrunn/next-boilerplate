@@ -23,4 +23,16 @@ export const getStripe = (): Stripe | null => {
     return client;
 };
 
+export const getWebhookSecret = (): string | null =>
+    keys().STRIPE_WEBHOOK_SECRET ?? null;
+
+/**
+ * Both halves or nothing: without the webhook secret no subscription state ever reaches
+ * the profile, so selling with only the secret key would charge people the app cannot see.
+ */
+export const isPaymentsConfigured = (): boolean => {
+    const { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET } = keys();
+    return Boolean(STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET);
+};
+
 export type { Stripe } from "stripe";
