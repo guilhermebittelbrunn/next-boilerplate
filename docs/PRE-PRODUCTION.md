@@ -695,7 +695,8 @@ resposta: quem pediu a exclusão não precisa da operação, e a resposta é `{ 
 
 ### Pendência — no modo `simple` o titular não alcança a aba de privacidade
 
-**Em aberto. Precisa de decisão de produto antes de um fork em modo `simple` ir para produção.**
+**Fechada em 2026-09-25.** A premissa não conferia com o código (nota abaixo) e o usuário decidiu não
+mexer no modo `simple` por ora. Reabra se o modo passar a restringir o painel comum.
 
 > ⚠️ **Correção medida em 2026-09-25: a premissa desta seção não confere com o código.** O texto abaixo parte
 > de que o modo `simple` restringe o painel comum a administradores. Nada no `apps/app` faz isso: o layout

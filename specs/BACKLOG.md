@@ -56,7 +56,7 @@ entrou: esta rodada é `--sync` puro.
 > **A fila tem três specs elegíveis, todas de valor médio.** As duas de valor alto que restam estão fora do
 > conjunto: `observability-logging` (`in-progress`, o resíduo exige conta em provedor) e
 > `teams-organizations` (`deferred`). A audiência `confianca` segue com uma spec só. A rodada de descoberta
-> continua em avaliação pelo usuário ([pergunta nº 4](#precisam-de-decisão)).
+> foi adiada pelo usuário em 2026-09-25 (E11).
 
 ### O caso `billing-subscription`: o que foi conferido antes de arquivar
 
@@ -127,6 +127,10 @@ Branch protection segue **não ligado**, remedido hoje: `gh api repos/:owner/:re
 
 Respeita `depends_on` (lido do frontmatter nesta rodada) e prioriza valor × esforço × custo de adiar.
 **Nenhuma spec segue bloqueada por dependência.**
+
+> **Antes da próxima spec**, a fila tem duas tarefas diretas aprovadas pelo usuário em 2026-09-25: o
+> achado de hidratação em `/en` e `/es` (a primeira, depois do merge de `admin-billing-insights`) e o
+> cancelamento da assinatura no soft delete pelo admin (achado A2).
 
 > **Critério de execução, sem exceção:** o que uma rodada autônoma consegue provar. O `/cycle` não
 > provisiona infraestrutura, então spec cujos critérios dependem de conta em provedor volta com metade dos
@@ -222,12 +226,17 @@ anteriores se repete: o arquivo que falta é vizinho dos declarados, na mesma ca
 Só o que é novo nesta rodada ou mudou de natureza. O que se repetia foi para
 [Decisões estacionadas](#decisões-estacionadas-51).
 
-| # | questão | recomendação |
-|---|---------|--------------|
-| 1 | **O que o modo `simple` deve fazer?** `docs/AUTH-SSO.md:66-71` diz que ele manda o usuário comum para a web e deixa o painel só para admin. O código não faz nada disso: o layout `(common)` não lê o modo, `commonUserUsesPanel()` não existe e a `apps/web` não tem área autenticada. Hoje o `simple` só esconde a cobrança e o link do painel no header da web | **Tratar o `simple` como "produto sem cobrança" e reescrever a tabela do `AUTH-SSO.md` para o que o código faz** (tarefa P de documentação; a nota de medição já está lá). Implementar o redirecionamento descrito mandaria o usuário comum para uma web sem área logada, então não é tarefa direta: se o "comum opera na web" for desejado, é spec de descoberta |
-| 2 | **A pendência nº 21 (titular sem acesso à aba de privacidade no `simple`) fecha?** Ela partia da mesma premissa falsa: hoje o titular alcança a aba em qualquer modo | **Fechar como descrita** e deixar a nota de correção no `PRE-PRODUCTION.md`, que já foi escrita. Ela volta se a restrição da pergunta nº 1 for implementada. Você tinha dito que ficava para depois; a medição mudou a natureza do item, por isso ele volta aqui uma vez |
-| 3 | **O soft delete de usuário pelo admin deve cancelar a assinatura?** `DELETE /users/[id]` (`apps/api/app/(routes)/users/[id]/route.ts:117`) só marca o perfil. A assinatura segue cobrando, e o webhook deixa de achar o perfil (`user.repository.ts:50-61` ignora `deletedAt`) | **Tarefa direta de esforço P:** chamar o mesmo `cancelSubscriptionForErasure` (`billing.ts:162-175`) antes do soft delete, com teste. Se o arquivamento pelo admin precisar ser reversível sem perder a assinatura, a alternativa é `cancel_at_period_end`, e aí a decisão é de produto |
-| 4 | **Rodar uma descoberta (`/spec` sem argumento) antes que a fila esvazie?** Restam três elegíveis, todas de valor médio, e `confianca` tem uma spec só | **Em avaliação pelo usuário (2026-09-24); não rodar até ele decidir.** Recomendação da auditoria: rodar depois do #1. A nota `specs/research/compliance-trust-baseline.md` é o ponto de partida para o eixo `confianca`; as candidatas registradas em [Lacunas](#lacunas-avaliadas-e-não-especificadas) são os templates de RoPA, runbook de incidente e DPA em `docs/` e o gate de acesso por plano |
+Nenhuma pergunta aberta. As quatro desta rodada foram respondidas pelo usuário em 2026-09-25:
+
+1. **O que o modo `simple` deve fazer:** ignorar por ora. Foi para [Decisões estacionadas](#decisões-estacionadas-51) (E10).
+2. **Fechar a pendência nº 21:** fechada. Ver [Pendências vivas sem dono](#pendências-vivas-sem-dono).
+3. **O soft delete pelo admin deve cancelar a assinatura:** sim, pelo caminho recomendado. Chamar
+   `cancelSubscriptionForErasure` antes do soft delete, com teste. É uma tarefa direta de esforço P, na fila
+   (achado A2).
+4. **Rodar a descoberta:** ainda não. Foi para [Decisões estacionadas](#decisões-estacionadas-51) (E11).
+
+O usuário também aprovou o achado de hidratação em `/en` e `/es` como a próxima tarefa depois do merge de
+`admin-billing-insights` (ver [UI, i18n e front-end](#-ui-i18n-e-front-end)).
 
 Saíram desta tabela nesta rodada: a adoção de Playwright, `@axe-core/playwright` e provedor de cobertura
 (**aprovada pelo usuário em 2026-09-24**; vale quando `e2e-testing` rodar) e a query string do deep link do
@@ -250,6 +259,8 @@ Cada uma tem dono e endereço.
 | E7 | Busca da tabela enxerga só as páginas carregadas | quem sentir a dor | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | abrir spec quando houver caso de uso |
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
 | E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral (3 rodadas) | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`), por isso precisa da sua palavra |
+| E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | este arquivo, achado A1 em [Achados](#-achados-novos-e-os-da-rodada-passada) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer; a nota de medição do `docs/AUTH-SSO.md` fica como está |
+| E11 | Rodar uma descoberta (`/spec` sem argumento) antes que a fila esvazie (2 rodadas) | você | este arquivo, [Lacunas](#lacunas-avaliadas-e-não-especificadas) | **o usuário respondeu "ainda não" (2026-09-25)**. Não reapresentar até ele pedir |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
@@ -338,8 +349,8 @@ doc é medida e corrigida ao passar por ela.
 | `docs/SECURITY.md:146` (rate limit) | 10 caminhos em `apps/api/proxy.ts:44-55` | **confere**, lista literal. `/payments/checkout` e `/payments/portal` ficam fora, e o documento não diz o contrário | ✅ **honesto**; ver o achado do rate limit |
 | `docs/SECURITY.md`, seção "Pagamentos (Stripe)" | dedupe por `event.id`, perfil tirado do evento verificado, checkout e portal pelo perfil do guard | **confere** com `webhooks/payments/route.ts:28-72`, `:161-167` e `ctx.subjectProfile` nas duas rotas | ✅ **honesto na estreia** |
 | `docs/PAYMENTS.md` (estado geral) | fluxo de ponta a ponta; 409 em `checkout/route.ts:41`; troca de assinatura em `billing-state.ts:141-147`; cancelamento em `account-erasure.ts:95` | **confere**, âncoras literais | ✅ **honesto**; o documento foi reescrito pela PR #25 |
-| `docs/AUTH-SSO.md:66-71` (modo de produto) | o layout `(common)` manda o comum para a web no `simple`; existe `commonUserUsesPanel()`; existe `apps/web/app/[locale]/(authenticated)/layout.tsx` | **nenhum dos três existe** (achado A1 do plano de `billing-subscription`, reconferido) | ⚠️ **nota de medição acrescentada** abaixo do parágrafo; a reescrita da tabela depende da [pergunta nº 1](#precisam-de-decisão) |
-| `docs/PRE-PRODUCTION.md`, "Pendência — no modo `simple`…" | no `simple` o painel comum fica restrito a administradores | **falso**, mesma causa da linha acima | ⚠️ **nota de correção acrescentada** no topo da seção; [pergunta nº 2](#precisam-de-decisão) |
+| `docs/AUTH-SSO.md:66-71` (modo de produto) | o layout `(common)` manda o comum para a web no `simple`; existe `commonUserUsesPanel()`; existe `apps/web/app/[locale]/(authenticated)/layout.tsx` | **nenhum dos três existe** (achado A1 do plano de `billing-subscription`, reconferido) | ⚠️ **nota de medição acrescentada** abaixo do parágrafo; a reescrita da tabela ficou estacionada (E10) |
+| `docs/PRE-PRODUCTION.md`, "Pendência — no modo `simple`…" | no `simple` o painel comum fica restrito a administradores | **falso**, mesma causa da linha acima | ⚠️ **nota de correção acrescentada** no topo da seção; a pendência foi fechada em 2026-09-25 |
 | `docs/AUTH-PANEL.md` e `docs/SETUP.md:85` (onboarding) | conferidos na rodada passada | não tocados pela PR #25 | sem remedição |
 
 > **Nota de método.** O §9 do `PRE-PRODUCTION.md` foi defasado pela sétima auditoria seguida, pelo mesmo
@@ -416,8 +427,8 @@ reconferidas no disco: seguem abertas.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| ⚠️ **O modo `simple` não restringe o painel comum** (A1) | `apps/app/app/[locale]/(authenticated)/(common)/layout.tsx` (não lê o modo) · `packages/next-config/product-mode.ts:12-23` (sem `commonUserUsesPanel`) · `docs/AUTH-SSO.md:66-71` | O documento descreve um redirecionamento que não existe, e uma pendência do `PRE-PRODUCTION.md` partia dele. Hoje o `simple` só esconde a cobrança. [Pergunta nº 1](#precisam-de-decisão) |
-| ⚠️ **Soft delete de usuário pelo admin não cancela a assinatura** (A2) | `apps/api/app/(routes)/users/[id]/route.ts:117` · `user.repository.ts:50-61` | A pessoa apagada pelo admin continua sendo cobrada, e o webhook deixa de achar o perfil, porque `findByStripeCustomerId` ignora `deletedAt`. A exclusão pelo titular cancela; esta não. [Pergunta nº 3](#precisam-de-decisão) |
+| ⚠️ **O modo `simple` não restringe o painel comum** (A1) | `apps/app/app/[locale]/(authenticated)/(common)/layout.tsx` (não lê o modo) · `packages/next-config/product-mode.ts:12-23` (sem `commonUserUsesPanel`) · `docs/AUTH-SSO.md:66-71` | O documento descreve um redirecionamento que não existe, e uma pendência do `PRE-PRODUCTION.md` partia dele. Hoje o `simple` só esconde a cobrança. Estacionado (E10): o usuário decidiu ignorar o modo por ora |
+| ⚠️ **Soft delete de usuário pelo admin não cancela a assinatura** (A2) | `apps/api/app/(routes)/users/[id]/route.ts:117` · `user.repository.ts:50-61` | A pessoa apagada pelo admin continua sendo cobrada, e o webhook deixa de achar o perfil, porque `findByStripeCustomerId` ignora `deletedAt`. A exclusão pelo titular cancela; esta não. **Decidido em 2026-09-25:** chamar `cancelSubscriptionForErasure` antes do soft delete, com teste. Tarefa P aprovada, na fila |
 | 🟡 **`.env.example` da `apps/app` e da `apps/web` publicam `STRIPE_*`, que nenhum dos dois lê** (A3) | `apps/app/.env.example:23-24` · `apps/web/.env.example:5-6` | Quem configura o fork põe a chave secreta em dois apps que não precisam dela. Só a `apps/api` lê (`PRE-PRODUCTION.md` §12 já diz isso) |
 | 🟡 **O webhook responde 500 para assinatura inválida** (A4) | `webhooks/payments/route.ts:156-158` → `failure()` em `:121-125` | A Stripe reentrega por até três dias um evento que nunca vai validar. Um 400 encerra as tentativas. `api-hardening` está arquivada, então é tarefa direta |
 | 🟡 **O deep link do onboarding perde a query string** | `apps/app/proxy.ts:215` | O proxy grava só o `pathname`. Afeta link de listagem filtrada ou paginada aberto antes do onboarding. Saiu de "Precisam de decisão" pela §5.1: tarefa direta P, gravar `pathname + search` e um caso a mais em `proxy.test.ts` |
@@ -477,7 +488,7 @@ reconferidas no disco: seguem abertas.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **Componente client renderiza em pt-br no servidor em `/en` e `/es`**, e a hidratação falha | `packages/internationalization/utils/cookies.ts:2-4` · `packages/internationalization/client.ts:8` | `getCookie` devolve `null` sem `window`, então `getDictionary()` cai no locale padrão durante o SSR e o navegador reescreve no idioma do cookie. Repro: `curl -H 'Cookie: <sessão do admin>; x-locale=en' http://localhost:3000/en/admin` devolve "Olá", "Atividade" e "Cobrança"; no navegador, "Hydration failed" em toda carga de `/en` e `/es` (sidebar, breadcrumb e seções da home). Achado em 2026-09-25 na seção de billing da home do admin, que herda o defeito. A correção na raiz é um provider de locale alimentado pelo segmento `[locale]` e um hook `useDictionary()`, mas `getDictionary()` do client aparece em 63 arquivos de `apps/app`, `apps/web`, `packages/design-system` e `packages/auth`, e parte delas roda fora de render (`packages/design-system/index.tsx:25`, `apps/app/shared/lib/formatDisplayDateTime.ts:21`), onde um contexto não pode ser lido |
+| 🟡 **Componente client renderiza em pt-br no servidor em `/en` e `/es`**, e a hidratação falha. **Próxima tarefa, aprovada pelo usuário em 2026-09-25** | `packages/internationalization/utils/cookies.ts:2-4` · `packages/internationalization/client.ts:8` | `getCookie` devolve `null` sem `window`, então `getDictionary()` cai no locale padrão durante o SSR e o navegador reescreve no idioma do cookie. Repro: `curl -H 'Cookie: <sessão do admin>; x-locale=en' http://localhost:3000/en/admin` devolve "Olá", "Atividade" e "Cobrança"; no navegador, "Hydration failed" em toda carga de `/en` e `/es` (sidebar, breadcrumb e seções da home). Achado em 2026-09-25 na seção de billing da home do admin, que herda o defeito. A correção na raiz é um provider de locale alimentado pelo segmento `[locale]` e um hook `useDictionary()`, mas `getDictionary()` do client aparece em 63 arquivos de `apps/app`, `apps/web`, `packages/design-system` e `packages/auth`, e parte delas roda fora de render (`packages/design-system/index.tsx:25`, `apps/app/shared/lib/formatDisplayDateTime.ts:21`), onde um contexto não pode ser lido |
 | 🟡 **O deep link das abas da conta não acompanha a navegação** | `AccountTabs.tsx:51-53` (estado lido uma vez) · `:55-62` (`history.replaceState`) | Reconferido. A barra lateral muda a URL e a aba fica onde estava. Estacionado (E9) |
 | 🟡 **`"Pick a date"` literal no `DateInput`** | `packages/design-system/components/ui/date-input.tsx:50` | Reconferido. Sobreviveu às PRs #11 a #25 |
 | 🟡 **O `DateInput` formata sempre em inglês** | `date-input.tsx:83` | Reconferido: `format(selected, "PPP")` sem `locale` |
@@ -521,11 +532,11 @@ reconferidas no disco: seguem abertas.
 | 18 | `storage.rules` nunca publicado nem testado | `PRE-PRODUCTION.md` | **continua aberto**; depende da 11 e de `e2e-testing` |
 | 19 | Conferir a retenção de log da plataforma | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: painel do provedor |
 | 20 | Reabertura do consentimento no `ProfileDropdown` nunca vista num browser | *(só neste arquivo)* | **continua aberto** |
-| 21 | No modo `simple` o titular não alcança a aba de privacidade | `PRE-PRODUCTION.md`, seção "Pendência — no modo `simple`…" | **premissa falsa, medida**: o `simple` não restringe o painel comum, então o titular alcança a aba. Nota de correção no documento. Proposta de fechar na [pergunta nº 2](#precisam-de-decisão) |
+| 21 | No modo `simple` o titular não alcança a aba de privacidade | `PRE-PRODUCTION.md`, seção "Pendência — no modo `simple`…" | **premissa falsa, medida**: o `simple` não restringe o painel comum, então o titular alcança a aba. **Fechada pelo usuário em 2026-09-25.** A nota de correção fica no documento. Volta se o `simple` passar a restringir o painel comum (E10) |
 | 22 | `NEXT_PUBLIC_PRIVACY_CONTACT` precisa ser definida por fork | `PRE-PRODUCTION.md` §7 (checklist) | **continua aberto**. Vazia, o canal cai no formulário de contato, que é maquete |
 | 23 | 🆕 Stripe por fork: catálogo recorrente, Customer Portal, endpoint de webhook na versão `2025-09-30.clover` com quatro eventos, chaves na `apps/api`, TTL opcional de `paymentEvent`; e a decisão sobre checar assinatura duplicada na Stripe antes do release | `PRE-PRODUCTION.md` §12 | **aberto, recém-registrado**. Cinco critérios de `billing-subscription` seguem 🔒 até uma conta real existir. `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` seguem vazias nos `.env` locais |
 
-Nenhuma linha fechou nesta rodada. A 21 tem proposta de fechamento, e a 23 é nova.
+A 21 foi fechada pelo usuário em 2026-09-25. A 23 é nova.
 
 ## Lacunas avaliadas e **não** especificadas
 
@@ -539,7 +550,7 @@ Descartadas de propósito, com o motivo. Reabrir exige argumento novo.
 | **Coleta de dados de domínio no onboarding (empresa, cargo, segmento)** | — | Fora do mesmo corte. Não é genérico; é código do fork. |
 | **Onboarding para a conta criada pelo admin** | — | Decisão D3 da entrega: o admin já informa o nome, e a mesma rota cria admins. O perfil sem o campo conta como concluído. |
 | **Demais direitos do art. 18 com fluxo próprio · painel de pedidos de titular · exportação assíncrona** | — | Fora do corte de [`data-rights-lgpd`](../docs/features/data-rights-lgpd/spec.md), arquivada. O canal de privacidade cobre os demais pedidos por ora. |
-| **RoPA, runbook de incidente, DPA e transferência internacional** | — | Fora do corte de `data-rights-lgpd` por serem documento, não código. Candidato natural a uma spec de templates em `docs/` numa próxima descoberta, que é também onde o eixo `confianca` pode ganhar peso ([pergunta nº 3](#precisam-de-decisão)). |
+| **RoPA, runbook de incidente, DPA e transferência internacional** | — | Fora do corte de `data-rights-lgpd` por serem documento, não código. Candidato natural a uma spec de templates em `docs/` numa próxima descoberta, que é também onde o eixo `confianca` pode ganhar peso. A descoberta está adiada (E11). |
 | **Exclusão de conta sem senha (conta só Google)** | — | Fora da entrega: reautenticar conta federada exige outro fluxo. Pertence à iteração de "sessão recente" de [`account-security-mfa`](account-security-mfa.md). |
 | **Histórico de acessos · IP, user-agent, dispositivo e geolocalização · presença em tempo real** | — | Fora do corte de [`user-activity-tracking`](../docs/features/user-activity-tracking/spec.md). IP mudaria a natureza jurídica do dado (Marco Civil art. 5º, VIII). |
 | **Série temporal de acessos na home do admin** | — | `lastAccessAt` guarda um instante por perfil; série temporal exigiria a coleção de eventos que `user-activity-tracking` descartou. |
