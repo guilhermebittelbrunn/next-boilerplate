@@ -5,7 +5,7 @@ import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const layoutSource = readFileSync(
-    join(process.cwd(), "app/[locale]/(unauthenticated)/layout.tsx"),
+    join(__dirname, "../app/[locale]/(unauthenticated)/layout.tsx"),
     "utf8"
 );
 
