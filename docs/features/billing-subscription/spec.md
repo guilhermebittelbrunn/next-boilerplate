@@ -1,7 +1,7 @@
 ---
 id: billing-subscription
 title: Assinatura Stripe de ponta a ponta
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: produto
@@ -22,6 +22,9 @@ O boilerplate se declara pronto para SaaS por assinatura — existe até um `Pro
 Quem precisar faturar escreve a integração inteira à mão, justamente a parte em que errar custa dinheiro do usuário final: cobrança duplicada, acesso liberado sem pagamento, cancelamento que não revoga. *(Até 2026-09-14 havia um agravante — a documentação do próprio repo afirmava que isso já existia. **Não afirma mais**: `docs/PAYMENTS.md` foi corrigido na PR #12.)*
 
 ## O que já existe no repo
+
+> Retrato de antes da entrega, mantido como registro. O estado atual está em
+> [Estado da entrega](#estado-da-entrega).
 
 - `packages/payments/index.ts:14-24` — **`getStripe()`**, server-only, que constrói o cliente sob demanda e devolve `null` quando não há `STRIPE_SECRET_KEY`; `:26` reexporta o tipo `Stripe`. É **tudo** o que o pacote expõe: nenhuma noção de plano, checkout ou portal. *(Deriva corrigida em 2026-09-01: até `ci-pipeline`, era um `new Stripe(... || "")` em escopo de módulo, na linha 5 — o que quebrava `api#build` em qualquer ambiente sem chave. **Consequência para esta spec: toda rota nova precisa tratar o `null`.**)*
 - `packages/payments/ai.ts:4-5` — `paymentsAgentToolkit` (cria produtos/preços/payment links). Serve para **semear** o catálogo, não para vender. 🔴 **Ainda tem o defeito gêmeo que o `getStripe()` corrigiu**: `new StripeAgentToolkit({ secretKey: keys().STRIPE_SECRET_KEY || "" })` em escopo de módulo. Não explode hoje só porque nada importa `@repo/payments/ai` — explodiria no primeiro fork que importasse, e esta spec é justamente o que faria alguém importar.
@@ -61,24 +64,26 @@ de espera. Falta o conteúdo.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md) · [`research/engineering-baseline.md`](research/engineering-baseline.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md) · [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md)
 - Prevalência: **9/10 dos starters** entregam assinatura Stripe (checkout + portal) por padrão — o segundo item mais universal do painel, atrás só de auth. Valor "alto", esforço "M".
 - A nota registra que **trial e downgrade quase nunca vêm testados** e que **a reconciliação de estado é o ponto frágil de todos** os kits: o diferencial não é ter checkout, é o estado bater. E o webhook da Stripe chega *at-least-once* e fora de ordem — idempotência é **exigência do provedor**, não otimização (`engineering-baseline.md`, prática 10).
 - Fontes: <https://www.next-forge.com/packages/payments> · <https://saas-ui.dev/docs/nextjs-starter-kit/billing>
 
 ## Proposta — corte de MVP
 
-- [ ] O usuário autenticado vê os planos ativos do catálogo Stripe do fork, com preço e moeda.
-- [ ] Ao escolher um plano, é levado ao Stripe Checkout e volta ao app com o resultado visível.
-- [ ] O estado da assinatura (cliente Stripe, plano, situação, fim do período) fica gravado no perfil e é lido pela UI — não recalculado a cada visita.
-- [ ] O webhook deixa de ser stub: assinatura criada/atualizada/cancelada reconcilia esse estado, e um evento reentregue não produz efeito duplicado.
-- [ ] O usuário com assinatura ativa abre o portal da Stripe para trocar plano, atualizar cartão ou cancelar.
-- [ ] Os CTAs do `pricing` da `apps/web` levam ao fluxo real quando o fork está em modo `subscription`.
+- [x] O usuário autenticado vê os planos ativos do catálogo Stripe do fork, com preço e moeda.
+- [x] Ao escolher um plano, é levado ao Stripe Checkout e volta ao app com o resultado visível.
+- [x] O estado da assinatura (cliente Stripe, plano, situação, fim do período) fica gravado no perfil e é lido pela UI — não recalculado a cada visita.
+- [x] O webhook deixa de ser stub: assinatura criada/atualizada/cancelada reconcilia esse estado, e um evento reentregue não produz efeito duplicado.
+- [x] O usuário com assinatura ativa abre o portal da Stripe para trocar plano, atualizar cartão ou cancelar.
+- [x] Os CTAs do `pricing` da `apps/web` levam ao fluxo real quando o fork está em modo `subscription`.
 
-> 🆕 **Obrigação transferida em 2026-09-23 — o passo `billing` da exclusão de conta.** O item 3 acima cria o
-> vínculo perfil↔cliente Stripe, e é esse vínculo que falta para a exclusão de conta cancelar a assinatura
-> (`apps/api/(shared)/lib/account-erasure.ts:67-78`, hoje `skipped`). Fechar isso é desta spec. O detalhe
-> está em [Riscos e trade-offs](#riscos-e-trade-offs).
+> **Obrigação transferida em 2026-09-23 — o passo `billing` da exclusão de conta.** O item 3 acima cria o
+> vínculo perfil↔cliente Stripe, e é esse vínculo que faltava para a exclusão de conta cancelar a
+> assinatura. **Paga pela PR #25:** o passo `billing` roda primeiro e cancela a assinatura viva antes de
+> apagar qualquer coisa (`apps/api/(shared)/lib/account-erasure.ts:74-97`, ordem em `:142-156`), e o
+> arquivo de exportação leva o estado da assinatura (`apps/api/(shared)/lib/account-export.ts:56-67`).
+> Evidência completa em [Estado da entrega](#estado-da-entrega).
 
 ### Fora do corte
 
@@ -104,7 +109,7 @@ de espera. Falta o conteúdo.
 - **Estado divergente é o risco central.** Webhook que falha vira usuário que paga sem acesso, ou que cancela e continua com acesso. Sem dedupe por evento, um retry reprocessa.
 - **O perfil vira dono de dado financeiro.** Assinatura no doc `user` acopla cobrança ao cadastro: a exclusão de conta passa a ter de cancelar antes de excluir — a nota lista isso como a armadilha central da exclusão de conta.
   🆕 **Obrigação transferida em 2026-09-23, e com endereço.** `data-rights-lgpd` foi entregue pela PR #23 e
-  arquivada em [`docs/features/data-rights-lgpd/spec.md`](../docs/features/data-rights-lgpd/spec.md). O
+  arquivada em [`docs/features/data-rights-lgpd/spec.md`](../data-rights-lgpd/spec.md). O
   expurgo da conta roda em passos nomeados, e o passo `billing` é um ponto de extensão que hoje responde
   `skipped` com motivo `billing-not-linked` (`apps/api/(shared)/lib/account-erasure.ts:67-78`), porque não
   existe vínculo perfil↔cliente Stripe para cancelar. **Quem criar esse vínculo é esta spec, então é ela
@@ -127,3 +132,55 @@ de espera. Falta o conteúdo.
 - Catálogo de planos vem do Stripe em tempo real ou de configuração local? — **recomendação:** do Stripe, para o fork não manter preço em dois lugares.
 - Modo `simple` esconde a tela de assinatura ou mostra desabilitada? — **recomendação:** esconder, seguindo o que `isSubscriptionMode()` (`product-mode.ts:23`) já sinaliza.
 - Bloquear o acesso quando a assinatura fica `past_due`? — **recomendação:** não neste corte; só exibir o estado. Bloqueio é decisão de produto de cada fork.
+
+## Estado da entrega
+
+Auditado em 2026-09-24 pelo `/spec --sync`. PR **#25** mergeada em `main` em 2026-09-24T14:46:15Z (merge
+commit `a1f87d0`), com CI `success` nesse SHA (`gh run 36015211021`, `headSha` = `a1f87d04…`). O
+`STATE.md` da feature traz `spec: billing-subscription` e as etapas `analyze`, `develop`, `review` e `test`
+em `done`. Os seis itens do corte e a obrigação herdada foram reabertos no código:
+
+| item | veredito | evidência |
+|------|----------|-----------|
+| 1. Planos ativos do catálogo, com preço e moeda | **implementado** | `GET /payments/plans` sob `requireCommonPanelApi` (`apps/api/app/(routes)/payments/plans/route.ts:12-29`) lê os preços recorrentes ativos direto da Stripe (`apps/api/(shared)/lib/billing.ts:50-66`). Com a cobrança desligada responde `enabled: false` sem chamar o provedor (`route.ts:15-17`). A aba lista os planos em `PlanList` (`AccountBillingPanel.tsx:175`), com preço formatado por idioma em `apps/app/shared/lib/formatPlanPrice.ts` |
+| 2. Checkout da Stripe e volta com resultado visível | **implementado** | `POST /payments/checkout` (`payments/checkout/route.ts:20-78`) cria a sessão com URLs de retorno `?tab=billing&checkout=success|canceled` (`billing.ts:34-44`, `:119-145`). A aba mostra o aviso de retorno em `CheckoutNotice` (`AccountBillingPanel.tsx:63`) e consulta a conta até o webhook chegar (`useCheckoutConfirmation.tsx`). Um segundo checkout com assinatura viva responde `409 PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE` (`route.ts:39-46`) |
+| 3. Estado gravado no perfil e lido pela UI | **implementado** | `stripeCustomerId` e `subscription` no `UserDTO` (`packages/sdk/src/types/user/user.ts:63`, `:65`), com o formato em `packages/sdk/src/types/payments/payments.ts:30-44`. A escrita acontece só pelo webhook, numa transação (`apps/api/(shared)/repositories/user.repository.ts:72-100`). A aba lê `account.subscription` e nunca a Stripe (`AccountBillingPanel.tsx:230-244`) |
+| 4. Webhook reconcilia e ignora reentrega | **implementado** | `customer.subscription.created/updated/deleted` passam por `reconcileSubscription` (`webhooks/payments/route.ts:74-96`, `:107-111`). O dedupe é por `event.id` na coleção `paymentEvent` (`route.ts:161-167`, `payment-event.repository.ts:27-55`), marcado só depois de o handler terminar. Evento fora de ordem é descartado pela regra de `decideSubscriptionWrite` (`apps/api/(shared)/lib/billing-state.ts:130`) |
+| 5. Portal da Stripe para quem assina | **implementado** | `POST /payments/portal` (`payments/portal/route.ts:14-56`), que responde `409 PAYMENTS_CUSTOMER_NOT_FOUND` sem vínculo (`:35-38`). O botão fica no `CurrentPlanCard` (`AccountBillingPanel.tsx:105`), exibido só com assinatura viva |
+| 6. CTAs do `pricing` no modo `subscription` | **implementado** | `resolvePlanCtaHref` (`apps/web/shared/lib/pricingCta.ts:13-27`) manda os dois primeiros planos para `<app>/<locale>/account?tab=billing`; o locale vem do segmento da rota (`apps/web/app/[locale]/pricing/page.tsx:34-40`). Fora do modo `subscription` o link continua apontando para o app |
+| Obrigação herdada: passo `billing` da exclusão | **implementado** | `cancelBilling` (`apps/api/(shared)/lib/account-erasure.ts:74-97`) roda antes dos outros passos e, se falhar, o expurgo para sem apagar nada (`:142-156`). O arquivo de exportação leva a assinatura (`account-export.ts:56-67`) |
+
+O modo `simple` esconde a aba (`AccountTabs.tsx:31-35`) e o item da barra lateral (`(common)/routes.tsx:52-56`).
+O defeito gêmeo de `packages/payments/ai.ts` também foi fechado: o toolkit é montado sob demanda e devolve
+`null` sem chave (`ai.ts:9-32`).
+
+**Gates medidos nesta auditoria**, com `--force`, `HEAD` em `a1f87d0`: `pnpm check` com 699 arquivos e 0
+correções; `pnpm turbo run lint typecheck test --force` com 24/24 tasks; suíte com 1817 testes em 180
+arquivos (`api` 804, `app` 559, `web` 41, `@repo/payments` 22).
+
+**O que só uma conta Stripe real prova.** O `/test` fechou 19 critérios, reprovou nenhum e deixou 5 como 🔒:
+catálogo real, Checkout real com volta, entrega real de webhook, página real do Customer Portal e
+cancelamento real no expurgo. O resto foi provado com chaves falsas no processo, webhook assinado
+localmente e o emulador. É o mesmo tipo de fechamento de `file-upload-storage`, arquivada com critérios
+"não verificados" por falta de infra: o código está completo e a prova contra o provedor fica em
+`docs/PRE-PRODUCTION.md`, item 12.
+
+## Deriva de implementação
+
+Nenhuma deriva muda o que a spec prometeu. Registro o que a entrega fez diferente, ou além:
+
+- **Os CTAs levam à aba de cobrança do app, não direto ao Checkout.** A spec dizia "fluxo real" sem fixar
+  o destino. A escolha exige sessão antes do pagamento, o que o checkout precisa de qualquer forma para
+  vincular o cliente ao perfil. O plano Enterprise continua em `/contact`.
+- **O webhook deixou de tratar `subscription_schedule.canceled`.** O evento cai no ramo padrão e só gera
+  log (`webhooks/payments/route.ts:113-117`). A reconciliação passou a depender de
+  `customer.subscription.*`, que cobre o cancelamento.
+- **O dedupe guarda o evento por 30 dias** (`payment-event.repository.ts:7-8`), com `expiresAt` para uma
+  política de TTL opcional. Serve para idempotência, não como histórico. Isso importa para
+  [`admin-billing-insights`](../../../specs/admin-billing-insights.md), que precisa de dado de cobrança
+  persistido e não pode agregar receita a partir dessa coleção.
+- **Assinatura duplicada por corrida sobrescreve a anterior no perfil.** O usuário decidiu em 2026-09-24
+  manter isso no MVP, com a checagem direto na Stripe escrita como passo antes do release no item 12 de
+  `docs/PRE-PRODUCTION.md`.
+- **A resposta 200 do webhook ainda ecoa o evento inteiro** (`webhooks/payments/route.ts:176`). Estava fora
+  do corte e segue como achado no [`BACKLOG.md`](../../../specs/BACKLOG.md).

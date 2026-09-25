@@ -119,7 +119,7 @@ porque não tem caminho decidido.
 - **Item c, visitas à `apps/web`** — sem caminho decidido; ver as perguntas em aberto.
 - Seção de billing (contratações, planos mais vendidos, receita) — é
   [`admin-billing-insights`](../../../specs/admin-billing-insights.md), separada porque
-  [`billing-subscription`](../../../specs/billing-subscription.md) está em 0/6.
+  [`billing-subscription`](../billing-subscription/spec.md) está em 0/6.
 - Tempo real, atualização automática e notificação de variação.
 - Exportar as métricas, comparar com período anterior, filtro de intervalo escolhido pelo usuário.
 - Segmentação (por tipo, por origem, por plano) e detalhamento por usuário a partir do número.
