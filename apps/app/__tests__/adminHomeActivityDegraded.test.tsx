@@ -31,6 +31,13 @@ vi.mock(
     () => ({ useUserActivitySummary: () => activityMock() })
 );
 
+vi.mock(
+    "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/BillingInsightsSection",
+    () => ({
+        BillingInsightsSection: () => <div data-testid="billing-section" />,
+    })
+);
+
 const { AdminHomeClient } = await import(
     "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient"
 );

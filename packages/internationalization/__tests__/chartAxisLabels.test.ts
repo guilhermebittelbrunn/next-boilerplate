@@ -44,3 +44,28 @@ describe("rótulos do eixo do gráfico de recência", () => {
         }
     });
 });
+
+/**
+ * O gráfico de planos corta todo rótulo do eixo, inclusive o da barra que agrupa os demais
+ * planos, então uma tradução mais longa que o limite apareceria truncada. A 320 px de viewport
+ * os centros dos cinco ticks ficam a cerca de 38 px um do outro, e com a fonte de 12 px um
+ * rótulo de seis caracteres como "Empre…" ocupa 43 px, cerca de 7,2 px por caractere. O
+ * limite é quantos desses caracteres cabem entre dois ticks.
+ */
+const TICK_SPACING_AT_320_PX = 38;
+const WIDE_LABEL_PX = 43;
+const WIDE_LABEL_CHARS = 6;
+const MAX_PLAN_AXIS_LABEL_CHARS = Math.floor(
+    TICK_SPACING_AT_320_PX / (WIDE_LABEL_PX / WIDE_LABEL_CHARS)
+);
+
+describe("rótulo da barra que agrupa os demais planos", () => {
+    it.each(locales)("cabe inteiro no eixo em %s", (locale) => {
+        const { other } = adminHomePageTranslations[locale].billing.plans;
+
+        expect(Array.from(other).length).toBeLessThanOrEqual(
+            MAX_PLAN_AXIS_LABEL_CHARS
+        );
+        expect(other.trim()).not.toBe("");
+    });
+});

@@ -1,6 +1,7 @@
 import type { Client } from "../../client/index";
 import type { Response } from "../../client/type";
 import type {
+    BillingSummaryDTO,
     CreateCheckoutRequest,
     OpenPortalRequest,
     PaymentPlansDTO,
@@ -46,6 +47,17 @@ export default class PaymentsActions {
             method: "POST",
             data: body,
         });
+
+        return data.data;
+    }
+
+    async summary(): Promise<BillingSummaryDTO> {
+        const { data } = await this.client.request<Response<BillingSummaryDTO>>(
+            {
+                url: "/payments/summary",
+                method: "GET",
+            }
+        );
 
         return data.data;
     }

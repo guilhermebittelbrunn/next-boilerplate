@@ -35,15 +35,16 @@ alguém olhar.
   capturas de tela versionadas** (e mais **4** em `review/` — eram 5 na contagem anterior, que somou o
   `review.md` junto dos PNGs), cobrindo desktop e mobile, tema claro e escuro, incluindo o fluxo de
   impersonação.
-- Suíte automatizada atual (**remedida em 2026-09-24, rodando o gate sem cache com o `HEAD` em `a1f87d0`,
+- Suíte automatizada atual (**remedida em 2026-09-25, rodando o gate sem cache com o `HEAD` em `a1f87d0`,
   já com a PR #25 mergeada**): **10 tasks de teste / 1817 testes em 180 arquivos**, todos de
   unidade/integração estreita — `apps/api` 804 em 66 arquivos, `apps/app` 559 em 73, `@repo/email` 137 em 7,
   `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44 em 5, `apps/web` 41 em 8,
   `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 22 em 4. **Nenhum sobe um
   app de verdade**, e **nenhuma** das dez configs declara **cobertura**: não existe medida nem baseline para
-  discutir. *(Eram 1615 em 164 arquivos antes da PR #25. Antes disso, 573 em 63 arquivos, depois 750 em 74, 860 em 88, 918 em 94, 981 em 102, 1038 em 107,
-  1091 em 112, 1227 em 124, 1276 em 130, 1325 em 134, 1378 em 137, 1434 em 145 e 1547 em 158; o crescimento
-  vem das PRs #10 a #24. A PR #24 acrescentou 3 arquivos em `apps/api` e 3 em `apps/app`. Seguem **10** tasks e **10** configs de Vitest, e não há
+  discutir. *(Eram 573 em 63 arquivos, depois 750 em 74, 860 em 88, 918 em 94, 981 em 102, 1038 em 107,
+  1091 em 112, 1227 em 124, 1276 em 130, 1325 em 134, 1378 em 137, 1434 em 145, 1547 em 158 e 1615 em 164; o
+  crescimento vem das PRs #10 a #25. A PR #25 acrescentou 6 arquivos em `apps/api`, 5 em `apps/app`, 2 em
+  `apps/web` e 3 em `@repo/payments`. Seguem **10** tasks e **10** configs de Vitest, e não há
   Playwright, Cypress nem `axe` em `package.json` nenhum. O número subiu; a lacuna é a mesma.)*
   > ✅ **O teste instável de 2026-09-19 foi consertado, e com ele caiu o argumento mais concreto que esta
   > spec tinha.** A execução de CI da PR #21 (`gh run 35456187047`) havia fechado vermelha porque

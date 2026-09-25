@@ -443,10 +443,11 @@ para quem vende assinatura; quem não vende pula inteiro.
 
 - [ ] Produtos e preços **recorrentes** criados no Dashboard da Stripe
 - [ ] Customer Portal configurado (cancelamento, troca de plano, cartão; reembolso conforme a lei)
-- [ ] Endpoint `https://<api>/webhooks/payments` registrado na versão `2025-09-30.clover`, com os quatro eventos
+- [ ] Endpoint `https://<api>/webhooks/payments` registrado na versão `2025-09-30.clover`, com os cinco eventos
+      (inclui `invoice.paid`)
 - [ ] `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` na `apps/api` (Vercel)
 - [ ] `NEXT_PUBLIC_APP_URL` na `apps/api` e na `apps/web`; `NEXT_PUBLIC_PRODUCT_MODE` igual nos três apps
-- [ ] Opcional: TTL do Firestore em `paymentEvent.expiresAt`
+- [ ] Opcional: TTL do Firestore em `paymentEvent.expiresAt`, e em nenhuma outra coleção de cobrança
 - [ ] Antes do release, decidir se o checkout passa a consultar a Stripe contra assinatura duplicada (ver
       "Risco aceito" abaixo)
 
@@ -460,6 +461,14 @@ responde 503 com o mesmo código. Com só uma das duas chaves, a API loga no boo
 `[payments] billing is DISABLED (no <chave que falta>)` e continua desligada. Sem catálogo mas com as
 chaves, a aba diz que não há planos. Com o endpoint numa versão de API anterior a 2025-03-31, a assinatura
 é gravada mas sem data de renovação (`currentPeriodEnd: null`).
+
+Na home do admin, com a cobrança desligada ou no modo `simple`, a seção de cobrança não aparece e
+`GET /payments/summary` responde 200 `{ "data": { "enabled": false } }` sem ler as coleções de cobrança. Com a cobrança
+ligada mas sem `invoice.paid` no endpoint, a assinatura continua sendo gravada no perfil, mas a receita do mês
+e as contratações recentes ficam vazias; havendo assinatura vigente, a seção mostra um aviso para conferir o
+evento. Um fork que já vendia começa receita e contratações do zero no dia em que `invoice.paid` for
+cadastrado, porque faturas antigas não são importadas. Os nomes de plano aparecem conforme os eventos de cada
+preço chegam, o que leva até um ciclo de cobrança; até lá o gráfico mostra "Plano sem nome".
 
 **Risco aceito: assinatura duplicada.** O checkout só recusa com 409 `PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE`
 quando o perfil já tem uma assinatura viva gravada (`apps/api/app/(routes)/payments/checkout/route.ts:41`).
@@ -493,7 +502,10 @@ O custo é uma chamada a mais à Stripe por checkout. Para saber se já acontece
    - URL: `https://<host-da-api>/webhooks/payments`
    - Versão de API: **`2025-09-30.clover`** (a mesma de `packages/payments/index.ts`)
    - Eventos: `checkout.session.completed`, `customer.subscription.created`,
-     `customer.subscription.updated`, `customer.subscription.deleted`
+     `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`
+
+   Num endpoint que já existe, edite-o e acrescente `invoice.paid` à lista de eventos. É esse evento que
+   alimenta a receita e as contratações recentes da home do admin.
 
    Copie o *Signing secret* (`whsec_…`).
 4. **Variáveis**, no painel da Vercel de cada app:
@@ -511,11 +523,16 @@ O custo é uma chamada a mais à Stripe por checkout. Para saber se já acontece
      --collection-group=paymentEvent --enable-ttl --project=<project-id>
    ```
 
+   Não aplique TTL em `paidInvoice` nem em `subscriptionActivation`. São o livro de faturas pagas e a data
+   da primeira cobrança de cada assinatura; a home do admin soma a receita a partir deles, e um documento
+   expirado some do número sem aviso.
+
 **Como verificar**, com a API publicada:
 
 ```bash
 # sem sessão: o guard responde antes da Stripe
 curl -s -o /dev/null -w '%{http_code}\n' https://<api>/payments/plans      # 401
+curl -s -o /dev/null -w '%{http_code}\n' https://<api>/payments/summary    # 401
 
 # webhook sem assinatura: a configuração está lida (sem chaves seria 503)
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<api>/webhooks/payments -d '{}'   # 500
@@ -523,9 +540,13 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<api>/webhooks/payments
 
 Com a Stripe CLI logada na conta de teste, `stripe trigger customer.subscription.created` cria um cliente e
 uma assinatura de teste; em Developers → Webhooks → endpoint, a entrega aparece com resposta 200 (nenhum
-perfil tem aquele cliente, então a API registra `webhook-profile-not-found`). Depois, com um usuário de
+perfil tem aquele cliente, então a API registra `webhook-profile-not-found`). A resposta de sucesso é só
+`{"ok":true}`; o webhook não devolve o evento recebido. Depois, com um usuário de
 teste, assine um plano com o cartão `4242 4242 4242 4242`: de volta ao app, a aba mostra "Confirmando o
-pagamento" e troca para o card "Plano atual" quando o webhook chega.
+pagamento" e troca para o card "Plano atual" quando o webhook chega. Aberta depois disso, a home do admin
+mostra o valor em "Recebido em <mês>" e a contratação na lista. Se `GET /payments/summary` responder 503
+`SUMMARY_INDEX_MISSING` num projeto real, alguma consulta precisou de índice; nenhuma foi desenhada para
+precisar, então isso é defeito a reportar, não índice a publicar.
 
 ---
 
@@ -571,17 +592,17 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-24**, com o `HEAD` em `a1f87d0` (PR #25 já mergeada). Os números abaixo são da
+Remedido em **2026-09-25**, com o `HEAD` em `a1f87d0` (PR #25 já mergeada). Os números abaixo são da
 sétima medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 35,2 s** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **56,7 s** |
 | lint/format | `pnpm check` | **699 arquivos**, 0 correções |
 | suíte | 10 tasks de teste | **1817 testes em 180 arquivos** |
 
-Distribuição da suíte, medida em 2026-09-24 com `--force`: `apps/api` 804 em 66 arquivos, `apps/app` 559 em
+Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 804 em 66 arquivos, `apps/app` 559 em
 73, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
 em 5, `apps/web` 41 em 8, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 22 em 4.
 
@@ -589,14 +610,14 @@ Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@re
 somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou
 49 testes em 6 arquivos e 18 arquivos ao alcance do `pnpm check`; a renovação de sessão somou 49 testes em
 4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #24, a suíte
-foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos. A PR #25 (assinatura Stripe) somou
-202 testes em 16 arquivos e 33 arquivos ao `pnpm check`.
+foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos; a PR #25 somou 202 testes em 16
+arquivos e 33 arquivos ao `pnpm check`.
 **Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
 uma das sete últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
 são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
 fato corrente.
 
-O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s, 1 min 2,7 s e agora 1 min 35,2 s, com a
+O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s, 1 min 2,7 s e agora 56,7 s, com a
 suíte sempre maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
 dimensionar CI.
 
@@ -666,7 +687,7 @@ que é o que libera o e-mail para um novo cadastro. Os outros dois dependem de i
 
 | Passo | Estado no boilerplate | O que destrava |
 |---|---|---|
-| `billing` | Roda **primeiro**. `skipped: no-subscription` para quem não tem assinatura viva; com assinatura viva, cancela na Stripe (imediato, sem reembolso proporcional) e reporta `done`. | Configurar a Stripe (item 12). Se o cancelamento falhar, ou se a Stripe estiver desligada e o perfil tiver assinatura viva gravada, o expurgo **para antes de apagar qualquer coisa**: os outros passos saem como `skipped: billing-failed` e a rota responde 503 `ACCOUNT_DELETION_BILLING_FAILED`. Apagar o perfil com a assinatura ativa deixaria a pessoa sendo cobrada sem vínculo para descobrir de quem é a assinatura. O cliente Stripe (e-mail e histórico de faturas) **continua** na Stripe: apagá-lo é decisão fiscal e jurídica de cada fork. |
+| `billing` | Roda **primeiro**. `skipped: no-subscription` para quem não tem assinatura viva; com assinatura viva, cancela na Stripe (imediato, sem reembolso proporcional) e reporta `done`. | Configurar a Stripe (item 12). Se o cancelamento falhar, ou se a Stripe estiver desligada e o perfil tiver assinatura viva gravada, o expurgo **para antes de apagar qualquer coisa**: os outros passos saem como `skipped: billing-failed` e a rota responde 503 `ACCOUNT_DELETION_BILLING_FAILED`. Apagar o perfil com a assinatura ativa deixaria a pessoa sendo cobrada sem vínculo para descobrir de quem é a assinatura. O cliente Stripe (e-mail e histórico de faturas) **continua** na Stripe: apagá-lo é decisão fiscal e jurídica de cada fork. As coleções `paidInvoice` e `subscriptionActivation` também ficam: guardam só ids da Stripe, valor, moeda e datas, sem perfil, nome ou e-mail. Depois do expurgo, a contratação aparece na home do admin como "Usuário removido" e o valor pago continua na receita. |
 | `storage` | `skipped: storage-not-configured` | Ativar o Cloud Storage (item 6). Sem bucket não existe objeto para apagar. |
 
 O relatório inteiro vai para o log estruturado como `[account] erasure-step`, uma linha por passo,
@@ -677,7 +698,17 @@ resposta: quem pediu a exclusão não precisa da operação, e a resposta é `{ 
 
 ### Pendência — no modo `simple` o titular não alcança a aba de privacidade
 
-**Em aberto. Precisa de decisão de produto antes de um fork em modo `simple` ir para produção.**
+**Fechada em 2026-09-25.** A premissa não conferia com o código (nota abaixo) e o usuário decidiu não
+mexer no modo `simple` por ora. Reabra se o modo passar a restringir o painel comum.
+
+> ⚠️ **Correção medida em 2026-09-25: a premissa desta seção não confere com o código.** O texto abaixo parte
+> de que o modo `simple` restringe o painel comum a administradores. Nada no `apps/app` faz isso: o layout
+> `(common)` não lê o modo de produto, e os únicos arquivos do app que leem são `(common)/routes.tsx:52` e
+> `AccountTabs.tsx:33`, os dois só para esconder a cobrança. `commonUserUsesPanel()` não existe em
+> `packages/next-config/product-mode.ts`, e a `apps/web` não tem área autenticada. Hoje, num fork `simple`, o
+> usuário comum entra no painel e alcança a aba de privacidade. A pendência real é outra: o modo `simple`
+> não faz o que `docs/AUTH-SSO.md` descreve. Ela está registrada nos achados do `specs/BACKLOG.md`. O texto
+> abaixo fica como estava, porque as saídas listadas voltam a valer no dia em que a restrição existir.
 
 A exportação e a exclusão de conta vivem na aba Privacidade da área de conta, que fica sob o painel comum
 (`apps/app/app/[locale]/(authenticated)/(common)/`). Quando `NEXT_PUBLIC_PRODUCT_MODE` é `simple`, o painel

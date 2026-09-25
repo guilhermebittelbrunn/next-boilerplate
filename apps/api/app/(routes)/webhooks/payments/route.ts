@@ -6,8 +6,14 @@ import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { toSubscriptionState } from "@/(shared)/lib/billing-state";
+import {
+    toPaidInvoiceRecord,
+    toSubscriptionState,
+} from "@/(shared)/lib/billing-state";
+import { ensurePlanLabel } from "@/(shared)/lib/plan-label";
+import { paidInvoiceRepository } from "@/(shared)/repositories/paid-invoice.repository";
 import { paymentEventRepository } from "@/(shared)/repositories/payment-event.repository";
+import { subscriptionActivationRepository } from "@/(shared)/repositories/subscription-activation.repository";
 import { userRepository } from "@/(shared)/repositories/user.repository";
 
 const idOf = (
@@ -71,31 +77,77 @@ async function findSubscriptionOwner(
     return byMetadata;
 }
 
+/** The plan name belongs to the price, so it is resolved even when no profile matches. */
 async function reconcileSubscription(
+    stripe: Stripe,
     event: Stripe.Event,
     subscription: Stripe.Subscription,
     requestId: string | null
 ): Promise<void> {
+    const state = toSubscriptionState(subscription, event.created);
     const profile = await findSubscriptionOwner(subscription);
-    if (!profile) {
+
+    if (profile) {
+        const result = await userRepository.applySubscriptionState(
+            profile.id,
+            state,
+            event.type
+        );
+        logEvent("payments", "webhook-subscription-reconciled", {
+            eventType: event.type,
+            result,
+            requestId,
+        });
+    } else {
         logProfileNotFound(event.type, requestId);
-        return;
     }
 
-    const result = await userRepository.applySubscriptionState(
-        profile.id,
-        toSubscriptionState(subscription, event.created),
-        event.type
-    );
+    if (state.priceId) {
+        await ensurePlanLabel(stripe, state.priceId, requestId);
+    }
+}
 
-    logEvent("payments", "webhook-subscription-reconciled", {
+/**
+ * Every write is keyed by the invoice or the subscription id, so running this twice for the
+ * same invoice (a redelivery after the event failed to be marked, or two concurrent
+ * deliveries) leaves the same documents behind. Only the first paid invoice of a
+ * subscription counts as a new subscription: a renewal is not a sale.
+ */
+async function recordPaidInvoice(
+    stripe: Stripe,
+    event: Stripe.Event,
+    invoice: Stripe.Invoice,
+    requestId: string | null
+): Promise<void> {
+    const record = toPaidInvoiceRecord(invoice, event.created);
+    await paidInvoiceRepository.recordOnce(record);
+
+    if (
+        record.billingReason === "subscription_create" &&
+        record.subscriptionId &&
+        record.customerId
+    ) {
+        await subscriptionActivationRepository.recordOnce({
+            subscriptionId: record.subscriptionId,
+            customerId: record.customerId,
+            priceId: record.priceId,
+            activatedAt: record.paidAt,
+        });
+    }
+
+    if (record.priceId) {
+        await ensurePlanLabel(stripe, record.priceId, requestId);
+    }
+
+    logEvent("payments", "webhook-invoice-recorded", {
         eventType: event.type,
-        result,
+        billingReason: record.billingReason,
         requestId,
     });
 }
 
 async function dispatch(
+    stripe: Stripe,
     event: Stripe.Event,
     requestId: string | null
 ): Promise<void> {
@@ -107,7 +159,21 @@ async function dispatch(
         case "customer.subscription.created":
         case "customer.subscription.updated":
         case "customer.subscription.deleted": {
-            await reconcileSubscription(event, event.data.object, requestId);
+            await reconcileSubscription(
+                stripe,
+                event,
+                event.data.object,
+                requestId
+            );
+            break;
+        }
+        case "invoice.paid": {
+            await recordPaidInvoice(
+                stripe,
+                event,
+                event.data.object,
+                requestId
+            );
             break;
         }
         default: {
@@ -163,7 +229,7 @@ export const POST = async (request: Request): Promise<Response> => {
             return NextResponse.json({ ok: true, duplicate: true });
         }
 
-        await dispatch(event, requestId);
+        await dispatch(stripe, event, requestId);
         await paymentEventRepository.markProcessed(event);
     } catch {
         logEvent("payments", "webhook-handler-failed", {
@@ -173,5 +239,5 @@ export const POST = async (request: Request): Promise<Response> => {
         return failure();
     }
 
-    return NextResponse.json({ result: event, ok: true });
+    return NextResponse.json({ ok: true });
 };
