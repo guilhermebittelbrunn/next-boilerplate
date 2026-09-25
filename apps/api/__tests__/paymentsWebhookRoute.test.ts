@@ -20,7 +20,13 @@ const {
     findByStripeCustomerIdMock,
     linkStripeCustomerMock,
     applySubscriptionStateMock,
+    recordPaidInvoiceMock,
+    recordActivationMock,
+    ensurePlanLabelMock,
 } = vi.hoisted(() => ({
+    recordPaidInvoiceMock: vi.fn(),
+    recordActivationMock: vi.fn(),
+    ensurePlanLabelMock: vi.fn(),
     getStripeMock: vi.fn(),
     getWebhookSecretMock: vi.fn(),
     constructEventMock: vi.fn(),
@@ -70,6 +76,31 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
             calls.push("applySubscriptionState");
             return applySubscriptionStateMock(...args);
         },
+    },
+}));
+
+vi.mock("@/(shared)/repositories/paid-invoice.repository", () => ({
+    paidInvoiceRepository: {
+        recordOnce: (...args: unknown[]) => {
+            calls.push("recordPaidInvoice");
+            return recordPaidInvoiceMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/repositories/subscription-activation.repository", () => ({
+    subscriptionActivationRepository: {
+        recordOnce: (...args: unknown[]) => {
+            calls.push("recordActivation");
+            return recordActivationMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/lib/plan-label", () => ({
+    ensurePlanLabel: (...args: unknown[]) => {
+        calls.push("ensurePlanLabel");
+        return ensurePlanLabelMock(...args);
     },
 }));
 
@@ -154,6 +185,9 @@ beforeEach(() => {
     findByStripeCustomerIdMock.mockResolvedValue(PROFILE);
     linkStripeCustomerMock.mockResolvedValue(undefined);
     applySubscriptionStateMock.mockResolvedValue("applied");
+    recordPaidInvoiceMock.mockResolvedValue("created");
+    recordActivationMock.mockResolvedValue("created");
+    ensurePlanLabelMock.mockResolvedValue(undefined);
     warn = vi.spyOn(console, "warn").mockImplementation(() => {
         return;
     });
@@ -261,21 +295,20 @@ describe("POST /webhooks/payments — assinatura", () => {
 });
 
 describe("POST /webhooks/payments — despacho de eventos", () => {
-    it("aceita checkout.session.completed devolvendo o evento verificado", async () => {
+    it("aceita checkout.session.completed sem ecoar o evento no corpo", async () => {
         const event = {
             id: "evt_qa",
             type: "checkout.session.completed",
-            data: { object: { customer: "cus_1" } },
+            data: {
+                object: { customer: "cus_1", customer_email: "a@example.com" },
+            },
         };
         constructEventMock.mockReturnValue(event);
 
         const response = await POST(request());
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        await expect(response.json()).resolves.toEqual({
-            result: event,
-            ok: true,
-        });
+        await expect(response.json()).resolves.toEqual({ ok: true });
     });
 
     it("registra subscription_schedule.canceled como não tratado: cancelar um schedule não cancela a assinatura", async () => {
@@ -339,7 +372,7 @@ describe("POST /webhooks/payments — despacho de eventos", () => {
     it("registra e aceita um tipo de evento não tratado", async () => {
         constructEventMock.mockReturnValue({
             id: "evt_invoice",
-            type: "invoice.paid",
+            type: "invoice.finalized",
             data: { object: {} },
         });
 
@@ -347,7 +380,7 @@ describe("POST /webhooks/payments — despacho de eventos", () => {
 
         expect(response.status).toBe(HTTP_STATUS.OK);
         expect(warn).toHaveBeenCalledWith(
-            "[payments] webhook-unhandled-event eventType=invoice.paid"
+            "[payments] webhook-unhandled-event eventType=invoice.finalized"
         );
         expect(markProcessedMock).toHaveBeenCalledWith(
             expect.objectContaining({ id: "evt_invoice" })
@@ -381,7 +414,11 @@ describe("POST /webhooks/payments — idempotência", () => {
 
         await POST(request());
 
-        expect(calls).toEqual(["applySubscriptionState", "markProcessed"]);
+        expect(calls).toEqual([
+            "applySubscriptionState",
+            "ensurePlanLabel",
+            "markProcessed",
+        ]);
     });
 
     it("responde 500 e não marca quando o handler falha, para a Stripe reentregar", async () => {
@@ -572,6 +609,239 @@ describe("POST /webhooks/payments — customer.subscription.*", () => {
         expect(warn).toHaveBeenCalledWith(
             "[payments] webhook-subscription-reconciled eventType=customer.subscription.updated result=skipped"
         );
+    });
+});
+
+const PAID_AT = 1_780_000_100;
+
+function invoiceObject(overrides: Record<string, unknown> = {}) {
+    return {
+        id: "in_qa",
+        object: "invoice",
+        amount_paid: 2900,
+        currency: "brl",
+        billing_reason: "subscription_create",
+        customer: "cus_qa",
+        customer_email: "pessoa@example.com",
+        customer_name: "Pessoa Real",
+        status_transitions: { paid_at: PAID_AT },
+        parent: {
+            type: "subscription_details",
+            subscription_details: { subscription: "sub_qa", metadata: {} },
+        },
+        lines: {
+            object: "list",
+            data: [
+                {
+                    subscription: "sub_qa",
+                    pricing: {
+                        type: "price_details",
+                        price_details: {
+                            price: "price_pro",
+                            product: "prod_pro",
+                        },
+                    },
+                },
+            ],
+        },
+        ...overrides,
+    };
+}
+
+function invoiceEvent(overrides: Record<string, unknown> = {}) {
+    return {
+        id: "evt_invoice_paid",
+        type: "invoice.paid",
+        created: EVENT_CREATED,
+        data: { object: invoiceObject(overrides) },
+    };
+}
+
+describe("POST /webhooks/payments — invoice.paid", () => {
+    it("primeira cobrança grava a fatura e a ativação, depois marca o evento", async () => {
+        constructEventMock.mockReturnValue(invoiceEvent());
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        await expect(response.json()).resolves.toEqual({ ok: true });
+        expect(recordPaidInvoiceMock).toHaveBeenCalledWith({
+            invoiceId: "in_qa",
+            customerId: "cus_qa",
+            subscriptionId: "sub_qa",
+            priceId: "price_pro",
+            billingReason: "subscription_create",
+            amountPaid: 2900,
+            currency: "brl",
+            paidAt: new Date(PAID_AT * MS),
+        });
+        expect(recordActivationMock).toHaveBeenCalledWith({
+            subscriptionId: "sub_qa",
+            customerId: "cus_qa",
+            priceId: "price_pro",
+            activatedAt: new Date(PAID_AT * MS),
+        });
+        expect(calls).toEqual([
+            "recordPaidInvoice",
+            "recordActivation",
+            "ensurePlanLabel",
+            "markProcessed",
+        ]);
+    });
+
+    it.each(["subscription_cycle", "subscription_update", "manual"])(
+        "%s grava só a fatura, sem contratação nova",
+        async (billingReason) => {
+            constructEventMock.mockReturnValue(
+                invoiceEvent({ billing_reason: billingReason })
+            );
+
+            const response = await POST(request());
+
+            expect(response.status).toBe(HTTP_STATUS.OK);
+            expect(recordPaidInvoiceMock).toHaveBeenCalledTimes(1);
+            expect(recordActivationMock).not.toHaveBeenCalled();
+        }
+    );
+
+    it("fatura avulsa sem assinatura nem preço grava só a fatura e não resolve nome", async () => {
+        constructEventMock.mockReturnValue(
+            invoiceEvent({
+                parent: null,
+                billing_reason: "subscription_create",
+                lines: { object: "list", data: [] },
+            })
+        );
+
+        await POST(request());
+
+        expect(recordPaidInvoiceMock).toHaveBeenCalledTimes(1);
+        expect(recordActivationMock).not.toHaveBeenCalled();
+        expect(ensurePlanLabelMock).not.toHaveBeenCalled();
+    });
+
+    it("resolve o nome do plano pelo preço da fatura, com o cliente da Stripe já em mãos", async () => {
+        constructEventMock.mockReturnValue(invoiceEvent());
+
+        await POST(request());
+
+        expect(ensurePlanLabelMock).toHaveBeenCalledWith(
+            expect.objectContaining({ webhooks: expect.any(Object) }),
+            "price_pro",
+            null
+        );
+    });
+
+    it("reprocessar a mesma fatura responde 200 e marca o evento", async () => {
+        recordPaidInvoiceMock.mockResolvedValue("exists");
+        recordActivationMock.mockResolvedValue("exists");
+        constructEventMock.mockReturnValue(invoiceEvent());
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(markProcessedMock).toHaveBeenCalledWith(
+            expect.objectContaining({ id: "evt_invoice_paid" })
+        );
+    });
+
+    it("falha ao gravar a fatura responde 500 e não marca, para a Stripe reentregar", async () => {
+        recordPaidInvoiceMock.mockRejectedValue(new Error("firestore down"));
+        constructEventMock.mockReturnValue(invoiceEvent());
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(recordActivationMock).not.toHaveBeenCalled();
+        expect(markProcessedMock).not.toHaveBeenCalled();
+    });
+
+    it("falha ao gravar a ativação responde 500 e não marca", async () => {
+        recordActivationMock.mockRejectedValue(new Error("firestore down"));
+        constructEventMock.mockReturnValue(invoiceEvent());
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(markProcessedMock).not.toHaveBeenCalled();
+    });
+
+    it("duplicado não roda handler de fatura", async () => {
+        wasProcessedMock.mockResolvedValue(true);
+        constructEventMock.mockReturnValue(invoiceEvent());
+
+        const response = await POST(request());
+
+        await expect(response.json()).resolves.toEqual({
+            ok: true,
+            duplicate: true,
+        });
+        expect(recordPaidInvoiceMock).not.toHaveBeenCalled();
+    });
+
+    it("registra a gravação sem valor, e-mail nem nome", async () => {
+        constructEventMock.mockReturnValue(invoiceEvent());
+
+        const response = await POST(request());
+        const body = JSON.stringify(await response.json());
+        const logged = warn.mock.calls.flat().join("\n");
+
+        expect(warn).toHaveBeenCalledWith(
+            "[payments] webhook-invoice-recorded eventType=invoice.paid billingReason=subscription_create"
+        );
+        expect(logged).not.toContain("2900");
+        expect(logged).not.toContain("pessoa@example.com");
+        expect(body).not.toContain("pessoa@example.com");
+        expect(body).not.toContain("Pessoa Real");
+    });
+});
+
+describe("POST /webhooks/payments — nome do plano nos eventos de assinatura", () => {
+    it("resolve o nome pelo preço da assinatura", async () => {
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated")
+        );
+
+        await POST(request());
+
+        expect(ensurePlanLabelMock).toHaveBeenCalledWith(
+            expect.anything(),
+            "price_pro",
+            null
+        );
+        expect(calls).toEqual([
+            "applySubscriptionState",
+            "ensurePlanLabel",
+            "markProcessed",
+        ]);
+    });
+
+    it("resolve o nome mesmo quando nenhum perfil corresponde", async () => {
+        findByStripeCustomerIdMock.mockResolvedValue(null);
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.created")
+        );
+
+        await POST(request());
+
+        expect(applySubscriptionStateMock).not.toHaveBeenCalled();
+        expect(ensurePlanLabelMock).toHaveBeenCalledWith(
+            expect.anything(),
+            "price_pro",
+            null
+        );
+    });
+
+    it("não resolve nome de assinatura sem preço", async () => {
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated", {
+                items: { data: [] },
+            })
+        );
+
+        await POST(request());
+
+        expect(ensurePlanLabelMock).not.toHaveBeenCalled();
     });
 });
 
