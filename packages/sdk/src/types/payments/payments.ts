@@ -81,3 +81,59 @@ export type OpenPortalRequest = {
 export type PaymentRedirectDTO = {
     url: string;
 };
+
+/** `name` is null until the payments webhook resolved it from the provider. */
+export type BillingPlanCountDTO = {
+    priceId: string | null;
+    productId: string | null;
+    name: string | null;
+    interval: PlanInterval | null;
+    intervalCount: number | null;
+    count: number;
+};
+
+export type BillingSubscriberDTO = {
+    profileId: string;
+    displayName: string | null;
+    email: string | null;
+};
+
+export type BillingActivationDTO = {
+    subscriptionId: string;
+    priceId: string | null;
+    planName: string | null;
+    interval: PlanInterval | null;
+    intervalCount: number | null;
+    /** First paid invoice of the subscription, ISO. */
+    activatedAt: string;
+    /** Null when the profile was deleted or never linked to the customer. */
+    subscriber: BillingSubscriberDTO | null;
+};
+
+export type BillingRevenueByCurrencyDTO = {
+    /** Lowercase ISO 4217 code, as the provider sends it. */
+    currency: string;
+    /** In the smallest unit of `currency`. */
+    amountPaid: number;
+    invoiceCount: number;
+};
+
+/** Paid invoices of one calendar month in UTC, `[periodStart, periodEnd)`. */
+export type BillingRevenueDTO = {
+    periodStart: string;
+    periodEnd: string;
+    byCurrency: BillingRevenueByCurrencyDTO[];
+    /** Earliest paid invoice on record; null when none was ever received. */
+    trackingSince: string | null;
+};
+
+export type BillingSummaryDataDTO = {
+    recentActivations: BillingActivationDTO[];
+    plans: BillingPlanCountDTO[];
+    revenue: BillingRevenueDTO;
+};
+
+/** `enabled: false` means billing is switched off in this environment, not that it failed. */
+export type BillingSummaryDTO =
+    | { enabled: false }
+    | ({ enabled: true } & BillingSummaryDataDTO);
