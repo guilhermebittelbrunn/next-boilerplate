@@ -1,7 +1,7 @@
 ---
 id: e2e-testing
 title: Testes E2E e acessibilidade automatizada
-status: proposed
+status: in-progress
 value: médio
 effort: G
 audience: dx
@@ -9,8 +9,8 @@ area: [raiz, apps/app, apps/web, packages/design-system]
 mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
-feature: -
-updated: 2026-09-25
+feature: e2e-testing
+updated: 2026-09-24
 ---
 
 # Testes E2E e acessibilidade automatizada

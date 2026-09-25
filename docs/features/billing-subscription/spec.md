@@ -78,10 +78,12 @@ de espera. Falta o conteúdo.
 - [x] O usuário com assinatura ativa abre o portal da Stripe para trocar plano, atualizar cartão ou cancelar.
 - [x] Os CTAs do `pricing` da `apps/web` levam ao fluxo real quando o fork está em modo `subscription`.
 
-> 🆕 **Obrigação transferida em 2026-09-23 — o passo `billing` da exclusão de conta.** O item 3 acima cria o
-> vínculo perfil↔cliente Stripe, e é esse vínculo que falta para a exclusão de conta cancelar a assinatura
-> (`apps/api/(shared)/lib/account-erasure.ts:67-78`, hoje `skipped`). Fechar isso é desta spec. O detalhe
-> está em [Riscos e trade-offs](#riscos-e-trade-offs).
+> **Obrigação transferida em 2026-09-23 — o passo `billing` da exclusão de conta.** O item 3 acima cria o
+> vínculo perfil↔cliente Stripe, e é esse vínculo que faltava para a exclusão de conta cancelar a
+> assinatura. **Paga pela PR #25:** o passo `billing` roda primeiro e cancela a assinatura viva antes de
+> apagar qualquer coisa (`apps/api/(shared)/lib/account-erasure.ts:74-97`, ordem em `:142-156`), e o
+> arquivo de exportação leva o estado da assinatura (`apps/api/(shared)/lib/account-export.ts:56-67`).
+> Evidência completa em [Estado da entrega](#estado-da-entrega).
 
 ### Fora do corte
 

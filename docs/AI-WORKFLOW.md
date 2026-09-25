@@ -81,7 +81,7 @@ Instaladas via `npx skills add ...` e **movidas para `.claude/skills/`** para o 
 auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude Code):
 
 - **`agent-browser`** — automação de browser (CDP) para navegar, preencher, clicar, **tirar screenshots** e
-  testar o app. Base do e2e descrito abaixo, e **exclusiva do `analista-qa`**. É um stub de descoberta:
+  testar o app. Base da passada de browser descrita abaixo, e **exclusiva do `analista-qa`**. É um stub de descoberta:
   carregue o uso real com `agent-browser skills get core` (e `... get dogfood` para QA exploratório).
   Requer instalação global: `npm i -g agent-browser && agent-browser install`.
 - **`vercel-react-best-practices`** — 70 regras de performance React/Next da Vercel (waterfalls, bundle,
@@ -120,7 +120,12 @@ vez**, no `/test`, pelo `analista-qa`.
 |-------|---------|------------------------|
 | `/develop` | smoke local, só para se desbloquear | nenhuma |
 | `/review` | `pnpm check` · `typecheck` · paridade de i18n | nenhuma |
-| `/test` | suíte Vitest **e** e2e com `agent-browser` | o **texto** do `test/report.md` |
+| `/test` | suíte Vitest **e** passada de browser com `agent-browser` | o **texto** do `test/report.md` |
+| CI | lint · typecheck · test · E2E (Playwright) · cobertura | log e artefatos do job |
+
+A suíte E2E do CI (`pnpm e2e`, Playwright, em `apps/e2e`) é outra coisa: rede de regressão dos fluxos
+críticos contra o emulador, a cada PR. Ela não julga tema, responsivo nem idioma, então não substitui a
+passada com `agent-browser` numa entrega de front-end.
 
 Até 2026-09-18 os quatro agents validavam visualmente. A medição sobre as 17 features entregues derrubou
 a prática: a validação visual do `/review` rendeu **4** achados no total e **zero em 13 delas**, enquanto
@@ -139,7 +144,7 @@ afirmou algo que a etapa seguinte derrubou, e **7 dessas eram afirmações de va
 - o **`/test`** começa por essa lista. Afirmação herdada é **hipótese**: ou o QA mede, ou o critério fica
   🔒 não verificado — nunca ✅.
 
-Operacional do e2e, no `/test`:
+Operacional da passada de browser, no `/test`:
 
 1. **Cheque a porta antes de subir** (`lsof -ti tcp:3000`): ocupada significa que o ambiente é seu — o
    agent reutiliza e **não derruba**. Livre, ele sobe guardando o PID: `pnpm --filter app dev` (3000) /

@@ -21,6 +21,7 @@ reexecutados à mão numa revisão**, e um "está verde" só vale como resposta 
 | `pnpm check` (Biome) | formatação, ordenação de imports/atributos, `console.log`, regras de lint |
 | `typecheck` nos workspaces que declaram o script | erro de tipo em qualquer app ou pacote |
 | `pnpm test` | as suítes Vitest, **inclusive a paridade pt-br/en/es** do `@repo/internationalization` |
+| `pnpm e2e` (job `e2e`, pulado em PR só de documentação) | cadastro, login, CRUD de `entity`, troca de painel e landing no navegador, contra o emulador, e axe sem violação `critical`/`serious` fora da allowlist nas telas percorridas |
 
 A consequência prática é onde a revisão humana precisa se concentrar — e é o resto deste arquivo:
 convenção de camada, autorização, ownership, escolha de `queryKey`, string de UI que existe nos 3 idiomas
@@ -182,6 +183,12 @@ screenshot.
 | `/develop` | smoke local, só para se desbloquear | nenhuma |
 | `/review` | `pnpm check` · `typecheck` · paridade de i18n | nenhuma |
 | `/test` | suíte Vitest **e** fluxo ponta a ponta com `agent-browser` | o **texto** do `test/report.md` |
+| CI | lint · typecheck · test · E2E (Playwright) · cobertura | log e artefatos do job |
+
+A suíte Playwright do CI e a passada com `agent-browser` do `/test` não se substituem. A suíte é rede de
+regressão: prova que o fluxo ainda funciona do navegador ao banco, e não julga tema, responsivo, idioma nem
+legibilidade. Entrega que toca front-end continua exigindo a passada com `agent-browser`, e a suíte verde
+não conta como validação visual.
 
 O screenshot não é evidência que sobrevive: o `.gitignore` descarta `docs/features/**/screenshots/` e
 `docs/features/**/test/e2e/` desde 2026-09-09. Ele serve para o agent olhar durante a execução. O que

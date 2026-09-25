@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
-import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
+import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../paths";
 import { useEntityCrud } from "../../(hooks)/useEntityCrud";
@@ -35,6 +35,7 @@ export function EntitiesListClient() {
     const router = useRouter();
     const { isImpersonating } = useAuthRequestPanel();
     const { dictionary, locale } = getDictionary();
+    const formatDateTime = useFormatDisplayDateTime();
     const { deleteEntityMutation, toggleEntityStatusMutation } =
         useEntityCrud();
 
@@ -87,7 +88,7 @@ export function EntitiesListClient() {
         {
             title: entitiesList.columns.createdAt,
             dataIndex: "createdAt",
-            render: (value: string) => formatDisplayDateTime(value),
+            render: (value: string) => formatDateTime(value),
         },
         {
             title: entitiesList.columns.enabled,

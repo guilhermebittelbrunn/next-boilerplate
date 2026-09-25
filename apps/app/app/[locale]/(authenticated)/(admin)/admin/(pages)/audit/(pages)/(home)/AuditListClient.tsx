@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
-import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
+import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { ADMIN_ROUTES } from "../../../../paths";
 import { AuditFilters } from "../../(components)/AuditFilters";
 import {
@@ -30,6 +30,7 @@ export function AuditListClient() {
         error: listError,
     } = useListAuditEvents(filters);
     const { dictionary, locale } = getDictionary();
+    const formatDateTime = useFormatDisplayDateTime();
 
     const routes = ADMIN_ROUTES(dictionary, locale);
     const auditTrailList = dictionary.apps.app.pages.admin.auditTrail.list;
@@ -41,7 +42,7 @@ export function AuditListClient() {
         {
             title: auditTrailList.columns.createdAt,
             dataIndex: "createdAt",
-            render: (value: string) => formatDisplayDateTime(value),
+            render: (value: string) => formatDateTime(value),
         },
         {
             title: auditTrailList.columns.action,

@@ -32,6 +32,15 @@ constar na seção [Entregues](#entregues).
 > 6. **Dois documentos estavam defasados e foram corrigidos:** o §9 do `docs/PRE-PRODUCTION.md` (1615 testes
 >    contra 1817 medidos) e a contagem de rotas do `docs/SECURITY.md` (26 contra 29).
 
+> **Nota do merge com `main` (2026-09-25).** Esta auditoria e a do workspace de `e2e-testing` rodaram em
+> paralelo sobre o mesmo `a1f87d0`, e as duas reescreveram este arquivo. No merge, prevaleceu esta versão,
+> com três acréscimos vindos de `main`: `e2e-testing` passou a `in-progress` com a PR #26 (mergeada em
+> 2026-09-25T13:24:58Z, `c71755e`, CI `success` em `gh run 36140806836`), os achados da entrega
+> `e2e-testing` e dois achados de cobrança que só a outra auditoria registrou. A outra rodada também gravou
+> uma decisão sua de 2026-09-24 sobre o modelo de `admin-billing-insights`, e a entrega diverge dela em dois
+> pontos; a divergência está escrita na spec, no bloco de reescopo. O corte de `e2e-testing` ainda não foi
+> conferido contra o código: fica para o próximo `/spec --sync`.
+
 ## Contadores
 
 Sobre as **5 specs que seguem em `specs/`**. Recontados do disco em 2026-09-25, lendo o frontmatter de
@@ -39,15 +48,15 @@ cada arquivo.
 
 | status | qtd |
 |--------|-----|
-| `proposed` | 3 |
+| `proposed` | 2 |
 | `approved` | 0 |
-| `in-progress` | 1 |
+| `in-progress` | 2 |
 | `done` (arquivadas) | 18 |
 | `deferred` | 1 |
 | `rejected` | 0 |
 | `superseded` | 0 |
 
-**Por audiência:** `produto` 1 · `confianca` 1 · `dx` 1 (+1 `in-progress` em `dx`, +1 `deferred` em
+**Por audiência:** `produto` 1 · `confianca` 1 · `dx` 0 (+2 `in-progress` em `dx`, +1 `deferred` em
 `produto`). **Por esforço:** P 0 · M 3 · G 2. **Por valor:** alto 2 · médio 3 · baixo 0.
 
 **Transições aplicadas: 1** (`billing-subscription`: `in-progress` → `done`, arquivada). Nenhuma spec nova
@@ -139,7 +148,7 @@ Respeita `depends_on` (lido do frontmatter nesta rodada) e prioriza valor × esf
 | # | id | por que agora |
 |---|----|---------------|
 | 1 | [`admin-billing-insights`](admin-billing-insights.md) | **Desbloqueada nesta rodada, e escolhida pelo usuário.** `billing-subscription` e `dashboard-home` estão entregues. O dedupe por `event.id`, que era o risco de correção central da spec, já existe (`payment-event.repository.ts:22-56`). Quase todo o corte se prova sem conta Stripe: a leitura é da base local, e o harness de payload assinado com o emulador fechou 19 critérios de `billing-subscription`; fica 🔒 só a entrega real de `invoice.paid`. Esforço M. **O que o `/analyze` precisa resolver**, e que a spec agora lista com âncora: o snapshot não guarda instante de ativação nem nome do plano, e nenhum evento de fatura é persistido. Há ainda um passo novo de infra por fork (um quinto evento no endpoint da Stripe), que vai para o `PRE-PRODUCTION.md` §12 |
-| 2 | [`e2e-testing`](e2e-testing.md) | Prova-se localmente nos itens 1, 3, 4 e 5; o item 2 só prova quando a branch subir, e "bloquear o merge" depende do branch protection (E3). As dependências de desenvolvimento foram **aprovadas pelo usuário em 2026-09-24**. A PR #25 reforçou o caso de novo: o `/test` achou o CTA do `/pricing` no idioma errado e o botão sem nome acessível dirigindo o browser à mão. **Perde o topo por esforço G** contra M, com valor igual |
+| 2 | [`e2e-testing`](e2e-testing.md) | **`in-progress` desde a PR #26** (`c71755e`, CI `success`); o corte ainda não foi auditado contra o código. Prova-se localmente nos itens 1, 3, 4 e 5; o item 2 só prova quando a branch subir, e "bloquear o merge" depende do branch protection (E3). As dependências de desenvolvimento foram **aprovadas pelo usuário em 2026-09-24**. A PR #25 reforçou o caso de novo: o `/test` achou o CTA do `/pricing` no idioma errado e o botão sem nome acessível dirigindo o browser à mão. **Perde o topo por esforço G** contra M, com valor igual |
 | 3 | [`account-security-mfa`](account-security-mfa.md) | Em **1,5 de 6**, inalterado. `value: médio` (MFA em **3/10** dos starters, sessões gerenciáveis em **1/10**). O segundo fator depende de um custo no Identity Platform que segue **não confirmado**, e o corte precisa de reescopo, como `onboarding-flow` precisava |
 | 4 | [`observability-logging`](observability-logging.md) | `in-progress`, 5 dos 6 itens. O resíduo é adotar um coletor de erro, que exige conta em provedor. **Fora do conjunto elegível.** A pergunta de fechar ou não foi estacionada (E1) |
 | 5 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22. O predicado de posse segue com quatro cópias em `entity.repository.ts` (`:23`, `:40`, `:64`, `:72`). A decisão de status foi estacionada (E2) |
@@ -290,7 +299,7 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 |----|--------|-----------|-------|---------|--------|------------|
 | [`account-security-mfa`](account-security-mfa.md) | MFA, sessões ativas e política de senha | confianca | médio | M | `proposed` | ✅ `account-settings` |
 | [`admin-billing-insights`](admin-billing-insights.md) | Seção de billing na home do admin | produto | médio | M | `proposed` | ✅ `billing-subscription` · ✅ `dashboard-home` |
-| [`e2e-testing`](e2e-testing.md) | Testes E2E e acessibilidade automatizada | dx | médio | G | `proposed` | ✅ `ci-pipeline` · ✅ `firebase-emulator-seed` |
+| [`e2e-testing`](e2e-testing.md) | Testes E2E e acessibilidade automatizada | dx | médio | G | `in-progress` | ✅ `ci-pipeline` · ✅ `firebase-emulator-seed` |
 | [`observability-logging`](observability-logging.md) | Observabilidade: erros, tracing e logs estruturados | dx | alto | M | `in-progress` | — |
 | [`teams-organizations`](teams-organizations.md) | Organizações, membros e convites | produto | alto | G | `deferred` | ✅ `transactional-emails` |
 
@@ -429,6 +438,8 @@ reconferidas no disco: seguem abertas.
 |--------|------|-----------------|
 | ⚠️ **O modo `simple` não restringe o painel comum** (A1) | `apps/app/app/[locale]/(authenticated)/(common)/layout.tsx` (não lê o modo) · `packages/next-config/product-mode.ts:12-23` (sem `commonUserUsesPanel`) · `docs/AUTH-SSO.md:66-71` | O documento descreve um redirecionamento que não existe, e uma pendência do `PRE-PRODUCTION.md` partia dele. Hoje o `simple` só esconde a cobrança. Estacionado (E10): o usuário decidiu ignorar o modo por ora |
 | ⚠️ **Soft delete de usuário pelo admin não cancela a assinatura** (A2) | `apps/api/app/(routes)/users/[id]/route.ts:117` · `user.repository.ts:50-61` | A pessoa apagada pelo admin continua sendo cobrada, e o webhook deixa de achar o perfil, porque `findByStripeCustomerId` ignora `deletedAt`. A exclusão pelo titular cancela; esta não. **Decidido em 2026-09-25:** chamar `cancelSubscriptionForErasure` antes do soft delete, com teste. Tarefa P aprovada, na fila |
+| 🟡 **As rotas de `payments/` que chamam a Stripe estão fora do rate limit** | `apps/api/proxy.ts:44-55` | Cada chamada vai à Stripe: o catálogo lista preços, o checkout cria cliente (com chave de idempotência) e sessão, o portal cria sessão. As três exigem sessão, então o abuso depende de conta válida, mas um cliente em loop consome a cota de API da Stripe do fork. `docs/SECURITY.md:146-148` não as lista entre as que ficam de fora |
+| 🟡 **`findByStripeCustomerId` devolve o documento cru, sem mapper** | `apps/api/(shared)/repositories/user.repository.ts:51-62` | `{ ...(live.data() as UserDTO), id }` entrega `Timestamp` onde o tipo promete `Date`. Hoje o webhook só lê `id` e `stripeCustomerId`, então não quebra nada; quebra no primeiro chamador que ler uma data. Contraria a regra de ouro 5 (normalizar no mapper) |
 | 🟡 **`.env.example` da `apps/app` e da `apps/web` publicam `STRIPE_*`, que nenhum dos dois lê** (A3) | `apps/app/.env.example:23-24` · `apps/web/.env.example:5-6` | Quem configura o fork põe a chave secreta em dois apps que não precisam dela. Só a `apps/api` lê (`PRE-PRODUCTION.md` §12 já diz isso) |
 | 🟡 **O webhook responde 500 para assinatura inválida** (A4) | `webhooks/payments/route.ts:156-158` → `failure()` em `:121-125` | A Stripe reentrega por até três dias um evento que nunca vai validar. Um 400 encerra as tentativas. `api-hardening` está arquivada, então é tarefa direta |
 | 🟡 **O deep link do onboarding perde a query string** | `apps/app/proxy.ts:215` | O proxy grava só o `pathname`. Afeta link de listagem filtrada ou paginada aberto antes do onboarding. Saiu de "Precisam de decisão" pela §5.1: tarefa direta P, gravar `pathname + search` e um caso a mais em `proxy.test.ts` |
@@ -438,6 +449,17 @@ reconferidas no disco: seguem abertas.
 | 🟡 **`--destructive` do dark tem contraste 1,97:1 como texto** | `packages/design-system/styles/globals.css:63` · usos como texto em `ui/form.tsx:156`, `ui/field.tsx:227`, `ui/label.tsx:21`, `form/hookform/*` | Toda mensagem de erro de formulário e o `pastDueHint` da aba billing ficam abaixo dos 4,5:1 do AA no dark (medido pelo `/test` de `billing-subscription` e recalculado em oklch → sRGB: 1,97:1 sobre `--background`). Clarear o token não resolve sozinho: o mesmo token é fundo sólido do item `danger` do antd no hover (`antd-app.tsx:20`, texto branco) e, para ficar ≥4,5:1 como texto (L ≈ 0,60), o branco sobre ele cai para 4,41:1. Caminho provável: mapear o `--destructive-foreground` do dark (`:64`, 5,18:1) no `@theme` e usá-lo como cor de texto de erro. Achado pelo `/review` de `billing-subscription` |
 | 🟡 **`Button` com `loading` perde o nome acessível** | `packages/design-system/components/ui/button.tsx:72-73` · `ui/spinner.tsx:8-9` | O `loading` troca o conteúdo pelo `Spinner`, cujo `aria-label="Loading"` é literal em inglês; no browser o botão ficou com nome `""` durante o redirect do checkout (`/test` de `billing-subscription`, item 11). Vale para todo botão com `loading` (`AccountPrivacyPanel`, painel de billing, formulários). Corrigir no componente, mantendo o texto do botão acessível enquanto o spinner aparece |
 | 🟡 **As páginas da `apps/web` leem o idioma do cookie `x-locale`, que o proxy grava na mesma resposta** | `apps/web/proxy.ts:104-108` · `getDictionary()` de `packages/internationalization/server.ts` · ex.: `apps/web/app/[locale]/pricing/page.tsx` (copy, metadata e o link `/contact` do plano Enterprise), `(home)/components/hero.tsx` (link `/contact`) | Ao trocar de idioma pela URL, a página renderiza no idioma da visita anterior até a navegação seguinte. O `/review` de `billing-subscription` corrigiu só o `href` dos CTAs de plano (usa o segmento `[locale]`); o resto é anterior à feature e atinge as ~20 páginas e componentes que chamam `getDictionary()` sem argumento. Mesma causa do achado de `<html lang>` acima |
+
+### 🆕 Achados da entrega `e2e-testing`
+
+Registrados pelo `/review` da suíte E2E, fora do placar da auditoria acima. Nenhum foi corrigido na entrega,
+que não muda código de produto.
+
+| achado | onde | por que importa |
+|--------|------|-----------------|
+| 🟡 **Sete grupos de violação de acessibilidade passam pela allowlist da suíte E2E** | `apps/e2e/a11y/allowlist.ts` · `packages/design-system/components/form/hookform/hookformInputPassword.tsx:77-86` · `apps/app/shared/components/ui/PanelNavbarControls.tsx:262-272` · `apps/web/app/[locale]/(home)/components/hero.tsx:28-50` | O axe reprova `critical`/`serious`, e a allowlist tolera o que a primeira execução mediu: botão de mostrar senha só com ícone, `Link` dentro de `Button` na web, `text-muted-foreground` sobre `bg-muted` no tema claro (cards da landing e iniciais do avatar), páginas do painel sem `<title>`, `Select` sem nome no navbar e no filtro de usuários, e `Switch` de linha sem nome nas tabelas. Corrigido o componente, a exceção sai no mesmo PR; a anotação `a11y-stale-exception` avisa quando ela deixa de casar. As exceções `[data-slot="select-trigger"]` e `[data-slot="switch"]` valem para qualquer instância na rota, então um `Select` novo sem nome nas telas do admin passa sem aviso até elas saírem |
+| 🟡 **O gatilho do `ActionsMenu` é um `<div>` sem papel nem nome** | `packages/design-system/components/ui/action-menu.tsx:103-110` | Não recebe foco pelo teclado, e o axe não o enxerga porque não é controle. A suíte E2E clica no `svg` da última célula da linha por falta de outro seletor |
+| 🟡 **O CTA primário do hero diz "Entrar" e leva a `/contact`** | `apps/web/app/[locale]/(home)/components/hero.tsx:33-34` | Texto e destino não combinam. A suíte E2E não afirma esse comportamento, para não transformar o defeito em contrato |
 
 ### 🔴 Segurança: seguem abertos, confirmados no código
 

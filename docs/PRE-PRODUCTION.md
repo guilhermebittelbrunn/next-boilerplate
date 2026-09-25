@@ -564,10 +564,13 @@ nome do fork** — e a fatura do provedor é do fork.
 
 ### 9. Branch protection na `main`
 
-- [ ] Exigir o check do CI antes do merge
+- [ ] Exigir os checks `verify` e `e2e` do CI antes do merge
 
 O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh api …/branches/main/protection`
-→ **404**, rulesets → `[]`). Ligar exigindo o check `verify` fecha isto.
+→ **404**, rulesets → `[]`, remedido em 2026-09-24). Ligar exigindo os checks `verify` e `e2e` fecha isto.
+O `e2e` é o job da suíte Playwright; ele só aparece na busca do ruleset depois de ter rodado numa PR, e é
+pulado (o que conta como sucesso) em PR que só mexe em documentação. `coverage` é informativo e não entra.
+Passo a passo no runbook de [`docs/SETUP.md`](SETUP.md#runbook--branch-protection-ação-manual-no-github).
 
 ✅ **O segundo pré-requisito também caiu, e este item não tem mais nenhum.** A auditoria de 2026-09-19
 acrescentou uma condição que não existia antes: exigir o check do CI com um teste instável no repositório

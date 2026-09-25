@@ -39,7 +39,7 @@ export default function ProfileDropdown() {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger aria-label={profileDropdown.triggerLabel}>
                 <div className="flex w-full max-w-56 items-center gap-3 truncate">
                     <Avatar className="h-9 w-9">
                         <AvatarImage src={avatarSrc} />

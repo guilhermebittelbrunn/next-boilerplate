@@ -217,6 +217,11 @@ ponta a ponta, não entregar administração de times completa.
   se este core é B2B ou B2C por padrão, e (2) parar de espalhar o predicado de posse por handler,
   concentrando-o num único ponto — que é exatamente o que torna o retrofit viável depois. Sem essas duas,
   `deferred` é só adiar a conta com juros.
+  > **Nota da auditoria de 2026-09-24.** As duas specs citadas acima como pré-requisito do adiamento foram
+  > entregues: `account-settings` (PR #12) e `billing-subscription` (PR #25). A segunda gravou a
+  > assinatura no perfil do usuário (`packages/sdk/src/types/user/user.ts:63`, `:65`), então a cobrança por
+  > organização, fora deste corte, agora pressupõe migrar esse vínculo. O motivo escrito do `deferred`
+  > perdeu parte da base; a decisão de status continua sendo sua (E2 no `BACKLOG.md`).
 - Organização implícita (uma por usuário, invisível) ou explícita desde o início? — **recomendação:**
   implícita; é o que permite ao fork B2C ignorar o recurso e ao B2B ligá-lo sem migrar dados.
 - Um usuário pode pertencer a várias organizações no primeiro corte? — **recomendação:** não. Múltiplo
