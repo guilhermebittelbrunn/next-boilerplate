@@ -9,9 +9,11 @@ import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
 import { getAppSessionUser } from "@/lib/server/authSession";
+import { resolvePreferredTimeZone } from "@/lib/server/displayTimeZone";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
 import { privacyPolicyUrl } from "@/shared/lib/privacyPolicyUrl";
 import { AppDesignProvider } from "@/shared/providers/AppDesignProvider";
+import { DisplayTimeZoneProvider } from "@/shared/providers/DisplayTimeZoneProvider";
 import ClientLayout from "./[locale]/clientLayout";
 
 type RootLayoutProps = {
@@ -34,14 +36,21 @@ async function resolvePreferredTheme(): Promise<string | undefined> {
 }
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-    const [{ locale }, sessionUser, panelSnapshot, preferredTheme, consent] =
-        await Promise.all([
-            getDictionary(),
-            getAppSessionUser(),
-            resolvePanelSnapshot(),
-            resolvePreferredTheme(),
-            resolveConsentBootstrap(),
-        ]);
+    const [
+        { locale },
+        sessionUser,
+        panelSnapshot,
+        preferredTheme,
+        preferredTimeZone,
+        consent,
+    ] = await Promise.all([
+        getDictionary(),
+        getAppSessionUser(),
+        resolvePanelSnapshot(),
+        resolvePreferredTheme(),
+        resolvePreferredTimeZone(),
+        resolveConsentBootstrap(),
+    ]);
 
     const privacyPolicyHref = privacyPolicyUrl(locale);
 
@@ -72,9 +81,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                     >
                         <AppDesignProvider defaultTheme={preferredTheme}>
                             <ToastContainer />
-                            <ClientLayout initialPanel={initialPanel}>
-                                {children}
-                            </ClientLayout>
+                            <DisplayTimeZoneProvider
+                                initialTimeZone={preferredTimeZone}
+                            >
+                                <ClientLayout initialPanel={initialPanel}>
+                                    {children}
+                                </ClientLayout>
+                            </DisplayTimeZoneProvider>
                         </AppDesignProvider>
                     </AnalyticsProvider>
                 </QueryProvider>

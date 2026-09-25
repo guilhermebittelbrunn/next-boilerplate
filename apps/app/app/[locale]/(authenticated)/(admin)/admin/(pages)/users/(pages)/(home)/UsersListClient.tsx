@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { useListUsers } from "@/shared/hooks/useListUsers";
-import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
+import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { ADMIN_ROUTES } from "../../../../paths";
 import { useUserCrud } from "../../(hooks)/useUserCrud";
 
@@ -21,6 +21,7 @@ export function UsersListClient() {
     const { data: users, isLoading, refetch, isFetching } = useListUsers();
     const router = useRouter();
     const { dictionary, locale } = getDictionary();
+    const formatDateTime = useFormatDisplayDateTime();
     const { deleteUserMutation, toggleUserStatusMutation } = useUserCrud();
 
     const routes = ADMIN_ROUTES(dictionary, locale);
@@ -40,7 +41,7 @@ export function UsersListClient() {
      */
     const renderLastAccess = (record: UserWithAuthDTO) => {
         if (record.lastAccessAt) {
-            return <span>{formatDisplayDateTime(record.lastAccessAt)}</span>;
+            return <span>{formatDateTime(record.lastAccessAt)}</span>;
         }
 
         const fromProvider = record.metadata?.lastRefreshTime;
@@ -50,7 +51,7 @@ export function UsersListClient() {
                     className="text-muted-foreground italic"
                     title={lastAccessLabels.approximate}
                 >
-                    {formatDisplayDateTime(fromProvider)}
+                    {formatDateTime(fromProvider)}
                 </span>
             );
         }
