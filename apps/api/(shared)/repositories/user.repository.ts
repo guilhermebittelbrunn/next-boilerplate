@@ -1,11 +1,13 @@
 import { getAuthInstance } from "@repo/auth/server";
 import type {
+    BillingSubscriberDTO,
+    PlanInterval,
     SubscriptionState,
     UserActivitySummaryDTO,
     UserDTO,
     UserSummaryDTO,
 } from "@repo/sdk/src/types";
-import { UserType } from "@repo/sdk/src/types";
+import { LIVE_SUBSCRIPTION_STATUSES, UserType } from "@repo/sdk/src/types";
 import db from "../infra/database";
 import {
     ACTIVE_WINDOW_DAYS,
@@ -20,6 +22,20 @@ import {
     serializeFirestoreData,
 } from "../mappers/user.mapper";
 import { BaseRepository } from "./base.repository";
+
+export type LivePlanCount = {
+    priceId: string | null;
+    productId: string | null;
+    interval: PlanInterval | null;
+    intervalCount: number | null;
+    count: number;
+};
+
+const NO_PRICE_KEY = "";
+
+function stringOrNull(value: unknown): string | null {
+    return typeof value === "string" && value.length > 0 ? value : null;
+}
 
 class UserRepository extends BaseRepository<UserDTO> {
     constructor() {
@@ -197,6 +213,124 @@ class UserRepository extends BaseRepository<UserDTO> {
                 precisionMinutes: ACTIVITY_WINDOW_MINUTES,
             },
         };
+    }
+
+    /**
+     * Reads one document per live subscription, and only the fields the count needs. The
+     * soft-delete filter runs in memory: putting it in the query would demand a composite
+     * index next to the `in` on the subscription status.
+     */
+    async countLiveSubscriptionsByPrice(): Promise<LivePlanCount[]> {
+        const snapshot = await this.db
+            .collection(this.table)
+            .where("subscription.status", "in", [...LIVE_SUBSCRIPTION_STATUSES])
+            .select(
+                "subscription.priceId",
+                "subscription.productId",
+                "subscription.interval",
+                "subscription.intervalCount",
+                "deletedAt"
+            )
+            .get();
+
+        const byPrice = new Map<string, LivePlanCount>();
+
+        for (const docSnap of snapshot.docs) {
+            const raw = docSnap.data() as {
+                deletedAt?: unknown;
+                subscription?: Record<string, unknown>;
+            };
+            if (raw.deletedAt != null) {
+                continue;
+            }
+
+            const subscription = raw.subscription ?? {};
+            const priceId = stringOrNull(subscription.priceId);
+            const key = priceId ?? NO_PRICE_KEY;
+            const current = byPrice.get(key);
+
+            if (current) {
+                current.count += 1;
+                continue;
+            }
+
+            byPrice.set(key, {
+                priceId,
+                productId: stringOrNull(subscription.productId),
+                interval: stringOrNull(
+                    subscription.interval
+                ) as PlanInterval | null,
+                intervalCount:
+                    typeof subscription.intervalCount === "number"
+                        ? subscription.intervalCount
+                        : null,
+                count: 1,
+            });
+        }
+
+        return [...byPrice.values()];
+    }
+
+    /**
+     * Resolves the people behind a handful of provider customers in one query and one Auth
+     * lookup. A customer whose profile was deleted, or whose Auth account is gone, is left
+     * out of the map. A transient Admin SDK failure surfaces, as in `mergeWithAuthUser`.
+     */
+    async identifyByStripeCustomerIds(
+        customerIds: string[]
+    ): Promise<Map<string, BillingSubscriberDTO>> {
+        const subscribers = new Map<string, BillingSubscriberDTO>();
+        const unique = [...new Set(customerIds)];
+        if (unique.length === 0) {
+            return subscribers;
+        }
+
+        const snapshot = await this.db
+            .collection(this.table)
+            .where("stripeCustomerId", "in", unique)
+            .select("stripeCustomerId", "reference_id", "deletedAt")
+            .get();
+
+        const profileByCustomer = new Map<
+            string,
+            { profileId: string; uid: string }
+        >();
+        for (const docSnap of snapshot.docs) {
+            const raw = docSnap.data();
+            const customerId = stringOrNull(raw.stripeCustomerId);
+            const uid = stringOrNull(raw.reference_id);
+            if (
+                raw.deletedAt != null ||
+                !customerId ||
+                !uid ||
+                profileByCustomer.has(customerId)
+            ) {
+                continue;
+            }
+            profileByCustomer.set(customerId, { profileId: docSnap.id, uid });
+        }
+
+        if (profileByCustomer.size === 0) {
+            return subscribers;
+        }
+
+        const { users } = await getAuthInstance().getUsers(
+            [...profileByCustomer.values()].map(({ uid }) => ({ uid }))
+        );
+        const authByUid = new Map(users.map((user) => [user.uid, user]));
+
+        for (const [customerId, { profileId, uid }] of profileByCustomer) {
+            const authUser = authByUid.get(uid);
+            if (authUser) {
+                subscribers.set(customerId, {
+                    profileId,
+                    displayName: authUser.displayName ?? null,
+                    email: authUser.email ?? null,
+                });
+            }
+        }
+
+        return subscribers;
     }
 
     /**
