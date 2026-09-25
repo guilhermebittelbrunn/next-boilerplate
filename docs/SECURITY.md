@@ -10,9 +10,9 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autorização (guards da API)
 
-São **26** arquivos de rota em `apps/api/app/(routes)/`. **Quinze** exportam o handler embrulhado num guard,
+São **30** arquivos de rota em `apps/api/app/(routes)/`. **Dezenove** exportam o handler embrulhado num guard,
 que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um motivo próprio
-(medido em 2026-09-24, sobre `ab11a5b` mais a rota `account/onboarding`):
+(medido em 2026-09-25, sobre `a1f87d0` mais a rota `payments/summary`):
 
 | grupo | quantas | por que não tem guard |
 |-------|---------|------------------------|
@@ -20,8 +20,8 @@ que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um
 | `/health`, `/health/ready` | 2 | sondas de plataforma, precisam responder sem credencial |
 | `/webhooks/payments` | 1 | autentica pela assinatura da Stripe (`constructEvent`), não por sessão |
 
-As **quinze** rotas de negócio restantes — `account/*` ×6, `entities` ×3, `files`, `users` ×4, `audit-events`
-— passam por um dos dois guards:
+As **dezenove** rotas de negócio restantes — `account/*` ×6, `entities` ×3, `files`, `users` ×4, `audit-events`,
+`payments/*` ×4 — passam por um dos dois guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
 - `requireAdminApi` — exige perfil admin.
@@ -156,7 +156,7 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 ## Pagamentos (Stripe)
 
 - O webhook (`apps/api/app/(routes)/webhooks/payments/route.ts`) **verifica a assinatura** (`stripe.webhooks.constructEvent` com `STRIPE_WEBHOOK_SECRET`) — mantenha isso; nunca processe o corpo sem verificar a assinatura.
-- O webhook só confia no evento assinado: o perfil vem do `customer` ou do `client_reference_id`/`metadata.profileId` que chegam **dentro** do evento verificado. Reentrega é deduplicada por `event.id` (coleção `paymentEvent`) e evento fora de ordem não sobrescreve estado mais novo. Detalhes em [`docs/PAYMENTS.md`](PAYMENTS.md).
+- O webhook só confia no evento assinado: o perfil vem do `customer` ou do `client_reference_id`/`metadata.profileId` que chegam **dentro** do evento verificado. Reentrega é deduplicada por `event.id` (coleção `paymentEvent`) e evento fora de ordem não sobrescreve estado mais novo. A resposta de sucesso é só `{ "ok": true }`, sem o evento: uma fatura traz e-mail e endereço do cliente. Detalhes em [`docs/PAYMENTS.md`](PAYMENTS.md).
 - Checkout e portal usam sempre o perfil do guard (`ctx.subjectProfile`), nunca um id do corpo, e são recusados durante personificação (403 `AUTH_REQUEST_IMPERSONATION_READ_ONLY`).
 - Nunca exponha `STRIPE_SECRET_KEY` no cliente; criação de checkout/portal é **server-side** (na API).
 
