@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 import {
     decideSubscriptionWrite,
     isLiveSubscription,
+    toPaidInvoiceRecord,
     toPlanDTO,
+    toPlanLabel,
     toSubscriptionState,
 } from "@/(shared)/lib/billing-state";
 
@@ -357,5 +359,149 @@ describe("decideSubscriptionWrite", () => {
         expect(
             decideSubscriptionWrite({ status: "active" }, state(), UPDATED)
         ).toEqual({ kind: "apply" });
+    });
+});
+
+const PAID_AT_SECONDS = 1_780_000_100;
+
+function invoice(overrides: Record<string, unknown> = {}): Stripe.Invoice {
+    return {
+        id: "in_qa",
+        object: "invoice",
+        amount_paid: 2900,
+        currency: "brl",
+        billing_reason: "subscription_create",
+        customer: "cus_qa",
+        customer_email: "pessoa@example.com",
+        status_transitions: { paid_at: PAID_AT_SECONDS },
+        parent: {
+            type: "subscription_details",
+            subscription_details: { subscription: "sub_parent", metadata: {} },
+        },
+        lines: {
+            object: "list",
+            data: [
+                {
+                    subscription: "sub_line",
+                    pricing: {
+                        type: "price_details",
+                        price_details: {
+                            price: "price_pro",
+                            product: "prod_pro",
+                        },
+                    },
+                },
+            ],
+        },
+        ...overrides,
+    } as unknown as Stripe.Invoice;
+}
+
+describe("toPaidInvoiceRecord", () => {
+    it("lê valor, moeda, motivo, assinatura, preço e o instante do pagamento", () => {
+        expect(toPaidInvoiceRecord(invoice(), EVENT_SECONDS)).toEqual({
+            invoiceId: "in_qa",
+            customerId: "cus_qa",
+            subscriptionId: "sub_parent",
+            priceId: "price_pro",
+            billingReason: "subscription_create",
+            amountPaid: 2900,
+            currency: "brl",
+            paidAt: new Date(PAID_AT_SECONDS * MS),
+        });
+    });
+
+    it("cai no instante do evento quando a fatura não traz paid_at", () => {
+        const record = toPaidInvoiceRecord(
+            invoice({ status_transitions: { paid_at: null } }),
+            EVENT_SECONDS
+        );
+
+        expect(record.paidAt).toEqual(new Date(EVENT_SECONDS * MS));
+    });
+
+    it("usa a assinatura da primeira linha quando não há parent (versão de API anterior)", () => {
+        const record = toPaidInvoiceRecord(
+            invoice({ parent: null }),
+            EVENT_SECONDS
+        );
+
+        expect(record.subscriptionId).toBe("sub_line");
+    });
+
+    it("aceita o customer expandido como objeto", () => {
+        const record = toPaidInvoiceRecord(
+            invoice({ customer: { id: "cus_obj", object: "customer" } }),
+            EVENT_SECONDS
+        );
+
+        expect(record.customerId).toBe("cus_obj");
+    });
+
+    it("fatura avulsa, sem linhas nem assinatura, fica sem preço e sem assinatura", () => {
+        const record = toPaidInvoiceRecord(
+            invoice({
+                parent: null,
+                billing_reason: "manual",
+                lines: { object: "list", data: [] },
+            }),
+            EVENT_SECONDS
+        );
+
+        expect(record.subscriptionId).toBeNull();
+        expect(record.priceId).toBeNull();
+        expect(record.billingReason).toBe("manual");
+    });
+
+    it("não carrega e-mail nem outro dado pessoal da fatura", () => {
+        const record = toPaidInvoiceRecord(invoice(), EVENT_SECONDS);
+
+        expect(JSON.stringify(record)).not.toContain("pessoa@example.com");
+    });
+});
+
+describe("toPlanLabel", () => {
+    it("usa o nome do produto expandido", () => {
+        expect(toPlanLabel(price())).toEqual({
+            name: "Pro",
+            productId: "prod_pro",
+            interval: "month",
+            intervalCount: 1,
+        });
+    });
+
+    it("mantém o nome de um produto arquivado, que ainda tem assinantes", () => {
+        const archived = price({
+            active: false,
+            product: {
+                id: "prod_old",
+                object: "product",
+                active: false,
+                name: "Legado",
+            },
+        });
+
+        expect(toPlanLabel(archived).name).toBe("Legado");
+    });
+
+    it("cai no nickname do preço quando o produto foi apagado", () => {
+        const label = toPlanLabel(
+            price({
+                nickname: "Pro anual",
+                product: { id: "prod_gone", object: "product", deleted: true },
+            })
+        );
+
+        expect(label.name).toBe("Pro anual");
+        expect(label.productId).toBe("prod_gone");
+    });
+
+    it("devolve nome nulo quando o produto não veio expandido e não há nickname", () => {
+        const label = toPlanLabel(
+            price({ nickname: null, product: "prod_pro" })
+        );
+
+        expect(label.name).toBeNull();
+        expect(label.productId).toBe("prod_pro");
     });
 });
