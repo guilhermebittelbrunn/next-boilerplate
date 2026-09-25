@@ -43,15 +43,18 @@ pnpm test           # Vitest em todos os workspaces (turbo)
 pnpm build          # build de produção (turbo; depende de test)
 pnpm --filter app typecheck   # tsc --noEmit de um workspace
 pnpm bump-ui        # re-sincroniza componentes shadcn no design-system
+pnpm e2e            # suíte Playwright (apps/e2e): sobe emulador + api/app/web e roda os fluxos críticos
+pnpm coverage       # cobertura Vitest consolidada do repo em coverage/ (sem limiar)
 
-pnpm turbo run lint typecheck test   # os 3 gates de uma vez — é o comando que o CI roda
+pnpm turbo run lint typecheck test   # os 3 gates de uma vez — é o comando que o job verify do CI roda
 ```
 
 `lint`, `typecheck` e `test` são tasks do turbo: cacheadas, paralelas e com `env: []` (herméticas em
 relação a variáveis de ambiente). `lint` é task da **raiz** (`//#lint`) porque o Biome varre o repositório
 inteiro a partir de um único `biome.jsonc`. **O CI roda exatamente essa linha** — se passa no seu terminal,
 passa no GitHub Actions. O pipeline está em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e
-descrito em [`docs/SETUP.md`](docs/SETUP.md).
+descrito em [`docs/SETUP.md`](docs/SETUP.md). O `pnpm e2e` fica fora dessa linha de propósito (precisa de
+JDK 21, browser e servidores de pé) e roda num job próprio, `e2e`, em toda PR que não é só documentação.
 
 Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe localmente com `pnpm --filter api dev:with-stripe`.
 
@@ -67,7 +70,7 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 8. **Hooks de dados**: listas `useListX` + `fetchXList`; por id `useFindXById` + `findXById` no mesmo arquivo, com `enabled` coerente. Toggle de `enabled` só faz `setQueryData` (sem `invalidateQueries`).
 9. **Nomes de arquivo (apps/app)**: módulos de feature em camelCase (`userFormFields.tsx`); componente React exportado em PascalCase. Variáveis de dictionary com nome descritivo (nunca `t`/`d`).
 10. **Mudanças mínimas + Server Components por padrão.** `"use client"` só com estado/eventos/browser API. Não refatore arquivos fora da tarefa. Rode `pnpm check` antes de concluir.
-11. **Quem executa o produto é o QA.** Fluxo que toca UI/layout (`apps/app`, `apps/web`, `packages/design-system`) não está pronto sem ser percorrido com a skill **`agent-browser`** (light + dark + mobile, 3 idiomas) — mas isso acontece **uma vez**, no `/test`, pelo `analista-qa`. O `/develop` faz smoke para se desbloquear; o `/review` lê código e roda os gates estáticos. Nenhum dos dois sobe app, dirige browser ou tira screenshot. O que a revisão não confirma lendo código vira a lista **"Verificar no `/test`"**, e afirmação herdada sem medição própria não conta como aprovada. Divisão e evidência na §7 de [`docs/review-checklist.md`](docs/review-checklist.md).
+11. **Quem executa o produto é o QA.** Fluxo que toca UI/layout (`apps/app`, `apps/web`, `packages/design-system`) não está pronto sem ser percorrido com a skill **`agent-browser`** (light + dark + mobile, 3 idiomas) — mas isso acontece **uma vez**, no `/test`, pelo `analista-qa`. O `/develop` faz smoke para se desbloquear; o `/review` lê código e roda os gates estáticos. Nenhum dos dois sobe app, dirige browser ou tira screenshot. O que a revisão não confirma lendo código vira a lista **"Verificar no `/test`"**, e afirmação herdada sem medição própria não conta como aprovada. Divisão e evidência na §7 de [`docs/review-checklist.md`](docs/review-checklist.md). A suíte E2E (`pnpm e2e`, Playwright) roda no CI como rede de regressão dos fluxos críticos e não substitui essa passada: ela confere que o fluxo funciona, não julga tema, responsivo nem layout.
 
 **Referência viva**: o CRUD de exemplo `entity` cobre o slice inteiro de ponta a ponta — use como template:
 - API: `apps/api/app/(routes)/entities/`, `apps/api/(shared)/repositories/entity.repository.ts`, `.../mappers/entity.mapper.ts`, `.../validation/entity.schema.ts`

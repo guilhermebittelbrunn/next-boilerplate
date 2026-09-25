@@ -133,16 +133,27 @@ configuráveis pelo `firebase.json` e entram na conta de "porta ocupada derruba 
 
 ## CI — GitHub Actions
 
-O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). Um único job, `verify`.
+O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). São quatro jobs:
+
+| Job | Quando roda | Executa | Teto |
+|-----|-------------|---------|------|
+| `verify` | toda PR e todo push em `main` | `pnpm turbo run lint typecheck test` | 15 min |
+| `changes` | toda PR e todo push em `main` | decide se o diff alcança o produto (ver abaixo) | 5 min |
+| `e2e` | quando `changes` diz que sim | `pnpm e2e` (ver [Testes E2E](#testes-e2e-playwright)) | 25 min |
+| `coverage` | quando `changes` diz que sim | `pnpm coverage` e o resumo por workspace no sumário do job | 15 min |
 
 | Item | Valor |
 |------|-------|
 | Dispara em | toda `pull_request` (qualquer branch alvo) e todo `push` em `main` |
-| Executa | `pnpm install --frozen-lockfile` e depois `pnpm turbo run lint typecheck test` |
 | Node / pnpm | lidos do repositório: `.nvmrc` (`22.12.0`) e `packageManager` (`pnpm@10.19.0`) |
-| Cache | store do pnpm, via `actions/setup-node` com chave no `pnpm-lock.yaml` |
+| Cache | store do pnpm, via `actions/setup-node` com chave no `pnpm-lock.yaml`; no `e2e`, também os JARs do emulador e o Chromium do Playwright |
 | Secrets | **nenhum** |
-| Teto | `timeout-minutes: 15`; execuções concorrentes na mesma ref são canceladas |
+| Concorrência | execuções concorrentes na mesma ref são canceladas |
+
+O `changes` pula `e2e` e `coverage` numa PR que só mexe em `docs/`, `specs/`, `.claude/` ou arquivos `.md`.
+Qualquer outro arquivo liga os dois, inclusive `packages/auth`, o `pnpm-lock.yaml` ou o `firebase.json`, que
+quebram o login sem tocar `apps/`. Push em `main` roda sempre. Job pulado por `if` conta como sucesso para
+check obrigatório, então exigir `e2e` não trava PR de documentação.
 
 Três consequências que valem entender antes de mexer:
 
@@ -153,6 +164,8 @@ Três consequências que valem entender antes de mexer:
   o pipeline. O build continua sendo verificado onde ele roda de verdade: localmente e na Vercel.
 - **`--frozen-lockfile` é um gate de graça.** Mexeu num `package.json` sem rodar `pnpm install`? A PR fica
   vermelha na instalação. Commite o `pnpm-lock.yaml` junto.
+- **Fork privado paga o `e2e` em minutos de Actions.** O `verify` leva cerca de um minuto; o `e2e` sobe
+  emulador, três servidores `next dev` e um navegador, e leva vários. Repositório público não paga.
 
 ### Runbook — branch protection (ação manual no GitHub)
 
@@ -165,8 +178,10 @@ bloqueie o merge, alguém precisa ligar isto **uma vez por repositório**:
 2. `Settings` → `Branches` → `Add branch ruleset` (ou `Add rule` no modelo clássico), alvo `main`.
 3. Marque:
    - **Require a pull request before merging** — é o que fecha o push direto em `main`.
-   - **Require status checks to pass before merging** e, na busca, selecione **`verify`** (o `name:` do
-     job). É o único check; se aparecerem outros com nome parecido, confira que veio do workflow `CI`.
+   - **Require status checks to pass before merging** e, na busca, selecione **`verify`** e **`e2e`** (o
+     `name:` de cada job). O `e2e` só aparece na busca depois de ter rodado numa PR (passo 1). Não exija
+     `changes` nem `coverage`: o primeiro só decide, o segundo é informativo. Se aparecerem checks com nome
+     parecido, confira que vieram do workflow `CI`.
    - **Require branches to be up to date before merging** — evita o merge que passa isolado e quebra a
      `main` combinado com outro PR.
 4. Deixe **Allow force pushes** e **Allow deletions** desmarcados.
@@ -178,6 +193,91 @@ o botão de merge tem de ficar bloqueado.
 
 > Enquanto isso não estiver ligado, a regra de nunca commitar em `main` é garantida só pelo hook local
 > `.claude/hooks/block-protected-branch-write.sh`, que não existe num clone sem o ferramental de IA.
+
+## Testes E2E (Playwright)
+
+A suíte vive em `apps/e2e` e percorre, num Chromium de verdade e contra o emulador, os fluxos que todo fork
+herda: cadastro com onboarding, login (comum, admin, senha errada, deep link com `?redirect=`), CRUD de
+`entity`, troca de painel do admin, usuário comum barrado no `/admin` e o CTA de cadastro da landing. Nas
+telas percorridas ela roda o axe e falha em violação `critical` ou `serious`.
+
+É rede de regressão. Ela não julga tema, alinhamento, responsivo nem idioma (roda só em `pt-br` e desktop),
+então não substitui a passada com `agent-browser` numa entrega de front-end.
+
+### Rodar local
+
+Precisa do JDK 21 no `PATH` (ver [Pré-requisitos](#pré-requisitos)) e, na primeira vez, do navegador:
+
+```bash
+pnpm --filter e2e exec playwright install chromium
+pnpm e2e                          # sobe emulador + api/app/web, roda o seed e a suíte
+pnpm --filter e2e e2e:report      # abre o relatório HTML da última execução
+```
+
+O `pnpm e2e` sobe tudo sozinho e derruba ao terminar. As portas 3000, 3001 e 3002 precisam estar livres: a
+suíte nunca reaproveita um `app`, `web` ou `api` já de pé, porque um `pnpm dev` aberto pode estar lendo o
+`.env` local. Se uma delas estiver ocupada, o erro nomeia a porta. Para rodar mesmo assim, troque as três
+portas da suíte:
+
+```bash
+E2E_APP_PORT=3100 E2E_WEB_PORT=3101 E2E_API_PORT=3102 pnpm e2e
+```
+
+Sem essas variáveis, valem 3000/3001/3002. O emulador é a exceção: se já houver um no ar, a suíte usa esse.
+Em qualquer caso o projeto `setup` roda o seed no começo, e o estado do emulador volta ao de
+[Estado que o `pnpm seed` cria](#estado-que-o-pnpm-seed-cria).
+
+A primeira execução é lenta: o `next dev` compila cada rota na primeira requisição, e o `setup` visita as
+rotas da suíte antes dos testes para pagar esse custo uma vez só.
+
+### Por que a suíte ignora o seu `.env`
+
+O ambiente de cada servidor é montado a partir do `.env.example` do app (`apps/e2e/support/stackEnv.ts`).
+Toda chave que só existe nos arquivos `.env*` locais vai vazia, as credenciais do Firebase e a `ARCJET_KEY`
+vão vazias, e o bloco do emulador (`FIRESTORE_EMULATOR_HOST`, `FIREBASE_AUTH_EMULATOR_HOST`,
+`NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST`, project id `demo-next-boilerplate`) é forçado. Como o Next lê
+`process.env` antes dos arquivos, o valor vazio vence o do `.env`. Antes de subir qualquer servidor, a config
+confere o resultado com a mesma regra do seed (`apps/api/scripts/emulatorTarget.mjs`) e recusa se ele puder
+alcançar um projeto real.
+
+### Evidência no CI
+
+O job `e2e` publica o artefato `e2e-evidence` quando falha: `playwright-report/` (relatório HTML) e
+`test-results/`, com trace, vídeo e screenshot de cada teste que falhou. O trace abre em
+`pnpm --filter e2e exec playwright show-trace <trace.zip>` e mostra rede e console do momento da falha.
+
+No CI, cada teste tem uma segunda tentativa, e um teste que só passa nela reprova o job
+(`failOnFlakyTests`). O relatório marca esse teste como `flaky`, o que separa "quebrou" de "passa quase
+sempre". Espera fixa (`waitForTimeout`) não entra na suíte: toda espera é asserção.
+
+### Acessibilidade e a allowlist
+
+As exceções do axe ficam em `apps/e2e/a11y/allowlist.ts`. Cada entrada tem rota, regra, um seletor CSS
+escrito à mão que o elemento precisa casar e o motivo. O seletor não é o que o axe imprime: aquele é montado
+a partir de classes e ids gerados e muda a cada ajuste de estilo. Uma exceção cobre só aquela regra naquele
+elemento daquela rota, então um campo novo sem rótulo na mesma tela continua reprovando.
+
+Entrada que não casa mais nada aparece como anotação `a11y-stale-exception` no relatório, sem reprovar;
+remova-a. Corrigiu o componente? Tire a exceção no mesmo PR. Violação `minor` e `moderate` não reprova e fica
+no anexo JSON de cada teste.
+
+## Cobertura
+
+```bash
+pnpm coverage                      # roda todos os workspaces numa execução só, com v8
+node scripts/coverage-summary.mjs  # tabela markdown por workspace, a partir do resumo gerado
+```
+
+O `vitest.config.mts` da raiz lista os configs de `apps/*` e `packages/*` como `projects`. Relatório por
+workspace não soma, então o número consolidado sai dessa execução única. A saída fica em `coverage/`
+(`coverage-summary.json` e `index.html`). Arquivo que nenhum teste importa conta como 0%. `apps/e2e` roda os
+próprios testes, mas fica fora da medição.
+
+Não há limiar. O job `coverage` do CI publica a tabela no sumário da execução e o relatório como artefato,
+e só falha quando um teste falha.
+
+`@vitest/coverage-v8` está fixado em `4.0.3` porque exige exatamente a mesma versão do `vitest`. Quem
+atualizar o `vitest` atualiza os dois juntos.
 
 ## Conductor (workspaces paralelos)
 
