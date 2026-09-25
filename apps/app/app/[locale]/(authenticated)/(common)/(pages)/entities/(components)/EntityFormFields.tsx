@@ -13,7 +13,7 @@ import type { RadioOption } from "@repo/design-system/components/ui/radio-group-
 import { getDictionary } from "@repo/internationalization/client";
 import { EntityType } from "@repo/sdk/src/types";
 import { useMemo } from "react";
-import { formatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
+import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { isStorageEnabled } from "@/shared/lib/storageEnabled";
 import {
     entityGenreUnset,
@@ -42,6 +42,7 @@ export function EntityFormFields({
     uploadPhoto,
 }: EntityFormFieldsProps) {
     const { dictionary } = getDictionary();
+    const formatDateTime = useFormatDisplayDateTime();
     const entitiesForm = dictionary.apps.app.pages.common.entities.form;
     const entitiesList = dictionary.apps.app.pages.common.entities.list;
     const canUploadPhoto = Boolean(uploadPhoto) && isStorageEnabled();
@@ -83,7 +84,7 @@ export function EntityFormFields({
                         <span className="font-medium text-foreground">
                             {createdAtLabel}:{" "}
                         </span>
-                        {formatDisplayDateTime(createdAtValue)}
+                        {formatDateTime(createdAtValue)}
                     </p>
                 </div>
             ) : null}

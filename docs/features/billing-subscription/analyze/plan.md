@@ -1,6 +1,6 @@
 # Plano: assinatura Stripe de ponta a ponta
 
-Spec de origem: [`specs/billing-subscription.md`](../../../../specs/billing-subscription.md). Plano feito numa
+Spec de origem: [`docs/features/billing-subscription/spec.md`](../spec.md). Plano feito numa
 rodada autônoma do `/cycle`: nenhuma pergunta foi feita ao usuário. Onde a spec decide, o plano segue a
 spec; onde ela é omissa, segue o padrão `entity`; onde há ambiguidade real, escolhe o menor raio de impacto
 e registra a escolha em [Perguntas em aberto](#perguntas-em-aberto).

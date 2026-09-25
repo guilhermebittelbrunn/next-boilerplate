@@ -208,7 +208,7 @@ export type UserDTO = {
 `UserDTO`.
 
 **Contenção declarada pela spec**: `packages/sdk/src/types/user/user.ts` é disputado com
-[`billing-subscription`](../../../../specs/billing-subscription.md) e
+[`billing-subscription`](../../billing-subscription/spec.md) e
 [`onboarding-flow`](../../onboarding-flow/spec.md), que também acrescentam campo ao `UserDTO`. Como
 os três são acréscimos de campo opcional em pontos diferentes do mesmo type, o conflito é textual, não
 semântico — resolve-se no merge.

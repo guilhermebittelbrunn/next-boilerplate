@@ -1,3 +1,5 @@
+import { globalTranslations } from "@repo/internationalization/translations/global";
+import { setCookie } from "@repo/shared/utils/helpers/cookies";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,6 +16,8 @@ vi.mock("@/shared/hooks/useMyAccount", () => ({
 
 const ProfileDropdown = (await import("@/shared/components/ui/ProfileDropdown"))
     .default;
+
+const ONE_HOUR_IN_SECONDS = 3600;
 
 const FIREBASE_USER = {
     displayName: "Bruno do Token",
@@ -80,4 +84,45 @@ describe("ProfileDropdown — origem do nome e do avatar", () => {
 
         expect(container.querySelector("[data-slot='avatar']")).toBeTruthy();
     });
+
+    it("dá nome ao gatilho antes de a conta e o usuário carregarem", () => {
+        useAuthMock.mockReturnValue({
+            user: null,
+            signOut: { mutate: vi.fn() },
+        });
+
+        render(<ProfileDropdown />);
+
+        expect(
+            screen.getByRole("button", {
+                name: globalTranslations["pt-br"].apps.app.shared
+                    .profileDropdown.triggerLabel,
+            })
+        ).toBeTruthy();
+    });
+
+    it.each(["pt-br", "en", "es"] as const)(
+        "nomeia o gatilho no idioma do cookie x-locale (%s)",
+        (locale) => {
+            setCookie("x-locale", locale, ONE_HOUR_IN_SECONDS);
+            useAuthMock.mockReturnValue({
+                user: null,
+                signOut: { mutate: vi.fn() },
+            });
+
+            try {
+                render(<ProfileDropdown />);
+
+                const triggerLabel =
+                    globalTranslations[locale].apps.app.shared.profileDropdown
+                        .triggerLabel;
+                expect(triggerLabel.trim()).not.toBe("");
+                expect(
+                    screen.getByRole("button", { name: triggerLabel })
+                ).toBeTruthy();
+            } finally {
+                setCookie("x-locale", "", -1);
+            }
+        }
+    );
 });

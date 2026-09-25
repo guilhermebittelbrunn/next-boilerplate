@@ -52,7 +52,7 @@ export const LanguageSwitcher = ({
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
                 <Button
                     className="shrink-0 gap-2 text-foreground"
                     size="sm"
