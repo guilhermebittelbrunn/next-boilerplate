@@ -10,9 +10,9 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autorização (guards da API)
 
-São **26** arquivos de rota em `apps/api/app/(routes)/`. **Quinze** exportam o handler embrulhado num guard,
+São **29** arquivos de rota em `apps/api/app/(routes)/`. **Dezoito** exportam o handler embrulhado num guard,
 que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um motivo próprio
-(medido em 2026-09-24, sobre `ab11a5b` mais a rota `account/onboarding`):
+(medido em 2026-09-24, sobre `a1f87d0`, com as rotas de `payments/`):
 
 | grupo | quantas | por que não tem guard |
 |-------|---------|------------------------|
@@ -20,8 +20,8 @@ que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um
 | `/health`, `/health/ready` | 2 | sondas de plataforma, precisam responder sem credencial |
 | `/webhooks/payments` | 1 | autentica pela assinatura da Stripe (`constructEvent`), não por sessão |
 
-As **quinze** rotas de negócio restantes — `account/*` ×6, `entities` ×3, `files`, `users` ×4, `audit-events`
-— passam por um dos dois guards:
+As **dezoito** rotas de negócio restantes — `account/*` ×6, `entities` ×3, `files`, `users` ×4, `audit-events`,
+`payments/*` ×3 — passam por um dos dois guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
 - `requireAdminApi` — exige perfil admin.
