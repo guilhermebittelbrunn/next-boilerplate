@@ -1,8 +1,6 @@
 import db from "../infra/database";
+import { isAlreadyExistsError } from "../infra/firestore-errors";
 import { BaseRepository } from "./base.repository";
-
-/** gRPC ALREADY_EXISTS, the status Firestore uses when `create()` hits a taken id. */
-const ALREADY_EXISTS = 6;
 
 /** Stripe retries a delivery for up to three days; a month leaves room to spare. */
 const RETENTION_DAYS = 30;
@@ -47,7 +45,7 @@ class PaymentEventRepository extends BaseRepository<PaymentEventRecord> {
                     ),
                 });
         } catch (error) {
-            if ((error as { code?: number }).code === ALREADY_EXISTS) {
+            if (isAlreadyExistsError(error)) {
                 return;
             }
             throw error;
