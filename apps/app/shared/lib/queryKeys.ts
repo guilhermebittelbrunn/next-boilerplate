@@ -47,6 +47,7 @@ export const queryKeys = {
     payments: {
         all: ["payments"] as const,
         plans: () => [...queryKeys.payments.all, "plans"] as const,
+        summary: () => [...queryKeys.payments.all, "summary"] as const,
     },
     health: () => ["health"] as const,
 } as const;
