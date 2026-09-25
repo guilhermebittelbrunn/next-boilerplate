@@ -11,6 +11,7 @@ import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
 import { MetricCard } from "@/shared/components/ui/MetricCard";
 import { ADMIN_ROUTES } from "../../paths";
 import { useUserSummary } from "../(hooks)/useUserSummary";
+import { BillingInsightsSection } from "./BillingInsightsSection";
 import { UserActivitySection } from "./UserActivitySection";
 
 export function AdminHomeClient() {
@@ -87,6 +88,7 @@ export function AdminHomeClient() {
                         </div>
                     )}
                     <UserActivitySection />
+                    <BillingInsightsSection />
                 </div>
             </Container>
         </>

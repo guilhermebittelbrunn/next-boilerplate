@@ -30,6 +30,14 @@ vi.mock(
     })
 );
 
+// Same for the billing block: it is covered by `billingInsightsSection.test.tsx`.
+vi.mock(
+    "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/BillingInsightsSection",
+    () => ({
+        BillingInsightsSection: () => <div data-testid="billing-section" />,
+    })
+);
+
 const { AdminHomeClient } = await import(
     "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient"
 );
@@ -148,5 +156,13 @@ describe("AdminHomeClient when the summary fails", () => {
         render(<AdminHomeClient />);
 
         expect(screen.getByTestId("activity-section")).toBeTruthy();
+    });
+
+    it("keeps the billing block on screen, since it loads on its own", () => {
+        givenSummary({ data: null, error: missingIndexRejection() });
+
+        render(<AdminHomeClient />);
+
+        expect(screen.getByTestId("billing-section")).toBeTruthy();
     });
 });

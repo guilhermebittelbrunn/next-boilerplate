@@ -1,3 +1,4 @@
+import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import {
     dehydrate,
     HydrationBoundary,
@@ -23,6 +24,14 @@ export default async function AdminHome() {
                     queryKey: queryKeys.users.activitySummary(),
                     queryFn: () => client.user.activitySummary(),
                 }),
+                ...(isSubscriptionMode()
+                    ? [
+                          queryClient.prefetchQuery({
+                              queryKey: queryKeys.payments.summary(),
+                              queryFn: () => client.payments.summary(),
+                          }),
+                      ]
+                    : []),
             ]);
         }
     }
