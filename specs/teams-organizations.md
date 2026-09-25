@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-23
+updated: 2026-09-25
 ---
 
 # Organizações, membros e convites
@@ -74,7 +74,7 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   `packages/`. A palavra "organization" no repo aparece só em `packages/seo/schema.ts` — no identificador
   `organizationSchema` (`:6`) e no tipo schema.org `Organization` (`:1`, `:5`, `:11`, `:14`) —, que é
   marcação da landing, nada a ver.
-- `packages/sdk/src/types/user/user.ts:2` — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
+- `packages/sdk/src/types/user/user.ts:4` (âncora remedida em 2026-09-25; o import da PR #25 empurrou o enum) — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
   O papel é **global**, não relativo a um grupo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
   (`:27`) trata `ADMIN` como papel de plataforma.

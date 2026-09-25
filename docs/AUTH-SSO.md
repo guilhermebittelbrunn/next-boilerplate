@@ -70,6 +70,15 @@ limpamos o cookie passivamente, ou o 2º app deslogaria o usuário ao abrir.
 
 Enforcement server-side: o layout `(common)` do app redireciona comum→web no `simple` ([(common)/layout.tsx](<../apps/app/app/[locale]/(authenticated)/(common)/layout.tsx>)); o grupo `(authenticated)` da web redireciona →app no `subscription` ([(authenticated)/layout.tsx](<../apps/web/app/[locale]/(authenticated)/layout.tsx>), com `requireSession` espelhando `apps/app`). Em `simple`, exige `NEXT_PUBLIC_WEB_URL`/`NEXT_PUBLIC_APP_URL` para os redirects cross-app. Assinatura: ver [docs/PAYMENTS.md](PAYMENTS.md).
 
+> ⚠️ **Medido em 2026-09-25: a tabela e o parágrafo acima descrevem um desenho, não o código.** O layout
+> `(common)` não redireciona ninguém por modo de produto (não importa `@repo/next-config/product-mode`),
+> `commonUserUsesPanel()` não é exportado por `packages/next-config/product-mode.ts` (só `getProductMode()` e
+> `isSubscriptionMode()`), e `apps/web/app/[locale]/(authenticated)/layout.tsx` não existe. O que o modo
+> `simple` faz hoje é esconder a cobrança: a aba e o item da barra lateral no app
+> (`(common)/routes.tsx:52`, `AccountTabs.tsx:33`), o `/pricing` da web e as rotas `payments/*` da API.
+> Também tira o link "Ir para o painel" do header da web (`apps/web/app/[locale]/components/header/index.tsx:38`).
+> O usuário comum que chega ao painel por URL continua entrando. Registrado como achado em `specs/BACKLOG.md`.
+
 ## Fallback: domínios registráveis distintos
 
 Se um fork colocar os apps em **domínios diferentes** (ex.: `marketing.com` + `myapp.io`), o

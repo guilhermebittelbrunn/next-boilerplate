@@ -568,31 +568,32 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-24**, com o `HEAD` em `d52c4f0` (PR #24 já mergeada). Os números abaixo são da
-sexta medição:
+Remedido em **2026-09-25**, com o `HEAD` em `a1f87d0` (PR #25 já mergeada). Os números abaixo são da
+sétima medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **1 min 2,7 s** |
-| lint/format | `pnpm check` | **666 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1615 testes em 164 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **56,7 s** |
+| lint/format | `pnpm check` | **699 arquivos**, 0 correções |
+| suíte | 10 tasks de teste | **1817 testes em 180 arquivos** |
 
-Distribuição da suíte, medida em 2026-09-24 com `--force`: `apps/api` 680 em 60 arquivos, `apps/app` 501 em
-68, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
-em 5, `apps/web` 35 em 6, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 8 em 1.
+Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 804 em 66 arquivos, `apps/app` 559 em
+73, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
+em 5, `apps/web` 41 em 8, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 22 em 4.
 
 Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@repo/analytics` à suíte; a #17
 somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou
 49 testes em 6 arquivos e 18 arquivos ao alcance do `pnpm check`; a renovação de sessão somou 49 testes em
 4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #24, a suíte
-foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos.
+foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos; a PR #25 somou 202 testes em 16
+arquivos e 33 arquivos ao `pnpm check`.
 **Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
-uma das seis últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
+uma das sete últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
 são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
 fato corrente.
 
-O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s e agora 1 min 2,7 s, com a
+O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s, 1 min 2,7 s e agora 56,7 s, com a
 suíte sempre maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
 dimensionar CI.
 
@@ -674,6 +675,15 @@ resposta: quem pediu a exclusão não precisa da operação, e a resposta é `{ 
 ### Pendência — no modo `simple` o titular não alcança a aba de privacidade
 
 **Em aberto. Precisa de decisão de produto antes de um fork em modo `simple` ir para produção.**
+
+> ⚠️ **Correção medida em 2026-09-25: a premissa desta seção não confere com o código.** O texto abaixo parte
+> de que o modo `simple` restringe o painel comum a administradores. Nada no `apps/app` faz isso: o layout
+> `(common)` não lê o modo de produto, e os únicos arquivos do app que leem são `(common)/routes.tsx:52` e
+> `AccountTabs.tsx:33`, os dois só para esconder a cobrança. `commonUserUsesPanel()` não existe em
+> `packages/next-config/product-mode.ts`, e a `apps/web` não tem área autenticada. Hoje, num fork `simple`, o
+> usuário comum entra no painel e alcança a aba de privacidade. A pendência real é outra: o modo `simple`
+> não faz o que `docs/AUTH-SSO.md` descreve. Ela está registrada nos achados do `specs/BACKLOG.md`. O texto
+> abaixo fica como estava, porque as saídas listadas voltam a valer no dia em que a restrição existir.
 
 A exportação e a exclusão de conta vivem na aba Privacidade da área de conta, que fica sob o painel comum
 (`apps/app/app/[locale]/(authenticated)/(common)/`). Quando `NEXT_PUBLIC_PRODUCT_MODE` é `simple`, o painel

@@ -6,165 +6,167 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última auditoria:** 2026-09-24 (`/spec --sync`, pós-merge da PR #24) · anteriores: 2026-09-23 (PR #23) ·
-> 2026-09-23 (PR #22) · 2026-09-19 (PR #21) · 2026-09-17 (PR #20) · 2026-09-17 (PR #19) · 2026-09-17 (PR #18) ·
-> 2026-09-16 (PR #17) · 2026-09-16 (PR #16) · 2026-09-16 (PR #15) · 2026-09-16 (PRs #13 e #14) · 2026-09-15 ·
-> 2026-09-14 · 2026-09-11 · 2026-09-10 · 2026-09-09 (2 rodadas) · 2026-09-02 · 2026-09-01 (3 rodadas) ·
-> 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
+> **Última auditoria:** 2026-09-25 (`/spec --sync`, pós-merge da PR #25) · anteriores: 2026-09-24 (PR #24) ·
+> 2026-09-23 (PR #23) · 2026-09-23 (PR #22) · 2026-09-19 (PR #21) · 2026-09-17 (PR #20) · 2026-09-17 (PR #19) ·
+> 2026-09-17 (PR #18) · 2026-09-16 (PR #17) · 2026-09-16 (PR #16) · 2026-09-16 (PR #15) · 2026-09-16 (PRs #13 e
+> #14) · 2026-09-15 · 2026-09-14 · 2026-09-11 · 2026-09-10 · 2026-09-09 (2 rodadas) · 2026-09-02 · 2026-09-01
+> (3 rodadas) · 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
 >
 > **O que mudou nesta rodada:**
-> 1. **`onboarding-flow` foi entregue e arquivada.** Era o #1 desta lista. PR #24 mergeada em `main` em
->    2026-09-24T11:26:50Z (`d52c4f0`), CI `success` no SHA de merge (`gh run 35993064246`). Os cinco itens
->    do corte foram reabertos no código e fecharam, com uma deriva pequena no item 3: o deep link volta sem
->    a query string. É a décima sétima spec a sair da fila e vive em
->    [`docs/features/onboarding-flow/spec.md`](../docs/features/onboarding-flow/spec.md).
-> 2. **O bloco de reescopo escrito pela auditoria passada funcionou.** O `/analyze` aplicou os sete pontos,
->    a entrega bateu com eles e o `postLoginNavigation.ts` ficou intacto, como o bloco previa. A linha de
->    política que o formaliza continua em [Decisões estacionadas](#decisões-estacionadas-51), agora com um
->    caso a favor.
-> 3. **`e2e-testing` é o novo #1**, pelo critério vigente: é a única spec elegível que uma rodada autônoma
->    prova sem provisionar nada. Ela traz uma pergunta que as outras não trazem, a adoção de dependências de
->    desenvolvimento, e essa pergunta abre [Precisam de decisão](#precisam-de-decisão).
-> 4. **Os 20 links mortos das specs arquivadas foram consertados**, junto com outros 11 da mesma causa em
->    `analyze/plan.md` e `review/review.md`. O achado sai da lista. Não resta link relativo morto em
->    `docs/features/`.
-> 5. **O `docs/PRE-PRODUCTION.md` §9 estava defasado de novo** (1547 testes contra 1615 medidos) e foi
->    corrigido. O `docs/SECURITY.md` já tinha sido atualizado dentro da PR #24 e confere.
+> 1. **`billing-subscription` foi entregue e arquivada.** PR #25 mergeada em `main` em 2026-09-24T14:46:15Z
+>    (`a1f87d0`), CI `success` no SHA de merge (`gh run 36015211021`). Os seis itens do corte e o passo
+>    `billing` do expurgo herdado de `data-rights-lgpd` foram reabertos no código e fecharam. Cinco critérios
+>    seguem 🔒 porque só uma conta Stripe real os prova. É a décima oitava spec a sair da fila e vive em
+>    [`docs/features/billing-subscription/spec.md`](../docs/features/billing-subscription/spec.md).
+> 2. **`admin-billing-insights` foi desbloqueada.** As duas dependências estão entregues. As três seções que
+>    descreviam a cobrança como inexistente foram reescritas com o que a PR #25 criou e com o que ainda falta
+>    para o corte dela: instante de ativação, nome do plano sem chamar a Stripe e o evento de fatura.
+> 3. **`admin-billing-insights` é o novo #1.** O usuário já a escolheu para esta rodada, e a auditoria
+>    concorda: é esforço M contra o G de `e2e-testing`, e o harness de webhook assinado que o `/test` de
+>    `billing-subscription` usou prova quase todo o corte sem conta Stripe.
+> 4. **O modo `simple` não faz o que a documentação diz.** `docs/AUTH-SSO.md` descreve um redirecionamento
+>    do usuário comum para a web que não existe no código, e a pendência nº 21 partia dessa premissa. Os dois
+>    documentos ganharam nota de medição; a decisão é a [pergunta nº 1](#precisam-de-decisão).
+> 5. **Três achados fecharam** com a PR #25 (o 🔴 do `packages/payments/ai.ts`, o webhook inalcançável em
+>    desenvolvimento e a casca do webhook) e **quatro entraram**, vindos do plano de `billing-subscription`.
+> 6. **Dois documentos estavam defasados e foram corrigidos:** o §9 do `docs/PRE-PRODUCTION.md` (1615 testes
+>    contra 1817 medidos) e a contagem de rotas do `docs/SECURITY.md` (26 contra 29).
 
 ## Contadores
 
-Sobre as **6 specs que seguem em `specs/`**. Recontados do disco em 2026-09-24, lendo o frontmatter de
+Sobre as **5 specs que seguem em `specs/`**. Recontados do disco em 2026-09-25, lendo o frontmatter de
 cada arquivo.
 
 | status | qtd |
 |--------|-----|
-| `proposed` | 4 |
+| `proposed` | 3 |
 | `approved` | 0 |
 | `in-progress` | 1 |
-| `done` (arquivadas) | 17 |
+| `done` (arquivadas) | 18 |
 | `deferred` | 1 |
 | `rejected` | 0 |
 | `superseded` | 0 |
 
-**Por audiência:** `produto` 2 · `confianca` 1 · `dx` 1 (+1 `in-progress` em `dx`, +1 `deferred` em
-`produto`). **Por esforço:** P 0 · M 4 · G 2. **Por valor:** alto 3 · médio 3 · baixo 0.
+**Por audiência:** `produto` 1 · `confianca` 1 · `dx` 1 (+1 `in-progress` em `dx`, +1 `deferred` em
+`produto`). **Por esforço:** P 0 · M 3 · G 2. **Por valor:** alto 2 · médio 3 · baixo 0.
 
-**Transições aplicadas: 1** (`onboarding-flow`: `proposed` → `done`, arquivada). Nenhuma spec nova
+**Transições aplicadas: 1** (`billing-subscription`: `in-progress` → `done`, arquivada). Nenhuma spec nova
 entrou: esta rodada é `--sync` puro.
 
-> **A fila ficou curta e sem nenhuma spec de valor alto que uma rodada autônoma consiga provar.** As três
-> de valor alto são `billing-subscription` (precisa de chaves da Stripe), `observability-logging`
-> (`in-progress`, o resíduo exige conta em provedor) e `teams-organizations` (`deferred`). A audiência
-> `confianca` segue com uma spec só. As duas coisas pedem uma rodada de descoberta (`/spec` sem argumento)
-> antes que a fila esvazie; ver [Precisam de decisão](#precisam-de-decisão) nº 3.
+> **A fila tem três specs elegíveis, todas de valor médio.** As duas de valor alto que restam estão fora do
+> conjunto: `observability-logging` (`in-progress`, o resíduo exige conta em provedor) e
+> `teams-organizations` (`deferred`). A audiência `confianca` segue com uma spec só. A rodada de descoberta
+> continua em avaliação pelo usuário ([pergunta nº 4](#precisam-de-decisão)).
 
-### O caso `onboarding-flow`: o que foi conferido antes de arquivar
+### O caso `billing-subscription`: o que foi conferido antes de arquivar
 
-PR **#24** mergeada em `main` em 2026-09-24T11:26:50Z (merge commit `d52c4f0`), com CI `success` nesse SHA
-(`gh run 35993064246`, conferido com `gh run list`: `headSha` = `d52c4f0e…`). `git log origin/main -1`
+PR **#25** mergeada em `main` em 2026-09-24T14:46:15Z (merge commit `a1f87d0`), com CI `success` nesse SHA
+(`gh run 36015211021`, conferido com `gh run list`: `headSha` = `a1f87d04…`). `git log origin/main -1`
 devolve o mesmo commit do `HEAD` local. A tabela completa, com todas as âncoras, está na spec arquivada,
 seção "Estado da entrega".
 
 | item | veredito | evidência principal |
 |------|----------|---------------------|
-| 1. Desvio decidido no servidor | **implementado** | `(common)/layout.tsx:38-41`, logo depois do desvio de admin; regra em `apps/app/lib/server/onboarding.ts:18-30` |
-| 2. Dois passos, progresso visível, nome e idioma | **implementado** | `ONBOARDING_STEPS` em `packages/sdk/src/types/user/user.ts:17-20`; progresso em `OnboardingClient.tsx:102-104`, `:169-175`; escrita pelo `PUT /account` existente |
-| 3. Retomável, deep link honrado | **implementado**, com deriva | estado nasce em `user-merge.ts:52`, avança por `account/onboarding/route.ts:14`; header `x-app-path` em `apps/app/proxy.ts:214-216`; a query string do destino se perde |
-| 4. Concluído nunca mais é interceptado | **implementado** | `completedAt` gravado em `apps/api/(shared)/lib/onboarding.ts:105-108`; `onboarding/page.tsx:45-48` redireciona |
-| 5. Passo pulável e interruptor | **implementado** | `skippable` por passo, `400 ONBOARDING_STEP_NOT_SKIPPABLE` em `route.ts:41-46`; `ONBOARDING_ENABLED` em `apps/app/env.ts:11`, vazio conta como ligado |
+| 1. Planos do catálogo, com preço e moeda | **implementado** | `payments/plans/route.ts:12-29`; `listPlans` em `billing.ts:50-67`; sem cobrança ligada, `{ enabled: false }` sem chamar a Stripe |
+| 2. Checkout e volta com resultado visível | **implementado**, caminho real 🔒 | `payments/checkout/route.ts:20-78`, 409 com assinatura viva (`:41-46`); volta em `billing.ts:34-44`; releitura da conta em `useCheckoutConfirmation.tsx:12-31` |
+| 3. Estado gravado no perfil e lido pela UI | **implementado** | `UserDTO.stripeCustomerId`/`subscription` em `user.ts:62-65`; snapshot em `payments.ts:30-44` |
+| 4. Webhook reconcilia, sem efeito duplicado | **implementado** | eventos em `webhooks/payments/route.ts:107-111`; dedupe em `:161-167` e `payment-event.repository.ts:27-55`; regra de ordem em transação (`user.repository.ts:71-104`, `billing-state.ts:130-165`) |
+| 5. Portal da Stripe | **implementado**, página real 🔒 | `payments/portal/route.ts:14-56` |
+| 6. CTAs do `pricing` no modo `subscription` | **implementado** | `apps/web/shared/lib/pricingCta.ts:13-27`; `pricing/page.tsx:39`, `:90`, `:128` |
+| Obrigação herdada: passo `billing` do expurgo | **implementado**, cancelamento real 🔒 | `account-erasure.ts:71-96`, roda primeiro e trava o resto se falhar (`:142-156`); exportação em `account-export.ts:56-67` |
 
-O `/test` fechou 20 de 20 critérios sob o emulador de Auth e Firestore na rodada 2, depois de a rodada 1
-ter reprovado dois (idioma pré-selecionado errado e o 409 que não voltava de passo), ambos corrigidos no
-`/review` com teste que falha sem a correção.
+O `/test` fechou 19 critérios, reprovou 0 e deixou 5 como 🔒 (catálogo real, checkout real, entrega real de
+webhook, página do portal, cancelamento real no expurgo). A prova usou chaves falsas no ambiente do
+processo, webhook assinado localmente e o emulador.
 
-**Arquivamento:** `docs/features/onboarding-flow/spec.md` não existia e o `STATE.md` já trazia
-`spec: onboarding-flow` (`:5`). Os quatro links de saída da spec (uma nota de pesquisa, duas specs
-arquivadas, uma spec viva) foram reescritos **antes** do `git mv`. Os três links de entrada que o movimento
-quebrou foram corrigidos: `docs/features/user-activity-tracking/spec.md:155`,
-`docs/features/user-activity-tracking/analyze/plan.md:212` e `docs/features/onboarding-flow/analyze/plan.md:3`.
+**Arquivamento:** `docs/features/billing-subscription/spec.md` não existia e o `STATE.md` já trazia
+`spec: billing-subscription` (`:5`). Os três links de saída da spec (duas notas de pesquisa e uma spec
+arquivada) foram reescritos antes do `git mv`. Os links de entrada que o movimento quebrou foram corrigidos
+em `docs/features/admin-analytics-dashboard/spec.md:122`, `docs/features/user-activity-tracking/spec.md:155`,
+`docs/features/user-activity-tracking/analyze/plan.md:211`, `docs/features/data-rights-lgpd/spec.md:212`,
+`docs/features/billing-subscription/analyze/plan.md:3` e em duas linhas de
+[`admin-billing-insights`](admin-billing-insights.md).
 
-**Nota de processo:** o `STATE.md` da feature mostra `review` em `in-progress`, porque o `/cycle` não
-commita e ninguém voltou para fechar a etapa depois do merge. É o mesmo estado de `audit-log`. Não bloqueia
-nada; a auditoria não edita a tabela de etapas.
+**Nota de processo:** o `git mv` deixou o rename **no índice**. Quem montar o plano de commits precisa
+contar com ele: é o commit de fechamento `docs(specs)`, separado do resto.
 
 ## Gates medidos nesta auditoria
 
-Executados agora, com `--force`, neste workspace, com o `HEAD` em `d52c4f0`. Não copiados do `/test` nem
+Executados agora, com `--force`, neste workspace, com o `HEAD` em `a1f87d0`. Não copiados do `/test` nem
 da rodada anterior.
 
 | comando | resultado |
 |---------|-----------|
-| `pnpm check` | ✅ **666 arquivos · 0 erros** (`No fixes applied`, 471 ms) |
-| `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks · 0 em cache · 1 min 2,7 s** |
+| `pnpm check` | ✅ **699 arquivos · 0 erros** (`No fixes applied`, 559 ms) |
+| `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks · 0 em cache · 56,7 s** |
 
-| workspace | arquivos | testes | Δ vs. 2026-09-23 (PR #23) |
+| workspace | arquivos | testes | Δ vs. 2026-09-24 (PR #24) |
 |-----------|---------:|-------:|---------------------------|
-| `api` | 60 | 680 | **+3 arquivos · +29** |
-| `app` | 68 | 501 | **+3 arquivos · +39** |
+| `api` | 66 | 804 | **+6 arquivos · +124** |
+| `app` | 73 | 559 | **+5 arquivos · +58** |
 | `@repo/email` | 7 | 137 | — |
 | `@repo/auth` | 8 | 101 | — |
 | `@repo/shared` | 4 | 44 | — |
 | `@repo/internationalization` | 5 | 44 | — |
-| `web` | 6 | 35 | — |
+| `web` | 8 | 41 | **+2 arquivos · +6** |
 | `@repo/analytics` | 2 | 34 | — |
 | `@repo/security` | 3 | 31 | — |
-| `@repo/payments` | 1 | 8 | — |
-| **total** | **164** | **1615** | **+6 arquivos · +68 testes** |
+| `@repo/payments` | 4 | 22 | **+3 arquivos · +14** |
+| **total** | **180** | **1817** | **+16 arquivos · +202 testes** |
 
-A PR #24 não criou workspace novo: seguem 24 tasks e **10** configs de Vitest. O `pnpm check` subiu de 648
-para **666** arquivos. O pacote de tradução ganhou um arquivo de página (`pages/onboarding/index.ts`) e
-três códigos em `apiErrors`, e o teste de paridade continua em 44/44 porque ele varre o dicionário inteiro.
+A PR #25 não criou workspace novo: seguem 24 tasks e **10** configs de Vitest, todas com `testTimeout`. O
+`pnpm check` subiu de 666 para **699** arquivos. O teste de paridade de i18n continua em 44/44 com os
+cinco códigos `PAYMENTS_*` novos, porque ele varre o dicionário inteiro.
 
-CI: a execução de merge de **#24** (`d52c4f0`) está em **`success`**.
+CI: a execução de merge de **#25** (`a1f87d0`) está em **`success`**.
 
 Branch protection segue **não ligado**, remedido hoje: `gh api repos/:owner/:repo/branches/main/protection`
-→ **404**, `rulesets` → **`[]`**. O repositório tem **24** PRs, todas mergeadas.
+→ **404**, `rulesets` → **`[]`**. O repositório tem **25** PRs, todas mergeadas.
 
 ## Ordem recomendada
 
 Respeita `depends_on` (lido do frontmatter nesta rodada) e prioriza valor × esforço × custo de adiar.
-**Uma spec segue bloqueada por dependência.**
+**Nenhuma spec segue bloqueada por dependência.**
 
 > **Critério de execução, sem exceção:** o que uma rodada autônoma consegue provar. O `/cycle` não
 > provisiona infraestrutura, então spec cujos critérios dependem de conta em provedor volta com metade dos
-> critérios "não verificados". Medido hoje: `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` estão vazias nos
-> `.env` locais da `apps/api` e da `apps/app`.
+> critérios "não verificados".
 
 | # | id | por que agora |
 |---|----|---------------|
-| 1 | [`e2e-testing`](e2e-testing.md) | **A única spec elegível que uma rodada autônoma prova sem provisionar nada.** Emulador e seed existem desde a PR #13; os itens 1, 3, 4 e 5 do corte se provam localmente. O item 2 (rodar no CI) só se prova quando a branch subir, e "bloquear o merge" depende do branch protection (E3), que é decisão sua. O argumento concreto cresceu de novo: o `/test` da PR #24 derrubou dois critérios dirigindo o browser à mão e achou a perda da query string do deep link; nenhum teste da suíte cobre essas três coisas. A PR #24 também mudou o primeiro fluxo do corte, porque cadastro agora atravessa o onboarding. **O custo é esforço G e dependências novas de desenvolvimento** (Playwright, `@axe-core/playwright` e um provedor de cobertura do Vitest; `node_modules/.pnpm` não tem nenhum deles). A `cycle-policy` §2 exige que dependência nova passe pelo relatório, e é a [pergunta nº 1](#precisam-de-decisão) |
-| 2 | [`billing-subscription`](billing-subscription.md) | Valor alto e ainda em **0/6**, reconferido: não existe grupo `payments/` entre os 8 de `apps/api/app/(routes)/`, o `UserDTO` (`user.ts:42-60`) não tem `subscription` nem `stripeCustomerId`, o SDK registra **7** actions (`client/index.ts:14-20`) e o webhook tem dois handlers `// TODO` (`webhooks/payments/route.ts:13,23`). Carrega a obrigação herdada de `data-rights-lgpd`: o passo `billing` do expurgo segue `skipped` (`account-erasure.ts:67-78`). **Perde só por verificabilidade:** checkout, portal e webhook exigem chaves de teste da Stripe, e elas estão vazias. Passa ao topo no dia em que existirem. O 🔴 de `packages/payments/ai.ts:4-5` continua sendo pré-requisito barato |
-| 3 | [`account-security-mfa`](account-security-mfa.md) | Em **1,5 de 6**, inalterado. `git grep -w -i "multifactor\|totp"` em `apps/` e `packages/` devolve **zero**. `value: médio` (MFA em **3/10** dos starters, sessões gerenciáveis em **1/10**). Seguem **11** declarações de `MIN_PASSWORD_LENGTH` e **28** ocorrências. O segundo fator depende de um custo no Identity Platform que segue **não confirmado**, e o corte precisa de reescopo, como `onboarding-flow` precisava. O bloco de reescopo funcionou lá; é o caminho mais barato aqui |
-| 4 | [`admin-billing-insights`](admin-billing-insights.md) | Bloqueada, e é a única. Espera `billing-subscription`, em 0/6. O risco que ela carrega é de correção: agregar receita a partir de webhook sem dedupe por `event.id` infla o número em silêncio |
-| 5 | [`observability-logging`](observability-logging.md) | `in-progress`, 5 dos 6 itens. O resíduo é adotar um coletor de erro, que exige conta em provedor. **Fora do conjunto elegível.** A pergunta de fechar ou não foi estacionada (E1) |
-| 6 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22. O predicado de posse segue com quatro cópias em `entity.repository.ts` (`:23`, `:40`, `:64`, `:72`). A decisão de status foi estacionada (E2) |
+| 1 | [`admin-billing-insights`](admin-billing-insights.md) | **Desbloqueada nesta rodada, e escolhida pelo usuário.** `billing-subscription` e `dashboard-home` estão entregues. O dedupe por `event.id`, que era o risco de correção central da spec, já existe (`payment-event.repository.ts:22-56`). Quase todo o corte se prova sem conta Stripe: a leitura é da base local, e o harness de payload assinado com o emulador fechou 19 critérios de `billing-subscription`; fica 🔒 só a entrega real de `invoice.paid`. Esforço M. **O que o `/analyze` precisa resolver**, e que a spec agora lista com âncora: o snapshot não guarda instante de ativação nem nome do plano, e nenhum evento de fatura é persistido. Há ainda um passo novo de infra por fork (um quinto evento no endpoint da Stripe), que vai para o `PRE-PRODUCTION.md` §12 |
+| 2 | [`e2e-testing`](e2e-testing.md) | Prova-se localmente nos itens 1, 3, 4 e 5; o item 2 só prova quando a branch subir, e "bloquear o merge" depende do branch protection (E3). As dependências de desenvolvimento foram **aprovadas pelo usuário em 2026-09-24**. A PR #25 reforçou o caso de novo: o `/test` achou o CTA do `/pricing` no idioma errado e o botão sem nome acessível dirigindo o browser à mão. **Perde o topo por esforço G** contra M, com valor igual |
+| 3 | [`account-security-mfa`](account-security-mfa.md) | Em **1,5 de 6**, inalterado. `value: médio` (MFA em **3/10** dos starters, sessões gerenciáveis em **1/10**). O segundo fator depende de um custo no Identity Platform que segue **não confirmado**, e o corte precisa de reescopo, como `onboarding-flow` precisava |
+| 4 | [`observability-logging`](observability-logging.md) | `in-progress`, 5 dos 6 itens. O resíduo é adotar um coletor de erro, que exige conta em provedor. **Fora do conjunto elegível.** A pergunta de fechar ou não foi estacionada (E1) |
+| 5 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22. O predicado de posse segue com quatro cópias em `entity.repository.ts` (`:23`, `:40`, `:64`, `:72`). A decisão de status foi estacionada (E2) |
 
 ### O que **não** foi escolhido para #1, e por quê
 
-- **`billing-subscription` tem mais valor e perde por verificabilidade.** Uma rodada autônoma sem chaves
-  de teste devolveria checkout, portal e webhook como "não verificados", que é metade do corte. Se você
-  puser chaves de teste da Stripe no ambiente de desenvolvimento, ela passa à frente sem discussão.
+- **`e2e-testing` tem o mesmo valor e mais alcance**, porque protege toda PR seguinte. Perde por esforço (G
+  contra M) e porque metade do argumento dela, bloquear o merge, espera o branch protection. Se o usuário
+  preferir alcance a velocidade, ela é a escolha, e as dependências já estão aprovadas.
 - **`account-security-mfa` perde por corte contestado, valor médio e custo não confirmado.** O item do
-  segundo fator depende de habilitar um recurso do provedor, que o `/cycle` não pode fazer, e a parte das
-  sessões ativas esbarra num modelo que o Firebase não oferece pronto.
-- **Ressalva sobre o #1:** se você recusar as dependências, `e2e-testing` não tem como ser feita com o que
-  existe no repositório, e não há #1 executável sem infra. Nesse caso, a recomendação passa a ser uma
-  rodada de descoberta, ou uma tarefa direta tirada dos [Achados](#achados-correções-pontuais-não-specs).
+  segundo fator depende de habilitar um recurso do provedor, que o `/cycle` não pode fazer.
+- **Ressalva sobre o #1:** o benchmark não sustenta `admin-billing-insights` (não há linha de painel
+  financeiro entre os starters medidos; a spec diz isso). O argumento dela é o cruzamento entre usuário do
+  fork e cliente da Stripe, e ele só pesa para fork que vende. Há um argumento de prazo a favor: receita
+  começa a contar só a partir da entrega, porque webhook não traz histórico.
 
-### O que o merge da PR #24 mudou no ranking
+### O que o merge da PR #25 mudou no ranking
 
-`onboarding-flow` saiu da fila sem destravar ninguém pelo `depends_on`: nenhuma spec dependia dela. O
-efeito foi em dois eixos:
+`billing-subscription` saiu da fila e destravou `admin-billing-insights` pelo `depends_on`, a única spec
+que dependia dela. O efeito foi em três eixos:
 
-- **Contenção.** `packages/sdk/src/types/user/user.ts` deixou de ser disputado: agora só
-  `billing-subscription` o declara. `apps/app/proxy.ts`, `postLoginNavigation.ts`, `user-merge.ts` e
-  `(common)/layout.tsx` saíram do `contends_on` coletivo.
-- **Argumento.** `e2e-testing` ganhou um caso concreto e uma mudança no primeiro fluxo do corte. Com
-  `onboarding-flow` fora e as outras duas elegíveis presas a provedor, ela sobe de #4 para #1.
+- **Dependência.** Nenhuma spec da fila está bloqueada por `depends_on`.
+- **Verificabilidade.** O harness de webhook assinado mostrou que spec de cobrança se prova quase inteira
+  sem conta Stripe. Era o motivo pelo qual `billing-subscription` ficou em #2 por várias rodadas, e o
+  mesmo motivo deixou de pesar contra `admin-billing-insights`.
+- **Contenção.** O webhook de pagamento, o `UserDTO`, o barril do SDK, `(common)/routes.tsx` e
+  `account-erasure.ts` saíram do `contends_on` coletivo. Só `admin-billing-insights` declara o webhook agora.
 
 ## Lotes paralelos
 
-Para rodar o ciclo completo em 2–3 workspaces do Conductor ao mesmo tempo. Calculado em **2026-09-24** a
+Para rodar o ciclo completo em 2–3 workspaces do Conductor ao mesmo tempo. Calculado em **2026-09-25** a
 partir do `contends_on` de cada spec, lido do disco, pelo algoritmo de
 [`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por
 disjunção → teto de 3.
@@ -173,25 +175,28 @@ disjunção → teto de 3.
 pena fazer*; o lote diz *o que pode ser feito junto sem uma spec pisar na outra*. Se você só vai rodar uma
 coisa, rode o #1 da ordem.
 
-**Elegíveis agora: 3 de 6.** Fora ficam `teams-organizations` (`deferred`), `observability-logging`
-(`in-progress`) e `admin-billing-insights` (espera `billing-subscription`).
+**Elegíveis agora: 3 de 5.** Fora ficam `teams-organizations` (`deferred`) e `observability-logging`
+(`in-progress`).
 
 | lote | specs | o que cada uma toca | por que não colidem |
 |------|-------|---------------------|---------------------|
-| **1** | `e2e-testing` · `billing-subscription` · `account-security-mfa` | `package.json` da raiz + `turbo.json` + `ci.yml` · webhook de pagamento + barril do SDK + `UserDTO` + `user.repository.ts` + `(common)/routes.tsx` + `account-erasure.ts` · `packages/auth/server.ts` + `session.ts` + `session-routes.ts` + `resolve-api-actor.ts` | **ferramental da raiz**, **caminho de cobrança** e **camada de credencial**. A primeira não toca em `apps/` nem em `packages/`; a segunda vive no webhook, no perfil e no SDK; a terceira, dentro de `packages/auth` e do resolvedor de ator |
+| **1** | `admin-billing-insights` · `e2e-testing` · `account-security-mfa` | `AdminHomeClient.tsx` + `queryKeys.ts` + webhook de pagamento + `user.repository.ts` · `package.json` da raiz + `turbo.json` + `ci.yml` · `packages/auth/server.ts` + `session.ts` + `session-routes.ts` + `resolve-api-actor.ts` | **home do admin e caminho de cobrança**, **ferramental da raiz** e **camada de credencial**. A primeira vive na `apps/api` e na home do admin; a segunda não toca em `apps/` nem em `packages/`; a terceira fica em `packages/auth` e no resolvedor de ator |
 
 Não há lote 2: as três elegíveis cabem no lote 1, e o teto de 3 não barrou ninguém.
 
+O `contends_on` de `admin-billing-insights` ganhou `apps/api/(shared)/repositories/user.repository.ts`
+nesta rodada. A contagem de assinaturas por plano lê o snapshot `subscription` do perfil, e os agregados de
+perfil moram nesse repositório (`summary` e `activitySummary`).
+
 ### Onde o lote 1 ainda pode colidir sem ter declarado
 
-- **`billing-subscription` e `account-security-mfa`** tendem a acrescentar códigos de erro em
-  `translations/packages/shared/utils.ts` (o `apiErrors`), que nenhuma das duas declara. A PR #24 também
-  tocou esse arquivo sem declarar. O conflito é aditivo e se resolve no merge, mas vai acontecer.
-- **`account-security-mfa`** mexe na política de senha, e uma das 11 declarações de `MIN_PASSWORD_LENGTH`
-  está em `apps/api/(shared)/validation/account.schema.ts:8`, arquivo que a PR #24 alterou sem declarar.
-  Ninguém mais no lote o toca.
-- **`e2e-testing`** vai tocar as configs de Vitest (para medir cobertura) e o `pnpm-lock.yaml`. Nenhuma das
-  outras declara esses arquivos, então o lote não muda. O `contends_on` dela segue como está no disco.
+- **`admin-billing-insights` e `account-security-mfa`** tendem a acrescentar códigos de erro em
+  `translations/packages/shared/utils.ts` (o `apiErrors`), que nenhuma das duas declara. As PRs #24 e #25
+  tocaram esse arquivo sem declarar. O conflito é aditivo e se resolve no merge.
+- **`admin-billing-insights`** provavelmente toca `firestore.indexes.json`, `packages/sdk/src/types/index.ts`
+  e `docs/PRE-PRODUCTION.md` §12. Nenhuma outra do lote declara esses arquivos.
+- **`e2e-testing`** vai tocar as configs de Vitest e o `pnpm-lock.yaml`. Se a suíte E2E cobrir a aba de
+  billing, lê o que `admin-billing-insights` estiver mudando, mas não escreve nos mesmos arquivos.
 
 ### Nota de processo: a auditoria é de um workspace só
 
@@ -205,13 +210,12 @@ dado (ver [`README.md`](README.md#depends_on--contends_on)).
 **Lote disjunto em `contends_on` reduz conflito; não elimina.** O campo é uma previsão feita lendo o corte
 de MVP.
 
-`onboarding-flow` declarou **5** arquivos e acertou **4**. Sobrou `postLoginNavigation.ts`, que o próprio
-reescopo tinha declarado irrelevante e que o `contends_on` não acompanhou. Na outra direção, a PR tocou
-sem declarar `packages/sdk/src/actions/account/action.ts`, `apps/api/(shared)/validation/account.schema.ts`,
-`auth/sign-up/route.ts`, `apps/app/env.ts`, `apps/app/.env.example`,
-`translations/apps/app/pages/index.ts` e `translations/packages/shared/utils.ts`. Foi a previsão mais
-precisa até aqui (a de `data-rights-lgpd` acertou 1 de 3), e ainda assim o padrão das rodadas anteriores
-se repete: o arquivo que falta é vizinho dos declarados, na mesma camada.
+`billing-subscription` declarou **6** arquivos e acertou **6**, a primeira previsão sem erro nessa direção.
+Na outra, a PR tocou sem declarar `account-export.ts`, `account/deletion/route.ts`,
+`apps/api/instrumentation.ts`, `AccountTabs.tsx`, `queryKeys.ts`, `apps/web/env.ts`, `pricing/page.tsx`, os
+dois arquivos de tradução e `packages/sdk/src/types/account/account.ts`. `queryKeys.ts` é declarado por
+`admin-billing-insights`; como as duas nunca rodaram juntas, não houve conflito. O padrão das rodadas
+anteriores se repete: o arquivo que falta é vizinho dos declarados, na mesma camada.
 
 ## Precisam de decisão
 
@@ -220,9 +224,14 @@ Só o que é novo nesta rodada ou mudou de natureza. O que se repetia foi para
 
 | # | questão | recomendação |
 |---|---------|--------------|
-| 1 | **Adotar Playwright, `@axe-core/playwright` e um provedor de cobertura do Vitest como dependências de desenvolvimento?** É o que `e2e-testing` (#1) exige, e a `cycle-policy` §2 não deixa o ciclo adotar dependência nova por conta própria | **Aprovado pelo usuário em 2026-09-24: adotar.** As três são gratuitas, ficam em `devDependencies`, não exigem variável de ambiente e não entram no bundle de nenhum app. Sem elas a spec não tem como ser feita. O navegador do Playwright precisa ser instalado no CI (`playwright install`), o que aumenta o tempo do job |
-| 2 | **Honrar a query string do deep link do onboarding?** O proxy grava só o `pathname` em `x-app-path` (`apps/app/proxy.ts:215`), então um link de listagem filtrada aberto antes do onboarding volta sem o filtro | **Tarefa direta de esforço P:** gravar `pathname + search`. O destino já passa por `postAuthRedirectTarget`, que recusa open redirect, e `resolveOnboardingDestination` já corta query antes de comparar com `/onboarding`. Precisa de um caso a mais em `proxy.test.ts` |
-| 3 | **Rodar uma descoberta (`/spec` sem argumento) antes que a fila esvazie?** Restam três elegíveis, nenhuma de valor alto provável sem infra, e `confianca` tem uma spec só | **Em avaliação pelo usuário (2026-09-24); não rodar até ele decidir.** Recomendação da auditoria: rodar depois do #1. A nota `specs/research/compliance-trust-baseline.md` é o ponto de partida para o eixo `confianca`; a candidata já registrada em [Lacunas](#lacunas-avaliadas-e-não-especificadas) é a de templates de RoPA, runbook de incidente e DPA em `docs/` |
+| 1 | **O que o modo `simple` deve fazer?** `docs/AUTH-SSO.md:66-71` diz que ele manda o usuário comum para a web e deixa o painel só para admin. O código não faz nada disso: o layout `(common)` não lê o modo, `commonUserUsesPanel()` não existe e a `apps/web` não tem área autenticada. Hoje o `simple` só esconde a cobrança e o link do painel no header da web | **Tratar o `simple` como "produto sem cobrança" e reescrever a tabela do `AUTH-SSO.md` para o que o código faz** (tarefa P de documentação; a nota de medição já está lá). Implementar o redirecionamento descrito mandaria o usuário comum para uma web sem área logada, então não é tarefa direta: se o "comum opera na web" for desejado, é spec de descoberta |
+| 2 | **A pendência nº 21 (titular sem acesso à aba de privacidade no `simple`) fecha?** Ela partia da mesma premissa falsa: hoje o titular alcança a aba em qualquer modo | **Fechar como descrita** e deixar a nota de correção no `PRE-PRODUCTION.md`, que já foi escrita. Ela volta se a restrição da pergunta nº 1 for implementada. Você tinha dito que ficava para depois; a medição mudou a natureza do item, por isso ele volta aqui uma vez |
+| 3 | **O soft delete de usuário pelo admin deve cancelar a assinatura?** `DELETE /users/[id]` (`apps/api/app/(routes)/users/[id]/route.ts:117`) só marca o perfil. A assinatura segue cobrando, e o webhook deixa de achar o perfil (`user.repository.ts:50-61` ignora `deletedAt`) | **Tarefa direta de esforço P:** chamar o mesmo `cancelSubscriptionForErasure` (`billing.ts:162-175`) antes do soft delete, com teste. Se o arquivamento pelo admin precisar ser reversível sem perder a assinatura, a alternativa é `cancel_at_period_end`, e aí a decisão é de produto |
+| 4 | **Rodar uma descoberta (`/spec` sem argumento) antes que a fila esvazie?** Restam três elegíveis, todas de valor médio, e `confianca` tem uma spec só | **Em avaliação pelo usuário (2026-09-24); não rodar até ele decidir.** Recomendação da auditoria: rodar depois do #1. A nota `specs/research/compliance-trust-baseline.md` é o ponto de partida para o eixo `confianca`; as candidatas registradas em [Lacunas](#lacunas-avaliadas-e-não-especificadas) são os templates de RoPA, runbook de incidente e DPA em `docs/` e o gate de acesso por plano |
+
+Saíram desta tabela nesta rodada: a adoção de Playwright, `@axe-core/playwright` e provedor de cobertura
+(**aprovada pelo usuário em 2026-09-24**; vale quando `e2e-testing` rodar) e a query string do deep link do
+onboarding, que apareceu pela segunda vez e, pela §5.1, fica só como achado com `arquivo:linha`.
 
 ## Decisões estacionadas (§5.1)
 
@@ -232,49 +241,44 @@ Cada uma tem dono e endereço.
 
 | # | questão | dono | onde mora a decisão | recomendação registrada |
 |---|---------|------|---------------------|-------------------------|
-| E1 | `observability-logging` fecha como entregue, com o coletor virando spec P própria? (10 rodadas) | você | `docs/PRE-PRODUCTION.md` §11 (o coletor) | fechar e abrir spec P do coletor |
-| E2 | `teams-organizations` continua `deferred`? (12 rodadas sem as contrapartidas P) | você | este arquivo, [Achados](#-repositório-rotas-e-proxy) (predicado de posse) | status de sua escolha; as contrapartidas já são achados com arquivo e linha |
-| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar; não há pré-requisito técnico. Passa a importar mais com o #1, cujo item 2 pede que a suíte E2E bloqueie o merge |
-| E4 | O gate `approved` não é usado (agora **cinco** specs entregues sem sair de `proposed`, incluindo `onboarding-flow`) | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
+| E1 | `observability-logging` fecha como entregue, com o coletor virando spec P própria? (11 rodadas) | você | `docs/PRE-PRODUCTION.md` §11 (o coletor) | fechar e abrir spec P do coletor |
+| E2 | `teams-organizations` continua `deferred`? (13 rodadas sem as contrapartidas P) | você | este arquivo, [Achados](#-repositório-rotas-e-proxy) (predicado de posse) | status de sua escolha; as contrapartidas já são achados com arquivo e linha |
+| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar; não há pré-requisito técnico. Passa a importar mais com `e2e-testing`, cujo item 2 pede que a suíte E2E bloqueie o merge |
+| E4 | O gate `approved` não é usado (agora **seis** specs entregues sem passar por `approved`, incluindo `billing-subscription`) | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
 | E5 | Prazo de retenção da coleção `auditEvent` | você | `docs/PRE-PRODUCTION.md` §1.3 | decidir um prazo padrão sem invocar o art. 15 do Marco Civil |
 | E6 | Teto absoluto da sessão ultrapassável por até meia vida de cookie | — | `docs/PRE-PRODUCTION.md`, seção "Declaração — por quanto tempo uma sessão pode ser renovada" | manter o comportamento; o número está escrito onde o fork lê |
 | E7 | Busca da tabela enxerga só as páginas carregadas | quem sentir a dor | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | abrir spec quando houver caso de uso |
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
-| E9 | 🆕 O deep link das abas da conta (`?tab=`) não acompanha a barra lateral (2 rodadas) | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:48-50`), por isso precisa da sua palavra |
+| E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral (3 rodadas) | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`), por isso precisa da sua palavra |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
 
 - Em `.claude/cycle-policy.md` §2: *"Spec cujo corte a auditoria contestou em duas rodadas não entra em
   `/analyze` sem um bloco 'Reescopo que o `/analyze` deve aplicar' na própria spec. Se o bloco não existir,
-  o `/cycle` escolhe a próxima."* **Agora com um caso medido:** `onboarding-flow` ficou seis rodadas presa
-  pelo corte contestado, ganhou o bloco numa rodada e foi entregue na seguinte, 5/5.
+  o `/cycle` escolhe a próxima."* Caso medido: `onboarding-flow` ficou seis rodadas presa pelo corte
+  contestado, ganhou o bloco numa rodada e foi entregue na seguinte, 5/5.
 - Em `.claude/skills/spec-audit/SKILL.md` §4.1, antes do passo 5: *"Reescreva os links relativos de saída
   da spec para o caminho novo: `research/*.md` vira `../../../specs/research/*.md`, spec viva vira
   `../../../specs/<id>.md`, spec arquivada vira `../<slug>/spec.md`. Rode o verificador de links no
-  arquivo movido e confirme zero mortos."* Esta rodada fez isso à mão pela terceira vez.
-
-Saíram do limbo nesta rodada, sem precisar de você: a confirmação de `onboarding-flow` como #1 (entregue),
-a aceitação do reescopo dela (aplicado pelo `/analyze`, entregue) e os 20 links mortos nas specs
-arquivadas (consertados).
+  arquivo movido e confirme zero mortos."* Esta rodada fez isso à mão pela quarta vez.
 
 ## Dependências e bloqueios
 
-| spec | `depends_on` | situação em 2026-09-24 |
+| spec | `depends_on` | situação em 2026-09-25 |
 |------|--------------|------------------------|
+| [`admin-billing-insights`](admin-billing-insights.md) | `billing-subscription`, `dashboard-home` | ✅ satisfeitas (PR #25, `a1f87d0`; PR #19, `bfc4d8f`) |
 | [`e2e-testing`](e2e-testing.md) | `ci-pipeline`, `firebase-emulator-seed` | ✅ satisfeitas (PR #5 e PR #13) |
 | [`account-security-mfa`](account-security-mfa.md) | `account-settings` | ✅ satisfeita (PR #12, `a4df5ed`) |
 | [`teams-organizations`](teams-organizations.md) | `transactional-emails` | ✅ satisfeita (PR #9, `400f290`) |
-| [`billing-subscription`](billing-subscription.md) · [`observability-logging`](observability-logging.md) | — | ✅ sem dependência |
-| [`admin-billing-insights`](admin-billing-insights.md) | `billing-subscription`, `dashboard-home` | ⛔ **bloqueada**: `billing-subscription` está em 0/6; ✅ `dashboard-home` fechou |
+| [`observability-logging`](observability-logging.md) | — | ✅ sem dependência |
 
 ## Todas as specs
 
 | id | título | audiência | valor | esforço | status | depende de |
 |----|--------|-----------|-------|---------|--------|------------|
 | [`account-security-mfa`](account-security-mfa.md) | MFA, sessões ativas e política de senha | confianca | médio | M | `proposed` | ✅ `account-settings` |
-| [`admin-billing-insights`](admin-billing-insights.md) | Seção de billing na home do admin | produto | médio | M | `proposed` | ⛔ `billing-subscription` · ✅ `dashboard-home` |
-| [`billing-subscription`](billing-subscription.md) | Assinatura Stripe de ponta a ponta | produto | alto | M | `proposed` | — |
+| [`admin-billing-insights`](admin-billing-insights.md) | Seção de billing na home do admin | produto | médio | M | `proposed` | ✅ `billing-subscription` · ✅ `dashboard-home` |
 | [`e2e-testing`](e2e-testing.md) | Testes E2E e acessibilidade automatizada | dx | médio | G | `proposed` | ✅ `ci-pipeline` · ✅ `firebase-emulator-seed` |
 | [`observability-logging`](observability-logging.md) | Observabilidade: erros, tracing e logs estruturados | dx | alto | M | `in-progress` | — |
 | [`teams-organizations`](teams-organizations.md) | Organizações, membros e convites | produto | alto | G | `deferred` | ✅ `transactional-emails` |
@@ -300,77 +304,86 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `session-refresh` | 2026-09-17 | [`docs/features/session-refresh/spec.md`](../docs/features/session-refresh/spec.md) — 6/6 do corte (PR #20, `cc93229`). ⚠️ A **revogação ponta a ponta segue 🔒 não verificada** |
 | `user-activity-tracking` | 2026-09-19 | [`docs/features/user-activity-tracking/spec.md`](../docs/features/user-activity-tracking/spec.md) — 5/6 do corte (PR #21, `e656331`). ✅ O item 4 parcial foi pago pela entrega de `data-rights-lgpd` |
 | `admin-analytics-dashboard` | 2026-09-23 | [`docs/features/admin-analytics-dashboard/spec.md`](../docs/features/admin-analytics-dashboard/spec.md) — 5/5 do corte (PR #22, `03498ae`). Gráfico entregue como histograma de recência |
-| `data-rights-lgpd` | 2026-09-23 | [`docs/features/data-rights-lgpd/spec.md`](../docs/features/data-rights-lgpd/spec.md) — **5/5 do corte** (PR #23, `ab11a5b`), item 3 dividido: arquivos sem prova contra bucket real, assinatura transferida para `billing-subscription`. **Quatro derivas registradas** |
+| `data-rights-lgpd` | 2026-09-23 | [`docs/features/data-rights-lgpd/spec.md`](../docs/features/data-rights-lgpd/spec.md) — **5/5 do corte** (PR #23, `ab11a5b`), item 3 dividido: arquivos sem prova contra bucket real, assinatura transferida para `billing-subscription` e paga pela PR #25. **Quatro derivas registradas** |
 | `onboarding-flow` | 2026-09-24 | [`docs/features/onboarding-flow/spec.md`](../docs/features/onboarding-flow/spec.md) — **5/5 do corte** (PR #24, `d52c4f0`), 20/20 critérios sob o emulador. Deriva no item 3: o deep link volta sem a query string |
+| `billing-subscription` | 2026-09-25 | [`docs/features/billing-subscription/spec.md`](../docs/features/billing-subscription/spec.md) — **6/6 do corte** (PR #25, `a1f87d0`), mais o passo `billing` do expurgo herdado de `data-rights-lgpd`. 19 ✅ e 5 🔒 no `/test` (só conta Stripe real prova). ⚠️ Catálogo, portal, endpoint de webhook e chaves são passo manual por fork (`PRE-PRODUCTION.md` §12) |
 
-**Verificado nesta rodada:** `docs/features/` tem **20** pastas e **17** `spec.md` arquivados. As três
+**Verificado nesta rodada:** `docs/features/` tem **21** pastas e **18** `spec.md` arquivados. As três
 pastas sem `spec.md` são `observability-logging` (spec continua em `specs/`), `auth-panel-context` e
 `impersonation-read-only` (as duas anteriores à semeadura). Não houve colisão de arquivamento.
 
-### O que a PR #24 entregou **além** do corte
+### O que a PR #25 entregou **além** do corte
 
-1. **`POST /auth/sign-up` passou a criar o perfil pelo helper** `createDefaultUserProfile`
-   (`auth/sign-up/route.ts:35`), mantendo o rollback da conta do Auth. Antes, o cadastro por senha gravava
-   o perfil direto e escaparia de qualquer campo inicial que o helper ganhasse.
-2. **O proxy da `apps/app` passou a repassar o caminho da requisição** no header `x-app-path`
-   (`proxy.ts:214-216`), sempre sobrescrevendo o que o navegador mandou. É infraestrutura reaproveitável:
-   qualquer layout que precise saber a URL pode ler esse header.
-3. **O avanço de passo é só para frente** (`apps/api/(shared)/lib/onboarding.ts:67-109`): passo atrás
-   devolve o estado atual sem escrever, passo à frente responde `409 ONBOARDING_STEP_OUT_OF_ORDER`, e a tela
-   volta ao passo do servidor.
+1. **`packages/payments/ai.ts` passou a construir o toolkit sob demanda** (`getPaymentsAgentToolkit`,
+   `ai.ts:9-32`), com teste em `packages/payments/__tests__/aiToolkit.test.ts`. Fecha o 🔴 que o backlog
+   carregava desde 2026-09-01.
+2. **As chaves da Stripe tratam string vazia como ausência e validam o prefixo** (`packages/payments/keys.ts:10-21`),
+   e o webhook lê o segredo pelo pacote (`getWebhookSecret`, `packages/payments/index.ts:26-27`), não pelo
+   `env.ts` da API. É isso que tornou o webhook alcançável em `next dev`.
+3. **A `apps/web` passou a enxergar `NEXT_PUBLIC_APP_URL`**, declarada no bloco `client` do `env.ts`
+   (`apps/web/env.ts:22`, `:31`). O `skipValidation: true` incondicional continua (`:33`).
+4. **A API avisa no boot quando só uma das chaves da Stripe está presente** (`apps/api/instrumentation.ts:8-22`).
+5. **O webhook responde 503 `PAYMENTS_NOT_CONFIGURED` sem as chaves** (`webhooks/payments/route.ts:136-141`),
+   para a Stripe reentregar em vez de perder o evento enquanto o fork termina a configuração.
 
 ## Contradições doc × código, medidas nesta rodada
 
 Nenhum gate lê prosa. Pela [`cycle-policy` §4](../.claude/cycle-policy.md), afirmação barata de medir num
 doc é medida e corrigida ao passar por ela.
 
-| documento | afirmava | realidade medida em 2026-09-24 | veredito |
+| documento | afirmava | realidade medida em 2026-09-25 | veredito |
 |-----------|----------|-------------------------------|----------|
-| `docs/PRE-PRODUCTION.md` §9 (gate) | 648 arquivos, 1547 testes em 158 arquivos, 1 min 12,4 s | 666 arquivos, 1615 testes em 164 arquivos, 1 min 2,7 s | ✅ **corrigido nesta rodada**, junto com a distribuição por workspace |
-| `docs/SECURITY.md:13-15` (guards) | **26** arquivos de rota, **15** com guard, **11** nus | **confere**: 26, 15 e os mesmos 11 (8 `/auth/*`, `health` ×2, `webhooks/payments`) | ✅ **honesto**: a PR #24 atualizou o documento junto com a rota |
-| `docs/SECURITY.md:146-148` (rate limit) | 10 caminhos em `apps/api/proxy.ts:44-55`; quatro das seis rotas de `/account` fora | **confere**, lista literal | ✅ **honesto** |
-| `docs/SECURITY.md:150` (renovação de sessão) | fora do rate limit, protegida só por `isSameOriginRequest` | **confere**: `session-routes.ts:87`, `session.ts:78-81` | ✅ **honesto** |
-| `docs/AUTH-PANEL.md` (onboarding) | o proxy repassa o `pathname` em `x-app-path`; perfil sem o campo conta como concluído; admin personificando nunca é desviado | **confere** com `proxy.ts:215`, `apps/app/shared/lib/onboarding.ts:25-47` e `lib/server/onboarding.ts:23-26` | ✅ **honesto na estreia**. Não diz que a query se perde, mas também não promete o contrário |
-| `docs/SETUP.md:85` (`ONBOARDING_ENABLED`) | vazio liga, `"false"` desliga, a API segue gravando o estado inicial | **confere** com `apps/app/shared/lib/onboarding.ts:54-56` e `user-merge.ts:52` | ✅ **honesto** |
-| `docs/PAYMENTS.md` (estado geral) | não há fluxo de assinatura; stubs em `route.ts:13,23` | **confere** | ✅ **honesto** pela décima segunda rodada |
+| `docs/PRE-PRODUCTION.md` §9 (gate) | 666 arquivos, 1615 testes em 164 arquivos, 1 min 2,7 s | 699 arquivos, 1817 testes em 180 arquivos, 56,7 s | ✅ **corrigido nesta rodada**, junto com a distribuição por workspace |
+| `docs/SECURITY.md:13-15` e `:23-24` (guards) | **26** arquivos de rota, **15** com guard, **11** nus | **29**, **18** com guard (as três de `payments/*` sob `requireCommonPanelApi`), os mesmos **11** nus | ✅ **corrigido nesta rodada**. A PR #25 atualizou a seção de pagamentos do documento e não a contagem |
+| `docs/SECURITY.md:146` (rate limit) | 10 caminhos em `apps/api/proxy.ts:44-55` | **confere**, lista literal. `/payments/checkout` e `/payments/portal` ficam fora, e o documento não diz o contrário | ✅ **honesto**; ver o achado do rate limit |
+| `docs/SECURITY.md`, seção "Pagamentos (Stripe)" | dedupe por `event.id`, perfil tirado do evento verificado, checkout e portal pelo perfil do guard | **confere** com `webhooks/payments/route.ts:28-72`, `:161-167` e `ctx.subjectProfile` nas duas rotas | ✅ **honesto na estreia** |
+| `docs/PAYMENTS.md` (estado geral) | fluxo de ponta a ponta; 409 em `checkout/route.ts:41`; troca de assinatura em `billing-state.ts:141-147`; cancelamento em `account-erasure.ts:95` | **confere**, âncoras literais | ✅ **honesto**; o documento foi reescrito pela PR #25 |
+| `docs/AUTH-SSO.md:66-71` (modo de produto) | o layout `(common)` manda o comum para a web no `simple`; existe `commonUserUsesPanel()`; existe `apps/web/app/[locale]/(authenticated)/layout.tsx` | **nenhum dos três existe** (achado A1 do plano de `billing-subscription`, reconferido) | ⚠️ **nota de medição acrescentada** abaixo do parágrafo; a reescrita da tabela depende da [pergunta nº 1](#precisam-de-decisão) |
+| `docs/PRE-PRODUCTION.md`, "Pendência — no modo `simple`…" | no `simple` o painel comum fica restrito a administradores | **falso**, mesma causa da linha acima | ⚠️ **nota de correção acrescentada** no topo da seção; [pergunta nº 2](#precisam-de-decisão) |
+| `docs/AUTH-PANEL.md` e `docs/SETUP.md:85` (onboarding) | conferidos na rodada passada | não tocados pela PR #25 | sem remedição |
 
-> **Nota de método.** O §9 do `PRE-PRODUCTION.md` foi defasado pela sexta auditoria seguida, pelo mesmo
-> mecanismo: medido certo e invalidado pela entrega seguinte. O `SECURITY.md` escapou desta vez porque a
-> própria PR o atualizou, que é o conserto que a nota da rodada passada pedia.
+> **Nota de método.** O §9 do `PRE-PRODUCTION.md` foi defasado pela sétima auditoria seguida, pelo mesmo
+> mecanismo: medido certo e invalidado pela entrega seguinte. O `SECURITY.md` também: a PR atualizou o
+> parágrafo sobre o assunto dela e deixou a contagem de rotas, três parágrafos acima, para trás.
 
 ## Deriva
 
 **Deriva** = o corte foi implementado diferente do especificado, ou o mundo mudou embaixo da spec.
 
-### Deriva de implementação: `onboarding-flow`
+### Deriva de implementação: `billing-subscription`
 
-Registradas por inteiro na spec arquivada. Em resumo: o deep link é honrado sem a query string (a
-implementação desviou, por pouco; virou a [pergunta nº 2](#precisam-de-decisão)); o cadastro por senha
-passou a usar o helper que cria o perfil, e a criação pelo admin continua sem o estado (a spec não sabia
-do contorno); o `contends_on` acertou 4 de 5 e deixou de fora sete arquivos vizinhos.
+Registrada por inteiro na spec arquivada. Em resumo: o fork com uma chave só sobe com a cobrança desligada
+e um aviso de boot, em vez de falhar (a spec pedia "falhar cedo e visível"; estava imprecisa); o snapshot
+ganhou `lastEventAt` para a regra de ordem; a assinatura duplicada por duas abas é risco aceito pelo
+usuário; o soft delete pelo admin não cancela a assinatura e virou achado; o `contends_on` acertou 6 de 6 e
+deixou de fora dez arquivos vizinhos.
+
+### Mudou embaixo da spec: `admin-billing-insights`
+
+A spec dizia que `billing-subscription` estava em 0/6, que não existia `payments/` na API, que o `UserDTO`
+não tinha `subscription` e que o webhook era stub. As quatro afirmações ficaram falsas com a PR #25. As
+seções "Por que está separada", "O que já existe no repo" e "Riscos" foram reescritas com o estado real e
+com uma tabela do que ainda falta para cada item do corte. **Corte de MVP e status não foram tocados.** O
+`contends_on` ganhou `user.repository.ts`.
 
 ### Âncoras deslocadas, corrigidas nas specs vivas
 
 | id | citado | real hoje | causa |
 |----|--------|-----------|-------|
-| [`billing-subscription`](billing-subscription.md) · [`admin-billing-insights`](admin-billing-insights.md) | `user.ts:12-28` (`UserDTO`) | **`:42-60`** | tipos do onboarding acima do `UserDTO` (PR #24) |
-| [`billing-subscription`](billing-subscription.md) | `user.ts:54-76` (`UserWithAuthDTO`) | **`:86-108`** | idem |
-| [`billing-subscription`](billing-subscription.md) | 25 `route.ts` | **26** | `account/onboarding` (PR #24) |
-| [`admin-billing-insights`](admin-billing-insights.md) | 22 `route.ts`, medidos em 2026-09-17 | **26**, nota de remedição acrescentada | PRs #22, #23 e #24 |
-| [`account-security-mfa`](account-security-mfa.md) | `account.schema.ts:7` (`MIN_PASSWORD_LENGTH`) | **`:8`** | import novo no topo (PR #24) |
-| [`account-security-mfa`](account-security-mfa.md) | `actions/account/action.ts:81` (`revokeSessions`) | **`:98`** | `advanceOnboarding` acima (PR #24) |
-| [`observability-logging`](observability-logging.md) | `auth/sign-up/route.ts:40` (×3) | **`:38`** | imports trocados e a criação do perfil encurtada (PR #24) |
-| [`e2e-testing`](e2e-testing.md) | 1547 testes em 158 arquivos | **1615 em 164** | PR #24 |
+| [`observability-logging`](observability-logging.md) | `webhooks/payments/route.ts:61,69` (×4) | **`:157,169`** | webhook reescrito (PR #25) |
+| [`observability-logging`](observability-logging.md) | `apps/api/instrumentation.ts:15-34`, `:20-24`, `:26-30`, `:36-37` | **`:35-56`**, **`:40-44`**, **`:46-50`**, **`:58-59`** | aviso de cobrança meio configurada no topo (PR #25) |
+| [`observability-logging`](observability-logging.md) | `account-export.ts:90`, `account-erasure.ts:111`, `:32-36` | **`:100`**, **`:159`**, **`:36-38`** | passo `billing` e campos de assinatura (PR #25) |
+| [`teams-organizations`](teams-organizations.md) | `user.ts:2` (`UserType`) | **`:4`** | import de `SubscriptionState` no topo (PR #25) |
+| [`e2e-testing`](e2e-testing.md) | 1615 testes em 164 arquivos | **1817 em 180** | PR #25 |
 
-Todas são deslocamento por entrega; nenhuma nasceu errada. As âncoras de `apps/api/proxy.ts` em
-`observability-logging` não mudaram: a PR #24 alterou o proxy da `apps/app`, não o da `apps/api`.
+As âncoras de `account-security-mfa` conferem: a rota de exclusão (`account/deletion/route.ts:55-72`) não
+se deslocou, porque a PR #25 acrescentou o tratamento de falha de billing depois do trecho citado.
 
 ### Contagens e afirmações de estado corrigidas
 
 | id | afirmava | real | leitura |
 |----|----------|------|---------|
-| [`e2e-testing`](e2e-testing.md) | o fluxo "cadastro" termina no painel | termina no onboarding, salvo com `ONBOARDING_ENABLED="false"` | parágrafo novo na spec; muda o roteiro do item 1 |
-| [`observability-logging`](observability-logging.md) | 16 pontos pelo helper de log | `git grep "logEvent("` fora de testes dá **20** linhas, uma delas a definição em `log.ts:51`; o mesmo número de `ab11a5b` | a PR #24 não acrescentou ponto; a contagem de 19 da rodada passada excluía a definição |
+| [`observability-logging`](observability-logging.md) | 20 linhas de `logEvent(` | **26**, a definição incluída; as seis novas são do escopo `payments` | nota de remedição na spec. A PR também somou um `console.warn` de boot (`instrumentation.ts:19`) |
 
 ### O que a auditoria **não** encontrou
 
@@ -381,21 +394,33 @@ quando deveria ter. Nenhuma entrega parcial órfã nova; a de `account-security-
 
 Coisas que não merecem spec própria, mas que são correções pontuais. Viram tarefa direta no `/analyze`.
 
-> **Auditoria de 2026-09-24 (pós-PR #24).** Cada achado da rodada anterior foi reaberto no disco, com o
-> veredito na própria linha. **Placar: 1 fechado · 4 novos · o resto confirmado aberto.** Depois da auditoria, o `/review` de `billing-subscription` acrescentou mais três novos. Três âncoras
-> de `apps/app/proxy.ts` desceram uma linha pelo import novo da PR #24.
+> **Auditoria de 2026-09-25 (pós-PR #25).** Cada achado da rodada anterior foi reaberto no disco, com o
+> veredito na própria linha. **Placar: 3 fechados · 1 fechado em parte · 4 novos · o resto confirmado
+> aberto.** Os quatro novos vêm da seção "Achados fora do escopo" do plano de `billing-subscription` (A1 a
+> A4), que não tinham chegado ao backlog. Âncoras de `user.repository.ts`, `AccountTabs.tsx` e
+> `apps/api/instrumentation.ts` se deslocaram com a PR #25.
 
 ### ✅ Fechados nesta rodada
 
 | achado | onde estava | como fechou |
 |--------|-------------|-------------|
-| 🟡 **Os 20 links mortos nas 10 specs arquivadas** | `docs/features/<slug>/spec.md` | Consertados pela auditoria: 16 apontavam para `research/*.md` e agora apontam para `../../../specs/research/`; os quatro de `session-refresh` apontam para `../../../specs/account-security-mfa.md` e `../user-activity-tracking/spec.md`. A mesma varredura achou e consertou mais 11 da mesma causa: a linha "Spec de origem" de 8 `analyze/plan.md`, dois links em `user-activity-tracking/analyze/plan.md` e um em `session-refresh/review/review.md`. Verificador de links rodado em todo `docs/features/*.md`: zero mortos |
+| 🔴 **`packages/payments/ai.ts` instanciava o `StripeAgentToolkit` com `\|\| ""` em escopo de módulo** | `packages/payments/ai.ts:4-5` | A PR #25 trocou por `getPaymentsAgentToolkit()`, construído sob demanda e `null` sem chave (`ai.ts:9-32`), com teste em `packages/payments/__tests__/aiToolkit.test.ts` |
+| 🟡 **O webhook da Stripe era inalcançável em desenvolvimento** (`skipValidation` descartava `STRIPE_WEBHOOK_SECRET`) | `apps/api/env.ts:46` | O webhook passou a ler o segredo por `getWebhookSecret()` de `@repo/payments` (`packages/payments/index.ts:26-27`), cujo `keys.ts` nunca pula validação. O `/test` rodou o harness assinado em `next dev`. O `skipValidation` da API continua em `:46`, sem efeito sobre o webhook |
+| 🟡 **Webhook da Stripe era casca** (dois handlers `// TODO`) | `webhooks/payments/route.ts:13,23` | Handlers reais e dedupe (`route.ts:28-119`, `:161-167`). O eco do evento no corpo da resposta **continua** e segue na tabela de repositório, rotas e proxy |
+| ◐ **`NEXT_PUBLIC_APP_URL` fora do bloco `client` da `apps/web`** (metade do achado do `skipValidation`) | `apps/web/env.ts` | Declarada no `client` (`:22`, `:31`). A outra metade, `skipValidation: true` incondicional, segue aberta em `:33` |
 
-### 🆕 Achados novos
+### 🆕 Achados novos e os da rodada passada
+
+As quatro primeiras linhas são novas nesta rodada. As seis seguintes entraram na rodada passada e foram
+reconferidas no disco: seguem abertas.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **O deep link do onboarding perde a query string** | `apps/app/proxy.ts:215` | O proxy grava só o `pathname`. Afeta link de listagem filtrada ou paginada aberto antes do onboarding. É a [pergunta nº 2](#precisam-de-decisão) |
+| ⚠️ **O modo `simple` não restringe o painel comum** (A1) | `apps/app/app/[locale]/(authenticated)/(common)/layout.tsx` (não lê o modo) · `packages/next-config/product-mode.ts:12-23` (sem `commonUserUsesPanel`) · `docs/AUTH-SSO.md:66-71` | O documento descreve um redirecionamento que não existe, e uma pendência do `PRE-PRODUCTION.md` partia dele. Hoje o `simple` só esconde a cobrança. [Pergunta nº 1](#precisam-de-decisão) |
+| ⚠️ **Soft delete de usuário pelo admin não cancela a assinatura** (A2) | `apps/api/app/(routes)/users/[id]/route.ts:117` · `user.repository.ts:50-61` | A pessoa apagada pelo admin continua sendo cobrada, e o webhook deixa de achar o perfil, porque `findByStripeCustomerId` ignora `deletedAt`. A exclusão pelo titular cancela; esta não. [Pergunta nº 3](#precisam-de-decisão) |
+| 🟡 **`.env.example` da `apps/app` e da `apps/web` publicam `STRIPE_*`, que nenhum dos dois lê** (A3) | `apps/app/.env.example:23-24` · `apps/web/.env.example:5-6` | Quem configura o fork põe a chave secreta em dois apps que não precisam dela. Só a `apps/api` lê (`PRE-PRODUCTION.md` §12 já diz isso) |
+| 🟡 **O webhook responde 500 para assinatura inválida** (A4) | `webhooks/payments/route.ts:156-158` → `failure()` em `:121-125` | A Stripe reentrega por até três dias um evento que nunca vai validar. Um 400 encerra as tentativas. `api-hardening` está arquivada, então é tarefa direta |
+| 🟡 **O deep link do onboarding perde a query string** | `apps/app/proxy.ts:215` | O proxy grava só o `pathname`. Afeta link de listagem filtrada ou paginada aberto antes do onboarding. Saiu de "Precisam de decisão" pela §5.1: tarefa direta P, gravar `pathname + search` e um caso a mais em `proxy.test.ts` |
 | 🟡 **Os `HookForm*` publicam `aria-invalid="false"` com a mensagem de erro visível** | `packages/design-system/components/ui/form.tsx:109-123` · `packages/design-system/components/form/hookform/` | O `HookFormInput` usa `<Controller>` direto, sem o `FormField` que põe o nome do campo no contexto; o `useFormField` não acha o erro e o `aria-describedby` sai sem o id da mensagem. Achado pelo `/review` da PR #24 (O3). Vale para os oito componentes da pasta e para todo formulário do repositório; leitor de tela não anuncia o erro. Terceiro caso do design-system sem task de teste; cruza com [`e2e-testing`](e2e-testing.md), cujo item 3 é acessibilidade automatizada |
 | 🟡 **`/favicon.ico` não existe na `apps/app` e cai no segmento `[locale]`** | `apps/app/app/` (sem `favicon.ico` nem `icon.*`) | O navegador pede o ícone em toda página. Anônimo vai para `/favicon.ico/sign-in`; conta com onboarding pendente vai para `/favicon.ico/onboarding?redirect=%2Ffavicon.ico` (O5 do `/test` da PR #24). Anterior à feature; ela só deixou o sintoma mais visível |
 | 🟡 **`<html lang>` segue o cookie `x-locale`, não a URL, na primeira carga** | root layout da `apps/app` | `/en/sign-in` com `x-locale=pt-br` sai com `lang="pt-br"` (O4 do `/test` da PR #24). Leitor de tela pronuncia a página no idioma errado até a navegação seguinte |
@@ -407,11 +432,10 @@ Coisas que não merecem spec própria, mas que são correções pontuais. Viram 
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🔴 **`packages/payments/ai.ts:4-5`** instancia `StripeAgentToolkit` com `keys().STRIPE_SECRET_KEY \|\| ""` em **escopo de módulo** | `packages/payments/ai.ts:4-5` | Reconferido, literal. Não explode só porque nada importa `@repo/payments/ai`; `billing-subscription` (#2) é o que faria alguém importar. `packages/payments/package.json` segue **sem `exports`** |
 | 🔴 **`packages/security/index.ts:11`** lê `keys().ARCJET_KEY` no **import**, e `@repo/security` é o primeiro import do middleware da `apps/api` | `packages/security/index.ts:11` | Reconferido. Uma `ARCJET_KEY` presente e malformada lança dentro do grafo de módulos do middleware: toda requisição falha, sem sinal no boot |
-| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo** | `apps/api/instrumentation.ts:20-24` | Reconferido: `throw` em `:20-24`, zero `process.exit`. `/health/ready` detecta parte das falhas, não esta |
-| ⚠️ **Quatro das seis rotas de `/account` seguem fora do rate limit**, entre elas a troca de senha | `apps/api/proxy.ts:44-55` | Recontado: a PR #24 acrescentou `POST /account/onboarding`, também fora. Ficam fora o `PUT /account`, `/account/password`, `/account/sessions/revoke` e `/account/onboarding` |
-| ⚠️ **Superfície não-guardada da API: 11 de 26** arquivos de rota exportam handler nu, 8 deles `/auth/*` | `apps/api/app/(routes)/auth/**` | Recontado: 26 arquivos, 15 com guard. A rota nova nasceu com guard |
+| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo** | `apps/api/instrumentation.ts:40-44` | Reconferido: `throw` em `:40-44` (a âncora desceu 20 linhas com o aviso de cobrança da PR #25), zero `process.exit`. `/health/ready` detecta parte das falhas, não esta |
+| ⚠️ **Quatro das seis rotas de `/account` seguem fora do rate limit**, entre elas a troca de senha | `apps/api/proxy.ts:44-55` | Recontado em 2026-09-25: ficam fora o `PUT /account`, `/account/password`, `/account/sessions/revoke` e `/account/onboarding`. A PR #25 acrescentou `POST /payments/checkout` e `POST /payments/portal`, também fora; cada checkout pode criar uma sessão na Stripe |
+| ⚠️ **Superfície não-guardada da API: 11 de 29** arquivos de rota exportam handler nu, 8 deles `/auth/*` | `apps/api/app/(routes)/auth/**` | Recontado: 29 arquivos, 18 com guard. As três rotas de `payments/*` nasceram com guard |
 | 🟡 **O endpoint de renovação de sessão está fora do rate limit e aceita requisição sem `Origin`** | `packages/auth/session-routes.ts:87` · `packages/auth/session.ts:78-81` | Reconferido. A parte documental está fechada (`docs/SECURITY.md:150`); o comportamento segue |
 
 ### 🟡 Dependências, exports e código morto
@@ -419,7 +443,7 @@ Coisas que não merecem spec própria, mas que são correções pontuais. Viram 
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🟡 **Dependência importada sem ser declarada**: `apps/app/env.ts:1` importa `@repo/email/keys` sem `@repo/email` no `package.json`; `apps/web` importa `@repo/auth` em **8 arquivos** sem declará-lo | `apps/app/package.json` · `apps/web/package.json` | Reconferido, os dois `grep` no `package.json` devolvem 0. Funciona por hoisting; o turbo não invalida `web#*` quando `@repo/auth` muda |
-| 🟡 `packages/auth/package.json:13` exporta `./client-ui` para arquivo **inexistente** | `packages/auth/package.json:13` | Reconferido: `client-ui.tsx` não existe. **Vigésima auditoria consecutiva** |
+| 🟡 `packages/auth/package.json:13` exporta `./client-ui` para arquivo **inexistente** | `packages/auth/package.json:13` | Reconferido: `client-ui.tsx` não existe. **Vigésima primeira auditoria consecutiva** |
 | 🟡 **`@repo/auth` declara `next: 15.1.3`** contra `16.0.0` do resto | `packages/auth/package.json:25` | Reconferido, inalterado |
 | 🟡 **`packages/email/package.json` não tem `main` nem `exports`** | `packages/email/package.json` | Reconferido: 0 |
 | 🟡 **`input-otp.tsx` é código morto** | `packages/design-system/components/ui/input-otp.tsx` | Reconferido: só ele, o barril, o `package.json` do pacote e o `playground`. `account-security-mfa` (#3) é quem o usaria |
@@ -437,16 +461,15 @@ Coisas que não merecem spec própria, mas que são correções pontuais. Viram 
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **`userRepository.list()` mente no tipo de retorno** | `apps/api/(shared)/repositories/user.repository.ts:64` | Declara `Promise<UserDTO[]>`, devolve o merge com o Auth e descarta linhas em silêncio (`:74`). N+1 do Admin SDK. Oitava rodada aberto |
-| 🟡 **`userRepository` tem cinco métodos com semântica própria de "quantos usuários existem"** | `user.repository.ts:48` · `:60` · `:64` · `:83` · `:101` | `touchLastAccess`, `purgeProfile`, `list`, `summary` e `activitySummary`. O cartão de total pode mostrar mais do que a tabela lista, e nada na tela explica |
+| 🟡 **`userRepository.list()` mente no tipo de retorno** | `apps/api/(shared)/repositories/user.repository.ts:122` | Declara `Promise<UserDTO[]>`, devolve o merge com o Auth e descarta linhas em silêncio (`:132`). N+1 do Admin SDK. Nona rodada aberto; âncoras desceram com os métodos de billing da PR #25 |
+| 🟡 **`userRepository` tem cinco métodos com semântica própria de "quantos usuários existem"** | `user.repository.ts:106` · `:118` · `:122` · `:141` · `:159` | `touchLastAccess`, `purgeProfile`, `list`, `summary` e `activitySummary`. O cartão de total pode mostrar mais do que a tabela lista, e nada na tela explica |
 | 🟡 **O predicado de posse foi copiado de novo** | `apps/api/(shared)/repositories/entity.repository.ts:23,40,64,72` · `entities/summary/route.ts:9` | Quatro cópias de `where("userId", "==", userId)` no mesmo arquivo. É a contrapartida P de [`teams-organizations`](teams-organizations.md) |
 | 🟡 **`/auth/sign-in` da api não tem consumidor e não segue o contrato de erro** | `apps/api/app/(routes)/auth/sign-in/route.ts:12` | Reconferido: zero `try`, `:12` devolve string crua (`"User not found"`). Viola a regra de ouro 3. O `sign-up` ganhou chamador indireto de `createDefaultUserProfile` na PR #24 e tem `try` |
-| 🟡 **Webhook da Stripe é casca e ecoa o evento inteiro** | `apps/api/app/(routes)/webhooks/payments/route.ts:13,23,67` | Reconferido. Escopo de `billing-subscription` (#2) |
-| 🟡 **O webhook da Stripe é inalcançável em desenvolvimento** (`skipValidation` descarta `STRIPE_WEBHOOK_SECRET`) | `apps/api/env.ts:46` | Reconferido |
-| ◐ **`skipValidation` incondicional na `apps/web`** e `NEXT_PUBLIC_APP_URL` fora do bloco `client` | `apps/web/env.ts:29` | Reconferido, inalterado |
+| 🟡 **Webhook da Stripe ecoa o evento inteiro** na resposta de sucesso | `apps/api/app/(routes)/webhooks/payments/route.ts:176` | A casca fechou com a PR #25; o eco ficou (`{ result: event, ok: true }`). O corpo volta para a Stripe, não para o browser, mas carrega dado do cliente sem necessidade. Fica no arquivo que [`admin-billing-insights`](admin-billing-insights.md) vai alterar |
+| ◐ **`skipValidation` incondicional na `apps/web`** | `apps/web/env.ts:33` | Reconferido. A metade do `NEXT_PUBLIC_APP_URL` fechou com a PR #25 |
 | ◐ **O bounce do proxy apaga a query string**, corrigido só para as rotas de `oobCode` | `apps/app/proxy.ts:190-203` | Reconferido: `redirectUrl.search = ""` em `:201` (âncoras desceram uma linha com o import da PR #24). Mesma família do achado novo do deep link do onboarding |
 | 🟡 **O TTL de 180 dias do cookie `x-locale` é letra morta** | `apps/app/proxy.ts:170,174` | Reconferido: `cookieStore.set` sem `maxAge` |
-| 🟡 Helper de cookie grava `SameSite=Lax` **sem `Secure`** por padrão | `packages/shared/utils/helpers/cookies.ts:28,30` | Reconferido. ASVS 5.0 L1 (3.3.1). Nona rodada aberto |
+| 🟡 Helper de cookie grava `SameSite=Lax` **sem `Secure`** por padrão | `packages/shared/utils/helpers/cookies.ts:28,30` | Reconferido. ASVS 5.0 L1 (3.3.1). Décima rodada aberto |
 | ⚪ **`cors.ts` allow-lista `x-locale`, que só existe como cookie** | `apps/api/(shared)/lib/cors.ts:17` | Reconferido. `x-role` (`:16`) **não** é resíduo |
 | 🟡 **O papel do painel viaja em dois headers** | `packages/sdk/src/client/base.ts:45,53,61,95` | Reconferido nas quatro âncoras |
 
@@ -454,8 +477,9 @@ Coisas que não merecem spec própria, mas que são correções pontuais. Viram 
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **O deep link das abas da conta não acompanha a navegação** | `AccountTabs.tsx:44-46` (estado lido uma vez) · `:48-55` (`history.replaceState`) | Reconferido. A barra lateral muda a URL e a aba fica onde estava. Estacionado (E9) |
-| 🟡 **`"Pick a date"` literal no `DateInput`** | `packages/design-system/components/ui/date-input.tsx:50` | Reconferido. Sobreviveu às PRs #11 a #24 |
+| 🟡 **Componente client renderiza em pt-br no servidor em `/en` e `/es`**, e a hidratação falha | `packages/internationalization/utils/cookies.ts:2-4` · `packages/internationalization/client.ts:8` | `getCookie` devolve `null` sem `window`, então `getDictionary()` cai no locale padrão durante o SSR e o navegador reescreve no idioma do cookie. Repro: `curl -H 'Cookie: <sessão do admin>; x-locale=en' http://localhost:3000/en/admin` devolve "Olá", "Atividade" e "Cobrança"; no navegador, "Hydration failed" em toda carga de `/en` e `/es` (sidebar, breadcrumb e seções da home). Achado em 2026-09-25 na seção de billing da home do admin, que herda o defeito. A correção na raiz é um provider de locale alimentado pelo segmento `[locale]` e um hook `useDictionary()`, mas `getDictionary()` do client aparece em 63 arquivos de `apps/app`, `apps/web`, `packages/design-system` e `packages/auth`, e parte delas roda fora de render (`packages/design-system/index.tsx:25`, `apps/app/shared/lib/formatDisplayDateTime.ts:21`), onde um contexto não pode ser lido |
+| 🟡 **O deep link das abas da conta não acompanha a navegação** | `AccountTabs.tsx:51-53` (estado lido uma vez) · `:55-62` (`history.replaceState`) | Reconferido. A barra lateral muda a URL e a aba fica onde estava. Estacionado (E9) |
+| 🟡 **`"Pick a date"` literal no `DateInput`** | `packages/design-system/components/ui/date-input.tsx:50` | Reconferido. Sobreviveu às PRs #11 a #25 |
 | 🟡 **O `DateInput` formata sempre em inglês** | `date-input.tsx:83` | Reconferido: `format(selected, "PPP")` sem `locale` |
 | 🟡 **Strings de UI soltas**: `"Switch language"` nos dois apps e `"Início"` no breadcrumb | `apps/app/shared/components/ui/LanguageSwitcher.tsx:79` · `apps/web/app/[locale]/components/header/language-switcher.tsx:68` · `PageBreadcrumb.tsx:30` | Reconferido. O breadcrumb ainda crava `href="/painel"` em `:28` |
 | 🟡 **A mensagem de erro padrão está cravada em pt-br num pacote** | `packages/shared/utils/helpers/handleClientError.ts:19` | Reconferido, literal |
@@ -472,17 +496,17 @@ Coisas que não merecem spec própria, mas que são correções pontuais. Viram 
 ## Pendências vivas sem dono
 
 > A maior parte destas tem **casa versionada** em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md).
-> Cada linha traz o veredito desta rodada. A PR #24 não acrescentou pendência: o `/test` rodou tudo sob o
-> emulador e não criou índice novo (`firestore.indexes.json` não está no diff).
+> Cada linha traz o veredito desta rodada. A PR #25 acrescentou uma pendência, a configuração da Stripe por
+> fork (linha 23), e não criou índice novo (`firestore.indexes.json` não está no diff).
 
-| # | pendência | onde vive | veredito 2026-09-24 |
+| # | pendência | onde vive | veredito 2026-09-25 |
 |---|-----------|-----------|---------------------|
 | 1 | 🔴 Publicar os três índices dos resumos da home (`GET /entities/summary` e `/users/summary` respondem 503 sem eles) | `PRE-PRODUCTION.md` §1.5 | **continua aberto**; não remedido nesta rodada, nada no repositório mudou |
 | 2 | 🔴 Publicar o índice das faixas de recência (`user`: `deletedAt` + `lastAccessAt`) | `PRE-PRODUCTION.md` §1.7 | **continua aberto**; idem |
 | 3 | 🔴 Publicar o índice da trilha de auditoria (filtro por usuário responde 503) | `PRE-PRODUCTION.md` §1.2 | **continua aberto**; idem |
 | 4 | 🔴 Publicar o índice da listagem paginada de `entity` | `PRE-PRODUCTION.md` §1.1 | **continua aberto**. São **seis** índices sem publicação; o comando é um só |
 | 5 | Retenção da coleção `auditEvent` | `PRE-PRODUCTION.md` §1.3 | **continua aberto**, estacionado (E5) |
-| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido (404, `[]`, 24 PRs); estacionado (E3) |
+| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido (404, `[]`, 25 PRs); estacionado (E3) |
 | 7 | Backfill de instantes em base que já tem dado | `PRE-PRODUCTION.md` §1.4 | **continua aberto**; não é mensurável daqui |
 | 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**: `grep` por `sentry`/`betterstack`/`logtail`/`axiom` nos `package.json` devolve 0; estacionado (E1) |
 | 9 | Health check da plataforma não aponta para `/health/ready` | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: configuração de plataforma |
@@ -492,16 +516,16 @@ Coisas que não merecem spec própria, mas que são correções pontuais. Viram 
 | 13 | Envio real de e-mail nunca provado | `PRE-PRODUCTION.md` §3 | **continua aberto** (exige domínio com SPF/DKIM). O `/test` da PR #24 viu o envio do e-mail de verificação falhar sob o emulador, com `RESEND_TOKEN` vazio, como esperado |
 | 14 | CSP Report-Only na `apps/web` | `PRE-PRODUCTION.md` §10 | **continua aberto**, deliberado |
 | 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #24 criou 7 contas só no emulador, que as descarta |
-| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**: `git ls-remote --heads` devolve 23, ou seja, 22 além de `main` (eram 21) |
+| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**: `git ls-remote --heads` devolve 24, ou seja, 23 além de `main` (eram 22) |
 | 17 | Login com Google sem passe manual com conta real | *(só neste arquivo)* | **continua aberto**. O `/test` da PR #24 também não percorreu o Google no emulador; o nome do Google como valor inicial do passo 1 ficou fechado só por leitura |
 | 18 | `storage.rules` nunca publicado nem testado | `PRE-PRODUCTION.md` | **continua aberto**; depende da 11 e de `e2e-testing` |
 | 19 | Conferir a retenção de log da plataforma | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: painel do provedor |
 | 20 | Reabertura do consentimento no `ProfileDropdown` nunca vista num browser | *(só neste arquivo)* | **continua aberto** |
-| 21 | No modo `simple` o titular não alcança a aba de privacidade | `PRE-PRODUCTION.md`, seção "Pendência — no modo `simple`…" | **continua aberto**. Você disse que fica para depois |
+| 21 | No modo `simple` o titular não alcança a aba de privacidade | `PRE-PRODUCTION.md`, seção "Pendência — no modo `simple`…" | **premissa falsa, medida**: o `simple` não restringe o painel comum, então o titular alcança a aba. Nota de correção no documento. Proposta de fechar na [pergunta nº 2](#precisam-de-decisão) |
 | 22 | `NEXT_PUBLIC_PRIVACY_CONTACT` precisa ser definida por fork | `PRE-PRODUCTION.md` §7 (checklist) | **continua aberto**. Vazia, o canal cai no formulário de contato, que é maquete |
+| 23 | 🆕 Stripe por fork: catálogo recorrente, Customer Portal, endpoint de webhook na versão `2025-09-30.clover` com quatro eventos, chaves na `apps/api`, TTL opcional de `paymentEvent`; e a decisão sobre checar assinatura duplicada na Stripe antes do release | `PRE-PRODUCTION.md` §12 | **aberto, recém-registrado**. Cinco critérios de `billing-subscription` seguem 🔒 até uma conta real existir. `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` seguem vazias nos `.env` locais |
 
-As linhas fechadas na rodada passada (índice de `reference_id`, `SESSION_ABSOLUTE_MAX_AGE_DAYS`, cookies na
-política de privacidade, links mortos) saíram da tabela; o histórico está no git.
+Nenhuma linha fechou nesta rodada. A 21 tem proposta de fechamento, e a 23 é nova.
 
 ## Lacunas avaliadas e **não** especificadas
 
@@ -509,10 +533,11 @@ Descartadas de propósito, com o motivo. Reabrir exige argumento novo.
 
 | lacuna | prevalência | por que ficou de fora |
 |--------|-------------|------------------------|
+| 🆕 **Gate de acesso por plano · bloqueio em `past_due` · trial, cupom, reembolso e faturas em UI própria · nome do plano traduzido** | gate por plano **2/10** na nota do benchmark | Fora do corte de [`billing-subscription`](../docs/features/billing-subscription/spec.md), arquivada. O Customer Portal cobre trial, cupom, reembolso e faturas; o bloqueio por situação é decisão de produto de cada fork. O gate por plano é o candidato mais forte a spec própria numa descoberta, com prevalência baixa escrita ao lado. |
 | **Coletor de erro gerenciado (Sentry, Better Stack, Axiom)** | prática 6 | A costura existe e está vazia: `onRequestError` nos três apps, sem ninguém do outro lado. Estacionado (E1). |
-| 🆕 **Passos de onboarding condicionais por papel ou plano · checklist de ativação · tour interativo** | — | Fora do corte de [`onboarding-flow`](../docs/features/onboarding-flow/spec.md), arquivada. Dependem de haver produto, e cada fork tem o seu. O fork acrescenta um passo editando `ONBOARDING_STEPS`. |
-| 🆕 **Coleta de dados de domínio no onboarding (empresa, cargo, segmento)** | — | Fora do mesmo corte. Não é genérico; é código do fork. |
-| 🆕 **Onboarding para a conta criada pelo admin** | — | Decisão D3 da entrega: o admin já informa o nome, e a mesma rota cria admins. O perfil sem o campo conta como concluído. |
+| **Passos de onboarding condicionais por papel ou plano · checklist de ativação · tour interativo** | — | Fora do corte de [`onboarding-flow`](../docs/features/onboarding-flow/spec.md), arquivada. Dependem de haver produto, e cada fork tem o seu. O fork acrescenta um passo editando `ONBOARDING_STEPS`. |
+| **Coleta de dados de domínio no onboarding (empresa, cargo, segmento)** | — | Fora do mesmo corte. Não é genérico; é código do fork. |
+| **Onboarding para a conta criada pelo admin** | — | Decisão D3 da entrega: o admin já informa o nome, e a mesma rota cria admins. O perfil sem o campo conta como concluído. |
 | **Demais direitos do art. 18 com fluxo próprio · painel de pedidos de titular · exportação assíncrona** | — | Fora do corte de [`data-rights-lgpd`](../docs/features/data-rights-lgpd/spec.md), arquivada. O canal de privacidade cobre os demais pedidos por ora. |
 | **RoPA, runbook de incidente, DPA e transferência internacional** | — | Fora do corte de `data-rights-lgpd` por serem documento, não código. Candidato natural a uma spec de templates em `docs/` numa próxima descoberta, que é também onde o eixo `confianca` pode ganhar peso ([pergunta nº 3](#precisam-de-decisão)). |
 | **Exclusão de conta sem senha (conta só Google)** | — | Fora da entrega: reautenticar conta federada exige outro fluxo. Pertence à iteração de "sessão recente" de [`account-security-mfa`](account-security-mfa.md). |

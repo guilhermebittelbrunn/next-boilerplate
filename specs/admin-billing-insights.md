@@ -8,9 +8,9 @@ audience: produto
 area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/internationalization]
 mode: subscription
 depends_on: [billing-subscription, dashboard-home]
-contends_on: ["apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx", apps/app/shared/lib/queryKeys.ts, apps/api/app/(routes)/webhooks/payments/route.ts]
+contends_on: ["apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx", apps/app/shared/lib/queryKeys.ts, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/(shared)/repositories/user.repository.ts]
 feature: -
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # Seção de billing na home do admin
@@ -27,46 +27,71 @@ trabalho manual, repetido toda semana, feito fora do sistema que tem a resposta.
 
 ## Por que esta spec está separada de [`admin-analytics-dashboard`](../docs/features/admin-analytics-dashboard/spec.md)
 
-Porque amarrar as duas faria a parte construível nascer bloqueada.
+Porque, quando as duas foram escritas, a parte de billing não tinha sobre o que ser construída. Os KPIs de
+atividade e o gráfico de acesso foram entregues pela PR #22; esta seção esperou
+[`billing-subscription`](../docs/features/billing-subscription/spec.md).
 
-[`billing-subscription`](billing-subscription.md) está em **0 de 6**, e isso foi remedido no código em
-2026-09-17:
-
-- **Não existe diretório `payments/`** entre as rotas da API. São 22 `route.ts` em
-  `apps/api/app/(routes)/`, medidos nesta branch: `account/*` ×3, `audit-events`, `auth/*` ×8, `entities`,
-  `entities/[id]`, `entities/summary`, `files`, `health`, `health/ready`, `users`, `users/[id]`,
-  `users/summary` e `webhooks/payments`. *(O backlog registrava 20 na auditoria da manhã; `entities/summary`
-  e `users/summary` são da `dashboard-home`, entregue nesta branch e ainda fora de `main`.)*
-  *(Remedido em 2026-09-24: são **26**. As PRs #22, #23 e #24 acrescentaram `users/activity-summary`,
-  `account/export`, `account/deletion` e `account/onboarding`, e `payments/` continua sem existir.)*
-- `packages/sdk/src/types/user/user.ts:42-60` — o `UserDTO` **não tem** `subscription` nem
-  `stripeCustomerId`.
-- `packages/sdk/src/client/index.ts:13-31` — são **7 actions** (`application`, `authApi`, `user`, `entity`,
-  `file`, `account`, `audit`). Não existe `payments`.
-- `apps/api/app/(routes)/webhooks/payments/route.ts:13,23` — os dois handlers de evento são `// TODO`. A
-  assinatura **é** validada (`:45-49`), mas nada é persistido e não há dedupe por `event.id`.
-
-Os KPIs de atividade e o gráfico de acesso podem ser construídos hoje. A seção de billing não. Mantê-los na
-mesma spec faria o `/analyze` planejar sobre uma dependência inexistente e devolver metade dos critérios
-como não verificados.
+**A dependência foi entregue.** `billing-subscription` saiu da fila com 6 de 6 itens do corte, pela PR #25
+(merge `a1f87d0` em 2026-09-24, CI `success` nesse SHA), e está arquivada. A spec deixou de estar bloqueada.
+O que a PR #25 **não** entregou, e que este corte precisa, está no fim da seção seguinte: é aí que mora o
+trabalho desta spec.
 
 ## O que já existe no repo
 
-- As peças da home, entregues por `dashboard-home` e em `main` desde 2026-09-17 (PR #19, merge `bfc4d8f`;
-  spec arquivada em [`docs/features/dashboard-home/spec.md`](../docs/features/dashboard-home/spec.md)):
-  `apps/app/shared/components/ui/MetricCard.tsx:11-17` (cartão de métrica com
-  esqueleto), `packages/design-system/components/ui/category-bar-chart.tsx:25-77` (gráfico de barras já
-  temático e com rótulo acessível),
-  `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx:34-56` (o
-  arranjo de cartões) e `apps/app/shared/lib/queryKeys.ts:11-48` (a factory de chaves).
-- `apps/api/(shared)/repositories/base.repository.ts:138-141` — `countQuery` com `query.count().get()`, para
-  contar assinatura por plano sem ler documento.
-- `apps/api/app/(routes)/users/summary/route.ts:6-20` — o molde de rota de agregado sob `requireAdminApi`,
-  com degradação traduzível quando falta índice.
-- `packages/payments/` existe e expõe `getStripe`, consumido pelo webhook (`route.ts:2-3`).
-- **Lacuna:** não há nenhum dado de cobrança persistido na base do fork. O webhook recebe o evento, despacha
-  para dois stubs e responde — inclusive ecoando o objeto Stripe inteiro no corpo (`:67`). Não há o que
-  agregar.
+Remedido em 2026-09-25, com o `HEAD` em `a1f87d0`.
+
+**Cobrança, entregue pela PR #25:**
+
+- **Rotas de pagamento do usuário comum**, todas sob `requireCommonPanelApi`:
+  `apps/api/app/(routes)/payments/plans/route.ts:12`, `payments/checkout/route.ts:20` e
+  `payments/portal/route.ts:14`. Nenhuma rota de billing existe sob `requireAdminApi`. A API tem hoje **29**
+  `route.ts`.
+- **Estado da assinatura no perfil.** `UserDTO` ganhou `stripeCustomerId` e `subscription`
+  (`packages/sdk/src/types/user/user.ts:62-65`). O snapshot `SubscriptionState`
+  (`packages/sdk/src/types/payments/payments.ts:30-44`) guarda `subscriptionId`, `status`, `priceId`,
+  `productId`, `unitAmount`, `currency`, `interval`, `intervalCount`, `currentPeriodEnd`,
+  `cancelAtPeriodEnd` e `lastEventAt`. `LIVE_SUBSCRIPTION_STATUSES` (`payments.ts:20-26`) define o que conta
+  como assinatura viva.
+- **Webhook que reconcilia.** `apps/api/app/(routes)/webhooks/payments/route.ts` verifica a assinatura com
+  o corpo bruto (`:145-159`) e trata quatro eventos: `checkout.session.completed` vincula o cliente ao perfil
+  (`:28-49`), e `customer.subscription.created|updated|deleted` gravam o snapshot (`:74-96`, `:107-111`).
+  Qualquer outro evento cai em `webhook-unhandled-event` (`:113-117`). A gravação passa por
+  `userRepository.applySubscriptionState`, numa transação (`apps/api/(shared)/repositories/user.repository.ts:71-104`),
+  com uma regra que só deixa o snapshot andar para frente (`decideSubscriptionWrite`,
+  `apps/api/(shared)/lib/billing-state.ts:130-165`).
+- **Dedupe por `event.id`, resolvido.** `paymentEventRepository`
+  (`apps/api/(shared)/repositories/payment-event.repository.ts:22-56`) grava um documento por evento, com o
+  id do evento como id do documento, só depois de o handler terminar (`route.ts:161-167`). Uma entrega
+  concorrente que já marcou o evento conta como o mesmo resultado (`:49-53`). Esta spec herda isso pronto.
+- **Interruptor.** `isBillingEnabled()` (`apps/api/(shared)/lib/billing.ts:22-28`) exige modo
+  `subscription`, as duas chaves Stripe e `NEXT_PUBLIC_APP_URL`. No app, `isSubscriptionMode()` já esconde a
+  aba de billing (`AccountTabs.tsx:33-35`) e o item da barra lateral (`(common)/routes.tsx:52-58`).
+- **Prova sem conta Stripe.** O `/test` de `billing-subscription` exercitou o webhook com chaves falsas no
+  ambiente do processo, payload assinado localmente e o emulador do Firestore, e fechou 19 critérios assim
+  (`docs/features/billing-subscription/test/report.md`, rodada B). O mesmo harness serve aqui.
+
+**Peças da home, entregues por `dashboard-home`** (PR #19, merge `bfc4d8f`; spec arquivada em
+[`docs/features/dashboard-home/spec.md`](../docs/features/dashboard-home/spec.md)):
+`apps/app/shared/components/ui/MetricCard.tsx:11-17` (cartão de métrica com esqueleto),
+`packages/design-system/components/ui/category-bar-chart.tsx:25-77` (gráfico de barras temático, com rótulo
+acessível), `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx:34-56`
+(o arranjo de cartões) e `apps/app/shared/lib/queryKeys.ts` (a factory de chaves). A rota
+`apps/api/app/(routes)/users/summary/route.ts:6-20` é o molde de agregado sob `requireAdminApi`, com
+degradação traduzível quando falta índice, e `BaseRepository.countQuery`
+(`apps/api/(shared)/repositories/base.repository.ts:138-141`) conta sem ler documento.
+
+**O que ainda falta para este corte**, item a item:
+
+| item do corte | o que a base tem hoje | o que falta |
+|---------------|-----------------------|-------------|
+| Contratações recentes | O snapshot diz qual plano e qual situação, mas não **quando** a assinatura começou. `lastEventAt` muda a cada evento, e `toSubscriptionState` não copia o `start_date` da Stripe (`billing-state.ts:36-58`) | Um instante de ativação persistido |
+| Planos mais vendidos | Dá para contar perfis com `subscription.status` vivo, agrupando por `subscription.priceId`. O snapshot não guarda o **nome** do plano: o nome só vem da Stripe, em `listPlans` (`billing.ts:50-67`, `toPlanDTO` em `billing-state.ts:61-86`), e o corte proíbe chamar a Stripe ao renderizar a home | Nome do plano disponível sem chamada síncrona à Stripe |
+| Receita mensal | Nada. O snapshot tem o preço de tabela do plano (`unitAmount`), não o que foi cobrado. Nenhum evento de fatura é tratado, e `paymentEvent` guarda só `type`, `createdAt` e `expiresAt` (`payment-event.repository.ts:11-16`), com validade de 30 dias pensada para uma política de TTL opcional (`:7-8`). Não serve de fonte para agregado | Persistir o evento de cobrança com valor, moeda e instante |
+| Tudo lido da base local, com dedupe | O dedupe existe | Nada além do que as linhas acima pedem |
+| Estado vazio e i18n | O padrão de cartões e o gráfico existem | A seção nova |
+
+O webhook ainda devolve o evento Stripe inteiro no corpo da resposta de sucesso (`route.ts:176`). É um
+achado aberto no `BACKLOG.md` e fica no mesmo arquivo que esta spec vai alterar.
 
 ## Evidência de mercado
 
@@ -75,7 +100,7 @@ como não verificados.
   2026-08-21, dentro da validade).
 
 **O benchmark não sustenta esta spec.** Ele mede "Assinatura Stripe (checkout + portal)" em **9 em 10**, com
-valor alto — mas isso é a dependência ([`billing-subscription`](billing-subscription.md)), não este painel.
+valor alto — mas isso é a dependência ([`billing-subscription`](../docs/features/billing-subscription/spec.md)), não este painel.
 **Não existe linha** no levantamento para leitura de receita, MRR ou painel financeiro dentro do produto, e
 não medi prevalência disso entre os starters. A linha de "Dashboard de métricas do produto" está em 3/10 e
 trata de métricas de uso, não de dinheiro.
@@ -124,32 +149,41 @@ Cobre o item **e** inteiro do pedido: contratações recentes, planos mais vendi
 
 | Camada | Impacto |
 |--------|---------|
-| `packages/sdk` | Agregado de cobrança para o painel admin, sobre o contrato que `billing-subscription` criar. |
-| `apps/api` | Rota de agregado sob `requireAdminApi`; o webhook passa a persistir evento de cobrança com dedupe. |
+| `packages/sdk` | Agregado de cobrança para o painel admin, sobre o contrato de `packages/sdk/src/types/payments/payments.ts`. |
+| `apps/api` | Rota de agregado sob `requireAdminApi`; o webhook passa a persistir o evento de cobrança, reusando o dedupe de `paymentEvent` que já existe. |
 | `apps/app` | Seção de billing no `AdminHomeClient`, com cartões e gráfico; chaves novas em `queryKeys.ts`. |
 | `apps/web` | N/A. |
 | `packages/*` | `design-system`: mais um consumidor do gráfico. i18n nos 3 idiomas, com formatação de moeda. |
-| Infra/env | Nenhuma variável além das que `billing-subscription` já exige. Provável índice composto para a agregação por período. |
+| Infra/env | Nenhuma variável além das que `billing-subscription` já exige. Um evento a mais no endpoint da Stripe de cada fork. Provável índice composto para a agregação por período. |
 
 ## Riscos e trade-offs
 
-- **Nasce bloqueada por [`billing-subscription`](billing-subscription.md), que está em 0/6.** É o risco
-  principal e está medido acima, não estimado.
 - **Número de dinheiro na tela é um contrato de correção.** Uma receita que diverge da Stripe é pior que
-  nenhuma receita, porque alguém vai tomar decisão em cima dela. O dedupe por `event.id` e o critério
-  explícito são o mínimo; mesmo com os dois, isto é um painel operacional e **não** substitui contabilidade.
-  Vale escrever isso na tela.
-- **Verificar de ponta a ponta exige chaves reais da Stripe.** É a mesma razão pela qual
-  `billing-subscription` não foi escolhida para o topo do backlog: uma rodada autônoma devolveria os
-  critérios como não verificados.
-- **Multimoeda quebra a soma.** Um fork que venda em mais de uma moeda não pode somar valores sem conversão,
-  e conversão está fora do corte. A saída é declarar a moeda e, se houver mais de uma, mostrar separado em
-  vez de somar errado.
-- **Índice composto de novo.** Agregar por mês pede índice, e a fila de índices versionados e não publicados
-  já tem **cinco entradas** (`docs/PRE-PRODUCTION.md` §1.1, §1.2 e §1.5), recontadas em 2026-09-17 depois da
-  PR #19.
-- **Modo de produto.** `mode: subscription` — um fork `simple` não instala isto, e a seção precisa sumir
-  inteira em vez de mostrar zeros.
+  nenhuma receita, porque alguém vai tomar decisão em cima dela. O dedupe por `event.id` já existe
+  (`payment-event.repository.ts`); o critério explícito na tela continua sendo desta spec. Mesmo com os dois,
+  isto é um painel operacional e **não** substitui contabilidade. Vale escrever isso na tela.
+- **Evento novo no endpoint de cada fork.** O `docs/PRE-PRODUCTION.md` §12 manda registrar exatamente quatro
+  eventos no endpoint da Stripe. Receita confirmada por `invoice.paid` exige um quinto, e o fork que não
+  atualizar o endpoint vê receita zero sem erro nenhum. A instrução do §12 precisa mudar junto.
+- **Receita só existe a partir da entrega.** Webhook não traz histórico. Um fork que já vende quando esta
+  spec chegar começa a contar do zero, a não ser que alguém importe as faturas antigas pela API da Stripe.
+  Importação está fora do corte; o estado vazio precisa dizer desde quando o número conta.
+- **Perfil apagado some da conta.** `findByStripeCustomerId` ignora perfil com `deletedAt`
+  (`user.repository.ts:50-61`), e o soft delete pelo admin não cancela a assinatura
+  (`users/[id]/route.ts:117`, achado no `BACKLOG.md`). Uma fatura paga por um cliente cujo perfil foi
+  apagado pelo admin chega, não acha dono e não entra na receita, embora o dinheiro tenha entrado.
+- **Nome do plano num idioma só.** Nome e descrição vêm do produto na Stripe, no idioma em que foram escritos
+  (decisão P8 de `billing-subscription`). O gráfico de planos herda isso.
+- **Verificação.** Quase tudo se prova sem conta Stripe, com o harness de payload assinado e o emulador que
+  `billing-subscription` usou. Fica 🔒 só a entrega real de `invoice.paid` pela Stripe.
+- **Multimoeda quebra a soma.** O snapshot já registra a moeda por assinatura (`payments.ts:37`). Um fork
+  que venda em mais de uma moeda não pode somar valores sem conversão, e conversão está fora do corte. A
+  saída é declarar a moeda e, havendo mais de uma, mostrar separado em vez de somar errado.
+- **Índice composto de novo.** Agregar por mês ou contar por plano e situação provavelmente pede índice, e a
+  fila de índices versionados e não publicados tem **seis** entradas (`docs/PRE-PRODUCTION.md` §1.1, §1.2,
+  §1.5 e §1.7), recontadas em 2026-09-24.
+- **Modo de produto.** `mode: subscription`: um fork `simple` não instala isto, e a seção precisa sumir
+  inteira em vez de mostrar zeros. `isBillingEnabled()` (`billing.ts:22-28`) é o interruptor que já existe.
 
 ## Sinais de pronto
 
