@@ -1,9 +1,21 @@
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import {
+    EXISTING_PASSWORD_MIN_LENGTH,
+    PASSWORD_MIN_LENGTH,
+} from "@repo/shared/utils/helpers/passwordPolicy";
 import { describe, expect, it } from "vitest";
 import {
     parseChangePassword,
+    parseDeleteAccount,
     parseUpdateAccount,
 } from "@/(shared)/validation/account.schema";
+
+const NEW_PASSWORD_ONE_SHORT = "a".repeat(PASSWORD_MIN_LENGTH - 1);
+const SHORTEST_NEW_PASSWORD = "a".repeat(PASSWORD_MIN_LENGTH);
+const SHORTEST_EXISTING_PASSWORD = "b".repeat(EXISTING_PASSWORD_MIN_LENGTH);
+const EXISTING_PASSWORD_ONE_SHORT = "b".repeat(
+    EXISTING_PASSWORD_MIN_LENGTH - 1
+);
 
 async function codeOf(response: Response): Promise<string> {
     const body = (await response.json()) as { error: { code: string } };
@@ -98,5 +110,63 @@ describe("parseChangePassword", () => {
                 uid: "other-uid",
             }).ok
         ).toBe(false);
+    });
+
+    it("answers a new password one character short with AUTH_PASSWORD_TOO_SHORT", async () => {
+        const result = parseChangePassword({
+            currentPassword: "old-secret",
+            password: NEW_PASSWORD_ONE_SHORT,
+        });
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+            expect(result.response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+            expect(await codeOf(result.response)).toBe(
+                "AUTH_PASSWORD_TOO_SHORT"
+            );
+        }
+    });
+
+    it("accepts a new password at the minimum and a current password created under the old rule", () => {
+        expect(
+            parseChangePassword({
+                currentPassword: SHORTEST_EXISTING_PASSWORD,
+                password: SHORTEST_NEW_PASSWORD,
+            }).ok
+        ).toBe(true);
+    });
+
+    it("keeps a current password below the old minimum a plain validation failure", async () => {
+        const result = parseChangePassword({
+            currentPassword: EXISTING_PASSWORD_ONE_SHORT,
+            password: SHORTEST_NEW_PASSWORD,
+        });
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+            expect(await codeOf(result.response)).toBe("VALIDATION_FAILED");
+        }
+    });
+});
+
+describe("parseDeleteAccount", () => {
+    it("accepts a current password created under the old rule", () => {
+        expect(
+            parseDeleteAccount({ currentPassword: SHORTEST_EXISTING_PASSWORD })
+                .ok
+        ).toBe(true);
+    });
+
+    it("refuses a current password below the old minimum with the confirmation code", async () => {
+        const result = parseDeleteAccount({
+            currentPassword: EXISTING_PASSWORD_ONE_SHORT,
+        });
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+            expect(await codeOf(result.response)).toBe(
+                "ACCOUNT_DELETION_CONFIRMATION_INVALID"
+            );
+        }
     });
 });

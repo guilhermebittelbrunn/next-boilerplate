@@ -1,12 +1,16 @@
 import { ONBOARDING_STEPS, type OnboardingStepId } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { z } from "zod";
+import {
+    existingPasswordSchema,
+    isPasswordTooShort,
+    newPasswordSchema,
+    passwordTooShortResponse,
+} from "./password.schema";
 
 const DISPLAY_NAME_MAX = 120;
 const PHONE_MAX = 32;
 const AVATAR_REFERENCE_MAX = 2048;
-const MIN_PASSWORD_LENGTH = 6;
-const MAX_PASSWORD_LENGTH = 1024;
 
 export const themeSchema = z.enum(["light", "dark", "system"]);
 export const localeSchema = z.enum(["pt-br", "en", "es"]);
@@ -39,11 +43,8 @@ export const updateAccountSchema = z
 
 export const changePasswordSchema = z
     .object({
-        currentPassword: z
-            .string()
-            .min(MIN_PASSWORD_LENGTH)
-            .max(MAX_PASSWORD_LENGTH),
-        password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
+        currentPassword: existingPasswordSchema,
+        password: newPasswordSchema,
     })
     .strict();
 
@@ -54,10 +55,7 @@ export const changePasswordSchema = z
  */
 export const deleteAccountSchema = z
     .object({
-        currentPassword: z
-            .string()
-            .min(MIN_PASSWORD_LENGTH)
-            .max(MAX_PASSWORD_LENGTH),
+        currentPassword: existingPasswordSchema,
     })
     .strict();
 
@@ -122,7 +120,12 @@ export function parseChangePassword(
     | { ok: false; response: Response } {
     const parsed = changePasswordSchema.safeParse(body);
     if (!parsed.success) {
-        return { ok: false, response: validationFailed() };
+        return {
+            ok: false,
+            response: isPasswordTooShort(parsed.error)
+                ? passwordTooShortResponse()
+                : validationFailed(),
+        };
     }
     return { ok: true, value: parsed.data };
 }

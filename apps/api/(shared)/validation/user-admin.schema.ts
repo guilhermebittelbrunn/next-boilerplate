@@ -1,12 +1,12 @@
 import { UserType } from "@repo/sdk/src/types";
 import { z } from "zod";
+import { newPasswordSchema } from "./password.schema";
 
-const MIN_PASSWORD_LENGTH = 6;
 const MAX_DISPLAY_NAME_LENGTH = 120;
 
 export const adminCreateUserSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(MIN_PASSWORD_LENGTH),
+    password: newPasswordSchema,
     type: z.nativeEnum(UserType),
     displayName: z.string().trim().max(MAX_DISPLAY_NAME_LENGTH).optional(),
 });

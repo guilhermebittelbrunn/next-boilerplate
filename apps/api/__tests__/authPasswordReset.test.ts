@@ -1,4 +1,8 @@
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import {
+    PASSWORD_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH,
+} from "@repo/shared/utils/helpers/passwordPolicy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -70,8 +74,8 @@ const UNKNOWN_EMAIL = "nobody@example.com";
 const ACTION_URL = "https://app.example.com/pt-br/reset-password?oobCode=code";
 const LONGEST_ACCEPTED_OOB_CODE = 2048;
 const OOB_CODE_PAST_THE_CEILING = LONGEST_ACCEPTED_OOB_CODE + 1;
-const SHORTEST_ACCEPTED_PASSWORD = 6;
-const LONGEST_ACCEPTED_PASSWORD = 1024;
+const SHORTEST_ACCEPTED_PASSWORD = PASSWORD_MIN_LENGTH;
+const LONGEST_ACCEPTED_PASSWORD = PASSWORD_MAX_LENGTH;
 const PASSWORD_PAST_THE_CEILING = LONGEST_ACCEPTED_PASSWORD + 1;
 
 function requestFor(url: string, body: unknown) {
@@ -251,7 +255,7 @@ describe("POST /auth/password/reset", () => {
     it("ends every open session of the account that changed its password", async () => {
         const response = await postResetConfirm({
             oobCode: "code",
-            password: "secret1",
+            password: "secret12",
         });
 
         expect(response.status).toBe(HTTP_STATUS.OK);
@@ -268,7 +272,7 @@ describe("POST /auth/password/reset", () => {
 
         const response = await postResetConfirm({
             oobCode: "code",
-            password: "secret1",
+            password: "secret12",
         });
 
         expect(response.status).toBe(HTTP_STATUS.OK);
@@ -301,7 +305,7 @@ describe("POST /auth/password/reset", () => {
 
         const response = await postResetConfirm({
             oobCode: "code",
-            password: "secret1",
+            password: "secret12",
         });
 
         expect(response.status).toBe(status);
@@ -319,11 +323,28 @@ describe("POST /auth/password/reset", () => {
         expect(identityResetPasswordMock).not.toHaveBeenCalled();
     });
 
+    /**
+     * Refusing before the provider is called is what keeps the link usable: the action
+     * code is spent on the first call that reaches Identity Toolkit.
+     */
+    it("answers a password one character short with its own code and leaves the link unspent", async () => {
+        const response = await postResetConfirm({
+            oobCode: "code",
+            password: "a".repeat(SHORTEST_ACCEPTED_PASSWORD - 1),
+        });
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await response.json()).toEqual({
+            error: { code: "AUTH_PASSWORD_TOO_SHORT" },
+        });
+        expect(identityResetPasswordMock).not.toHaveBeenCalled();
+    });
+
     it("rejects a missing action code", async () => {
         for (const body of [
-            { password: "secret1" },
-            { oobCode: "", password: "secret1" },
-            { oobCode: "   ", password: "secret1" },
+            { password: "secret12" },
+            { oobCode: "", password: "secret12" },
+            { oobCode: "   ", password: "secret12" },
         ]) {
             const response = await postResetConfirm(body);
 
@@ -340,7 +361,7 @@ describe("POST /auth/password/reset", () => {
     it("reports a link already spent as invalid and revokes nothing twice", async () => {
         const first = await postResetConfirm({
             oobCode: "code",
-            password: "secret1",
+            password: "secret12",
         });
         expect(first.status).toBe(HTTP_STATUS.OK);
         expect(revokeUserSessionsMock).toHaveBeenCalledTimes(1);
@@ -350,7 +371,7 @@ describe("POST /auth/password/reset", () => {
         );
         const second = await postResetConfirm({
             oobCode: "code",
-            password: "secret1",
+            password: "secret12",
         });
 
         expect(second.status).toBe(HTTP_STATUS.BAD_REQUEST);
@@ -363,7 +384,7 @@ describe("POST /auth/password/reset", () => {
     it("rejects an action code past the accepted length before calling the provider", async () => {
         const response = await postResetConfirm({
             oobCode: "a".repeat(OOB_CODE_PAST_THE_CEILING),
-            password: "secret1",
+            password: "secret12",
         });
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
@@ -411,7 +432,7 @@ describe("POST /auth/password/reset", () => {
 
         await postResetConfirm({
             oobCode: "code",
-            password: "secret1",
+            password: "secret12",
             email: "victim@example.com",
         });
 
