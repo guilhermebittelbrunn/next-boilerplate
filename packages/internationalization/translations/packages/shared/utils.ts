@@ -28,6 +28,8 @@ export const sharedUtilsTranslations = {
             AUTH_SESSION_EXPIRED:
                 "Sua sessão atingiu o tempo máximo. Entre novamente.",
             USERS_NOT_FOUND: "Usuário não encontrado.",
+            USERS_DELETE_BILLING_FAILED:
+                "Não foi possível cancelar a assinatura deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para atualizar.",
             ACCOUNT_AVATAR_INVALID:
                 "A imagem informada não pode ser usada como foto de perfil.",
@@ -138,6 +140,8 @@ export const sharedUtilsTranslations = {
             AUTH_SESSION_EXPIRED:
                 "Your session reached its maximum lifetime. Sign in again.",
             USERS_NOT_FOUND: "User not found.",
+            USERS_DELETE_BILLING_FAILED:
+                "We couldn't cancel this user's subscription, so they were not archived. Try again in a moment.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nothing to update.",
             ACCOUNT_AVATAR_INVALID:
                 "That image cannot be used as your profile picture.",
@@ -246,6 +250,8 @@ export const sharedUtilsTranslations = {
             AUTH_SESSION_EXPIRED:
                 "Tu sesión alcanzó el tiempo máximo. Inicia sesión de nuevo.",
             USERS_NOT_FOUND: "Usuario no encontrado.",
+            USERS_DELETE_BILLING_FAILED:
+                "No pudimos cancelar la suscripción de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para actualizar.",
             ACCOUNT_AVATAR_INVALID:
                 "Esa imagen no se puede usar como foto de perfil.",

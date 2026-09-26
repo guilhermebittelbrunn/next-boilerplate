@@ -30,7 +30,7 @@ export const adminUsersPageTranslations = {
                 action: "Arquivar",
                 confirmTitle: "Arquivar usuário",
                 confirmDescription:
-                    "O usuário sai da listagem e perde o acesso, mas o cadastro é preservado e o e-mail continua ocupado.",
+                    "O usuário sai da listagem e perde o acesso, mas o cadastro é preservado e o e-mail continua ocupado. Se houver assinatura ativa, ela é cancelada na hora.",
             },
         },
         form: {
@@ -86,7 +86,7 @@ export const adminUsersPageTranslations = {
                 action: "Archive",
                 confirmTitle: "Archive user",
                 confirmDescription:
-                    "The user leaves the listing and loses access, but the record is kept and the email stays taken.",
+                    "The user leaves the listing and loses access, but the record is kept and the email stays taken. If there is an active subscription, it is canceled right away.",
             },
         },
         form: {
@@ -141,7 +141,7 @@ export const adminUsersPageTranslations = {
                 action: "Archivar",
                 confirmTitle: "Archivar usuario",
                 confirmDescription:
-                    "El usuario sale del listado y pierde el acceso, pero el registro se conserva y el correo sigue ocupado.",
+                    "El usuario sale del listado y pierde el acceso, pero el registro se conserva y el correo sigue ocupado. Si hay una suscripción activa, se cancela de inmediato.",
             },
         },
         form: {

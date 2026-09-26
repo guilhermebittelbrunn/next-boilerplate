@@ -5,6 +5,7 @@ import { AuthProvider } from "@repo/auth/provider";
 import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
+import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
@@ -30,24 +31,29 @@ const RootLayout = async ({ children }: RootLayoutProperties) => {
             suppressHydrationWarning
         >
             <body>
-                <QueryProvider>
-                    <DesignSystemProvider>
-                        <AuthProvider>
-                            <AnalyticsProvider
-                                consent={consent}
-                                locale={locale}
-                                privacyPolicyHref={`/${locale}/legal/privacy`}
-                            >
-                                <ToastContainer />
-                                <Header />
-                                <main>
-                                    <ClientLayout> {children} </ClientLayout>
-                                </main>
-                                <Footer />
-                            </AnalyticsProvider>
-                        </AuthProvider>
-                    </DesignSystemProvider>
-                </QueryProvider>
+                <LocaleProvider>
+                    <QueryProvider>
+                        <DesignSystemProvider>
+                            <AuthProvider>
+                                <AnalyticsProvider
+                                    consent={consent}
+                                    locale={locale}
+                                    privacyPolicyHref={`/${locale}/legal/privacy`}
+                                >
+                                    <ToastContainer />
+                                    <Header />
+                                    <main>
+                                        <ClientLayout>
+                                            {" "}
+                                            {children}{" "}
+                                        </ClientLayout>
+                                    </main>
+                                    <Footer />
+                                </AnalyticsProvider>
+                            </AuthProvider>
+                        </DesignSystemProvider>
+                    </QueryProvider>
+                </LocaleProvider>
             </body>
         </html>
     );

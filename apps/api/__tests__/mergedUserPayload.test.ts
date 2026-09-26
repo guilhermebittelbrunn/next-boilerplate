@@ -44,6 +44,15 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
+vi.mock("@repo/payments", () => ({
+    getStripe: () => null,
+    isPaymentsConfigured: () => false,
+}));
+
+vi.mock("@/env", () => ({
+    env: { NEXT_PUBLIC_APP_URL: "http://localhost:3000" },
+}));
+
 const { GET: getMe } = await import("@/app/(routes)/auth/me/route");
 const { GET: getUserById } = await import("@/app/(routes)/users/[id]/route");
 

@@ -62,6 +62,15 @@ vi.mock("@repo/auth/server", () => ({
     getCurrentUser: vi.fn(),
 }));
 
+vi.mock("@repo/payments", () => ({
+    getStripe: () => null,
+    isPaymentsConfigured: () => false,
+}));
+
+vi.mock("@/env", () => ({
+    env: { NEXT_PUBLIC_APP_URL: "http://localhost:3000" },
+}));
+
 const { PUT, DELETE } = await import("@/app/(routes)/users/[id]/route");
 
 const ADMIN_UID = "admin-1";

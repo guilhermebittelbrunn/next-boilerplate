@@ -1,8 +1,17 @@
 import { getAuthInstance } from "@repo/auth/server";
-import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
+import { getStripe } from "@repo/payments";
+import {
+    AuditAction,
+    AuditTargetType,
+    type UserDTO,
+} from "@repo/sdk/src/types";
+import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { resolveUserAuditLabel } from "@/(shared)/lib/audit-label";
 import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
+import { cancelSubscriptionForErasure } from "@/(shared)/lib/billing";
+import { isLiveSubscription } from "@/(shared)/lib/billing-state";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import {
     type RouteIdParamsContext,
@@ -24,6 +33,37 @@ function changedFieldsOf(patch: AdminUpdateUserInput): string[] {
     return Object.keys(patch).filter(
         (field) => patch[field as keyof AdminUpdateUserInput] !== undefined
     );
+}
+
+type BillingCancellation = { ok: true } | { ok: false; reason: string };
+
+/**
+ * An archived profile is no longer found by the payment webhook, so a subscription left
+ * alive would keep charging someone with no account to manage it. With a live
+ * subscription and Stripe switched off, archiving is refused for the same reason.
+ */
+async function cancelLiveSubscription(
+    profile: UserDTO
+): Promise<BillingCancellation> {
+    const subscription = profile.subscription;
+    if (!(subscription && isLiveSubscription(subscription))) {
+        return { ok: true };
+    }
+
+    const stripe = getStripe();
+    if (!stripe) {
+        return { ok: false, reason: "billing-not-configured" };
+    }
+
+    try {
+        await cancelSubscriptionForErasure(stripe, subscription.subscriptionId);
+        return { ok: true };
+    } catch (error) {
+        return {
+            ok: false,
+            reason: error instanceof Error ? error.name : "unknown",
+        };
+    }
 }
 
 export const GET = requireAdminApi<RouteIdParamsContext>(async (_req, ctx) => {
@@ -113,6 +153,18 @@ export const DELETE = requireAdminApi<RouteIdParamsContext>(
         // Read while the account is still there: the record that has to outlive the
         // deletion would otherwise be unable to name who was deleted.
         const targetLabel = await resolveUserAuditLabel(profile.reference_id);
+
+        const billing = await cancelLiveSubscription(profile);
+        if (!billing.ok) {
+            logEvent("payments", "admin-user-delete-billing-failed", {
+                requestId: requestIdFrom(req),
+                reason: billing.reason,
+            });
+            return Response.json(
+                { error: { code: "USERS_DELETE_BILLING_FAILED" } },
+                { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
+            );
+        }
 
         await userRepository.delete(id);
 

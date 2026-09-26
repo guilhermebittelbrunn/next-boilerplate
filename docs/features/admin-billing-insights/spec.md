@@ -1,7 +1,7 @@
 ---
 id: admin-billing-insights
 title: Seção de billing na home do admin
-status: proposed
+status: done
 value: médio
 effort: M
 audience: produto
@@ -9,7 +9,7 @@ area: [apps/app, apps/api, packages/sdk, packages/design-system, packages/intern
 mode: subscription
 depends_on: [billing-subscription, dashboard-home]
 contends_on: ["apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx", apps/app/shared/lib/queryKeys.ts, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/(shared)/repositories/user.repository.ts, firestore.indexes.json]
-feature: -
+feature: admin-billing-insights
 updated: 2026-09-25
 ---
 
@@ -25,11 +25,11 @@ O painel da Stripe responde em termos de cliente e de cobrança, não em termos 
 usuário do fork é qual `customer`, nem o nome que o produto dá aos planos. Cruzar as duas coisas vira
 trabalho manual, repetido toda semana, feito fora do sistema que tem a resposta.
 
-## Por que esta spec está separada de [`admin-analytics-dashboard`](../docs/features/admin-analytics-dashboard/spec.md)
+## Por que esta spec está separada de [`admin-analytics-dashboard`](../admin-analytics-dashboard/spec.md)
 
 Porque, quando as duas foram escritas, a parte de billing não tinha sobre o que ser construída. Os KPIs de
 atividade e o gráfico de acesso foram entregues pela PR #22; esta seção esperou
-[`billing-subscription`](../docs/features/billing-subscription/spec.md).
+[`billing-subscription`](../billing-subscription/spec.md).
 
 **A dependência foi entregue.** `billing-subscription` saiu da fila com 6 de 6 itens do corte, pela PR #25
 (merge `a1f87d0` em 2026-09-24, CI `success` nesse SHA), e está arquivada. A spec deixou de estar bloqueada.
@@ -71,7 +71,7 @@ Remedido em 2026-09-25, com o `HEAD` em `a1f87d0`.
   (`docs/features/billing-subscription/test/report.md`, rodada B). O mesmo harness serve aqui.
 
 **Peças da home, entregues por `dashboard-home`** (PR #19, merge `bfc4d8f`; spec arquivada em
-[`docs/features/dashboard-home/spec.md`](../docs/features/dashboard-home/spec.md)):
+[`docs/features/dashboard-home/spec.md`](../dashboard-home/spec.md)):
 `apps/app/shared/components/ui/MetricCard.tsx:11-17` (cartão de métrica com esqueleto),
 `packages/design-system/components/ui/category-bar-chart.tsx:25-77` (gráfico de barras temático, com rótulo
 acessível), `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/(components)/AdminHomeClient.tsx:34-56`
@@ -93,14 +93,62 @@ degradação traduzível quando falta índice, e `BaseRepository.countQuery`
 O webhook ainda devolve o evento Stripe inteiro no corpo da resposta de sucesso (`route.ts:176`). É um
 achado aberto no `BACKLOG.md` e fica no mesmo arquivo que esta spec vai alterar.
 
+## Estado da entrega
+
+Auditado em 2026-09-25 pelo `/spec --sync`, com o `HEAD` em `0659ede` (merge da PR #27, mergeada em
+2026-09-25T15:08:35Z). O CI desse SHA terminou em `success` nos quatro jobs (`verify`, `changes`, `e2e`,
+`coverage`; `gh run 36152188106`), e a PR também passou nos quatro antes do merge. As tabelas das seções
+anteriores descrevem a base antes da entrega e ficam como registro do que faltava.
+
+| item do corte | veredito | evidência |
+|---------------|----------|-----------|
+| 1. Contratações recentes | **implementado** | `invoice.paid` com `billing_reason=subscription_create` grava a ativação uma vez (`apps/api/app/(routes)/webhooks/payments/route.ts:116-147`, `subscription-activation.repository.ts:27`); a leitura pega as 5 últimas (`apps/api/(shared)/lib/billing-summary.ts:21`, `:124-126`) e resolve o usuário pelo `customerId` (`:138-140`); rota sob `requireAdminApi` (`payments/summary/route.ts:12`) |
+| 2. Planos mais vendidos | **implementado** | contagem por `priceId` dos status vivos (`user.repository.ts:223`), nome pelo cache `planLabel` gravado pelo webhook (`(shared)/lib/plan-label.ts:26`), ordenação em `billing-summary.ts:73-95`; gráfico em `BillingPlansChart.tsx` |
+| 3. Receita mensal, com moeda e critério | **implementado** | soma por moeda, sem conversão (`billing-summary.ts:37-58`), no mês UTC (`:27-34`); a tela diz "recebido" e o critério (`BillingRevenueCard.tsx:39-40`, copy em `translations/apps/app/pages/admin/home.ts:58-66`) e separa moedas (`:62-66` do cartão) |
+| 4. Leitura só da base local, com dedupe | **implementado** | a rota não chama a Stripe (`payments/summary/route.ts:17-20`); dedupe por `event.id` (`route.ts:228-233`) e fatura gravada com o id da própria fatura (`paid-invoice.repository.ts:36-54`) |
+| 5. Estado vazio e i18n | **implementado** | estado vazio em `BillingInsightsSection.tsx:61-72`; a seção some em `simple` e com a cobrança desligada (`:37-39`, `payments/summary/route.ts:13-15`); chaves nos 3 idiomas em `home.ts:47`, `:142`, `:237` |
+
+A entrega também parou de ecoar o evento Stripe na resposta de sucesso do webhook (`route.ts:242` devolve
+só `{ ok: true }`), que era um achado aberto no `BACKLOG.md`.
+
+O `/test` fechou com 18 critérios aprovados, 4 🔒 e 1 reprovado (critério 18). O reprovado é a hidratação
+em `/en` e `/es`, anterior à entrega e já registrada no `BACKLOG.md` como tarefa aprovada. Os 🔒 dependem
+de conta Stripe real: entrega de `invoice.paid`, nome real do produto, forma real do payload e ausência de
+índice composto num projeto Firebase real.
+
+### Deriva em relação ao bloco de reescopo
+
+O bloco "Reescopo que o `/analyze` deve aplicar" foi escrito em outro workspace enquanto a entrega corria, e
+a implementação diverge dele em dois pontos. Nenhum dos dois muda o que o admin vê na tela.
+
+- **Item 1, instante de ativação.** O bloco pedia gravar o instante no snapshot do perfil, na primeira vez
+  que a assinatura entra num status vivo. A entrega grava em `subscriptionActivation/<sub_id>`, na primeira
+  fatura paga com `billing_reason=subscription_create`. A nota de divergência acima dizia que uma
+  assinatura em `trialing` ficaria fora da lista. A documentação da Stripe diz o contrário: uma assinatura
+  com período de teste gera na criação uma fatura de valor zero com `subscription_create`, que passa a
+  `paid` na hora ([Use free trial periods on subscriptions](https://docs.stripe.com/billing/subscriptions/trials/free-trials)
+  e [How subscriptions work](https://docs.stripe.com/billing/subscriptions/overview), consultadas em
+  2026-09-25). A entrega grava fatura de valor zero (decisão D21 do plano), então o teste gratuito entra
+  como contratação. Isso não foi provado contra uma conta Stripe real.
+- **Item 3, vínculo da fatura.** O bloco pedia o vínculo com o perfil. A entrega guarda o `customerId` e
+  resolve o usuário na leitura. Com isso, a fatura não carrega dado de pessoa, e o expurgo de conta
+  mantém o registro sem apagá-lo (`docs/PRE-PRODUCTION.md:690`).
+
+Leitura da auditoria: a spec estava mais específica do que devia. O bloco descrevia *como* gravar, que é
+assunto do plano, e o plano escolheu outro caminho com a mesma saída observável. Fica registrado aqui para
+o usuário confirmar; se ele quiser o desenho do bloco, é uma tarefa nova, e não a reabertura desta spec.
+
+O `contends_on` previu 5 arquivos e a PR tocou 4 deles. `firestore.indexes.json` ficou de fora porque as
+consultas usam só índices automáticos.
+
 ## Evidência de mercado
 
-- Notas: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md) e
-  [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) (ambas coletadas em
+- Notas: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md) e
+  [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (ambas coletadas em
   2026-08-21, dentro da validade).
 
 **O benchmark não sustenta esta spec.** Ele mede "Assinatura Stripe (checkout + portal)" em **9 em 10**, com
-valor alto — mas isso é a dependência ([`billing-subscription`](../docs/features/billing-subscription/spec.md)), não este painel.
+valor alto — mas isso é a dependência ([`billing-subscription`](../billing-subscription/spec.md)), não este painel.
 **Não existe linha** no levantamento para leitura de receita, MRR ou painel financeiro dentro do produto, e
 não medi prevalência disso entre os starters. A linha de "Dashboard de métricas do produto" está em 3/10 e
 trata de métricas de uso, não de dinheiro.
@@ -124,15 +172,15 @@ que o fork vende alguma coisa.
 
 Cobre o item **e** inteiro do pedido: contratações recentes, planos mais vendidos e receita mensal.
 
-- [ ] **Contratações recentes:** as últimas N ativações de assinatura, com usuário, plano e data, sob
+- [x] **Contratações recentes:** as últimas N ativações de assinatura, com usuário, plano e data, sob
       `requireAdminApi`.
-- [ ] **Planos mais vendidos:** contagem de assinaturas ativas por plano, no gráfico de barras que já
+- [x] **Planos mais vendidos:** contagem de assinaturas ativas por plano, no gráfico de barras que já
       existe.
-- [ ] **Receita mensal:** o valor do mês corrente, com a **moeda** e o **critério** ("faturado" ou
+- [x] **Receita mensal:** o valor do mês corrente, com a **moeda** e o **critério** ("faturado" ou
       "recebido") escritos na tela junto do número.
-- [ ] Os três leem **dado persistido na base do próprio fork**, alimentado pelo webhook de pagamento **com
+- [x] Os três leem **dado persistido na base do próprio fork**, alimentado pelo webhook de pagamento **com
       dedupe por `event.id`**. Nada de chamar a Stripe de forma síncrona ao renderizar a home.
-- [ ] Estado vazio para o fork que ainda não vendeu nada, e i18n nos 3 idiomas, com moeda e data formatadas
+- [x] Estado vazio para o fork que ainda não vendeu nada, e i18n nos 3 idiomas, com moeda e data formatadas
       por idioma.
 
 ### Reescopo que o `/analyze` deve aplicar (decisão do usuário em 2026-09-24)
@@ -251,7 +299,7 @@ falta. Os cinco itens acima continuam valendo; o que muda é **de onde** cada n�
   2026-09-24:** coleção própria de faturas pagas, alimentada pelo webhook e sem TTL. Ver o reescopo acima.
 - **Quem vê a seção: qualquer admin ou um papel separado?** — **recomendação:** qualquer admin no primeiro
   corte. Papel de finanças é problema de RBAC, que vive em
-  [`teams-organizations`](teams-organizations.md), hoje `deferred`.
+  [`teams-organizations`](../../../specs/teams-organizations.md), hoje `deferred`.
 - **Quantas contratações recentes mostrar, e a partir de qual evento uma assinatura conta como "recente"?**
   — **recomendação:** as 5 últimas ativações, pelo instante em que a assinatura passou a ativa. Cinco cabe
   na home sem competir com o resto; a lista completa é assunto de uma tela própria, fora deste corte.

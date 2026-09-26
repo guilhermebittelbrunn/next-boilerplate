@@ -11,7 +11,7 @@ Mantém o dicionário consistente nos 3 idiomas. Regra de ouro do repo: **nenhum
 - Base: `packages/internationalization/translations/`. Cada arquivo-folha exporta um objeto com as **3 chaves de idioma**: `"pt-br"`, `en`, `es`.
 - Folhas sobem por `index.ts` (ex.: `apps/app/pages/common/index.ts`) até `translations/global.ts` (`globalTranslations`).
 - No app: `const { dictionary, locale } = getDictionary()` — client de `@repo/internationalization/client`, server de `@repo/internationalization/server`. Acesso por caminho, ex.: `dictionary.apps.app.pages.common.entities.messages.created`.
-- Idiomas suportados e default em `packages/internationalization/utils.ts` (`locales`, `getDefaultLocale`). Locale resolvido via cookie `x-locale`.
+- Idiomas suportados e default em `packages/internationalization/utils.ts` (`locales`, `getDefaultLocale`). No servidor, o locale vem do cookie `x-locale`; no client, do segmento `[locale]` via `LocaleProvider` (root layouts).
 
 ## Adicionar/editar chaves de UI
 

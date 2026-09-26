@@ -22,7 +22,7 @@ Este repositório é um **boilerplate full stack** em monorepo (`pnpm` + `turbo`
 
 ## Convenções de implementação
 
-- **Locale no app**: para resolver locale atual, prefira `getDictionary()` (client/server) ou `getDictionaryForLocale(...)` quando a rota já fornece `[locale]`. Esses helpers já aplicam fallback/default e cookie (`x-locale`) automaticamente.
+- **Locale no app**: para resolver locale atual, prefira `getDictionary()` (client/server) ou `getDictionaryForLocale(...)` quando a rota já fornece `[locale]`. Esses helpers já aplicam fallback/default. O do servidor lê o cookie `x-locale`; o do client lê o segmento `[locale]` pelo `LocaleProvider` dos root layouts (cookie só sem provider) e, no servidor, só pode ser chamado durante o render. Componente client que fica montado numa troca de idioma (acima do segmento `[locale]`, como o `AuthProvider`) usa `useDictionary()`, que re-renderiza quando o idioma muda.
 - **Nomenclatura de arquivos**: componentes React em **TitleCase** (ex.: `PanelNavbarControls.tsx`); hooks em **camelCase** (ex.: `useListUsers.ts`).
 
 ## Regras por escopo (`CLAUDE.md` aninhados)

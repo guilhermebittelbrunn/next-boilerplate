@@ -474,8 +474,8 @@ preço chegam, o que leva até um ciclo de cobrança; até lá o gráfico mostra
 quando o perfil já tem uma assinatura viva gravada (`apps/api/app/(routes)/payments/checkout/route.ts:41`).
 Se a pessoa abrir o checkout em duas abas e pagar nas duas antes de o primeiro webhook chegar, a Stripe cria
 duas assinaturas. O perfil fica com a mais recente (`decideSubscriptionWrite`,
-`apps/api/(shared)/lib/billing-state.ts:141-147`) e a exclusão de conta cancela só essa
-(`apps/api/(shared)/lib/account-erasure.ts:95`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
+`apps/api/(shared)/lib/billing-state.ts:141-147`) e tanto a exclusão de conta quanto o arquivamento pelo admin cancelam só essa
+(`apps/api/(shared)/lib/account-erasure.ts:95`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
 a sobrescrita foi aceita. Quem precisar fechar o caso antes do release:
 
 1. Em `POST /payments/checkout`, quando o perfil já tem `stripeCustomerId`, chamar
@@ -592,19 +592,21 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-25**, com o `HEAD` em `a1f87d0` (PR #25 já mergeada). Os números abaixo são da
-sétima medição:
+Remedido em **2026-09-25**, com o `HEAD` em `0659ede` (PR #27 já mergeada) mais o working tree da correção
+de hidratação do dicionário client e do cancelamento no arquivamento pelo admin. Os números abaixo são da
+oitava medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
-| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **10 de 10** (`apps/api:11`, `apps/app:13`, `apps/web:11`, `packages/analytics:6`, `packages/auth:10`, `packages/email:15`, `packages/internationalization:10`, `packages/payments:10`, `packages/security:10`, `packages/shared:10`) |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **24/24 tasks**, 0 em cache, **56,7 s** |
-| lint/format | `pnpm check` | **699 arquivos**, 0 correções |
-| suíte | 10 tasks de teste | **1817 testes em 180 arquivos** |
+| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **11 de 11** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/email`, `packages/internationalization`, `packages/payments`, `packages/security`, `packages/shared`). O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **26/26 tasks**, 0 em cache, **53,4 s** |
+| lint/format | `pnpm check` | **755 arquivos**, 0 correções |
+| suíte | 11 tasks de teste | **1990 testes em 196 arquivos** |
 
-Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 804 em 66 arquivos, `apps/app` 559 em
-73, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/shared` 44 em 4, `@repo/internationalization` 44
-em 5, `apps/web` 41 em 8, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 22 em 4.
+Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 894 em 73 arquivos, `apps/app` 608 em
+78, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/internationalization` 59 em 6, `@repo/shared` 44
+em 4, `apps/web` 44 em 9, `@repo/analytics` 34 em 2, `@repo/security` 31 em 3, `@repo/payments` 22 em 4,
+`apps/e2e` (Vitest) 16 em 2.
 
 Dois destes números mudam a cada entrega. A PR #16 acrescentou o workspace `@repo/analytics` à suíte; a #17
 somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arquivos; a home do painel somou

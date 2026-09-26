@@ -4,6 +4,7 @@ import { AnalyticsProvider } from "@repo/analytics/provider";
 import { resolveConsentBootstrap } from "@repo/analytics/server";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
+import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
@@ -73,24 +74,26 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             suppressHydrationWarning
         >
             <body>
-                <QueryProvider>
-                    <AnalyticsProvider
-                        consent={consent}
-                        locale={locale}
-                        privacyPolicyHref={privacyPolicyHref}
-                    >
-                        <AppDesignProvider defaultTheme={preferredTheme}>
-                            <ToastContainer />
-                            <DisplayTimeZoneProvider
-                                initialTimeZone={preferredTimeZone}
-                            >
-                                <ClientLayout initialPanel={initialPanel}>
-                                    {children}
-                                </ClientLayout>
-                            </DisplayTimeZoneProvider>
-                        </AppDesignProvider>
-                    </AnalyticsProvider>
-                </QueryProvider>
+                <LocaleProvider>
+                    <QueryProvider>
+                        <AnalyticsProvider
+                            consent={consent}
+                            locale={locale}
+                            privacyPolicyHref={privacyPolicyHref}
+                        >
+                            <AppDesignProvider defaultTheme={preferredTheme}>
+                                <ToastContainer />
+                                <DisplayTimeZoneProvider
+                                    initialTimeZone={preferredTimeZone}
+                                >
+                                    <ClientLayout initialPanel={initialPanel}>
+                                        {children}
+                                    </ClientLayout>
+                                </DisplayTimeZoneProvider>
+                            </AppDesignProvider>
+                        </AnalyticsProvider>
+                    </QueryProvider>
+                </LocaleProvider>
             </body>
         </html>
     );

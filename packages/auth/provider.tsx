@@ -9,7 +9,7 @@ import {
     subscribeToIdTokenState,
 } from "@repo/auth/client";
 import useAlert from "@repo/design-system/hooks/useAlert";
-import { getDictionary } from "@repo/internationalization/client";
+import { useDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import {
@@ -123,7 +123,7 @@ export function AuthProvider({
     const bootstrapAttemptedRef = useRef(false);
     // Concurrent ID-token callbacks would otherwise each alert and each push to sign-in.
     const sessionExpiredHandledRef = useRef(false);
-    const { dictionary, locale } = getDictionary();
+    const { dictionary, locale } = useDictionary();
 
     const redirectPath = () => getRedirectPath?.() ?? `/${locale}`;
 
@@ -250,7 +250,7 @@ export function AuthProvider({
     }, [dictionary, errorAlert, locale, router]);
 
     /**
-     * `getDictionary()` and `useAlert()` return fresh references on every render, so
+     * `useDictionary()` and `useAlert()` return fresh references on every render, so
      * `handleSessionExpired` changes identity on every render too. Reading it through a
      * ref keeps it out of the ID-token subscription's dependencies — otherwise the
      * subscription would be torn down and re-created on each render, re-running the
