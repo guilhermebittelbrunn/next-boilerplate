@@ -1,4 +1,8 @@
 import type { globalTranslations } from "@repo/internationalization/translations/global";
+import {
+    EXISTING_PASSWORD_MIN_LENGTH,
+    PASSWORD_MIN_LENGTH,
+} from "@repo/shared/utils/helpers/passwordPolicy";
 import { z } from "zod";
 
 type Dictionary = (typeof globalTranslations)[keyof typeof globalTranslations];
@@ -6,7 +10,6 @@ type Dictionary = (typeof globalTranslations)[keyof typeof globalTranslations];
 const DISPLAY_NAME_MAX = 120;
 const PHONE_MAX = 32;
 const AVATAR_REFERENCE_MAX = 2048;
-const MIN_PASSWORD_LENGTH = 6;
 const PHONE_RE = /^[\d\s()+-]+$/;
 const STORAGE_OBJECT_PATH_RE =
     /^uploads\/[A-Za-z0-9_-]{1,128}\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
@@ -84,11 +87,11 @@ export function buildAccountPasswordSchema(dictionary: Dictionary) {
             currentPassword: z
                 .string()
                 .min(1, validation.required)
-                .min(MIN_PASSWORD_LENGTH, validation.min),
+                .min(EXISTING_PASSWORD_MIN_LENGTH, validation.min),
             password: z
                 .string()
                 .min(1, validation.required)
-                .min(MIN_PASSWORD_LENGTH, validation.min),
+                .min(PASSWORD_MIN_LENGTH, validation.newPasswordMin),
             confirmPassword: z.string().min(1, validation.required),
         })
         .refine((values) => values.password === values.confirmPassword, {

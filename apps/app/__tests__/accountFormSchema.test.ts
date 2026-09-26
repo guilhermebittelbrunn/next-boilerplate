@@ -1,4 +1,8 @@
 import { globalTranslations } from "@repo/internationalization/translations/global";
+import {
+    EXISTING_PASSWORD_MIN_LENGTH,
+    PASSWORD_MIN_LENGTH,
+} from "@repo/shared/utils/helpers/passwordPolicy";
 import { describe, expect, it } from "vitest";
 import {
     buildAccountPasswordSchema,
@@ -6,8 +10,9 @@ import {
     buildAccountProfileSchema,
 } from "@/app/[locale]/(authenticated)/(common)/(pages)/account/(validations)/accountFormSchema";
 
-const profileSchema = buildAccountProfileSchema(globalTranslations["pt-br"]);
-const passwordSchema = buildAccountPasswordSchema(globalTranslations["pt-br"]);
+const dictionary = globalTranslations["pt-br"];
+const profileSchema = buildAccountProfileSchema(dictionary);
+const passwordSchema = buildAccountPasswordSchema(dictionary);
 const preferencesSchema = buildAccountPreferencesSchema();
 
 const profileBase = { displayName: "Ana Souza", phone: "", avatar: "" };
@@ -77,14 +82,46 @@ describe("buildAccountPasswordSchema", () => {
         ).toBe(false);
     });
 
-    it("requires at least six characters", () => {
+    it("requires the new password to reach the policy minimum", () => {
+        const oneShort = "a".repeat(PASSWORD_MIN_LENGTH - 1);
+        const result = passwordSchema.safeParse({
+            currentPassword: "old-secret",
+            password: oneShort,
+            confirmPassword: oneShort,
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.error?.issues[0]?.path).toEqual(["password"]);
+        expect(result.error?.issues[0]?.message).toBe(
+            dictionary.apps.app.pages.common.account.security.validation
+                .newPasswordMin
+        );
+    });
+
+    it("keeps accepting a current password created under the old rule", () => {
+        const newPassword = "a".repeat(PASSWORD_MIN_LENGTH);
+
         expect(
             passwordSchema.safeParse({
-                currentPassword: "old-secret",
-                password: "12345",
-                confirmPassword: "12345",
+                currentPassword: "b".repeat(EXISTING_PASSWORD_MIN_LENGTH),
+                password: newPassword,
+                confirmPassword: newPassword,
             }).success
-        ).toBe(false);
+        ).toBe(true);
+    });
+
+    it("answers a current password below the old minimum with the current-password copy", () => {
+        const newPassword = "a".repeat(PASSWORD_MIN_LENGTH);
+        const result = passwordSchema.safeParse({
+            currentPassword: "b".repeat(EXISTING_PASSWORD_MIN_LENGTH - 1),
+            password: newPassword,
+            confirmPassword: newPassword,
+        });
+
+        expect(result.error?.issues[0]?.path).toEqual(["currentPassword"]);
+        expect(result.error?.issues[0]?.message).toBe(
+            dictionary.apps.app.pages.common.account.security.validation.min
+        );
     });
 });
 
