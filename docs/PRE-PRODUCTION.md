@@ -562,6 +562,10 @@ Sem ela o `@repo/security` degrada para **no-op** e a API avisa uma vez, no boot
 redefinição de senha e o reenvio de verificação: sem limite, os dois viram **gerador gratuito de e-mail em
 nome do fork** — e a fatura do provedor é do fork.
 
+O cadastro também fica sem trava. `POST /auth/sign-up` cria a conta pelo Admin SDK, que não passa pelo
+limite do Firebase de 100 contas por hora por IP (esse limite vale para a criação pelo cliente). Sem
+`ARCJET_KEY`, um script cria contas pela API até o Firebase recusar por cota do projeto.
+
 ### 9. Branch protection na `main`
 
 - [ ] Exigir os checks `verify` e `e2e` do CI antes do merge
@@ -789,6 +793,33 @@ usuário que cheguem antes da primeira escrita da janela leem o perfil ainda sem
 — o desenho não usa transação, então o piso é uma escrita por janela e o teto é o paralelismo do momento.
 Medido em 2026-09-17 contra o emulador: 110 requisições autenticadas em duas janelas produziram 3
 escritas, das quais 2 vieram de um par concorrente na abertura da primeira janela.
+
+### Declaração — o que a política de senha não alcança
+
+Não é pendência que bloqueie deploy: é o limite do que o boilerplate garante sem custo.
+
+A regra de 8 a 1024 caracteres vale em toda rota da `apps/api` que define senha. Os formulários das duas
+front-ends aplicam o mínimo de 8 antes de enviar; o teto de 1024 só a API confere. O cadastro pelo produto
+passa por `POST /auth/sign-up`, então a regra vale ali também.
+
+**O caminho que fica aberto.** A chave web do Firebase é pública por desenho. Quem chamar
+`identitytoolkit.googleapis.com/v1/accounts:signUp?key=<chave>` direto, fora do produto, ainda cria conta
+com senha de 6 ou 7 caracteres, porque o mínimo do Firebase é 6. O prejuízo fica com quem faz isso: é a
+própria conta dele que nasce com senha fraca. As contas criadas antes da política também podem ter senha de
+6 ou 7, e o login continua aceitando essas senhas; o servidor não sabe o tamanho delas e não força troca.
+
+**Como fechar, se o fork precisar.** As duas saídas exigem o upgrade para Firebase Authentication with
+Identity Platform:
+
+1. Password policy em modo `ENFORCE` com mínimo 8, aplicada pelo próprio Firebase a qualquer cliente.
+2. Desligar o cadastro pelo cliente, e aí só o Admin SDK (a rota da API) cria conta.
+
+O upgrade impõe teto de 3.000 usuários ativos por dia no plano Spark, ou exige cartão no Blaze (50 mil MAU
+sem custo, depois US$ 0,0025 a 0,0055 por MAU, segundo `firebase.google.com/docs/auth`, consultado em
+2026-09-26).
+
+**Como verificar:** com a política ligada, a chamada REST acima com senha de 7 caracteres tem de ser
+recusada em vez de criar a conta.
 
 - [ ] **Contas de QA acumuladas** no projeto Firebase de desenvolvimento (`next-boilerplate-576d0`).
       Todas `example.com`, sem PII real e sem senha em arquivo. Limpar em Authentication **e** o doc `user`
