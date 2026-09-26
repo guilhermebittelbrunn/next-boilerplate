@@ -4,7 +4,6 @@ import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 import {
     type Auth,
     connectAuthEmulator,
-    createUserWithEmailAndPassword,
     GoogleAuthProvider,
     getAuth,
     onAuthStateChanged,
@@ -21,7 +20,7 @@ import {
     DEMO_PROJECT_ID,
     DEMO_WEB_API_KEY,
 } from "./emulator";
-import type { SignInDTO, SignUpDTO } from "./types";
+import type { SignInDTO } from "./types";
 
 let firebaseApp: FirebaseApp | undefined;
 let firebaseAuth: Auth | undefined;
@@ -152,15 +151,6 @@ export const signInWithGoogle = () => {
     const auth = getAuthClient();
     const provider = new GoogleAuthProvider();
     return signInWithPopup(auth, provider);
-};
-
-/**
- * Create a new user with email and password.
- * `role` is not sent to Firebase client Auth; pass it to the session API after sign-up (see AuthProvider).
- */
-export const signUp = ({ email, password }: SignUpDTO) => {
-    const auth = getAuthClient();
-    return createUserWithEmailAndPassword(auth, email, password);
 };
 
 /**
