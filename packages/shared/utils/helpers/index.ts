@@ -6,6 +6,7 @@ export * from "./handleClientError";
 export * from "./httpStatus";
 export * from "./log";
 export * from "./normalizeFirestoreInstant";
+export * from "./passwordPolicy";
 export * from "./request-id";
 export * from "./requestErrorReporter";
 export * from "./stringIfExists";
