@@ -32,7 +32,6 @@ vi.mock("@repo/auth/client", () => ({
     logout: () => logoutMock(),
     signIn: (...args: unknown[]) => signInMock(...args),
     signInWithGoogle: vi.fn(),
-    signUp: vi.fn(),
     subscribeToIdTokenState: (listener: (user: unknown) => void) => {
         subscribers.push(listener);
         return () => {

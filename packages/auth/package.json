@@ -14,8 +14,7 @@
     "./middleware": "./middleware.ts",
     "./provider": "./provider.tsx",
     "./redirect": "./redirect.ts",
-    "./components/sign-in": "./components/sign-in.tsx",
-    "./components/sign-up": "./components/sign-up.tsx"
+    "./components/sign-in": "./components/sign-in.tsx"
   },
   "dependencies": {
     "@repo/internationalization": "workspace:*",

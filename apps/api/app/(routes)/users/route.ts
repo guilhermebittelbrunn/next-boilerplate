@@ -11,6 +11,10 @@ import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import { mapIdentityToolkitMessageToCode } from "@/(shared)/lib/toolkit-error-codes";
 import { getMergedUserByFirestoreDocId } from "@/(shared)/lib/user-merge";
 import { userRepository } from "@/(shared)/repositories/user.repository";
+import {
+    isPasswordTooShort,
+    passwordTooShortResponse,
+} from "@/(shared)/validation/password.schema";
 import { adminCreateUserSchema } from "@/(shared)/validation/user-admin.schema";
 import { requireAdminApi } from "@/app/(guards)/admin";
 
@@ -41,6 +45,9 @@ export const POST = requireAdminApi(async (req, _ctx) => {
 
     const parsed = adminCreateUserSchema.safeParse(parsedBody.value);
     if (!parsed.success) {
+        if (isPasswordTooShort(parsed.error)) {
+            return passwordTooShortResponse();
+        }
         return Response.json(
             { error: { code: "VALIDATION_FAILED" } },
             {

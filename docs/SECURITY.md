@@ -4,9 +4,10 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autenticação
 
-- **Provider**: Firebase. No cliente (`@repo/auth/client`), o usuário faz sign-in/sign-up (e-mail/senha ou Google) e obtém um **ID token**, sincronizado num cookie de sessão.
+- **Provider**: Firebase. No cliente (`@repo/auth/client`), o usuário faz sign-in (e-mail/senha ou Google) e obtém um **ID token**, sincronizado num cookie de sessão. O cadastro por e-mail e senha não sai do navegador direto para o Firebase: as duas front-ends chamam `POST /auth/sign-up` na `apps/api`, que valida o corpo com Zod, cria a conta pelo Admin SDK (`createUser`) e grava o perfil. Em seguida o front entra com `signIn`, como no login.
+- **Política de senha**: mínimo de 8 e máximo de 1024 caracteres para toda senha **definida** (cadastro, redefinição por link, troca na área de conta, criação pelo admin), sem regra de composição e sem aparar espaços. Quem confere uma senha que já existe (login, senha atual na troca e na exclusão de conta) segue aceitando 6, porque contas antigas podem ter senha de 6 ou 7. As três constantes vivem em `packages/shared/utils/helpers/passwordPolicy.ts`; a API responde `400 AUTH_PASSWORD_TOO_SHORT` para senha nova curta. Contornar o produto e chamar `identitytoolkit.googleapis.com/v1/accounts:signUp` com a chave web pública ainda cria conta com 6 ou 7 caracteres; fechar esse caminho exige Identity Platform (ver `docs/PRE-PRODUCTION.md`, "Declaração — o que a política de senha não alcança").
 - **No servidor** (`@repo/auth/server`), o Firebase **Admin SDK** verifica o token (`verifyIdToken`) a partir do cookie `access-token` ou do header `Authorization: Bearer`. Falhas benignas (token expirado/ inválido) viram "sem sessão", não erro 500.
-- **Identity Toolkit REST** (`FIREBASE_WEB_API_KEY`) é usado para sign-in/sign-up server-side em algumas rotas.
+- **Identity Toolkit REST** (`FIREBASE_WEB_API_KEY`) é usado no servidor para o login (inclusive a conferência da senha atual na troca de senha e na exclusão de conta), o login com Google, a redefinição de senha por link, a confirmação de e-mail e a criação de usuário pelo admin (`POST /users`).
 
 ## Autorização (guards da API)
 
@@ -151,7 +152,8 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 
 - **Sem `ARCJET_KEY` o limite é um no-op explícito**: nada é contado, nenhuma chamada de rede é feita, e a API avisa **uma vez, no boot**. Nunca há contador em memória — em serverless ele não limita nada.
 - ⚠️ **Isto não protege o formulário de login.** O login por e-mail/senha das duas front-ends vai do browser direto para `identitytoolkit.googleapis.com` e **nunca toca a `apps/api`**; quem limita esse caminho é a proteção nativa do Firebase (`USERS_AUTH_RATE_LIMITED`). O limite aqui cobre a **superfície da API**.
-- Bloqueio é registrado pelo helper de log compartilhado, numa linha só (`logEvent("security", "blocked", …)` em `apps/api/proxy.ts:63`, saindo como `[security] blocked reason=… path=… method=… requestId=…`), **sem IP, e-mail, body ou token** — IP é dado pessoal sob LGPD. A assinatura do helper não aceita objeto (`packages/shared/utils/helpers/log.ts:21`), então não há como passar o erro inteiro por descuido.
+- ⚠️ **O cadastro depende deste limite.** O formulário de cadastro chama `/auth/sign-up`, e a rota cria a conta pelo Admin SDK, que não passa pelo limite do Firebase para criação de conta pelo cliente (100 contas por hora por IP, `firebase.google.com/docs/auth/limits`). Sem `ARCJET_KEY`, nada limita a criação de contas em massa por essa rota.
+- Bloqueio é registrado pelo helper de log compartilhado, numa linha só (`logEvent("security", "blocked", …)` em `apps/api/proxy.ts:67`, saindo como `[security] blocked reason=… path=… method=… requestId=…`), **sem IP, e-mail, body ou token** — IP é dado pessoal sob LGPD. A assinatura do helper não aceita objeto (`packages/shared/utils/helpers/log.ts:21`), então não há como passar o erro inteiro por descuido.
 
 ## Pagamentos (Stripe)
 

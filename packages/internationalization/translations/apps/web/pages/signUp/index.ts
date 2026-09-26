@@ -18,6 +18,11 @@ export const signUpTranslations = {
         googleSignIn: "Continuar com Google",
         signIn: "Entrar",
         noAccount: "Não tem uma conta? ",
+        validation: {
+            emailInvalid: "Email inválido",
+            passwordMin: "A senha deve ter pelo menos 8 caracteres",
+            passwordsDoNotMatch: "As senhas não coincidem",
+        },
     },
     en: {
         meta: {
@@ -38,6 +43,11 @@ export const signUpTranslations = {
         googleSignIn: "Continue with Google",
         signIn: "Sign In",
         noAccount: "Don't have an account? ",
+        validation: {
+            emailInvalid: "Invalid email",
+            passwordMin: "Password must be at least 8 characters",
+            passwordsDoNotMatch: "Passwords do not match",
+        },
     },
     es: {
         meta: {
@@ -58,5 +68,10 @@ export const signUpTranslations = {
         googleSignIn: "Continuar con Google",
         signIn: "Iniciar sesión",
         noAccount: "¿No tienes una cuenta? ",
+        validation: {
+            emailInvalid: "Email no válido",
+            passwordMin: "La contraseña debe tener al menos 8 caracteres",
+            passwordsDoNotMatch: "Las contraseñas no coinciden",
+        },
     },
 };

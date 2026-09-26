@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -59,7 +59,10 @@ segue invisível até alguém conferir a fatura.
   `apps/api/instrumentation.ts:19`, o aviso de cobrança meio configurada. Âncoras do webhook, do expurgo e da
   exportação remedidas na mesma data. Remedido de novo em 2026-09-25, depois da PR #27: **28** linhas, com
   duas novas do escopo `payments` (`webhook-invoice-recorded` no webhook e `plan-label-unresolved` em
-  `(shared)/lib/plan-label.ts:49`). As duas âncoras de falha do webhook desceram para `:223` e `:235`.)* Os dois clones que esta spec
+  `(shared)/lib/plan-label.ts:49`). As duas âncoras de falha do webhook desceram para `:223` e `:235`.
+  Remedido em 2026-09-26, depois da PR #28: **29** linhas. A nova é `admin-user-delete-billing-failed`,
+  escopo `payments`, em `users/[id]/route.ts:159`, emitida quando o arquivamento pelo admin não consegue
+  cancelar a assinatura. As âncoras do webhook conferem.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
 - **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:122` gera o UUID, `:161` o

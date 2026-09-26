@@ -13,7 +13,6 @@ vi.mock("firebase/app", () => ({
 
 vi.mock("firebase/auth", () => ({
     getAuth: (...args: unknown[]) => getAuthMock(...args),
-    createUserWithEmailAndPassword: vi.fn(),
     GoogleAuthProvider: class {},
     onAuthStateChanged: vi.fn(),
     onIdTokenChanged: vi.fn(),

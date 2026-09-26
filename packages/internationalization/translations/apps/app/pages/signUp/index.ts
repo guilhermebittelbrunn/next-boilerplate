@@ -16,7 +16,7 @@ export const signUpTranslations = {
         },
         validation: {
             emailInvalid: "Email inválido",
-            passwordMin: "A senha deve ter pelo menos 6 caracteres",
+            passwordMin: "A senha deve ter pelo menos 8 caracteres",
             passwordsDoNotMatch: "As senhas não coincidem",
         },
         signUp: "Cadastrar",
@@ -42,7 +42,7 @@ export const signUpTranslations = {
         },
         validation: {
             emailInvalid: "Invalid email",
-            passwordMin: "Password must be at least 6 characters",
+            passwordMin: "Password must be at least 8 characters",
             passwordsDoNotMatch: "Passwords do not match",
         },
         signUp: "Sign Up",
@@ -68,7 +68,7 @@ export const signUpTranslations = {
         },
         validation: {
             emailInvalid: "Email no válido",
-            passwordMin: "La contraseña debe tener al menos 6 caracteres",
+            passwordMin: "La contraseña debe tener al menos 8 caracteres",
             passwordsDoNotMatch: "Las contraseñas no coinciden",
         },
         signUp: "Registrarse",

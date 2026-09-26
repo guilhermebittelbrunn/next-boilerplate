@@ -61,6 +61,7 @@ export const commonAccountPageTranslations = {
             validation: {
                 required: "Informe a senha.",
                 min: "A senha deve ter ao menos 6 caracteres.",
+                newPasswordMin: "A nova senha deve ter ao menos 8 caracteres.",
                 mismatch: "As senhas não conferem.",
             },
         },
@@ -222,6 +223,8 @@ export const commonAccountPageTranslations = {
             validation: {
                 required: "Enter the password.",
                 min: "The password must have at least 6 characters.",
+                newPasswordMin:
+                    "The new password must have at least 8 characters.",
                 mismatch: "The passwords do not match.",
             },
         },
@@ -383,6 +386,8 @@ export const commonAccountPageTranslations = {
             validation: {
                 required: "Indica la contraseña.",
                 min: "La contraseña debe tener al menos 6 caracteres.",
+                newPasswordMin:
+                    "La nueva contraseña debe tener al menos 8 caracteres.",
                 mismatch: "Las contraseñas no coinciden.",
             },
         },

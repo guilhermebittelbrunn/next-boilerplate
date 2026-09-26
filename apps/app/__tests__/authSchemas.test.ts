@@ -1,4 +1,5 @@
 import { globalTranslations } from "@repo/internationalization/translations/global";
+import { PASSWORD_MIN_LENGTH } from "@repo/shared/utils/helpers/passwordPolicy";
 import { describe, expect, it } from "vitest";
 import { buildForgotPasswordSchema } from "@/app/[locale]/(unauthenticated)/forgot-password/validations/forgotPasswordSchema";
 import { buildResetPasswordSchema } from "@/app/[locale]/(unauthenticated)/reset-password/validations/resetPasswordSchema";
@@ -40,8 +41,8 @@ describe("buildSignUpSchema", () => {
         expect(
             schema.safeParse({
                 email: "user@example.com",
-                password: "secret1",
-                confirmPassword: "secret1",
+                password: "secret12",
+                confirmPassword: "secret12",
             }).success
         ).toBe(true);
     });
@@ -49,8 +50,8 @@ describe("buildSignUpSchema", () => {
     it("rejects mismatched passwords", () => {
         const result = schema.safeParse({
             email: "user@example.com",
-            password: "secret1",
-            confirmPassword: "secret2",
+            password: "secret12",
+            confirmPassword: "secret22",
         });
         expect(result.success).toBe(false);
     });
@@ -88,8 +89,8 @@ describe("buildResetPasswordSchema", () => {
     it("accepts matching passwords at the minimum length", () => {
         expect(
             schema.safeParse({
-                password: "secret",
-                confirmPassword: "secret",
+                password: "a".repeat(PASSWORD_MIN_LENGTH),
+                confirmPassword: "a".repeat(PASSWORD_MIN_LENGTH),
             }).success
         ).toBe(true);
     });
@@ -103,8 +104,8 @@ describe("buildResetPasswordSchema", () => {
 
     it("blames the confirmation field when the two differ", () => {
         const result = schema.safeParse({
-            password: "secret1",
-            confirmPassword: "secret2",
+            password: "secret12",
+            confirmPassword: "secret22",
         });
 
         expect(result.success).toBe(false);

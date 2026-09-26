@@ -45,11 +45,6 @@ export type SignInDTO = {
     password: string;
 };
 
-export type SignUpDTO = {
-    email: string;
-    password: string;
-};
-
 export function parseUserProfileResponse(data: unknown): UserProfile | null {
     if (!data || typeof data !== "object") {
         return null;

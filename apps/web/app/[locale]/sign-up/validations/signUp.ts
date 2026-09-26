@@ -1,26 +1,26 @@
+import type { globalTranslations } from "@repo/internationalization/translations/global";
+import { PASSWORD_MIN_LENGTH } from "@repo/shared/utils/helpers/passwordPolicy";
 import { z } from "zod";
 
-const MIN_PASSWORD_LENGTH = 6;
+type Dictionary = (typeof globalTranslations)[keyof typeof globalTranslations];
 
-export const signUpSchema = z
-    .object({
-        email: z.string().email("Email inválido"),
-        password: z
-            .string()
-            .min(
-                MIN_PASSWORD_LENGTH,
-                "A senha deve ter pelo menos 6 caracteres"
-            ),
-        confirmPassword: z
-            .string()
-            .min(
-                MIN_PASSWORD_LENGTH,
-                "A senha deve ter pelo menos 6 caracteres"
-            ),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-        message: "As senhas não coincidem",
-        path: ["confirmPassword"],
-    });
+export function buildSignUpSchema(dictionary: Dictionary) {
+    const validation = dictionary.apps.web.pages.signUp.validation;
 
-export type SignUpFormValues = z.infer<typeof signUpSchema>;
+    return z
+        .object({
+            email: z.string().email(validation.emailInvalid),
+            password: z
+                .string()
+                .min(PASSWORD_MIN_LENGTH, validation.passwordMin),
+            confirmPassword: z
+                .string()
+                .min(PASSWORD_MIN_LENGTH, validation.passwordMin),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+            message: validation.passwordsDoNotMatch,
+            path: ["confirmPassword"],
+        });
+}
+
+export type SignUpFormValues = z.infer<ReturnType<typeof buildSignUpSchema>>;

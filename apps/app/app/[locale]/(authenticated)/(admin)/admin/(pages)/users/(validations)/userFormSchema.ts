@@ -1,10 +1,10 @@
 import type { globalTranslations } from "@repo/internationalization/translations/global";
 import { UserType } from "@repo/sdk/src/types";
+import { PASSWORD_MIN_LENGTH } from "@repo/shared/utils/helpers/passwordPolicy";
 import { z } from "zod";
 
 type Dictionary = (typeof globalTranslations)[keyof typeof globalTranslations];
 
-const MIN_PASSWORD_LENGTH = 6;
 const MAX_DISPLAY_NAME_LENGTH = 120;
 
 export function buildCreateUserFormSchema(dictionary: Dictionary) {
@@ -13,7 +13,7 @@ export function buildCreateUserFormSchema(dictionary: Dictionary) {
     return z
         .object({
             email: z.string().email(v.emailInvalid),
-            password: z.string().min(MIN_PASSWORD_LENGTH, v.passwordMin),
+            password: z.string().min(PASSWORD_MIN_LENGTH, v.passwordMin),
             confirmPassword: z.string().min(1, v.passwordMismatch),
             displayName: z
                 .string()

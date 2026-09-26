@@ -2,6 +2,10 @@ import { UserRoleLevel } from "@repo/auth/types";
 import { UserType } from "@repo/sdk/src/types";
 import { AUTH_REQUEST_HEADER } from "@repo/shared/utils/helpers/auth-request-headers";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import {
+    EXISTING_PASSWORD_MIN_LENGTH,
+    PASSWORD_MIN_LENGTH,
+} from "@repo/shared/utils/helpers/passwordPolicy";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -193,12 +197,32 @@ describe("POST /account/password", () => {
 
     it("recusa uma senha nova curta antes de conferir a senha atual", async () => {
         const response = await changePassword(
-            request({ currentPassword: "current-secret", password: "abc" })
+            request({
+                currentPassword: "current-secret",
+                password: "a".repeat(PASSWORD_MIN_LENGTH - 1),
+            })
         );
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
-        expect(await codeOf(response)).toBe("VALIDATION_FAILED");
+        expect(await codeOf(response)).toBe("AUTH_PASSWORD_TOO_SHORT");
         expect(signInWithPasswordMock).not.toHaveBeenCalled();
+        expect(updateUserMock).not.toHaveBeenCalled();
+    });
+
+    it("aceita a senha atual curta de uma conta criada antes da política", async () => {
+        const currentPassword = "b".repeat(EXISTING_PASSWORD_MIN_LENGTH);
+        const password = "a".repeat(PASSWORD_MIN_LENGTH);
+
+        const response = await changePassword(
+            request({ currentPassword, password })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(signInWithPasswordMock).toHaveBeenCalledWith(
+            OWNER_EMAIL,
+            currentPassword
+        );
+        expect(updateUserMock).toHaveBeenCalledWith(OWNER_UID, { password });
     });
 
     it("recusa um uid no corpo em vez de trocar a senha de outra conta", async () => {

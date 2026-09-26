@@ -1,9 +1,8 @@
 import type { globalTranslations } from "@repo/internationalization/translations/global";
+import { EXISTING_PASSWORD_MIN_LENGTH } from "@repo/shared/utils/helpers/passwordPolicy";
 import { z } from "zod";
 
 type Dictionary = (typeof globalTranslations)[keyof typeof globalTranslations];
-
-const MIN_PASSWORD_LENGTH = 6;
 
 export type AccountDeletionFormValues = {
     currentPassword: string;
@@ -17,6 +16,6 @@ export function buildAccountDeletionSchema(dictionary: Dictionary) {
         currentPassword: z
             .string()
             .min(1, validation.required)
-            .min(MIN_PASSWORD_LENGTH, validation.min),
+            .min(EXISTING_PASSWORD_MIN_LENGTH, validation.min),
     });
 }

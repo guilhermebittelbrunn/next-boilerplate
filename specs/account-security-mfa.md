@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: -
-updated: 2026-09-24
+updated: 2026-09-26
 ---
 
 # MFA, sessões ativas e política de senha
@@ -207,6 +207,42 @@ eficácia.
       junto com códigos de recuperação**, porque sem eles o recurso vira fila de suporte.
 - [ ] Tudo **opt-in**: um fork que não ativa segundo fator continua subindo, buildando e funcionando como
       hoje.
+
+### Reescopo que o `/analyze` deve aplicar (auditoria de 2026-09-26)
+
+A auditoria contesta este corte há várias rodadas: seis itens, três deles dependentes de modelo novo
+(sessões identificáveis) ou de custo não confirmado (segundo fator no GCIP). Rodar o corte inteiro numa
+rodada autônoma tende a voltar com metade dos critérios "não verificados". Este bloco aplica a
+recomendação que a própria spec já dava na última pergunta em aberto: política de senha primeiro, segundo
+fator depois.
+
+**Primeira fatia: só o item 4, a política de senha.** Ela não custa nada ao fork, não exige conta em
+provedor e dá para provar sob o emulador.
+
+- O ponto de partida é a nota [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md),
+  dentro da validade (`revalidate_after: 2027-08-21`): ASVS 5.0 L1 pede senha com pelo menos 8 caracteres
+  sem regra de composição (6.2.1/6.2.5), checagem contra as 3000 senhas mais comuns (6.2.4) e permissão
+  para colar e usar gerenciador de senha (6.2.6/6.2.7). Isso casa com o critério 3.3.8 do WCAG 2.2.
+- Hoje o mínimo é 6 e está declarado **11** vezes (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e
+  `packages/`, remedido em 2026-09-26). A regra precisa nascer num lugar só e ser consumida pelas três
+  camadas, como a seção "O que já existe" já apontava.
+- **Risco que o `/analyze` precisa resolver:** o cadastro da `apps/app` vai direto do navegador ao
+  Firebase (`packages/auth/client.ts:163`, `createUserWithEmailAndPassword`), sem passar pela API. Validar
+  só no formulário é o anti-padrão da regra de ouro 4. O `/analyze` escolhe como fechar esse caminho no
+  servidor; se a escolha depender de configuração do projeto Firebase, ela vira passo em
+  `docs/PRE-PRODUCTION.md` e não reprova a entrega.
+- Os schemas de login (`sign-in/validations/signInSchema.ts` na `apps/app` e na `apps/web`) também
+  declaram o mínimo. Subir o número ali impede de entrar quem já tem senha de 6 ou 7 caracteres, então a
+  regra nova vale para cadastro, troca, redefinição e criação pelo admin, e não para o login.
+
+**Ficam para fatias seguintes, nesta mesma spec:** o item 2 (lista de sessões), o resíduo do item 3 (logout
+local por padrão e encerramento seletivo, que andam juntos porque os dois exigem identificar sessões) e o
+item 5 (segundo fator, com códigos de recuperação). Depois da primeira fatia a spec passa a `in-progress`
+e **não** é arquivada.
+
+**O `contends_on` do frontmatter descreve o corte inteiro.** A primeira fatia toca os schemas de senha de
+`apps/api/(shared)/validation/` e dos formulários, não a camada de sessão de `packages/auth`. Como esta é a
+única spec elegível, a diferença não muda nenhum lote agora.
 
 ### Fora do corte
 

@@ -5,7 +5,6 @@ import {
     logout,
     signIn,
     signInWithGoogle,
-    signUp,
     subscribeToIdTokenState,
 } from "@repo/auth/client";
 import useAlert from "@repo/design-system/hooks/useAlert";
@@ -30,14 +29,13 @@ import {
     useState,
 } from "react";
 import { postAuthRedirectTarget } from "./redirect";
-import type { SignInDTO, SignUpDTO, UserDTO } from "./types";
+import type { SignInDTO, UserDTO } from "./types";
 
 type AuthContextType = {
     user: UserDTO | null;
     accessToken: string | null;
     loading: boolean;
     signIn: UseMutationResult<UserCredential, Error, SignInDTO>;
-    signUp: UseMutationResult<UserCredential, Error, SignUpDTO, unknown>;
     signInWithGoogle: UseMutationResult<UserCredential, Error, void, unknown>;
     signOut: UseMutationResult<void, Error, void, unknown>;
 };
@@ -355,13 +353,6 @@ export function AuthProvider({
         onSuccess: onAuthSuccess,
     });
 
-    const signUpMutation = useMutation({
-        mutationFn: signUp,
-        onError: (error) =>
-            errorAlert(handleClientError(new FormattedError(error, locale))),
-        onSuccess: onAuthSuccess,
-    });
-
     const signInWithGoogleMutation = useMutation({
         mutationFn: signInWithGoogle,
         onError: (error) =>
@@ -389,7 +380,6 @@ export function AuthProvider({
                 loading,
                 accessToken,
                 signIn: signInMutation,
-                signUp: signUpMutation,
                 signInWithGoogle: signInWithGoogleMutation,
                 signOut: signOutMutation,
             }}
