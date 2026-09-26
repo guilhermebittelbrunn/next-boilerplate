@@ -6,6 +6,14 @@ export type AuthMePayload = Record<string, unknown> & {
     type?: string;
 };
 
+export type SignUpRequest = {
+    email: string;
+    password: string;
+};
+
+/** Carries no account data: the caller signs in right after with the same credentials. */
+export type AuthAccountCreated = { created: true };
+
 export type GoogleSignInRequest = {
     idToken: string;
     requestUri: string;
@@ -63,6 +71,18 @@ export default class AuthActions {
         });
 
         return data.data as AuthMePayload;
+    }
+
+    async signUp(body: SignUpRequest): Promise<AuthAccountCreated> {
+        const { data } = await this.client.request<
+            Response<AuthAccountCreated>
+        >({
+            url: "/auth/sign-up",
+            method: "POST",
+            data: body,
+        });
+
+        return data.data;
     }
 
     /**
