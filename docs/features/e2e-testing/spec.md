@@ -1,7 +1,7 @@
 ---
 id: e2e-testing
 title: Testes E2E e acessibilidade automatizada
-status: in-progress
+status: done
 value: médio
 effort: G
 audience: dx
@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [ci-pipeline, firebase-emulator-seed]
 contends_on: [package.json, turbo.json, .github/workflows/ci.yml]
 feature: e2e-testing
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # Testes E2E e acessibilidade automatizada
@@ -136,9 +136,40 @@ alguém olhar.
 - **Lacuna:** a única garantia de que os fluxos principais funcionam é **humana e pontual**; nada a repete
   sozinho, e nada disso pode rodar como gate de merge.
 
+## Estado da entrega
+
+Auditado em 2026-09-25 pelo `/spec --sync`, com o `HEAD` em `0659ede`. A PR #26 entrou em `main` em
+2026-09-25T13:24:58Z (`c71755e`), com CI `success` (`gh run 36140806836`). O usuário decidiu arquivar
+nesta data com o item 2 em aberto, que fica marcado com ⚠️ até o branch protection da `main` ser ligado
+(decisão estacionada E3 do `BACKLOG.md`). As seções anteriores descrevem a base antes da entrega e ficam
+como registro.
+
+| item do corte | veredito | evidência |
+|---------------|----------|-----------|
+| 1. Fluxos críticos contra o emulador e o seed | **implementado** | `apps/e2e/tests/`: cadastro com onboarding (`signUp.spec.ts:16`), quatro casos de login (`signIn.spec.ts:25`, `:41`, `:53`, `:65`), CRUD de `entity` (`entityCrud.spec.ts:22`), troca de painel e usuário comum barrado no `/admin` (`panelSwitch.spec.ts:15`, `:74`) e o CTA da landing (`landing.spec.ts:9`). A suíte recusa subir sem alvo de emulador (`support/stackEnv.ts`, coberto por `__tests__/stackEnv.test.ts`) |
+| 2. Roda no CI a cada PR, bloqueia o merge e deixa evidência | ⚠️ **parcial** | job `e2e` em `.github/workflows/ci.yml:66-121`, pulado só em PR de documentação (`:44-64`); `failOnFlakyTests` e uma retentativa no CI (`apps/e2e/playwright.config.ts:30-31`); trace, screenshot e vídeo na falha (`:44-46`) e artefato `e2e-evidence` (`ci.yml:115-120`). **Não bloqueia o merge:** `gh api repos/:owner/:repo/branches/main/protection` devolve 404 e `rulesets` devolve `[]`. Falta configuração do GitHub, não código |
+| 3. Acessibilidade automática, só as violações graves, com exceções | **implementado** | filtro `critical`/`serious` (`support/a11yFilter.ts:41-42`), tags WCAG (`support/a11y.ts:71`), lista de exceções em `a11y/allowlist.ts`, tema escuro nas telas estáticas (`tests/a11yDark.spec.ts`) |
+| 4. Cobertura medida e consolidada, sem limiar | **implementado** | `vitest.config.mts:11-14` (v8, `apps/*` e `packages/*`), script `coverage` (`package.json:20`), job `coverage` com resumo no step summary (`ci.yml:124-149`) |
+| 5. Convivência com a validação visual escrita | **implementado** | `docs/SETUP.md:197-205` e a regra de ouro 11 do `CLAUDE.md` |
+
+**O `STATE.md` da feature não reflete o código.** Ele marca o `/test` como `blocked` desde
+2026-09-25 09:38 pelo defeito D3: o `LanguageSwitcher` da `apps/web` aninhava `button` em `button`, a
+hidratação refazia o cabeçalho e o axe pegava o gatilho vazio em `web:/pt-br/sign-up` (`1 flaky, 21 passed`
+na rodada 2). A correção entrou na própria PR #26, no commit
+`fix(web): make the language switcher button the dropdown trigger`. Depois dela, o job `e2e`, que reprova
+teste instável, passou nas quatro execuções seguintes: a PR #26, o merge da #26, a PR #27 e o merge da #27
+(`gh run 36152188106`). O `/test` não foi refeito depois da correção.
+
+**Fora do corte e não entregue.** A seção "O que já existe no repo" apontava os testes de `firestore.rules`
+e `storage.rules` como trabalho desta spec, mas o corte não os incluiu e o plano os deixou de fora.
+`@firebase/rules-unit-testing` continua fora de todo `package.json`.
+
+**Contenção.** O `contends_on` declarou `package.json`, `turbo.json` e `.github/workflows/ci.yml`. A PR
+alterou os dois primeiros de fora e não tocou `turbo.json`.
+
 ## Evidência de mercado
 
-- Nota: [`research/engineering-baseline.md`](research/engineering-baseline.md)
+- Nota: [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md)
 - **Prática 2 (testes E2E)** — *padrão de facto*, esforço M–G; a dor evitada é "regressão em login/checkout",
   que é exatamente o inventário de fluxos deste repo. A nota recomenda escopo enxuto — **5 a 10 fluxos**,
   não cobertura ampla — apontando para o **emulador**, nunca para o Firebase real, com rastro guardado
@@ -154,16 +185,16 @@ alguém olhar.
 
 ## Proposta — corte de MVP
 
-- [ ] Um punhado de fluxos críticos (cadastro, login, criar/editar/excluir um registro do slice de
+- [x] Um punhado de fluxos críticos (cadastro, login, criar/editar/excluir um registro do slice de
       referência, e a troca entre painel comum e admin) roda automaticamente do navegador ao banco,
       contra o **emulador** e o estado inicial do seed — nunca contra dados reais.
-- [ ] Esses fluxos rodam no CI a cada PR e bloqueiam o merge quando quebram, com evidência suficiente
+- [~] Esses fluxos rodam no CI a cada PR e bloqueiam o merge quando quebram, com evidência suficiente
       para diagnosticar a falha sem reproduzir localmente.
-- [ ] Verificação automática de acessibilidade nas telas percorridas por esses fluxos, falhando apenas nas
+- [x] Verificação automática de acessibilidade nas telas percorridas por esses fluxos, falhando apenas nas
       violações mais graves e com lista de exceções inicial, para não travar o repositório no dia 1.
-- [ ] Cobertura de teste passa a ser **medida e consolidada** no repositório inteiro — sem limiar de
+- [x] Cobertura de teste passa a ser **medida e consolidada** no repositório inteiro — sem limiar de
       bloqueio neste corte.
-- [ ] A convivência com a validação visual fica **escrita**: a suíte é rede de segurança contra regressão
+- [x] A convivência com a validação visual fica **escrita**: a suíte é rede de segurança contra regressão
       e **não substitui** a regra de ouro 11 — julgamento visual, tema, responsivo e qualidade de layout
       continuam sendo do `agent-browser` e de quem entrega.
 

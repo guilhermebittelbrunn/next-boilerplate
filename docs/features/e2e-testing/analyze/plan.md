@@ -1,6 +1,6 @@
 # Plano: testes E2E e acessibilidade automatizada
 
-- **Spec de origem:** `specs/e2e-testing.md` (problema, evidência de mercado e corte de MVP já decididos lá).
+- **Spec de origem:** [`spec.md`](../spec.md) (arquivada em 2026-09-25; nasceu em `specs/e2e-testing.md`) (problema, evidência de mercado e corte de MVP já decididos lá).
 - **Rodada:** autônoma do `/cycle`. Nenhuma pergunta foi feita ao usuário; as decisões seguem a escada
   spec → padrão do repo → menor raio de impacto e estão listadas no fim, cada uma com a alternativa descartada.
 - **Dependências novas aprovadas pelo usuário em 2026-09-24:** `@playwright/test`, `@axe-core/playwright` e

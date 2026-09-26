@@ -1,7 +1,7 @@
 # Plano: seção de billing na home do admin
 
-Spec de origem: [`specs/admin-billing-insights.md`](../../../../specs/admin-billing-insights.md) (continua em
-`specs/` até o `/spec --sync` arquivá-la). Plano feito numa rodada autônoma do `/cycle`, sem perguntas ao
+Spec de origem: [`spec.md`](../spec.md) (arquivada em 2026-09-25; nasceu em `specs/admin-billing-insights.md`).
+Plano feito numa rodada autônoma do `/cycle`, sem perguntas ao
 usuário. Onde a spec decide, o plano segue a spec. Onde ela é omissa, segue o padrão do repo (`entity`,
 `users/summary`, `users/activity-summary`). Onde a ambiguidade é real, escolhe o menor raio de impacto e
 registra a escolha em [Perguntas em aberto](#perguntas-em-aberto).
