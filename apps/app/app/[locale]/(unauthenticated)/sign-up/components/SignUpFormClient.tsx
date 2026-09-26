@@ -11,6 +11,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
 import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
+import type { SignUpRequest } from "@repo/sdk/src/actions/auth/action";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation } from "@tanstack/react-query";
@@ -33,7 +34,7 @@ export default function SignUpFormClient() {
     const router = useRouter();
     const { dictionary, locale } = getDictionary();
     const { errorAlert, successAlert } = useAlert();
-    const { signUp, loading: authLoading, user } = useAuth();
+    const { signIn, loading: authLoading, user } = useAuth();
 
     const googleSignIn = useMutation({
         mutationFn: signInWithGoogleViaApi,
@@ -108,11 +109,20 @@ export default function SignUpFormClient() {
         }
     };
 
+    const createAccount = useMutation({
+        mutationFn: (credentials: SignUpRequest) =>
+            apiClient.authApi.signUp(credentials),
+        onError: (error) =>
+            errorAlert(handleClientError(new FormattedError(error, locale))),
+        onSuccess: (_created, credentials) =>
+            signIn.mutate(credentials, { onSuccess: requestVerificationEmail }),
+    });
+
+    const isSubmitting =
+        createAccount.isPending || signIn.isPending || googleSignIn.isPending;
+
     const onSubmit = (data: SignUpFormValues) => {
-        signUp.mutate(
-            { email: data.email, password: data.password },
-            { onSuccess: requestVerificationEmail }
-        );
+        createAccount.mutate({ email: data.email, password: data.password });
     };
 
     // Already authenticated or still resolving the session: show a loader and let
@@ -175,9 +185,7 @@ export default function SignUpFormClient() {
 
                         <Button
                             className="w-full"
-                            disabled={
-                                signUp.isPending || googleSignIn.isPending
-                            }
+                            disabled={isSubmitting}
                             type="submit"
                         >
                             {dictionary.apps.app.pages.signUp.form.submit}
@@ -198,7 +206,7 @@ export default function SignUpFormClient() {
 
                 <Button
                     className="w-full"
-                    disabled={signUp.isPending || googleSignIn.isPending}
+                    disabled={isSubmitting}
                     loading={googleSignIn.isPending}
                     onClick={() => googleSignIn.mutate()}
                     type="button"
