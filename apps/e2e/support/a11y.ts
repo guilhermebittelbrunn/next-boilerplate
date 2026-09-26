@@ -12,6 +12,8 @@ import {
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 const DARK_CLASS = /(^|\s)dark(\s|$)/;
+const NON_EMPTY = /\S/;
+const TITLE_RULE = "document-title";
 
 const currentTheme = async (page: Page): Promise<A11yTheme> =>
     (await page.evaluate(
@@ -67,12 +69,17 @@ export async function expectAccessible(
     }
 
     const scope = { route, theme };
+    const exceptions = applicableExceptions(A11Y_ALLOWLIST, scope);
+    // Next streams async generateMetadata after the page body on client-side
+    // navigation, so the page can be visible while <title> is still missing.
+    if (!exceptions.some((exception) => exception.ruleId === TITLE_RULE)) {
+        await expect(page).toHaveTitle(NON_EMPTY);
+    }
+
     const results = await new AxeBuilder({ page })
         .withTags(WCAG_TAGS)
         .analyze();
-    const selectors = applicableExceptions(A11Y_ALLOWLIST, scope).map(
-        (exception) => exception.selector
-    );
+    const selectors = exceptions.map((exception) => exception.selector);
     const matched = await resolveMatches(page, results.violations, selectors);
     const { failing, staleExceptions } = filterViolations(
         results.violations,
