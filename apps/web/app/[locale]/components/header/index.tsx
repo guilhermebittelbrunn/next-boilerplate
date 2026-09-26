@@ -1,7 +1,10 @@
 "use client";
 
 import useAuth from "@repo/auth/provider";
-import { Button } from "@repo/design-system/components/ui/button";
+import {
+    Button,
+    buttonVariants,
+} from "@repo/design-system/components/ui/button";
 import { ModeToggle } from "@repo/design-system/components/ui/mode-toggle";
 import {
     NavigationMenu,
@@ -12,6 +15,7 @@ import {
     NavigationMenuTrigger,
 } from "@repo/design-system/components/ui/navigation-menu";
 import { useIsLargeDesktop } from "@repo/design-system/hooks/useMediaQuery";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import { Menu, MoveRight, X } from "lucide-react";
@@ -79,12 +83,15 @@ export const Header = () => {
                             {navigationItems.map((item) => (
                                 <NavigationMenuItem key={item.title}>
                                     {item.href ? (
-                                        <NavigationMenuLink>
-                                            <Button variant="ghost">
-                                                <Link href={item.href}>
-                                                    {item.title}
-                                                </Link>
-                                            </Button>
+                                        <NavigationMenuLink
+                                            asChild
+                                            className={buttonVariants({
+                                                variant: "ghost",
+                                            })}
+                                        >
+                                            <Link href={item.href}>
+                                                {item.title}
+                                            </Link>
                                         </NavigationMenuLink>
                                     ) : (
                                         <>
@@ -104,21 +111,22 @@ export const Header = () => {
                                                                 }
                                                             </p>
                                                         </div>
-                                                        <Button
-                                                            className="mt-10"
-                                                            size="sm"
+                                                        <Link
+                                                            className={cn(
+                                                                buttonVariants({
+                                                                    size: "sm",
+                                                                }),
+                                                                "mt-10"
+                                                            )}
+                                                            href={`/${locale}/contact`}
                                                         >
-                                                            <Link
-                                                                href={`/${locale}/contact`}
-                                                            >
-                                                                {
-                                                                    dictionary
-                                                                        .components
-                                                                        .header
-                                                                        .contact
-                                                                }
-                                                            </Link>
-                                                        </Button>
+                                                            {
+                                                                dictionary
+                                                                    .components
+                                                                    .header
+                                                                    .contact
+                                                            }
+                                                        </Link>
                                                     </div>
                                                     <div className="flex h-full flex-col justify-end text-sm">
                                                         {item.items?.map(
@@ -183,17 +191,19 @@ export const Header = () => {
                             {user ? (
                                 <>
                                     {showPanelLink && (
-                                        <Button className="hidden md:inline">
-                                            <a
-                                                href={panelUrl}
-                                                rel="noopener noreferrer"
-                                            >
-                                                {
-                                                    dictionary.components.header
-                                                        .goToPanel
-                                                }
-                                            </a>
-                                        </Button>
+                                        <a
+                                            className={cn(
+                                                buttonVariants(),
+                                                "hidden md:inline-flex"
+                                            )}
+                                            href={panelUrl}
+                                            rel="noopener noreferrer"
+                                        >
+                                            {
+                                                dictionary.components.header
+                                                    .goToPanel
+                                            }
+                                        </a>
                                     )}
                                     <Button
                                         className="hidden md:inline"
@@ -212,25 +222,23 @@ export const Header = () => {
                                 </>
                             ) : (
                                 <>
-                                    <Button
-                                        className="hidden md:inline"
-                                        variant="outline"
+                                    <Link
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: "outline",
+                                            }),
+                                            "hidden md:inline-flex"
+                                        )}
+                                        href={`/${locale}/sign-in`}
                                     >
-                                        <Link href={`/${locale}/sign-in`}>
-                                            {
-                                                dictionary.components.header
-                                                    .signIn
-                                            }
-                                        </Link>
-                                    </Button>
-                                    <Button>
-                                        <Link href={`/${locale}/sign-up`}>
-                                            {
-                                                dictionary.components.header
-                                                    .signUp
-                                            }
-                                        </Link>
-                                    </Button>
+                                        {dictionary.components.header.signIn}
+                                    </Link>
+                                    <Link
+                                        className={buttonVariants()}
+                                        href={`/${locale}/sign-up`}
+                                    >
+                                        {dictionary.components.header.signUp}
+                                    </Link>
                                 </>
                             )}
                         </div>
