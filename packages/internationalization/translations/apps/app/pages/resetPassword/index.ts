@@ -13,7 +13,7 @@ export const resetPasswordTranslations = {
             submit: "Salvar senha",
         },
         validation: {
-            passwordMin: "A senha deve ter pelo menos 6 caracteres",
+            passwordMin: "A senha deve ter pelo menos 8 caracteres",
             passwordsDoNotMatch: "As senhas não conferem",
         },
         invalidLink: {
@@ -42,7 +42,7 @@ export const resetPasswordTranslations = {
             submit: "Save password",
         },
         validation: {
-            passwordMin: "Password must be at least 6 characters",
+            passwordMin: "Password must be at least 8 characters",
             passwordsDoNotMatch: "Passwords do not match",
         },
         invalidLink: {
@@ -71,7 +71,7 @@ export const resetPasswordTranslations = {
             submit: "Guardar contraseña",
         },
         validation: {
-            passwordMin: "La contraseña debe tener al menos 6 caracteres",
+            passwordMin: "La contraseña debe tener al menos 8 caracteres",
             passwordsDoNotMatch: "Las contraseñas no coinciden",
         },
         invalidLink: {

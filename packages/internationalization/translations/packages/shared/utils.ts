@@ -70,6 +70,8 @@ export const sharedUtilsTranslations = {
             VALIDATION_FAILED: "Dados inválidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este e-mail já está em uso.",
             USERS_AUTH_WEAK_PASSWORD: "Senha muito fraca.",
+            AUTH_PASSWORD_TOO_SHORT:
+                "A senha deve ter pelo menos 8 caracteres.",
             USERS_AUTH_INVALID_EMAIL: "E-mail inválido.",
             USERS_AUTH_RATE_LIMITED:
                 "Muitas tentativas. Tente novamente em instantes.",
@@ -182,6 +184,8 @@ export const sharedUtilsTranslations = {
             VALIDATION_FAILED: "Invalid data.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "This email is already in use.",
             USERS_AUTH_WEAK_PASSWORD: "Password is too weak.",
+            AUTH_PASSWORD_TOO_SHORT:
+                "The password must have at least 8 characters.",
             USERS_AUTH_INVALID_EMAIL: "Invalid email.",
             USERS_AUTH_RATE_LIMITED: "Too many attempts. Try again shortly.",
             USERS_AUTH_SIGN_UP_FAILED: "Could not create the user.",
@@ -293,6 +297,8 @@ export const sharedUtilsTranslations = {
             VALIDATION_FAILED: "Datos no válidos.",
             USERS_AUTH_EMAIL_ALREADY_IN_USE: "Este correo ya está en uso.",
             USERS_AUTH_WEAK_PASSWORD: "La contraseña es demasiado débil.",
+            AUTH_PASSWORD_TOO_SHORT:
+                "La contraseña debe tener al menos 8 caracteres.",
             USERS_AUTH_INVALID_EMAIL: "Correo no válido.",
             USERS_AUTH_RATE_LIMITED:
                 "Demasiados intentos. Inténtalo de nuevo en unos momentos.",

@@ -44,7 +44,7 @@ export const adminUsersPageTranslations = {
             back: "Voltar",
             validation: {
                 emailInvalid: "Informe um e-mail válido.",
-                passwordMin: "A senha deve ter pelo menos 6 caracteres.",
+                passwordMin: "A senha deve ter pelo menos 8 caracteres.",
                 passwordMismatch: "As senhas não coincidem.",
             },
         },
@@ -100,7 +100,7 @@ export const adminUsersPageTranslations = {
             back: "Back",
             validation: {
                 emailInvalid: "Enter a valid email address.",
-                passwordMin: "Password must be at least 6 characters.",
+                passwordMin: "Password must be at least 8 characters.",
                 passwordMismatch: "Passwords do not match.",
             },
         },
@@ -155,7 +155,7 @@ export const adminUsersPageTranslations = {
             back: "Volver",
             validation: {
                 emailInvalid: "Introduce un correo válido.",
-                passwordMin: "La contraseña debe tener al menos 6 caracteres.",
+                passwordMin: "La contraseña debe tener al menos 8 caracteres.",
                 passwordMismatch: "Las contraseñas no coinciden.",
             },
         },
