@@ -8,22 +8,41 @@ import {
 } from "@repo/design-system/components/form/hookform";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
+import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
+import type { SignUpRequest } from "@repo/sdk/src/actions/auth/action";
+import FormattedError from "@repo/shared/utils/helpers/formattedError";
+import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
-
-import { type SignUpFormValues, signUpSchema } from "../validations/signUp";
+import { apiClient } from "@/shared/lib/client";
+import {
+    buildSignUpSchema,
+    type SignUpFormValues,
+} from "../validations/signUp";
 
 export const SignUpFormClient = () => {
     const router = useRouter();
     const { dictionary, locale } = getDictionary();
-    const { signUp, signInWithGoogle, loading: authLoading, user } = useAuth();
+    const { errorAlert } = useAlert();
+    const { signIn, signInWithGoogle, loading: authLoading, user } = useAuth();
+
+    const createAccount = useMutation({
+        mutationFn: (credentials: SignUpRequest) =>
+            apiClient.authApi.signUp(credentials),
+        onError: (error) =>
+            errorAlert(handleClientError(new FormattedError(error, locale))),
+        onSuccess: (_created, credentials) => signIn.mutate(credentials),
+    });
+
+    const schema = useMemo(() => buildSignUpSchema(dictionary), [dictionary]);
 
     const form = useForm<SignUpFormValues>({
-        resolver: zodResolver(signUpSchema),
+        resolver: zodResolver(schema),
         defaultValues: {
             email: "",
             password: "",
@@ -38,7 +57,7 @@ export const SignUpFormClient = () => {
     }, [user, authLoading, router, locale]);
 
     const onSubmit = (data: SignUpFormValues) => {
-        signUp.mutate({ email: data.email, password: data.password });
+        createAccount.mutate({ email: data.email, password: data.password });
     };
 
     const handleGoogleSignIn = () => {
@@ -105,7 +124,9 @@ export const SignUpFormClient = () => {
 
                         <Button
                             className="w-full"
-                            disabled={signUp.isPending}
+                            disabled={
+                                createAccount.isPending || signIn.isPending
+                            }
                             type="submit"
                         >
                             {dictionary.apps.web.pages.signUp.form.submit}
