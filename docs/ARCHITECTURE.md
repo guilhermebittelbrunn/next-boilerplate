@@ -61,7 +61,7 @@ Monorepo **boilerplate full-stack** (fork customizado do [next-forge](https://gi
 
 - Pacote próprio `@repo/internationalization`, **sem serviço de terceiros**. Idiomas: `pt-br`, `en`, `es`.
 - Dicionário composto por arquivos-folha (cada um com as 3 chaves de idioma) que sobem por `index.ts` até `translations/global.ts`.
-- Locale resolvido pelo cookie `x-locale`; `getDictionary()` (client/server) já aplica fallback/default.
+- No servidor, `getDictionary()` de `@repo/internationalization/server` resolve o locale pelo cookie `x-locale`. No client, `getDictionary()` segue o segmento `[locale]` da URL por meio do `LocaleProvider`, montado nos root layouts de `apps/app` e `apps/web`, e usa o cookie só em árvore sem provider. Os dois aplicam fallback/default.
 - Erros de API: a API responde `error.code` estável; o app traduz via `apiErrors` (`translations/packages/shared/utils.ts`) + `FormattedError`/`handleClientError`.
 
 ## UI, tema e responsividade

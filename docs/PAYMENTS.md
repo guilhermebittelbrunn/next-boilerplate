@@ -155,6 +155,11 @@ Os códigos novos têm tradução nos 3 idiomas em `apiErrors`.
   (`subscriptions.cancel`, imediato, sem reembolso proporcional); assinatura que a Stripe já não tem conta
   como feita. Se o cancelamento falhar, ou se a Stripe estiver desligada com assinatura viva gravada, nada
   é apagado e `POST /account/deletion` responde 503 `ACCOUNT_DELETION_BILLING_FAILED`.
+- O arquivamento de usuário pelo admin (`DELETE /users/[id]`) segue a mesma regra antes do soft delete: com
+  assinatura viva, cancela na hora; assinatura que a Stripe já não tem conta como cancelada. Se o
+  cancelamento falhar, ou se a Stripe estiver desligada com assinatura viva gravada, o usuário não é
+  arquivado e a rota responde 503 `USERS_DELETE_BILLING_FAILED`. Sem assinatura viva, a Stripe não é
+  chamada.
 - A exportação leva `account.subscription` e `account.stripeCustomerId`, com `null` quando não existem.
 
 ## Fora do corte
@@ -162,8 +167,7 @@ Os códigos novos têm tradução nos 3 idiomas em `apiErrors`.
 Trial, cupom, downgrade proporcional, reembolso e faturas em UI própria; MRR, churn e receita líquida de
 reembolso no resumo do admin; importar faturas anteriores ao cadastro de `invoice.paid`; bloquear acesso por plano ou em
 `past_due` (o status só é exibido); cobrança por organização; nome e descrição de plano traduzidos (vêm da
-Stripe num idioma só); cancelar a assinatura quando o **admin** faz soft delete de um usuário
-(`apps/api/app/(routes)/users/[id]/route.ts`), que hoje não cancela.
+Stripe num idioma só).
 
 Reembolso programático, se um fork precisar: `stripe.refunds.create({ payment_intent })` numa rota com
 `requireAdminApi`. Política de reembolso (ex.: arrependimento de 7 dias do CDC) se configura no Customer
