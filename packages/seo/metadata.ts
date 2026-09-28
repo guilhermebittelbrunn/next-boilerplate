@@ -1,3 +1,4 @@
+import { getBrand } from "@repo/next-config/brand";
 import merge from "lodash.merge";
 import type { Metadata } from "next";
 
@@ -7,18 +8,7 @@ type MetadataGenerator = Omit<Metadata, "description" | "title"> & {
     image?: string;
 };
 
-/**
- * Identity is env-configurable so each fork brands its own SEO metadata.
- * Falls back to neutral boilerplate defaults (never product-specific names).
- */
-const applicationName = process.env.NEXT_PUBLIC_APP_NAME || "next-boilerplate";
-const authorName = process.env.NEXT_PUBLIC_APP_AUTHOR || applicationName;
 const authorUrl = process.env.NEXT_PUBLIC_APP_AUTHOR_URL;
-const author: Metadata["authors"] = {
-    name: authorName,
-    ...(authorUrl ? { url: authorUrl } : {}),
-};
-const publisher = authorName;
 const twitterHandle = process.env.NEXT_PUBLIC_TWITTER_HANDLE;
 const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 
@@ -46,6 +36,13 @@ export const createMetadata = ({
     image,
     ...properties
 }: MetadataGenerator): Metadata => {
+    const applicationName = getBrand().name;
+    const authorName =
+        process.env.NEXT_PUBLIC_APP_AUTHOR?.trim() || applicationName;
+    const author: Metadata["authors"] = {
+        name: authorName,
+        ...(authorUrl ? { url: authorUrl } : {}),
+    };
     const parsedTitle = `${title} | ${applicationName}`;
     const defaultMetadata: Metadata = {
         title: parsedTitle,
@@ -71,7 +68,7 @@ export const createMetadata = ({
             // overrides this via merge.
             locale: "en_US",
         },
-        publisher,
+        publisher: authorName,
         twitter: {
             card: "summary_large_image",
             ...(twitterHandle ? { creator: twitterHandle } : {}),
