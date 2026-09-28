@@ -4,6 +4,7 @@ question: Qual é o baseline de práticas de desenvolvimento que um monorepo Tur
 lens: dx
 panel: [turborepo-docs, vercel-docs, playwright-docs, vitest-docs, firebase-docs, sentry-docs, stripe-docs, upstash-docs, t3-env, renovate-docs, changesets, lighthouse-ci]
 collected: 2026-08-21
+amended: 2026-09-26
 revalidate_after: 2027-02-21
 confidence: alta
 ---
@@ -153,3 +154,25 @@ bundle, score de a11y/SEO).
 - <https://flags-sdk.dev/> · <https://vercel.com/docs/flags/flags-sdk-reference>
 - <https://pnpm.io/using-changesets> · <https://docs.renovatebot.com/configuration-options/>
 - <https://github.com/treosh/lighthouse-ci-action> · <https://vercel.com/docs/speed-insights>
+
+## Adendo de 2026-09-26: emulador de Storage e testes de rules
+
+Coletado na descoberta de 2026-09-26 para a prática 3, que este repositório ainda não cumpre.
+
+- O Admin SDK "automatically connect[s] to the Cloud Storage for Firebase emulator when the
+  `FIREBASE_STORAGE_EMULATOR_HOST` environment variable is set" (sem `http://`). Não precisa de código
+  condicional no cliente do servidor, só da variável.
+- O emulador de Storage implementa um subconjunto da API de objetos (`copy`, `delete`, `get`, `insert`,
+  `list`, `patch`, `rewrite`, `update`) e **não** emula APIs de bucket, IAM, notificações nem metadados de
+  bucket. A doc não fala de URL assinada; se o `getSignedUrl` v4 funciona sob o emulador sem credencial de
+  service account é **não confirmado**, e é o primeiro risco de quem ligar o emulador neste repo.
+- `@firebase/rules-unit-testing` cobre Storage além de Firestore (`RulesTestContext.storage()`,
+  `RulesTestEnvironment.clearStorage()`).
+- Com `firestore.rules` e `storage.rules` em negação total e a API no Admin SDK, o teste de rules aqui não
+  prova autorização de negócio: prova que ninguém abriu o banco ou o bucket ao cliente sem querer. É uma
+  rede de regressão barata para o fork que um dia escrever a primeira regra permissiva.
+
+### Fontes do adendo
+
+- <https://firebase.google.com/docs/emulator-suite/connect_storage>
+- <https://firebase.google.com/docs/rules/unit-tests>

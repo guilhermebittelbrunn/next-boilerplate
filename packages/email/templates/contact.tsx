@@ -1,5 +1,6 @@
 import { Hr, Text } from "@react-email/components";
 import type { Locale } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import { emailBrand } from "../brand";
 import { EmailLayout } from "../components/layout";
 import { emailCopy } from "../copy";
@@ -24,7 +25,7 @@ const ContactEmail = ({ locale, data }: ContactEmailProps) => {
     return (
         <EmailLayout
             footerNote={interpolate(copy.footerNote, {
-                brand: emailBrand.name,
+                brand: getBrand().name,
             })}
             locale={locale}
             preview={interpolate(copy.preview, { name: data.name })}

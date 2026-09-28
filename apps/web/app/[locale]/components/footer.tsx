@@ -1,12 +1,12 @@
 import { getDictionary } from "@repo/internationalization/server";
+import { getBrand } from "@repo/next-config/brand";
 import Link from "next/link";
 import { env } from "@/env";
-import { getAppName } from "@/shared/lib/seo";
 import { CookiePreferencesButton } from "./cookiePreferencesButton";
 
 export async function Footer() {
     const { dictionary, locale } = await getDictionary();
-    const appName = getAppName();
+    const appName = getBrand().name;
     const legal = dictionary.apps.web.pages.legal;
 
     const navigationItems = [

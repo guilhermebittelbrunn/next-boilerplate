@@ -1,4 +1,5 @@
 import { getDefaultLocale, locales } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
 
@@ -13,11 +14,6 @@ const PROTOCOL_RE = /^https?:\/\//;
 
 type PageMeta = { title: string; description: string; image?: string };
 
-/** Brand name (env-configurable, neutral default). Used in SEO + header/footer. */
-export function getAppName(): string {
-    return process.env.NEXT_PUBLIC_APP_NAME || "next-boilerplate";
-}
-
 /** Normalize a host/URL env value into an absolute origin (no trailing slash). */
 function normalizeOrigin(value: string): string {
     const trimmed = value.trim().replace(TRAILING_SLASH_RE, "");
@@ -30,11 +26,13 @@ function normalizeOrigin(value: string): string {
  * values with or without a protocol.
  */
 export function getWebBaseUrl(): string {
-    const fromEnv =
-        process.env.NEXT_PUBLIC_WEB_URL ||
-        process.env.VERCEL_PROJECT_PRODUCTION_URL;
-    if (fromEnv) {
-        return normalizeOrigin(fromEnv);
+    const { siteUrl } = getBrand();
+    if (siteUrl) {
+        return siteUrl;
+    }
+    const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+    if (vercelHost) {
+        return normalizeOrigin(vercelHost);
     }
     return "http://localhost:3001";
 }

@@ -21,6 +21,7 @@ vi.mock("resend", () => ({
 const TOKEN = "re_test_token";
 const FROM = "owner@example.com";
 const VISITOR = "jane.smith@example.com";
+const LINE_BREAK = /[\r\n]/;
 
 const contactData = {
     name: "Jane Smith",
@@ -67,6 +68,7 @@ beforeEach(() => {
 afterEach(() => {
     process.env.RESEND_FROM = "";
     process.env.RESEND_TOKEN = "";
+    vi.unstubAllEnvs();
 });
 
 afterAll(() => {
@@ -141,6 +143,7 @@ describe("sendEmail without credentials", () => {
 describe("sendEmail with credentials", () => {
     beforeEach(() => {
         configure(FROM, TOKEN);
+        vi.stubEnv("NEXT_PUBLIC_APP_NAME", "");
     });
 
     it("sends from the configured address and forwards replyTo", async () => {
@@ -257,6 +260,64 @@ describe("sendEmail with credentials", () => {
         await expect(
             sendEmail({ template: contactEmail, to: FROM, data: contactData })
         ).resolves.toEqual({ sent: true, id: null });
+    });
+});
+
+describe("sender name", () => {
+    const sentFrom = async (resendFrom: string, brandName: string) => {
+        configure(resendFrom, TOKEN);
+        vi.stubEnv("NEXT_PUBLIC_APP_NAME", brandName);
+        const sendEmail = await loadSendEmail();
+
+        await sendEmail({
+            template: contactEmail,
+            to: FROM,
+            data: contactData,
+        });
+
+        return sendMock.mock.calls[0]?.[0].from as string;
+    };
+
+    it("names a bare address after the configured brand", async () => {
+        await expect(sentFrom(FROM, "QA Brand")).resolves.toBe(
+            `QA Brand <${FROM}>`
+        );
+    });
+
+    it("keeps a sender that already carries a name", async () => {
+        await expect(sentFrom(`Outro <${FROM}>`, "QA Brand")).resolves.toBe(
+            `Outro <${FROM}>`
+        );
+    });
+
+    it.each(["", "   "])(
+        "sends the bare address while the brand name is %j",
+        async (brandName) => {
+            await expect(sentFrom(FROM, brandName)).resolves.toBe(FROM);
+        }
+    );
+
+    it.each([
+        ["Acme, Inc.", `"Acme, Inc." <${FROM}>`],
+        ['QA "Brand"', `QA Brand <${FROM}>`],
+        ["QA <Brand>", `QA Brand <${FROM}>`],
+        [
+            "QA\r\nBcc: victim@example.com",
+            `"QABcc: victim@example.com" <${FROM}>`,
+        ],
+        ["Dr. Brand", `"Dr. Brand" <${FROM}>`],
+    ])(
+        "sanitizes %j into a single safe header value",
+        async (name, expected) => {
+            const from = await sentFrom(FROM, name);
+
+            expect(from).toBe(expected);
+            expect(from).not.toMatch(LINE_BREAK);
+        }
+    );
+
+    it("falls back to the bare address when nothing survives sanitizing", async () => {
+        await expect(sentFrom(FROM, '"<>"')).resolves.toBe(FROM);
     });
 });
 

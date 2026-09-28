@@ -6,6 +6,7 @@ export const emailTranslations = {
                 "Você recebeu este e-mail porque tem uma conta em {brand}.",
             fallbackUrlLabel:
                 "Se o botão não funcionar, copie e cole este endereço no navegador:",
+            supportNote: "Dúvidas? Escreva para {supportEmail}.",
         },
         welcome: {
             subject: "Boas-vindas a {brand}",
@@ -58,6 +59,7 @@ export const emailTranslations = {
                 "You received this email because you have an account at {brand}.",
             fallbackUrlLabel:
                 "If the button does not work, copy and paste this address into your browser:",
+            supportNote: "Questions? Write to {supportEmail}.",
         },
         welcome: {
             subject: "Welcome to {brand}",
@@ -110,6 +112,7 @@ export const emailTranslations = {
                 "Recibiste este correo porque tienes una cuenta en {brand}.",
             fallbackUrlLabel:
                 "Si el botón no funciona, copia y pega esta dirección en tu navegador:",
+            supportNote: "¿Dudas? Escríbenos a {supportEmail}.",
         },
         welcome: {
             subject: "Bienvenido a {brand}",

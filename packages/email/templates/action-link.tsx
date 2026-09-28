@@ -1,5 +1,6 @@
 import { Text } from "@react-email/components";
 import type { Locale } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import { emailBrand } from "../brand";
 import { ActionButton } from "../components/action-button";
 import { EmailLayout } from "../components/layout";
@@ -30,7 +31,7 @@ const ActionLinkEmail = ({ locale, data }: ActionLinkEmailProps) => {
         <EmailLayout
             locale={locale}
             preview={interpolate(actionCopy.preview, {
-                brand: emailBrand.name,
+                brand: getBrand().name,
             })}
         >
             <Text
@@ -61,7 +62,7 @@ export const actionLinkEmail: EmailTemplate<ActionLinkData> = {
     id: "action-link",
     subject: (copy, data) =>
         interpolate(copy.actionLink.actions[data.action].subject, {
-            brand: emailBrand.name,
+            brand: getBrand().name,
         }),
     render: ({ locale, data }) => (
         <ActionLinkEmail data={data} locale={locale} />

@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-26
+updated: 2026-09-27
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -46,13 +46,14 @@ segue invisível até alguém conferir a fatura.
   *(Âncoras e contagem remedidas em 2026-09-17: a PR #18 acrescentou o escopo `audit` à união, deslocando o
   restante do arquivo em uma linha.)*
 - **As variações de formato acabaram.** Os **16** pontos de log deliberado passam todos pelo helper, entre
-  eles `apps/api/proxy.ts:67`, `webhooks/payments/route.ts:223,235`, `users/route.ts:73`,
-  `auth/sign-up/route.ts:38`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
+  eles `apps/api/proxy.ts:67`, `webhooks/payments/route.ts:223,235`, `users/route.ts:80`,
+  `auth/sign-up/route.ts:58`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
   `(shared)/lib/storage.ts:89`, `account-avatar.ts:45`, `entity-photo.ts:62` e os dois que a PR #18 trouxe
   em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). *(Âncoras de `proxy.ts` e `storage.ts` remedidas em 2026-09-23: a PR #23 deslocou as duas. A mesma PR
   acrescentou dois pontos novos pelo helper, `account-export.ts:100` e `account-erasure.ts:159`: `git grep "logEvent("`
   fora de `__tests__` dá 19 chamadas hoje, contra 17 no `03498ae`. A distância entre 17 e os 16 desta
-  linha é de recorte, não de fato. Chamadas de `console` cru seguem em 18 em 12 arquivos, 7 delas em
+  linha é de recorte, não de fato. Chamadas de `console` cru seguem em 19 linhas de 12 arquivos (recontado em 2026-09-27; o `console.warn` de
+  `apps/api/instrumentation.ts:19`, da PR #25, não tinha entrado na soma), 7 delas em
   `packages/auth/server.ts`. Remedido em 2026-09-25, depois da PR #25: `git grep "logEvent("` fora de testes dá **26**
   linhas, a definição em `log.ts:51` incluída (eram 20). As seis novas são do escopo `payments`: uma em cada
   rota de `payments/*` e três a mais no webhook. A mesma PR acrescentou um `console.warn` de boot em
@@ -62,7 +63,10 @@ segue invisível até alguém conferir a fatura.
   `(shared)/lib/plan-label.ts:49`). As duas âncoras de falha do webhook desceram para `:223` e `:235`.
   Remedido em 2026-09-26, depois da PR #28: **29** linhas. A nova é `admin-user-delete-billing-failed`,
   escopo `payments`, em `users/[id]/route.ts:159`, emitida quando o arquivamento pelo admin não consegue
-  cancelar a assinatura. As âncoras do webhook conferem.)* Os dois clones que esta spec
+  cancelar a assinatura. As âncoras do webhook conferem. Remedido em 2026-09-27, depois da PR #29: **31**
+  linhas. As duas novas são do escopo `auth`, na rota de cadastro: `sign-up-failed` (`auth/sign-up/route.ts:44`)
+  e `sign-up-rollback-failed` (`:62`). A chamada antiga da mesma rota, `profile-create-failed`, desceu para
+  `:58`, e a de `users/route.ts` desceu para `:80`.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
 - **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:122` gera o UUID, `:161` o
@@ -154,7 +158,7 @@ continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário
 |---------------|----------|-----------|
 | 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:58-59`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
 | 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:122,161,75-76` · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
-| 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:223,235` · `users/route.ts:73` · `auth/sign-up/route.ts:38`, todos com `requestId` |
+| 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:223,235` · `users/route.ts:80` · `auth/sign-up/route.ts:58`, todos com `requestId` (âncoras remedidas em 2026-09-27) |
 | 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-57`, booleano nu, teto de 2 s em `:9` |
 | 5. Camada no-op sem a variável do serviço | **implementado**, por não haver serviço | zero dependência nova, zero env nova, zero linha em `.env.example` |
 | 6. Código morto de analytics removido | **implementado** | entregue por tabela em 2026-09-01 |
@@ -197,7 +201,7 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
       gera, `:161` repassa ao handler, `:75-76` carimba na resposta; `formattedError.ts:117` lê de volta.
 - [x] Os pontos que hoje usam `console` em fluxos críticos (webhook de pagamento, criação de perfil)
       passam a emitir log estruturado com esse identificador. — `webhooks/payments/route.ts:223,235`,
-      `users/route.ts:73`, `auth/sign-up/route.ts:38`.
+      `users/route.ts:80`, `auth/sign-up/route.ts:58`.
 - [x] O endpoint de saúde deixa de mentir: distingue "o processo está de pé" de "as dependências
       respondem", e não é pré-renderizado. — `health/route.ts:3` e `health/ready/route.ts`, sobre
       `(shared)/lib/readiness.ts:31-57`.

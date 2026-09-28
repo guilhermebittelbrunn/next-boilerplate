@@ -2,6 +2,7 @@ import { type Locale, resolveLocale } from "@repo/internationalization/utils";
 import { Resend } from "resend";
 import { emailCopy } from "./copy";
 import { keys } from "./keys";
+import { withBrandSender } from "./sender";
 import type { EmailTemplate } from "./template";
 
 export type SendFailureReason =
@@ -110,7 +111,7 @@ export const sendEmail = async <TData>({
 
     try {
         const { data: sent, error } = await client.emails.send({
-            from,
+            from: withBrandSender(from),
             to: recipients,
             replyTo,
             subject: template.subject(emailCopy(resolvedLocale), data),

@@ -1,7 +1,7 @@
 ---
 id: account-security-mfa
 title: "MFA, sessões ativas e política de senha"
-status: proposed
+status: in-progress
 value: médio
 effort: M
 audience: confianca
@@ -9,8 +9,8 @@ area: [apps/api, apps/app, packages/auth, packages/design-system, packages/inter
 mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
-feature: -
-updated: 2026-09-26
+feature: account-security-mfa
+updated: 2026-09-27
 ---
 
 # MFA, sessões ativas e política de senha
@@ -32,7 +32,7 @@ eficácia.
   (`packages/auth/session-routes.ts:126`) o chama em `:132`, montado em
   `apps/app/app/api/auth/session/route.ts:13` e `apps/web/app/api/auth/session/route.ts:12`, alcançado pelo
   botão de sair (`apps/app/shared/components/ui/ProfileDropdown.tsx:81` →
-  `packages/auth/provider.tsx:372-373`, a mutation `signOutMutation`/`mutationFn: logout`).
+  `packages/auth/provider.tsx:363-364`, a mutation `signOutMutation`/`mutationFn: logout`).
   ⚠️ *Âncoras recorrigidas em 2026-09-17: a PR #20 acrescentou ~90 linhas a `server.ts` e ~130 a
   `session-routes.ts`, deslocando todas as referências deste bloco. É a segunda vez que ele envelhece por
   inserção no meio de arquivo alheio.* Não é código morto — **o efeito colateral é que todo logout é um
@@ -65,15 +65,20 @@ eficácia.
   e ela **retorna `true` quando não há cabeçalho `Origin`**. **Não há validação de csrfToken.** A PR #20
   acrescentou uma segunda superfície que grava cookie por trás dessa mesma guarda — o custo de não ter
   csrfToken dobrou sem que ninguém decidisse isso.
-- `apps/app/.../sign-up/validations/signUpSchema.ts:6` — `MIN_PASSWORD_LENGTH = 6`. A validação é só
-  tamanho mínimo + conferência de confirmação. Sem complexidade, sem verificação de senha vazada.
+- ✅ **Política de senha: entregue pela PR #29.** A regra mora em
+  `packages/shared/utils/helpers/passwordPolicy.ts:2-10` (mínimo 8 e máximo 1024 para senha nova; 6 para
+  conferir senha existente) e a API a aplica em `apps/api/(shared)/validation/password.schema.ts:10-18`. Continua
+  sem checagem contra senhas comuns ou vazadas. *(Até 2026-09-26 esta linha citava
+  `sign-up/validations/signUpSchema.ts:6` com `MIN_PASSWORD_LENGTH = 6`; hoje o arquivo importa
+  `PASSWORD_MIN_LENGTH` em `:2`.)*
 - Busca por palavra inteira (`grep -riw`) por `multiFactor`, `MFA`, `TOTP`, `2FA` e `passkey` em `apps/` e
-  `packages/`: **zero ocorrências**. ⚠️ Sem `-w` a busca devolve 7 falsos positivos, todos do `InputOTP`
-  — `TOTP` casa dentro de `InpuTOTP`. Não existe segundo fator nem tela de sessões/dispositivos. Em compensação,
+  `packages/`: **zero ocorrências**. ⚠️ Sem `-w` a busca devolve 8 falsos positivos: 7 do `InputOTP`
+  (`TOTP` casa dentro de `InpuTOTP`) e 1 em `apps/app/__tests__/onboardingState.test.ts:119`, onde `%2Faccount`
+  casa com `2FA` (recontado em 2026-09-27). Não existe segundo fator nem tela de sessões/dispositivos. Em compensação,
   `packages/design-system/components/ui/input-otp.tsx:11` já traz o primitivo de código de uso único, **não
   usado em lugar nenhum** — peça reaproveitável para o desafio e para os códigos de recuperação.
-- **Lacuna:** sem MFA, sem visibilidade de sessões, sem revogação seletiva e sem política de senha. *(A
-  quinta lacuna — "revogação que não fecha o caminho do bearer" — **caiu em 2026-09-15**.)*
+- **Lacuna:** sem MFA, sem visibilidade de sessões e sem revogação seletiva. *(A política de senha saiu da
+  lista em 2026-09-27, entregue pela PR #29. A quinta lacuna — "revogação que não fecha o caminho do bearer" — **caiu em 2026-09-15**.)*
   > **Correção de escopo, segunda revisão (auditoria de 2026-09-16, pós-PR #15).** Esta linha já foi
   > corrigida uma vez, de "dois" para "cinco" schemas. **São dez** — e a contagem de cinco errou por um
   > motivo que vale registrar: olhou só para `apps/app`. Todos declaram `MIN_PASSWORD_LENGTH = 6` por conta
@@ -91,6 +96,10 @@ eficácia.
   > esforço para cima e pede que a regra nasça em `@repo/shared`, consumida pelas três camadas, em vez de
   > virar uma décima primeira constante copiada.
   >
+  > **Nota de 2026-09-27: as onze sumiram.** A PR #29 trocou todas pelas constantes de
+  > `passwordPolicy.ts`. `git grep "MIN_PASSWORD_LENGTH"` em `apps/` e `packages/` dá **0**, com ou sem o `=`. A
+  > tabela acima fica como registro do escopo que a fatia 1 cobriu.
+  >
   > **Nota de 2026-09-23 — a décima primeira apareceu.** A PR #23 criou
   > `account/(validations)/accountDeletionSchema.ts`, que declara a própria `MIN_PASSWORD_LENGTH = 6`.
   > `git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/` devolve **11** declarações (eram 10 no
@@ -105,7 +114,7 @@ eficácia.
   > expurgo apenas chama `revokeUserSessions` e `deleteUser`.)*
   >
   > Achado lateral, fora do escopo desta spec:
-  > `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:9` tem a mensagem em pt-br cravada no código
+  > `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:10` (remedido em 2026-09-27) tem a mensagem em pt-br cravada no código
   > (`"A senha deve ter pelo menos 6 caracteres"`), fora do dicionário — viola a regra de ouro 2.
 
 ## Evidência de mercado
@@ -168,7 +177,7 @@ eficácia.
 > de inverter sem ninguém perceber.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
-> (`packages/auth/client.ts:224-235`), que força `reload(user)` + `getIdToken(true)`. É o primeiro
+> (`packages/auth/client.ts:214-225`, remedido em 2026-09-27), que força `reload(user)` + `getIdToken(true)`. É o primeiro
 > precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
 > do lado do browser. A suíte de `packages/auth` deixou de ser o ponto cego que esta nota apontava: passou
 > de 2 arquivos / 29 testes para **8 arquivos / 101 testes** (recontado em 2026-09-17, rodando o gate sem
@@ -200,9 +209,29 @@ eficácia.
       elimina o **silêncio** —, mas não ganhou granularidade nem a preservação da sessão atual. **Isso muda
       o escopo do que resta:** a parte pendente não é de UI, é de modelo — manter sessão específica exige
       identificá-las, e o Firebase não oferece isso pronto.
-- [ ] **Política de senha explícita e honesta no cadastro e na troca**, com força mínima real,
+- [x] **Política de senha explícita e honesta no cadastro e na troca**, com força mínima real,
       **respeitando o critério 3.3.8** — sem CAPTCHA, sem proibir colar, sem exigir decorar sequência de
       símbolos.
+      ✅ **Entregue pela fatia 1 (PR #29, `597f641`, 2026-09-26), conferido no código em 2026-09-27.** A
+      regra mora num lugar só: `packages/shared/utils/helpers/passwordPolicy.ts:2-10` (`PASSWORD_MIN_LENGTH =
+      8`, `PASSWORD_MAX_LENGTH = 1024`, `EXISTING_PASSWORD_MIN_LENGTH = 6` para login e senha atual). Na borda
+      da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
+      `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
+      e na redefinição (`auth.schema.ts:23`, `:28`, `:82-83`), na troca (`account.schema.ts:46-47`, `:125-126`)
+      e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
+      (`translations/packages/shared/utils.ts:73`, `:187`, `:300`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
+      formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
+      `password.schema.ts`. O cadastro das duas front-ends passou pela API
+      (`apiClient.authApi.signUp`, `SignUpFormClient.tsx:114` e `sign-up-form-client.tsx:36`, rota
+      `auth/sign-up/route.ts:19-77` com Admin SDK); `git grep createUserWithEmailAndPassword` em `apps/` e
+      `packages/`: **0**. O `/test` confirmou colar nos campos de senha (item 10 do relatório). CI de merge
+      verde (`gh run 36257926749`: `verify`, `changes`, `e2e`, `coverage`).
+      **O que a fatia não alcança, por decisão registrada no plano:** checagem contra as senhas mais comuns
+      (ASVS 6.2.4, pergunta P2, adiada para fatia seguinte); o REST direto do Identity Toolkit com a chave
+      pública, que ainda aceita 6 ou 7 caracteres (declaração em `docs/PRE-PRODUCTION.md`, "o que a política
+      de senha não alcança"); e o script `apps/api/scripts/create-dev-admin.mjs`, que não aplica a regra
+      (P4).
 - [ ] **Segundo fator opcional**, ativável pelo usuário, exigido no login quando ativo — **e entregue
       junto com códigos de recuperação**, porque sem eles o recurso vira fila de suporte.
 - [ ] Tudo **opt-in**: um fork que não ativa segundo fator continua subindo, buildando e funcionando como
@@ -225,15 +254,17 @@ provedor e dá para provar sob o emulador.
   para colar e usar gerenciador de senha (6.2.6/6.2.7). Isso casa com o critério 3.3.8 do WCAG 2.2.
 - Hoje o mínimo é 6 e está declarado **11** vezes (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e
   `packages/`, remedido em 2026-09-26). A regra precisa nascer num lugar só e ser consumida pelas três
-  camadas, como a seção "O que já existe" já apontava.
+  camadas, como a seção "O que já existe" já apontava. *(Resolvido pela PR #29: 0 declarações.)*
 - **Risco que o `/analyze` precisa resolver:** o cadastro da `apps/app` vai direto do navegador ao
   Firebase (`packages/auth/client.ts:163`, `createUserWithEmailAndPassword`), sem passar pela API. Validar
   só no formulário é o anti-padrão da regra de ouro 4. O `/analyze` escolhe como fechar esse caminho no
   servidor; se a escolha depender de configuração do projeto Firebase, ela vira passo em
-  `docs/PRE-PRODUCTION.md` e não reprova a entrega.
+  `docs/PRE-PRODUCTION.md` e não reprova a entrega. *(Resolvido pela PR #29: o cadastro das duas front-ends
+  chama `POST /auth/sign-up`, e `createUserWithEmailAndPassword` saiu de `packages/auth/client.ts`.)*
 - Os schemas de login (`sign-in/validations/signInSchema.ts` na `apps/app` e na `apps/web`) também
   declaram o mínimo. Subir o número ali impede de entrar quem já tem senha de 6 ou 7 caracteres, então a
-  regra nova vale para cadastro, troca, redefinição e criação pelo admin, e não para o login.
+  regra nova vale para cadastro, troca, redefinição e criação pelo admin, e não para o login. *(Aplicado pela
+  PR #29: os dois `signInSchema.ts` importam `EXISTING_PASSWORD_MIN_LENGTH`, que vale 6.)*
 
 **Ficam para fatias seguintes, nesta mesma spec:** o item 2 (lista de sessões), o resíduo do item 3 (logout
 local por padrão e encerramento seletivo, que andam juntos porque os dois exigem identificar sessões) e o
@@ -243,6 +274,20 @@ e **não** é arquivada.
 **O `contends_on` do frontmatter descreve o corte inteiro.** A primeira fatia toca os schemas de senha de
 `apps/api/(shared)/validation/` e dos formulários, não a camada de sessão de `packages/auth`. Como esta é a
 única spec elegível, a diferença não muda nenhum lote agora.
+
+### Estado das fatias (auditoria de 2026-09-27)
+
+| fatia | itens do corte | situação |
+|-------|----------------|----------|
+| 1 — política de senha | item 4 | ✅ **entregue** pela PR #29 (`597f641`), mergeada em 2026-09-26 com CI verde no SHA de merge. Evidência no item 4 acima |
+| 2 — sessões | item 2 e o resíduo do item 3 (logout local, encerramento seletivo) | ⏳ não iniciada. Exige identificar sessões, que o Firebase não oferece pronto; é aqui que o `contends_on` do frontmatter volta a valer |
+| 3 — segundo fator | item 5, com códigos de recuperação, e o item 6 (opt-in) | ⏳ não iniciada. Preço do MFA no Identity Platform segue **não confirmado** |
+
+A spec passou a `in-progress` com `feature: account-security-mfa` e **não** é arquivada: os itens 2, 3
+(resíduo), 5 e 6 seguem abertos. O `docs/features/account-security-mfa/STATE.md` ficou com `review:
+in-progress` embora a PR tenha sido mergeada; a auditoria não escreve ali e registra a defasagem no
+`BACKLOG.md`. A próxima fatia deve abrir pasta própria em `docs/features/` ou reaproveitar esta com um
+`STATE.md` novo; decidir isso é do `/analyze` daquela fatia.
 
 ### Fora do corte
 

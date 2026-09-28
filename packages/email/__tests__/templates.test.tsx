@@ -1,7 +1,7 @@
 import { render } from "@react-email/components";
 import { locales } from "@repo/internationalization/utils";
-import { describe, expect, it } from "vitest";
-import { emailBrand } from "../brand";
+import { getBrand } from "@repo/next-config/brand";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { emailCopy } from "../copy";
 import { interpolate } from "../interpolate";
 import {
@@ -35,7 +35,7 @@ const userFacingTemplates = [templates[0], templates[1]] as const;
 
 const accountFooter = (locale: (typeof locales)[number]) =>
     interpolate(emailCopy(locale).layout.footerNote, {
-        brand: emailBrand.name,
+        brand: getBrand().name,
     });
 
 describe("shared layout", () => {
@@ -48,10 +48,10 @@ describe("shared layout", () => {
         async (_id, locale, entry) => {
             const html = await renderFor(entry, locale);
 
-            expect(html).toContain(emailBrand.name);
+            expect(html).toContain(getBrand().name);
             expect(html).toContain(
                 interpolate(emailCopy(locale).layout.signature, {
-                    brand: emailBrand.name,
+                    brand: getBrand().name,
                 })
             );
             expect(html).toContain(`lang="${locale}"`);
@@ -75,10 +75,49 @@ describe("shared layout", () => {
 
             expect(html).toContain(
                 interpolate(emailCopy(locale).contact.footerNote, {
-                    brand: emailBrand.name,
+                    brand: getBrand().name,
                 })
             );
             expect(html).not.toContain(accountFooter(locale));
+        }
+    );
+});
+
+describe("support line", () => {
+    const SUPPORT_EMAIL = "qa-brand-config@example.com";
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    it.each(
+        userFacingTemplates.flatMap((entry) =>
+            locales.map((locale) => [entry.template.id, locale, entry] as const)
+        )
+    )(
+        "%s in %s carries the support line in its own language",
+        async (_id, locale, entry) => {
+            vi.stubEnv("NEXT_PUBLIC_APP_SUPPORT_EMAIL", SUPPORT_EMAIL);
+
+            const html = await renderFor(entry, locale);
+
+            expect(html).toContain(
+                interpolate(emailCopy(locale).layout.supportNote, {
+                    supportEmail: SUPPORT_EMAIL,
+                })
+            );
+            expect(html).not.toContain("{supportEmail}");
+        }
+    );
+
+    it.each(locales)(
+        "contact in %s leaves the support line out",
+        async (locale) => {
+            vi.stubEnv("NEXT_PUBLIC_APP_SUPPORT_EMAIL", SUPPORT_EMAIL);
+
+            const html = await renderFor(templates[2], locale);
+
+            expect(html).not.toContain(SUPPORT_EMAIL);
         }
     );
 });
@@ -101,7 +140,7 @@ describe("welcome template", () => {
     it("resolves the subject from the dictionary", () => {
         expect(welcomeEmail.subject(emailCopy("en"), welcomePreviewData)).toBe(
             interpolate(emailCopy("en").welcome.subject, {
-                brand: emailBrand.name,
+                brand: getBrand().name,
             })
         );
     });
@@ -149,7 +188,7 @@ describe("action-link template", () => {
         expect(html).toContain(actionCopy.cta);
         expect(html).toContain(`href="${data.url}"`);
         expect(actionLinkEmail.subject(emailCopy(locale), data)).toBe(
-            interpolate(actionCopy.subject, { brand: emailBrand.name })
+            interpolate(actionCopy.subject, { brand: getBrand().name })
         );
     });
 
@@ -159,7 +198,7 @@ describe("action-link template", () => {
         ).toBe(
             interpolate(
                 emailCopy("es").actionLink.actions.confirmAccess.subject,
-                { brand: emailBrand.name }
+                { brand: getBrand().name }
             )
         );
     });
@@ -197,4 +236,70 @@ describe("contact template", () => {
             emailCopy("es").contact.subject
         );
     });
+});
+
+describe("with a configured brand", () => {
+    const BRAND = "QA Brand";
+    const SUPPORT = "qa-brand-config@example.com";
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    const configureBrand = () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_NAME", BRAND);
+        vi.stubEnv("NEXT_PUBLIC_APP_SUPPORT_EMAIL", SUPPORT);
+    };
+
+    it("puts the configured name in the subjects", () => {
+        configureBrand();
+
+        expect(welcomeEmail.subject(emailCopy("en"), welcomePreviewData)).toBe(
+            interpolate(emailCopy("en").welcome.subject, { brand: BRAND })
+        );
+        expect(
+            actionLinkEmail.subject(emailCopy("pt-br"), actionLinkPreviewData)
+        ).toBe(
+            interpolate(
+                emailCopy("pt-br").actionLink.actions.confirmAccess.subject,
+                { brand: BRAND }
+            )
+        );
+    });
+
+    it.each(
+        userFacingTemplates.flatMap((entry) =>
+            locales.map((locale) => [entry.template.id, locale, entry] as const)
+        )
+    )(
+        "%s in %s signs with the name and offers the support line",
+        async (_id, locale, entry) => {
+            configureBrand();
+
+            const html = await renderFor(entry, locale);
+
+            expect(html).toContain(
+                interpolate(emailCopy(locale).layout.signature, {
+                    brand: BRAND,
+                })
+            );
+            expect(html).toContain(
+                interpolate(emailCopy(locale).layout.supportNote, {
+                    supportEmail: SUPPORT,
+                })
+            );
+        }
+    );
+
+    it.each(locales)(
+        "contact in %s, addressed to the owner, has no support line",
+        async (locale) => {
+            configureBrand();
+
+            const html = await renderFor(templates[2], locale);
+
+            expect(html).toContain(BRAND);
+            expect(html).not.toContain(SUPPORT);
+        }
+    );
 });

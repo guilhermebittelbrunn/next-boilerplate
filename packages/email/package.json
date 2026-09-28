@@ -10,6 +10,7 @@
   "dependencies": {
     "@react-email/components": "0.5.7",
     "@repo/internationalization": "workspace:*",
+    "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "react": "19.2.0",
     "react-dom": "19.2.0",

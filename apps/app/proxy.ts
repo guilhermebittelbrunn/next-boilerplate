@@ -1,6 +1,7 @@
 import { postAuthRedirectTarget } from "@repo/auth/redirect";
 import { getUserFromSessionCookie } from "@repo/auth/server";
 import { getDefaultLocale, locales } from "@repo/internationalization/utils";
+import { getBrandLogoOrigin } from "@repo/next-config/brand";
 import { secure } from "@repo/security";
 import {
     applySecurityHeaders,
@@ -43,6 +44,7 @@ const firebaseAuthOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 const authEmulatorOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST
     ? `http://${env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST}`
     : null;
+const brandLogoOrigin = getBrandLogoOrigin();
 
 const securityOptions = buildBrowserAppOptions({
     scriptSrc: [
@@ -60,6 +62,7 @@ const securityOptions = buildBrowserAppOptions({
         GOOGLE_AVATAR_ORIGIN,
         ...(isStorageConfigured ? [STORAGE_ORIGIN] : []),
         ...(isAnalyticsEnabled ? [TAG_MANAGER_ORIGIN] : []),
+        ...(brandLogoOrigin ? [brandLogoOrigin] : []),
     ],
     // The Google sign-in flow embeds a relay iframe served by whichever auth backend is
     // in use (/emulator/auth/iframe on the emulator), so that origin has to be framable.

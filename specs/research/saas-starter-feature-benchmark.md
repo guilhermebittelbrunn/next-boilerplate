@@ -5,6 +5,7 @@ lens: produto
 panel: [next-forge, makerkit, shipfast, supastarter, saas-ui-pro, vercel-platforms, supabase-stripe-starter, open-saas, nextacular, divjoy]
 reference: [better-auth, clerk, workos]
 collected: 2026-08-21
+amended: 2026-09-26
 revalidate_after: 2027-02-21
 confidence: média
 ---
@@ -126,3 +127,71 @@ otimização (ver [`engineering-baseline.md`](engineering-baseline.md), prática
 - <https://docs.opensaas.sh/> · <https://github.com/nextacular/nextacular> · <https://shipfa.st/docs>
 - <https://vercel.com/templates/next.js/platforms-starter-kit>
 - <https://www.better-auth.com/docs/plugins/organization> · <https://clerk.com/organizations>
+
+## Adendo de 2026-09-26: troca de e-mail, acesso por plano e configuração central
+
+Coletado na descoberta de 2026-09-26 para três perguntas que a tabela de prevalência original não cobria.
+O painel é o mesmo; onde a verificação não foi possível, está escrito.
+
+### Troca de e-mail do titular
+
+| referência | entrega? | como foi verificado |
+|---|---|---|
+| Makerkit | sim | código público do kit lite: `packages/features/accounts/src/components/email/update-email-form.tsx` e a chave `updateEmailCardTitle` ("Update your Email") no dicionário `en` |
+| Better-Auth (referência) | sim, desligado por padrão | doc: "first enable the `changeEmail` feature, which is disabled by default"; o e-mail só muda depois que o novo endereço é verificado, e existe um passo opcional de confirmação pelo endereço atual |
+| Open SaaS | não | `AccountPage.tsx` mostra o e-mail; busca por `updateEmail`, `changeEmail` e `verifyBeforeUpdateEmail` no repositório devolve 0 |
+| Supastarter, ShipFast, Saas-UI, next-forge, demais | não verificado | código fechado ou página de docs sem menção. O next-forge delega a conta ao Clerk, cuja página do `UserProfile` não detalha o gerenciamento de e-mail |
+
+Resultado honesto: **2 confirmados, 1 confirmado sem, o resto não verificado.** Não dá para escrever uma
+fração sobre 10.
+
+O requisito de provedor pesa mais que a prevalência. Projetos Firebase criados a partir de 15/09/2023 vêm com
+a proteção contra enumeração de e-mail ligada, e com ela "users cannot change their email address without
+first verifying the new address"; o `updateEmail` direto deixa de funcionar e o caminho documentado é o
+`verifyBeforeUpdateEmail`. No Admin SDK o equivalente é `generateVerifyAndChangeEmailLink(email, newEmail)`,
+presente no `firebase-admin` 13.6.0 instalado neste repositório. O emulador de Auth passou a aceitar esse
+fluxo com a PR #7618 do `firebase-tools` (merge em 10/09/2024); o repositório fixa `firebase-tools` 15.30.1.
+
+Avisar o endereço antigo depois da troca é o requisito **6.3.7 da ASVS 5.0.0, que é nível 3**, não 1. Vale
+como higiene barata, não como exigência do nível que um MVP mira.
+
+### Acesso por plano (entitlements)
+
+- **Makerkit** documenta entitlements como receita, não como recurso entregue: "Instead of offering a
+  one-size-fits-all entitlements system, Makerkit provides a foundation you can customize." O modelo da
+  receita liga variante de plano a recurso e limite, com checagem no banco e na aplicação.
+- **Open SaaS** guarda `subscriptionStatus`, `subscriptionPlan` e `credits` no usuário e deixa a decisão com o
+  desenvolvedor ("you can choose how to handle this status within your app"). A doc não descreve checagem de
+  servidor entregue por padrão.
+- A prevalência de 2/10 da tabela original se mantém: o que os kits entregam é o estado da assinatura; o
+  gate em si fica com quem constrói.
+- **Stripe Entitlements** é o mecanismo do provedor: recursos (`Feature`, com `lookup_key` único) presos a
+  produtos, e a Stripe mantém as permissões ativas do cliente conforme a assinatura. O evento é
+  `entitlements.active_entitlement_summary.updated`, o resumo traz no máximo 10 itens (acima disso, paginar
+  pela `url` do payload) e a doc recomenda "persist these entitlements internally for faster resolution".
+  Mudança de recurso num produto só vale para assinaturas existentes no próximo ciclo. Preço do recurso:
+  **não confirmado**.
+
+### Configuração central de marca e criação de projeto
+
+| referência | como o projeto novo recebe nome e marca |
+|---|---|
+| next-forge | `npx next-forge@latest init` pergunta nome e gerenciador de pacotes, clona, instala e copia os arquivos de env |
+| Makerkit | `apps/web/config/app.config.ts`, alimentado por env (`NEXT_PUBLIC_PRODUCT_NAME`, cores de tema), validado com Zod no build |
+| ShipFast | `config.js`: "It is where you configure your app. [...] it is the backbone of the app." |
+| Supastarter | um `config.ts` por app (`apps/marketing/config.ts`, `apps/saas/config.ts`), cada um com o nome do app |
+
+**4 de 4 verificados** têm um ponto único de configuração por app, e um deles tem CLI de criação. Os outros
+seis do painel não foram verificados neste tema.
+
+### Fontes do adendo
+
+- <https://github.com/makerkit/nextjs-saas-starter-kit-lite> — formulário de troca de e-mail (busca de código, 2026-09-26)
+- <https://www.better-auth.com/docs/concepts/users-accounts> — `changeEmail`
+- <https://github.com/wasp-lang/open-saas> — `template/app/src/user/AccountPage.tsx`
+- <https://docs.cloud.google.com/identity-platform/docs/admin/email-enumeration-protection> — proteção contra enumeração e troca de e-mail
+- <https://github.com/firebase/firebase-tools/pull/7618> — fluxo `VERIFY_AND_CHANGE_EMAIL` no emulador
+- <https://raw.githubusercontent.com/OWASP/ASVS/master/5.0/en/0x15-V6-Authentication.md> — 6.3.7 (nível 3)
+- <https://makerkit.dev/docs/next-supabase-turbo/recipes/subscription-entitlements> · <https://docs.opensaas.sh/general/user-overview/>
+- <https://docs.stripe.com/billing/entitlements.md?dashboard-or-api=api> — Entitlements
+- <https://www.next-forge.com/docs/setup/installation> · <https://makerkit.dev/docs/next-supabase-turbo/configuration/application-configuration> · <https://shipfa.st/docs> · <https://supastarter.dev/docs/nextjs/configuration>

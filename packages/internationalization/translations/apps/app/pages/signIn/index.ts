@@ -22,12 +22,6 @@ export const signInTranslations = {
         signUp: "Cadastrar",
         noAccount: "Não tem uma conta? ",
         forgotPassword: "Esqueci minha senha",
-        layout: {
-            title: "Acme Inc",
-            description:
-                "Essa biblioteca me salvou inúmeras horas de trabalho e me ajudou a entregar designs incríveis aos meus clientes mais rapidamente do que nunca.",
-            author: "Sofia Davis",
-        },
     },
     en: {
         meta: {
@@ -52,12 +46,6 @@ export const signInTranslations = {
         signUp: "Sign Up",
         noAccount: "Don't have an account? ",
         forgotPassword: "Forgot your password?",
-        layout: {
-            title: "Acme Inc",
-            description:
-                "This library has saved me countless hours of work and helped me deliver stunning designs to my clients faster than ever before.",
-            author: "Sofia Davis",
-        },
     },
     es: {
         meta: {
@@ -82,11 +70,5 @@ export const signInTranslations = {
         signUp: "Registrarse",
         noAccount: "No tienes una cuenta? ",
         forgotPassword: "¿Olvidaste tu contraseña?",
-        layout: {
-            title: "Acme Inc",
-            description:
-                "Esta biblioteca me ha ahorrado innumerables horas de trabajo y me ha ayudado a entregar diseños increíbles a mis clientes más rápido que nunca.",
-            author: "Sofia Davis",
-        },
     },
 };

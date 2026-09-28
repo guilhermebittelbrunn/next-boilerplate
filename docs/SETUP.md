@@ -84,8 +84,19 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 | `SESSION_ABSOLUTE_MAX_AGE_DAYS` | `app`, `web` | Teto absoluto da sessão em dias, contado da autenticação original. Enquanto a aba está aberta o cookie é renovado; passado o teto a renovação é recusada com `AUTH_SESSION_EXPIRED` e o cookie é limpo. Default 30, grampeado entre `SESSION_COOKIE_MAX_AGE_DAYS` e 90. |
 | `ONBOARDING_ENABLED` | `app` | Fluxo de onboarding depois do cadastro (nome de exibição e idioma), lido em `apps/app/env.ts`. Vazio ou ausente: ligado. `"false"`: ninguém é desviado e `/onboarding` redireciona para o painel. A API continua gravando o estado inicial em perfis novos, então quem se cadastrar com a variável em `"false"` passa pelo fluxo uma vez se ela voltar a ficar vazia. |
 
-### SEO (apenas `apps/web`) · `@repo/seo`
-Identidade da marca para metadata/Open Graph/JSON-LD. Todas opcionais (defaults neutros): `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_AUTHOR`, `NEXT_PUBLIC_APP_AUTHOR_URL`, `NEXT_PUBLIC_TWITTER_HANDLE`.
+### Marca e SEO · `@repo/next-config` (`packages/next-config/brand.ts`) + `@repo/seo`
+Todas opcionais. Vazias ou ausentes, valem os padrões neutros, e valor malformado conta como ausente. São
+`NEXT_PUBLIC_*`, gravadas no bundle no build: trocar pede deploy novo. Roteiro completo em
+[`FORKING.md`](FORKING.md).
+
+| Var | App | Para quê |
+|-----|-----|----------|
+| `NEXT_PUBLIC_APP_NAME` | `app`, `web`, `api` | Nome do produto na barra lateral, no painel de entrada, no header/footer da web, no `<title>`/Open Graph, no JSON-LD, nos e-mails e no nome do remetente. Padrão `next-boilerplate`. |
+| `NEXT_PUBLIC_APP_LOGO_URL` | `app`, `web`, `api` | URL absoluta `http(s)` e pública do logo, usada no app, na web e nos e-mails. A origem entra no `img-src` da CSP. Vazia: cada superfície mostra seu ícone genérico. |
+| `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | `api` (e-mails); `app` e `web` por simetria | Linha de suporte no rodapé dos e-mails para usuários. Vazia: sem linha. |
+| `NEXT_PUBLIC_APP_AUTHOR` | `app`, `web` | Autor e `publisher` na metadata. Vazio: o nome da marca. |
+| `NEXT_PUBLIC_APP_AUTHOR_URL` | `app`, `web` | URL do autor na metadata. |
+| `NEXT_PUBLIC_TWITTER_HANDLE` | `app`, `web` | `twitter:creator`. |
 
 ### i18n · `@repo/internationalization`
 `NEXT_PUBLIC_DEFAULT_LOCALE` (`pt-br` | `en` | `es`, default `pt-br`) — locale usado quando a URL não traz prefixo de idioma.
@@ -421,4 +432,4 @@ nessa conta e promove o perfil a admin. Rodar de novo é a forma de voltar a ent
 
 ## Pendências de higiene (recomendadas)
 
-- **`apps/api/.env.example`** ainda carrega chaves do upstream next-forge que este fork não usa (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub) — apesar da nota no topo deste documento. Limpar evita que cada fork herde configuração morta.
+- Os `.env.example` já não trazem chaves do projeto de origem (Clerk, `DATABASE_URL`, BetterStack, Svix, Knock, Liveblocks, BaseHub). O que sobrou dele está na raiz (`package.json`, `tsup.config.ts`, `.autorc`, `CHANGELOG.md`) e a limpeza está descrita em [`FORKING.md`](FORKING.md), seção "Resíduos do projeto de origem".
