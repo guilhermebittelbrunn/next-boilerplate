@@ -1,8 +1,7 @@
 # Análise e blueprint: marca num lugar só e roteiro de criação de fork
 
-- **Spec de origem:** [`specs/brand-config.md`](../../../../specs/brand-config.md) (status `in-progress`,
-  auditada em 2026-09-27). O arquivo vai para `docs/features/brand-config/spec.md` no `/spec --sync` da
-  entrega.
+- **Spec de origem:** [`spec.md`](../spec.md) (arquivada em 2026-09-28; nasceu em `specs/brand-config.md`,
+  auditada em 2026-09-27).
 - **Rodada:** autônoma, dentro de um `/cycle`. Cada decisão que pediria pergunta foi tomada pela escada
   spec → padrão do repo → menor raio de impacto e está no fim, com a alternativa descartada.
 - **Branch:** nenhuma criada. Quem nomeia e cria é o `revisor-codigo`, no `/review`.

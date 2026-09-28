@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -101,12 +101,12 @@ segue invisível até alguém conferir a fatura.
   apontando há cinco rodadas. *(As âncoras `:263` e `:276` da versão anterior deslocaram para `:253` e
   `:279`. E a rodada de 2026-09-16 escreveu "9 arquivos": subtraiu as 2 chamadas do total e esqueceu de
   subtrair os 2 arquivos que as hospedam.)*
-- **`packages/email` mantém um helper próprio.** `packages/email/index.ts:39-49` (`logEmail`) produz
+- **`packages/email` mantém um helper próprio.** `packages/email/index.ts:40-50` (`logEmail`) produz
   exatamente o mesmo formato do `logEvent`, com `console.warn` direto. Não é divergência de formato, é
   duplicação de código — e o teste que reprova quem logar o objeto de erro
   (`packages/email/__tests__/logPrivacy.test.ts`) vigia só esta cópia.
 - **`provider-error` continua colapsando três falhas distintas** — cota estourada, domínio não verificado e
-  chave revogada — num único motivo (`packages/email/index.ts:120-130`). Descartar o objeto de erro é
+  chave revogada — num único motivo (`packages/email/index.ts:121-131`). Descartar o objeto de erro é
   correto e deliberado (ele carrega o endereço do destinatário), mas ninguém distingue "acabou a cota" de
   "revogaram a chave" sem abrir o painel do provedor.
 - **`import-in-the-middle` e `require-in-the-middle` seguem declarados e nunca importados**
