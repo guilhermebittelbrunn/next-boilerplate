@@ -31,6 +31,18 @@ export const authEmulatorHost = (): string | null =>
 export const firestoreEmulatorHost = (): string | null =>
     process.env.FIRESTORE_EMULATOR_HOST || null;
 
+/** The Storage emulator creates a bucket on its first write; this is the demo project's. */
+export const DEMO_STORAGE_BUCKET = `${DEMO_PROJECT_ID}.appspot.com`;
+
+/**
+ * Only the name firebase-admin reads. Accepting the public variant too would let the API
+ * believe it is emulated while the Admin SDK sends the Storage client to the real Google
+ * Cloud Storage. Deliberately left out of `isEmulated()`: with only this host set, Auth
+ * and Firestore still need real credentials.
+ */
+export const storageEmulatorHost = (): string | null =>
+    process.env.FIREBASE_STORAGE_EMULATOR_HOST || null;
+
 export const authEmulatorOrigin = (): string | null => {
     const host = authEmulatorHost();
     return host ? `http://${host}` : null;
