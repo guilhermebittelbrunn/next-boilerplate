@@ -261,8 +261,8 @@ pnpm --filter api create-dev-admin <email> <senha>
 pnpm check                  # lint e formatação (Biome)
 pnpm fix                    # corrige o que der
 pnpm --filter <app> typecheck
-pnpm test                   # Vitest em todos os workspaces
-pnpm turbo run lint typecheck test
+pnpm test                   # Vitest em todos os workspaces + suíte contra emulador (JDK 21)
+pnpm turbo run lint typecheck test test:emulator
 pnpm e2e                    # Playwright + axe
 pnpm coverage               # cobertura em coverage/
 ```
@@ -276,8 +276,9 @@ pnpm bump-ui                # ressincroniza os componentes shadcn do design syst
 ```
 
 > [!TIP]
-> `lint`, `typecheck` e `test` são tasks cacheadas do Turbo e não leem variável de ambiente. O job `verify`
-> do CI roda exatamente `pnpm turbo run lint typecheck test`: se passa no seu terminal, passa no GitHub.
+> `lint`, `typecheck` e `test` são tasks cacheadas do Turbo e não leem variável de ambiente. `test:emulator`
+> roda contra os emuladores do Firebase, não usa cache e precisa de JDK 21. O job `verify` do CI roda
+> exatamente `pnpm turbo run lint typecheck test test:emulator`: se passa no seu terminal, passa no GitHub.
 
 ---
 

@@ -96,6 +96,9 @@ Mesma postura do Firestore — **a API é a única autoridade** — com uma dife
   nada que o cliente envia entra no path.
 - A leitura sai por **URL assinada V4, expirável (15 min)**, emitida só depois do check de posse do
   recurso. O documento no Firestore guarda o **caminho**, nunca uma URL assinada.
+  A exceção é o emulador de Storage (`FIREBASE_STORAGE_EMULATOR_HOST` preenchido): ali a URL é o caminho do
+  objeto no emulador, `http://127.0.0.1:9199/<bucket>/<objeto>`, sem assinatura, porque o emulador não
+  confere assinatura e assinar exigiria uma chave que o projeto `demo-` não tem. O ramo de produção não muda.
 - [`storage.rules`](../storage.rules) é `deny-all` e governa `firebasestorage.googleapis.com`. Quem fecha
   `storage.googleapis.com` — de onde saem as URLs assinadas — é a **ausência de IAM público**.
 

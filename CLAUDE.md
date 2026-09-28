@@ -46,15 +46,18 @@ pnpm bump-ui        # re-sincroniza componentes shadcn no design-system
 pnpm e2e            # suíte Playwright (apps/e2e): sobe emulador + api/app/web e roda os fluxos críticos
 pnpm coverage       # cobertura Vitest consolidada do repo em coverage/ (sem limiar)
 
-pnpm turbo run lint typecheck test   # os 3 gates de uma vez — é o comando que o job verify do CI roda
+pnpm turbo run lint typecheck test test:emulator   # os gates do job verify do CI, na mesma linha
 ```
 
 `lint`, `typecheck` e `test` são tasks do turbo: cacheadas, paralelas e com `env: []` (herméticas em
 relação a variáveis de ambiente). `lint` é task da **raiz** (`//#lint`) porque o Biome varre o repositório
-inteiro a partir de um único `biome.jsonc`. **O CI roda exatamente essa linha** — se passa no seu terminal,
-passa no GitHub Actions. O pipeline está em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e
-descrito em [`docs/SETUP.md`](docs/SETUP.md). O `pnpm e2e` fica fora dessa linha de propósito (precisa de
-JDK 21, browser e servidores de pé) e roda num job próprio, `e2e`, em toda PR que não é só documentação.
+inteiro a partir de um único `biome.jsonc`. `test:emulator` é a exceção: roda a suíte da `apps/api` contra
+os emuladores de Firestore e Storage (security rules, upload, expurgo), nunca vem do cache e **exige JDK
+21**. `pnpm test` roda `test` e `test:emulator`; `pnpm turbo run test` e o `build` continuam sem Java.
+**O CI roda exatamente essa linha** — se passa no seu terminal, passa no GitHub Actions. O pipeline está
+em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e descrito em [`docs/SETUP.md`](docs/SETUP.md). O
+`pnpm e2e` fica fora dessa linha de propósito (precisa de JDK 21, browser e servidores de pé) e roda num job
+próprio, `e2e`, em toda PR que não é só documentação.
 
 Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe localmente com `pnpm --filter api dev:with-stripe`.
 

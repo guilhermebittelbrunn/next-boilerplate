@@ -9,7 +9,7 @@ Como subir o boilerplate do zero e o mapa **real** das variáveis de ambiente. A
 ## Pré-requisitos
 
 - Node `22.12.0` (`nvm use`) · pnpm `10.19.0`
-- **JDK 21+** — só para rodar os emuladores do Firebase (eles são JARs). `java -version` precisa dizer `21` ou mais; o `firebase-tools` recusa versões anteriores. No macOS: `brew install openjdk@21`. A fórmula é **keg-only**: o `brew` instala e não põe no `PATH`, então `java -version` continua respondendo a versão antiga (ou nenhuma) e parece que a instalação falhou. Aponte o `JAVA_HOME` na sessão antes de subir o emulador:
+- **JDK 21+** — para rodar os emuladores do Firebase (eles são JARs) e, por isso, também o `pnpm test`, que inclui a suíte contra emulador (`test:emulator`). `java -version` precisa dizer `21` ou mais; o `firebase-tools` recusa versões anteriores. No macOS: `brew install openjdk@21`. A fórmula é **keg-only**: o `brew` instala e não põe no `PATH`, então `java -version` continua respondendo a versão antiga (ou nenhuma) e parece que a instalação falhou. Aponte o `JAVA_HOME` na sessão antes de subir o emulador:
 
   ```bash
   export JAVA_HOME=/opt/homebrew/opt/openjdk@21   # Intel: /usr/local/opt/openjdk@21
@@ -126,7 +126,7 @@ no boot. Uma chave com prefixo errado (`pk_` como secret, por exemplo) falha a v
 O caminho local padrão são **três comandos**, em dois terminais — sem conta no Google e sem tocar em dado real:
 
 ```bash
-pnpm emulators   # terminal 1: Auth + Firestore emulados (deixe rodando)
+pnpm emulators   # terminal 1: Auth + Firestore + Storage emulados (deixe rodando)
 pnpm seed        # terminal 2: popula o estado inicial
 pnpm dev         # terminal 2: todos os apps (3000/3001/3002/3003)
 ```
@@ -138,8 +138,8 @@ pnpm --filter app dev             # só um app
 pnpm --filter api dev:with-stripe # API (3002) + encaminhamento de webhooks Stripe
 ```
 
-Portas: `app` 3000 · `web` 3001 · `api` 3002 · `email` 3003 · emulador Auth 9099 · Firestore 8080 · UI do
-emulador 4001. O `emulators:start` também reserva **4400** (hub), **4500** e **9150** — não são
+Portas: `app` 3000 · `web` 3001 · `api` 3002 · `email` 3003 · emulador Auth 9099 · Firestore 8080 ·
+Storage 9199 · UI do emulador 4001. O `emulators:start` também reserva **4400** (hub), **4500** e **9150** — não são
 configuráveis pelo `firebase.json` e entram na conta de "porta ocupada derruba tudo".
 
 ## CI — GitHub Actions
@@ -148,7 +148,7 @@ O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). S�
 
 | Job | Quando roda | Executa | Teto |
 |-----|-------------|---------|------|
-| `verify` | toda PR e todo push em `main` | `pnpm turbo run lint typecheck test` | 15 min |
+| `verify` | toda PR e todo push em `main` | `pnpm turbo run lint typecheck test test:emulator` | 15 min |
 | `changes` | toda PR e todo push em `main` | decide se o diff alcança o produto (ver abaixo) | 5 min |
 | `e2e` | quando `changes` diz que sim | `pnpm e2e` (ver [Testes E2E](#testes-e2e-playwright)) | 25 min |
 | `coverage` | quando `changes` diz que sim | `pnpm coverage` e o resumo por workspace no sumário do job | 15 min |
@@ -157,7 +157,7 @@ O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). S�
 |------|-------|
 | Dispara em | toda `pull_request` (qualquer branch alvo) e todo `push` em `main` |
 | Node / pnpm | lidos do repositório: `.nvmrc` (`22.12.0`) e `packageManager` (`pnpm@10.19.0`) |
-| Cache | store do pnpm, via `actions/setup-node` com chave no `pnpm-lock.yaml`; no `e2e`, também os JARs do emulador e o Chromium do Playwright |
+| Cache | store do pnpm, via `actions/setup-node` com chave no `pnpm-lock.yaml`; no `verify` e no `e2e`, os JARs do emulador (chave no `pnpm-lock.yaml` e no `firebase.json`); no `e2e`, também o Chromium do Playwright |
 | Secrets | **nenhum** |
 | Concorrência | execuções concorrentes na mesma ref são canceladas |
 
@@ -168,15 +168,19 @@ check obrigatório, então exigir `e2e` não trava PR de documentação.
 
 Três consequências que valem entender antes de mexer:
 
-- **O comando é o mesmo dos dois lados.** `pnpm turbo run lint typecheck test` roda igual no seu terminal e
-  no runner. Nada de lint só do diff no CI: isso reintroduz o "passa aqui, quebra lá".
+- **O comando é o mesmo dos dois lados.** `pnpm turbo run lint typecheck test test:emulator` roda igual no
+  seu terminal e no runner. Nada de lint só do diff no CI: isso reintroduz o "passa aqui, quebra lá".
+- **`test:emulator` é o único gate que precisa de Java.** Por isso o `verify` instala o Temurin 21. Ele não
+  entra no `build`, que depende só de `test`, então o deploy na Vercel continua sem Java.
 - **`build` está fora de propósito.** `apps/api` exige `FIREBASE_ADMIN_PROJECT_ID`, `_CLIENT_EMAIL` e
   `_PRIVATE_KEY` para buildar; incluí-lo obrigaria a configurar segredos e um clone limpo deixaria de rodar
   o pipeline. O build continua sendo verificado onde ele roda de verdade: localmente e na Vercel.
 - **`--frozen-lockfile` é um gate de graça.** Mexeu num `package.json` sem rodar `pnpm install`? A PR fica
   vermelha na instalação. Commite o `pnpm-lock.yaml` junto.
-- **Fork privado paga o `e2e` em minutos de Actions.** O `verify` leva cerca de um minuto; o `e2e` sobe
-  emulador, três servidores `next dev` e um navegador, e leva vários. Repositório público não paga.
+- **Fork privado paga o `e2e` em minutos de Actions.** O `e2e` sobe emulador, três servidores `next dev` e
+  um navegador, e é o job de teto mais alto (25 min). O `verify` também sobe os emuladores de Firestore e
+  Storage para o `test:emulator`, e o primeiro run baixa o JAR de rules do Storage. Repositório público não
+  paga.
 
 ### Runbook — branch protection (ação manual no GitHub)
 
@@ -373,7 +377,8 @@ passa `--project`), nunca no [`.firebaserc`](../.firebaserc), que é versionado 
 ### Voltar para um projeto Firebase real
 
 **Esvazie o bloco do emulador** nos três `.env` (`FIRESTORE_EMULATOR_HOST`, `FIREBASE_AUTH_EMULATOR_HOST`,
-`NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`) e preencha o service account
+`FIREBASE_STORAGE_EMULATOR_HOST`, `NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST`,
+`NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`) e preencha o service account
 e as `NEXT_PUBLIC_FIREBASE_*`. Sem nenhuma dessas variáveis, o comportamento é exatamente o de antes de os
 emuladores existirem — o código não tem default algum, quem é opinativo é o `.env.example`.
 
@@ -395,10 +400,18 @@ emuladores existirem — o código não tem default algum, quem é opinativo é 
 - **`pnpm --filter api build` não funciona sob o emulador** — `apps/api/env.ts` exige os três
   `FIREBASE_ADMIN_*` fora de `development`. O caminho local é `pnpm dev`; o build continua exigindo
   service account, como já documentado acima.
-- **Upload de imagem fica desligado sob o emulador.** O Cloud Storage **não** é emulado aqui, e um bucket
-  real combinado com os hosts do emulador gravaria objeto de verdade num bucket de verdade — sem erro
-  visível. Por isso, emulando, a API responde `STORAGE_NOT_CONFIGURED` e o formulário de entidade cai no
-  campo de URL da foto. Para exercitar upload, use um projeto Firebase real.
+- **O upload vai para o emulador de Storage.** Com `FIREBASE_STORAGE_EMULATOR_HOST` preenchido, a API grava
+  no bucket `demo-next-boilerplate.appspot.com` do emulador, qualquer que seja o `FIREBASE_STORAGE_BUCKET`,
+  e devolve links `http://127.0.0.1:9199/...` sem assinatura (o emulador não confere assinatura). O
+  `NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST` do `apps/app` mostra o seletor de arquivo e libera esse host
+  na política de imagem. Um `.env` copiado antes dessas variáveis continua com o comportamento anterior:
+  Auth ou Firestore emulados sem o host de Storage deixam o upload desligado (`STORAGE_NOT_CONFIGURED`),
+  porque um bucket real receberia objetos de verdade. Assinatura V4 e expiração do link só se provam
+  contra um bucket real.
+- **`pnpm emulators` antigo de pé quebra o `pnpm test`.** A suíte `test:emulator` reaproveita os emuladores
+  que já estão rodando, mas só se Firestore (8080) **e** Storage (9199) responderem. Um `pnpm emulators`
+  iniciado antes do Storage entrar no script responde só no 8080, e a suíte recusa com uma mensagem pedindo
+  para reiniciá-lo. Com nenhum dos dois de pé, ela sobe os próprios emuladores e os derruba no fim.
 
 ## Primeiro admin (bootstrap de desenvolvimento)
 

@@ -12,8 +12,8 @@ Verifique **apenas o que o diff toca**. Cite sempre `arquivo:linha` e a regra vi
 
 ## O que a máquina já cobre
 
-Toda PR roda `pnpm turbo run lint typecheck test` no GitHub Actions
-([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)). Estes três itens, portanto, **não precisam ser
+Toda PR roda `pnpm turbo run lint typecheck test test:emulator` no GitHub Actions
+([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)). Estes itens, portanto, **não precisam ser
 reexecutados à mão numa revisão**, e um "está verde" só vale como resposta a eles:
 
 | Coberto pelo CI | O que isso garante |
@@ -21,6 +21,7 @@ reexecutados à mão numa revisão**, e um "está verde" só vale como resposta 
 | `pnpm check` (Biome) | formatação, ordenação de imports/atributos, `console.log`, regras de lint |
 | `typecheck` nos workspaces que declaram o script | erro de tipo em qualquer app ou pacote |
 | `pnpm test` | as suítes Vitest, **inclusive a paridade pt-br/en/es** do `@repo/internationalization` |
+| `test:emulator` (`apps/api`) | `firestore.rules` e `storage.rules` negando cliente anônimo e autenticado; upload, leitura pela URL devolvida, troca de avatar e expurgo contra o Storage emulado |
 | `pnpm e2e` (job `e2e`, pulado em PR só de documentação) | cadastro, login, CRUD de `entity`, troca de painel e landing no navegador, contra o emulador, e axe sem violação `critical`/`serious` fora da allowlist nas telas percorridas |
 
 A consequência prática é onde a revisão humana precisa se concentrar — e é o resto deste arquivo:
