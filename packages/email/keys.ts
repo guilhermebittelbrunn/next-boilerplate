@@ -16,7 +16,7 @@ const emptyToUndefined = (value: unknown) => {
 };
 
 const emailAddress = z.string().email();
-const displayNameSender = /^[^<>]*<([^<>\s]+)>$/;
+export const displayNameSender = /^[^<>]*<([^<>\s]+)>$/;
 
 /**
  * Resend takes the sender both as a bare address and in the `Acme <hi@acme.com>`
