@@ -27,6 +27,11 @@
       "dependsOn": ["^test"],
       "env": []
     },
+    "test:emulator": {
+      "dependsOn": ["test"],
+      "cache": false,
+      "outputs": []
+    },
     "analyze": {
       "dependsOn": ["^analyze"]
     },
