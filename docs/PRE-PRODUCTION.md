@@ -602,7 +602,7 @@ oitava medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
-| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **11 de 11** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/email`, `packages/internationalization`, `packages/payments`, `packages/security`, `packages/shared`). O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
+| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **12 de 12** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/email`, `packages/internationalization`, `packages/next-config`, `packages/payments`, `packages/security`, `packages/shared`); a de `packages/next-config` entrou em 2026-09-27, com a marca configurável. O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
 | gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **26/26 tasks**, 0 em cache, **53,4 s** |
 | lint/format | `pnpm check` | **755 arquivos**, 0 correções |
 | suíte | 11 tasks de teste | **1990 testes em 196 arquivos** |
@@ -676,6 +676,18 @@ provedor e nenhum deles é código — o quarto, já resolvido, era.
       que introduziu o agendamento (`665a4cc`), nem em nenhum outro. A entrada foi removida. Apontá-la
       para `/health` chegou a ser considerado e foi descartado: um ping diário não mantém uma função
       serverless aquecida, então a chamada existiria só para justificar a linha.
+
+### 13. Marca do produto
+
+- [ ] `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e `NEXT_PUBLIC_APP_SUPPORT_EMAIL` definidas nos
+      projetos `app`, `web` e `api` da Vercel, seguidas de um deploy novo de cada um
+- [ ] Logo hospedado numa URL `https` pública e estável, num CDN ou bucket com leitura pública (a web não
+      serve arquivo solto: o proxy dela redireciona para o prefixo de idioma todo caminho sem ele)
+- [ ] Ícones do app (`apps/app/app/`) e da web (`apps/web/app/[locale]/`) trocados pelos do produto
+
+Sem as variáveis, o produto sobe normalmente e o cliente vê `next-boilerplate` no painel, na landing, no
+título da aba e nos e-mails. As variáveis são `NEXT_PUBLIC_*`, então defini-las sem refazer o deploy não
+muda nada. Passo a passo em [`FORKING.md`](FORKING.md), passo 1.
 
 ---
 
