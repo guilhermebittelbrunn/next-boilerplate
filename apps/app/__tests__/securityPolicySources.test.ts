@@ -10,6 +10,9 @@ const { envMock, getUserFromSessionCookieMock } = vi.hoisted(() => ({
             | string
             | undefined,
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: undefined as string | undefined,
+        NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: undefined as
+            | string
+            | undefined,
         NEXT_PUBLIC_GA_MEASUREMENT_ID: undefined as string | undefined,
     },
     getUserFromSessionCookieMock: vi.fn(),
@@ -60,6 +63,7 @@ async function policyWith(
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: AUTH_DOMAIN,
         NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: undefined,
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: undefined,
+        NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: undefined,
         NEXT_PUBLIC_GA_MEASUREMENT_ID: undefined,
         ...overrides,
     });
@@ -223,6 +227,69 @@ describe("image sources follow the storage bucket", () => {
             ).get("connect-src") ?? [];
 
         expect(connectSrc).not.toContain(STORAGE_ORIGIN);
+    });
+});
+
+/**
+ * Under the Storage emulator the API hands back plain-http links to the emulator, so the
+ * avatar and the thumbnails break unless its origin is named. Without the variable the
+ * policy must stay exactly as it was.
+ */
+describe("image sources follow the storage emulator host", () => {
+    const EMULATOR_HOST = "127.0.0.1:9199";
+    const EMULATOR_ORIGIN = `http://${EMULATOR_HOST}`;
+
+    it("names the emulator origin once the host is configured", async () => {
+        const imgSrc =
+            (
+                await policyWith({
+                    NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: EMULATOR_HOST,
+                })
+            ).get("img-src") ?? [];
+
+        expect(imgSrc).toContain(EMULATOR_ORIGIN);
+        expect(imgSrc).not.toContain(STORAGE_ORIGIN);
+    });
+
+    it.each([undefined, ""])(
+        "leaves the emulator origin out for the host value %j",
+        async (value) => {
+            const baseline = (await policyWith({})).get("img-src");
+
+            const imgSrc = (
+                await policyWith({
+                    NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: value,
+                })
+            ).get("img-src");
+
+            expect(imgSrc).toEqual(baseline);
+            expect(imgSrc).not.toContain(EMULATOR_ORIGIN);
+        }
+    );
+
+    it("keeps the bucket host tied to the bucket alone", async () => {
+        const imgSrc =
+            (
+                await policyWith({
+                    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:
+                        "demo-project.firebasestorage.app",
+                    NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: EMULATOR_HOST,
+                })
+            ).get("img-src") ?? [];
+
+        expect(imgSrc).toContain(STORAGE_ORIGIN);
+        expect(imgSrc).toContain(EMULATOR_ORIGIN);
+    });
+
+    it("does not reach connect-src", async () => {
+        const connectSrc =
+            (
+                await policyWith({
+                    NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: EMULATOR_HOST,
+                })
+            ).get("connect-src") ?? [];
+
+        expect(connectSrc).not.toContain(EMULATOR_ORIGIN);
     });
 });
 

@@ -44,6 +44,9 @@ const firebaseAuthOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 const authEmulatorOrigin = env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST
     ? `http://${env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST}`
     : null;
+const storageEmulatorOrigin = env.NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST
+    ? `http://${env.NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST}`
+    : null;
 const brandLogoOrigin = getBrandLogoOrigin();
 
 const securityOptions = buildBrowserAppOptions({
@@ -61,6 +64,7 @@ const securityOptions = buildBrowserAppOptions({
     imgSrc: [
         GOOGLE_AVATAR_ORIGIN,
         ...(isStorageConfigured ? [STORAGE_ORIGIN] : []),
+        ...(storageEmulatorOrigin ? [storageEmulatorOrigin] : []),
         ...(isAnalyticsEnabled ? [TAG_MANAGER_ORIGIN] : []),
         ...(brandLogoOrigin ? [brandLogoOrigin] : []),
     ],

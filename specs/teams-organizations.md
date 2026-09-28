@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Organizações, membros e convites
@@ -75,8 +75,8 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   `"workspace"` em testes de onboarding e dois textos de teste). A palavra "organization" aparece em
   `packages/seo/schema.ts`, no identificador `organizationSchema` (`:6`) e no tipo schema.org `Organization`
   (`:1`, `:5`, `:11`, `:14`), e no único consumidor, o JSON-LD da home da web
-  (`apps/web/app/[locale]/(home)/page.tsx:3`, `:35`). É marcação da landing, nada a ver. *(Recontado em
-  2026-09-27.)*
+  (`apps/web/app/[locale]/(home)/page.tsx:4`, `:32`). É marcação da landing, nada a ver. *(Recontado em
+  2026-09-27; âncoras da home remedidas em 2026-09-28, depois da PR #30.)*
 - `packages/sdk/src/types/user/user.ts:4` (âncora remedida em 2026-09-25; o import da PR #25 empurrou o enum) — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
   O papel é **global**, não relativo a um grupo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
@@ -175,7 +175,7 @@ ponta a ponta, não entregar administração de times completa.
 | `apps/api` | Guard de pertencimento novo; coleções novas; **toda consulta e toda checagem de posse existente muda de chave**. Convite exige envio de e-mail. |
 | `apps/app` | Telas de membros e convites; aceite de convite (rota parcialmente pública); o painel admin ganha a dimensão "organização". |
 | `apps/web` | Página de aceite de convite para quem ainda não tem conta, se o aceite não viver no `app`. |
-| `packages/*` | `auth`: papel por organização convive com `UserRoleLevel` global. `email`: a dependência `transactional-emails` está satisfeita em `main` (PR #9, mergeada em 2026-09-10) e já entrega template genérico por descritor (`packages/email/templates/action-link.tsx:12`, `ActionSlug` como chave do dicionário) — convite não é template novo, é **slug de dicionário × 3 idiomas**. i18n nos 3 idiomas. |
+| `packages/*` | `auth`: papel por organização convive com `UserRoleLevel` global. `email`: a dependência `transactional-emails` está satisfeita em `main` (PR #9, mergeada em 2026-09-10) e já entrega template genérico por descritor (`packages/email/templates/action-link.tsx:13`, `ActionSlug` como chave do dicionário) — convite não é template novo, é **slug de dicionário × 3 idiomas**. i18n nos 3 idiomas. |
 | Infra/env | Índices compostos no Firestore (escopo + filtro) para toda consulta escopada; `firestore.rules` reescritas se algum dia expuser cliente direto. Nenhum serviço pago novo além do envio de e-mail. |
 
 ## Riscos e trade-offs

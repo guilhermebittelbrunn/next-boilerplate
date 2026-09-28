@@ -51,12 +51,11 @@ Conferir depois de publicar — uma leitura direta com a chave pública deve dev
 a API sem acesso. E o rollback correto é **reverter o código da API primeiro**: republicar rules
 permissivas sem reverter reexpõe a base inteira, o que não é rollback, é o incidente de novo.
 
-> 📌 **O emulador chegou; a suíte de testes das rules, não.** O repo agora roda contra os emuladores de
-> Auth e Firestore (`pnpm emulators`), o que era o **pré-requisito** para testar as rules — mas nenhum
-> teste as exercita ainda. Elas continuam validadas só por `deploy --dry-run` (sintaxe) e pelo `curl`
-> manual acima (comportamento). A suíte com `@firebase/rules-unit-testing` está fora do corte da entrega
-> do emulador e anda junto de `ci-pipeline`/`e2e-testing`. **Não leia "emulador entregue" como "rules
-> testadas".** O emulador de **Storage** não foi ligado, então `storage.rules` segue sem teste e sem
+> 📌 **Testado no emulador não é publicado.** `firestore.rules` e `storage.rules` têm teste contra os
+> emuladores (`pnpm --filter api test:emulator`, dentro do `pnpm test` e do job `verify`): cliente anônimo e
+> autenticado são recusados em leitura, listagem, escrita e remoção, e trocar a negação por
+> `allow read, write: if true` quebra a suíte. Isso prova o arquivo, não o projeto: enquanto o `deploy`
+> acima não rodar, o projeto real segue com as rules que tiver. `storage.rules` também continua sem
 > publicação (§ abaixo).
 
 #### 1.1 Índice composto da listagem paginada de `entity`
@@ -596,16 +595,15 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-25**, com o `HEAD` em `0659ede` (PR #27 já mergeada) mais o working tree da correção
-de hidratação do dicionário client e do cancelamento no arquivamento pelo admin. Os números abaixo são da
-oitava medição:
+Remedido em **2026-09-28**, com o `HEAD` em `e07252a` (PR #30 já mergeada) mais o working tree do emulador
+de Storage e dos testes das rules. Os números de tasks, arquivos e testes abaixo são dessa medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **12 de 12** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/email`, `packages/internationalization`, `packages/next-config`, `packages/payments`, `packages/security`, `packages/shared`); a de `packages/next-config` entrou em 2026-09-27, com a marca configurável. O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **26/26 tasks**, 0 em cache, **53,4 s** |
-| lint/format | `pnpm check` | **755 arquivos**, 0 correções |
-| suíte | 11 tasks de teste | **1990 testes em 196 arquivos** |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **27/27 tasks**, 0 em cache, **47,8 s** |
+| lint/format | `pnpm check` | **782 arquivos**, 0 correções |
+| suíte | 12 tasks de teste | **2237 testes em 212 arquivos**. A suíte contra emulador (`api#test:emulator`, 170 testes em 4 arquivos) fica fora desta linha: ela roda no `pnpm test` e no `verify`, com JDK 21 |
 
 Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 894 em 73 arquivos, `apps/app` 608 em
 78, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/internationalization` 59 em 6, `@repo/shared` 44

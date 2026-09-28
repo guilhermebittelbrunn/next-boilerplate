@@ -183,8 +183,10 @@ Operacional da passada de browser, no `/test`:
   qualquer `git push --force`. É rede de segurança para
   [`.claude/rules/git-commits.md`](../.claude/rules/git-commits.md), não substituto da verificação
   proativa.
-- **Typecheck**: não roda por hook (custo alto por edição). Rode `pnpm turbo run lint typecheck test`
-  antes de concluir — os três gates de uma vez, cacheados, e é o que o CI vai rodar de qualquer jeito.
+- **Typecheck**: não roda por hook (custo alto por edição). Rode
+  `pnpm turbo run lint typecheck test test:emulator` antes de concluir — os gates de uma vez, e é o que o CI
+  vai rodar de qualquer jeito. Os três primeiros são cacheados; `test:emulator` sobe os emuladores e exige
+  JDK 21.
 - **Rede de segurança fora da máquina**: o hook de branch e a disciplina de rodar os comandos existem só no
   clone com o ferramental de IA. Quem garante lint/tipos/testes em toda PR é o
   [`ci.yml`](../.github/workflows/ci.yml) — inclusive num fork sem nada disso instalado.
@@ -220,7 +222,7 @@ Informal, para mudanças pequenas:
 1. Descreva o recurso. Se for CRUD, peça `/new-crud`.
 2. As regras do escopo (`apps/*/CLAUDE.md`, `packages/CLAUDE.md`) carregam automaticamente; aponte o
    recurso de referência `entity`.
-3. Ao concluir: `pnpm turbo run lint typecheck test` — é o mesmo comando que o CI roda em toda PR
+3. Ao concluir: `pnpm turbo run lint typecheck test test:emulator` — é o mesmo comando que o CI roda em toda PR
    ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), cobre lint, tipos, testes e a paridade de
    i18n de uma vez, e é cacheado. (⚠️ `turbo build` depende de `test`, e o `build` **não** está no CI.)
 4. **Se tocou front-end**: percorra o fluxo com `agent-browser` (light/dark/mobile, 3 idiomas). No

@@ -1,7 +1,7 @@
 ---
 id: storage-emulator-rules-tests
 title: Emulador de Cloud Storage e testes das security rules
-status: approved
+status: in-progress
 value: alto
 effort: M
 audience: dx
@@ -9,7 +9,7 @@ area: [apps/api, apps/e2e, packages/auth]
 mode: ambos
 depends_on: []
 contends_on: [firebase.json, package.json, turbo.json, apps/api/(shared)/lib/storage.ts, .github/workflows/ci.yml]
-feature: -
+feature: storage-emulator-rules-tests
 updated: 2026-09-27
 ---
 

@@ -135,7 +135,7 @@ a **própria infra** — consulta real que depende de índice, `firestore.rules`
 contra o documento. Teste caro roda em todo `pnpm test` e em toda PR; quando existir, o motivo está escrito
 no `test/report.md`.
 
-**O CI é o gate final, não o `/review`.** Toda PR roda `pnpm turbo run lint typecheck test` no GitHub
+**O CI é o gate final, não o `/review`.** Toda PR roda `pnpm turbo run lint typecheck test test:emulator` no GitHub
 Actions ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), então lint, tipos, testes e paridade
 de i18n deixam de depender de alguém lembrar de rodá-los. Isso não desobriga ninguém: rodar antes de
 commitar continua sendo mais rápido que descobrir na PR. O que muda é o **foco** — o `/review` e o `/test`

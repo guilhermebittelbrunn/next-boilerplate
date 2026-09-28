@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { isEmulated } from "@repo/auth/emulator";
+import {
+    DEMO_STORAGE_BUCKET,
+    isEmulated,
+    storageEmulatorHost,
+} from "@repo/auth/emulator";
 import { getStorageAdmin } from "@repo/auth/server";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { env } from "@/env";
@@ -23,16 +27,21 @@ const STORAGE_OBJECT_PATH_RE =
     /^uploads\/[A-Za-z0-9_-]{1,128}\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
 
 /**
- * There is no Cloud Storage emulator in this setup, so an emulated stack with a bucket
- * name still filled in would write objects into the real bucket — with Application
- * Default Credentials, silently. Reporting storage as unconfigured keeps every read and
- * write inside the emulated boundary; the panel already degrades to the photo URL field.
+ * Emulated Auth or Firestore without the Storage emulator keeps storage off: a bucket
+ * name still filled in would be reached with Application Default Credentials, silently,
+ * and real objects would land in a real bucket. With the Storage emulator every call goes
+ * to it under the demo bucket, so no real bucket name is ever used in that mode.
  */
 export const isStorageConfigured = (): boolean =>
-    Boolean(env.FIREBASE_STORAGE_BUCKET) && !isEmulated();
+    storageEmulatorHost() !== null ||
+    (Boolean(env.FIREBASE_STORAGE_BUCKET) && !isEmulated());
 
-const bucket = () =>
-    getStorageAdmin().bucket(env.FIREBASE_STORAGE_BUCKET as string);
+const bucketName = (): string =>
+    storageEmulatorHost()
+        ? DEMO_STORAGE_BUCKET
+        : (env.FIREBASE_STORAGE_BUCKET as string);
+
+const bucket = () => getStorageAdmin().bucket(bucketName());
 
 export const buildObjectPath = (ownerId: string, extension: string): string =>
     `${UPLOAD_PREFIX}/${ownerId}/${randomUUID()}.${extension}`;
@@ -72,6 +81,17 @@ export async function signReadUrl(
     path: string
 ): Promise<{ url: string; expiresAt: string }> {
     const expires = Date.now() + SIGNED_URL_TTL_MS;
+    const emulatorHost = storageEmulatorHost();
+
+    // The emulator checks no signature, and signing needs a private key the demo project
+    // does not have: without one, the library asks Google's IAM API to sign instead.
+    if (emulatorHost) {
+        return {
+            url: `http://${emulatorHost}/${DEMO_STORAGE_BUCKET}/${path}`,
+            expiresAt: new Date(expires).toISOString(),
+        };
+    }
+
     const [url] = await bucket().file(path).getSignedUrl({
         version: "v4",
         action: "read",

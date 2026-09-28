@@ -1,7 +1,7 @@
 ---
 id: brand-config
 title: Marca num lugar só e roteiro de criação de fork
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: dx
@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/email/brand.ts, packages/seo/metadata.ts, apps/web/shared/lib/seo.ts, apps/app/shared/components/ui/Sidebar.tsx, "apps/app/app/[locale]/(unauthenticated)/layout.tsx"]
 feature: brand-config
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Marca num lugar só e roteiro de criação de fork
@@ -66,9 +66,35 @@ variáveis, textos legais) está espalhado entre `docs/SETUP.md`, `docs/PRE-PROD
 > estava, reprovaria a entrega pelo dado de seed. As outras âncoras desta seção foram lidas de novo no disco
 > e conferem.
 
+## Estado da entrega
+
+Entregue pela PR #30, mergeada em `main` como `e07252a` ("feat: brand config in one place and a fork guide")
+em 2026-09-28 às 13:51 UTC, da branch `feat/brand-config`. Os quatro checks da PR passaram antes do merge, e a
+execução de merge também (`gh run 36431584408`: `success` em `changes`, `verify`, `coverage` e `e2e`). A
+auditoria de 2026-09-28 conferiu os cinco itens do corte no código:
+
+| item do corte | evidência no código |
+|---------------|---------------------|
+| 1. fonte única de nome, logo, suporte e URL | `packages/next-config/brand.ts:51-60` (`getBrand()`), com as variáveis declaradas em `packages/next-config/keys.ts:45-47`. Leem dali a barra lateral (`Sidebar.tsx:68`), o painel de entrada (`(unauthenticated)/layout.tsx:16`), o header, o footer e o JSON-LD da web (`header/index.tsx:37`, `footer.tsx:9`, `(home)/page.tsx:27`), o `siteUrl` da web (`apps/web/shared/lib/seo.ts:29`), o `createMetadata` (`packages/seo/metadata.ts:39`) e os e-mails (`packages/email/components/layout.tsx:39`, `sender.ts:14`, os três templates) |
+| 2. nome e logo nas quatro superfícies, sem "Acme" de marca | `git grep -i "acme\|company name"` em `apps/` e `packages/`, fora de `__tests__`: três linhas, o seed (`seed-emulator.mjs:35`, `seedAccounts.ts:12`) e o comentário de `packages/email/keys.ts:22`. O depoimento `Sofia Davis` e as chaves `layout` de `signIn` e `signUp` saíram do dicionário |
+| 3. favicon e ícone do app | `apps/app/app/favicon.ico`, `icon.png` e `apple-icon.png`; o `/test` mediu `/favicon.ico` com `200 image/x-icon` em `next start` (`test/report.md:79`); teste `apps/app/__tests__/appIcons.test.ts` |
+| 4. roteiro de criação de fork | `docs/FORKING.md`, 12 passos em ordem (marca no 3, Firebase no 4, domínios no 5, variáveis no 8, textos legais no 3.3), com links para o `PRE-PRODUCTION.md`; o `docs/SETUP.md:87-99` e o `README.md` apontam para ele |
+| 5. marca ausente não quebra nada | todos os campos de `getBrand()` têm padrão (`brand.ts:14`, `:24-49`) e os três `.env.example` publicam as variáveis vazias (`apps/app/.env.example:76-78`, `apps/web/.env.example:58-60`, `apps/api/.env.example:83-85`); o CI roda com elas vazias e passou |
+
+**O que a entrega fez além do corte:** a origem do logo entra no `img-src` da CSP nos dois front-ends
+(`apps/app/proxy.ts:47`, `:65`; `apps/web/proxy.ts:30`, `:39`), com um filtro de host que impede um `;` de
+abrir diretiva nova (`brand.ts:19-21`); o remetente dos e-mails ganha o nome da marca quando o `RESEND_FROM`
+vem sem nome (`packages/email/sender.ts:13-26`); e o `PRE-PRODUCTION.md` ganhou o item 13, "Marca do produto".
+
+**O que ficou aberto:** o `/test` fechou com 14 ✅, 0 ❌ e 1 🔒 (nome não ASCII na caixa de entrada da Resend,
+que pede conta real). As observações anteriores à entrega (o `/favicon.ico` da web responde HTML, o header
+deslogado da web passa da largura a 1024 px, a inicial do avatar abaixo do AA, nome longo quebrando na barra
+lateral) estão no `specs/BACKLOG.md` como achados. O `package.json` da raiz continua com o nome `next-forge` e o
+`bin` quebrado; o `FORKING.md` descreve a limpeza, mas o arquivo não mudou.
+
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
   2026-09-26.
 - Prevalência: **4 de 4 verificados** têm um ponto único de configuração por app. Makerkit usa
   `app.config.ts` alimentado por env e validado com Zod no build; ShipFast chama o `config.js` de "the
@@ -78,15 +104,15 @@ variáveis, textos legais) está espalhado entre `docs/SETUP.md`, `docs/PRE-PROD
 
 ## Proposta — corte de MVP
 
-- [ ] Um único lugar define nome do produto, logo, e-mail de suporte e URL do site, com padrão neutro. App,
+- [x] Um único lugar define nome do produto, logo, e-mail de suporte e URL do site, com padrão neutro. App,
       web, e-mails e metadados leem dali.
-- [ ] A barra lateral do app, o painel das telas de login e cadastro do app, o header da web e os e-mails
+- [x] A barra lateral do app, o painel das telas de login e cadastro do app, o header da web e os e-mails
       mostram o nome e o logo configurados; nenhum "Acme Inc", "Acme" de marca ou "company name" sobra no
       código.
-- [ ] O app ganha favicon e ícone, e o pedido de `/favicon.ico` deixa de cair na rota de idioma.
-- [ ] Um documento de criação de fork lista, em ordem, o que trocar: marca, projeto Firebase, domínios e
+- [x] O app ganha favicon e ícone, e o pedido de `/favicon.ico` deixa de cair na rota de idioma.
+- [x] Um documento de criação de fork lista, em ordem, o que trocar: marca, projeto Firebase, domínios e
       variáveis de cada app, textos legais, e aponta para o `docs/PRE-PRODUCTION.md` no que já está lá.
-- [ ] Valor de marca ausente não quebra o build nem o boot; o padrão neutro aparece.
+- [x] Valor de marca ausente não quebra o build nem o boot; o padrão neutro aparece.
 
 ### Fora do corte
 

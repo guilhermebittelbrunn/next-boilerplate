@@ -84,4 +84,4 @@ cancelamento e troca de plano sem código.
 - [ ] Rota nova trata `getStripe()` nulo e `isBillingEnabled()` falso com `error.code`.
 - [ ] Webhook verifica assinatura, deduplica e reconcilia pela regra de ordem.
 - [ ] Textos e `error.code` nos 3 idiomas (`pnpm --filter @repo/internationalization test`).
-- [ ] `pnpm turbo run lint typecheck test` passa.
+- [ ] `pnpm turbo run lint typecheck test test:emulator` passa.
