@@ -58,13 +58,17 @@ vi.mock("@/(shared)/validation/file.schema", () => ({
     parseUploadedImage: (...args: unknown[]) => parseUploadedImageMock(...args),
 }));
 
-const { isStorageConfigured } = await import("@/(shared)/lib/storage");
+const { isStorageConfigured, putObject, signReadUrl } = await import(
+    "@/(shared)/lib/storage"
+);
 const { withPhotoUrl } = await import("@/(shared)/lib/entity-photo");
 const { POST } = await import("@/app/(routes)/files/route");
 
 const REAL_BUCKET = "next-boilerplate-576d0.firebasestorage.app";
 const AUTH_EMULATOR_HOST = "127.0.0.1:9099";
 const FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+const STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
+const DEMO_BUCKET = "demo-next-boilerplate.appspot.com";
 const OWNER_UID = "common-9";
 const OWNER_PROFILE = {
     id: "p2",
@@ -79,6 +83,9 @@ const clearEmulatorEnv = () => {
     vi.stubEnv("FIREBASE_AUTH_EMULATOR_HOST", undefined);
     vi.stubEnv("NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST", undefined);
     vi.stubEnv("FIRESTORE_EMULATOR_HOST", undefined);
+    vi.stubEnv("FIREBASE_STORAGE_EMULATOR_HOST", undefined);
+    vi.stubEnv("NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST", undefined);
+    vi.stubEnv("STORAGE_EMULATOR_HOST", undefined);
 };
 
 function uploadRequest(): NextRequest {
@@ -218,5 +225,92 @@ describe("reading an entity photo against an emulated stack", () => {
 
         expect(result.photoUrl).toBe(SIGNED_URL);
         expect(getSignedUrlMock).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("storage against the storage emulator", () => {
+    it.each([
+        ["alone", {}],
+        [
+            "with auth and firestore emulated too",
+            {
+                FIREBASE_AUTH_EMULATOR_HOST: AUTH_EMULATOR_HOST,
+                FIRESTORE_EMULATOR_HOST,
+            },
+        ],
+    ])("is configured with its host set %s", (_label, extra) => {
+        vi.stubEnv("FIREBASE_STORAGE_EMULATOR_HOST", STORAGE_EMULATOR_HOST);
+        for (const [variable, value] of Object.entries(extra)) {
+            vi.stubEnv(variable, value);
+        }
+
+        expect(isStorageConfigured()).toBe(true);
+    });
+
+    it("is configured with its host set even without a bucket", () => {
+        envMock.FIREBASE_STORAGE_BUCKET = "";
+        vi.stubEnv("FIREBASE_STORAGE_EMULATOR_HOST", STORAGE_EMULATOR_HOST);
+
+        expect(isStorageConfigured()).toBe(true);
+    });
+
+    it("writes to the demo bucket even with a real bucket in the env", async () => {
+        vi.stubEnv("FIREBASE_STORAGE_EMULATOR_HOST", STORAGE_EMULATOR_HOST);
+        vi.stubEnv("FIRESTORE_EMULATOR_HOST", FIRESTORE_EMULATOR_HOST);
+
+        await putObject(OWNED_OBJECT_PATH, Buffer.from("x"), "image/png");
+
+        expect(bucketMock).toHaveBeenCalledWith(DEMO_BUCKET);
+        expect(bucketMock).not.toHaveBeenCalledWith(REAL_BUCKET);
+        expect(saveMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("stores an upload in the demo bucket through POST /files", async () => {
+        vi.stubEnv("FIREBASE_STORAGE_EMULATOR_HOST", STORAGE_EMULATOR_HOST);
+        vi.stubEnv("FIREBASE_AUTH_EMULATOR_HOST", AUTH_EMULATOR_HOST);
+
+        const response = await POST(uploadRequest());
+
+        expect(response.status).toBe(STATUS_CREATED);
+        expect(bucketMock).toHaveBeenCalledWith(DEMO_BUCKET);
+        expect(bucketMock).not.toHaveBeenCalledWith(REAL_BUCKET);
+        expect(getSignedUrlMock).not.toHaveBeenCalled();
+    });
+
+    it("hands back the emulator path of the object without signing it", async () => {
+        vi.stubEnv("FIREBASE_STORAGE_EMULATOR_HOST", STORAGE_EMULATOR_HOST);
+
+        const { url, expiresAt } = await signReadUrl(OWNED_OBJECT_PATH);
+
+        expect(url).toBe(
+            `http://${STORAGE_EMULATOR_HOST}/${DEMO_BUCKET}/${OWNED_OBJECT_PATH}`
+        );
+        expect(Number.isNaN(Date.parse(expiresAt))).toBe(false);
+        expect(getSignedUrlMock).not.toHaveBeenCalled();
+    });
+
+    it("still signs a v4 url without the emulator host", async () => {
+        const { url } = await signReadUrl(OWNED_OBJECT_PATH);
+
+        expect(url).toBe(SIGNED_URL);
+        expect(getSignedUrlMock).toHaveBeenCalledWith(
+            expect.objectContaining({ version: "v4", action: "read" })
+        );
+    });
+
+    it.each([
+        "NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST",
+        "STORAGE_EMULATOR_HOST",
+    ])("stays off with only %s set on an emulated stack", async (variable) => {
+        vi.stubEnv(variable, STORAGE_EMULATOR_HOST);
+        vi.stubEnv("FIRESTORE_EMULATOR_HOST", FIRESTORE_EMULATOR_HOST);
+
+        expect(isStorageConfigured()).toBe(false);
+
+        const response = await POST(uploadRequest());
+
+        expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
+        expect(bucketMock).not.toHaveBeenCalled();
+        expect(saveMock).not.toHaveBeenCalled();
     });
 });

@@ -27,7 +27,7 @@ const ACCOUNTS = [
 /**
  * Deliberately covers the edges the panel has to render: every EntityType, a disabled
  * record, an empty description, and null genre/birthdate. `photo` stays null because
- * Cloud Storage is not emulated.
+ * the seed uploads no object, and a path to a missing one would render a broken image.
  */
 const ENTITIES_BY_OWNER = {
     "user@example.com": [
