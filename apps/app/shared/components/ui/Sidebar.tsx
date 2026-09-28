@@ -3,6 +3,7 @@
 import {
     Avatar,
     AvatarFallback,
+    AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import {
     Collapsible,
@@ -26,6 +27,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
+import { getBrand } from "@repo/next-config/brand";
 import { ChevronRightIcon, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -63,6 +65,7 @@ export const GlobalSidebar = ({
     const sidebar = useSidebar();
     const { dictionary } = getDictionary();
     const pathname = usePathname();
+    const brand = getBrand();
 
     const isActive = (url: string) =>
         url !== "#" && (pathname === url || pathname.startsWith(`${url}/`));
@@ -73,10 +76,16 @@ export const GlobalSidebar = ({
                 <SidebarHeader className="mt-0">
                     <div className="flex items-center gap-4">
                         <Avatar className="h-8 w-8">
-                            <AvatarFallback />
+                            <AvatarImage
+                                alt=""
+                                src={brand.logoUrl ?? undefined}
+                            />
+                            <AvatarFallback>
+                                {brand.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
                         </Avatar>
                         {sidebar.open && (
-                            <span className="text-sm">company name</span>
+                            <span className="text-sm">{brand.name}</span>
                         )}
                     </div>
                     <div />
