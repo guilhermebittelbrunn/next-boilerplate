@@ -38,6 +38,16 @@ export const keys = () =>
              * the contact form instead, which every fork already has working.
              */
             NEXT_PUBLIC_PRIVACY_CONTACT: z.string().optional(),
+            /**
+             * Brand and SEO identity. Plain strings on purpose: the example env files
+             * publish them empty, and `getBrand()` validates the format and falls back.
+             */
+            NEXT_PUBLIC_APP_NAME: z.string().optional(),
+            NEXT_PUBLIC_APP_LOGO_URL: z.string().optional(),
+            NEXT_PUBLIC_APP_SUPPORT_EMAIL: z.string().optional(),
+            NEXT_PUBLIC_APP_AUTHOR: z.string().optional(),
+            NEXT_PUBLIC_APP_AUTHOR_URL: z.string().optional(),
+            NEXT_PUBLIC_TWITTER_HANDLE: z.string().optional(),
         },
         runtimeEnv: {
             ANALYZE: process.env.ANALYZE,
@@ -56,6 +66,13 @@ export const keys = () =>
             NEXT_PUBLIC_PRODUCT_MODE: process.env.NEXT_PUBLIC_PRODUCT_MODE,
             NEXT_PUBLIC_PRIVACY_CONTACT:
                 process.env.NEXT_PUBLIC_PRIVACY_CONTACT,
+            NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+            NEXT_PUBLIC_APP_LOGO_URL: process.env.NEXT_PUBLIC_APP_LOGO_URL,
+            NEXT_PUBLIC_APP_SUPPORT_EMAIL:
+                process.env.NEXT_PUBLIC_APP_SUPPORT_EMAIL,
+            NEXT_PUBLIC_APP_AUTHOR: process.env.NEXT_PUBLIC_APP_AUTHOR,
+            NEXT_PUBLIC_APP_AUTHOR_URL: process.env.NEXT_PUBLIC_APP_AUTHOR_URL,
+            NEXT_PUBLIC_TWITTER_HANDLE: process.env.NEXT_PUBLIC_TWITTER_HANDLE,
         },
         skipValidation: true,
     });
