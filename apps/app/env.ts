@@ -20,6 +20,9 @@ export const env = createEnv({
         // Doubles as the switch for the upload capability: absent means the form falls
         // back to the photo URL field and the bucket host stays out of the policy.
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().optional(),
+        // Filled in, uploads go to the Storage emulator: the file picker shows without a
+        // bucket and the emulator origin is allowed in the image policy.
+        NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: z.string().optional(),
         NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
     },
     runtimeEnv: {
@@ -30,6 +33,8 @@ export const env = createEnv({
             process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST,
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:
             process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST:
+            process.env.NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST,
         NEXT_PUBLIC_GA_MEASUREMENT_ID:
             process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
     },
