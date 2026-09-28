@@ -226,6 +226,66 @@ describe("image sources follow the storage bucket", () => {
     });
 });
 
+/**
+ * A fork that hosts its logo on a CDN would see a broken mark in the sidebar and the
+ * sign-in panel if the policy did not name that host. A missing or malformed logo value
+ * must leave the directive exactly as it was.
+ */
+describe("image sources follow the brand logo", () => {
+    const LOGO_URL = "https://cdn.example.com/brand/logo.png";
+
+    it("names the logo origin once a logo is configured", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_LOGO_URL", LOGO_URL);
+
+        const imgSrc = (await policyWith({})).get("img-src") ?? [];
+
+        expect(imgSrc).toContain("https://cdn.example.com");
+        expect(imgSrc).not.toContain(LOGO_URL);
+    });
+
+    it.each([
+        "",
+        "   ",
+        "/logo.png",
+        "javascript:alert(1)",
+        "ftp://cdn.example.com/l.png",
+        "https://x;sandbox/logo.png",
+        "https://a,b.com/l.png",
+        "https://a'b.com/l.png",
+    ])(
+        "leaves the directive untouched for the logo value %j",
+        async (value) => {
+            const baseline = (await policyWith({})).get("img-src");
+            vi.stubEnv("NEXT_PUBLIC_APP_LOGO_URL", value);
+
+            const imgSrc = (await policyWith({})).get("img-src");
+
+            expect(imgSrc).toEqual(baseline);
+        }
+    );
+
+    it("does not let a separator in the logo host open a directive of its own", async () => {
+        const baseline = [...(await policyWith({})).keys()];
+        vi.stubEnv("NEXT_PUBLIC_APP_LOGO_URL", "https://x;sandbox/logo.png");
+
+        const policy = await policyWith({});
+
+        expect([...policy.keys()]).toEqual(baseline);
+        expect(policy.has("sandbox")).toBe(false);
+    });
+
+    it("keeps the port of the logo origin", async () => {
+        vi.stubEnv(
+            "NEXT_PUBLIC_APP_LOGO_URL",
+            "https://cdn.example.com:8443/l.png"
+        );
+
+        const imgSrc = (await policyWith({})).get("img-src") ?? [];
+
+        expect(imgSrc).toContain("https://cdn.example.com:8443");
+    });
+});
+
 describe("script sources outside development", () => {
     it("forbids eval, which only the hot reloading server needs", async () => {
         const scriptSrc = (await policyWith({})).get("script-src") ?? [];
