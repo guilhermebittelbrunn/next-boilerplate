@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-25
+updated: 2026-09-27
 ---
 
 # Organizações, membros e convites
@@ -70,10 +70,13 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
 
 ## O que já existe no repo
 
-- **Zero ocorrências** de `organizationId`, `workspace`, `tenant`, `membership` ou `invite` em `apps/` e
-  `packages/`. A palavra "organization" no repo aparece só em `packages/seo/schema.ts` — no identificador
-  `organizationSchema` (`:6`) e no tipo schema.org `Organization` (`:1`, `:5`, `:11`, `:14`) —, que é
-  marcação da landing, nada a ver.
+- **Zero ocorrências** de `organizationId`, `tenant` ou `membership` em `apps/` e `packages/`, e nenhuma de
+  `workspace` ou `invite` no sentido de domínio (o `grep` literal acha `workspace:*` nos `package.json`, o passo
+  `"workspace"` em testes de onboarding e dois textos de teste). A palavra "organization" aparece em
+  `packages/seo/schema.ts`, no identificador `organizationSchema` (`:6`) e no tipo schema.org `Organization`
+  (`:1`, `:5`, `:11`, `:14`), e no único consumidor, o JSON-LD da home da web
+  (`apps/web/app/[locale]/(home)/page.tsx:3`, `:35`). É marcação da landing, nada a ver. *(Recontado em
+  2026-09-27.)*
 - `packages/sdk/src/types/user/user.ts:4` (âncora remedida em 2026-09-25; o import da PR #25 empurrou o enum) — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
   O papel é **global**, não relativo a um grupo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
@@ -117,7 +120,7 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   `where("userId", "==", userId)` de `listByUserId` (`entity.repository.ts:23`), que a própria spec descreve
   em prosa mas nunca numerou. São 4 três rodadas atrás e 14 hoje.
   A PR #11 passou a codificar a posse também no **prefixo do caminho no bucket**
-  (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath:37`/`isOwnedBy:43`), e a PR #12 replicou esse padrão
+  (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath:37`/`isOwnedBy:50`, âncora remedida em 2026-09-27), e a PR #12 replicou esse padrão
   num terceiro recurso (`account/route.ts:41,154`).
   ⚠️ **Correção de fato, medida em 2026-09-19:** a versão anterior afirmava que esse prefixo está
   "espelhado em `storage.rules`". Não está. O arquivo é negação total (`allow read, write: if false` em
