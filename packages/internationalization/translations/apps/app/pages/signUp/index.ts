@@ -1,5 +1,3 @@
-import { signInTranslations } from "../signIn";
-
 export const signUpTranslations = {
     "pt-br": {
         meta: {
@@ -25,7 +23,6 @@ export const signUpTranslations = {
         googleSignIn: "Continuar com Google",
         signIn: "Entrar",
         noAccount: "Não tem uma conta? ",
-        layout: signInTranslations["pt-br"].layout,
     },
     en: {
         meta: {
@@ -51,7 +48,6 @@ export const signUpTranslations = {
         googleSignIn: "Continue with Google",
         signIn: "Sign In",
         noAccount: "Don't have an account? ",
-        layout: signInTranslations.en.layout,
     },
     es: {
         meta: {
@@ -77,6 +73,5 @@ export const signUpTranslations = {
         googleSignIn: "Continuar con Google",
         signIn: "Iniciar sesión",
         noAccount: "¿No tienes una cuenta? ",
-        layout: signInTranslations.es.layout,
     },
 };
