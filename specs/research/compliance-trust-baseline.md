@@ -4,6 +4,7 @@ question: Qual é o baseline de confiança (segurança, privacidade, conformidad
 lens: confianca
 panel: [lgpd, anpd-resolucoes, gdpr, eprivacy, marco-civil, owasp, wcag, lbi, stripe-pci, firebase-security]
 collected: 2026-08-21
+amended: 2026-09-26
 revalidate_after: 2027-08-21
 confidence: alta
 ---
@@ -299,3 +300,38 @@ art. 3(24) exclui microempresas da definição de PME de propósito.
 - <https://firebase.google.com/terms/data-processing-terms> · <https://firebase.google.com/terms/subprocessors>
 - <https://stripe.com/guides/pci-compliance> · <https://docs.stripe.com/webhooks> · <https://docs.stripe.com/get-started/checklist/website>
 - <https://cloud.google.com/logging/quotas> · <https://developers.google.com/tag-platform/security/guides/consent>
+
+## Adendo de 2026-09-26: documentos de conformidade e backup
+
+Coletado na descoberta de 2026-09-26, para dimensionar uma spec de modelos em `docs/` (controles 6, 8, 9 e
+19 da tabela acima). O restante da nota segue válido até `revalidate_after`.
+
+- **Modelo oficial de RoPA para pequeno porte.** A ANPD publicou um "modelo de registro simplificado de
+  operações com dados pessoais para Agentes de Tratamento de Pequeno Porte (ATPP)", em Excel e PDF, com
+  instruções de preenchimento. Os oito campos, conforme o resumo da página de notícia: contato da
+  instituição; categorias de titulares; dados pessoais; compartilhamento; medidas de segurança; prazo de
+  armazenamento; processo, finalidade e base legal; observações. A leitura direta da página e do PDF foi
+  bloqueada pelo portal gov.br (HTTP 401 e página de desafio) em 2026-09-26, então a lista de campos é
+  **confirmada só pelo resumo**; o `/analyze` deve abrir o modelo no navegador antes de copiar a estrutura.
+- **Subprocessadores e DPA dos provedores do repositório** (URLs responderam 200 em 2026-09-26):
+  Firebase/Google `firebase.google.com/terms/data-processing-terms` e `/terms/subprocessors`; Stripe
+  `stripe.com/legal/dpa` e `/legal/service-providers`; Resend `resend.com/legal/dpa` e
+  `/legal/subprocessors`; Vercel `vercel.com/legal/dpa` e `/legal/sub-processors`. O DPA da Arcjet **não foi
+  encontrado** (`arcjet.com/dpa` deu 404); o do Google Analytics não foi procurado.
+- **Backup do Firestore.** Backups agendados são diários ou semanais, com retenção de até 14 semanas; a
+  restauração "writes the data from a backup to a new Cloud Firestore database", nunca sobre o banco
+  existente; cobra-se o armazenamento de cada backup e o tamanho restaurado; e "This feature requires the
+  Blaze pricing plan". Ou seja: um fork no Spark não tem backup gerenciado, e isso precisa estar escrito
+  no runbook, não descoberto no dia do incidente.
+- **Política de divulgação de vulnerabilidade.** O RFC 9116 define `/.well-known/security.txt` (campos
+  `Contact` e `Expires` obrigatórios). É barato, mas o `Expires` envelhece e exige manutenção; nenhuma
+  prevalência entre starters foi medida.
+- **Aviso ao titular sobre mudança de credencial** é o 6.3.7 da ASVS 5.0.0, **nível 3**.
+
+### Fontes do adendo
+
+- <https://www.gov.br/anpd/pt-br/assuntos/noticias/anpd-divulga-modelo-de-registro-simplificado-de-operacoes-com-dados-pessoais-para-agentes-de-tratamento-de-pequeno-porte-atpp> · <https://www.gov.br/anpd/pt-br/documentos-e-publicacoes/modelo_de_ropa_para_atpp.pdf>
+- <https://firebase.google.com/docs/firestore/backups>
+- <https://stripe.com/legal/dpa> · <https://resend.com/legal/dpa> · <https://resend.com/legal/subprocessors> · <https://vercel.com/legal/dpa> · <https://vercel.com/legal/sub-processors>
+- <https://www.rfc-editor.org/rfc/rfc9116>
+- <https://raw.githubusercontent.com/OWASP/ASVS/master/5.0/en/0x15-V6-Authentication.md>
