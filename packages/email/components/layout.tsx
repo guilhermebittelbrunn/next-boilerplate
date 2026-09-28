@@ -11,6 +11,7 @@ import {
     Text,
 } from "@react-email/components";
 import type { Locale } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import type { ReactNode } from "react";
 import { emailBrand } from "../brand";
 import { emailCopy } from "../copy";
@@ -35,6 +36,7 @@ export const EmailLayout = ({
     footerNote,
 }: EmailLayoutProps) => {
     const layoutCopy = emailCopy(locale).layout;
+    const brand = getBrand();
 
     return (
         <Tailwind>
@@ -47,11 +49,11 @@ export const EmailLayout = ({
                 >
                     <Container className="mx-auto max-w-[600px] px-4 py-12">
                         <Section className="pb-6 text-center">
-                            {emailBrand.logoUrl ? (
+                            {brand.logoUrl ? (
                                 <Img
-                                    alt={emailBrand.name}
+                                    alt={brand.name}
                                     height="32"
-                                    src={emailBrand.logoUrl}
+                                    src={brand.logoUrl}
                                     style={{ margin: "0 auto" }}
                                 />
                             ) : (
@@ -59,7 +61,7 @@ export const EmailLayout = ({
                                     className="m-0 font-semibold text-xl"
                                     style={{ color: emailBrand.primaryColor }}
                                 >
-                                    {emailBrand.name}
+                                    {brand.name}
                                 </Text>
                             )}
                         </Section>
@@ -80,7 +82,7 @@ export const EmailLayout = ({
                                 style={{ color: emailBrand.mutedTextColor }}
                             >
                                 {interpolate(layoutCopy.signature, {
-                                    brand: emailBrand.name,
+                                    brand: brand.name,
                                 })}
                             </Text>
                         </Section>
@@ -90,9 +92,19 @@ export const EmailLayout = ({
                         >
                             {footerNote ??
                                 interpolate(layoutCopy.footerNote, {
-                                    brand: emailBrand.name,
+                                    brand: brand.name,
                                 })}
                         </Text>
+                        {!footerNote && brand.supportEmail ? (
+                            <Text
+                                className="mt-1 text-center text-xs"
+                                style={{ color: emailBrand.mutedTextColor }}
+                            >
+                                {interpolate(layoutCopy.supportNote, {
+                                    supportEmail: brand.supportEmail,
+                                })}
+                            </Text>
+                        ) : null}
                     </Container>
                 </Body>
             </Html>

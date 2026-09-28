@@ -1,7 +1,7 @@
 import { render } from "@react-email/components";
 import type { Locale } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import { describe, expect, it } from "vitest";
-import { emailBrand } from "../brand";
 import { emailCopy } from "../copy";
 import { interpolate } from "../interpolate";
 import {
@@ -126,7 +126,7 @@ describe("the preview entries the port 3003 lists", () => {
         async (entry) => {
             const html = await entry.html();
 
-            expect(html).toContain(emailBrand.name);
+            expect(html).toContain(getBrand().name);
             expect(html).not.toMatch(UNRESOLVED_PLACEHOLDER);
         }
     );

@@ -53,7 +53,13 @@ describe("email dictionary branch", () => {
         "keeps every placeholder resolvable by interpolate in %s",
         (locale) => {
             const copy = emailCopy(locale);
-            const known = new Set(["brand", "name", "email", "url"]);
+            const known = new Set([
+                "brand",
+                "name",
+                "email",
+                "url",
+                "supportEmail",
+            ]);
 
             const unknown = leafEntries(copy)
                 .flatMap(([key, value]) =>

@@ -1,5 +1,6 @@
 import { Text } from "@react-email/components";
 import type { Locale } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import { emailBrand } from "../brand";
 import { ActionButton } from "../components/action-button";
 import { EmailLayout } from "../components/layout";
@@ -24,7 +25,7 @@ const WelcomeEmail = ({ locale, data }: WelcomeEmailProps) => {
     return (
         <EmailLayout
             locale={locale}
-            preview={interpolate(copy.preview, { brand: emailBrand.name })}
+            preview={interpolate(copy.preview, { brand: getBrand().name })}
         >
             <Text
                 className="mt-0 mb-4 font-semibold text-2xl"
@@ -49,7 +50,7 @@ const WelcomeEmail = ({ locale, data }: WelcomeEmailProps) => {
 export const welcomeEmail: EmailTemplate<WelcomeData> = {
     id: "welcome",
     subject: (copy) =>
-        interpolate(copy.welcome.subject, { brand: emailBrand.name }),
+        interpolate(copy.welcome.subject, { brand: getBrand().name }),
     render: ({ locale, data }) => <WelcomeEmail data={data} locale={locale} />,
 };
 
