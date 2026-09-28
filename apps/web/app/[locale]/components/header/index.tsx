@@ -2,6 +2,11 @@
 
 import useAuth from "@repo/auth/provider";
 import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@repo/design-system/components/ui/avatar";
+import {
     Button,
     buttonVariants,
 } from "@repo/design-system/components/ui/button";
@@ -17,19 +22,19 @@ import {
 import { useIsLargeDesktop } from "@repo/design-system/hooks/useMediaQuery";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
+import { getBrand } from "@repo/next-config/brand";
 import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import { Menu, MoveRight, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { env } from "@/env";
 import { apiClient } from "@/shared/lib/client";
-import { getAppName } from "@/shared/lib/seo";
 import { WEB_PATHS } from "../../paths";
 import { LanguageSwitcher } from "./language-switcher";
 
 export const Header = () => {
     const { dictionary, locale } = getDictionary();
-    const appName = getAppName();
+    const brand = getBrand();
     const isLargeDesktop = useIsLargeDesktop();
     const { user, signOut, loading } = useAuth();
 
@@ -160,20 +165,27 @@ export const Header = () => {
                     </NavigationMenu>
                 </div>
                 <div className="flex items-center gap-2 lg:justify-center">
-                    <svg
-                        className="-translate-y-[0.5px] h-[18px] w-[18px] fill-current"
-                        fill="none"
-                        height="22"
-                        viewBox="0 0 235 203"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <title>{appName}</title>
-                        <path
-                            d="M117.082 0L234.164 202.794H0L117.082 0Z"
-                            fill="currentColor"
-                        />
-                    </svg>
-                    <p className="whitespace-nowrap font-semibold">{appName}</p>
+                    <Avatar className="size-[18px] rounded-none">
+                        <AvatarImage alt="" src={brand.logoUrl ?? undefined} />
+                        <AvatarFallback className="rounded-none bg-transparent text-current">
+                            <svg
+                                aria-hidden="true"
+                                className="-translate-y-[0.5px] h-[18px] w-[18px] fill-current"
+                                fill="none"
+                                height="22"
+                                viewBox="0 0 235 203"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M117.082 0L234.164 202.794H0L117.082 0Z"
+                                    fill="currentColor"
+                                />
+                            </svg>
+                        </AvatarFallback>
+                    </Avatar>
+                    <p className="whitespace-nowrap font-semibold">
+                        {brand.name}
+                    </p>
                 </div>
 
                 <div className="flex w-full justify-end gap-4">

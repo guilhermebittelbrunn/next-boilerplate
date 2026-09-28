@@ -1,12 +1,9 @@
 import { getDictionary } from "@repo/internationalization/server";
+import { getBrand } from "@repo/next-config/brand";
 import { JsonLd } from "@repo/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@repo/seo/schema";
 import type { Metadata } from "next";
-import {
-    buildLocaleMetadata,
-    getAppName,
-    getWebBaseUrl,
-} from "@/shared/lib/seo";
+import { buildLocaleMetadata, getWebBaseUrl } from "@/shared/lib/seo";
 import { Cases } from "./components/cases";
 import { CTA } from "./components/cta";
 import { FAQ } from "./components/faq";
@@ -27,20 +24,20 @@ export const generateMetadata = async (): Promise<Metadata> => {
 export default async function Home() {
     const { dictionary } = await getDictionary();
     const baseUrl = getWebBaseUrl();
-    const appName = getAppName();
+    const brand = getBrand();
 
     return (
         <>
             <JsonLd
                 code={organizationSchema({
-                    name: appName,
+                    name: brand.name,
                     url: baseUrl,
-                    logo: `${baseUrl}/icon.png`,
+                    logo: brand.logoUrl ?? `${baseUrl}/icon.png`,
                 })}
             />
             <JsonLd
                 code={websiteSchema({
-                    name: appName,
+                    name: brand.name,
                     url: baseUrl,
                     description:
                         dictionary.apps.web.pages.home.meta.description,
