@@ -37,7 +37,8 @@ const securityOptions = buildApiOptions();
  * is a legitimate user in a loop, and every accepted request writes to the fork's bucket
  * and is billed as storage and egress. The two data-rights endpoints are the same kind of
  * exception: the export reads the whole dossier on every call, and the deletion spends
- * Identity Toolkit quota on each password attempt.
+ * Identity Toolkit quota on each password attempt. The email change request spends it
+ * too, and sends two emails on top.
  *
  * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
@@ -49,9 +50,11 @@ const RATE_LIMITED_PATHS = [
     "/auth/password/reset",
     "/auth/email-verification/send",
     "/auth/email-verification/confirm",
+    "/auth/email-change/confirm",
     "/files",
     "/account/export",
     "/account/deletion",
+    "/account/email",
 ];
 
 function isRateLimitedPath(pathname: string): boolean {
