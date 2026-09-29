@@ -1,13 +1,18 @@
 import type { HTMLInputTypeAttribute } from "react";
 import {
     type Control,
-    Controller,
     type ControllerProps,
     type FieldValues,
     type Path,
     useFormContext,
 } from "react-hook-form";
-import { FormControl, FormItem, FormLabel, FormMessage } from "../../ui/form";
+import {
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "../../ui/form";
 import { Input, type InputProps } from "../../ui/input";
 
 interface HookFormInputProps<T extends FieldValues> extends InputProps {
@@ -41,7 +46,7 @@ export function HookFormInput<T extends FieldValues>(
     }
 
     return (
-        <Controller
+        <FormField
             control={control}
             name={name}
             render={({ field, fieldState }) => {

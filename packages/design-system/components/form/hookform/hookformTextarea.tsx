@@ -3,13 +3,12 @@
 
 import {
     type Control,
-    Controller,
     type ControllerProps,
     type FieldValues,
     type Path,
     useFormContext,
 } from "react-hook-form";
-import { FormItem, FormMessage } from "../../ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "../../ui/form";
 import {
     TextareaInput,
     type TextareaInputProps,
@@ -45,27 +44,31 @@ export function HookFormTextarea<T extends FieldValues>(
     }
 
     return (
-        <Controller
+        <FormField
             control={control}
             name={name}
             render={({ field, fieldState }) => {
                 const errorMessage = fieldState.error?.message;
                 return (
                     <FormItem>
-                        <TextareaInput
-                            {...rest}
-                            disabled={formState.isSubmitting || rest.disabled}
-                            error={errorMessage}
-                            hint={hint}
-                            id={field.name}
-                            label={label}
-                            name={field.name}
-                            onBlur={field.onBlur}
-                            onChange={field.onChange}
-                            ref={field.ref}
-                            required={required}
-                            value={field.value ?? ""}
-                        />
+                        <FormControl>
+                            <TextareaInput
+                                {...rest}
+                                disabled={
+                                    formState.isSubmitting || rest.disabled
+                                }
+                                error={errorMessage}
+                                hint={hint}
+                                id={field.name}
+                                label={label}
+                                name={field.name}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                ref={field.ref}
+                                required={required}
+                                value={field.value ?? ""}
+                            />
+                        </FormControl>
                         <FormMessage message={errorMessage} />
                     </FormItem>
                 );

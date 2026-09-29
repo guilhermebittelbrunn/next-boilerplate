@@ -3,13 +3,12 @@
 
 import {
     type Control,
-    Controller,
     type ControllerProps,
     type FieldValues,
     type Path,
     useFormContext,
 } from "react-hook-form";
-import { FormItem, FormMessage } from "../../ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "../../ui/form";
 import {
     ImageUploadInput,
     type ImageUploadInputProps,
@@ -44,24 +43,28 @@ export function HookFormImageUpload<T extends FieldValues>(
     }
 
     return (
-        <Controller
+        <FormField
             control={control}
             name={name}
             render={({ field, fieldState }) => {
                 const errorMessage = fieldState.error?.message;
                 return (
                     <FormItem>
-                        <ImageUploadInput
-                            {...rest}
-                            disabled={formState.isSubmitting || rest.disabled}
-                            error={errorMessage}
-                            id={field.name}
-                            label={label}
-                            onBlur={field.onBlur}
-                            onChange={field.onChange}
-                            required={required}
-                            value={field.value ?? ""}
-                        />
+                        <FormControl>
+                            <ImageUploadInput
+                                {...rest}
+                                disabled={
+                                    formState.isSubmitting || rest.disabled
+                                }
+                                error={errorMessage}
+                                id={field.name}
+                                label={label}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                required={required}
+                                value={field.value ?? ""}
+                            />
+                        </FormControl>
                         <FormMessage message={errorMessage} />
                     </FormItem>
                 );

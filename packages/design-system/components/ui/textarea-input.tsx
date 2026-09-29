@@ -34,10 +34,10 @@ export const TextareaInput = forwardRef<
       <Textarea
         aria-invalid={Boolean(error)}
         className={cn(error ? "border-destructive" : "", className)}
-        data-slot="textarea-input"
         id={id}
         ref={ref}
         {...textareaProps}
+        data-slot="textarea-input"
       />
       {hint ? (
         <p className="text-muted-foreground text-xs">{hint}</p>
