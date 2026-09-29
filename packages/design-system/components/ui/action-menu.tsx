@@ -46,6 +46,7 @@ export function ActionsMenu({
 
     return (
         <Dropdown
+            autoFocus
             trigger={["click"]}
             placement="bottomRight"
             menu={{
@@ -100,14 +101,16 @@ export function ActionsMenu({
                 ],
             }}
         >
-            <div
+            <button
+                aria-label={translation.trigger}
                 className={cn(
-                    "flex h-full w-full items-center justify-center rounded-full p-2 hover:cursor-pointer hover:opacity-40",
+                    "flex h-full w-full items-center justify-center rounded-full p-2 outline-none hover:cursor-pointer hover:opacity-40 focus-visible:ring-[3px] focus-visible:ring-ring/50",
                     className,
                 )}
+                type="button"
             >
                 <MoreVerticalIcon className="h-6 w-6" />
-            </div>
+            </button>
         </Dropdown>
     );
 }

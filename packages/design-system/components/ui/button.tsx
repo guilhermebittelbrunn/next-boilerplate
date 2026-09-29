@@ -61,6 +61,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) {
     return (
       <button
+        aria-busy={loading || undefined}
         className={cn(buttonVariants({ variant, size, className }))}
         data-size={size}
         data-slot="button"
@@ -70,7 +71,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading ? (
-          <Spinner />
+          <>
+            <Spinner aria-hidden="true" />
+            <span className="sr-only">{children}</span>
+          </>
         ) : (
           <div className="flex items-center gap-2">
             {icon && icon}
