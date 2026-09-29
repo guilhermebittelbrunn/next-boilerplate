@@ -6,14 +6,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
     sendEmailVerificationMock,
     confirmEmailVerificationMock,
+    confirmEmailChangeMock,
     reloadCurrentUserMock,
+    logoutMock,
     successAlertMock,
     errorAlertMock,
     handleClientErrorMock,
 } = vi.hoisted(() => ({
     sendEmailVerificationMock: vi.fn(),
     confirmEmailVerificationMock: vi.fn(),
+    confirmEmailChangeMock: vi.fn(),
     reloadCurrentUserMock: vi.fn(),
+    logoutMock: vi.fn(),
     successAlertMock: vi.fn(),
     errorAlertMock: vi.fn(),
     handleClientErrorMock: vi.fn(),
@@ -28,12 +32,15 @@ vi.mock("@/shared/lib/client", () => ({
                 sendEmailVerificationMock(...args),
             confirmEmailVerification: (...args: unknown[]) =>
                 confirmEmailVerificationMock(...args),
+            confirmEmailChange: (...args: unknown[]) =>
+                confirmEmailChangeMock(...args),
         },
     },
 }));
 
 vi.mock("@repo/auth/client", () => ({
     reloadCurrentUser: (...args: unknown[]) => reloadCurrentUserMock(...args),
+    logout: (...args: unknown[]) => logoutMock(...args),
 }));
 
 vi.mock("@repo/design-system/hooks/useAlert", () => ({
@@ -104,6 +111,8 @@ beforeEach(() => {
     sendEmailVerificationMock.mockResolvedValue({ requested: true });
     confirmEmailVerificationMock.mockResolvedValue({ confirmed: true });
     reloadCurrentUserMock.mockResolvedValue({ emailVerified: true });
+    confirmEmailChangeMock.mockResolvedValue({ confirmed: true });
+    logoutMock.mockResolvedValue(undefined);
     handleClientErrorMock.mockReturnValue("copy traduzida do error.code");
 });
 
@@ -239,6 +248,56 @@ describe("useEmailVerification · confirmVerificationMutation", () => {
                 true
             )
         );
+        expect(errorAlertMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("useEmailVerification · confirmEmailChangeMutation", () => {
+    it("confirms the change and signs the stale in-memory user out", async () => {
+        const { result } = renderUseEmailVerification();
+
+        result.current.confirmEmailChangeMutation.mutate("change-code");
+
+        await waitFor(() =>
+            expect(result.current.confirmEmailChangeMutation.isSuccess).toBe(
+                true
+            )
+        );
+        expect(confirmEmailChangeMock).toHaveBeenCalledWith({
+            oobCode: "change-code",
+        });
+        expect(logoutMock).toHaveBeenCalledTimes(1);
+        expect(confirmEmailVerificationMock).not.toHaveBeenCalled();
+    });
+
+    it("still reports success when signing out fails", async () => {
+        logoutMock.mockRejectedValue(new Error("network down"));
+        const { result } = renderUseEmailVerification();
+
+        result.current.confirmEmailChangeMutation.mutate("change-code");
+
+        await waitFor(() =>
+            expect(result.current.confirmEmailChangeMutation.isSuccess).toBe(
+                true
+            )
+        );
+        expect(result.current.confirmEmailChangeMutation.data).toEqual({
+            confirmed: true,
+        });
+    });
+
+    it("keeps the session when the code is refused, and leaves the refusal to the screen", async () => {
+        confirmEmailChangeMock.mockRejectedValue({
+            error: { code: "AUTH_OOB_CODE_INVALID" },
+        });
+        const { result } = renderUseEmailVerification();
+
+        result.current.confirmEmailChangeMutation.mutate("used-code");
+
+        await waitFor(() =>
+            expect(result.current.confirmEmailChangeMutation.isError).toBe(true)
+        );
+        expect(logoutMock).not.toHaveBeenCalled();
         expect(errorAlertMock).not.toHaveBeenCalled();
     });
 });

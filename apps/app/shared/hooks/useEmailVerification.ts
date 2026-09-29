@@ -1,6 +1,6 @@
 "use client";
 
-import { reloadCurrentUser } from "@repo/auth/client";
+import { logout, reloadCurrentUser } from "@repo/auth/client";
 import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
@@ -37,5 +37,25 @@ export function useEmailVerification() {
         },
     });
 
-    return { resendVerificationMutation, confirmVerificationMutation };
+    const confirmEmailChangeMutation = useMutation({
+        mutationFn: async (oobCode: string) => {
+            const confirmed = await apiClient.authApi.confirmEmailChange({
+                oobCode,
+            });
+
+            // Opened in the browser of a session that was just revoked, the user in
+            // memory still carries the old address and a dead refresh token. Signing it
+            // out here does not navigate, so the success card stays on screen; the
+            // change already happened, so a failure to sign out is not reported.
+            await logout().catch(() => null);
+
+            return confirmed;
+        },
+    });
+
+    return {
+        resendVerificationMutation,
+        confirmVerificationMutation,
+        confirmEmailChangeMutation,
+    };
 }
