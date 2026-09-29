@@ -76,7 +76,7 @@ export const ContactFormClient = () => {
                                     }
                                 </Label>
                                 <Popover>
-                                    <PopoverTrigger>
+                                    <PopoverTrigger asChild>
                                         <Button
                                             className={cn(
                                                 "w-full max-w-sm justify-start text-left font-normal",
