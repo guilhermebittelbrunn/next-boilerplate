@@ -4,11 +4,17 @@ import type { Locale } from "@repo/internationalization/utils";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { env } from "@/env";
 
-export type AuthActionKind = "reset-password" | "verify-email";
+export type AuthActionKind = "reset-password" | "verify-email" | "change-email";
 
 const APP_PATH_BY_KIND: Record<AuthActionKind, string> = {
     "reset-password": "reset-password",
     "verify-email": "verify-email",
+    "change-email": "verify-email",
+};
+
+/** The page behind `verify-email` serves two actions and tells them apart by `mode`. */
+const APP_MODE_BY_KIND: Partial<Record<AuthActionKind, string>> = {
+    "change-email": "verifyAndChangeEmail",
 };
 
 /** Both prerequisites of a working link, checked before any account lookup. */
@@ -72,6 +78,14 @@ export async function buildAuthActionLink(
         throw error;
     }
 
+    return toAppLink(kind, firebaseLink, locale);
+}
+
+function toAppLink(
+    kind: AuthActionKind,
+    firebaseLink: string,
+    locale: Locale
+): string | null {
     const oobCode = new URL(firebaseLink).searchParams.get("oobCode");
     if (!oobCode) {
         return null;
@@ -83,5 +97,56 @@ export async function buildAuthActionLink(
     }
 
     const path = APP_PATH_BY_KIND[kind];
-    return `${base}/${locale}/${path}?oobCode=${encodeURIComponent(oobCode)}`;
+    const link = `${base}/${locale}/${path}?oobCode=${encodeURIComponent(oobCode)}`;
+    const mode = APP_MODE_BY_KIND[kind];
+    return mode ? `${link}&mode=${mode}` : link;
+}
+
+export type EmailChangeLinkResult =
+    | { ok: true; url: string }
+    | { ok: false; reason: "email-in-use" | "refused" };
+
+/**
+ * Mints the link that moves `currentEmail` to `newEmail` once opened. Unlike the
+ * anonymous flows above, the caller is the signed-in owner of `currentEmail`, so an
+ * address already taken can be reported as such.
+ */
+export async function buildEmailChangeLink(
+    currentEmail: string,
+    newEmail: string,
+    locale: Locale
+): Promise<EmailChangeLinkResult> {
+    const auth = getAuthInstance();
+
+    // Checked here rather than left to the generator: the emulator refuses a taken
+    // address, but nothing documents that the production generator does the same.
+    try {
+        await auth.getUserByEmail(newEmail);
+        return { ok: false, reason: "email-in-use" };
+    } catch (error) {
+        if (firebaseErrorCode(error) !== "auth/user-not-found") {
+            throw error;
+        }
+    }
+
+    let firebaseLink: string;
+    try {
+        firebaseLink = await auth.generateVerifyAndChangeEmailLink(
+            currentEmail,
+            newEmail
+        );
+    } catch (error) {
+        const code = firebaseErrorCode(error);
+        if (code === "auth/email-already-exists") {
+            return { ok: false, reason: "email-in-use" };
+        }
+        if (code) {
+            logRefusedLink("change-email", code);
+            return { ok: false, reason: "refused" };
+        }
+        throw error;
+    }
+
+    const url = toAppLink("change-email", firebaseLink, locale);
+    return url ? { ok: true, url } : { ok: false, reason: "refused" };
 }

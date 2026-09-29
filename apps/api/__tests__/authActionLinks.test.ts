@@ -4,11 +4,13 @@ const {
     getUserByEmailMock,
     generatePasswordResetLinkMock,
     generateEmailVerificationLinkMock,
+    generateVerifyAndChangeEmailLinkMock,
     isEmailEnabledMock,
 } = vi.hoisted(() => ({
     getUserByEmailMock: vi.fn(),
     generatePasswordResetLinkMock: vi.fn(),
     generateEmailVerificationLinkMock: vi.fn(),
+    generateVerifyAndChangeEmailLinkMock: vi.fn(),
     isEmailEnabledMock: vi.fn(),
 }));
 
@@ -19,6 +21,8 @@ vi.mock("@repo/auth/server", () => ({
             generatePasswordResetLinkMock(...args),
         generateEmailVerificationLink: (...args: unknown[]) =>
             generateEmailVerificationLinkMock(...args),
+        generateVerifyAndChangeEmailLink: (...args: unknown[]) =>
+            generateVerifyAndChangeEmailLinkMock(...args),
     }),
 }));
 
@@ -172,6 +176,126 @@ describe("buildAuthActionLink", () => {
         await expect(
             buildAuthActionLink("reset-password", EMAIL, "en")
         ).rejects.toThrow("firestore down");
+    });
+});
+
+describe("buildEmailChangeLink", () => {
+    const NEW_EMAIL = "person.new@example.com";
+    const CHANGE_LINK =
+        "https://project.firebaseapp.com/__/auth/action?mode=verifyAndChangeEmail&oobCode=CHANGE-1&apiKey=key";
+
+    beforeEach(() => {
+        getUserByEmailMock.mockRejectedValue(
+            firebaseError("auth/user-not-found")
+        );
+        generateVerifyAndChangeEmailLinkMock.mockResolvedValue(CHANGE_LINK);
+    });
+
+    it("points the link at the verify-email page with the change mode", async () => {
+        const { buildEmailChangeLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        const result = await buildEmailChangeLink(EMAIL, NEW_EMAIL, "pt-br");
+
+        expect(result).toEqual({
+            ok: true,
+            url: "https://app.example.com/pt-br/verify-email?oobCode=CHANGE-1&mode=verifyAndChangeEmail",
+        });
+        expect(getUserByEmailMock).toHaveBeenCalledWith(NEW_EMAIL);
+        expect(generateVerifyAndChangeEmailLinkMock).toHaveBeenCalledWith(
+            EMAIL,
+            NEW_EMAIL
+        );
+    });
+
+    it("reports an address that already has an account without minting a link", async () => {
+        getUserByEmailMock.mockResolvedValue({
+            uid: "uid-2",
+            email: NEW_EMAIL,
+        });
+        const { buildEmailChangeLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        await expect(
+            buildEmailChangeLink(EMAIL, NEW_EMAIL, "en")
+        ).resolves.toEqual({ ok: false, reason: "email-in-use" });
+        expect(generateVerifyAndChangeEmailLinkMock).not.toHaveBeenCalled();
+    });
+
+    it("reports an address the generator says is taken", async () => {
+        generateVerifyAndChangeEmailLinkMock.mockRejectedValue(
+            firebaseError("auth/email-already-exists")
+        );
+        const { buildEmailChangeLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        await expect(
+            buildEmailChangeLink(EMAIL, NEW_EMAIL, "en")
+        ).resolves.toEqual({ ok: false, reason: "email-in-use" });
+    });
+
+    it("answers refused, and logs the code without the addresses, for any other provider refusal", async () => {
+        generateVerifyAndChangeEmailLinkMock.mockRejectedValue(
+            firebaseError("auth/internal-error")
+        );
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+            // silence the expected report
+        });
+        const { buildEmailChangeLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        await expect(
+            buildEmailChangeLink(EMAIL, NEW_EMAIL, "en")
+        ).resolves.toEqual({ ok: false, reason: "refused" });
+        expect(warnSpy).toHaveBeenCalledWith(
+            "[auth-action-link] refused kind=change-email code=auth/internal-error"
+        );
+        for (const [line] of warnSpy.mock.calls) {
+            expect(String(line)).not.toContain(EMAIL);
+            expect(String(line)).not.toContain(NEW_EMAIL);
+        }
+        warnSpy.mockRestore();
+    });
+
+    it("answers refused when the generated link carries no action code", async () => {
+        generateVerifyAndChangeEmailLinkMock.mockResolvedValue(
+            "https://project.firebaseapp.com/__/auth/action?mode=verifyAndChangeEmail"
+        );
+        const { buildEmailChangeLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        await expect(
+            buildEmailChangeLink(EMAIL, NEW_EMAIL, "en")
+        ).resolves.toEqual({ ok: false, reason: "refused" });
+    });
+
+    it("propagates a lookup failure that is not a missing account", async () => {
+        getUserByEmailMock.mockRejectedValue(new Error("auth down"));
+        const { buildEmailChangeLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        await expect(
+            buildEmailChangeLink(EMAIL, NEW_EMAIL, "en")
+        ).rejects.toThrow("auth down");
+    });
+
+    it("propagates a generator failure that is not a provider refusal", async () => {
+        generateVerifyAndChangeEmailLinkMock.mockRejectedValue(
+            new Error("network")
+        );
+        const { buildEmailChangeLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        await expect(
+            buildEmailChangeLink(EMAIL, NEW_EMAIL, "en")
+        ).rejects.toThrow("network");
     });
 });
 

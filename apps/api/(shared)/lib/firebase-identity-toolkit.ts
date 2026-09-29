@@ -111,10 +111,19 @@ export async function identitySignInWithPassword(
 
 type ToolkitResetPassword = { email: string; requestType: string };
 
-type ToolkitApplyOob = {
+export type ToolkitApplyOob = {
     localId: string;
     email: string;
     emailVerified: boolean;
+    /** Only on an email change: the address the account moved to. */
+    newEmail?: string;
+};
+
+export type ToolkitCheckOob = {
+    requestType: string;
+    /** The address the code was issued for — on an email change, the one being left. */
+    email?: string;
+    newEmail?: string;
 };
 
 /** Consumes a password-reset action code and sets the new password. */
@@ -131,7 +140,23 @@ export async function identityResetPassword(
     return parseToolkitJson<ToolkitResetPassword>(res, "Password reset failed");
 }
 
-/** Applies an email-verification action code. */
+/**
+ * Reads what an action code would do without spending it: `accounts:resetPassword`
+ * with no new password only inspects the code, as the client SDK's `checkActionCode`.
+ */
+export async function identityCheckOobCode(
+    oobCode: string
+): Promise<ToolkitCheckOob> {
+    const key = getWebApiKey();
+    const res = await fetch(`${base()}/accounts:resetPassword?key=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oobCode }),
+    });
+    return parseToolkitJson<ToolkitCheckOob>(res, "Action code check failed");
+}
+
+/** Applies an email-verification or email-change action code. */
 export async function identityApplyOobCode(
     oobCode: string
 ): Promise<ToolkitApplyOob> {
