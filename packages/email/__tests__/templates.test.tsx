@@ -7,16 +7,19 @@ import { interpolate } from "../interpolate";
 import {
     actionLinkPreviewData,
     contactPreviewData,
+    emailChangeNoticePreviewData,
     welcomePreviewData,
 } from "../preview-data";
 import { actionLinkEmail } from "../templates/action-link";
 import { contactEmail } from "../templates/contact";
+import { emailChangeNoticeEmail } from "../templates/email-change-notice";
 import { welcomeEmail } from "../templates/welcome";
 
 const templates = [
     { template: welcomeEmail, data: welcomePreviewData },
     { template: actionLinkEmail, data: actionLinkPreviewData },
     { template: contactEmail, data: contactPreviewData },
+    { template: emailChangeNoticeEmail, data: emailChangeNoticePreviewData },
 ] as const;
 
 const renderFor = (
@@ -31,7 +34,7 @@ const renderFor = (
     );
 
 /** Everything except `contact`, which is addressed to whoever runs the product. */
-const userFacingTemplates = [templates[0], templates[1]] as const;
+const userFacingTemplates = [templates[0], templates[1], templates[3]] as const;
 
 const accountFooter = (locale: (typeof locales)[number]) =>
     interpolate(emailCopy(locale).layout.footerNote, {
@@ -176,8 +179,8 @@ describe("action-link template", () => {
     });
 
     it.each(
-        (["resetPassword", "verifyEmail"] as const).flatMap((action) =>
-            locales.map((locale) => [action, locale] as const)
+        (["resetPassword", "verifyEmail", "changeEmail"] as const).flatMap(
+            (action) => locales.map((locale) => [action, locale] as const)
         )
     )("renders the %s action in %s", async (action, locale) => {
         const data = { ...actionLinkPreviewData, action };
@@ -200,6 +203,69 @@ describe("action-link template", () => {
                 emailCopy("es").actionLink.actions.confirmAccess.subject,
                 { brand: getBrand().name }
             )
+        );
+    });
+});
+
+describe("email-change-notice template", () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    it.each(locales)(
+        "renders the %s copy with the new address and no other locale",
+        async (locale) => {
+            const html = await renderFor(templates[3], locale);
+            const copy = emailCopy(locale).emailChangeNotice;
+
+            expect(html).toContain(
+                interpolate(copy.body, {
+                    newEmail: emailChangeNoticePreviewData.newEmail,
+                })
+            );
+            expect(html).toContain(copy.advice);
+            expect(html).toContain(
+                interpolate(copy.title, {
+                    name: emailChangeNoticePreviewData.name,
+                })
+            );
+            for (const other of locales.filter((item) => item !== locale)) {
+                expect(html).not.toContain(
+                    emailCopy(other).emailChangeNotice.advice
+                );
+            }
+        }
+    );
+
+    it("carries no link, so the notice cannot be used to confirm the change", async () => {
+        const html = await renderFor(templates[3], "pt-br");
+
+        expect(html).not.toContain("href=");
+    });
+
+    it.each(locales)(
+        "resolves the %s subject from the dictionary",
+        (locale) => {
+            expect(
+                emailChangeNoticeEmail.subject(
+                    emailCopy(locale),
+                    emailChangeNoticePreviewData
+                )
+            ).toBe(
+                interpolate(emailCopy(locale).emailChangeNotice.subject, {
+                    brand: getBrand().name,
+                })
+            );
+        }
+    );
+
+    it("leaves the support line out when the brand has no support address", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_SUPPORT_EMAIL", "");
+
+        const html = await renderFor(templates[3], "en");
+
+        expect(html).not.toContain(
+            emailCopy("en").layout.supportNote.split("{")[0]
         );
     });
 });

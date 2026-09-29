@@ -7,14 +7,18 @@ import { interpolate } from "../interpolate";
 import {
     actionLinkPreviewData,
     contactPreviewData,
+    emailChangeNoticePreviewData,
     welcomePreviewData,
 } from "../preview-data";
 import ActionLinkEmail from "../templates/action-link";
 import ContactEmail from "../templates/contact";
+import EmailChangeNoticeEmail from "../templates/email-change-notice";
 import ActionLinkEmailEn from "../templates/previews/action-link.en";
 import ActionLinkEmailEs from "../templates/previews/action-link.es";
 import ContactEmailEn from "../templates/previews/contact.en";
 import ContactEmailEs from "../templates/previews/contact.es";
+import EmailChangeNoticeEmailEn from "../templates/previews/email-change-notice.en";
+import EmailChangeNoticeEmailEs from "../templates/previews/email-change-notice.es";
 import WelcomeEmailEn from "../templates/previews/welcome.en";
 import WelcomeEmailEs from "../templates/previews/welcome.es";
 import WelcomeEmail from "../templates/welcome";
@@ -28,6 +32,8 @@ const distinctiveCopy = {
             name: contactPreviewData.name,
             email: contactPreviewData.email,
         }),
+    "email-change-notice": (locale: Locale) =>
+        emailCopy(locale).emailChangeNotice.advice,
 };
 
 type PreviewEntry = {
@@ -87,6 +93,27 @@ const previews: PreviewEntry[] = [
         locale: "es",
         html: () => render(<ContactEmailEs />),
     },
+    {
+        template: "email-change-notice",
+        locale: "pt-br",
+        html: () =>
+            render(
+                <EmailChangeNoticeEmail
+                    data={emailChangeNoticePreviewData}
+                    locale="pt-br"
+                />
+            ),
+    },
+    {
+        template: "email-change-notice",
+        locale: "en",
+        html: () => render(<EmailChangeNoticeEmailEn />),
+    },
+    {
+        template: "email-change-notice",
+        locale: "es",
+        html: () => render(<EmailChangeNoticeEmailEs />),
+    },
 ];
 
 const allLocales: Locale[] = ["pt-br", "en", "es"];
@@ -94,7 +121,7 @@ const allLocales: Locale[] = ["pt-br", "en", "es"];
 const otherLocales = (locale: Locale): Locale[] =>
     allLocales.filter((item) => item !== locale);
 
-const UNRESOLVED_PLACEHOLDER = /\{(brand|name|email|url)\}/;
+const UNRESOLVED_PLACEHOLDER = /\{(brand|name|email|url|newEmail)\}/;
 
 describe("the preview entries the port 3003 lists", () => {
     it("offers every template in every language", () => {

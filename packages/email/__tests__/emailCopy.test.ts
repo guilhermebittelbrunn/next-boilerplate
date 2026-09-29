@@ -59,6 +59,7 @@ describe("email dictionary branch", () => {
                 "email",
                 "url",
                 "supportEmail",
+                "newEmail",
             ]);
 
             const unknown = leafEntries(copy)
