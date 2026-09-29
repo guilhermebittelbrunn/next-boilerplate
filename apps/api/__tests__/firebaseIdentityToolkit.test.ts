@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { identitySignInWithPassword } from "@/(shared)/lib/firebase-identity-toolkit";
+import {
+    IdentityToolkitError,
+    identityCheckOobCode,
+    identitySignInWithPassword,
+} from "@/(shared)/lib/firebase-identity-toolkit";
 
 vi.mock("server-only", () => ({}));
 
@@ -83,5 +87,53 @@ describe("web api key", () => {
             identitySignInWithPassword("a@b.com", "secret")
         ).rejects.toThrow(MISSING_KEY_MESSAGE);
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("identityCheckOobCode", () => {
+    beforeEach(() => {
+        vi.stubEnv("FIREBASE_WEB_API_KEY", "real-key");
+    });
+
+    it("inspects the code through accounts:resetPassword with the code alone", async () => {
+        fetchMock.mockResolvedValue(
+            new Response(
+                JSON.stringify({
+                    requestType: "VERIFY_AND_CHANGE_EMAIL",
+                    email: "old@example.com",
+                    newEmail: "new@example.com",
+                }),
+                { status: 200 }
+            )
+        );
+
+        const checked = await identityCheckOobCode("code-1");
+
+        expect(calledUrl()).toBe(
+            "https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=real-key"
+        );
+        const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+        expect(JSON.parse(String(init.body))).toEqual({ oobCode: "code-1" });
+        expect(checked).toEqual({
+            requestType: "VERIFY_AND_CHANGE_EMAIL",
+            email: "old@example.com",
+            newEmail: "new@example.com",
+        });
+    });
+
+    it("propagates the toolkit refusal with its message", async () => {
+        fetchMock.mockResolvedValue(
+            new Response(
+                JSON.stringify({
+                    error: { message: "EXPIRED_OOB_CODE", code: 400 },
+                }),
+                { status: 400 }
+            )
+        );
+
+        const failure = identityCheckOobCode("code-1");
+
+        await expect(failure).rejects.toBeInstanceOf(IdentityToolkitError);
+        await expect(failure).rejects.toThrow("EXPIRED_OOB_CODE");
     });
 });

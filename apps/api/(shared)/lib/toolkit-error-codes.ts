@@ -23,8 +23,8 @@ export function mapIdentityToolkitMessageToCode(message: string): string {
 
 /**
  * Maps an action-code failure to a stable code. The caller supplies the fallback
- * because the same toolkit message set serves both password reset and email
- * verification.
+ * because the same toolkit message set serves password reset, email verification
+ * and email change.
  */
 export function mapOobActionMessageToCode(
     message: string,
@@ -42,6 +42,10 @@ export function mapOobActionMessageToCode(
     }
     if (m.includes("TOO_MANY_ATTEMPTS") || m.includes("TOO_MANY_REQUESTS")) {
         return "USERS_AUTH_RATE_LIMITED";
+    }
+    // Only an email change hits this: the new address was taken after the link went out.
+    if (m.includes("EMAIL_EXISTS")) {
+        return "USERS_AUTH_EMAIL_ALREADY_IN_USE";
     }
     return fallback;
 }

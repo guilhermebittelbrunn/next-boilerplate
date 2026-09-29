@@ -7,21 +7,22 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 - **Provider**: Firebase. No cliente (`@repo/auth/client`), o usuário faz sign-in (e-mail/senha ou Google) e obtém um **ID token**, sincronizado num cookie de sessão. O cadastro por e-mail e senha não sai do navegador direto para o Firebase: as duas front-ends chamam `POST /auth/sign-up` na `apps/api`, que valida o corpo com Zod, cria a conta pelo Admin SDK (`createUser`) e grava o perfil. Em seguida o front entra com `signIn`, como no login.
 - **Política de senha**: mínimo de 8 e máximo de 1024 caracteres para toda senha **definida** (cadastro, redefinição por link, troca na área de conta, criação pelo admin), sem regra de composição e sem aparar espaços. Quem confere uma senha que já existe (login, senha atual na troca e na exclusão de conta) segue aceitando 6, porque contas antigas podem ter senha de 6 ou 7. As três constantes vivem em `packages/shared/utils/helpers/passwordPolicy.ts`; a API responde `400 AUTH_PASSWORD_TOO_SHORT` para senha nova curta. Contornar o produto e chamar `identitytoolkit.googleapis.com/v1/accounts:signUp` com a chave web pública ainda cria conta com 6 ou 7 caracteres; fechar esse caminho exige Identity Platform (ver `docs/PRE-PRODUCTION.md`, "Declaração — o que a política de senha não alcança").
 - **No servidor** (`@repo/auth/server`), o Firebase **Admin SDK** verifica o token (`verifyIdToken`) a partir do cookie `access-token` ou do header `Authorization: Bearer`. Falhas benignas (token expirado/ inválido) viram "sem sessão", não erro 500.
-- **Identity Toolkit REST** (`FIREBASE_WEB_API_KEY`) é usado no servidor para o login (inclusive a conferência da senha atual na troca de senha e na exclusão de conta), o login com Google, a redefinição de senha por link, a confirmação de e-mail e a criação de usuário pelo admin (`POST /users`).
+- **Identity Toolkit REST** (`FIREBASE_WEB_API_KEY`) é usado no servidor para o login (inclusive a conferência da senha atual na troca de senha, na troca de e-mail e na exclusão de conta), o login com Google, a redefinição de senha por link, a confirmação de e-mail, a confirmação da troca de e-mail e a criação de usuário pelo admin (`POST /users`).
+- **Troca de e-mail**: `POST /account/email` pede a senha atual e só manda um link ao endereço novo depois que a Resend aceitou o aviso ao endereço antigo. Nada muda na conta até o link ser aberto. `POST /auth/email-change/confirm` é pública, porque o link pode ser aberto noutro aparelho: ela confere que o código é do tipo `VERIFY_AND_CHANGE_EMAIL` antes de aplicá-lo, e só então encerra todas as sessões da conta (`revokeUserSessions`) e grava `account.email.change` na trilha. `POST /auth/email-verification/confirm` faz a conferência inversa e só aplica código `VERIFY_EMAIL`; sem isso, um link de troca aberto sem o parâmetro `mode` mudaria o e-mail por ela, sem revogação nem evento. Quem tem o link consegue aplicar o código direto no Identity Toolkit com a chave web pública; nesse caso o e-mail muda, mas a revogação explícita e o evento de auditoria não acontecem.
 
 ## Autorização (guards da API)
 
-São **30** arquivos de rota em `apps/api/app/(routes)/`. **Dezenove** exportam o handler embrulhado num guard,
-que roda **antes** da lógica; **onze** exportam handler nu, e cada grupo tem um motivo próprio
-(medido em 2026-09-25, sobre `a1f87d0` mais a rota `payments/summary`):
+São **32** arquivos de rota em `apps/api/app/(routes)/`. **Vinte** exportam o handler embrulhado num guard,
+que roda **antes** da lógica; **doze** exportam handler nu, e cada grupo tem um motivo próprio
+(medido em 2026-09-29, com as rotas `account/email` e `auth/email-change/confirm`):
 
 | grupo | quantas | por que não tem guard |
 |-------|---------|------------------------|
-| `/auth/*` — `me`, `sign-in`, `sign-in/google`, `sign-up`, `password/reset`, `password/reset-request`, `email-verification/send`, `email-verification/confirm` | 8 | é a superfície **anterior à sessão**: um guard que exige sessão recusaria justamente quem vem criar uma. `/auth/me` é a exceção dentro da exceção — ela resolve o ator por dentro (`resolveApiActor`, `auth/me/route.ts:6`) e devolve 401 sem ele |
+| `/auth/*` — `me`, `sign-in`, `sign-in/google`, `sign-up`, `password/reset`, `password/reset-request`, `email-verification/send`, `email-verification/confirm`, `email-change/confirm` | 9 | é a superfície **anterior à sessão**: um guard que exige sessão recusaria justamente quem vem criar uma. `/auth/me` é a exceção dentro da exceção — ela resolve o ator por dentro (`resolveApiActor`, `auth/me/route.ts:6`) e devolve 401 sem ele |
 | `/health`, `/health/ready` | 2 | sondas de plataforma, precisam responder sem credencial |
 | `/webhooks/payments` | 1 | autentica pela assinatura da Stripe (`constructEvent`), não por sessão |
 
-As **dezenove** rotas de negócio restantes — `account/*` ×6, `entities` ×3, `files`, `users` ×4, `audit-events`,
+As **vinte** rotas de negócio restantes — `account/*` ×7, `entities` ×3, `files`, `users` ×4, `audit-events`,
 `payments/*` ×4 — passam por um dos dois guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
@@ -147,9 +148,9 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 
 ### Limite de requisições
 
-`checkRateLimit()` (Arcjet, `slidingWindow` de **20 req/60 s por IP**) roda no proxy da API sobre uma lista fechada de **10 caminhos**, casados por igualdade exata (`apps/api/proxy.ts:44-55`, medido em 2026-09-23): `/auth/sign-in`, `/auth/sign-up`, `/auth/sign-in/google`, `/auth/password/reset-request`, `/auth/password/reset`, `/auth/email-verification/send`, `/auth/email-verification/confirm`, `/files`, `/account/export` e `/account/deletion`. Estouro devolve `429 AUTH_RATE_LIMITED` + `Retry-After`. Ficam de fora `/auth/me` (autenticada, hot path), `/webhooks/payments` (a Stripe faz retry agressivo; um 429 nosso viraria assinatura perdida), `/health` e `/health/ready`.
+`checkRateLimit()` (Arcjet, `slidingWindow` de **20 req/60 s por IP**) roda no proxy da API sobre uma lista fechada de **12 caminhos**, casados por igualdade exata (`apps/api/proxy.ts:45-58`, medido em 2026-09-29): `/auth/sign-in`, `/auth/sign-up`, `/auth/sign-in/google`, `/auth/password/reset-request`, `/auth/password/reset`, `/auth/email-verification/send`, `/auth/email-verification/confirm`, `/auth/email-change/confirm`, `/files`, `/account/export`, `/account/deletion` e `/account/email`. Estouro devolve `429 AUTH_RATE_LIMITED` + `Retry-After`. Ficam de fora `/auth/me` (autenticada, hot path), `/webhooks/payments` (a Stripe faz retry agressivo; um 429 nosso viraria assinatura perdida), `/health` e `/health/ready`.
 
-⚠️ **Casamento exato significa que rota nova nasce sem limite.** Quatro das seis rotas de `/account` — o perfil, a troca de senha, o encerramento de sessões e o avanço do onboarding — não estão na lista; a exportação de dados e a exclusão de conta estão. Quem acrescentar um endpoint sensível precisa acrescentá-lo ali também.
+⚠️ **Casamento exato significa que rota nova nasce sem limite.** Quatro das sete rotas de `/account` — o perfil, a troca de senha, o encerramento de sessões e o avanço do onboarding — não estão na lista; a exportação de dados, a exclusão de conta e o pedido de troca de e-mail estão. Quem acrescentar um endpoint sensível precisa acrescentá-lo ali também.
 
 ⚠️ **O limite só alcança a `apps/api`.** `POST /api/auth/session/refresh` (`packages/auth/session-routes.ts:87`), reexportado pela `apps/app` e pela `apps/web`, regrava o cookie de sessão e vive nos front-ends, fora deste proxy. A única barreira dele é `isSameOriginRequest` (`packages/auth/session.ts:78-81`), que aceita a requisição quando não há header `Origin`. Antes de renovar, a rota exige um ID token e confere a sessão atual no Firebase Admin.
 

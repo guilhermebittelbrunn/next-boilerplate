@@ -5,6 +5,7 @@ import {
 } from "@repo/shared/utils/helpers/passwordPolicy";
 import { describe, expect, it } from "vitest";
 import {
+    parseChangeEmail,
     parseChangePassword,
     parseDeleteAccount,
     parseUpdateAccount,
@@ -167,6 +168,58 @@ describe("parseDeleteAccount", () => {
             expect(await codeOf(result.response)).toBe(
                 "ACCOUNT_DELETION_CONFIRMATION_INVALID"
             );
+        }
+    });
+});
+
+const EMAIL_DOMAIN = "@example.com";
+const EMAIL_MAX_LENGTH = 320;
+const EMAIL_ONE_OVER = `${"a".repeat(EMAIL_MAX_LENGTH + 1 - EMAIL_DOMAIN.length)}${EMAIL_DOMAIN}`;
+
+describe("parseChangeEmail", () => {
+    const VALID = {
+        newEmail: "new@example.com",
+        currentPassword: SHORTEST_EXISTING_PASSWORD,
+    };
+
+    it("accepts the new address and the current password", () => {
+        const parsed = parseChangeEmail(VALID);
+        expect(parsed.ok).toBe(true);
+    });
+
+    it("trims the new address before validating it", () => {
+        const parsed = parseChangeEmail({
+            ...VALID,
+            newEmail: "  new@example.com ",
+        });
+        expect(parsed.ok && parsed.value.newEmail).toBe("new@example.com");
+    });
+
+    it("accepts a supported locale", () => {
+        expect(parseChangeEmail({ ...VALID, locale: "es" }).ok).toBe(true);
+    });
+
+    it.each([
+        ["an identity field", { ...VALID, uid: "other-uid" }],
+        ["a profile id", { ...VALID, id: "other-user" }],
+        ["a malformed address", { ...VALID, newEmail: "not-an-email" }],
+        [
+            "an address over 320 characters",
+            { ...VALID, newEmail: EMAIL_ONE_OVER },
+        ],
+        [
+            "a password under the minimum",
+            { ...VALID, currentPassword: EXISTING_PASSWORD_ONE_SHORT },
+        ],
+        ["no password", { newEmail: VALID.newEmail }],
+        ["an unknown locale", { ...VALID, locale: "fr" }],
+    ])("refuses %s with VALIDATION_FAILED", async (_label, body) => {
+        const parsed = parseChangeEmail(body);
+
+        expect(parsed.ok).toBe(false);
+        if (!parsed.ok) {
+            expect(parsed.response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+            expect(await codeOf(parsed.response)).toBe("VALIDATION_FAILED");
         }
     });
 });

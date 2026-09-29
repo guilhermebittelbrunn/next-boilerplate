@@ -11,6 +11,7 @@ import {
 const DISPLAY_NAME_MAX = 120;
 const PHONE_MAX = 32;
 const AVATAR_REFERENCE_MAX = 2048;
+const EMAIL_MAX = 320;
 
 export const themeSchema = z.enum(["light", "dark", "system"]);
 export const localeSchema = z.enum(["pt-br", "en", "es"]);
@@ -48,6 +49,15 @@ export const changePasswordSchema = z
     })
     .strict();
 
+/** Same `.strict()` guard: whose address changes comes from the token, never from the body. */
+export const changeEmailSchema = z
+    .object({
+        newEmail: z.string().trim().max(EMAIL_MAX).email(),
+        currentPassword: existingPasswordSchema,
+        locale: localeSchema.optional(),
+    })
+    .strict();
+
 /**
  * Same `.strict()` guard as the payloads above, and the same reason: the account being
  * erased comes from the token, so a body carrying `id` or `uid` is an attempt to erase
@@ -74,6 +84,7 @@ export const advanceOnboardingSchema = z
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type ChangeEmailInput = z.infer<typeof changeEmailSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
 export type AdvanceOnboardingInput = z.infer<typeof advanceOnboardingSchema>;
 
@@ -126,6 +137,16 @@ export function parseChangePassword(
                 ? passwordTooShortResponse()
                 : validationFailed(),
         };
+    }
+    return { ok: true, value: parsed.data };
+}
+
+export function parseChangeEmail(
+    body: unknown
+): { ok: true; value: ChangeEmailInput } | { ok: false; response: Response } {
+    const parsed = changeEmailSchema.safeParse(body);
+    if (!parsed.success) {
+        return { ok: false, response: validationFailed() };
     }
     return { ok: true, value: parsed.data };
 }

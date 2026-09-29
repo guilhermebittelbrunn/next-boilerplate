@@ -1,7 +1,7 @@
 ---
 id: accessibility-conformance
 title: "Acessibilidade: allowlist do axe zerada e testes no design system"
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: confianca
@@ -14,6 +14,13 @@ updated: 2026-09-29
 ---
 
 # Acessibilidade: allowlist do axe zerada e testes no design system
+
+> **Entregue** pela PR #32 (`3e5ec4c`, mergeada em 2026-09-29 às 13:29 UTC, branch
+> `feat/accessibility-conformance`). CI verde no SHA de merge (`gh run 36575448782`: `changes`, `verify`,
+> `coverage` e `e2e` em `success`, com o `pnpm e2e` em 22/22). A auditoria de 2026-09-29 conferiu os seis itens
+> do corte no código; o resultado está em [Entrega conferida](#entrega-conferida-em-2026-09-29), no fim deste
+> arquivo. O resto do texto é a spec como foi aprovada, e as âncoras `arquivo:linha` dela descrevem o código de
+> antes da entrega.
 
 ## Problema
 
@@ -74,8 +81,8 @@ cobertas, que nenhum achado sozinho tem.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md), controle 18, e
-  [`research/engineering-baseline.md`](research/engineering-baseline.md), prática 17.
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md), controle 18, e
+  [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md), prática 17.
 - Natureza da obrigação: **lei**. A LBI (Lei 13.146/2015), art. 63, torna "obrigatória a acessibilidade nos
   sítios da internet mantidos por empresas com sede ou representação comercial no País"; a norma técnica é
   aberta, e a referência internacional é o WCAG 2.2 AA. Para fork que vende a consumidor na UE, o European
@@ -145,3 +152,38 @@ cobertas, que nenhum achado sozinho tem.
   cobertas; exceção só para defeito de biblioteca externa, com link para o problema na origem.
 - Usar uma lib de axe nos testes de componente do design system? — **recomendação:** não no MVP; afirmar o
   atributo e o nome com Testing Library basta e evita dependência nova.
+
+## Entrega conferida em 2026-09-29
+
+Auditoria do `/spec --sync` sobre `origin/main` em `3e5ec4c`. Cada item foi lido no código, e os gates rodaram
+com `--force` neste workspace.
+
+| item do corte | veredito | evidência |
+|---------------|----------|-----------|
+| 1. Erro de campo anunciado em todo `HookForm*` | implementado | os oito componentes de `components/form/hookform/` usam `FormField` e põem o controle focável dentro de `FormControl` (ex.: `hookformInput.tsx:49`, `:68`); o `FormControl` calcula `aria-invalid` e `aria-describedby` pelo contexto (`ui/form.tsx:109-126`); os compostos repassam o `aria-describedby` ao elemento que recebe foco (`ui/select/index.tsx:277`, `ui/date-input.tsx:69`, `ui/image-upload-input.tsx:157`). Teste `hookformAria.test.tsx:141-171`: sem erro, com erro e depois de limpar, para os oito |
+| 2. Nenhum controle sem nome nas rotas cobertas | implementado | toggle de senha com nome do dicionário (`hookformInputPassword.tsx:88`); gatilho do `ActionsMenu` virou `<button>` com `aria-label` (`ui/action-menu.tsx:104-113`); `Button` em carregamento mantém o texto em `sr-only` e esconde o spinner (`ui/button.tsx:63-84`); seletor de ambiente do navbar no desktop e no mobile (`PanelNavbarControls.tsx:218`, `:264`); `Switch` das linhas com o nome do registro (`UsersListClient.tsx:107`, `EntitiesListClient.tsx:100`). Chaves nos 3 idiomas (`translations/components/ui/input-password.ts`, `action-menu.ts`) |
+| 3. Páginas do painel com `<title>` traduzido | implementado, com deriva | `generateMetadata` nos dois layouts (`(admin)/admin/layout.tsx:22-29`, `(common)/layout.tsx:23-30`); teste `panelLayoutTitle.test.ts` (8 casos) |
+| 4. Contraste AA como texto, sem quebrar o `danger` do antd | implementado | `--muted-foreground` do claro em `oklch(0.54 0 0)` (`styles/globals.css:21`) e `--destructive` do escuro no valor do upstream (`:63`); `Dropdown` com `colorError` e `colorTextLightSolid` por componente (`providers/antd-app.tsx:75-78`); filhos do item `danger` com `color: inherit` (`globals.css:237-250`). Testes `themeContrast.test.ts` (nove pares) e `actionMenu.test.tsx:69`, `:95` |
+| 5. Allowlist vazia | implementado | `apps/e2e/a11y/allowlist.ts:20` (`A11Y_ALLOWLIST: A11yException[] = []`), com a regra de exceção só para defeito de biblioteca externa em `:16-19` e em `docs/SETUP.md`. No merge, o job `e2e` passou 22/22 |
+| 6. `@repo/design-system` com task de `test` que pega regressão | implementado | `packages/design-system/package.json:7` e `vitest.config.mts`; o turbo roda a task (`turbo.json:26-29`). A auditoria mediu 45 testes em 6 arquivos. O `/test` tirou o `aria-label` do gatilho e o `sr-only` do `Button` e viu 4 testes caírem |
+
+**Veredito:** 6/6. Três pontos de leitura:
+
+- **`<title>` por área, não por página.** Todas as telas do painel comum saem com o mesmo título, e as do admin
+  também. Satisfaz o corte e o axe, com 2 arquivos (pergunta 2 do §14 do plano). O título que descreve cada
+  página (WCAG 2.4.2) ficou como achado no `BACKLOG.md`. Leitura: a spec não pedia mais que isso.
+- **`aria-invalid="false"` sem erro.** O corte diz "quando há erro, e só então". O `FormControl` publica
+  `false` quando não há erro, e o teste afirma "diferente de `true`". Para leitor de tela, `false` e ausente
+  dizem o mesmo. Leitura: a spec estava estrita demais na letra.
+- **Escopo a mais, previsto nos riscos.** Entraram o link do 404 da `apps/app` (`NotFoundPage.tsx`), o
+  `PopoverTrigger asChild` do formulário de contato da web, o `alt=""` do avatar do menu de perfil
+  (`ProfileDropdown.tsx:45`) e a regra dos `HookForm*` no `AGENTS.md` e no `packages/CLAUDE.md`.
+
+A rodada introduziu um defeito e o pegou antes do merge: na primeira passada do `/test`, o "Excluir" do menu de
+ações ficava ilegível no hover, nos dois temas (texto e ícone em 1:1). O `/review` corrigiu o `globals.css` e o
+`/test` remediu (4,77:1 no claro e 6,85:1 no escuro).
+
+Ficaram 🔒: o botão de checkout em carregamento, sem chave de teste da Stripe, e a leitura por um leitor de tela
+de verdade. O `/test` conferiu os atributos na árvore de acessibilidade do navegador, não num NVDA ou VoiceOver.
+
+O que segue aberto depois da entrega está no `BACKLOG.md`, na seção de achados da entrega.

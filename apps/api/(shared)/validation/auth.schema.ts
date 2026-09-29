@@ -99,3 +99,6 @@ export const parseEmailVerificationSend = (body: unknown) =>
 
 export const parseEmailVerificationConfirm = (body: unknown) =>
     parseWith(emailVerificationConfirmSchema, body);
+
+export const parseEmailChangeConfirm = (body: unknown) =>
+    parseWith(emailVerificationConfirmSchema, body);

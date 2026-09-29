@@ -162,6 +162,15 @@ Os códigos novos têm tradução nos 3 idiomas em `apiErrors`.
   chamada.
 - A exportação leva `account.subscription` e `account.stripeCustomerId`, com `null` quando não existem.
 
+## Troca de e-mail do titular
+
+A troca de e-mail (`POST /account/email` e a confirmação pelo link) muda só o endereço do Firebase Auth. O
+`customer` da Stripe guarda o e-mail com que foi criado no primeiro checkout
+(`ensureStripeCustomer` em `apps/api/(shared)/lib/billing.ts`) e nada o atualiza depois: recibos e avisos
+de cobrança seguem para o endereço antigo. O titular muda o endereço de cobrança pelo Customer Portal,
+desde que o portal esteja configurado para permitir a edição dos dados do cliente (ver
+`docs/PRE-PRODUCTION.md` §12).
+
 ## Fora do corte
 
 Trial, cupom, downgrade proporcional, reembolso e faturas em UI própria; MRR, churn e receita líquida de

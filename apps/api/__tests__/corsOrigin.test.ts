@@ -290,6 +290,7 @@ describe("api proxy rate limit", () => {
             "/auth/password/reset",
             "/auth/email-verification/send",
             "/auth/email-verification/confirm",
+            "/auth/email-change/confirm",
         ];
 
         for (const path of recoveryPaths) {
@@ -320,6 +321,20 @@ describe("api proxy rate limit", () => {
         );
 
         expect(checkRateLimitMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("counts the email change request", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "POST",
+                path: "/account/email",
+            })
+        );
+
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(1);
     });
 
     it("leaves the rest of the account area unlimited", async () => {
@@ -378,6 +393,27 @@ describe("api proxy rate limit", () => {
             error: { code: "AUTH_RATE_LIMITED" },
         });
     });
+
+    it.each(["/account/email", "/auth/email-change/confirm"])(
+        "answers a spent budget on %s with AUTH_RATE_LIMITED",
+        async (path) => {
+            const proxy = await loadProxy(APP_ORIGIN);
+            checkRateLimitMock.mockResolvedValue({
+                allowed: false,
+                reason: "rate-limit",
+                retryAfterSeconds: RETRY_AFTER_SECONDS,
+            });
+
+            const response = await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "POST", path })
+            );
+
+            expect(response.status).toBe(TOO_MANY_REQUESTS);
+            await expect(response.json()).resolves.toEqual({
+                error: { code: "AUTH_RATE_LIMITED" },
+            });
+        }
+    );
 
     /**
      * A browser hides every response header from cross-origin scripts unless the

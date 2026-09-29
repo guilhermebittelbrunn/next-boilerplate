@@ -40,7 +40,22 @@ export const emailTranslations = {
                     body: "Falta um passo: confirme que este endereço é seu para garantir o acesso à conta e o recebimento de avisos importantes. O link é pessoal e tem prazo de validade.",
                     cta: "Confirmar meu e-mail",
                 },
+                changeEmail: {
+                    subject: "Confirme seu novo e-mail em {brand}",
+                    preview: "Confirme a troca de e-mail em {brand}",
+                    title: "Confirme seu novo e-mail",
+                    body: "Recebemos um pedido para usar este endereço na sua conta. O e-mail da conta só muda quando você usar o botão abaixo. O link é pessoal e tem prazo de validade.",
+                    cta: "Confirmar novo e-mail",
+                },
             },
+        },
+        emailChangeNotice: {
+            subject: "Pedido de troca de e-mail em {brand}",
+            preview:
+                "Alguém pediu para trocar o e-mail da sua conta em {brand}",
+            title: "Olá, {name}",
+            body: "Recebemos um pedido para trocar o e-mail da sua conta para {newEmail}. Nada muda até alguém abrir o link enviado a esse endereço.",
+            advice: "Se não foi você, troque sua senha agora e fale com o suporte.",
         },
         contact: {
             subject: "Nova mensagem do formulário de contato",
@@ -93,7 +108,22 @@ export const emailTranslations = {
                     body: "One step left: confirm that this address is yours to keep access to your account and to receive important notices. This link is personal and expires.",
                     cta: "Confirm my email",
                 },
+                changeEmail: {
+                    subject: "Confirm your new email at {brand}",
+                    preview: "Confirm the email change at {brand}",
+                    title: "Confirm your new email",
+                    body: "We received a request to use this address for your account. The account email only changes when you use the button below. This link is personal and expires.",
+                    cta: "Confirm new email",
+                },
             },
+        },
+        emailChangeNotice: {
+            subject: "Email change requested at {brand}",
+            preview:
+                "Someone asked to change the email of your {brand} account",
+            title: "Hi, {name}",
+            body: "We received a request to change the email of your account to {newEmail}. Nothing changes until someone opens the link sent to that address.",
+            advice: "If this was not you, change your password now and contact support.",
         },
         contact: {
             subject: "New message from the contact form",
@@ -146,7 +176,21 @@ export const emailTranslations = {
                     body: "Falta un paso: confirma que esta dirección es tuya para mantener el acceso a tu cuenta y recibir avisos importantes. El enlace es personal y tiene fecha de vencimiento.",
                     cta: "Confirmar mi correo",
                 },
+                changeEmail: {
+                    subject: "Confirma tu nuevo correo en {brand}",
+                    preview: "Confirma el cambio de correo en {brand}",
+                    title: "Confirma tu nuevo correo",
+                    body: "Recibimos una solicitud para usar esta dirección en tu cuenta. El correo de la cuenta solo cambia cuando uses el botón de abajo. El enlace es personal y tiene fecha de vencimiento.",
+                    cta: "Confirmar nuevo correo",
+                },
             },
+        },
+        emailChangeNotice: {
+            subject: "Solicitud de cambio de correo en {brand}",
+            preview: "Alguien pidió cambiar el correo de tu cuenta en {brand}",
+            title: "Hola, {name}",
+            body: "Recibimos una solicitud para cambiar el correo de tu cuenta a {newEmail}. Nada cambia hasta que alguien abra el enlace enviado a esa dirección.",
+            advice: "Si no fuiste tú, cambia tu contraseña ahora y contacta con soporte.",
         },
         contact: {
             subject: "Nuevo mensaje del formulario de contacto",

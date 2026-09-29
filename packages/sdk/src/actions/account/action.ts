@@ -4,7 +4,9 @@ import type {
     AccountConfirmation,
     AccountDataExportDTO,
     AccountDTO,
+    AccountEmailChangeRequested,
     AdvanceOnboardingRequest,
+    ChangeEmailRequest,
     ChangePasswordRequest,
     DeleteAccountRequest,
     OnboardingStateDTO,
@@ -43,6 +45,20 @@ export default class AccountActions {
             Response<AccountConfirmation>
         >({
             url: "/account/password",
+            method: "POST",
+            data: body,
+        });
+
+        return data.data;
+    }
+
+    async requestEmailChange(
+        body: ChangeEmailRequest
+    ): Promise<AccountEmailChangeRequested> {
+        const { data } = await this.client.request<
+            Response<AccountEmailChangeRequested>
+        >({
+            url: "/account/email",
             method: "POST",
             data: body,
         });

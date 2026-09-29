@@ -7,12 +7,14 @@ const {
     canSendAuthActionLinkMock,
     buildAuthActionLinkMock,
     sendEmailMock,
+    identityCheckOobCodeMock,
     identityApplyOobCodeMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     canSendAuthActionLinkMock: vi.fn(),
     buildAuthActionLinkMock: vi.fn(),
     sendEmailMock: vi.fn(),
+    identityCheckOobCodeMock: vi.fn(),
     identityApplyOobCodeMock: vi.fn(),
 }));
 
@@ -38,6 +40,8 @@ vi.mock("@repo/email/templates/action-link", () => ({
 
 vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
     IdentityToolkitError: FakeToolkitError,
+    identityCheckOobCode: (...args: unknown[]) =>
+        identityCheckOobCodeMock(...args),
     identityApplyOobCode: (...args: unknown[]) =>
         identityApplyOobCodeMock(...args),
 }));
@@ -80,6 +84,10 @@ beforeEach(() => {
     canSendAuthActionLinkMock.mockReturnValue(true);
     buildAuthActionLinkMock.mockResolvedValue(ACTION_URL);
     sendEmailMock.mockResolvedValue({ sent: true, id: "mail-1" });
+    identityCheckOobCodeMock.mockResolvedValue({
+        requestType: "VERIFY_EMAIL",
+        email: ACTOR_EMAIL,
+    });
     identityApplyOobCodeMock.mockResolvedValue({
         localId: "uid-1",
         email: ACTOR_EMAIL,
@@ -223,8 +231,59 @@ describe("POST /auth/email-verification/confirm", () => {
         const response = await postConfirm({});
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(identityCheckOobCodeMock).not.toHaveBeenCalled();
         expect(identityApplyOobCodeMock).not.toHaveBeenCalled();
     });
+
+    it("checks the action code before applying it", async () => {
+        await postConfirm({ oobCode: "code" });
+
+        expect(identityCheckOobCodeMock).toHaveBeenCalledWith("code");
+        expect(
+            identityCheckOobCodeMock.mock.invocationCallOrder[0]
+        ).toBeLessThan(identityApplyOobCodeMock.mock.invocationCallOrder[0]);
+    });
+
+    /**
+     * An email-change code applied here would move the address without the session
+     * revocation and the audit event of its own route, so it is refused unspent.
+     */
+    it.each(["VERIFY_AND_CHANGE_EMAIL", "PASSWORD_RESET"])(
+        "refuses a %s code without spending it",
+        async (requestType) => {
+            identityCheckOobCodeMock.mockResolvedValue({
+                requestType,
+                email: ACTOR_EMAIL,
+                newEmail: "actor.new@example.com",
+            });
+
+            const response = await postConfirm({ oobCode: "code" });
+
+            expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+            expect(await response.json()).toEqual({
+                error: { code: "AUTH_OOB_CODE_INVALID" },
+            });
+            expect(identityApplyOobCodeMock).not.toHaveBeenCalled();
+        }
+    );
+
+    it.each([
+        ["INVALID_OOB_CODE", "AUTH_OOB_CODE_INVALID"],
+        ["EXPIRED_OOB_CODE", "AUTH_OOB_CODE_EXPIRED"],
+    ])(
+        "translates %s from the check into a stable code",
+        async (message, code) => {
+            identityCheckOobCodeMock.mockRejectedValue(
+                new FakeToolkitError(message)
+            );
+
+            const response = await postConfirm({ oobCode: "code" });
+
+            expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+            expect(await response.json()).toEqual({ error: { code } });
+            expect(identityApplyOobCodeMock).not.toHaveBeenCalled();
+        }
+    );
 
     /**
      * A link opened twice is the ordinary case, not an attack: mail clients prefetch
@@ -255,6 +314,7 @@ describe("POST /auth/email-verification/confirm", () => {
         expect(await response.json()).toEqual({
             error: { code: "VALIDATION_FAILED" },
         });
+        expect(identityCheckOobCodeMock).not.toHaveBeenCalled();
         expect(identityApplyOobCodeMock).not.toHaveBeenCalled();
     });
 

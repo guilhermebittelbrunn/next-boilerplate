@@ -2,14 +2,20 @@ import { getTranslations } from "@repo/internationalization/server";
 import { resolveLocale } from "@repo/internationalization/utils";
 import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
+import { ConfirmEmailChangeResult } from "./components/ConfirmEmailChangeResult";
 import { VerifyEmailResult } from "./components/VerifyEmailResult";
+
+const EMAIL_CHANGE_MODE = "verifyAndChangeEmail";
 
 type LocaleParams = {
     readonly params: Promise<{ locale: string }>;
 };
 
 type VerifyEmailProps = LocaleParams & {
-    readonly searchParams: Promise<{ oobCode?: string | string[] }>;
+    readonly searchParams: Promise<{
+        oobCode?: string | string[];
+        mode?: string | string[];
+    }>;
 };
 
 export const generateMetadata = async ({
@@ -22,8 +28,12 @@ export const generateMetadata = async ({
 };
 
 export default async function VerifyEmail({ searchParams }: VerifyEmailProps) {
-    const { oobCode } = await searchParams;
+    const { oobCode, mode } = await searchParams;
     const code = typeof oobCode === "string" && oobCode !== "" ? oobCode : null;
+
+    if (mode === EMAIL_CHANGE_MODE) {
+        return <ConfirmEmailChangeResult oobCode={code} />;
+    }
 
     return <VerifyEmailResult oobCode={code} />;
 }

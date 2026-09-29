@@ -29,6 +29,20 @@ export const emailVerificationTranslations = {
                 "Este endereço não traz um código de confirmação válido. Peça um novo pelo aviso no painel.",
         },
         goToPanel: "Ir para o painel",
+        changeEmail: {
+            confirming: "Confirmando o novo e-mail...",
+            success: {
+                title: "E-mail alterado",
+                description:
+                    "Entre de novo usando o novo endereço. As sessões abertas desta conta foram encerradas.",
+            },
+            error: {
+                title: "Não foi possível trocar o e-mail",
+                description:
+                    "O link pode ter expirado, já ter sido usado, ou o endereço passou a pertencer a outra conta. Peça a troca de novo na sua conta.",
+            },
+            signIn: "Entrar",
+        },
     },
     en: {
         notice: {
@@ -60,6 +74,20 @@ export const emailVerificationTranslations = {
                 "This address carries no valid confirmation code. Request a new one from the notice in the panel.",
         },
         goToPanel: "Go to the panel",
+        changeEmail: {
+            confirming: "Confirming the new email...",
+            success: {
+                title: "Email changed",
+                description:
+                    "Sign in again with the new address. The open sessions of this account have been ended.",
+            },
+            error: {
+                title: "Could not change the email",
+                description:
+                    "The link may have expired, already been used, or the address now belongs to another account. Request the change again from your account.",
+            },
+            signIn: "Sign in",
+        },
     },
     es: {
         notice: {
@@ -91,5 +119,19 @@ export const emailVerificationTranslations = {
                 "Esta dirección no trae un código de confirmación válido. Solicita uno nuevo desde el aviso del panel.",
         },
         goToPanel: "Ir al panel",
+        changeEmail: {
+            confirming: "Confirmando el nuevo correo...",
+            success: {
+                title: "Correo cambiado",
+                description:
+                    "Vuelve a entrar con la nueva dirección. Se cerraron las sesiones abiertas de esta cuenta.",
+            },
+            error: {
+                title: "No se pudo cambiar el correo",
+                description:
+                    "El enlace pudo haber caducado, ya fue usado, o la dirección pasó a pertenecer a otra cuenta. Solicita el cambio de nuevo desde tu cuenta.",
+            },
+            signIn: "Entrar",
+        },
     },
 };

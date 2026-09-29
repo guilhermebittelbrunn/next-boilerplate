@@ -264,22 +264,30 @@ vazio" e passa a exigir as outras duas. Detalhes em [`SETUP.md`](SETUP.md).
 
 - [ ] `RESEND_TOKEN` · `RESEND_FROM` com domínio verificado no provedor
 
-**Sem isto, quem esquece a senha perde a conta.** A recuperação de senha e a verificação de e-mail
-dependem de entrega real; sem credencial, o pedido de redefinição responde `EMAIL_NOT_CONFIGURED` (503) em
-vez de fingir que enviou. O erro é honesto, mas a funcionalidade não existe.
+**Sem isto, quem esquece a senha perde a conta.** A recuperação de senha, a verificação de e-mail e a troca
+de e-mail do titular dependem de entrega real; sem credencial, o pedido de redefinição e o pedido de troca
+de e-mail respondem `EMAIL_NOT_CONFIGURED` (503) em vez de fingir que enviaram. O erro é honesto, mas a
+funcionalidade não existe.
 
 ⛔ **Nunca foi provado de ponta a ponta.** Toda a validação da base de e-mail e da recuperação de senha foi
 feita com preview local e placeholder — **nenhuma mensagem saiu de verdade**, porque isso exige o passo de
 DNS, que não tem contorno. Depois de configurar, rode o ciclo real uma vez: pedir redefinição → receber →
 definir a senha nova → entrar.
 
+Rode também o ciclo da troca de e-mail: na aba Perfil, pedir a troca → receber o aviso no endereço antigo
+e o link no novo → abrir o link → entrar com o endereço novo e ver a sessão antiga cair. Com
+`NEXT_PUBLIC_APP_SUPPORT_EMAIL` vazia (§13), o aviso sai sem a linha de suporte, que é o canal para
+contestar a troca. O comportamento do Firebase de produção nesse fluxo nunca foi medido: o desenho se apoia
+no emulador para três pontos (conferir o código sem gastá-lo, o link pendente deixar de valer depois que
+outro é aplicado, e o gerador recusar endereço em uso).
+
 ### 4. As chaves que os links de ação carregam
 
-- [ ] `FIREBASE_WEB_API_KEY` — a API confirma a redefinição de senha e a verificação de e-mail pelos
-      endpoints REST do Identity Toolkit. Project settings → General → Web API Key.
+- [ ] `FIREBASE_WEB_API_KEY` — a API confirma a redefinição de senha, a verificação de e-mail e a troca de
+      e-mail pelos endpoints REST do Identity Toolkit. Project settings → General → Web API Key.
 - [ ] `NEXT_PUBLIC_APP_URL` **na `apps/api`** apontando para o host real da `apps/app` — é a base dos links
       enviados nos e-mails de ação. Valor errado gera link que não resolve; valor ausente faz o pedido de
-      redefinição responder `EMAIL_NOT_CONFIGURED`.
+      redefinição e o de troca de e-mail responderem `EMAIL_NOT_CONFIGURED`.
 
 ### 5. `CORS_ORIGIN`
 
@@ -496,7 +504,9 @@ O custo é uma chamada a mais à Stripe por checkout. Para saber se já acontece
    avulso não aparece.
 2. **Customer Portal.** Dashboard → Settings → Billing → Customer portal. Habilite cancelamento, atualização
    de forma de pagamento e troca de plano (adicione os produtos à lista). Se o produto está sujeito ao CDC,
-   configure o reembolso da janela de arrependimento.
+   configure o reembolso da janela de arrependimento. Habilite também a edição do e-mail em *Customer
+   information*: a troca de e-mail na conta não atualiza o `customer` da Stripe, e o portal é o caminho
+   do titular para mudar o endereço de cobrança.
 3. **Endpoint do webhook.** Dashboard → Developers → Webhooks → *Add endpoint*:
    - URL: `https://<host-da-api>/webhooks/payments`
    - Versão de API: **`2025-09-30.clover`** (a mesma de `packages/payments/index.ts`)
@@ -595,15 +605,15 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-28**, com o `HEAD` em `e07252a` (PR #30 já mergeada) mais o working tree do emulador
-de Storage e dos testes das rules. Os números de tasks, arquivos e testes abaixo são dessa medição:
+Remedido em **2026-09-29**, com o `HEAD` em `3e5ec4c` (PR #32 já mergeada), sem mudança de código no working
+tree. Os números de tasks, arquivos e testes abaixo são dessa medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
-| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **12 de 12** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/email`, `packages/internationalization`, `packages/next-config`, `packages/payments`, `packages/security`, `packages/shared`); a de `packages/next-config` entrou em 2026-09-27, com a marca configurável. O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **27/27 tasks**, 0 em cache, **47,8 s** |
-| lint/format | `pnpm check` | **782 arquivos**, 0 correções |
-| suíte | 12 tasks de teste | **2237 testes em 212 arquivos**. A suíte contra emulador (`api#test:emulator`, 170 testes em 4 arquivos) fica fora desta linha: ela roda no `pnpm test` e no `verify`, com JDK 21 |
+| configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **13 de 13** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/design-system`, `packages/email`, `packages/internationalization`, `packages/next-config`, `packages/payments`, `packages/security`, `packages/shared`); a de `packages/next-config` entrou em 2026-09-27, com a marca configurável, e a de `packages/design-system` na PR #32. O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **28/28 tasks**, 0 em cache, **1 min 5,8 s** |
+| lint/format | `pnpm check` | **792 arquivos**, 0 correções |
+| suíte | 13 tasks de teste | **2296 testes em 220 arquivos**. A suíte contra emulador (`api#test:emulator`, 170 testes em 4 arquivos) fica fora desta linha: ela roda no `pnpm test` e no `verify`, com JDK 21 |
 
 Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 894 em 73 arquivos, `apps/app` 608 em
 78, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/internationalization` 59 em 6, `@repo/shared` 44
@@ -615,13 +625,14 @@ somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arqui
 49 testes em 6 arquivos e 18 arquivos ao alcance do `pnpm check`; a renovação de sessão somou 49 testes em
 4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #24, a suíte
 foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos; a PR #25 somou 202 testes em 16
-arquivos e 33 arquivos ao `pnpm check`.
-**Remedir antes de citar** — a contagem de tasks e a de configs são as únicas que ficaram estáveis. Cada
-uma das sete últimas auditorias encontrou estes dois números defasados, sempre pelo mesmo mecanismo: eles
+arquivos e 33 arquivos ao `pnpm check`; a PR #32 somou 59 testes em 8 arquivos, 10 arquivos ao `pnpm check`
+e a task `@repo/design-system#test`, que levou as tasks de 27 para 28 e as configs de 12 para 13.
+**Remedir antes de citar** — nenhum destes números é estável, nem a contagem de tasks e de configs, que
+mudou na PR #32. Cada uma das oito últimas auditorias encontrou a contagem de testes e de arquivos defasada, sempre pelo mesmo mecanismo: eles
 são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
 fato corrente.
 
-O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s, 1 min 2,7 s e agora 56,7 s, com a
+O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s, 1 min 2,7 s, 56,7 s, 47,8 s e agora 1 min 5,8 s, com a
 suíte sempre maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
 dimensionar CI.
 

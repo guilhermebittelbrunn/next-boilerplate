@@ -49,6 +49,10 @@ export type EmailVerificationConfirmBody = {
     oobCode: string;
 };
 
+export type EmailChangeConfirmBody = {
+    oobCode: string;
+};
+
 /**
  * Deliberately carries no information: a password reset request answers the same
  * way whether or not the address has an account.
@@ -150,6 +154,20 @@ export default class AuthActions {
             Response<AuthActionConfirmed>
         >({
             url: "/auth/email-verification/confirm",
+            method: "POST",
+            data: body,
+        });
+
+        return data.data;
+    }
+
+    async confirmEmailChange(
+        body: EmailChangeConfirmBody
+    ): Promise<AuthActionConfirmed> {
+        const { data } = await this.client.request<
+            Response<AuthActionConfirmed>
+        >({
+            url: "/auth/email-change/confirm",
             method: "POST",
             data: body,
         });
