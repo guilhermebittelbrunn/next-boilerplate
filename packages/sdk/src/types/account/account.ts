@@ -22,6 +22,16 @@ export type ChangePasswordRequest = {
     password: string;
 };
 
+export type ChangeEmailRequest = {
+    newEmail: string;
+    currentPassword: string;
+    /** Language of both emails. Absent falls back to the fork's default locale. */
+    locale?: string;
+};
+
+/** The address only changes when the link sent to the new one is opened. */
+export type AccountEmailChangeRequested = { requested: true };
+
 export type AccountConfirmation = {
     confirmed: boolean;
 };
