@@ -104,6 +104,10 @@ export function UsersListClient() {
             render: (value: boolean, record: UserWithAuthDTO) => (
                 <div className="flex justify-center">
                     <Switch
+                        aria-label={adminUsersList.statusToggle.replace(
+                            "{name}",
+                            record.displayName ?? record.email ?? ""
+                        )}
                         checked={!value}
                         disabled={
                             toggleUserStatusMutation.isPending &&

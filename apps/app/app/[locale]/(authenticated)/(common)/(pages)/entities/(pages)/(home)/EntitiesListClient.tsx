@@ -97,6 +97,10 @@ export function EntitiesListClient() {
             render: (value: boolean, record: EntityDTO) => (
                 <div className="flex justify-center">
                     <Switch
+                        aria-label={entitiesList.enabledToggle.replace(
+                            "{name}",
+                            record.name
+                        )}
                         checked={value}
                         disabled={
                             isImpersonating ||

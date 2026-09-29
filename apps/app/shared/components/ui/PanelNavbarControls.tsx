@@ -215,6 +215,7 @@ export default function PanelNavbarControls() {
                         </DropdownMenuLabel>
                         <div className="mt-2">
                             <Select
+                                aria-label={navbarCopy.environmentLabel}
                                 disabled={environmentDisabled}
                                 onValueChange={handleEnvironmentChange}
                                 options={environmentOptions}
@@ -260,6 +261,7 @@ export default function PanelNavbarControls() {
     return (
         <div className="flex min-w-0 items-center gap-2 pl-2">
             <Select
+                aria-label={navbarCopy.environmentLabel}
                 disabled={environmentDisabled}
                 onValueChange={handleEnvironmentChange}
                 options={environmentOptions}

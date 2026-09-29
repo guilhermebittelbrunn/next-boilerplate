@@ -1,17 +1,19 @@
 import { UserRoleLevel } from "@repo/auth/types";
 import type { UserWithAuthDTO } from "@repo/sdk/src/types";
 import { fireEvent, render } from "@testing-library/react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProfileKind } from "@/shared/lib/authRequestHeaders";
 
 const {
+    isMobileMock,
     listUsersMock,
     panelMock,
     reloadMock,
     setImpersonatedUserMock,
     setPanelEnvironmentMock,
 } = vi.hoisted(() => ({
+    isMobileMock: vi.fn(),
     listUsersMock: vi.fn(),
     panelMock: vi.fn(),
     reloadMock: vi.fn(),
@@ -27,8 +29,20 @@ vi.mock("@/shared/providers/AuthRequestPanelContext", () => ({
 }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ locale: "pt-br" }) }));
 vi.mock("@repo/design-system/hooks/useMobile", () => ({
-    useIsMobile: () => false,
+    useIsMobile: () => isMobileMock(),
 }));
+vi.mock("@repo/design-system/components/ui/dropdown-menu", () => {
+    const Passthrough = ({ children }: { children?: ReactNode }) => (
+        <div>{children}</div>
+    );
+    return {
+        DropdownMenu: Passthrough,
+        DropdownMenuContent: Passthrough,
+        DropdownMenuLabel: Passthrough,
+        DropdownMenuSeparator: () => null,
+        DropdownMenuTrigger: Passthrough,
+    };
+});
 vi.mock("@repo/internationalization/client", () => {
     const navbar = {
         environmentLabel: "Ambiente",
@@ -52,13 +66,16 @@ vi.mock("@repo/design-system/components/ui", () => ({
         value,
         placeholder,
         onValueChange,
+        "aria-label": ariaLabel,
     }: {
         options: { value: string; label: string }[];
         value?: string;
         placeholder?: string;
         onValueChange?: (value: string) => void;
+        "aria-label"?: string;
     }): ReactElement => (
         <div
+            data-aria-label={ariaLabel ?? ""}
             data-placeholder={placeholder ?? ""}
             data-testid="select"
             data-value={value ?? ""}
@@ -125,6 +142,8 @@ function pickOption(root: HTMLElement, value: string) {
 }
 
 beforeEach(() => {
+    isMobileMock.mockReset();
+    isMobileMock.mockReturnValue(false);
     listUsersMock.mockReset();
     panelMock.mockReset();
     reloadMock.mockReset();
@@ -162,6 +181,7 @@ describe("PanelNavbarControls", () => {
 
         expect(selects).toHaveLength(1);
         expect(selects[0].getAttribute("data-value")).toBe(UserRoleLevel.ADMIN);
+        expect(selects[0].getAttribute("data-aria-label")).toBe("Ambiente");
         expect(container.querySelector('[data-value="uid-alice"]')).toBe(null);
         expect(setImpersonatedUserMock).not.toHaveBeenCalled();
     });
@@ -262,5 +282,23 @@ describe("PanelNavbarControls", () => {
             { uid: "uid-alice", label: "Alice" }
         );
         expect(reloadMock).not.toHaveBeenCalled();
+    });
+
+    it("names the environment switcher inside the mobile menu", () => {
+        isMobileMock.mockReturnValue(true);
+        givenPanel({
+            profileKind: "admin",
+            panelRequestRole: UserRoleLevel.COMMON,
+            impersonatedFirebaseUid: "uid-alice",
+            impersonatedLabel: "Alice",
+        });
+
+        const { selects } = renderControls();
+
+        expect(selects).toHaveLength(2);
+        expect(selects[0].getAttribute("data-aria-label")).toBe("Ambiente");
+        expect(selects[1].getAttribute("data-placeholder")).toBe(
+            "Selecione o usuário"
+        );
     });
 });

@@ -1,6 +1,6 @@
 import { UserType } from "@repo/sdk/src/types";
 import { setCookie } from "@repo/shared/utils/helpers/cookies";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -81,7 +81,7 @@ const { UsersListClient } = await import(
     "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/users/(pages)/(home)/UsersListClient"
 );
 
-function user() {
+function user(overrides: Record<string, unknown> = {}) {
     return {
         id: "p1",
         type: UserType.COMMON,
@@ -103,12 +103,13 @@ function user() {
         },
         providerData: [],
         customClaims: null,
+        ...overrides,
     };
 }
 
-function givenUsers() {
+function givenUsers(rows = [user()]) {
     listUsersMock.mockReturnValue({
-        data: [user()],
+        data: rows,
         isLoading: false,
         isFetching: false,
         refetch: vi.fn(),
@@ -172,5 +173,29 @@ describe("archive labels on the admin users list", () => {
         render(<UsersListClient />);
 
         expect(deleteLabels()?.confirmDescription).toContain("preservado");
+    });
+});
+
+describe("status switch on the admin users list", () => {
+    it("names the switch after the user it toggles", () => {
+        givenUsers();
+
+        render(<UsersListClient />);
+
+        expect(
+            screen.getByRole("switch", { name: "Usuário ativo: Ana" })
+        ).toBeTruthy();
+    });
+
+    it("falls back to the email when the user has no display name", () => {
+        givenUsers([user({ displayName: null })]);
+
+        render(<UsersListClient />);
+
+        expect(
+            screen.getByRole("switch", {
+                name: "Usuário ativo: user@example.com",
+            })
+        ).toBeTruthy();
     });
 });
