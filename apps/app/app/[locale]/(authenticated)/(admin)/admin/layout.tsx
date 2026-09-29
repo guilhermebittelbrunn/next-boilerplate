@@ -1,5 +1,9 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar";
+import { getTranslations } from "@repo/internationalization/server";
+import { resolveLocale } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import { secure } from "@repo/security";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { env } from "@/env";
@@ -13,6 +17,17 @@ import { SidebarAdmin } from "./sidebar";
 type AppLayoutProperties = {
     readonly children: ReactNode;
     readonly params: Promise<{ locale: string }>;
+};
+
+export const generateMetadata = async ({
+    params,
+}: Pick<AppLayoutProperties, "params">): Promise<Metadata> => {
+    const { locale } = await params;
+    const dictionary = await getTranslations(resolveLocale(locale));
+
+    return {
+        title: `${dictionary.apps.app.pages.navbar.environmentAdmin} | ${getBrand().name}`,
+    };
 };
 
 const AppLayout = async ({ children, params }: AppLayoutProperties) => {
