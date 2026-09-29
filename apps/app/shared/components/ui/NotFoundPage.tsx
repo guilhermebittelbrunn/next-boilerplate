@@ -1,4 +1,4 @@
-import { Button } from "@repo/design-system/components/ui/button";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
 import {
     Card,
     CardDescription,
@@ -6,6 +6,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { cn } from "@repo/design-system/lib/utils";
 import { getTranslations } from "@repo/internationalization/server";
 import {
     getDefaultLocale,
@@ -46,14 +47,18 @@ export async function NotFoundPage() {
                     </div>
                 </CardHeader>
                 <CardFooter className="flex flex-col gap-3 pb-8">
-                    <Button
-                        className="w-full sm:w-auto"
-                        icon={<ArrowLeft />}
-                        size="lg"
-                        variant="default"
+                    <Link
+                        className={cn(
+                            buttonVariants({ size: "lg" }),
+                            "w-full sm:w-auto"
+                        )}
+                        href={homePath}
                     >
-                        <Link href={homePath}>{notFoundCopy.goHome}</Link>
-                    </Button>
+                        <span className="flex items-center gap-2">
+                            <ArrowLeft />
+                            {notFoundCopy.goHome}
+                        </span>
+                    </Link>
                 </CardFooter>
             </Card>
         </div>
