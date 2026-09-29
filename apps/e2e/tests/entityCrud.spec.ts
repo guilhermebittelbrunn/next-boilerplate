@@ -14,9 +14,8 @@ const listPath = `/${LOCALE}/entities`;
 const rowNamed = (page: Page, name: string) =>
     page.getByRole("row").filter({ hasText: name });
 
-// The row menu trigger is a plain <div> around an icon, with no role or name to query.
 const openRowActions = async (row: Locator) => {
-    await row.getByRole("cell").last().locator("svg").click();
+    await row.getByRole("button", { name: actionMenuCopy.trigger }).click();
 };
 
 test("creates, edits and deletes an entity", async ({ page }, testInfo) => {
