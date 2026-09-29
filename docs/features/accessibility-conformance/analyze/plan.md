@@ -1,6 +1,6 @@
 # Plano: acessibilidade com allowlist do axe zerada e testes no design system
 
-- **Spec:** [`specs/accessibility-conformance.md`](../../../../specs/accessibility-conformance.md) (`approved`; passa a `in-progress` com este plano)
+- **Spec:** [`spec.md`](../spec.md) (`approved`; passa a `in-progress` com este plano)
 - **Card:** nenhum
 - **Rodada:** `/cycle` autônomo. Nada foi perguntado. As decisões tomadas sem perguntar estão em §13, e as perguntas em §14 já trazem a opção adotada.
 - **Branch:** a atual é `cycle-spec-pipeline`, fora do padrão. Quem nomeia e cria é o `revisor-codigo`.
