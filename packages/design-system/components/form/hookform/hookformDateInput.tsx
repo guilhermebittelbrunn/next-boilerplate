@@ -3,14 +3,13 @@
 
 import {
     type Control,
-    Controller,
     type ControllerProps,
     type FieldValues,
     type Path,
     useFormContext,
 } from "react-hook-form";
 import { DateInput, type DateInputProps } from "../../ui/date-input";
-import { FormItem, FormMessage } from "../../ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "../../ui/form";
 
 export type HookFormDateInputProps<T extends FieldValues> = Omit<
     DateInputProps,
@@ -41,25 +40,29 @@ export function HookFormDateInput<T extends FieldValues>(
     }
 
     return (
-        <Controller
+        <FormField
             control={control}
             name={name}
             render={({ field, fieldState }) => {
                 const errorMessage = fieldState.error?.message;
                 return (
                     <FormItem>
-                        <DateInput
-                            {...rest}
-                            disabled={formState.isSubmitting || rest.disabled}
-                            error={errorMessage}
-                            id={field.name}
-                            label={label}
-                            onBlur={field.onBlur}
-                            onChange={field.onChange}
-                            ref={field.ref}
-                            required={required}
-                            value={field.value ?? ""}
-                        />
+                        <FormControl>
+                            <DateInput
+                                {...rest}
+                                disabled={
+                                    formState.isSubmitting || rest.disabled
+                                }
+                                error={errorMessage}
+                                id={field.name}
+                                label={label}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                ref={field.ref}
+                                required={required}
+                                value={field.value ?? ""}
+                            />
+                        </FormControl>
                         <FormMessage message={errorMessage} />
                     </FormItem>
                 );

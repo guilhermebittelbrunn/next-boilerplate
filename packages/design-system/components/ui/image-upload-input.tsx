@@ -28,6 +28,7 @@ export type ImageUploadInputTexts = {
 
 export type ImageUploadInputProps = {
     id?: string;
+    "aria-describedby"?: string;
     label?: string;
     required?: boolean;
     error?: string;
@@ -52,6 +53,7 @@ export type ImageUploadInputProps = {
 
 export function ImageUploadInput({
     id,
+    "aria-describedby": ariaDescribedBy,
     label,
     required = false,
     error,
@@ -69,6 +71,7 @@ export function ImageUploadInput({
     const generatedId = useId();
     const inputId = id ?? generatedId;
     const hintId = `${inputId}-hint`;
+    const fileErrorId = `${inputId}-file-error`;
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [progress, setProgress] = useState<number | null>(null);
@@ -78,6 +81,9 @@ export function ImageUploadInput({
     const isUploading = progress !== null;
     const previewUrl = value ? (uploadedPreview ?? previewSrc ?? null) : null;
     const isInvalid = Boolean(error || fileError);
+    const inputDescribedBy = [hintId, ariaDescribedBy, fileError ? fileErrorId : null]
+        .filter(Boolean)
+        .join(" ");
 
     const rejectFile = (message: string) => {
         setFileError(message);
@@ -148,7 +154,7 @@ export function ImageUploadInput({
 
             <input
                 accept={accept.join(",")}
-                aria-describedby={hintId}
+                aria-describedby={inputDescribedBy}
                 aria-invalid={isInvalid}
                 className="sr-only"
                 disabled={disabled || isUploading}
@@ -220,7 +226,9 @@ export function ImageUploadInput({
             ) : null}
 
             {fileError ? (
-                <p className="text-destructive text-sm">{fileError}</p>
+                <p className="text-destructive text-sm" id={fileErrorId}>
+                    {fileError}
+                </p>
             ) : null}
         </div>
     );

@@ -46,6 +46,8 @@ export type SelectProps = {
     searchPlaceholder?: string;
     emptyMessage?: string;
     "aria-label"?: string;
+    "aria-describedby"?: string;
+    "aria-invalid"?: boolean;
     /** Use horizontal label + trigger (e.g. nav toolbars). Default stacks label above. */
     orientation?: "vertical" | "horizontal";
 };
@@ -75,6 +77,8 @@ export function Select({
     searchPlaceholder,
     emptyMessage,
     "aria-label": ariaLabel,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
     orientation = "vertical",
 }: SelectProps): ReactElement {
     const { dictionary } = getDictionary();
@@ -270,6 +274,8 @@ export function Select({
             value={resolvedValue}
         >
             <SelectTrigger
+                aria-describedby={ariaDescribedBy}
+                aria-invalid={ariaInvalid}
                 aria-label={ariaLabel ?? (label ? undefined : placeholder)}
                 className={cn(
                     isHorizontal ? "min-w-0" : "w-full",

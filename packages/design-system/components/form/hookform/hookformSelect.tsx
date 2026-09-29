@@ -3,13 +3,18 @@
 import { cn } from "@repo/design-system/lib/utils";
 import {
     type Control,
-    Controller,
     type ControllerProps,
     type FieldValues,
     type Path,
     useFormContext,
 } from "react-hook-form";
-import { FormControl, FormItem, FormLabel, FormMessage } from "../../ui/form";
+import {
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "../../ui/form";
 import { Select, type SelectOption } from "../../ui/select";
 
 export type HookFormSelectProps<T extends FieldValues> = {
@@ -56,7 +61,7 @@ export function HookFormSelect<T extends FieldValues>(
     }
 
     return (
-        <Controller
+        <FormField
             control={control}
             name={name}
             render={({ field, fieldState }) => {

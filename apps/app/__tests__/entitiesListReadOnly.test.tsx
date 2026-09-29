@@ -185,6 +185,11 @@ describe("EntitiesListClient while acting as another user", () => {
 
         expect(isDisabled(screen.getByTestId("add-entity"))).toBe(true);
         expect(isDisabled(firstSwitch())).toBe(true);
+        expect(
+            screen.getByRole("switch", {
+                name: `Entidade ativa: ${ENTITY.name}`,
+            })
+        ).toBe(firstSwitch());
         expect(screen.queryByTestId("delete-entity")).toBeNull();
         // Reading a record is still the point of the mode.
         expect(screen.getByTestId("edit-entity")).toBeTruthy();
@@ -212,6 +217,11 @@ describe("EntitiesListClient while acting as another user", () => {
 
         expect(isDisabled(screen.getByTestId("add-entity"))).toBe(false);
         expect(isDisabled(firstSwitch())).toBe(false);
+        expect(
+            screen.getByRole("switch", {
+                name: `Entidade ativa: ${ENTITY.name}`,
+            })
+        ).toBe(firstSwitch());
         expect(screen.getByTestId("delete-entity")).toBeTruthy();
         expect(screen.getByTestId("edit-entity")).toBeTruthy();
         expect(screen.queryByRole("alert")).toBeNull();

@@ -1,15 +1,21 @@
 import { Button } from "@base-ui/react";
+import { getDictionary } from "@repo/internationalization/client";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
 import {
     type Control,
-    Controller,
     type ControllerProps,
     type FieldValues,
     type Path,
     useFormContext,
 } from "react-hook-form";
-import { FormControl, FormItem, FormLabel, FormMessage } from "../../ui/form";
+import {
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "../../ui/form";
 import { Input, type InputProps } from "../../ui/input";
 
 interface HookFormInputPasswordProps<T extends FieldValues> extends InputProps {
@@ -34,6 +40,8 @@ export function HookFormInputPassword<T extends FieldValues>(
         ...rest
     } = props;
     const { formState } = useFormContext();
+    const { dictionary } = getDictionary();
+    const passwordToggleCopy = dictionary.components.inputPassword;
     const [showPassword, setShowPassword] = useState(false);
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
@@ -43,7 +51,7 @@ export function HookFormInputPassword<T extends FieldValues>(
     }
 
     return (
-        <Controller
+        <FormField
             control={control}
             name={name}
             render={({ field, fieldState }) => {
@@ -62,8 +70,8 @@ export function HookFormInputPassword<T extends FieldValues>(
                                 </span>
                             ) : null}
                         </FormLabel>
-                        <FormControl>
-                            <div className="relative">
+                        <div className="relative">
+                            <FormControl>
                                 <Input
                                     aria-required={required}
                                     className={
@@ -75,18 +83,23 @@ export function HookFormInputPassword<T extends FieldValues>(
                                     placeholder="••••••••"
                                     type={showPassword ? "text" : "password"}
                                 />
-                                <Button
-                                    className="-translate-y-1/2 absolute top-1/2 right-2"
-                                    onClick={toggleShowPassword}
-                                >
-                                    {showPassword ? (
-                                        <EyeIcon className="h-4 w-4" />
-                                    ) : (
-                                        <EyeOffIcon className="h-4 w-4" />
-                                    )}
-                                </Button>
-                            </div>
-                        </FormControl>
+                            </FormControl>
+                            <Button
+                                aria-label={
+                                    showPassword
+                                        ? passwordToggleCopy.hide
+                                        : passwordToggleCopy.show
+                                }
+                                className="-translate-y-1/2 absolute top-1/2 right-2"
+                                onClick={toggleShowPassword}
+                            >
+                                {showPassword ? (
+                                    <EyeIcon className="h-4 w-4" />
+                                ) : (
+                                    <EyeOffIcon className="h-4 w-4" />
+                                )}
+                            </Button>
+                        </div>
                         <FormMessage message={errorMessage} />
                     </FormItem>
                 );

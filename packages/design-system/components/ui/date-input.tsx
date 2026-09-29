@@ -22,6 +22,7 @@ function parseIsoDate(value: string | undefined): Date | undefined {
 }
 
 export type DateInputProps = {
+  "aria-describedby"?: string;
   label?: string;
   error?: string;
   required?: boolean;
@@ -48,6 +49,7 @@ export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
       onBlur,
       disabled,
       placeholder = "Pick a date",
+      "aria-describedby": ariaDescribedBy,
     },
     ref
   ) {
@@ -64,6 +66,7 @@ export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
         <Popover onOpenChange={setOpen} open={open}>
           <PopoverTrigger asChild>
             <Button
+              aria-describedby={ariaDescribedBy}
               aria-invalid={Boolean(error)}
               className={cn(
                 "h-9 w-full justify-start px-3 text-left font-normal shadow-xs md:text-sm",

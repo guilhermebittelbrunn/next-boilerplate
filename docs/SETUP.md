@@ -267,6 +267,10 @@ sempre". Espera fixa (`waitForTimeout`) não entra na suíte: toda espera é ass
 
 ### Acessibilidade e a allowlist
 
+A allowlist está vazia: toda violação `critical` ou `serious` do axe reprova a suíte. Exceção nova só entra
+para defeito dentro de biblioteca de terceiros que o repositório não consegue corrigir, com link para o
+problema na origem no campo `reason`. Defeito em componente do repositório se corrige no componente.
+
 As exceções do axe ficam em `apps/e2e/a11y/allowlist.ts`. Cada entrada tem rota, regra, um seletor CSS
 escrito à mão que o elemento precisa casar e o motivo. O seletor não é o que o axe imprime: aquele é montado
 a partir de classes e ids gerados e muda a cada ajuste de estilo. Uma exceção cobre só aquela regra naquele

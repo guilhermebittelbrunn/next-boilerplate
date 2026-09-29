@@ -2,6 +2,7 @@ export const adminUsersPageTranslations = {
     "pt-br": {
         list: {
             searchPlaceholder: "Buscar por nome ou e-mail",
+            statusToggle: "Usuário ativo: {name}",
             refresh: "Atualizar",
             empty: "Nenhum usuário encontrado.",
             columns: {
@@ -58,6 +59,7 @@ export const adminUsersPageTranslations = {
     en: {
         list: {
             searchPlaceholder: "Search by name or email",
+            statusToggle: "User active: {name}",
             refresh: "Refresh",
             empty: "No users found.",
             columns: {
@@ -114,6 +116,7 @@ export const adminUsersPageTranslations = {
     es: {
         list: {
             searchPlaceholder: "Buscar por nombre o correo",
+            statusToggle: "Usuario activo: {name}",
             refresh: "Actualizar",
             empty: "No se encontraron usuarios.",
             columns: {

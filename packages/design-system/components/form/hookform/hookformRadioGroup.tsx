@@ -3,13 +3,12 @@
 
 import {
     type Control,
-    Controller,
     type ControllerProps,
     type FieldValues,
     type Path,
     useFormContext,
 } from "react-hook-form";
-import { FormItem, FormMessage } from "../../ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "../../ui/form";
 import {
     RadioGroupInput,
     type RadioGroupInputProps,
@@ -43,7 +42,7 @@ export function HookFormRadioGroup<T extends FieldValues>(
     }
 
     return (
-        <Controller
+        <FormField
             control={control}
             name={name}
             render={({ field, fieldState }) => {
@@ -51,16 +50,18 @@ export function HookFormRadioGroup<T extends FieldValues>(
                 const value = field.value ?? "";
                 return (
                     <FormItem>
-                        <RadioGroupInput
-                            {...rest}
-                            disabled={
-                                formState.isSubmitting ||
-                                Boolean(disabledFromProps)
-                            }
-                            error={errorMessage}
-                            onValueChange={field.onChange}
-                            value={value}
-                        />
+                        <FormControl>
+                            <RadioGroupInput
+                                {...rest}
+                                disabled={
+                                    formState.isSubmitting ||
+                                    Boolean(disabledFromProps)
+                                }
+                                error={errorMessage}
+                                onValueChange={field.onChange}
+                                value={value}
+                            />
+                        </FormControl>
                         <FormMessage message={errorMessage} />
                     </FormItem>
                 );

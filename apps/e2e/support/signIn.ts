@@ -6,8 +6,6 @@ const signInCopy = ptBr.apps.app.pages.signIn;
 
 export const signInPath = `/${LOCALE}/sign-in`;
 
-// The password field is located by name: its label is bound to a wrapper, not to the
-// input, so it has no accessible name to query by.
 export const passwordInput = (page: Page, name = "password") =>
     page.locator(`input[name="${name}"]`);
 

@@ -1,4 +1,5 @@
-import { Button } from "@repo/design-system/components/ui/button";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import { MoveRight, PhoneCall } from "lucide-react";
 import Link from "next/link";
@@ -20,27 +21,29 @@ export const CTA = async () => {
                         </p>
                     </div>
                     <div className="flex flex-row gap-4">
-                        <Button
-                            className="gap-4"
-                            icon={<PhoneCall />}
-                            variant="outline"
+                        <Link
+                            className={cn(
+                                buttonVariants({ variant: "outline" }),
+                                "gap-4"
+                            )}
+                            href={`/${locale}/contact`}
                         >
-                            <Link href={`/${locale}/contact`}>
-                                {dictionary.apps.web.pages.cta.primaryCta}{" "}
-                            </Link>
-                        </Button>
-                        <Button className="gap-4" icon={<MoveRight />}>
-                            <Link
-                                href={
-                                    env.NEXT_PUBLIC_APP_URL ||
-                                    `/${locale}/sign-up`
-                                }
-                            >
-                                {
-                                    dictionary.apps.web.pages.cta.secondaryCta
-                                }{" "}
-                            </Link>
-                        </Button>
+                            <span className="flex items-center gap-2">
+                                <PhoneCall />
+                                {dictionary.apps.web.pages.cta.primaryCta}
+                            </span>
+                        </Link>
+                        <Link
+                            className={cn(buttonVariants(), "gap-4")}
+                            href={
+                                env.NEXT_PUBLIC_APP_URL || `/${locale}/sign-up`
+                            }
+                        >
+                            <span className="flex items-center gap-2">
+                                <MoveRight />
+                                {dictionary.apps.web.pages.cta.secondaryCta}
+                            </span>
+                        </Link>
                     </div>
                 </div>
             </div>

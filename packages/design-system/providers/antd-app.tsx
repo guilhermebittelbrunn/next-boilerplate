@@ -69,6 +69,13 @@ export function AntdAppProvider({ children }: { children: ReactNode }) {
                         dangerItemActiveBg: "var(--color-accent)",
                         dangerItemSelectedBg: "var(--color-accent)",
                     },
+                    // Seed tokens such as colorError go through antd's palette algorithm, which
+                    // cannot parse a CSS variable and yields #000000. A component-level override
+                    // skips that derivation, so the danger item gets the real destructive colour.
+                    Dropdown: {
+                        colorError: "var(--color-destructive)",
+                        colorTextLightSolid: "var(--color-background)",
+                    },
                     Modal: {
                         contentBg: "var(--color-popover)",
                         headerBg: "var(--color-popover)",

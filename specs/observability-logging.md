@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -48,8 +48,8 @@ segue invisível até alguém conferir a fatura.
 - **As variações de formato acabaram.** Os **16** pontos de log deliberado passam todos pelo helper, entre
   eles `apps/api/proxy.ts:67`, `webhooks/payments/route.ts:223,235`, `users/route.ts:80`,
   `auth/sign-up/route.ts:58`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
-  `(shared)/lib/storage.ts:89`, `account-avatar.ts:45`, `entity-photo.ts:62` e os dois que a PR #18 trouxe
-  em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). *(Âncoras de `proxy.ts` e `storage.ts` remedidas em 2026-09-23: a PR #23 deslocou as duas. A mesma PR
+  `(shared)/lib/storage.ts:109`, `account-avatar.ts:45`, `entity-photo.ts:62` e os dois que a PR #18 trouxe
+  em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). *(Âncoras de `proxy.ts` e `storage.ts` remedidas em 2026-09-23: a PR #23 deslocou as duas; a de `storage.ts` desceu de novo para `:109` com a PR #31, remedida em 2026-09-29. A PR #23 também
   acrescentou dois pontos novos pelo helper, `account-export.ts:100` e `account-erasure.ts:159`: `git grep "logEvent("`
   fora de `__tests__` dá 19 chamadas hoje, contra 17 no `03498ae`. A distância entre 17 e os 16 desta
   linha é de recorte, não de fato. Chamadas de `console` cru seguem em 19 linhas de 12 arquivos (recontado em 2026-09-27; o `console.warn` de

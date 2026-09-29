@@ -28,6 +28,7 @@ Regras de escopo para os pacotes compartilhados `@repo/*`. O Claude carrega este
 ### React Hook Form (`components/form/hookform/`)
 
 - Componentes **`HookForm*`** estendem o UI base com `Omit<…>` sobre props que o controller gere (`value`, `onChange`, `error`, …); repassar **`{...rest}`**.
+- Todo **`HookForm*`** usa **`FormField`** (nunca `Controller` direto) e envolve o controle focável em **`FormControl`**; componente composto repassa `aria-describedby` a esse controle. É o que liga o campo à mensagem de erro no leitor de tela.
 - **`HookFormSwitch`**: um único **`Switch`** dentro de **`FormControl`**; **`FormLabel`** opcional ao lado; sem aninhar dois `Switch` nem `switchSlot`. **`FormDescription`** / **`FormMessage`** quando necessário.
 
 ### Barrel `components/ui/index.ts`
