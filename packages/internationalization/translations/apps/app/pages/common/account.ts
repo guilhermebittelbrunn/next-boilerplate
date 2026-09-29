@@ -15,7 +15,27 @@ export const commonAccountPageTranslations = {
             phone: "Telefone",
             phonePlaceholder: "+55 51 99999-0000",
             email: "E-mail",
-            emailHint: "A troca de e-mail estará disponível em breve.",
+            emailChange: {
+                action: "Trocar e-mail",
+                unsupported:
+                    "Esta conta entra pelo Google e não tem senha para confirmar a troca de e-mail.",
+                dialogTitle: "Trocar o e-mail da conta",
+                dialogDescription:
+                    "Enviamos um link para o novo endereço. O e-mail só muda quando você abrir esse link; até lá, você continua entrando com o atual. O endereço atual recebe um aviso.",
+                newEmail: "Novo e-mail",
+                newEmailPlaceholder: "voce@exemplo.com",
+                currentPassword: "Senha atual",
+                confirm: "Enviar link",
+                cancel: "Cancelar",
+                validation: {
+                    emailRequired: "Informe o novo e-mail.",
+                    emailInvalid: "Informe um e-mail válido.",
+                    emailMax: "O e-mail pode ter no máximo 320 caracteres.",
+                    emailSameAsCurrent: "O novo e-mail é igual ao atual.",
+                    passwordRequired: "Informe a senha.",
+                    passwordMin: "A senha deve ter ao menos 6 caracteres.",
+                },
+            },
             avatar: "Foto de perfil (URL)",
             avatarPlaceholder: "https://exemplo.com/foto.jpg",
             avatarHint:
@@ -154,6 +174,8 @@ export const commonAccountPageTranslations = {
         messages: {
             profileUpdated: "Perfil atualizado.",
             passwordChanged: "Senha alterada. Entre novamente para continuar.",
+            emailChangeRequested:
+                "Link enviado para o novo e-mail. A troca acontece quando você abrir o link.",
             preferencesUpdated: "Preferências atualizadas.",
             sessionsRevoked: "Todas as sessões foram encerradas.",
             dataExported: "Os seus dados foram baixados.",
@@ -177,7 +199,29 @@ export const commonAccountPageTranslations = {
             phone: "Phone",
             phonePlaceholder: "+1 555 000-0000",
             email: "E-mail",
-            emailHint: "Changing your e-mail will be available soon.",
+            emailChange: {
+                action: "Change email",
+                unsupported:
+                    "This account signs in with Google and has no password to confirm an email change.",
+                dialogTitle: "Change the account email",
+                dialogDescription:
+                    "We send a link to the new address. The email only changes when you open that link; until then, you keep signing in with the current one. The current address gets a notice.",
+                newEmail: "New email",
+                newEmailPlaceholder: "you@example.com",
+                currentPassword: "Current password",
+                confirm: "Send link",
+                cancel: "Cancel",
+                validation: {
+                    emailRequired: "Enter the new email.",
+                    emailInvalid: "Enter a valid email.",
+                    emailMax: "The email can have at most 320 characters.",
+                    emailSameAsCurrent:
+                        "The new email is the same as the current one.",
+                    passwordRequired: "Enter the password.",
+                    passwordMin:
+                        "The password must have at least 6 characters.",
+                },
+            },
             avatar: "Profile picture (URL)",
             avatarPlaceholder: "https://example.com/photo.jpg",
             avatarHint:
@@ -316,6 +360,8 @@ export const commonAccountPageTranslations = {
         messages: {
             profileUpdated: "Profile updated.",
             passwordChanged: "Password changed. Sign in again to continue.",
+            emailChangeRequested:
+                "Link sent to the new email. The change happens when you open the link.",
             preferencesUpdated: "Preferences updated.",
             sessionsRevoked: "Every session has been ended.",
             dataExported: "Your data has been downloaded.",
@@ -339,7 +385,29 @@ export const commonAccountPageTranslations = {
             phone: "Teléfono",
             phonePlaceholder: "+34 600 000 000",
             email: "Correo electrónico",
-            emailHint: "El cambio de correo estará disponible pronto.",
+            emailChange: {
+                action: "Cambiar correo",
+                unsupported:
+                    "Esta cuenta entra con Google y no tiene contraseña para confirmar el cambio de correo.",
+                dialogTitle: "Cambiar el correo de la cuenta",
+                dialogDescription:
+                    "Enviamos un enlace a la nueva dirección. El correo solo cambia cuando abras ese enlace; hasta entonces, sigues entrando con el actual. La dirección actual recibe un aviso.",
+                newEmail: "Nuevo correo",
+                newEmailPlaceholder: "tu@ejemplo.com",
+                currentPassword: "Contraseña actual",
+                confirm: "Enviar enlace",
+                cancel: "Cancelar",
+                validation: {
+                    emailRequired: "Indica el nuevo correo.",
+                    emailInvalid: "Indica un correo válido.",
+                    emailMax:
+                        "El correo puede tener como máximo 320 caracteres.",
+                    emailSameAsCurrent: "El nuevo correo es igual al actual.",
+                    passwordRequired: "Indica la contraseña.",
+                    passwordMin:
+                        "La contraseña debe tener al menos 6 caracteres.",
+                },
+            },
             avatar: "Foto de perfil (URL)",
             avatarPlaceholder: "https://ejemplo.com/foto.jpg",
             avatarHint:
@@ -480,6 +548,8 @@ export const commonAccountPageTranslations = {
             profileUpdated: "Perfil actualizado.",
             passwordChanged:
                 "Contraseña cambiada. Vuelve a entrar para continuar.",
+            emailChangeRequested:
+                "Enlace enviado al nuevo correo. El cambio ocurre cuando abras el enlace.",
             preferencesUpdated: "Preferencias actualizadas.",
             sessionsRevoked: "Se cerraron todas las sesiones.",
             dataExported: "Tus datos se han descargado.",

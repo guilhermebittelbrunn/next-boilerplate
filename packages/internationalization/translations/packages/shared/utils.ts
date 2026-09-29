@@ -95,6 +95,11 @@ export const sharedUtilsTranslations = {
                 "Não foi possível redefinir a senha. Peça um novo link.",
             AUTH_EMAIL_VERIFICATION_FAILED:
                 "Não foi possível confirmar o e-mail. Peça um novo link.",
+            AUTH_EMAIL_CHANGE_FAILED:
+                "Não foi possível trocar o e-mail. Peça a troca de novo.",
+            ACCOUNT_EMAIL_UNCHANGED: "O novo e-mail é igual ao atual.",
+            ACCOUNT_EMAIL_CHANGE_REAUTH_UNSUPPORTED:
+                "Esta conta não tem senha para confirmar a troca de e-mail.",
             STORAGE_NOT_CONFIGURED:
                 "O envio de arquivos não está configurado. Fale com o suporte.",
             UPLOAD_FILE_MISSING: "Nenhum arquivo foi enviado.",
@@ -206,6 +211,12 @@ export const sharedUtilsTranslations = {
                 "Could not reset the password. Request a new link.",
             AUTH_EMAIL_VERIFICATION_FAILED:
                 "Could not confirm the email. Request a new link.",
+            AUTH_EMAIL_CHANGE_FAILED:
+                "Could not change the email. Request the change again.",
+            ACCOUNT_EMAIL_UNCHANGED:
+                "The new email is the same as the current one.",
+            ACCOUNT_EMAIL_CHANGE_REAUTH_UNSUPPORTED:
+                "This account has no password to confirm the email change.",
             STORAGE_NOT_CONFIGURED:
                 "File uploads are not configured. Contact support.",
             UPLOAD_FILE_MISSING: "No file was sent.",
@@ -324,6 +335,11 @@ export const sharedUtilsTranslations = {
                 "No se pudo restablecer la contraseña. Solicita un enlace nuevo.",
             AUTH_EMAIL_VERIFICATION_FAILED:
                 "No se pudo confirmar el correo. Solicita un enlace nuevo.",
+            AUTH_EMAIL_CHANGE_FAILED:
+                "No se pudo cambiar el correo. Solicita el cambio de nuevo.",
+            ACCOUNT_EMAIL_UNCHANGED: "El nuevo correo es igual al actual.",
+            ACCOUNT_EMAIL_CHANGE_REAUTH_UNSUPPORTED:
+                "Esta cuenta no tiene contraseña para confirmar el cambio de correo.",
             STORAGE_NOT_CONFIGURED:
                 "La subida de archivos no está configurada. Contacta al soporte.",
             UPLOAD_FILE_MISSING: "No se envió ningún archivo.",
