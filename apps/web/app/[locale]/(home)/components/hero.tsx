@@ -1,4 +1,5 @@
-import { Button } from "@repo/design-system/components/ui/button";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import { MoveRight, PhoneCall } from "lucide-react";
 import Link from "next/link";
@@ -24,32 +25,35 @@ export const Hero = async () => {
                         </p>
                     </div>
                     <div className="flex flex-row gap-3">
-                        <Button
-                            className="gap-4"
-                            icon={<PhoneCall />}
-                            size="lg"
-                            variant="outline"
+                        <Link
+                            className={cn(
+                                buttonVariants({
+                                    size: "lg",
+                                    variant: "outline",
+                                }),
+                                "gap-4"
+                            )}
+                            href={`/${locale}/contact`}
                         >
-                            <Link href={`/${locale}/contact`}>
-                                {dictionary.apps.web.pages.cta.primaryCta}{" "}
-                            </Link>
-                        </Button>
-                        <Button
-                            className="gap-4"
-                            icon={<MoveRight />}
-                            size="lg"
+                            <span className="flex items-center gap-2">
+                                <PhoneCall />
+                                {dictionary.apps.web.pages.cta.primaryCta}
+                            </span>
+                        </Link>
+                        <Link
+                            className={cn(
+                                buttonVariants({ size: "lg" }),
+                                "gap-4"
+                            )}
+                            href={
+                                env.NEXT_PUBLIC_APP_URL || `/${locale}/sign-up`
+                            }
                         >
-                            <Link
-                                href={
-                                    env.NEXT_PUBLIC_APP_URL ||
-                                    `/${locale}/sign-up`
-                                }
-                            >
-                                {
-                                    dictionary.apps.web.pages.cta.secondaryCta
-                                }{" "}
-                            </Link>
-                        </Button>
+                            <span className="flex items-center gap-2">
+                                <MoveRight />
+                                {dictionary.apps.web.pages.cta.secondaryCta}
+                            </span>
+                        </Link>
                     </div>
                 </div>
             </div>

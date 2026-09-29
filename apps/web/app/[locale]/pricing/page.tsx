@@ -1,4 +1,5 @@
-import { Button } from "@repo/design-system/components/ui/button";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import { resolveLocale } from "@repo/internationalization/utils";
 import { isSubscriptionMode } from "@repo/next-config/product-mode";
@@ -82,18 +83,21 @@ const Pricing = async ({ params }: PricingProps) => {
                                     }
                                 </span>
                             </p>
-                            <Button
-                                className="mt-8 gap-4"
-                                icon={<MoveRight />}
-                                variant="outline"
+                            <Link
+                                className={cn(
+                                    buttonVariants({ variant: "outline" }),
+                                    "mt-8 gap-4"
+                                )}
+                                href={planCtaHref}
                             >
-                                <Link href={planCtaHref}>
+                                <span className="flex items-center gap-2">
+                                    <MoveRight />
                                     {
                                         dictionary.apps.web.pages.pricing
                                             .items[0].linkButton
                                     }
-                                </Link>
-                            </Button>
+                                </span>
+                            </Link>
                         </div>
                         <div className="flex flex-col gap-2 px-3 py-1 md:px-6 md:py-4">
                             <p className="text-2xl">
@@ -124,14 +128,18 @@ const Pricing = async ({ params }: PricingProps) => {
                                     }
                                 </span>
                             </p>
-                            <Button className="mt-8 gap-4" icon={<MoveRight />}>
-                                <Link href={planCtaHref}>
+                            <Link
+                                className={cn(buttonVariants(), "mt-8 gap-4")}
+                                href={planCtaHref}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <MoveRight />
                                     {
                                         dictionary.apps.web.pages.pricing
                                             .items[1].linkButton
                                     }
-                                </Link>
-                            </Button>
+                                </span>
+                            </Link>
                         </div>
                         <div className="flex flex-col gap-2 px-3 py-1 md:px-6 md:py-4">
                             <p className="text-2xl">
@@ -162,18 +170,21 @@ const Pricing = async ({ params }: PricingProps) => {
                                     }
                                 </span>
                             </p>
-                            <Button
-                                className="mt-8 gap-4"
-                                icon={<PhoneCall />}
-                                variant="outline"
+                            <Link
+                                className={cn(
+                                    buttonVariants({ variant: "outline" }),
+                                    "mt-8 gap-4"
+                                )}
+                                href={`/${locale}/contact`}
                             >
-                                <Link href={`/${locale}/contact`}>
+                                <span className="flex items-center gap-2">
+                                    <PhoneCall />
                                     {
                                         dictionary.apps.web.pages.pricing
                                             .items[2].linkButton
                                     }
-                                </Link>
-                            </Button>
+                                </span>
+                            </Link>
                         </div>
                         <div className="col-span-3 px-3 py-4 lg:col-span-1 lg:px-6">
                             <b>{featuresTable.heading}</b>

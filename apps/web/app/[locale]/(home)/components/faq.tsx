@@ -4,7 +4,8 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@repo/design-system/components/ui/accordion";
-import { Button } from "@repo/design-system/components/ui/button";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
 import { JsonLd } from "@repo/seo/json-ld";
 import { faqPageSchema } from "@repo/seo/schema";
@@ -33,18 +34,20 @@ export const FAQ = async () => {
                                     </p>
                                 </div>
                                 <div className="">
-                                    <Button
-                                        className="gap-4"
-                                        icon={<PhoneCall />}
-                                        variant="outline"
+                                    <Link
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: "outline",
+                                            }),
+                                            "gap-4"
+                                        )}
+                                        href={`/${locale}/contact`}
                                     >
-                                        <Link href={`/${locale}/contact`}>
-                                            {
-                                                dictionary.apps.web.pages.faq
-                                                    .cta
-                                            }{" "}
-                                        </Link>
-                                    </Button>
+                                        <span className="flex items-center gap-2">
+                                            <PhoneCall />
+                                            {dictionary.apps.web.pages.faq.cta}
+                                        </span>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
