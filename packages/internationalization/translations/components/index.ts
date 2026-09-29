@@ -3,6 +3,7 @@ import { actionMenuTranslations } from "./ui/action-menu";
 import { buttonTranslations } from "./ui/button";
 import { cookieConsentTranslations } from "./ui/cookie-consent";
 import { footerTranslations } from "./ui/footer";
+import { inputPasswordTranslations } from "./ui/input-password";
 import { scrollToTopTranslations } from "./ui/scroll-to-top";
 import { selectTranslations } from "./ui/select";
 import { tableTranslations } from "./ui/table";
@@ -17,6 +18,7 @@ export const componentsTranslations = {
         select: selectTranslations["pt-br"],
         scrollToTop: scrollToTopTranslations["pt-br"],
         cookieConsent: cookieConsentTranslations["pt-br"],
+        inputPassword: inputPasswordTranslations["pt-br"],
     },
     en: {
         header: headerTranslations.en,
@@ -27,6 +29,7 @@ export const componentsTranslations = {
         select: selectTranslations.en,
         scrollToTop: scrollToTopTranslations.en,
         cookieConsent: cookieConsentTranslations.en,
+        inputPassword: inputPasswordTranslations.en,
     },
     es: {
         header: headerTranslations.es,
@@ -37,5 +40,6 @@ export const componentsTranslations = {
         select: selectTranslations.es,
         scrollToTop: scrollToTopTranslations.es,
         cookieConsent: cookieConsentTranslations.es,
+        inputPassword: inputPasswordTranslations.es,
     },
 };

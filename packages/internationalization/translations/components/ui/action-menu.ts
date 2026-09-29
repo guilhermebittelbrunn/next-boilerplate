@@ -1,5 +1,6 @@
 export const actionMenuTranslations = {
     "pt-br": {
+        trigger: "Mais ações",
         edit: "Editar",
         delete: "Excluir",
         deleteConfirmTitle: "Excluir registro",
@@ -9,6 +10,7 @@ export const actionMenuTranslations = {
         deleteConfirmCancel: "Não",
     },
     en: {
+        trigger: "More actions",
         edit: "Edit",
         delete: "Delete",
         deleteConfirmTitle: "Delete record",
@@ -18,6 +20,7 @@ export const actionMenuTranslations = {
         deleteConfirmCancel: "No",
     },
     es: {
+        trigger: "Más acciones",
         edit: "Editar",
         delete: "Eliminar",
         deleteConfirmTitle: "Eliminar registro",

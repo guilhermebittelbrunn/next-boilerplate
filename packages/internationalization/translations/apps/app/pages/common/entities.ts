@@ -2,6 +2,7 @@ export const commonEntitiesPageTranslations = {
     "pt-br": {
         list: {
             searchPlaceholder: "Buscar por nome ou descrição",
+            enabledToggle: "Entidade ativa: {name}",
             empty: "Nenhuma entidade cadastrada.",
             columns: {
                 photo: "Foto",
@@ -78,6 +79,7 @@ export const commonEntitiesPageTranslations = {
     en: {
         list: {
             searchPlaceholder: "Search by name or description",
+            enabledToggle: "Entity enabled: {name}",
             empty: "No entities yet.",
             columns: {
                 photo: "Photo",
@@ -154,6 +156,7 @@ export const commonEntitiesPageTranslations = {
     es: {
         list: {
             searchPlaceholder: "Buscar por nombre o descripción",
+            enabledToggle: "Entidad activa: {name}",
             empty: "No hay entidades registradas.",
             columns: {
                 photo: "Foto",
