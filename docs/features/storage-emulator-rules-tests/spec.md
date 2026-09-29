@@ -1,7 +1,7 @@
 ---
 id: storage-emulator-rules-tests
 title: Emulador de Cloud Storage e testes das security rules
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: dx
@@ -10,10 +10,16 @@ mode: ambos
 depends_on: []
 contends_on: [firebase.json, package.json, turbo.json, apps/api/(shared)/lib/storage.ts, .github/workflows/ci.yml]
 feature: storage-emulator-rules-tests
-updated: 2026-09-27
+updated: 2026-09-29
 ---
 
 # Emulador de Cloud Storage e testes das security rules
+
+> **Entregue** pela PR #31 (`2c285de`, mergeada em 2026-09-28 às 22:18 UTC, branch
+> `feat/storage-emulator-rules-tests`). CI verde no SHA de merge (`gh run 36491617313`: `changes`, `verify`,
+> `coverage` e `e2e` em `success`). A auditoria de 2026-09-29 conferiu os cinco itens do corte no código; o
+> resultado está em [Entrega conferida](#entrega-conferida-em-2026-09-29), no fim deste arquivo. O resto do
+> texto é a spec como foi aprovada, e as âncoras `arquivo:linha` dela descrevem o código de antes da entrega.
 
 ## Problema
 
@@ -40,8 +46,8 @@ abrir uma coleção sem perceber.
   (`apps/api/(shared)/lib/account-erasure.ts:56-68`, `eraseStorage`, passo `storage`).
 - `firestore.rules:32-34` e `storage.rules:26-29`: uma regra de negação total cada. `grep` por
   `rules-unit-testing`, `assertFails` e `assertSucceeds` em código (fora de `node_modules`, `docs/` e `specs/`): 0.
-- A entrega de [`file-upload-storage`](../docs/features/file-upload-storage/test/report.md) fechou com 6 critérios
-  "não verificados" pelo Storage não estar ativo (`test/report.md:138`, `STATE.md:18`), e [`account-settings`](../docs/features/account-settings/spec.md)
+- A entrega de [`file-upload-storage`](../file-upload-storage/test/report.md) fechou com 6 critérios
+  "não verificados" pelo Storage não estar ativo (`test/report.md:138`, `STATE.md:18`), e [`account-settings`](../account-settings/spec.md)
   com o caminho feliz do avatar sem verificação. As pendências 11 e 18 do `BACKLOG.md` ("Cloud Storage não
   ativado", "`storage.rules` nunca publicado nem testado") seguem abertas pelo mesmo motivo.
 - **Lacuna:** nenhum ambiente reproduzível onde upload, leitura por URL assinada e remoção de arquivos rodem
@@ -57,7 +63,7 @@ o custo marginal de incluir mais um caiu.
 
 ## Evidência de mercado
 
-- Nota: [`research/engineering-baseline.md`](research/engineering-baseline.md), prática 3 e adendo de
+- Nota: [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md), prática 3 e adendo de
   2026-09-26.
 - A prática 3 ("testes de security rules") é classificada como **obrigatória com Firebase**: a doc do
   Firebase trata as rules como a única barreira contra acesso direto do cliente.
@@ -141,3 +147,42 @@ descartada. As consequências estão em "Riscos e trade-offs" e são o `/analyze
 - Se o `getSignedUrl` não funcionar sob o emulador, aceitar prova só de escrita e remoção? —
   **recomendação:** não; o `/analyze` procura um contorno restrito ao modo emulado e, se não houver, a leitura
   vira critério 🔒 declarado.
+
+**Resolvida na entrega:** o `getSignedUrl` não funciona sob o emulador sem chave privada (a biblioteca pede ao
+IAM do Google para assinar). O contorno ficou restrito ao modo emulado: com `FIREBASE_STORAGE_EMULATOR_HOST`,
+`signReadUrl` devolve a URL de caminho do emulador, sem assinatura (`apps/api/(shared)/lib/storage.ts:84-93`).
+Em produção o caminho V4 segue igual (`:95-99`). A leitura foi provada sob o emulador; objeto que não abre sem
+assinatura e expiração da URL continuam dependendo de bucket real (`docs/PRE-PRODUCTION.md` §6).
+
+## Entrega conferida em 2026-09-29
+
+Auditoria do `/spec --sync` sobre `origin/main` em `2c285de`. Cada item foi lido no código e os testes rodaram
+neste workspace com JDK 21.
+
+| item do corte | veredito | evidência |
+|---------------|----------|-----------|
+| 1. `pnpm emulators` sobe o Storage; a API usa o bucket emulado e nunca um real nesse modo | implementado | `firebase.json:16-18` (porta 9199); `package.json:14` (`--only auth,firestore,storage`); `isStorageConfigured()` e `bucketName()` em `apps/api/(shared)/lib/storage.ts:35-42` trocam para `DEMO_STORAGE_BUCKET` quando há host de emulador; `storageEmulatorHost()` lê só o nome que o Admin SDK lê (`packages/auth/emulator.ts:43-44`); teste `storageEmulatorIsolation.test.ts` |
+| 2. Upload, leitura pela URL e remoção sob o emulador, com caminho feliz e recusa de dono errado | implementado | `apps/api/__tests__/storageUpload.emulator.test.ts:133` (grava, lista e baixa o objeto pela URL devolvida, comparando os bytes), `:156` (troca de avatar apaga o anterior), `:187` (objeto de outro dono é recusado e continua no lugar) |
+| 3. Passo `storage` do expurgo apaga os objetos do titular | implementado | `apps/api/__tests__/accountErasureStorage.emulator.test.ts:57` ("deletes every object of the data subject and nobody else's") |
+| 4. Rules do Firestore e do Storage recusam cliente anônimo e autenticado; o teste quebra se a negação afrouxar | implementado | `firestoreRules.emulator.test.ts` (145 testes; coleções descobertas nos repositórios, `:30-43`, e três identidades, `:84-88`, entre elas o dono do documento) e `storageRules.emulator.test.ts` (20 testes, mesmas três identidades, `:63-67`, conferindo o código `storage/unauthorized`); o `/test` mediu as duas mutações `if true` quebrando a suíte |
+| 5. Os testes rodam no `pnpm test`, no job `verify` e antes do `pnpm build` | implementado, com deriva | `package.json:19` (`turbo test test:emulator`); `turbo.json:30-34` (task sem cache); `.github/workflows/ci.yml:39-42` (Temurin 21) e `:53`; na execução de merge o `verify` rodou `api:test:emulator` com 170 testes em 4 arquivos. O `build` depende só de `test` (`turbo.json:17`), não de `test:emulator` |
+
+**Veredito:** 5/5, com uma deriva no item 5 e duas diferenças de letra que a spec não previa:
+
+- **O `build` não roda os testes contra emulador.** A spec pedia "antes de todo `pnpm build`" e, nos riscos,
+  admitia separar o que o build exige do que o gate exige. A Vercel não tem Java, então a outra opção
+  quebraria todo deploy (pergunta 1 do §14 do plano, adotada como "build depende só de `test`"). Leitura: a
+  spec estava errada na letra; os riscos já descreviam a saída.
+- **`apps/app` mudou**, embora a spec dissesse "nenhum código": sem a flag `NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST`
+  (`apps/app/env.ts:25`, `apps/app/shared/lib/storageEnabled.ts:3-7`) e a origem do emulador na CSP, o
+  seletor de avatar não aparecia sob emulador. Leitura: a spec estava errada.
+- **Os testes de rules usam o SDK cliente do Firebase contra o emulador**, não `@firebase/rules-unit-testing`.
+  A spec citava a biblioteca como evidência de que dá para testar, não como requisito. O `firebase` entrou
+  como dependência de desenvolvimento da `apps/api`, na mesma versão que o monorepo já instalava.
+
+Gates remedidos na auditoria: `pnpm turbo run test:emulator --force` com JDK 21, 13/13 tasks, 170 testes em
+4 arquivos, 33,5 s; `pnpm turbo run lint typecheck test --force`, 27/27 tasks. O critério 13 do `/test`
+(`verify` no GitHub), que ficou 🔒, foi medido depois do merge e passou.
+
+O que segue aberto depois da entrega está no `BACKLOG.md`: o avatar do menu de perfil sem `alt`, a falta de
+trava contra host de emulador em produção e as lacunas de teste herdadas do `/review` e do `/test`.

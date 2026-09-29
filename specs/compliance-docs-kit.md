@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: []
 feature: -
-updated: 2026-09-27
+updated: 2026-09-29
 ---
 
 # Modelos de conformidade: RoPA, incidente, subprocessadores e backup
@@ -29,7 +29,7 @@ Arcjet, Google Analytics. Escrever cada um do zero em cada fork é retrabalho, e
 
 - `docs/` tem `SECURITY.md` (modelo de segurança do código), `PRE-PRODUCTION.md` (passos manuais) e `SETUP.md`.
   `grep` por `incident`, `breach`, `vazamento`, `ANPD`, `RoPA`, `subprocess` e `DPA` nos `docs/*.md`: nenhum
-  documento sobre isso. "Incidente" aparece só de passagem em `docs/PRE-PRODUCTION.md:52` e `:660`; os demais
+  documento sobre isso. "Incidente" aparece só de passagem em `docs/PRE-PRODUCTION.md:52` e `:658`; os demais
   termos ficam em `specs/` (a nota `research/compliance-trust-baseline.md` e o `BACKLOG.md`).
 - `apps/web/app/[locale]/legal/privacy/page.tsx` e `legal/terms/page.tsx` publicam avisos-modelo, com o texto em
   `packages/internationalization/translations/apps/web/pages/legal/index.ts` e o aviso "Substitua por sua

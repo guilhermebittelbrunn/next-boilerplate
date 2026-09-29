@@ -1,7 +1,7 @@
 ---
 id: accessibility-conformance
 title: "Acessibilidade: allowlist do axe zerada e testes no design system"
-status: approved
+status: in-progress
 value: alto
 effort: M
 audience: confianca
@@ -9,8 +9,8 @@ area: [packages/design-system, apps/app, apps/web, apps/e2e, packages/internatio
 mode: ambos
 depends_on: []
 contends_on: [packages/design-system/components/ui/form.tsx, packages/design-system/components/ui/button.tsx, packages/design-system/styles/globals.css, packages/design-system/package.json, apps/e2e/a11y/allowlist.ts]
-feature: -
-updated: 2026-09-27
+feature: accessibility-conformance
+updated: 2026-09-29
 ---
 
 # Acessibilidade: allowlist do axe zerada e testes no design system
@@ -55,6 +55,12 @@ teste se voltasse.
 - Achados já registrados no `BACKLOG.md` e absorvidos por esta spec: `aria-invalid` dos `HookForm*`, `Button`
   com `loading`, contraste do `--destructive`, gatilho do `ActionsMenu`, os sete grupos da allowlist e a task
   de teste do design system.
+- `apps/app/shared/components/ui/ProfileDropdown.tsx:45`: `<AvatarImage src={avatarSrc} />` sem `alt`. Com
+  avatar enviado, o axe acusa `image-alt` (serious) em toda página autenticada (medido pelo `/test` de
+  `storage-emulator-rules-tests` em 2026-09-28). A suíte E2E não vê porque o usuário do seed não tem avatar, e
+  o caso não está no corte abaixo, que fala de controles sem nome. O gatilho do menu já tem `aria-label`
+  (`:42`), então a correção provável é `alt=""`. *(Acrescentado pela auditoria de 2026-09-29; o corte não
+  mudou.)*
 - **Lacuna:** nenhuma das exceções saiu desde a PR #26, exceto a parte do header da web consertada na PR #28;
   nenhum teste de componente protege o que for consertado.
 

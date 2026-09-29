@@ -1,6 +1,6 @@
 # Plano: emulador de Cloud Storage e testes das security rules
 
-- **Spec:** [`specs/storage-emulator-rules-tests.md`](../../../../specs/storage-emulator-rules-tests.md) (`approved`, decisão do usuário de 2026-09-26 sobre `pnpm test` incluída)
+- **Spec:** [`spec.md`](../spec.md) (arquivada em 2026-09-29; nasceu em `specs/storage-emulator-rules-tests.md`, `approved`, decisão do usuário de 2026-09-26 sobre `pnpm test` incluída)
 - **Card:** nenhum
 - **Rodada:** `/cycle` autônomo. Nada foi perguntado; as decisões estão em §13 e as perguntas em §14, cada uma com a opção adotada.
 - **Branch:** a atual é `barcelona`, fora do padrão. Quem nomeia e cria é o `revisor-codigo`.
