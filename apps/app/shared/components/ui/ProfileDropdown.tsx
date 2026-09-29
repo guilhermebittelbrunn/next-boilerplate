@@ -42,7 +42,7 @@ export default function ProfileDropdown() {
             <DropdownMenuTrigger aria-label={profileDropdown.triggerLabel}>
                 <div className="flex w-full max-w-56 items-center gap-3 truncate">
                     <Avatar className="h-9 w-9">
-                        <AvatarImage src={avatarSrc} />
+                        <AvatarImage alt="" src={avatarSrc} />
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <span className="hidden truncate md:inline">
