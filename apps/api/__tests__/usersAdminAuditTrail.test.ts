@@ -15,6 +15,7 @@ const {
     resolveLabelMock,
     updateUserMock,
     getMergedUserMock,
+    revokeUserSessionsMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
@@ -25,6 +26,7 @@ const {
     resolveLabelMock: vi.fn(),
     updateUserMock: vi.fn(),
     getMergedUserMock: vi.fn(),
+    revokeUserSessionsMock: vi.fn(),
 }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
@@ -60,6 +62,7 @@ vi.mock("@/(shared)/lib/user-merge", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ updateUser: updateUserMock }),
     getCurrentUser: vi.fn(),
+    revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
 }));
 
 vi.mock("@repo/payments", () => ({
@@ -122,6 +125,7 @@ beforeEach(() => {
         resolveLabelMock,
         updateUserMock,
         getMergedUserMock,
+        revokeUserSessionsMock,
     ]) {
         mock.mockReset();
     }
@@ -138,6 +142,7 @@ beforeEach(() => {
     deleteMock.mockResolvedValue(undefined);
     updateUserMock.mockResolvedValue({});
     getMergedUserMock.mockResolvedValue({ id: TARGET_DOC_ID });
+    revokeUserSessionsMock.mockResolvedValue(undefined);
 });
 
 describe("DELETE /users/[id] leaves a trail", () => {
@@ -240,5 +245,95 @@ describe("PUT /users/[id] leaves a trail", () => {
             type: UserType.ADMIN,
         });
         expect(recordAuditEventMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("PUT /users/[id] revokes sessions when disabling", () => {
+    it("revokes the target's sessions after disabling it in Firebase Auth", async () => {
+        const order: string[] = [];
+        updateUserMock.mockImplementation(() => {
+            order.push("updateUser");
+            return Promise.resolve({});
+        });
+        revokeUserSessionsMock.mockImplementation(() => {
+            order.push("revoke");
+            return Promise.resolve();
+        });
+        recordAuditEventMock.mockImplementation(() => {
+            order.push("audit");
+            return Promise.resolve();
+        });
+
+        const response = await PUT(request({ disabled: true }), routeContext);
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(await response.json()).toEqual({ data: { id: TARGET_DOC_ID } });
+        expect(updateUserMock).toHaveBeenCalledWith(TARGET_UID, {
+            disabled: true,
+        });
+        expect(revokeUserSessionsMock).toHaveBeenCalledTimes(1);
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(TARGET_UID);
+        expect(order).toEqual(["updateUser", "revoke", "audit"]);
+        expect(recordedEvent().changedFields).toEqual(["disabled"]);
+    });
+
+    it("revokes when disabling together with other edits", async () => {
+        await PUT(
+            request({ type: UserType.ADMIN, disabled: true }),
+            routeContext
+        );
+
+        expect(revokeUserSessionsMock).toHaveBeenCalledTimes(1);
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(TARGET_UID);
+    });
+
+    it("does not revoke when re-enabling", async () => {
+        const response = await PUT(request({ disabled: false }), routeContext);
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateUserMock).toHaveBeenCalledWith(TARGET_UID, {
+            disabled: false,
+        });
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ["displayName", { displayName: "New Name" }],
+        ["type", { type: UserType.ADMIN }],
+        ["type and displayName", { type: UserType.ADMIN, displayName: "N" }],
+    ])("does not revoke for an edit of %s alone", async (_label, body) => {
+        const response = await PUT(request(body), routeContext);
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+
+    it("does not revoke when Firebase Auth fails", async () => {
+        updateUserMock.mockRejectedValue(new Error("auth is down"));
+
+        await expect(
+            PUT(request({ disabled: true }), routeContext)
+        ).rejects.toThrow("auth is down");
+
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+
+    it("does not revoke for a profile that does not exist", async () => {
+        findByIdMock.mockResolvedValue(null);
+
+        const response = await PUT(request({ disabled: true }), routeContext);
+
+        expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+        expect(await response.json()).toEqual({
+            error: { code: "USERS_NOT_FOUND" },
+        });
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+
+    it("does not revoke for an empty patch", async () => {
+        const response = await PUT(request({}), routeContext);
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
     });
 });

@@ -606,15 +606,15 @@ repositório.
 do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falha observada de 1 em 2. A PR
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
-Remedido em **2026-09-29**, com o `HEAD` em `3e5ec4c` (PR #32 já mergeada), sem mudança de código no working
+Remedido em **2026-09-30**, com o `HEAD` em `c7aa4d9` (PR #34 já mergeada), sem mudança de código no working
 tree. Os números de tasks, arquivos e testes abaixo são dessa medição:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **13 de 13** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/design-system`, `packages/email`, `packages/internationalization`, `packages/next-config`, `packages/payments`, `packages/security`, `packages/shared`); a de `packages/next-config` entrou em 2026-09-27, com a marca configurável, e a de `packages/design-system` na PR #32. O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
-| gate completo, sem cache | `pnpm turbo run lint typecheck test --force` | ✅ **28/28 tasks**, 0 em cache, **1 min 5,8 s** |
-| lint/format | `pnpm check` | **792 arquivos**, 0 correções |
-| suíte | 13 tasks de teste | **2296 testes em 220 arquivos**. A suíte contra emulador (`api#test:emulator`, 170 testes em 4 arquivos) fica fora desta linha: ela roda no `pnpm test` e no `verify`, com JDK 21 |
+| gate completo, sem cache | `pnpm turbo run lint typecheck test test:emulator --force`, com JDK 21 | ✅ **29/29 tasks** (as 28 de `lint typecheck test` mais `api#test:emulator`), 0 em cache, **1 min 6,3 s** |
+| lint/format | `pnpm check` | **806 arquivos**, 0 correções |
+| suíte | 13 tasks de teste | **2452 testes em 226 arquivos**. A suíte contra emulador (`api#test:emulator`, 170 testes em 4 arquivos) fica fora desta contagem: ela roda no `pnpm test` e no `verify`, com JDK 21 |
 
 Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 894 em 73 arquivos, `apps/app` 608 em
 78, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/internationalization` 59 em 6, `@repo/shared` 44
@@ -627,13 +627,14 @@ somou 53 testes em 5 arquivos de paginação; a #18 somou 136 testes em 12 arqui
 4 arquivos (2 em `packages/auth`, 2 em `apps/app`) e 6 arquivos ao `pnpm check`. Da PR #21 à #24, a suíte
 foi de 1325 para 1615 testes e o `pnpm check`, de 607 para 666 arquivos; a PR #25 somou 202 testes em 16
 arquivos e 33 arquivos ao `pnpm check`; a PR #32 somou 59 testes em 8 arquivos, 10 arquivos ao `pnpm check`
-e a task `@repo/design-system#test`, que levou as tasks de 27 para 28 e as configs de 12 para 13.
+e a task `@repo/design-system#test`, que levou as tasks de 27 para 28 e as configs de 12 para 13; a PR #33
+somou 156 testes em 6 arquivos e 14 arquivos ao `pnpm check`, e a #34 só trouxe documentação.
 **Remedir antes de citar** — nenhum destes números é estável, nem a contagem de tasks e de configs, que
 mudou na PR #32. Cada uma das oito últimas auditorias encontrou a contagem de testes e de arquivos defasada, sempre pelo mesmo mecanismo: eles
 são medidos corretamente e invalidados pela entrega seguinte. Leia-os como "medido em tal data", nunca como
 fato corrente.
 
-O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s, 1 min 2,7 s, 56,7 s, 47,8 s e agora 1 min 5,8 s, com a
+O tempo do gate já foi medido em 1 min 30 s, 30,6 s, 1 min 16,6 s, 1 min 12,4 s, 1 min 2,7 s, 56,7 s, 47,8 s, 1 min 5,8 s e agora 1 min 6,3 s (esta última já com `test:emulator` na linha), com a
 suíte sempre maior. A variação é contenção da máquina no momento, não ganho ou perda de suíte. Não use este número para
 dimensionar CI.
 
@@ -885,6 +886,11 @@ recusada em vez de criar a conta.
         formulários do `/develop` e do `/review`, mas nenhuma conta com esse endereço chegou a existir: o
         `/forgot-password` para no `EMAIL_NOT_CONFIGURED` antes de consultar o Authentication, e as
         tentativas de `sign-in` falharam por credencial inválida. Nada a apagar.
+      - **Da tarefa `disabled-account-revocation`: nenhuma sobrou.** O `/test` de 2026-09-30 criou
+        `qa-disabled-revocation@example.com` pelo `POST /auth/sign-up`, desativou e reativou a conta, e
+        apagou no fim o usuário do Authentication, o doc `user` e os 2 eventos `auditEvent` que o `PUT`
+        gravou. Usou `qa-admin@` como ator por token customizado, sem senha; ela continua existindo e
+        ganhou só um `lastAccessAt` novo.
 
       > **Padrão a corrigir no processo, não na lista:** esta seção é atualizada por quem entrega, e em
       > 2026-09-15 a entrega anterior não a atualizou. Foram **15 contas** acumuladas em 12 PRs, todas

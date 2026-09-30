@@ -1,7 +1,7 @@
 ---
 id: compliance-docs-kit
 title: "Modelos de conformidade: RoPA, incidente, subprocessadores e backup"
-status: in-progress
+status: done
 value: médio
 effort: P
 audience: confianca
@@ -29,7 +29,7 @@ Arcjet, Google Analytics. Escrever cada um do zero em cada fork é retrabalho, e
 
 - `docs/` tem `SECURITY.md` (modelo de segurança do código), `PRE-PRODUCTION.md` (passos manuais) e `SETUP.md`.
   `grep` por `incident`, `breach`, `vazamento`, `ANPD`, `RoPA`, `subprocess` e `DPA` nos `docs/*.md`: nenhum
-  documento sobre isso. "Incidente" aparece só de passagem em `docs/PRE-PRODUCTION.md:52` e `:658`; os demais
+  documento sobre isso. "Incidente" aparecia só de passagem em `docs/PRE-PRODUCTION.md:52` e `:658` (hoje `:670`, depois da entrega); os demais
   termos ficam em `specs/` (a nota `research/compliance-trust-baseline.md` e o `BACKLOG.md`).
 - `apps/web/app/[locale]/legal/privacy/page.tsx` e `legal/terms/page.tsx` publicam avisos-modelo, com o texto em
   `packages/internationalization/translations/apps/web/pages/legal/index.ts` e o aviso "Substitua por sua
@@ -42,9 +42,45 @@ Arcjet, Google Analytics. Escrever cada um do zero em cada fork é retrabalho, e
 - **Lacuna:** nenhum modelo de registro de operações, runbook de incidente, lista de subprocessadores, nota de
   transferência internacional ou procedimento de backup e restauração.
 
+## Entrega
+
+Entregue pela PR #34, mergeada em `main` como `c7aa4d9` ("docs: compliance templates for RoPA, incidents,
+subprocessors and backup") em 2026-09-30 às 14:10 UTC, da branch `run-full-task-cycle-v2`. Na PR, `verify` e
+`changes` passaram e `e2e` e `coverage` foram pulados, como previsto para PR só de documentação. A execução de
+merge (`gh run 36727057243`) terminou em `success` nos quatro jobs, `e2e` incluído. A auditoria de 2026-09-30
+conferiu os seis itens do corte no disco:
+
+| item do corte | o que o repositório mostra |
+|---------------|----------------------------|
+| 1. Registro de operações nos campos do modelo da ANPD, preenchido com o que o core faz | `docs/ROPA.md`: contato em `:32-43`, registros em `:45-182` (nove operações do core e um bloco `[FORK]` para o domínio, `:168`), medidas comuns em `:183`. Hipótese legal marcada `[FORK] confirmar` |
+| 2. Runbook de incidente com papéis, avaliação, prazos com fonte, registro e evidência | `docs/INCIDENT-RESPONSE.md`: papéis `:14`, prazos da Res. CD/ANPD 15/2024 e do GDPR com o artigo ao lado `:24-44`, conter `:46`, evidência `:57`, avaliação `:70`, registro de 5 anos `:115` |
+| 3. Lista de subprocessadores com finalidade, dado, região, DPA e obrigatoriedade | `docs/SUBPROCESSORS.md:25-86`: 9 serviços em 5 empresas, cada um com a variável que o liga e `arquivo:linha` da chamada; "O que não entra" em `:88` |
+| 4. Nota de transferência internacional, sem afirmar adequação não confirmada | `docs/SUBPROCESSORS.md:113` em diante (LGPD arts. 33 e 35, Res. CD/ANPD 19/2024); o DPA da Arcjet e a cobertura do Vercel Web Analytics ficam como "não encontrado" e "não confirmado" |
+| 5. Backup e restauração do Firestore, com o limite do Spark e o teste de restauração | `docs/BACKUP.md`: Spark sem backup de nenhum tipo `:11-33`, agendamento no Blaze `:49`, restauração `:80`, teste como rotina `:142` |
+| 6. `docs/PRE-PRODUCTION.md` aponta para os documentos | §14, `:702-718`, com os quatro links nos itens `:704-707`; também `:387` (§7) e `:741` |
+
+Medições da auditoria: os 91 `arquivo:linha` de código citados nos quatro documentos existem e cabem no
+arquivo, e os 38 links relativos resolvem. Os pacotes de provedor declarados nos `package.json` são os da
+lista, mais o `@stripe/agent-toolkit`, que a própria lista exclui por não ter consumidor. O `/test` fechou com
+18 ✅, 0 ❌ e 2 🔒 (backup no Blaze e conformidade jurídica, que nenhuma rodada autônoma prova).
+
+### Deriva
+
+| ponto | especificado | entregue | leitura |
+|-------|--------------|----------|---------|
+| operações no registro | seis (cadastro, sessão, cobrança, e-mail, analytics, trilha) | nove, mais o bloco do fork: entraram o formulário de contato, a proteção contra abuso e os arquivos enviados | a spec estava incompleta; o plano levantou as operações no código |
+| nota de transferência | documento próprio, pela leitura dos "quatro documentos" | seção de `SUBPROCESSORS.md` | mesma informação, um arquivo a menos |
+| escopo | `docs/` e ponteiros no `PRE-PRODUCTION.md` | também uma ressalva no `docs/FORKING.md:166-168` (o Spark não tem backup) | frase que ficaria falsa com o `BACKUP.md` publicado |
+| `contends_on` | vazio | a PR alterou `docs/PRE-PRODUCTION.md` e `docs/FORKING.md`, que nenhuma spec declara | sem custo; nenhuma outra spec estava em execução |
+| registro da feature | `STATE.md` com `branch: docs/compliance-docs-kit (proposta…)` | a PR saiu da `run-full-task-cycle-v2`, e a renomeação não aconteceu | deriva de pipeline, a mesma de E11 no `BACKLOG.md` |
+
+**Achado que a entrega produziu:** a medição do `/test` confirmou que conta desativada pelo admin segue com o
+ID token aceito pela API por até 1 hora. Está no `BACKLOG.md` como achado de segurança e na spec
+[`account-security-mfa`](../../../specs/account-security-mfa.md).
+
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md), controles 6, 8, 9 e
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md), controles 6, 8, 9 e
   19, e adendo de 2026-09-26.
 - Natureza da obrigação: **lei**. Registro de operações: LGPD art. 37, que a Res. CD/ANPD 2/2022 art. 9º permite
   cumprir de forma simplificada para pequeno porte, sem isentar. Incidente: Res. CD/ANPD 15/2024, com

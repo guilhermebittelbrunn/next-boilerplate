@@ -62,7 +62,7 @@ segue invisível até alguém conferir a fatura.
   duas novas do escopo `payments` (`webhook-invoice-recorded` no webhook e `plan-label-unresolved` em
   `(shared)/lib/plan-label.ts:49`). As duas âncoras de falha do webhook desceram para `:223` e `:235`.
   Remedido em 2026-09-26, depois da PR #28: **29** linhas. A nova é `admin-user-delete-billing-failed`,
-  escopo `payments`, em `users/[id]/route.ts:159`, emitida quando o arquivamento pelo admin não consegue
+  escopo `payments`, em `users/[id]/route.ts:163`, emitida quando o arquivamento pelo admin não consegue
   cancelar a assinatura. As âncoras do webhook conferem. Remedido em 2026-09-27, depois da PR #29: **31**
   linhas. As duas novas são do escopo `auth`, na rota de cadastro: `sign-up-failed` (`auth/sign-up/route.ts:44`)
   e `sign-up-rollback-failed` (`:62`). A chamada antiga da mesma rota, `profile-create-failed`, desceu para

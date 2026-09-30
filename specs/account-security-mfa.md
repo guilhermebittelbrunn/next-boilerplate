@@ -289,26 +289,22 @@ in-progress` embora a PR tenha sido mergeada; a auditoria não escreve ali e reg
 `BACKLOG.md`. A próxima fatia deve abrir pasta própria em `docs/features/` ou reaproveitar esta com um
 `STATE.md` novo; decidir isso é do `/analyze` daquela fatia.
 
-### Achado ligado à fatia 2 (auditoria de 2026-09-30)
+### Achado ligado à fatia 2 (auditoria de 2026-09-30): corrigido
 
-**Conta desativada pelo admin segue com o ID token aceito pela API até ele expirar, em até 1 hora.** O
-`PUT /users/[id]` com `disabled: true` só chama `updateUser` (`apps/api/app/(routes)/users/[id]/route.ts:117-122`)
-e não revoga os tokens. O bearer passa por `getCurrentUser` (`packages/auth/server.ts:180-184`, chamado em
-`apps/api/(shared)/lib/resolve-api-actor.ts:24`), que usa `verifyIdToken` sem `checkRevoked`, compara o token
-com a marca de revogação e não confere `user.disabled`. O cookie de sessão não tem o problema, porque passa
-por `verifySessionCookie(..., true)` (`server.ts:298-301`). O `/test` de `compliance-docs-kit` mediu o
-comportamento em 2026-09-30 contra o projeto Firebase de desenvolvimento
-([`test/report.md`](../docs/features/compliance-docs-kit/test/report.md), linhas 20 e 51-53).
+**Conta desativada pelo admin seguia com o ID token aceito pela API até ele expirar.** Corrigido em
+2026-09-30 por tarefa direta ([`disabled-account-revocation`](../docs/features/disabled-account-revocation/)),
+em dois pontos:
 
-O achado mora aqui porque o `contends_on` desta spec já cobre `server.ts` e `resolve-api-actor.ts`, e a fatia 2
-mexe no mesmo modelo de sessão. O status não muda. A correção cabe antes da fatia 2, como tarefa direta: o
-`getUser` já roda em `server.ts:181`, então recusar `user.disabled` ali não custa chamada a mais; revogar os
-refresh tokens no `PUT` de desativação é a outra metade.
+- `getCurrentUser` recusa o bearer quando o `UserRecord` que já carrega vem com `disabled: true`
+  (`packages/auth/server.ts:180-183`, sem chamada nova ao Firebase). A API responde `401 AUTH_INVALID_TOKEN`.
+- `PUT /users/[id]` com `disabled: true` chama `revokeUserSessions` depois do `updateUser`
+  (`apps/api/app/(routes)/users/[id]/route.ts:120-126`), então reativar a conta não devolve as sessões antigas.
 
-O teste da correção **não pode rodar no emulador**. No `firebase-admin@13.6.0`, `lib/auth/base-auth.js:119`
-confere revogação e `disabled` sozinho quando `checkRevoked || isEmulator`, então sob emulador o defeito não
-aparece e o teste passa mesmo sem a correção. Tem de ser teste de unidade ou de rota com o `getAuthInstance`
-mockado.
+Os dois pontos são cobertos por teste de unidade com o Firebase mockado
+(`packages/auth/__tests__/serverSessionRevocation.test.ts` e `apps/api/__tests__/usersAdminAuditTrail.test.ts`).
+Teste de sessão da fatia 2 precisa seguir o mesmo caminho: no `firebase-admin@13.6.0`, `lib/auth/base-auth.js:119`
+confere revogação e `disabled` sozinho sob o emulador, e um teste de emulador passaria mesmo sem a checagem
+no nosso código.
 
 ### Fora do corte
 

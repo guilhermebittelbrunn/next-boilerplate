@@ -91,7 +91,7 @@ precisam voltar ao `(default)` por um dos dois caminhos do passo 3.
      Authentication, arquivos (com Storage ligado) e os rótulos pessoais na trilha
      ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), "Declaração: até onde a exclusão de conta alcança").
    - `user.delete` é o arquivamento pelo admin: marca `deletedAt` no perfil
-     (`apps/api/app/(routes)/users/[id]/route.ts:169`, que chama `apps/api/(shared)/repositories/base.repository.ts:225-226`).
+     (`apps/api/app/(routes)/users/[id]/route.ts:173`, que chama `apps/api/(shared)/repositories/base.repository.ts:225-226`).
 2. **Restaure para um banco novo.** Pegue o nome completo do backup em `firebase firestore:backups:list`:
 
    ```bash

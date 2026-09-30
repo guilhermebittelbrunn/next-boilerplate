@@ -166,9 +166,9 @@ function isMintedBeforeRevocation(
 }
 
 /**
- * Get the current user from the request
+ * Get the current user from the request, or null. A disabled account is rejected from the
+ * record loaded here, since the Admin SDK only checks it under `checkRevoked`, at a second fetch.
  * @param token - Firebase ID token from the request
- * @returns User record or null
  */
 export const getCurrentUser = async (token: string | null) => {
     if (!token) {
@@ -179,7 +179,7 @@ export const getCurrentUser = async (token: string | null) => {
         const authInstance = getAuthInstance();
         const decodedToken = await authInstance.verifyIdToken(token);
         const user = await authInstance.getUser(decodedToken.uid);
-        if (isMintedBeforeRevocation(decodedToken, user)) {
+        if (user.disabled || isMintedBeforeRevocation(decodedToken, user)) {
             return null;
         }
         return user;
