@@ -1,3 +1,4 @@
+import { arcjetKeyState } from "@repo/security/keys";
 import { reportRequestError } from "@repo/shared/utils/helpers/requestErrorReporter";
 import type { Instrumentation } from "next";
 
@@ -22,6 +23,28 @@ function warnOnHalfConfiguredPayments(): void {
 }
 
 /**
+ * A key without the Arcjet prefix is read as no key, so the limiter stays off rather than
+ * failing every request. That is a configuration mistake, not a choice, hence an error. The
+ * value is never logged: whatever was pasted there may be another service's credential.
+ */
+function warnOnDisabledRateLimit(): void {
+    const state = arcjetKeyState(process.env.ARCJET_KEY);
+
+    if (state === "absent") {
+        console.warn(
+            "[security] rate limiting is DISABLED (no ARCJET_KEY). Public auth routes accept unlimited requests."
+        );
+        return;
+    }
+
+    if (state === "malformed") {
+        console.error(
+            '[security] rate limiting is DISABLED (ARCJET_KEY is set but does not start with "ajkey_"). Public auth routes accept unlimited requests.'
+        );
+    }
+}
+
+/**
  * Firestore is this API's database and it is reached with a service account, so a missing
  * credential is a configuration error, not a runtime state to degrade into. Resolving the
  * instance here turns it into a startup crash with a clear message instead of every request
@@ -43,12 +66,7 @@ export const register = async () => {
         );
     }
 
-    if (!process.env.ARCJET_KEY) {
-        console.warn(
-            "[security] rate limiting is DISABLED (no ARCJET_KEY). Public auth routes accept unlimited requests."
-        );
-    }
-
+    warnOnDisabledRateLimit();
     warnOnHalfConfiguredPayments();
 
     const { getFirestoreAdmin } = await import("@repo/auth/server");

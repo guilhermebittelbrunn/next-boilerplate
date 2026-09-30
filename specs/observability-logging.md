@@ -53,11 +53,11 @@ segue invisível até alguém conferir a fatura.
   acrescentou dois pontos novos pelo helper, `account-export.ts:100` e `account-erasure.ts:159`: `git grep "logEvent("`
   fora de `__tests__` dá 19 chamadas hoje, contra 17 no `03498ae`. A distância entre 17 e os 16 desta
   linha é de recorte, não de fato. Chamadas de `console` cru seguem em 19 linhas de 12 arquivos (recontado em 2026-09-27; o `console.warn` de
-  `apps/api/instrumentation.ts:19`, da PR #25, não tinha entrado na soma), 7 delas em
+  `apps/api/instrumentation.ts:20`, da PR #25, não tinha entrado na soma), 7 delas em
   `packages/auth/server.ts`. Remedido em 2026-09-25, depois da PR #25: `git grep "logEvent("` fora de testes dá **26**
   linhas, a definição em `log.ts:51` incluída (eram 20). As seis novas são do escopo `payments`: uma em cada
   rota de `payments/*` e três a mais no webhook. A mesma PR acrescentou um `console.warn` de boot em
-  `apps/api/instrumentation.ts:19`, o aviso de cobrança meio configurada. Âncoras do webhook, do expurgo e da
+  `apps/api/instrumentation.ts:20`, o aviso de cobrança meio configurada. Âncoras do webhook, do expurgo e da
   exportação remedidas na mesma data. Remedido de novo em 2026-09-25, depois da PR #27: **28** linhas, com
   duas novas do escopo `payments` (`webhook-invoice-recorded` no webhook e `plan-label-unresolved` em
   `(shared)/lib/plan-label.ts:49`). As duas âncoras de falha do webhook desceram para `:223` e `:235`.
@@ -78,7 +78,7 @@ segue invisível até alguém conferir a fatura.
   `packages/shared/utils/helpers/request-id.ts:6` concentra o nome do header, e
   `formattedError.ts:24,117` o lê de volta da resposta que o browser recebeu, para que o identificador do
   toast case com o `requestId=` da linha de log.
-- **`onRequestError` nos três apps** — `apps/api/instrumentation.ts:58-59`, `apps/app/instrumentation.ts:4-5`
+- **`onRequestError` nos três apps** — `apps/api/instrumentation.ts:76-77`, `apps/app/instrumentation.ts:4-5`
   e `apps/web/instrumentation.ts:4-5`, todos apontando para `requestErrorReporter.ts:39-53`, que emite a
   linha estruturada e só então repassa o objeto de erro. `pathWithoutQuery` (`:21-23`) descarta a query
   string antes de logar, porque ela carrega o que o usuário digitou.
@@ -120,7 +120,7 @@ segue invisível até alguém conferir a fatura.
 
 ### Histórico, preservado por ser o argumento que sustentou a spec
 
-- `apps/api/instrumentation.ts:35-56` deixou de ser um stub vazio em 2026-08-31
+- `apps/api/instrumentation.ts:58-74` deixou de ser um stub vazio em 2026-08-31
   (`firestore-admin-access`): o `register()` roda no boot e resolve a instância do Firestore, para que a
   falta de credencial mate o processo em vez de degradar. Desde `api-hardening` ele também derruba o boot
   quando falta `CORS_ORIGIN` em produção (`:40-44`) e emite um aviso de boot quando o rate limit está
@@ -145,7 +145,7 @@ segue invisível até alguém conferir a fatura.
   > houve regressão — não houve. O código morto continua fora; o nome foi reaproveitado.
   `@repo/analytics` segue sem dependência oculta, declarando `NEXT_PUBLIC_GA_MEASUREMENT_ID` como sua
   única env.
-- `packages/security/index.ts:42-44` — o padrão de referência do repo para integração opcional: sem a
+- `packages/security/index.ts:40-43` — o padrão de referência do repo para integração opcional: sem a
   variável de ambiente, a função retorna sem fazer nada. É o critério que o coletor precisa seguir quando
   alguém o adotar.
 
@@ -160,7 +160,7 @@ continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário
 
 | item do corte | veredito | evidência |
 |---------------|----------|-----------|
-| 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:58-59`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
+| 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:76-77`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
 | 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:125,164,78-79` · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
 | 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:223,235` · `users/route.ts:80` · `auth/sign-up/route.ts:58`, todos com `requestId` (âncoras remedidas em 2026-09-27) |
 | 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-57`, booleano nu, teto de 2 s em `:9` |
@@ -238,7 +238,7 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
 ## Riscos e trade-offs
 
 - **Custo herdado por todo fork:** o serviço de coleta exige conta. Se a integração não for estritamente
-  no-op na ausência da variável — como `packages/security/index.ts:42-44` já faz com `ARCJET_KEY` — todo
+  no-op na ausência da variável — como `packages/security/index.ts:40-43` já faz com `ARCJET_KEY` — todo
   fork passa a ter uma env obrigatória a mais para subir. Este é o risco número um da spec.
 - **Cota queimada por amostragem alta** (prática 6): o free tier some em dias se o padrão for coletar tudo.
   O default do boilerplate precisa ser conservador, e o valor precisa ser configurável.

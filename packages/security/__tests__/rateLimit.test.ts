@@ -165,3 +165,49 @@ describe("rate limit with a key", () => {
         expect(requestMock).not.toHaveBeenCalled();
     });
 });
+
+describe("rate limit with a malformed key", () => {
+    it("loads without throwing and lets the request through, not enforcing", async () => {
+        const { checkRateLimit, isRateLimitEnforced } =
+            await loadLimiter("invalida");
+
+        await expect(
+            checkRateLimit(new Request("http://api.test/"))
+        ).resolves.toEqual({ allowed: true, enforced: false });
+        expect(isRateLimitEnforced()).toBe(false);
+        expect(arcjetMock).not.toHaveBeenCalled();
+        expect(protectMock).not.toHaveBeenCalled();
+        expect(requestMock).not.toHaveBeenCalled();
+    });
+
+    it("skips the bot check as well", async () => {
+        const { secure } = await loadLimiter("invalida");
+
+        await expect(
+            secure([], new Request("http://app.test/"))
+        ).resolves.toBeUndefined();
+        expect(arcjetMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("rate limit key lookup", () => {
+    it("reads the key on every call instead of once at import", async () => {
+        const { isRateLimitEnforced } = await loadLimiter(undefined);
+        expect(isRateLimitEnforced()).toBe(false);
+
+        process.env.ARCJET_KEY = ARCJET_KEY;
+
+        expect(isRateLimitEnforced()).toBe(true);
+    });
+
+    it("hands the trimmed key to Arcjet", async () => {
+        const { checkRateLimit } = await loadLimiter(`  ${ARCJET_KEY}  `);
+        protectMock.mockResolvedValue(allowedDecision());
+
+        await checkRateLimit(new Request("http://api.test/"));
+
+        expect(arcjetMock).toHaveBeenCalledWith(
+            expect.objectContaining({ key: ARCJET_KEY })
+        );
+    });
+});

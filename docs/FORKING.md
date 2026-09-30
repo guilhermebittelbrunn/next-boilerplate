@@ -313,6 +313,10 @@ Passo a passo, verificação e riscos aceitos: [`PAYMENTS.md`](PAYMENTS.md) e
 requisições sem limite, incluindo cadastro, redefinição de senha e reenvio de verificação, que disparam
 e-mail cobrado na sua conta Resend. [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 8.
 
+Um valor sem o prefixo `ajkey_` é tratado como ausente na `api`, que registra um erro no boot, e faz o build
+de `app` e `web` falhar. Na `web` a chave hoje só serve para essa validação: o `skipValidation` de
+`apps/web/env.ts` deixa `env.ARCJET_KEY` sempre vazio, e o bloqueio de bot de `apps/web/proxy.ts` não roda.
+
 ### 7.4 Google Analytics
 
 `NEXT_PUBLIC_GA_MEASUREMENT_ID` (`G-…`) em `app` e `web`. Um valor sem o prefixo `G-` é ignorado. Com ele
@@ -389,7 +393,7 @@ Legenda da coluna "Prod": **obrigatória** (sem ela o app não sobe ou uma funç
 |-----|------|------|------------|-------|
 | `RESEND_TOKEN` · `RESEND_FROM` | api, web (app só valida) | obrigatória | Envio de e-mail. `RESEND_FROM` é o remetente e a caixa que recebe o formulário de contato | Sem recuperação de senha, sem verificação de e-mail, sem formulário de contato |
 | `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` | api | opcional | Liga a cobrança. Preencha as duas ou nenhuma; prefixo errado derruba o build | Cobrança desligada |
-| `ARCJET_KEY` | api, app, web | recomendada | Limite de requisições nas rotas públicas | Sem limite; a API avisa no boot |
+| `ARCJET_KEY` | api, app, web | recomendada | Limite de requisições nas rotas públicas; prefixo errado derruba o build de app e web e desliga o limite na api (erro no boot) | Sem limite; a API avisa no boot |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | app, web | opcional | Google Analytics com banner de consentimento | Sem analytics nem tag do Google |
 
 ### Só de desenvolvimento
