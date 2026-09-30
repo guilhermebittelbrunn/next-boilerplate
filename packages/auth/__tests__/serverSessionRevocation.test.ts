@@ -50,8 +50,13 @@ function decodedToken(authTimeSeconds: number) {
     return { uid: UID, auth_time: authTimeSeconds };
 }
 
-function userRecord(tokensValidAfterTime?: string) {
-    return { uid: UID, email: "owner@example.com", tokensValidAfterTime };
+function userRecord(tokensValidAfterTime?: string, disabled?: boolean) {
+    return {
+        uid: UID,
+        email: "owner@example.com",
+        tokensValidAfterTime,
+        disabled,
+    };
 }
 
 function firebaseError(code: string) {
@@ -123,6 +128,59 @@ describe("getCurrentUser — id token contra a revogação de sessões", () => {
 
         await expect(getCurrentUser("expired")).resolves.toBeNull();
         expect(console.error).not.toHaveBeenCalled();
+    });
+});
+
+describe("getCurrentUser — conta desativada", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.spyOn(console, "error").mockImplementation(vi.fn());
+    });
+
+    it("recusa o id token de uma conta desativada", async () => {
+        verifyIdTokenMock.mockResolvedValue(decodedToken(REVOKED_AT_SECONDS));
+        getUserMock.mockResolvedValue(userRecord(undefined, true));
+
+        await expect(getCurrentUser("id-token")).resolves.toBeNull();
+    });
+
+    it("recusa mesmo com o token emitido depois da revogação", async () => {
+        verifyIdTokenMock.mockResolvedValue(
+            decodedToken(REVOKED_AT_SECONDS + ONE_MINUTE_IN_SECONDS)
+        );
+        getUserMock.mockResolvedValue(userRecord(REVOKED_AT, true));
+
+        await expect(getCurrentUser("fresh-id-token")).resolves.toBeNull();
+    });
+
+    it("não registra erro ao recusar conta desativada", async () => {
+        verifyIdTokenMock.mockResolvedValue(decodedToken(REVOKED_AT_SECONDS));
+        getUserMock.mockResolvedValue(userRecord(undefined, true));
+
+        await getCurrentUser("id-token");
+
+        expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it("aceita a conta com disabled: false", async () => {
+        verifyIdTokenMock.mockResolvedValue(decodedToken(REVOKED_AT_SECONDS));
+        getUserMock.mockResolvedValue(userRecord(undefined, false));
+
+        await expect(getCurrentUser("id-token")).resolves.toEqual(
+            userRecord(undefined, false)
+        );
+    });
+
+    it("verifica o token sem pedir a checagem de revogação e busca o usuário uma vez", async () => {
+        verifyIdTokenMock.mockResolvedValue(decodedToken(REVOKED_AT_SECONDS));
+        getUserMock.mockResolvedValue(userRecord(undefined, true));
+
+        await getCurrentUser("id-token");
+
+        expect(verifyIdTokenMock).toHaveBeenCalledTimes(1);
+        expect(verifyIdTokenMock.mock.calls[0]).toEqual(["id-token"]);
+        expect(getUserMock).toHaveBeenCalledTimes(1);
+        expect(getUserMock).toHaveBeenCalledWith(UID);
     });
 });
 
