@@ -1,4 +1,4 @@
-import { getAuthInstance } from "@repo/auth/server";
+import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
 import { getStripe } from "@repo/payments";
 import {
     AuditAction,
@@ -119,6 +119,10 @@ export const PUT = requireAdminApi<RouteIdParamsContext>(async (req, ctx) => {
     }
     if (Object.keys(authUpdate).length > 0) {
         await getAuthInstance().updateUser(profile.reference_id, authUpdate);
+    }
+
+    if (parsed.value.disabled === true) {
+        await revokeUserSessions(profile.reference_id);
     }
 
     await recordAuditEvent({
