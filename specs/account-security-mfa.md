@@ -292,8 +292,8 @@ in-progress` embora a PR tenha sido mergeada; a auditoria não escreve ali e reg
 ### Achado ligado à fatia 2 (auditoria de 2026-09-30): corrigido
 
 **Conta desativada pelo admin seguia com o ID token aceito pela API até ele expirar.** Corrigido em
-2026-09-30 por tarefa direta ([`disabled-account-revocation`](../docs/features/disabled-account-revocation/)),
-em dois pontos:
+2026-09-30 por tarefa direta ([`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md)),
+mergeada pela PR #35 (`1936369`) com CI verde, em dois pontos:
 
 - `getCurrentUser` recusa o bearer quando o `UserRecord` que já carrega vem com `disabled: true`
   (`packages/auth/server.ts:180-183`, sem chamada nova ao Firebase). A API responde `401 AUTH_INVALID_TOKEN`.
@@ -338,7 +338,7 @@ no nosso código.
 
 - **Custo herdado por todo fork:** se o segundo fator exigir habilitar um serviço pago no provedor, todo
   fork que não o usa não pode pagar por ele nem falhar no build. O padrão tem de ser **NO-OP quando falta
-  a configuração**, como `packages/security/index.ts:42-44` faz com `ARCJET_KEY`.
+  a configuração**, como `packages/security/index.ts:40-43` faz com `ARCJET_KEY`.
 - **Endurecer a verificação de credencial custa latência em toda requisição autenticada.** Checar
   revogação a cada chamada é mais seguro e mais caro; não checar é a falha atual. O meio-termo (checar
   onde importa) só funciona se "onde importa" estiver definido no core, e não a critério de cada fork.

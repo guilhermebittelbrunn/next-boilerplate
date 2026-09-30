@@ -6,8 +6,8 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-09-30 (`/spec --sync`, dentro de um `/cycle` autônomo, pós-merge da PR #34) ·
-> **anteriores:** 2026-09-30 (PR #33) · 2026-09-29 (PR #32) · 2026-09-29 (PR #31) · 2026-09-28 (PR #30) · 2026-09-27 (PR #29) · 2026-09-26 (`/spec` de descoberta, pedida pelo usuário) · 2026-09-26
+> **Última rodada:** 2026-09-30 (`/spec --sync`, dentro de um `/cycle` autônomo, pós-merge da PR #35) ·
+> **anteriores:** 2026-09-30 (PR #34) · 2026-09-30 (PR #33) · 2026-09-29 (PR #32) · 2026-09-29 (PR #31) · 2026-09-28 (PR #30) · 2026-09-27 (PR #29) · 2026-09-26 (`/spec` de descoberta, pedida pelo usuário) · 2026-09-26
 > (PR #28) · 2026-09-25 (PRs #26 e #27) · 2026-09-25 (PR #25) · 2026-09-24 (PR #24) · 2026-09-23 (PR #23) ·
 > 2026-09-23 (PR #22) · 2026-09-19 (PR #21) · 2026-09-17 (PR #20) · 2026-09-17 (PR #19) · 2026-09-17 (PR #18) ·
 > 2026-09-16 (PR #17) · 2026-09-16 (PR #16) · 2026-09-16 (PR #15) · 2026-09-16 (PRs #13 e #14) · 2026-09-15 ·
@@ -15,31 +15,36 @@ constar na seção [Entregues](#entregues).
 > 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
 >
 > **O que mudou nesta rodada:**
-> 1. **`compliance-docs-kit` foi entregue e arquivada** em
->    [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md). Os seis itens
->    do corte foram conferidos no disco, e a PR #34 (`c7aa4d9`) está em `main` com CI verde no SHA de merge,
->    `e2e` incluído. É a quinta spec entregue depois de passar por `approved`. Cinco derivas, nenhuma de
->    conteúdo. Detalhe em [Entrega confirmada](#entrega-confirmada-compliance-docs-kit-pr-34).
-> 2. **A PR #34 não mexeu em código.** `git diff --name-only f377c84 c7aa4d9` só lista `docs/` e `specs/`, então
->    todo achado ancorado em código segue igual byte a byte. Nenhum achado de código fechou; nenhum novo entrou.
-> 3. **Uma pendência fechou pela metade sem ninguém notar:** a 12 (revogação nunca provada ponta a ponta). O
->    `/test` de `compliance-docs-kit` mediu, contra o projeto Firebase de desenvolvimento, que o cookie emitido
->    antes da revogação é recusado e que o bearer cai depois de `revokeRefreshTokens`. Falta só a passada de
->    navegador entre as duas apps.
-> 4. **Gates remedidos com `--force`**, com JDK 21: 29/29 tasks em 1 min 6,3 s (as 28 de sempre mais
->    `api#test:emulator`), 806 arquivos no `pnpm check`, 2452 testes em 226 arquivos e 170 em 4 contra o
->    emulador. Os números são os da rodada anterior, como esperado de uma PR só de documentação. O teste
->    instável de `useListAuditEvents` não apareceu em quatro execuções; o acumulado fica em 2 falhas em 28.
-> 5. **Âncoras corrigidas**: o link morto do `FORKING.md` desceu para `:433` e foi medido na página
->    renderizada pelo GitHub (a âncora real é `#-crud-de-referência`); a spec arquivada ganhou dois links
->    reescritos e uma âncora remedida.
-> 6. **Lotes recalculados**: uma spec elegível, `plan-entitlements`, que segue `proposed`. Lote 1 só com ela,
->    sem lote 2.
-> 7. **Recomendação de #1: tarefa direta, sem spec**, para o 🔴 da conta desativada cujo ID token a API aceita
->    por até 1 hora. `plan-entitlements` é a única spec elegível e depende de você aprová-la; o `/cycle` não
->    aprova spec. Detalhe em [Ordem recomendada](#ordem-recomendada). A tarefa já corre nesta mesma rodada
->    como [`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md), no working
->    tree e sem PR; o 🔴 segue aberto até o merge.
+> 1. **O 🔴 da conta desativada fechou.** A tarefa direta
+>    [`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md) entrou em `main` pela
+>    PR #35 (`1936369`), com CI verde no SHA de merge nos quatro jobs. No código: `getCurrentUser` recusa
+>    `user.disabled` (`packages/auth/server.ts:182`) e o `PUT /users/[id]` revoga as sessões ao desativar
+>    (`apps/api/app/(routes)/users/[id]/route.ts:124-126`). O runbook de incidente foi corrigido no mesmo diff e
+>    a frase nova confere com o código. Detalhe em
+>    [Entrega confirmada](#entrega-confirmada-disabled-account-revocation-pr-35).
+> 2. **Nenhuma spec mudou de status.** A PR #35 não tinha spec. As quatro que seguem em `specs/` foram
+>    reconferidas por `grep` e nenhuma ganhou código por tabela.
+> 3. **Gates remedidos com `--force`**, com JDK 21: 29/29 tasks em 1 min 39,9 s, 806 arquivos no `pnpm check`,
+>    **2466** testes em 226 arquivos (+14, os da PR #35: 5 em `@repo/auth`, 9 na `apps/api`) e 170 em 4 contra o
+>    emulador. O teste instável de `useListAuditEvents` não apareceu em três execuções; o acumulado fica em 2
+>    falhas em 31.
+> 4. **Âncoras corrigidas**: o `PUT` ganhou quatro linhas e o `PRE-PRODUCTION.md` ganhou uma antes do §13 e
+>    cinco na higiene. Seis âncoras deste arquivo foram remedidas; as da spec arquivada de `compliance-docs-kit`
+>    ficaram registradas, porque a auditoria não edita spec arquivada.
+> 5. **Achados: 1 fechado, 1 novo, 83 abertos.** O novo é o `GET /auth/me` respondendo 401 sem `error.code`,
+>    visto no `/test` da tarefa. Duas lacunas de teste novas vieram do mesmo `/test` e estão na seção dela.
+> 6. **Lotes recalculados**: uma spec elegível, `plan-entitlements`, que segue `proposed`. Lote 1 só com ela.
+> 7. **Recomendação de #1: tarefa direta, sem spec**, para o 🔴 que sobrou: `packages/security/index.ts:11`
+>    lê a `ARCJET_KEY` no import, e uma chave malformada derruba toda requisição da API. Tamanho P, provável
+>    só com teste de unidade. Detalhe em [Ordem recomendada](#ordem-recomendada). A tarefa já corre nesta
+>    mesma rodada como [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md), no
+>    working tree e sem PR; o 🔴 segue aberto até o merge.
+> 8. **O que a tarefa mediu e este arquivo absorveu depois da auditoria:** o 🔴 foi reescrito (em `app` e `web`
+>    a chave malformada recusa o build; só a API publicava um build que respondia erro a tudo); o
+>    `skipValidation` da `apps/web` ganhou uma consequência medida (o bloqueio de bot da landing nunca roda),
+>    com a decisão de ligá-lo em aberto (D8); o achado do `/auth/sign-in` ganhou dois 500 medidos; e as
+>    âncoras que o diff da tarefa deslocou foram remedidas no working tree (tabela em
+>    [Âncoras deslocadas](#âncoras-deslocadas-corrigidas-nesta-rodada)).
 
 ## Contadores
 
@@ -59,11 +64,9 @@ arquivo.
 **Por audiência:** `confianca` 1 (`in-progress`) · `dx` 1 (`in-progress`) · `produto` 2 (1 `proposed`,
 1 `deferred`). **Por esforço:** M 3 · G 1. **Por valor:** alto 2 · médio 2 · baixo 0.
 
-**Transições aplicadas: 1.** `compliance-docs-kit` `in-progress → done`, com o corte inteiro confirmado no disco
-e a PR #34 em `main` com CI verde. A spec foi editada (frontmatter, seção de entrega com evidência por item,
-derivas, dois links e uma âncora) e movida com `git mv` para `docs/features/compliance-docs-kit/spec.md`. O
-índice estava vazio antes do movimento; depois dele tem só o rename, com o conteúdo da versão anterior. As
-edições da spec e as deste arquivo estão no working tree, fora do índice. Nada foi commitado.
+**Transições aplicadas: 0.** A PR #35 foi uma tarefa direta, sem spec. Nenhum arquivo foi movido e o índice
+do git ficou vazio antes e depois da auditoria. As edições deste arquivo estão no working tree. Nada foi
+commitado.
 
 > **A fila elegível tem uma spec**, `plan-entitlements`, ainda `proposed`. Ficam fora `account-security-mfa` e
 > `observability-logging` (`in-progress`; a segunda estacionada em E1) e `teams-organizations` (`deferred`,
@@ -77,8 +80,9 @@ Correções que vieram de achados deste arquivo, sem spec própria. Ficam regist
 | feature | PR | achados fechados |
 |---------|----|------------------|
 | [`i18n-hydration-admin-delete-billing`](../docs/features/i18n-hydration-admin-delete-billing/STATE.md) | #28, `295c8de`, 2026-09-26 | hidratação do dicionário client em `/en` e `/es`; A2 (arquivamento pelo admin sem cancelar a assinatura) |
+| [`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md) | #35, `1936369`, 2026-09-30 | 🔴 conta desativada pelo admin com o ID token aceito pela API por até 1 hora; a frase correspondente do runbook de incidente e o achado ligado em [`account-security-mfa`](account-security-mfa.md). Detalhe em [Entrega confirmada](#entrega-confirmada-disabled-account-revocation-pr-35) |
 
-### O que foi conferido no código
+### O que foi conferido no código da PR #28
 
 | achado | veredito | evidência |
 |--------|----------|-----------|
@@ -101,41 +105,37 @@ segue no hero, no CTA, no FAQ e na página de preços; o achado da allowlist de 
   arquivo anterior a esta rodada; o `STATE.md` fica como está, porque a auditoria só escreve em
   `docs/features/` para arquivar spec.
 
-## Entrega confirmada: `compliance-docs-kit` (PR #34)
+## Entrega confirmada: `disabled-account-revocation` (PR #35)
 
-A PR #34 entrou em `main` como `c7aa4d9` ("docs: compliance templates for RoPA, incidents, subprocessors and
-backup") em 2026-09-30 às 14:10 UTC, da branch `run-full-task-cycle-v2`. Na PR passaram `verify` e `changes`; o
-`e2e` e o `coverage` foram pulados, que é o comportamento do CI para PR só de documentação. A execução de merge
-rodou os quatro: `gh run 36727057243`, `success` em `changes`, `verify` (2 min 22 s), `coverage` e `e2e`
-(4 min 16 s). A PR levou junto a auditoria anterior (o arquivamento de `account-email-change` e o `BACKLOG.md`,
-commit `8708f21`), em oito commits.
+A PR #35 entrou em `main` como `1936369` ("fix: disabled accounts lose API access immediately") em 2026-09-30 às
+19:15 UTC, da branch `fix/disabled-account-revocation`, em cinco commits (`b4cb9f6` auth, `af69978` api, `a8653dc`
+documentos, `aeaee83` auditoria anterior, `d57dfee` artefatos da tarefa). Os quatro checks passaram na PR
+(`gh pr view 35`) e a execução de merge também: `gh run 36764362726`, `success` em `changes`, `verify`
+(3 min 2 s), `coverage` e `e2e` (4 min 11 s).
 
-A auditoria conferiu os seis itens do corte no disco:
+`git diff --name-only c7aa4d9 1936369 -- apps packages` lista quatro arquivos: `packages/auth/server.ts`,
+`apps/api/app/(routes)/users/[id]/route.ts` e os dois testes. A auditoria conferiu cada ponto no disco:
 
-| item do corte | o que o repositório mostra |
-|---------------|----------------------------|
-| 1. Registro de operações nos campos da ANPD, preenchido com o que o core faz | `docs/ROPA.md`: contato `:32-43`, nove operações do core e um bloco `[FORK]` para o domínio (`:45-182`), medidas comuns `:183`; hipótese legal marcada `[FORK] confirmar` |
-| 2. Runbook de incidente | `docs/INCIDENT-RESPONSE.md`: papéis `:14`, prazos da Res. CD/ANPD 15/2024 e do GDPR com o artigo ao lado `:24-44`, conter `:46`, evidência `:57`, avaliação `:70`, registro de 5 anos `:115` |
-| 3. Lista de subprocessadores | `docs/SUBPROCESSORS.md:25-86`: 9 serviços em 5 empresas, com variável, `arquivo:linha`, região e DPA; "O que não entra" em `:88` |
-| 4. Nota de transferência internacional | `docs/SUBPROCESSORS.md:113` em diante; DPA da Arcjet "não encontrado" e cobertura do Vercel Web Analytics "não confirmado" |
-| 5. Backup e restauração do Firestore | `docs/BACKUP.md`: Spark sem backup de nenhum tipo `:11-33`, Blaze `:49`, restauração `:80`, teste como rotina `:142` |
-| 6. Ponteiros no `PRE-PRODUCTION.md` | §14, `:702-718`, com os quatro links em `:704-707`; também `:387` (§7) e `:741` |
+| o que a tarefa prometia | o que o código mostra |
+|-------------------------|-----------------------|
+| a API recusa o bearer de conta desativada | `getCurrentUser` testa `user.disabled` no `UserRecord` que já carrega, antes da marca de revogação (`packages/auth/server.ts:181-183`), sem chamada nova ao Firebase. Cobre os três chamadores: `resolve-api-actor.ts:24`, `packages/auth/middleware.ts:71` e `user-merge.ts:35` |
+| desativar pelo admin revoga as sessões | `PUT /users/[id]` chama `revokeUserSessions` quando o corpo traz `disabled: true` (`users/[id]/route.ts:124-126`), depois do `updateUser` (`:120-122`). `revokeUserSessions` engole a falha e só loga (`server.ts:323-329`), então a desativação vale mesmo se a revogação cair |
+| teste de unidade, não de emulador | `serverSessionRevocation.test.ts` ganhou cinco casos de `disabled` (`:140-190`), inclusive o que garante uma só busca do usuário (`:174`); `usersAdminAuditTrail.test.ts` confere a chamada com o uid do alvo e a ausência dela em `disabled: false` (`:258-297`). `@repo/auth` foi de 107 para 112 testes e a `apps/api` de 1022 para 1031, medidos nesta auditoria |
+| o runbook deixa de descrever o buraco | `docs/INCIDENT-RESPONSE.md:51-52` descreve o corte imediato nos dois transportes e a revogação no `PUT`; as seis âncoras de código da linha 51 foram lidas e conferem |
+| o achado ligado em `account-security-mfa` fecha | a seção da spec virou "corrigido", com `server.ts:180-183` e `users/[id]/route.ts:120-126`, conferidas |
 
-**Medido pela auditoria, além da leitura:** os 91 `arquivo:linha` de código citados nos quatro documentos
-existem e cabem no arquivo; os 38 links relativos resolvem; os pacotes de provedor nos `package.json` são os
-da lista, mais o `@stripe/agent-toolkit`, que a lista exclui por não ter consumidor (`git grep "payments/ai"`
-em `apps` e `packages`: 0); `next/font/google` e `firebase/analytics`: 0; nenhum `vercel.json` define
-`regions`, como o `SUBPROCESSORS.md` afirma. `grep -c "\[FORK\]"`: 42 no `ROPA.md`, 13 no runbook, 13 na lista,
-5 no backup, 1 no `PRE-PRODUCTION.md`. Varredura de segredo nos artefatos da feature: só prefixos
-(`whsec_`) e um endereço `@example.com`.
+**Veredito:** fechado. O `/test` da tarefa não encontrou defeito: contra o projeto Firebase de desenvolvimento, o
+bearer de conta desativada recebeu `401 AUTH_INVALID_TOKEN` e voltou a passar quando a checagem foi retirada do
+código; depois de desativar e reativar pelo `PUT`, o bearer antigo seguiu recusado. A passada de navegador
+(pessoa desativada com o app aberto cai no sign-in) ficou 🔒 por custo, porque o diff não toca UI.
 
-**Veredito:** 6/6. A spec passou a `done` e foi arquivada. O `/test` fechou com 18 ✅, 0 ❌ e 2 🔒 (backup no
-Blaze e conformidade jurídica).
+**Registro da feature:** o `STATE.md` traz as quatro etapas em `done` e `branch: fix/disabled-account-revocation
+(proposta; …)`. Pela primeira vez desde a PR #29 o nome proposto foi o usado, mas ele não tem o `<project>` do
+padrão, porque o diff cruza `packages/auth` e `apps/api` (ver E11). A branch segue viva no remoto (pendência 16).
 
-**Registro da feature:** o `STATE.md` traz `spec: compliance-docs-kit` e as quatro etapas em `done`, mas o campo
-`branch:` diz `docs/compliance-docs-kit (proposta; a atual run-full-task-cycle-v2 é renomeada na aprovação dos
-commits)`. A renomeação não aconteceu: a PR saiu da `run-full-task-cycle-v2`, que também não segue o padrão
-`<project>/<type>/<title>`. É a sexta PR seguida com a branch fora do padrão (E11).
+A entrega anterior, `compliance-docs-kit` (PR #34, `c7aa4d9`), tem a evidência item a item na própria spec
+arquivada, [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md), e a linha
+dela em [Entregues](#entregues).
 
 ## Entrega parcial confirmada: fatia 1 de `account-security-mfa` (PR #29)
 
@@ -172,28 +172,28 @@ branch mergeada também não segue o padrão `<project>/<type>/<title>` de `.cla
 
 ## Gates medidos nesta auditoria
 
-Executados em 2026-09-30, com `--force`, neste workspace, com o `HEAD` em `c7aa4d9` (igual a `origin/main`) e o
+Executados em 2026-09-30, com `--force`, neste workspace, com o `HEAD` em `1936369` (igual a `origin/main`) e o
 working tree limpo. Não copiados do `/test` nem da rodada anterior.
 
 | comando | resultado |
 |---------|-----------|
-| `pnpm check` | ✅ **806 arquivos · 0 erros** (`No fixes applied`, 377 ms) |
-| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH` | ✅ **29/29 tasks · 0 em cache · 1 min 6,3 s**, na primeira execução; `api#test:emulator` **170 testes em 4 arquivos**. Ao fim, nenhuma porta de emulador ficou ouvindo |
-| `vitest run` da `apps/app`, 3 execuções seguidas | 3 passagens, 756 testes cada, nenhum erro não tratado |
+| `pnpm check` | ✅ **806 arquivos · 0 erros** (`No fixes applied`, 417 ms) |
+| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH` | ✅ **29/29 tasks · 0 em cache · 1 min 39,9 s**, na primeira execução; `api#test:emulator` **170 testes em 4 arquivos**. Ao fim, nenhuma das portas de emulador (8080, 9099, 9199, 4000, 4400, 4500, 9150, 8085) ficou ouvindo |
+| `vitest run` da `apps/app`, 2 execuções seguidas depois do turbo | 2 passagens, 756 testes cada, nenhum erro não tratado |
 
-**Mudança de forma:** esta rodada rodou a linha do job `verify` inteira num comando só, e por isso conta 29
-tasks. As rodadas anteriores separavam `lint typecheck test` (28) de `test:emulator`.
+O tempo subiu de 1 min 6,3 s para 1 min 39,9 s com a mesma quantidade de tasks. A suíte cresceu 14 testes, o que
+não explica a diferença; é contenção da máquina, como o `PRE-PRODUCTION.md` §9 já avisa.
 
-**O teste instável de `useListAuditEvents` não apareceu nesta rodada** (0 em 4 execuções da suíte da
-`apps/app`, contando a do turbo). O acumulado é 2 falhas em 28, todas em 2026-09-28. O arquivo não muda desde a
+**O teste instável de `useListAuditEvents` não apareceu nesta rodada** (0 em 3 execuções da suíte da
+`apps/app`, contando a do turbo). O acumulado é 2 falhas em 31, todas em 2026-09-28. O arquivo não muda desde a
 PR #18 e o CI segue verde; o achado continua aberto.
 
-| workspace | arquivos | testes | Δ vs. 2026-09-30 (PR #33) |
+| workspace | arquivos | testes | Δ vs. 2026-09-30 (PR #34) |
 |-----------|---------:|-------:|---------------------------|
-| `api` | 78 | 1022 | — |
+| `api` | 78 | 1031 | **+9** testes em arquivo existente (`usersAdminAuditTrail.test.ts`) |
 | `app` | 91 | 756 | — |
 | `@repo/email` | 7 | 202 | — |
-| `@repo/auth` | 9 | 107 | — |
+| `@repo/auth` | 9 | 112 | **+5** testes em arquivo existente (`serverSessionRevocation.test.ts`) |
 | `web` | 13 | 82 | — |
 | `@repo/internationalization` | 6 | 59 | — |
 | `@repo/design-system` | 6 | 45 | — |
@@ -203,18 +203,18 @@ PR #18 e o CI segue verde; o achado continua aberto.
 | `@repo/security` | 3 | 31 | — |
 | `@repo/payments` | 4 | 22 | — |
 | `e2e` | 2 | 16 | — (testes unitários da suíte; os de navegador rodam no `pnpm e2e`) |
-| **total** | **226** | **2452** | **sem mudança**: a PR #34 é só documentação |
+| **total** | **226** | **2466** | **+14**, os da PR #35 |
 | `api#test:emulator` (fora da linha acima) | 4 | 170 | — |
 
-O `docs/PRE-PRODUCTION.md` §9 registrava 2296 testes em 220 arquivos, medidos no `3e5ec4c`. Foi atualizado
-nesta rodada para os números acima, medidos no `c7aa4d9` (ver [Contradições](#contradições-doc--código-medidas-nesta-rodada)).
+O `docs/PRE-PRODUCTION.md` §9 registra 2452 testes em 226 arquivos, medidos no `c7aa4d9`. Ficou 14 testes
+defasado com a PR #35 (ver [Contradições](#contradições-doc--código-medidas-nesta-rodada)).
 
-CI: a execução de merge da **#34** (`c7aa4d9`, `gh run 36727057243`) terminou em **`success`** em `changes`,
-`verify`, `coverage` e `e2e`. As quatorze últimas execuções de merge na `main` (`e656331` a `c7aa4d9`) estão
-verdes.
+CI: a execução de merge da **#35** (`1936369`, `gh run 36764362726`) terminou em **`success`** em `changes`,
+`verify`, `coverage` e `e2e`. As 16 últimas execuções do CI na `main` (`gh run list --branch main --limit 16`)
+estão verdes.
 
 Branch protection segue **não ligado**, remedido hoje: `gh api repos/:owner/:repo/branches/main/protection`
-→ **404** ("Branch not protected"), `rulesets` → **`[]`**. O repositório tem **34** PRs, nenhuma aberta.
+→ **404** ("Branch not protected"), `rulesets` → **`[]`**. O repositório tem **35** PRs, nenhuma aberta.
 
 ## Ordem recomendada
 
@@ -234,51 +234,65 @@ com `brand-config`, `storage-emulator-rules-tests`, `accessibility-conformance`,
 | 3 | [`observability-logging`](observability-logging.md) | `in-progress`, 5 dos 6 itens. **Fora do conjunto elegível.** Estacionada (E1) |
 | 4 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22. Estacionada (E2) |
 
-**Recomendação para a próxima rodada: tarefa direta, sem spec, para o 🔴 da conta desativada.** A única spec
-elegível, `plan-entitlements`, está `proposed` porque você a manteve assim em 2026-09-26, e o `/cycle` não aprova
-spec. A tarefa é esta:
+**Recomendação para a próxima rodada: tarefa direta, sem spec, para o 🔴 da `ARCJET_KEY` lida no import.** A
+única spec elegível, `plan-entitlements`, está `proposed` porque você a manteve assim em 2026-09-26, e o `/cycle`
+não aprova spec. Com o 🔴 da conta desativada fechado pela PR #35, este é o único 🔴 aberto. A tarefa é esta:
 
-- **O quê:** a API passa a recusar o ID token de conta desativada, e desativar uma conta pelo admin revoga as
-  sessões dela. Hoje o bearer emitido antes da desativação vale por até 1 hora (medido contra o projeto
-  Firebase de desenvolvimento pelo `/test` de `compliance-docs-kit`).
-- **Por quê é a primeira:** é o único 🔴 com correção conhecida, barata e medida. Desativar é o mecanismo de
-  banimento do core, e o runbook de incidente entregue pela PR #34 manda o operador desativar a conta como
-  contenção (`docs/INCIDENT-RESPONSE.md:51`), com a ressalva de que isso não corta o bearer. Cada fork
-  herda o buraco e o parágrafo que o explica.
-- **Arquivos:** `packages/auth/server.ts:180-184` (recusar `user.disabled` depois do `getUser` que já roda em
-  `:181`; cobre também `packages/auth/middleware.ts:71` e `apps/api/(shared)/lib/user-merge.ts:35`, que chamam o
-  mesmo `getCurrentUser`); `apps/api/app/(routes)/users/[id]/route.ts:117-122` (chamar `revokeUserSessions`,
-  `packages/auth/server.ts:323`, quando `disabled` vira `true`); testes em
-  `packages/auth/__tests__/serverSessionRevocation.test.ts` (já mocka `getAuthInstance`) e no teste de rota do
-  `PUT` (`apps/api/__tests__/usersAdminAuditTrail.test.ts` é o que exercita o `PUT` hoje); e, no mesmo
-  diff, as frases que ficariam falsas: `docs/INCIDENT-RESPONSE.md:51` e o achado ligado em
-  [`account-security-mfa`](account-security-mfa.md).
-- **Tamanho:** P. Duas mudanças de poucas linhas em código, mais testes e dois parágrafos de documento.
-  Sem i18n novo (a API já responde 401 sem usuário) e sem variável nova.
-- **Atenção no teste:** não pode ser no emulador. O `firebase-admin@13.6.0` confere `disabled` sozinho sob
-  emulador (`lib/auth/base-auth.js:119`), então o teste de emulador passaria antes da correção. Tem de ser
-  teste de unidade com `getAuthInstance` mockado.
-- **Contenção:** toca `packages/auth/server.ts`, que está no `contends_on` de `account-security-mfa`. Não briga
-  com nada em execução: a fatia 2 não tem feature aberta, e `plan-entitlements` não toca `packages/auth`.
-
-Se você aprovar `plan-entitlements`, ela pode correr em paralelo com essa tarefa: os arquivos não se cruzam.
+- **O quê:** uma `ARCJET_KEY` presente e malformada (sem o prefixo `ajkey_`) deixa de derrubar as apps. O
+  pacote passa a ler a chave na primeira chamada, não no import, e trata chave inválida como ausência: o
+  limitador vira no-op, como já acontece sem a chave, e o problema aparece no log de boot da `apps/api` em vez
+  de em cada requisição.
+- **Por quê é a primeira:** é o último 🔴. O schema da chave (`packages/security/keys.ts:9-15`) recusa valor sem
+  o prefixo, e `keys()` roda no topo do módulo (`packages/security/index.ts:11`). Os três `proxy.ts` importam o
+  pacote (`apps/api/proxy.ts:1`, `apps/app/proxy.ts:5`, `apps/web/proxy.ts:5`). Na `apps/api` a exceção sobe
+  no grafo de módulos do middleware e toda requisição falha, sem nada no boot: o aviso de
+  `apps/api/instrumentation.ts:46-50` só olha se a variável existe. Basta colar a chave errada na Vercel.
+  **Corrigido depois pela medição da tarefa:** em `apps/app` e `apps/web` o efeito é outro, o `next build`
+  recusa a chave em "Collecting page data", porque o `env.ts` das duas estende o schema estrito. O 🔴 de
+  runtime era só da API.
+- **Arquivos:** `packages/security/index.ts:11` (leitura no import) e os usos de `arcjetKey` em `:32`,
+  `:42-47` e `:85-91`; `packages/security/keys.ts:9-15` (o schema, que continua valendo para o `env.ts` da `apps/app`
+  e da `apps/web`); `apps/api/instrumentation.ts:46-50` (aviso de boot que distingue ausente de malformada);
+  testes em `packages/security/__tests__/rateLimit.test.ts` (já carrega o módulo com chaves diferentes,
+  `:47-49`), `keys.test.ts` e `apps/api/__tests__/instrumentation.test.ts` (já faz `stubEnv("ARCJET_KEY", …)`
+  em `:64`).
+- **Tamanho:** P. Uma função de leitura preguiçosa no pacote, um ramo a mais no aviso de boot e testes de
+  unidade. Sem i18n, sem variável nova, sem dependência nova.
+- **O que a rodada autônoma prova sem infra:** tudo. A falha acontece na validação do schema, antes de
+  qualquer chamada à Arcjet, então uma string como `ARCJET_KEY=invalida` reproduz o defeito no teste de
+  unidade (importar o módulo não lança; `checkRateLimit` responde `enforced: false`; o boot loga). Nenhuma
+  conta na Arcjet é necessária. O caminho com chave válida já tem teste com a Arcjet mockada.
+- **Uma decisão que a tarefa toma sozinha:** chave malformada vira no-op com erro no log, e não queda do
+  processo. É o que a [`cycle-policy`](../.claude/cycle-policy.md) §3 manda para feature opt-in ("sem a env, a
+  app sobe"), e derrubar o boot não funcionaria de qualquer jeito: o `throw` do `CORS_ORIGIN` em
+  `instrumentation.ts:40-44` não derruba o processo (achado aberto). Fica registrada como pergunta, com essa
+  recomendação.
+- **Medido depois, pelo `/analyze` e pelo `/test` da tarefa:** o `next build` de `apps/app` e de `apps/web`
+  sai com exit 1 e `Invalid environment variables` com a chave malformada, inclusive na web, que usa
+  `skipValidation: true`: o `security()` do `extends` valida por conta própria antes de ser descartado. O
+  schema estrito ficou, como sinal alto no build.
+- **Contenção:** `packages/security/*` e `apps/api/instrumentation.ts` não estão no `contends_on` de nenhuma
+  spec viva.
+- **Em execução** desde 2026-09-30 como
+  [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md), no working tree e sem
+  PR: `readArcjetKey` e `arcjetKeyState` em `packages/security/keys.ts:11-26`, leitura por chamada em
+  `index.ts:40` e `:84`, boot da API separando ausente (`warn`) de malformada (`error`, sem ecoar o valor) em
+  `instrumentation.ts:30-45`. O `/test` fechou com 10 ✅, 0 ❌ e 1 🔒 (chave real da Arcjet). Fecha no
+  `/spec --sync` depois do merge.
 
 ### O que **não** foi escolhido para #1, e por quê
 
 - **`plan-entitlements`** só não é #1 porque está `proposed`: o usuário a manteve assim em 2026-09-26, e metade
   dos critérios fica 🔒 sem conta Stripe.
-- **O `packages/security/index.ts:11` lendo a chave no import** é o outro 🔴, mas só dispara com uma
-  `ARCJET_KEY` presente e malformada; o da conta desativada vale em todo fork que usa o painel admin.
+- **O admin que desativa a própria conta** (🟢, achado da PR #35) ficou mais caro com a correção: agora o admin
+  perde o painel na mesma requisição. Mas é recuperável pelo console do Firebase, e a correção pede código de
+  erro novo nos 3 idiomas e mudança na listagem. P, e o segundo da fila.
 - **O "Excluir" do menu de ações pelo teclado** (WCAG 2.1.1) segue a tarefa direta P mais urgente da lista de
-  UI. Cabe ao lado de qualquer outra.
-- **O foco do diálogo de exclusão de conta** (WCAG 2.4.3) é tarefa direta P com a correção já conhecida, a mesma
-  `onOpenAutoFocus` do diálogo de troca de e-mail.
-- **Os achados pequenos de segurança** (o webhook respondendo 500 para assinatura inválida; rotas de
-  `payments/*` e quatro de `/account` fora do rate limit) seguem como tarefas diretas P.
-- **O teste instável de `useListAuditEvents`** é tarefa direta P, 2 falhas em 28 execuções locais.
-- **O `getDictionary()` do servidor lendo o cookie** continua tarefa direta M, não spec.
-- **O item da `review-checklist.md` para `SUBPROCESSORS.md` e `ROPA.md`** ficou possível com o merge da PR #34;
-  é correção de documento P, sem código.
+  UI, mas só se prova numa passada de navegador.
+
+Os demais achados P (foco do diálogo de exclusão, rate limit de `payments/*` e `/account`, teste instável,
+`getDictionary()` do servidor, item da `review-checklist.md`) seguem na seção de achados, com `arquivo:linha`, e
+deixam de ser repetidos aqui pela §5.1 da `cycle-policy`.
 
 ## Lotes paralelos
 
@@ -299,20 +313,20 @@ coisa, rode o #1 da ordem.
 | **1** | `plan-entitlements` | `webhooks/payments/route.ts`, `billing-state.ts`, `packages/sdk/src/types/payments/payments.ts` | lote de uma spec só |
 
 **Quem ficou fora do lote 1, nominalmente:** ninguém entre as elegíveis. Não há lote 2. **Mudança desta
-rodada:** nenhuma no lote; `compliance-docs-kit` já estava fora por estar `in-progress` e agora está arquivada.
+rodada:** nenhuma no lote. Os `contends_on` foram relidos do disco; nenhum mudou desde a rodada anterior.
 
 **A tarefa direta recomendada como #1 não é spec e não entra no cálculo**, mas o `contends_on` dela seria
-`packages/auth/server.ts` e `apps/api/app/(routes)/users/[id]/route.ts`. É disjunto do de `plan-entitlements`,
-então as duas podem correr em workspaces separados.
+`packages/security/index.ts`, `packages/security/keys.ts` e `apps/api/instrumentation.ts`. É disjunto do de
+`plan-entitlements` e do de toda spec viva, então as duas podem correr em workspaces separados.
 
 ### Onde os lotes podem colidir mesmo disjuntos
 
 - **`plan-entitlements` e o SDK**: acrescenta tipos em `types/payments/payments.ts`. Se mexer no índice de
   ações do cliente (`packages/sdk/src/client/index.ts`), que não declara, o conflito é com
   `teams-organizations`, que está fora da fila.
-- **`plan-entitlements` e a tarefa da conta desativada**: nenhuma das duas declara `docs/PRE-PRODUCTION.md` nem
-  `docs/SECURITY.md`, e as duas podem acabar editando esses arquivos. O conflito seria de texto e se resolve no
-  merge.
+- **`plan-entitlements` e a tarefa da `ARCJET_KEY`**: nenhuma das duas declara `docs/PRE-PRODUCTION.md` nem
+  `docs/SECURITY.md`, e as duas podem acabar editando esses arquivos (a segunda quase certamente, no §8 do
+  `PRE-PRODUCTION.md`). O conflito seria de texto e se resolve no merge.
 - Quase toda spec de código acrescenta códigos em `translations/packages/shared/utils.ts` (`apiErrors`). O
   conflito é aditivo e se resolve no merge.
 - **Gate local:** `pnpm test` roda também `test:emulator` e exige JDK 21 no `PATH`. Nesta máquina o `java`
@@ -339,21 +353,30 @@ declarava esses arquivos, então a previsão errou para menos sem custo, de novo
 `account-email-change` declarou 4 e a PR #33 alterou 3 deles (o `action-link.tsx` ficou intacto), mais 26
 arquivos de código e tradução fora da lista, sem contar testes e documentos. `compliance-docs-kit` declarou 0 e
 a PR #34 alterou `docs/PRE-PRODUCTION.md` e `docs/FORKING.md`, os dois arquivos compartilhados que a rodada
-anterior tinha apontado nesta seção.
+anterior tinha apontado nesta seção. A tarefa direta da PR #35 foi prevista com dois arquivos de código e tocou
+exatamente esses dois, mais os dois testes, `docs/INCIDENT-RESPONSE.md` (previsto), `docs/BACKUP.md` e
+`docs/PRE-PRODUCTION.md` (não previstos: uma âncora deslocada e a medição do §9).
 
 ## Precisam de decisão
 
-**Nenhuma pergunta nova nesta rodada.** Os pontos que poderiam virar pergunta foram resolvidos assim:
+**Duas perguntas novas nesta rodada**: a D1 acompanha a recomendação de #1, e a D8 veio da medição da tarefa.
 
-- **O CI no SHA de merge da PR #34** foi medido, não perguntado: verde nos quatro jobs.
-- **As duas perguntas de `compliance-docs-kit`** (idioma dos documentos, `security.txt` no corte) saíram com a
-  recomendação da spec, e o merge as levou: português, sem `security.txt`.
+| # | pergunta | recomendação | por quê |
+|---|----------|--------------|---------|
+| D1 | `ARCJET_KEY` malformada: o limitador vira no-op com erro no log de boot, ou o processo recusa subir? | no-op com erro no log | a `cycle-policy` §3 pede modo degradado para feature opt-in; e o `throw` de boot não derruba o processo hoje (achado do `CORS_ORIGIN`), então recusar subir não funcionaria sem mexer nisso também. **Adotada** pela tarefa `arcjet-key-lazy-validation`, no working tree; muda se você disser o contrário antes do merge |
+| D8 | Ligar o bloqueio de bot da landing? Hoje ele nunca roda, nem com chave válida (achado do `skipValidation` da `apps/web`) | não ligar agora; declarar a decisão | ligar é pôr `detectBot` e `shield` em modo `LIVE` para visitante anônimo em todo fork que já tem a chave. Pede teste próprio (falso positivo de crawler, preview de link) e não cabe numa correção de configuração. Os documentos já descrevem o comportamento atual (`docs/ROPA.md:108`, `docs/SUBPROCESSORS.md:40`, `docs/FORKING.md` §7.3, no working tree) |
+
+Os demais pontos foram resolvidos sem pergunta:
+
+- **O CI no SHA de merge da PR #35** foi medido: verde nos quatro jobs (`gh run 36764362726`).
+- **Se o 🔴 da conta desativada fechou de fato** foi medido no código, não lido do `STATE.md`: as duas mudanças
+  estão em `main` e os 14 testes novos passam no gate desta rodada.
 - **Aprovar `plan-entitlements`** é decisão sua desde 2026-09-26 e não é reapresentada como pergunta; a
   recomendação de #1 funciona com ou sem ela.
 - **`plan-entitlements` (Stripe Entitlements ou mapa local?)** segue em "Perguntas em aberto" da própria spec,
   pela §5.1 da `cycle-policy`; o `/cycle` adota a recomendação escrita lá se você não disser nada.
-- **O `STATE.md` com a branch errada e o nome de branch fora do padrão** voltaram na PR #34. Estão em E11 e não
-  são reapresentados.
+- **O nome de branch fora do padrão** voltou na PR #35 (`fix/disabled-account-revocation`, sem `<project>`).
+  Está em E11 e não é reapresentado.
 
 ## Decisões estacionadas (§5.1)
 
@@ -366,7 +389,7 @@ Cada uma tem dono e endereço.
 |---|---------|------|---------------------|-------------------------|
 | E1 | `observability-logging` fecha como entregue, com o coletor virando spec P própria? (12 rodadas) | você | `docs/PRE-PRODUCTION.md` §11 (o coletor) | fechar e abrir spec P do coletor |
 | E2 | `teams-organizations` continua `deferred`? (14 rodadas sem as contrapartidas P) | você | este arquivo, [Achados](#-repositório-rotas-e-proxy) (predicado de posse) | status de sua escolha; as contrapartidas já são achados com arquivo e linha |
-| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-09-30, pós-PR #34: 404, `[]`, 34 PRs |
+| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-09-30, pós-PR #35: 404, `[]`, 35 PRs |
 | E4 | O gate `approved` não é usado (**oito** specs entregues sem passar por `approved`, incluindo `admin-billing-insights` e `e2e-testing`; a fatia 1 de `account-security-mfa` saiu da mesma forma, pela PR #29, com a spec em `proposed`). **Em 2026-09-26 o usuário aprovou cinco specs de uma vez, o primeiro uso do gate; `brand-config` (PR #30), `storage-emulator-rules-tests` (PR #31), `accessibility-conformance` (PR #32) e `account-email-change` (PR #33) e `compliance-docs-kit` (PR #34) são as cinco entregues depois de passar por ele** | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
 | E5 | Prazo de retenção da coleção `auditEvent` | você | `docs/PRE-PRODUCTION.md` §1.3 | decidir um prazo padrão sem invocar o art. 15 do Marco Civil |
 | E6 | Teto absoluto da sessão ultrapassável por até meia vida de cookie | — | `docs/PRE-PRODUCTION.md`, seção "Declaração — por quanto tempo uma sessão pode ser renovada" | manter o comportamento; o número está escrito onde o fork lê |
@@ -374,7 +397,7 @@ Cada uma tem dono e endereço.
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
 | E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral (3 rodadas) | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`), por isso precisa da sua palavra |
 | E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | este arquivo, achado A1 em [Achados](#-achados-abertos-reconferidos-ou-herdados) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer; a nota de medição do `docs/AUTH-SSO.md` fica como está |
-| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão (PRs #29 a #34) | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | o `STATE.md` de `account-security-mfa` segue com `review: in-progress` e o de `brand-config` com `branch: -`, ambos já mergeados, de `feat/account-security-password-policy` e `feat/brand-config`. Na PR #31 o `STATE.md` acompanhou o merge (`review: done`, branch gravada), mas a branch saiu de novo como `feat/<slug>`. Na PR #32 as duas coisas voltaram: `feat/accessibility-conformance` e `review: in-progress` no `STATE.md` depois do merge. Na PR #33 a tabela do `STATE.md` acompanhou (`review: done`, branch gravada), mas as notas do mesmo arquivo dizem que a etapa segue `in-progress`, e a branch saiu como `feat/account-email-change`. Na PR #34 a tabela acompanhou, mas o campo `branch:` guarda um nome proposto que não foi usado (`docs/compliance-docs-kit`), e a PR saiu da `run-full-task-cycle-v2`. Recomendação: a regra aceitar `feat/<slug>` para feature que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
+| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão (PRs #29 a #35) | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | o `STATE.md` de `account-security-mfa` segue com `review: in-progress` e o de `brand-config` com `branch: -`, ambos já mergeados, de `feat/account-security-password-policy` e `feat/brand-config`. Na PR #31 o `STATE.md` acompanhou o merge (`review: done`, branch gravada), mas a branch saiu de novo como `feat/<slug>`. Na PR #32 as duas coisas voltaram: `feat/accessibility-conformance` e `review: in-progress` no `STATE.md` depois do merge. Na PR #33 a tabela do `STATE.md` acompanhou (`review: done`, branch gravada), mas as notas do mesmo arquivo dizem que a etapa segue `in-progress`, e a branch saiu como `feat/account-email-change`. Na PR #34 a tabela acompanhou, mas o campo `branch:` guarda um nome proposto que não foi usado (`docs/compliance-docs-kit`), e a PR saiu da `run-full-task-cycle-v2`. Na PR #35 o nome proposto no `STATE.md` foi o usado pela primeira vez (`fix/disabled-account-revocation`), mas sem `<project>`, porque o diff cruza `packages/auth` e `apps/api`; o `review.md` da tarefa justificou a omissão pela regra de commit, que aceita omitir o escopo, enquanto a de branch não aceita. Recomendação: a regra aceitar `feat/<slug>` para feature que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
@@ -441,12 +464,11 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `account-email-change` | 2026-09-29 | [`docs/features/account-email-change/spec.md`](../docs/features/account-email-change/spec.md) — **5/5 do corte** (PR #33, `f377c84`), 16 ✅, 0 ❌ e 1 🔒 no `/test` (entrega real do aviso pela Resend). Quarta spec entregue depois de passar por `approved`. ⚠️ Quatro derivas sem efeito no comportamento; o diff introduziu e corrigiu antes do merge dois defeitos de foco no diálogo novo. Resend, `FIREBASE_WEB_API_KEY` e o e-mail de suporte são passo manual por fork (`PRE-PRODUCTION.md` §3, §4 e §13) |
 | `compliance-docs-kit` | 2026-09-30 | [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md) — **6/6 do corte** (PR #34, `c7aa4d9`), 18 ✅, 0 ❌ e 2 🔒 no `/test` (backup no Blaze e conformidade jurídica). Quinta spec entregue depois de passar por `approved`. ⚠️ Cinco derivas sem efeito no conteúdo. Preencher os `[FORK]`, aceitar os DPAs e decidir o backup são passo manual por fork (`PRE-PRODUCTION.md` §14) |
 
-**Verificado na auditoria de 2026-09-30 (pós-PR #34):** `docs/features/` tem **30** pastas e **25** `spec.md`
-arquivados. As cinco pastas sem `spec.md` são `account-security-mfa` e `observability-logging` (specs
-`in-progress` em `specs/`), `auth-panel-context` e `impersonation-read-only` (as duas anteriores à semeadura) e
-`i18n-hydration-admin-delete-billing` (tarefa direta, sem spec). Não houve colisão de arquivamento:
-`docs/features/compliance-docs-kit/spec.md` não existia antes do `git mv`. Os dois links relativos da spec
-movida foram reescritos para o caminho novo e conferidos no disco.
+**Verificado na auditoria de 2026-09-30 (pós-PR #35):** `docs/features/` tem **31** pastas e **25** `spec.md`
+arquivados. As seis pastas sem `spec.md` são `account-security-mfa` e `observability-logging` (specs
+`in-progress` em `specs/`), `auth-panel-context` e `impersonation-read-only` (as duas anteriores à semeadura),
+`i18n-hydration-admin-delete-billing` e `disabled-account-revocation` (tarefas diretas, sem spec, listadas em
+[Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec)). Nenhuma spec foi arquivada nesta rodada.
 
 ### O que a PR #27 entregou **além** do corte (registrado em 2026-09-25)
 
@@ -457,35 +479,39 @@ movida foram reescritos para o caminho novo e conferidos no disco.
 3. **Aviso de endpoint incompleto.** Com assinatura vigente e nenhuma fatura paga registrada, a seção avisa
    que falta `invoice.paid` no endpoint (`BillingInsightsSection.tsx:76-83`), em vez de mostrar receita
    zero sem explicação.
-4. **A declaração do expurgo ganhou as duas coleções novas** (`docs/PRE-PRODUCTION.md:733`, âncora remedida
-   em 2026-09-30, já com o item 14 da entrega de `compliance-docs-kit`): ficam depois da exclusão, porque guardam só ids da Stripe, valor, moeda e datas.
+4. **A declaração do expurgo ganhou as duas coleções novas** (`docs/PRE-PRODUCTION.md:739`, âncora remedida
+   em 2026-09-30 no working tree, com a PR #35 e a tarefa `arcjet-key-lazy-validation` somando seis linhas antes dela): ficam depois da exclusão, porque guardam só ids da Stripe, valor, moeda e datas.
 
 ## Contradições doc × código, medidas nesta rodada
 
 Nenhum gate lê prosa. Pela [`cycle-policy` §4](../.claude/cycle-policy.md), afirmação barata de medir num
-doc é medida ao passar por ela. Nesta rodada foram medidos os documentos que a PR #34 criou ou alterou
-(`docs/ROPA.md`, `docs/INCIDENT-RESPONSE.md`, `docs/SUBPROCESSORS.md`, `docs/BACKUP.md`, `docs/PRE-PRODUCTION.md`,
-`docs/FORKING.md`) e as contagens do `docs/SECURITY.md`. A auditoria não edita `docs/`; o que está defasado
-fica registrado aqui.
+doc é medida ao passar por ela. Nesta rodada foram medidos os documentos que a PR #35 alterou
+(`docs/INCIDENT-RESPONSE.md`, `docs/BACKUP.md`, `docs/PRE-PRODUCTION.md`) e os que citam o `PUT /users/[id]`. A
+auditoria não edita `docs/`; o que está defasado fica registrado aqui.
 
 | documento | afirma | realidade medida em 2026-09-30 | veredito |
 |-----------|--------|-------------------------------|----------|
-| `docs/PRE-PRODUCTION.md:609-617` (§9, gate) | medição no `3e5ec4c`: 28/28 tasks, 792 arquivos, 2296 testes em 220 arquivos | no `c7aa4d9`: 28 tasks sem o emulador (29 com), **806** arquivos, **2452** em **226**; `test:emulator` 170 em 4 | ✅ **corrigido no working tree** desta rodada, depois de ficar defasado por duas: o §9 passou a citar a medição no `c7aa4d9` (29/29 tasks com `test:emulator`, 806 arquivos, 2452 em 226). Entra no commit `docs` |
-| `docs/PRE-PRODUCTION.md:583-584` (§9) | proteção remedida em 2026-09-24: 404, `[]` | 404 e `[]` hoje | ✅ **honesto**; a data é a de uma medição antiga, o estado é o mesmo |
+| `docs/PRE-PRODUCTION.md:613-622` (§9, gate) | medição no `c7aa4d9`: 29/29 tasks, 806 arquivos, 2452 testes em 226 arquivos | no `1936369`: 29/29 tasks, **806** arquivos, **2466** em **226**; `test:emulator` 170 em 4 | ⚠️ **defasado em 14 testes** pela PR #35, que atualizou o §9 com a medição da rodada anterior e somou os próprios testes depois. **No working tree**, a tarefa `arcjet-key-lazy-validation` já reescreveu o §9 com 2485 testes em 227 arquivos, contando os seus; a auditoria não remediu esse número |
+| `docs/PRE-PRODUCTION.md:587-588` (§9) | proteção remedida em 2026-09-24: 404, `[]` | 404 e `[]` hoje | ✅ **honesto**; a data é a de uma medição antiga, o estado é o mesmo |
 | `docs/SUBPROCESSORS.md:25-86` e `ROPA.md`, `INCIDENT-RESPONSE.md`, `BACKUP.md` (âncoras) | 91 `arquivo:linha` de código | todos existem e cabem no arquivo; seis conferidos por leitura (`server.ts:180-183`, `:323-325`, `users/[id]/route.ts:87`, `sessions/revoke/route.ts:7-8`, `session.ts:150`, `:161`) | ✅ **honesto** |
 | os mesmos quatro (links) | 38 links relativos | 0 mortos | ✅ **honesto** |
 | `docs/SUBPROCESSORS.md:88-96` (o que não entra) | `@stripe/agent-toolkit` sem consumidor; sem `next/font/google`; sem Firebase Analytics | `git grep` por `payments/ai`, `next/font/google`, `getAnalytics` e `firebase/analytics` em `apps` e `packages`: 0 | ✅ **honesto** |
 | `docs/SUBPROCESSORS.md` (Vercel) | os `vercel.json` do repo não definem `regions` | `grep -c regions` nos três: 0 | ✅ **honesto** |
-| `docs/INCIDENT-RESPONSE.md:51` (conta desativada) | bearer emitido antes da desativação segue aceito por até 1 hora | `getCurrentUser` não confere `disabled` (`packages/auth/server.ts:173-195`) | ✅ **honesto**. Vira falso quando o 🔴 for corrigido; a tarefa tem de editar esta linha. A tarefa `disabled-account-revocation` já a reescreveu no working tree, junto com a correção |
+| `docs/INCIDENT-RESPONSE.md:51-52` (conta desativada) | a API recusa a conta desativada na requisição seguinte, nos dois transportes; o `PUT` revoga as sessões (`users/[id]/route.ts:87`, `:117-122`, `:124-126`); `server.ts:180-183`, `:284-302`; `resolve-api-actor.ts:24` | as seis âncoras conferem no `1936369`; `getCurrentUser` recusa `user.disabled` em `server.ts:182` | ✅ **honesto**, reescrito pela PR #35 junto com a correção. A célula tem uns 900 caracteres, como o `/review` da tarefa notou; o conteúdo confere |
+| `docs/BACKUP.md:94` | o arquivamento pelo admin marca `deletedAt` em `users/[id]/route.ts:173` | `:173` é `userRepository.delete(id)` | ✅ **honesto**, âncora corrigida pela PR #35 |
+| `docs/PRE-PRODUCTION.md:894-898` (contas de QA) | a tarefa `disabled-account-revocation` criou e apagou a própria conta de QA | o `test/report.md` da tarefa descreve a limpeza e a conferência (`auth/user-not-found`, 0 eventos) | ✅ **honesto** pelo artefato; o console do Firebase não foi aberto (pendência 15) |
 | `docs/SECURITY.md:15-17` (guards) | 32 arquivos de rota, 20 com guard, 12 nus, 9 em `/auth/*` | recontado: 32, 20, 12 (9 em `/auth/*`, os dois `health` e o webhook) | ✅ **honesto** |
-| `docs/FORKING.md:433` (link) | aponta para `../README.md#crud-de-referência` | o README renderizado pelo GitHub (`gh api repos/:owner/:repo/readme` em HTML) publica o id `user-content--crud-de-referência`, com `href="#-crud-de-referência"` | ❌ **link morto, medido**. A PR #34 empurrou a linha de `:432` para `:433` |
+| `docs/FORKING.md:437` (link) | aponta para `../README.md#crud-de-referência` | o README renderizado pelo GitHub (`gh api repos/:owner/:repo/readme` em HTML) publica o id `user-content--crud-de-referência`, com `href="#-crud-de-referência"` | ❌ **link morto, medido**. A PR #34 empurrou a linha de `:432` para `:433` |
+| `docs/features/disabled-account-revocation/STATE.md` | `branch: fix/disabled-account-revocation (proposta; o workspace segue em run-cycle-pipeline)`; notas citam `BACKLOG.md:617` e `:235-259` | a PR #35 saiu dessa branch; as linhas citadas eram do `BACKLOG.md` anterior à auditoria pós-PR #34 | ⚠️ **defasado só no parêntese e nas linhas**; o nome está certo. Fica como está: a auditoria só escreve em `docs/features/` para arquivar spec |
 | `docs/features/compliance-docs-kit/STATE.md` (`branch:`) | `docs/compliance-docs-kit`, proposta | a PR #34 saiu de `run-full-task-cycle-v2` | ⚠️ **defasado**, estacionado em E11 |
 | `docs/features/account-email-change/STATE.md` | tabela: `review` `done`; notas: "a etapa `review` segue `in-progress`" | PR #33 mergeada com CI verde | ⚠️ **contradição interna**, estacionada em E11 |
 | `docs/features/e2e-testing/STATE.md` (`/test`) | `blocked` pelo D3 | o job `e2e` passou em todas as execuções seguintes, inclusive o merge da #34 | ⚠️ **defasado**, fica como está por decisão do usuário |
 | `docs/features/accessibility-conformance/STATE.md`, `account-security-mfa/STATE.md` e `brand-config/STATE.md` | `review: in-progress` / `branch: -` | PRs #29, #30 e #32 mergeadas | ⚠️ **defasados**, estacionados em E11 |
 | `docs/AUTH-SSO.md:66-71` e a pendência do modo `simple` no `PRE-PRODUCTION.md` | redirecionamento do comum para a web no `simple` | não remedido; estacionado (E10) | ⚠️ nota de medição anterior segue no lugar |
 
-Os documentos que a rodada anterior mediu e que a PR #34 não tocou (`docs/PAYMENTS.md`, `docs/SETUP.md`,
+Os documentos que as rodadas anteriores mediram e que a PR #35 não tocou (`docs/ROPA.md`, `docs/SUBPROCESSORS.md`,
+`docs/FORKING.md`, `docs/SECURITY.md`) mantêm o veredito da tabela acima; a PR #35 não criou rota nem mudou
+guard, então as contagens do `docs/SECURITY.md:15-17` seguem certas. Os que a PR #34 também não tocou (`docs/PAYMENTS.md`, `docs/SETUP.md`,
 `AGENTS.md`, `packages/CLAUDE.md`, `docs/ARCHITECTURE.md`, `apps/app/CLAUDE.md`, `README.md`) mantêm o veredito
 de lá.
 
@@ -493,63 +519,90 @@ de lá.
 
 **Deriva** = o corte foi implementado diferente do especificado, ou o mundo mudou embaixo da spec.
 
-**Deriva de implementação em `compliance-docs-kit`: cinco, nenhuma de conteúdo.** A spec arquivada ganhou a
-tabela correspondente.
+**Nenhuma deriva de spec nesta rodada**: nenhuma spec foi entregue, e as quatro vivas não ganharam código. A
+tarefa direta da PR #35 não tinha corte de spec; contra a recomendação da rodada anterior, entregou o que foi
+prometido (as duas mudanças de código, os testes de unidade, o runbook e o achado em `account-security-mfa`) e
+acrescentou duas correções de documento que o diff tornou necessárias (`docs/BACKUP.md:94` e o §9 do
+`PRE-PRODUCTION.md`).
 
-| ponto | especificado | implementado | leitura |
-|-------|--------------|--------------|---------|
-| operações no registro | seis | nove, mais o bloco do fork (formulário de contato, proteção contra abuso e arquivos enviados a mais) | a spec estava incompleta; o plano levantou as operações no código |
-| nota de transferência | lida como documento próprio | seção de `SUBPROCESSORS.md` (`:113`) | mesma informação, um arquivo a menos |
-| escopo | `docs/` e ponteiros no `PRE-PRODUCTION.md` | também a ressalva do `docs/FORKING.md:166-168` | a frase "o Spark basta" ficaria falsa com o `BACKUP.md` publicado |
-| `contends_on` | vazio | `docs/PRE-PRODUCTION.md` e `docs/FORKING.md` alterados | previsto nesta seção na rodada anterior, sem custo |
-| registro da feature | `branch: docs/compliance-docs-kit` proposta | PR da `run-full-task-cycle-v2` | deriva de pipeline (E11) |
-
-**Deriva de pipeline:** a branch `run-full-task-cycle-v2` não segue `<project>/<type>/<title>`, como nas PRs #29
-a #33, e ficou viva no remoto depois do merge (pendência 16).
+**Deriva de pipeline:** a branch `fix/disabled-account-revocation` não tem o `<project>` de
+`<project>/<type>/<title>` e ficou viva no remoto depois do merge, como a `run-full-task-cycle-v2` da PR #34
+(E11, pendência 16).
 
 ### Âncoras deslocadas, corrigidas nesta rodada
 
-Todas por arquivos que a PR #34 alterou (`git diff --name-only f377c84 c7aa4d9`: só `docs/` e `specs/`). Cada uma
-foi lida no disco.
+A PR #35 alterou quatro arquivos de código e três documentos. `packages/auth/server.ts` trocou três linhas de
+JSDoc por três, então nenhuma âncora do arquivo se moveu (conferido: `getCurrentUser` segue em `:173`, a
+checagem em `:182`, `revokeUserSessions` em `:323`). O `PUT /users/[id]` ganhou quatro linhas a partir da
+`:124`. O `docs/PRE-PRODUCTION.md` ganhou uma linha na `:631` (§9) e cinco na `:889` (higiene). Cada âncora
+abaixo foi lida no disco.
 
 | onde | citado | real hoje | causa |
 |------|--------|-----------|-------|
-| este arquivo, achados e contradições | `docs/FORKING.md:432` | **`:433`** | a ressalva do Spark no passo 1 do §4 |
-| a spec arquivada | `docs/PRE-PRODUCTION.md:658` ("incidente" de passagem) | **`:670`** | o item 14 e os trechos novos da PR #34 |
-| a spec arquivada | `research/compliance-trust-baseline.md` (relativo a `specs/`) | `../../../specs/research/compliance-trust-baseline.md` | o movimento para `docs/features/`; conferido no disco |
-| este arquivo, seis links | `compliance-docs-kit.md` | `../docs/features/compliance-docs-kit/spec.md` | idem |
-| este arquivo, A2 (duas linhas) e lacunas do arquivamento | `users/[id]/route.ts:157`, `:158-167`, `:157-169` | **`:161`**, **`:162-171`**, **`:161-173`** | a revogação no `PUT` da tarefa `disabled-account-revocation`, ainda no working tree (4 linhas a partir da `:123`) |
+| este arquivo, achado do admin que se desativa | `users/[id]/route.ts:87-126` | **`:87-143`** | o `PUT` inteiro, que agora termina na `:143`; a faixa antiga cortava o handler no meio |
+| este arquivo, lacuna "Banir usuário pelo admin" | `users/[id]/route.ts:117-121`, `UsersListClient.tsx:102-119` | **`:117-126`**, **`:102-125`** | a revogação entrou em `:124-126`; o `onCheckedChange` do switch vai até a `:125` |
+| este arquivo, pendência 26 | `PRE-PRODUCTION.md:690-701` (§13) | **`:691-702`** | a linha nova do §9 |
+| este arquivo, PR #27 item 4 | `PRE-PRODUCTION.md:733` | **`:734`** | idem |
+| este arquivo, 🔴 da conta desativada | `server.ts:180-184`, `users/[id]/route.ts:117-122` | movido para os fechados, com `server.ts:181-183` e `route.ts:124-126` | o achado fechou |
 
-A última linha não vem da PR #34: foi corrigida no `/review` da tarefa que a deslocou, junto com
-`docs/BACKUP.md:94` e `specs/observability-logging.md:65`, que a própria tarefa já tinha ajustado.
+**Deslocadas pela tarefa `arcjet-key-lazy-validation`, ainda no working tree.** O diff dela acrescentou 23
+linhas a `apps/api/instrumentation.ts`, tirou 2 de `packages/security/index.ts` e mexeu em cinco documentos. As
+âncoras abaixo foram remedidas no arquivo do working tree e só valem depois do merge; em `main` seguem as
+antigas.
 
-As âncoras em `docs/PRE-PRODUCTION.md` citadas neste arquivo (`:454-455`, `:567-577`, `:575-577`, `:609-617`,
-`:690-701`, `:733`) foram remedidas no `c7aa4d9` e estão certas: a rodada anterior as corrigiu com a entrega de
-`compliance-docs-kit` já no working tree, e o merge levou o mesmo texto. As specs que seguem em `specs/` não citam
-linha de `docs/`, então nenhuma delas derivou. A contagem de `logEvent(` fora de testes em
-`observability-logging` segue em **33** e o `console` cru em **19** linhas de **12** arquivos, recontados.
+| onde | citado | real no working tree | causa |
+|------|--------|----------------------|-------|
+| `observability-logging`, linhas 56 e 60 | `apps/api/instrumentation.ts:19` | **`:20`** | o import de `arcjetKeyState` na linha 1 |
+| `observability-logging`, linhas 81 e 163 | `instrumentation.ts:58-59` | **`:76-77`** | `warnOnDisabledRateLimit` (`:25-45`) |
+| `observability-logging`, linha 123 | `instrumentation.ts:35-56` | **`:58-74`** | idem |
+| `observability-logging`, linhas 148 e 241; `account-security-mfa`, linha 341 | `packages/security/index.ts:42-44` | **`:40-43`** | a leitura da chave passou para dentro de `checkRateLimit` (`:40`) |
+| este arquivo, `CORS_ORIGIN` | `instrumentation.ts:40-44` | **`:63-67`** | idem ao primeiro |
+| este arquivo, `isRateLimitEnforced()` | `index.ts:32` | **`:30`** | o `const` do topo saiu |
+| este arquivo, contradições, pendências e achados | `PRE-PRODUCTION.md:583-584`, `:609-617`, `:691-702`, `:734`, `:889-893`, §8 `:567-577` | **`:587-588`**, **`:613-622`**, **`:696-707`**, **`:739`**, **`:894-898`**, **`:567-582`** | quatro linhas no §8 (chave malformada) e uma no §9 |
+| este arquivo, link do CRUD de referência | `FORKING.md:433` | **`:437`** | quatro linhas no §7.3 (Arcjet) |
+| este arquivo, cadastro sem trava | `SECURITY.md:159` | **`:160`** | uma linha sobre a chave sem prefixo em `:158` |
+
+**Não corrigidas, porque a auditoria não edita spec arquivada:** a
+[`spec de compliance-docs-kit`](../docs/features/compliance-docs-kit/spec.md) cita `PRE-PRODUCTION.md:670`
+(real `:671`), `:702-718` (real `:703-719`), `:704-707` (real `:705-708`) e `:741` (real `:742`), na linha 32 e
+na linha 60. O texto apontado é o mesmo, uma linha abaixo.
+
+As demais âncoras em `docs/PRE-PRODUCTION.md` citadas neste arquivo (`:54-58`, `:454-455`, `:567-577`,
+`:575-577`, `:583-584`, `:609-617`) ficam antes da `:631` e foram relidas em `main`: conferem (as que a
+tarefa seguinte deslocou no working tree estão na tabela acima). As specs vivas não citam
+linha de `docs/`. As âncoras de `users/[id]/route.ts` em `account-security-mfa` (`:120-126`),
+`observability-logging` (`:163`) e `plan-entitlements` (`:49`) conferem, assim como as deste arquivo para o
+`DELETE` (`:161`, `:162-171`, `:161-173`), corrigidas pelo `/review` da tarefa. A contagem de `logEvent(` fora de
+testes em `observability-logging` segue em **33**, recontada; a PR #35 não acrescentou nem tirou chamada de
+`logEvent` ou de `console` (`git diff c7aa4d9 1936369 -- apps packages`, fora de testes: 0 linhas). A tarefa `arcjet-key-lazy-validation` acrescenta, no working tree, um `console.error` de boot
+(`apps/api/instrumentation.ts:41`), do mesmo tipo dos avisos de boot que a spec já conta; a contagem não foi
+refeita.
 
 ### O que a auditoria **não** encontrou
 
-A PR #34 não alterou código; o gate completo passa com os mesmos números. Nenhuma spec `done` perdeu código.
-Nenhuma feature em `docs/features/*/STATE.md` deveria ter `spec:` e não tem. Nenhuma entrega parcial órfã: as
-quatro specs que seguem em `specs/` foram conferidas por `grep` (entitlements, segundo fator, organizações e
-coletor de erro) e nenhuma ganhou código por tabela. Nenhuma colisão de arquivamento:
-`docs/features/compliance-docs-kit/spec.md` não existia antes do `git mv`.
+Nenhuma spec `done` perdeu código. Nenhuma feature em `docs/features/*/STATE.md` deveria ter `spec:` e não tem.
+Nenhuma entrega parcial órfã: as quatro specs que seguem em `specs/` foram conferidas por `grep` (entitlements,
+segundo fator, organizações e coletor de erro) e nenhuma ganhou código por tabela. Nenhum arquivamento, então
+nenhuma colisão possível.
 
 ## Achados: correções pontuais, não specs
 
 Coisas que não merecem spec própria, mas que são correções pontuais. Viram tarefa direta no `/analyze`.
 
-> **Auditoria de 2026-09-30 (pós-PR #34).** A rodada anterior fechou com 82 linhas abertas; o número não foi
-> recontado linha a linha nesta rodada. A PR #34 não alterou nenhum arquivo de código (`git diff --name-only
-> f377c84 c7aa4d9` só lista `docs/` e `specs/`), então toda linha ancorada em código segue igual, porque o
-> arquivo é o mesmo byte a byte. As que citam documento alterado pela PR (`docs/FORKING.md`,
-> `docs/PRE-PRODUCTION.md`) e as do 🔴 da conta desativada foram reabertas no disco. **Placar: 0 fechados · 0
-> novos · 1 medido e confirmado (o link do `FORKING.md`, agora em `:433`) · 1 descrição atualizada (o item da
-> `review-checklist.md`, que o merge dos documentos destravou) · 82 abertos.** Depois da auditoria, o `/review` de
-> `disabled-account-revocation` acrescentou um 🟢 (o admin que desativa a própria conta), e as linhas abertas
-> passam a 83.
+> **Auditoria de 2026-09-30 (pós-PR #35).** A rodada anterior fechou com 83 linhas abertas (82 da auditoria e
+> o 🟢 que o `/review` da tarefa acrescentou); o número não foi recontado linha a linha nesta rodada. A PR #35
+> alterou quatro arquivos de código: `packages/auth/server.ts`, `apps/api/app/(routes)/users/[id]/route.ts` e
+> dois testes. As linhas que citam esses arquivos foram reabertas no disco; as demais seguem iguais, porque o
+> arquivo é o mesmo byte a byte. **Placar: 1 fechado (o 🔴 da conta desativada) · 1 novo (`GET /auth/me` sem
+> `error.code`, visto no `/test` da tarefa) · 2 âncoras remedidas (o achado do admin que se desativa e a lacuna
+> "Banir usuário") · 83 abertos.** As duas lacunas de
+> teste novas do `/test` da tarefa estão na seção dela e não entram no placar, como nas rodadas anteriores.
+
+### ✅ Fechados na auditoria de 2026-09-30 (PR #35)
+
+| achado | onde estava | como fechou |
+|--------|-------------|-------------|
+| 🔴 **Conta desativada pelo admin seguia com o ID token aceito pela API até ele expirar** | `packages/auth/server.ts:180-184` · `apps/api/app/(routes)/users/[id]/route.ts:117-122` (antes da PR #35) | `getCurrentUser` recusa `user.disabled` no registro que já carrega (`server.ts:181-183`) e o `PUT` revoga as sessões ao desativar (`route.ts:124-126`). Testes de unidade com o Firebase mockado: `serverSessionRevocation.test.ts:140-190` e `usersAdminAuditTrail.test.ts:258-297`, 4 deles derrubados por mutação no `/test`. Medido contra o projeto de desenvolvimento pelo `/test` da tarefa: `401 AUTH_INVALID_TOKEN` no bearer da conta desativada. O runbook (`docs/INCIDENT-RESPONSE.md:51-52`) e a seção ligada de [`account-security-mfa`](account-security-mfa.md) foram reescritos no mesmo diff |
 
 ### ✅ Fechados na auditoria de 2026-09-29 (PR #32)
 
@@ -584,7 +637,7 @@ dependências.
 
 ### ⚠️ Achados abertos, reconferidos ou herdados
 
-Reconferidos em 2026-09-30, pós-PR #34, que não alterou nenhum dos arquivos desta tabela.
+Reconferidos em 2026-09-30, pós-PR #35, que não alterou nenhum dos arquivos desta tabela.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
@@ -615,15 +668,14 @@ entrega; os três ficaram fora dela por decisão registrada.
 |--------|------|-----------------|
 | 🟡 **Reenviar o cadastro depois de conta criada e login falho responde `USERS_AUTH_EMAIL_ALREADY_IN_USE`** | `apps/app/.../sign-up/components/SignUpFormClient.tsx:112-119` · `apps/web/.../sign-up/components/sign-up-form-client.tsx:34-40` | A criação e o login são duas chamadas. Se a primeira passa e a segunda falha (rede, 429, cookie de sessão), a pessoa reenvia, recebe "e-mail já cadastrado" e precisa ir ao login por conta própria. O `/review` deixou como está porque a correção muda o fluxo; a alternativa registrada é tentar o `signIn` quando o reenvio receber esse código logo depois de um 201 na mesma tela |
 | 🟡 **`create-dev-admin.mjs` não aplica a política de senha** | `apps/api/scripts/create-dev-admin.mjs:36-46` | O script cria administrador com qualquer senha que o Firebase aceite (6 ou mais). Fora da fatia por decisão do plano (P4): o script roda em Node puro e repetir a constante criaria a 12ª cópia. Afeta só quem opera o fork |
-| 🟡 **Sem `ARCJET_KEY`, nada limita a criação de contas em massa** | `apps/api/proxy.ts:47` (`/auth/sign-up` na lista) · `docs/PRE-PRODUCTION.md:575-577` · `docs/SECURITY.md:159` (âncoras remedidas em 2026-09-30) | A rota cria a conta pelo Admin SDK, que não passa pelo limite do Firebase de 100 contas por hora por IP. A rota está na lista de rate limit, mas o limite é no-op sem a chave. Está escrito nos dois documentos; o critério 19 do `/test` ficou 🔒 |
+| 🟡 **Sem `ARCJET_KEY`, nada limita a criação de contas em massa** | `apps/api/proxy.ts:47` (`/auth/sign-up` na lista) · `docs/PRE-PRODUCTION.md:575-577` · `docs/SECURITY.md:160` (âncoras remedidas em 2026-09-30, a segunda no working tree) | A rota cria a conta pelo Admin SDK, que não passa pelo limite do Firebase de 100 contas por hora por IP. A rota está na lista de rate limit, mas o limite é no-op sem a chave. Está escrito nos dois documentos; o critério 19 do `/test` ficou 🔒 |
 
 ### 🔴 Segurança: seguem abertos, confirmados no código
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🔴 **`packages/security/index.ts:11`** lê `keys().ARCJET_KEY` no **import**, e `@repo/security` é o primeiro import do middleware da `apps/api` | `packages/security/index.ts:11` | Reconferido. Uma `ARCJET_KEY` presente e malformada lança dentro do grafo de módulos do middleware: toda requisição falha, sem sinal no boot |
-| 🔴 **Conta desativada pelo admin segue com o ID token aceito pela API até ele expirar** (novo, 2026-09-30, da entrega de `compliance-docs-kit`) | `apps/api/app/(routes)/users/[id]/route.ts:117-122` (só `updateUser`, sem revogar) · `packages/auth/server.ts:180-184` (`verifyIdToken` sem `checkRevoked`; confere a marca de revogação, não `user.disabled`) · `apps/api/(shared)/lib/resolve-api-actor.ts:24` | Desativar é o mecanismo de banimento do core, e na API ele leva até 1 hora para valer: `resolveApiActor` devolve o usuário com `disabled=true` para o bearer emitido antes. Medido pelo `/test` de `compliance-docs-kit` contra o projeto Firebase de desenvolvimento (`docs/features/compliance-docs-kit/test/report.md:20`, `:51-53`). O cookie de sessão não tem o problema (`server.ts:298-301`, `checkRevoked: true`). O `getUser` já roda em `server.ts:181`, então recusar `user.disabled` ali não custa chamada a mais; revogar os refresh tokens no `PUT` é a outra metade. **O teste da correção não pode ser no emulador:** `firebase-admin@13.6.0`, `lib/auth/base-auth.js:119`, confere `disabled` sozinho quando `checkRevoked \|\| isEmulator`. Tem de ser teste de unidade ou de rota com `getAuthInstance` mockado. Ligado a [`account-security-mfa`](account-security-mfa.md), cujo `contends_on` cobre `server.ts` e `resolve-api-actor.ts`; o status dela não muda. Reconferido em 2026-09-30 pós-PR #34, com o runbook de incidente já em `main` descrevendo o limite (`docs/INCIDENT-RESPONSE.md:51`), que a correção tem de atualizar. Tarefa direta P, **recomendada como #1**. **Em execução** desde 2026-09-30 como [`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md), no working tree e sem PR: fecha no `/spec --sync` depois do merge |
-| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo** | `apps/api/instrumentation.ts:40-44` | Reconferido: `throw` em `:40-44` (a âncora desceu 20 linhas com o aviso de cobrança da PR #25), zero `process.exit`. `/health/ready` detecta parte das falhas, não esta |
+| 🔴 **`packages/security/index.ts:11`** lê `keys().ARCJET_KEY` no **import**, e a `apps/api` publica um build que responde erro a toda requisição | `packages/security/index.ts:11` · `packages/security/keys.ts:9-15` · `apps/api/proxy.ts:1` · `apps/api/instrumentation.ts:46-50` (âncoras de `main`, `1936369`) | Reconferido em 2026-09-30, pós-PR #35, e **corrigido pela medição da tarefa**: uma `ARCJET_KEY` presente e sem o prefixo `ajkey_` lança dentro do grafo de módulos do middleware da API, e toda requisição falha (o `/test` mediu `500` sem `x-request-id` em `GET /health` com o `index.ts` de `main`). O aviso de boot só confere se a variável existe. Em `apps/app` e `apps/web` o efeito é outro, e menos grave: o `next build` recusa a chave em "Collecting page data", porque o `env.ts` das duas estende o schema estrito; nenhuma das duas chega a publicar. Único 🔴 aberto. **Em execução** desde 2026-09-30 como [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md), no working tree e sem PR: fecha no `/spec --sync` depois do merge |
+| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo** | `apps/api/instrumentation.ts:63-67` | Reconferido: `throw` em `:63-67` no working tree (desceu 23 linhas com o aviso de chave malformada da tarefa `arcjet-key-lazy-validation`; em `main` segue em `:40-44`), zero `process.exit`. `/health/ready` detecta parte das falhas, não esta |
 | ⚠️ **Quatro das sete rotas de `/account` seguem fora do rate limit**, entre elas a troca de senha | `apps/api/proxy.ts:45-58` | Recontado em 2026-09-30: a PR #33 criou `POST /account/email` já na lista (`:57`). Ficam fora o `PUT /account`, `/account/password`, `/account/sessions/revoke` e `/account/onboarding`. A PR #25 acrescentou `POST /payments/checkout` e `POST /payments/portal`, também fora; cada checkout pode criar uma sessão na Stripe |
 | ⚠️ **Superfície não-guardada da API: 12 de 32** arquivos de rota exportam handler nu, 9 deles `/auth/*` | `apps/api/app/(routes)/auth/**` | Recontado em 2026-09-30: 32 arquivos, 20 com guard. A PR #33 acrescentou `account/email` (com guard) e `auth/email-change/confirm` (nua, como as outras confirmações por link, e na lista de rate limit). Os 12 nus: 9 em `/auth/*`, os dois `health` e o webhook de pagamento. `docs/SECURITY.md:15-17` traz os mesmos números |
 | 🟡 **O endpoint de renovação de sessão está fora do rate limit e aceita requisição sem `Origin`** | `packages/auth/session-routes.ts:87` · `packages/auth/session.ts:78-81` | Reconferido. A parte documental está fechada (`docs/SECURITY.md:155`, âncora remedida em 2026-09-30); o comportamento segue |
@@ -639,7 +691,7 @@ entrega; os três ficaram fora dela por decisão registrada.
 | 🟡 **`input-otp.tsx` é código morto** | `packages/design-system/components/ui/input-otp.tsx` | Reconferido: só ele, o barril, o `package.json` do pacote e o `playground`. `account-security-mfa` (fatia 3, segundo fator) é quem o usaria |
 | 🟡 **`import-in-the-middle` e `require-in-the-middle` instalados e nunca importados** | `apps/app/package.json:27,36` | Reconferido: 0 importadores |
 | 🟡 **`packages/internationalization` tem dois defeitos de `exports`** | `packages/internationalization/package.json:5-12` | Reconferido em 2026-09-26, depois da PR #28 mexer no arquivo: falta `"./utils/*"`, e `"."` (`:6`) aponta para `index.ts`, que não existe |
-| 🟡 **`isRateLimitEnforced()` é export morto** | `packages/security/index.ts:32` | Reconferido: 4 referências, todas em `__tests__/rateLimit.test.ts` |
+| 🟡 **`isRateLimitEnforced()` é export morto** | `packages/security/index.ts:30` | Reconferido no working tree: a tarefa `arcjet-key-lazy-validation` passou a função a ler a chave por chamada e a âncora subiu de `:32` para `:30`. Todas as referências seguem em `__tests__/rateLimit.test.ts` (agora 9) |
 | 🟡 **`FormattedError.retryAfterSeconds` sem consumidor** fora dos testes | `packages/shared/utils/helpers/formattedError.ts:14,23` | Reconferido. O homônimo de outro tipo em `apps/api/proxy.ts:109` (âncora remedida em 2026-09-30) segue sem relação |
 | 🟡 **`reloadCurrentUser` sem teste próprio** | `packages/auth/client.ts:214` | Reconferido em 2026-09-27 (a âncora subiu dez linhas com a saída do `signUp` na PR #29): só `useEmailVerification.test.tsx`, que a mocka |
 | 🟡 **`packages/shared` tem `test` e não tem `typecheck`** | `packages/shared/package.json:11` (só `test`) | Metade fechada pela PR #32: o `@repo/design-system` ganhou a task de `test` (`packages/design-system/package.json:7`, 45 testes). Falta o `typecheck` do `packages/shared`, adiado desde a primeira auditoria |
@@ -653,8 +705,9 @@ entrega; os três ficaram fora dela por decisão registrada.
 | 🟡 **`userRepository.list()` mente no tipo de retorno** | `apps/api/(shared)/repositories/user.repository.ts:138` | Declara `Promise<UserDTO[]>`, devolve o merge com o Auth e descarta linhas em silêncio (`:148`). N+1 do Admin SDK. Décima rodada aberto; âncoras desceram de novo com os agregados de cobrança da PR #27 |
 | 🟡 **`userRepository` tem cinco métodos com semântica própria de "quantos usuários existem"** | `user.repository.ts:122` · `:134` · `:138` · `:157` · `:175` | `touchLastAccess`, `purgeProfile`, `list`, `summary` e `activitySummary`. O cartão de total pode mostrar mais do que a tabela lista, e nada na tela explica |
 | 🟡 **O predicado de posse foi copiado de novo** | `apps/api/(shared)/repositories/entity.repository.ts:23,40,64,72` · `entities/summary/route.ts:9` | Quatro cópias de `where("userId", "==", userId)` no mesmo arquivo. É a contrapartida P de [`teams-organizations`](teams-organizations.md) |
-| 🟡 **`/auth/sign-in` da api não tem consumidor e não segue o contrato de erro** | `apps/api/app/(routes)/auth/sign-in/route.ts:12` | Reconferido: zero `try`, `:12` devolve string crua (`"User not found"`). Viola a regra de ouro 3. O `sign-up` ganhou chamador indireto de `createDefaultUserProfile` na PR #24 e tem `try` |
-| ◐ **`skipValidation` incondicional na `apps/web`** | `apps/web/env.ts:33` | Reconferido. A metade do `NEXT_PUBLIC_APP_URL` fechou com a PR #25 |
+| 🟡 **`/auth/sign-in` da api não tem consumidor e não segue o contrato de erro** | `apps/api/app/(routes)/auth/sign-in/route.ts:12` | Reconferido: zero `try`, `:12` devolve string crua (`"User not found"`). Viola a regra de ouro 3. O `sign-up` ganhou chamador indireto de `createDefaultUserProfile` na PR #24 e tem `try`. **Medido em 2026-09-30** pelo `/test` de `arcjet-key-lazy-validation`, contra o build de produção da API: sem corpo, `req.json()` (`:5`) lança `SyntaxError: Unexpected end of JSON input` e a rota responde `500`; com `{}`, o Identity Toolkit recusa a credencial, `identitySignInWithPassword` (`:7`) lança `IdentityToolkitError` e a resposta é `500` de novo. Nos dois casos o proxy passou (a resposta traz `x-request-id`), então o erro é do handler |
+| 🟡 **`GET /auth/me` responde 401 com `{ message }`, sem `error.code`** (novo, 2026-09-30) | `apps/api/app/(routes)/auth/me/route.ts:9-12`, `:18-21` | Visto no `/test` da PR #35 (`test/report.md:88`): o bearer da conta desativada recebe `401 {"message":"Invalid or expired token"}` aqui e `401 AUTH_INVALID_TOKEN` nas rotas com guard. Viola a regra de ouro 3; o front não consegue traduzir. O consumidor é o `apps/app/lib/server/authSession.ts`. Mesma família do `/auth/sign-in`; P, junto com ele |
+| 🟡 **`skipValidation` incondicional na `apps/web`, e por causa dele o bloqueio de bot da landing nunca roda** (ampliado em 2026-09-30) | `apps/web/env.ts:33` · `apps/web/proxy.ts:63` (`if (!env.ARCJET_KEY) return;`) · `:68` (`secure()`) | Com `skipValidation: true`, o `createEnv` do `@t3-oss/env-core@0.13.8` devolve só o `runtimeEnv` do próprio módulo e descarta o que veio de `extends` (`if (skip) return runtimeEnv;`, antes do merge). Como o `runtimeEnv` da web não declara `ARCJET_KEY`, `env.ARCJET_KEY` sai sempre `undefined`, mesmo com chave válida, e o `secure()` é pulado. Medido pelo `/test` de `arcjet-key-lazy-validation` com um probe de import: `ajkey_ok` dá `"ajkey_ok"` no `env.ts` da `apps/app` e `undefined` no da `apps/web`. A metade do `NEXT_PUBLIC_APP_URL` fechou com a PR #25. **§5.1:** o `skipValidation` já tinha voltado intacto em várias rodadas como "recomendação"; ele fica aqui como dívida técnica com `arquivo:linha`, e a parte que exige julgamento (ligar o bloqueio de bot) sai como a pergunta D8 e não é reapresentada depois. Tirar o `skipValidation` sem decidir a D8 liga o bloqueio por tabela, então as duas coisas andam juntas. P, depois da D8 |
 | ◐ **O bounce do proxy apaga a query string**, corrigido só para as rotas de `oobCode` | `apps/app/proxy.ts:196-210` | Reconferido: `redirectUrl.search = ""` em `:208` (âncoras desceram quatro linhas com a CSP do emulador de Storage da PR #31). Mesma família do achado novo do deep link do onboarding |
 | 🟡 **O TTL de 180 dias do cookie `x-locale` é letra morta** | `apps/app/proxy.ts:177,181` | Reconferido em 2026-09-29: `cookieStore.set` sem `maxAge` |
 | 🟡 Helper de cookie grava `SameSite=Lax` **sem `Secure`** por padrão | `packages/shared/utils/helpers/cookies.ts:28,30` | Reconferido. ASVS 5.0 L1 (3.3.1). Décima rodada aberto |
@@ -689,7 +742,7 @@ Vistos pelos quatro inventários paralelos desta rodada. Nenhum vira spec.
 |--------|------|-----------------|
 | 🟡 **A `apps/web` não tem `not-found` nem `error`, e o `global-error` pode estar inerte** | `apps/web/app/[locale]/global-error.tsx` · `apps/web/app/` (sem `layout.tsx`, `not-found.tsx` nem `error.tsx`) | Rota inexistente na landing cai no 404 padrão do Next, sem tradução nem marca. O Next só reconhece `global-error` na raiz de `app/`, e a web não tem root layout ali; **não medido** se o arquivo em `[locale]` chega a ser usado. A `apps/app` tem `not-found.tsx` e `global-error.tsx` na raiz, mas nenhum `error.tsx` de segmento |
 | 🟡 **O `package.json` da raiz ainda é o do next-forge** | `package.json:2-5` · `:42` | Reconferido em 2026-09-28: a PR #30 não tocou no arquivo; o `FORKING.md` ("Resíduos do projeto de origem") descreve a limpeza que cada fork faz à mão. `"name": "next-forge"` e um `bin` para `dist/index.js`, gerado de `scripts/index.ts`, que não existe. `engines.node` diz `>=18` e o `.nvmrc`, `22.12.0`. Todo fork herda os três |
-| 🟢 **Link do `FORKING.md` para o CRUD de referência está morto** (novo, 2026-09-28; medido em 2026-09-30) | `docs/FORKING.md:433` · `README.md:306` | O link usa `#crud-de-referência`; o título é `### 🧬 CRUD de referência`. Medido no README renderizado pelo GitHub (`gh api repos/:owner/:repo/readme` com `Accept: application/vnd.github.html`): o id publicado é `user-content--crud-de-referência`, e o próprio título aponta para `#-crud-de-referência`. Correção: trocar a âncora ou tirar o emoji do título |
+| 🟢 **Link do `FORKING.md` para o CRUD de referência está morto** (novo, 2026-09-28; medido em 2026-09-30) | `docs/FORKING.md:437` · `README.md:306` | O link usa `#crud-de-referência`; o título é `### 🧬 CRUD de referência`. Medido no README renderizado pelo GitHub (`gh api repos/:owner/:repo/readme` com `Accept: application/vnd.github.html`): o id publicado é `user-content--crud-de-referência`, e o próprio título aponta para `#-crud-de-referência`. Correção: trocar a âncora ou tirar o emoji do título |
 
 ### 🆕 Achados do `/test` de `brand-config` (2026-09-27)
 
@@ -763,7 +816,7 @@ Reconferidos no código em 2026-09-29.
 
 ### 🆕 Achados da entrega `account-email-change` (2026-09-30)
 
-Vindos do `/review`, do handoff e do `/test` da spec, entregue pela PR #33 e arquivada nesta rodada. Nenhum
+Vindos do `/review`, do handoff e do `/test` da spec, entregue pela PR #33 e arquivada em 2026-09-30. Nenhum
 bloqueou a entrega. Reconferidos no código em 2026-09-30.
 
 | achado | onde | por que importa |
@@ -793,8 +846,8 @@ aberto logo depois de `/es/account` saiu com `lang="es"`), porque o proxy grava 
 
 ### 🆕 Achados da entrega `compliance-docs-kit` (2026-09-30)
 
-Vindos do plano, do `/review` e do `/test` da spec, entregue pela PR #34 e arquivada nesta rodada. O 🔴 da conta
-desativada está na tabela de segurança acima.
+Vindos do plano, do `/review` e do `/test` da spec, entregue pela PR #34 e arquivada em 2026-09-30. O 🔴 da conta
+desativada fechou com a PR #35 e está na lista de fechados.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
@@ -802,40 +855,49 @@ desativada está na tabela de segurança acima.
 
 ### 🆕 Achado da tarefa `disabled-account-revocation` (2026-09-30)
 
-Vem da decisão D7 do plano da tarefa, que ainda está no working tree, sem PR. O plano deixou o ponto para o
-backlog e nenhuma etapa o registrou; o `/review` da tarefa o trouxe para cá.
+Vem da decisão D7 do plano da tarefa, entregue pela PR #35. O plano deixou o ponto para o backlog e nenhuma etapa
+o registrou; o `/review` da tarefa o trouxe para cá. Reconferido no `1936369`: o `PUT` segue sem comparar o alvo
+com o ator.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟢 **O admin pode desativar a própria conta** | `apps/api/app/(routes)/users/[id]/route.ts:87-126` (o `PUT` não compara o `id` com `ctx.actorProfile.id`) · `UsersListClient.tsx:102-125` (o switch de status aparece também na linha do próprio admin) | Já acontecia antes da tarefa: o cookie de sessão recusava o admin desativado. Com a correção, o bearer também cai na requisição seguinte e as sessões são revogadas, então o admin perde o painel na hora e só volta pelas mãos de outro admin ou pelo console do Firebase. Num fork com um admin só, ninguém consegue reativá-lo pelo painel. Correção provável: a API recusa `disabled: true` para o próprio perfil, com `error.code` nos 3 idiomas, e a listagem esconde o switch nessa linha. P |
+| 🟢 **O admin pode desativar a própria conta** | `apps/api/app/(routes)/users/[id]/route.ts:87-143` (o `PUT` não compara o `id` com `ctx.actorProfile.id`) · `UsersListClient.tsx:102-125` (o switch de status aparece também na linha do próprio admin) | Já acontecia antes da tarefa: o cookie de sessão recusava o admin desativado. Com a correção, o bearer também cai na requisição seguinte e as sessões são revogadas, então o admin perde o painel na hora e só volta pelas mãos de outro admin ou pelo console do Firebase. Num fork com um admin só, ninguém consegue reativá-lo pelo painel. Correção provável: a API recusa `disabled: true` para o próprio perfil, com `error.code` nos 3 idiomas, e a listagem esconde o switch nessa linha. P |
+
+**Lacunas de teste e 🔒 herdados da entrega, com veredito desta auditoria:**
+
+| lacuna | veredito 2026-09-30 | motivo |
+|--------|---------------------|--------|
+| `resolveApiActor` sem teste ponta a ponta com conta desativada | **fechada por medição**, sem teste persistente | o `/test` rodou a cadeia sem mock contra o projeto de desenvolvimento; `resolve-api-actor.ts` segue sem arquivo de teste próprio |
+| `revokeUserSessions` lançando dentro do `PUT` | **fora de escopo** | a função engole a falha (`server.ts:326-328`) e a rota nunca vê o erro; o `catch` sem teste é anterior à tarefa |
+| Pessoa desativada com o app aberto cai no sign-in com a mensagem certa, nos 3 idiomas | **continua aberta**, 🔒 | sem passada de navegador, por custo: o diff não toca UI e o 401 é o mesmo que a revogação de sessão já produzia |
+| Admin desativado como alvo (critério 1 medido só com conta comum) | **continua aberta**, nova, risco baixo | mesmo caminho de código; o `/test` não desativou a conta de QA de admin, que é compartilhada entre rodadas |
 
 ## Pendências vivas sem dono
 
 > A maior parte destas tem **casa versionada** em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md).
-> Na auditoria pós-PR #34 foram remedidas as linhas 6, 8 e 16, e a 12 foi reclassificada a partir de uma
-> medição que a rodada anterior não tinha lido. As outras mantêm o veredito anterior com motivo: exigem console
-> de provedor, ou dependem de arquivos que a PR #34 não tocou (ela só alterou `docs/` e `specs/`). A PR #34 não
-> criou índice, rule nem variável de ambiente; acrescentou ao `PRE-PRODUCTION.md` o item 14 (preencher os
-> documentos de conformidade), que é passo por fork e está na linha de `compliance-docs-kit` em Entregues.
+> Na auditoria pós-PR #35 foram remedidas as linhas 6, 8 e 16, e a 4, a 12 e a 15 ganharam informação do `/test`
+> da tarefa. As outras mantêm o veredito anterior com motivo: exigem console de provedor, ou dependem de arquivos
+> que a PR #35 não tocou. A PR #35 não criou índice, rule nem variável de ambiente, e não acrescentou passo
+> manual ao `PRE-PRODUCTION.md` ("Pré-requisitos manuais de infra: nenhum", no `STATE.md` da tarefa).
 
 | # | pendência | onde vive | veredito 2026-09-30 |
 |---|-----------|-----------|---------------------|
 | 1 | 🔴 Publicar os três índices dos resumos da home (`GET /entities/summary` e `/users/summary` respondem 503 sem eles) | `PRE-PRODUCTION.md` §1.5 | **continua aberto**; não remedido nesta rodada, nada no repositório mudou |
 | 2 | 🔴 Publicar o índice das faixas de recência (`user`: `deletedAt` + `lastAccessAt`) | `PRE-PRODUCTION.md` §1.7 | **continua aberto**; idem |
 | 3 | 🔴 Publicar o índice da trilha de auditoria (filtro por usuário responde 503) | `PRE-PRODUCTION.md` §1.2 | **continua aberto**; idem |
-| 4 | 🔴 Publicar o índice da listagem paginada de `entity` | `PRE-PRODUCTION.md` §1.1 | **continua aberto**. São **seis** índices sem publicação; o comando é um só |
+| 4 | 🔴 Publicar o índice da listagem paginada de `entity` | `PRE-PRODUCTION.md` §1.1 | **continua aberto, medido**: o `/test` da PR #35 recebeu `503 PAGINATION_INDEX_MISSING` em `GET /entities` contra o projeto de desenvolvimento (`test/report.md:85`), então o índice não está publicado nem lá. São **seis** índices sem publicação; o comando é um só |
 | 5 | Retenção da coleção `auditEvent` | `PRE-PRODUCTION.md` §1.3 | **continua aberto**, estacionado (E5) |
-| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-09-30 pós-PR #34 (404, `[]`, 34 PRs); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
+| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-09-30 pós-PR #35 (404, `[]`, 35 PRs); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
 | 7 | Backfill de instantes em base que já tem dado | `PRE-PRODUCTION.md` §1.4 | **continua aberto**; não é mensurável daqui |
-| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-09-30 pós-PR #34: `grep` por `@sentry`/`@logtail`/`@axiomhq`/`betterstack` nos `package.json` versionados devolve 0; estacionado (E1) |
+| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-09-30 pós-PR #35: `grep` por `@sentry`/`@logtail`/`@axiomhq`/`betterstack` nos `package.json` versionados devolve 0; estacionado (E1) |
 | 9 | Health check da plataforma não aponta para `/health/ready` | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: configuração de plataforma |
 | 10 | `SESSION_COOKIE_DOMAIN` em subdomínios distintos | `PRE-PRODUCTION.md` §7 | **continua aberto** (configuração de deploy) |
 | 11 | Cloud Storage não ativado (plano Blaze) | `PRE-PRODUCTION.md` §6 | **continua aberto** em produção. Desde a PR #31, upload, avatar e o passo `storage` do expurgo rodam e têm teste sob o emulador; contra bucket real seguem sem prova o objeto que não abre sem assinatura e a expiração da URL V4 |
-| 12 | Revogação de sessão nunca provada ponta a ponta | *(só neste arquivo)* | **metade fechada**, reconhecido nesta rodada: o `/test` de `compliance-docs-kit` mediu em 2026-09-30, contra o projeto Firebase de desenvolvimento, que depois de `revokeRefreshTokens` o cookie emitido antes volta `null`, o bearer volta `null` em `resolveApiActor` e `createSessionCookie` com o token anterior lança `auth/id-token-expired` (`docs/features/compliance-docs-kit/test/report.md`, tabela "Resultado bruto"). É a prova que a ressalva de `session-refresh` pedia para a camada de verificação. **Continua aberto** só o percurso de navegador: sair numa app e ver a outra perder a sessão |
+| 12 | Revogação de sessão nunca provada ponta a ponta | *(só neste arquivo)* | **metade fechada**, reconhecido na auditoria pós-PR #34: o `/test` de `compliance-docs-kit` mediu em 2026-09-30, contra o projeto Firebase de desenvolvimento, que depois de `revokeRefreshTokens` o cookie emitido antes volta `null`, o bearer volta `null` em `resolveApiActor` e `createSessionCookie` com o token anterior lança `auth/id-token-expired` (`docs/features/compliance-docs-kit/test/report.md`, tabela "Resultado bruto"). É a prova que a ressalva de `session-refresh` pedia para a camada de verificação. **Continua aberto** só o percurso de navegador: sair numa app e ver a outra perder a sessão. O `/test` da PR #35 somou a medição da conta desativada (bearer recusado com e sem revogação, e depois da reativação) e também não subiu navegador |
 | 13 | Envio real de e-mail nunca provado | `PRE-PRODUCTION.md` §3 | **continua aberto** (exige domínio com SPF/DKIM). O `/test` da PR #24 viu o envio do e-mail de verificação falhar sob o emulador, com `RESEND_TOKEN` vazio, como esperado. O `/test` da PR #29 deixou 🔒 o e-mail de verificação depois do cadastro pela API (critério 20). O `/test` de `brand-config` deixou 🔒 o nome da marca com acento na caixa de entrada. O `/test` da PR #33 deixou 🔒 a entrega do aviso ao endereço antigo e do link ao novo; sem Resend o pedido responde `503 EMAIL_NOT_CONFIGURED`, medido nos 3 idiomas |
 | 14 | CSP Report-Only na `apps/web` | `PRE-PRODUCTION.md` §10 | **continua aberto**, deliberado |
-| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #24 criou 7 contas só no emulador, que as descarta |
-| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-09-30 pós-PR #34: `git ls-remote --heads origin` devolve 33, ou seja, 32 além de `main` (eram 31; a `run-full-task-cycle-v2` ficou viva depois do merge) |
+| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:894-898`) e usou a `qa-admin@` compartilhada, sem senha; não acumulou nada |
+| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-09-30 pós-PR #35: `git ls-remote --heads origin` devolve 34, ou seja, 33 além de `main` (eram 32; a `fix/disabled-account-revocation` ficou viva depois do merge, como a `run-full-task-cycle-v2`) |
 | 17 | Login com Google sem passe manual com conta real | *(só neste arquivo)* | **continua aberto**. O `/test` da PR #24 também não percorreu o Google no emulador; o nome do Google como valor inicial do passo 1 ficou fechado só por leitura |
 | 18 | `storage.rules` nunca publicado (o teste veio com a PR #31) | `PRE-PRODUCTION.md` §6 e `:54-58` | **metade fechada** pela PR #31: `storage.rules` e `firestore.rules` têm teste contra emulador no `verify` (20 e 145 testes; entrega em [`storage-emulator-rules-tests`](../docs/features/storage-emulator-rules-tests/spec.md)). **Continua aberto** publicar no projeto real, que depende da 11 |
 | 19 | Conferir a retenção de log da plataforma | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: painel do provedor |
@@ -843,11 +905,11 @@ backlog e nenhuma etapa o registrou; o `/review` da tarefa o trouxe para cá.
 | 21 | No modo `simple` o titular não alcança a aba de privacidade | `PRE-PRODUCTION.md`, seção "Pendência — no modo `simple`…" | **premissa falsa, medida**: o `simple` não restringe o painel comum, então o titular alcança a aba. **Fechada pelo usuário em 2026-09-25.** A nota de correção fica no documento. Volta se o `simple` passar a restringir o painel comum (E10) |
 | 22 | `NEXT_PUBLIC_PRIVACY_CONTACT` precisa ser definida por fork | `PRE-PRODUCTION.md` §7 (checklist) | **continua aberto**. Vazia, o canal cai no formulário de contato, que é maquete |
 | 23 | Stripe por fork: catálogo recorrente, Customer Portal, endpoint de webhook na versão `2025-09-30.clover` com **cinco** eventos (a PR #27 acrescentou `invoice.paid`, `PRE-PRODUCTION.md:454-455`), chaves na `apps/api`, TTL opcional de `paymentEvent`; e a decisão sobre checar assinatura duplicada na Stripe antes do release | `PRE-PRODUCTION.md` §12 | **continua aberto**. A PR #33 acrescentou ao §12 habilitar a edição do e-mail no Customer Portal, porque a troca de e-mail não atualiza o `customer`. Cinco critérios de `billing-subscription`, quatro de `admin-billing-insights` o cancelamento real no arquivamento pelo admin (PR #28) e o botão de checkout em carregamento (PR #32) seguem 🔒 até uma conta real existir. `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` seguem vazias nos `.env` locais |
-| 24 | 🆕 `ARCJET_KEY` por fork: sem ela o rate limit é no-op, e o cadastro pela API passa a depender dela (a rota usa o Admin SDK, fora do limite do Firebase por IP) | `PRE-PRODUCTION.md` §8 (`:567-577`) | **aberto**, entrou com a PR #29. Critério 19 do `/test` da fatia 1 🔒 |
+| 24 | 🆕 `ARCJET_KEY` por fork: sem ela o rate limit é no-op, e o cadastro pela API passa a depender dela (a rota usa o Admin SDK, fora do limite do Firebase por IP) | `PRE-PRODUCTION.md` §8 (`:567-582`) | **aberto**, entrou com a PR #29. Critério 19 do `/test` da fatia 1 🔒 |
 | 25 | 🆕 Fechar o cadastro pelo REST do Identity Toolkit com a chave pública, que ainda aceita senha de 6 ou 7 (Identity Platform: password policy em `ENFORCE` ou cadastro pelo cliente desligado) | `PRE-PRODUCTION.md`, "Declaração — o que a política de senha não alcança" | **opcional, declarado**: o upgrade tem custo ou teto (3.000 DAU no Spark). Critério 18 do `/test` da fatia 1 🔒 |
-| 26 | 🆕 Marca por fork: `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e `NEXT_PUBLIC_APP_SUPPORT_EMAIL` nos projetos `app`, `web` e `api`, logo numa URL `https` pública, ícones do produto no lugar dos padrões | `PRE-PRODUCTION.md` §13 (`:690-701`) | **aberto**, entrou com a PR #30. Sem ela, o produto sobe com o nome `next-boilerplate`; não bloqueia nada. Desde a PR #33, sem `NEXT_PUBLIC_APP_SUPPORT_EMAIL` o aviso de troca de e-mail sai sem a linha de suporte, que é o canal para contestar (`PRE-PRODUCTION.md` §3) |
+| 26 | 🆕 Marca por fork: `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e `NEXT_PUBLIC_APP_SUPPORT_EMAIL` nos projetos `app`, `web` e `api`, logo numa URL `https` pública, ícones do produto no lugar dos padrões | `PRE-PRODUCTION.md` §13 (`:696-707`) | **aberto**, entrou com a PR #30. Sem ela, o produto sobe com o nome `next-boilerplate`; não bloqueia nada. Desde a PR #33, sem `NEXT_PUBLIC_APP_SUPPORT_EMAIL` o aviso de troca de e-mail sai sem a linha de suporte, que é o canal para contestar (`PRE-PRODUCTION.md` §3) |
 
-A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. A 23 cresceu com as PRs #27, #28, #32 e #33; a 24 e a 25 vieram da PR #29; a 26, da PR #30, e ganhou peso com a #33. A 13 ganhou um 🔒 com a #33.
+A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. A 4 foi medida no projeto de desenvolvimento em 2026-09-30. A 23 cresceu com as PRs #27, #28, #32 e #33; a 24 e a 25 vieram da PR #29; a 26, da PR #30, e ganhou peso com a #33. A 13 ganhou um 🔒 com a #33.
 
 ## Lacunas avaliadas e **não** especificadas
 
@@ -870,7 +932,7 @@ Descartadas de propósito, com o motivo. Reabrir exige argumento novo.
 | 🆕 **Aceite de termos e privacidade registrado no cadastro** | não medido | Avaliado em 2026-09-26. O aviso de privacidade é dever de informação (LGPD art. 9º), não consentimento; aceite de termos é decisão contratual de cada fork. Um link para os dois documentos junto ao botão de cadastro é achado P, não spec. |
 | 🆕 **Avisos de segurança por e-mail (senha trocada, sessões encerradas, login novo)** | — | Avaliado em 2026-09-26. É o requisito 6.3.7 da ASVS 5.0.0, **nível 3** (6.3.5, login suspeito, também é nível 3). O aviso ao endereço antigo entrou em [`account-email-change`](../docs/features/account-email-change/spec.md), entregue pela PR #33, por ser barato; o resto espera pedido. |
 | 🆕 **OpenAPI / documentação da API gerada** | — | Avaliado em 2026-09-26. O SDK é o contrato e a única porta para a API (regra de ouro 1); um segundo contrato gerado envelhece junto. Vale só se o produto for uma API, como as API keys. |
-| 🆕 **Banir usuário pelo admin** | 4/10 (admin) | Já existe como desativar: `disabled` no `PUT /users/[id]` (`user-admin.schema.ts:21`, `users/[id]/route.ts:117-121`) e o switch da listagem (`UsersListClient.tsx:102-119`). |
+| 🆕 **Banir usuário pelo admin** | 4/10 (admin) | Já existe como desativar: `disabled` no `PUT /users/[id]` (`user-admin.schema.ts:21`, `users/[id]/route.ts:117-126`) e o switch da listagem (`UsersListClient.tsx:102-125`). Desde a PR #35, desativar também corta o bearer e revoga as sessões na hora. |
 | 🆕 **CLI de criação de fork** | 1 de 4 verificados (next-forge) | Fora do corte de [`brand-config`](../docs/features/brand-config/spec.md), entregue em 2026-09-28 com o roteiro escrito (`docs/FORKING.md`). O script só vale depois que o roteiro se mostrar estável em forks reais. |
 | 🆕 **`/.well-known/security.txt` e política de divulgação de vulnerabilidade** | não medido | Fora do corte de [`compliance-docs-kit`](../docs/features/compliance-docs-kit/spec.md), entregue em 2026-09-30 sem ele. É código na web, e o campo `Expires` do RFC 9116 exige manutenção. |
 | **Coletor de erro gerenciado (Sentry, Better Stack, Axiom)** | prática 6 | A costura existe e está vazia: `onRequestError` nos três apps, sem ninguém do outro lado. Estacionado (E1). |
