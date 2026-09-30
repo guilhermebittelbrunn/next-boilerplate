@@ -1,7 +1,7 @@
 ---
 id: compliance-docs-kit
 title: "Modelos de conformidade: RoPA, incidente, subprocessadores e backup"
-status: approved
+status: in-progress
 value: médio
 effort: P
 audience: confianca
@@ -9,8 +9,8 @@ area: [docs]
 mode: ambos
 depends_on: []
 contends_on: []
-feature: -
-updated: 2026-09-29
+feature: compliance-docs-kit
+updated: 2026-09-30
 ---
 
 # Modelos de conformidade: RoPA, incidente, subprocessadores e backup
@@ -38,7 +38,7 @@ Arcjet, Google Analytics. Escrever cada um do zero em cada fork é retrabalho, e
   para cada fork definir `NEXT_PUBLIC_PRIVACY_CONTACT`.
 - A coleção `auditEvent` registra ações sensíveis, e o prazo de retenção dela está estacionado (E5).
 - Backup do Firestore: `grep` por `firestore export`, `gcloud firestore`, `backup` e `PITR` no repositório só
-  acha o comando de TTL de `paymentEvent` (`docs/PRE-PRODUCTION.md:522`).
+  acha o comando de TTL de `paymentEvent` (`docs/PRE-PRODUCTION.md:533`, âncora remedida em 2026-09-30 no working tree da entrega).
 - **Lacuna:** nenhum modelo de registro de operações, runbook de incidente, lista de subprocessadores, nota de
   transferência internacional ou procedimento de backup e restauração.
 

@@ -384,6 +384,7 @@ existe, e diz isso em voz alta em vez de fingir.
 - [ ] Reescrever a política de privacidade com os dados reais do fork
 - [ ] Acrescentar à seção de cookies os que o fork gravar além dos do core
 - [ ] `NEXT_PUBLIC_PRIVACY_CONTACT` com o endereço do fork (vazio: o canal cai no formulário de `/contact`)
+- [ ] Listar na política de privacidade os subprocessadores que o fork liga, a partir de [`SUBPROCESSORS.md`](SUBPROCESSORS.md)
 - [ ] `SESSION_COOKIE_DOMAIN` definida em produção, **se** `web` e `app` rodam em subdomínios distintos
 - [ ] Conferir no painel do Google que o Consent Mode chega como esperado
 
@@ -698,6 +699,21 @@ Sem as variáveis, o produto sobe normalmente e o cliente vê `next-boilerplate`
 título da aba e nos e-mails. As variáveis são `NEXT_PUBLIC_*`, então defini-las sem refazer o deploy não
 muda nada. Passo a passo em [`FORKING.md`](FORKING.md), passo 1.
 
+### 14. Documentos de conformidade
+
+- [ ] Registro de operações completo nas lacunas `[FORK]`: [`ROPA.md`](ROPA.md)
+- [ ] Papéis do runbook preenchidos e o runbook lido por quem decide: [`INCIDENT-RESPONSE.md`](INCIDENT-RESPONSE.md)
+- [ ] Lista de subprocessadores cortada para as integrações que o fork liga, e o DPA de cada uma aceito na conta do provedor: [`SUBPROCESSORS.md`](SUBPROCESSORS.md)
+- [ ] Backup decidido (Blaze com agendamento, ou operação sem backup registrada no `ROPA.md`) e uma restauração testada: [`BACKUP.md`](BACKUP.md)
+
+São obrigações de quem opera o fork, não recursos do produto: a LGPD cobra o registro de operações (art.
+37) e a comunicação de incidente (art. 48, regulamentado pela Res. CD/ANPD 15/2024), e nenhum teste deste repositório confere nada
+disso. O boilerplate entrega os quatro modelos preenchidos com o que o código faz; o preenchimento e a
+decisão jurídica são do fork. `grep -n "\[FORK\]" docs/*.md` lista o que falta.
+
+Dois achados dos modelos pedem atenção antes do primeiro cliente: o DPA da Vercel só vale nos planos Pro e
+Enterprise, e no plano Spark do Firebase o Firestore não tem backup de nenhum tipo.
+
 ---
 
 ## 🧹 Higiene
@@ -721,7 +737,9 @@ O relatório inteiro vai para o log estruturado como `[account] erasure-step`, u
 correlacionada por `requestId`, com nome do passo, estado e contagem — nunca valores. Ele não volta na
 resposta: quem pediu a exclusão não precisa da operação, e a resposta é `{ "confirmed": true }`.
 
-**A exclusão não tem janela de arrependimento.** É imediata e irreversível, e não há de onde restaurar.
+**A exclusão não tem janela de arrependimento.** É imediata e irreversível, e sem backup do Firestore não
+há de onde restaurar. Com o backup agendado ligado ([`BACKUP.md`](BACKUP.md)), o perfil e os registros
+apagados ficam nos backups até o fim da retenção deles, e esse prazo entra no que se declara ao titular.
 
 ### Pendência — no modo `simple` o titular não alcança a aba de privacidade
 
@@ -881,7 +899,8 @@ recusada em vez de criar a conta.
 Quem for a produção pela primeira vez deve conferir, na ordem: **service account** → **build passa** →
 **`CORS_ORIGIN`** → **deploy da API** → **publicar as rules** → **domínio de e-mail** → **ciclo real de
 recuperação de senha** → **storage, se o fork usa upload**. Os quatro últimos são os que ninguém lembra, e
-são os que o usuário final sente.
+são os que o usuário final sente. Depois disso, a restauração do backup é testada na frequência que o fork
+anotou em [`BACKUP.md`](BACKUP.md): backup que nunca foi restaurado não conta como backup.
 
 Referências: [`SETUP.md`](SETUP.md) (variáveis, uma a uma) · [`SECURITY.md`](SECURITY.md) (postura e
 comandos) · [`ARCHITECTURE.md`](ARCHITECTURE.md).

@@ -4,7 +4,7 @@ question: Qual é o baseline de confiança (segurança, privacidade, conformidad
 lens: confianca
 panel: [lgpd, anpd-resolucoes, gdpr, eprivacy, marco-civil, owasp, wcag, lbi, stripe-pci, firebase-security]
 collected: 2026-08-21
-amended: 2026-09-26
+amended: 2026-09-30
 revalidate_after: 2027-08-21
 confidence: alta
 ---
@@ -335,3 +335,95 @@ Coletado na descoberta de 2026-09-26, para dimensionar uma spec de modelos em `d
 - <https://stripe.com/legal/dpa> · <https://resend.com/legal/dpa> · <https://resend.com/legal/subprocessors> · <https://vercel.com/legal/dpa> · <https://vercel.com/legal/sub-processors>
 - <https://www.rfc-editor.org/rfc/rfc9116>
 - <https://raw.githubusercontent.com/OWASP/ASVS/master/5.0/en/0x15-V6-Authentication.md>
+
+## Adendo de 2026-09-30: fontes dos modelos de conformidade
+
+Coletado na implementação dos modelos em `docs/` ([`ROPA.md`](../../docs/ROPA.md),
+[`INCIDENT-RESPONSE.md`](../../docs/INCIDENT-RESPONSE.md), [`SUBPROCESSORS.md`](../../docs/SUBPROCESSORS.md),
+[`BACKUP.md`](../../docs/BACKUP.md)). Cada item foi lido na data acima. O `revalidate_after` da nota não
+muda.
+
+### Correções a esta nota
+
+- **O bloqueador da "Resposta curta" está vencido.** A `apps/api` acessa o Firestore pelo Admin SDK desde o
+  commit `3089d71` (`getFirestore(getFirebaseAdminApp())` em `packages/auth/server.ts:100`), e o cabeçalho de
+  `firestore.rules` descreve esse modelo. O parágrafo que fala do client SDK não autenticado descreve o
+  estado de 2026-08-21, não o atual.
+- **O DPA do Firebase citado no adendo de 2026-09-26 não é o que cobre o boilerplate.** A
+  [tabela de termos do Firebase](https://firebase.google.com/terms) põe Cloud Firestore, Cloud Storage for
+  Firebase e Firebase Authentication sob os "Google Cloud Platform Terms of Service", e a
+  [página de privacidade](https://firebase.google.com/support/privacy) diz que esses serviços estão cobertos
+  pelo [Cloud Data Processing Addendum](https://cloud.google.com/terms/data-processing-addendum). A lista de
+  subprocessadores correspondente é <https://cloud.google.com/terms/subprocessors>. Os
+  `firebase.google.com/terms/data-processing-terms` valem para outros produtos do Firebase.
+- **O modelo de RoPA da ANPD está confirmado no próprio PDF.** O download direto
+  (<https://www.gov.br/anpd/pt-br/documentos-e-publicacoes/modelo_de_ropa_para_atpp.pdf/@@download/file>,
+  2 páginas) confirma os oito blocos (informações de contato, categorias de titulares, dados pessoais,
+  compartilhamento, medidas de segurança, período de armazenamento, processo/finalidade/hipótese legal,
+  observações) e as instruções: marcar só tipos de dado, hipótese legal pelos arts. 7º e 11, Observações
+  para encarregado, operadores e transferência internacional.
+
+### Incidente (Res. CD/ANPD 15/2024)
+
+- O §8º do art. 6º dobra para pequeno porte os prazos "constantes no caput e no § 3º": a comunicação à ANPD
+  (3 → 6 dias úteis) **e** a complementação (20 → 40 dias úteis). A declaração de comunicação aos titulares
+  (art. 9º, §4º, 3 dias úteis) não aparece entre os prazos dobrados.
+- O art. 6º, §2º, lista doze itens da comunicação à ANPD, e o art. 10, §1º, oito itens mínimos do registro.
+- O formulário está em
+  <https://www.gov.br/anpd/pt-br/canais_atendimento/agente-de-tratamento/comunicado-de-incidente-de-seguranca-cis>
+  (destino do link `assuntos/comunicacao-de-incidentes-de-seguranca-cis` citado acima).
+- Fonte: <https://dspace.mj.gov.br/bitstream/1/12879/2/RES_ANPD_2024_15.html>.
+
+### Transferência internacional, por provedor
+
+| Provedor | Mecanismo para dado sujeito à LGPD | Fonte |
+|---|---|---|
+| Google Cloud (Authentication, Firestore, Storage) | "BR SCCs" no Apêndice 3, seção Brazil, §3.1, que se apresentam como "cláusulas-padrão contratuais aprovadas pela ANPD"; a página de soluções alternativas não lista nenhuma para o Brasil | <https://cloud.google.com/terms/data-processing-addendum> (modificado em 8 de junho de 2026), <https://cloud.google.com/sccs/br-c2p?hl=pt-br>, <https://cloud.google.com/terms/alternative-transfer-solution> |
+| Google Analytics (Google Ads Data Processing Terms) | não encontrado: a LGPD está na definição de lei aplicável, mas a seção de transferência trata só de transferências europeias | <https://business.safety.google/adsprocessorterms/> |
+| Stripe | "Brazilian Standard Contractual Clauses" (§11 do adendo de transferência) | <https://stripe.com/legal/dpa> (28 de setembro de 2026), <https://stripe.com/legal/dta> (18 de novembro de 2025) |
+| Resend | não encontrado; só SCCs da UE e EU-U.S. DPF | <https://resend.com/legal/dpa> |
+| Vercel | não encontrado; SCCs da UE e IDTA do Reino Unido, e termos por jurisdição sem o Brasil | <https://vercel.com/legal/dpa> (17 de março de 2026) |
+| Arcjet | DPA não encontrado (`arcjet.com/dpa` e `arcjet.com/legal` com 404) | <https://arcjet.com/privacy>, <https://docs.arcjet.com/privacy> |
+
+Continua **não confirmado**: se o texto das cláusulas brasileiras do Google Cloud e da Stripe coincide com o
+anexo da Res. 19/2024; o conteúdo da retificação de 18/08/2025; o texto integral da Res. 32/2026.
+
+### Provedores: região, escopo do contrato e retenção
+
+- **Firebase Authentication** processa só nos Estados Unidos, guarda IP de login "for a few weeks" e remove a
+  conta excluída dos sistemas de backup em até 180 dias (<https://firebase.google.com/support/privacy>,
+  atualizada em 2026-09-24).
+- **Vercel**: o DPA "applies ... for Customers who are on Enterprise and Pro plans"; o Hobby é "non-commercial
+  personal use only" (<https://vercel.com/docs/limits/fair-use-guidelines>). Funções rodam em `iad1`
+  (Washington, D.C.) por padrão em projeto novo
+  (<https://vercel.com/docs/functions/configuring-functions/region>); `gru1` é São Paulo
+  (<https://vercel.com/docs/regions>). Se o DPA cobre o Web Analytics: **não confirmado** (o DPA não lista
+  produtos). O Web Analytics identifica o visitante por hash da requisição e descarta a sessão em 24 horas
+  (<https://vercel.com/docs/analytics/privacy-policy>).
+- **Google Analytics** está na lista de serviços cobertos pelos termos de processamento do Google Ads
+  (<https://business.safety.google/adsservices/>), e empresa fora do EEE, do Reino Unido e da Suíça precisa
+  "proactively accept such terms in their Account Settings"
+  (<https://support.google.com/analytics/answer/3379636?hl=en>).
+- **Resend** envia de `us-east-1`, `eu-west-1`, `sa-east-1` ou `ap-northeast-1`, mas guarda dados da conta,
+  metadados e logs nos Estados Unidos em qualquer caso (<https://resend.com/docs/dashboard/domains/regions>).
+- **Arcjet** processa IP e cabeçalhos, retém 30 dias, roda em várias regiões sem garantir a do app; a lista de
+  subprocessadores fica em <https://trust.arcjet.com/subprocessors>, página montada por JavaScript que não
+  foi lida.
+
+### Backup do Firestore
+
+- Backup agendado: Blaze; um agendamento diário e um semanal por banco; retenção até `14w`; sem políticas de
+  TTL; mesma região do banco; restauração só para um id de banco livre
+  (<https://firebase.google.com/docs/firestore/backups>, atualizada em 2026-09-24).
+- Export e import exigem faturamento ("Firebase projects must be on the Blaze plan"); o import sobrescreve
+  documento de mesmo id e não apaga o que não estava no export
+  (<https://docs.cloud.google.com/firestore/docs/manage-data/export-import>, atualizada em 2026-09-28).
+- PITR exige faturamento, vem desligado e guarda 7 dias em granularidade de minuto
+  (<https://docs.cloud.google.com/firestore/native/docs/pitr>).
+- Existe restauração no lugar: apagar o banco, esperar ao menos 5 minutos e restaurar com o mesmo id; é
+  irreversível e derruba o serviço no intervalo
+  (<https://docs.cloud.google.com/firestore/native/docs/restore-in-place>, atualizada em 2026-09-28). A página
+  não faz exceção ao `(default)`, mas isso não foi testado.
+- `firebase auth:export ACCOUNT_FILE --format=json|csv` exporta as contas do Authentication, que não estão no
+  backup do Firestore (<https://firebase.google.com/docs/cli/auth>, atualizada em 2026-09-29). Se o comando
+  exige o Blaze: **não confirmado**, a página não diz.

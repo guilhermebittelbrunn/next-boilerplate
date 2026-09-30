@@ -164,7 +164,8 @@ prefixo. Defina o mesmo valor em `app` e `web`.
 ## 4. Projeto Firebase
 
 1. **Crie o projeto** no [Firebase Console](https://console.firebase.google.com). O plano gratuito
-   (Spark) basta, a menos que o produto use upload de arquivo (item 7 abaixo).
+   (Spark) basta para rodar, a menos que o produto use upload de arquivo (§7.5 abaixo). Ele não tem
+   backup do Firestore de nenhum tipo: [`BACKUP.md`](BACKUP.md).
 2. **Registre um app Web** (Project settings → Your apps → Web). Os valores do `firebaseConfig` viram as
    variáveis `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`,
    `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`,
