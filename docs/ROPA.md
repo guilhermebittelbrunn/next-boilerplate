@@ -105,7 +105,7 @@ Envia só com `RESEND_TOKEN` e `RESEND_FROM` definidas.
 | Categorias de titulares | Titulares em geral (visitantes da landing). |
 | Dados pessoais | Nome, e-mail. Outros: mensagem em texto livre, que pode conter qualquer coisa que o visitante escreva. |
 | Compartilhamento | Resend, que entrega a mensagem na caixa do `RESEND_FROM`. |
-| Medidas de segurança | Nenhuma cópia no Firestore. Bloqueio de bot na landing, se `ARCJET_KEY` estiver definida. |
+| Medidas de segurança | Nenhuma cópia no Firestore. A landing não aplica bloqueio de bot, mesmo com `ARCJET_KEY` definida: o `skipValidation` de `apps/web/env.ts:33` deixa `env.ARCJET_KEY` vazio, e `apps/web/proxy.ts:63` pula a checagem. |
 | Período de armazenamento | O core não guarda. A mensagem fica na caixa de entrada do fork. `[FORK]` prazo de guarda da caixa. |
 | Processo, finalidade e hipótese legal | Processo: atendimento a contato. Finalidade: responder a quem escreveu. Hipótese sugerida: procedimento preliminar a contrato a pedido do titular (art. 7º, V) ou legítimo interesse (art. 7º, IX). `[FORK]` confirmar. |
 | Observações | Onde está no código: `apps/web/app/[locale]/contact/actions/contact.tsx:7-22`. Sem `NEXT_PUBLIC_PRIVACY_CONTACT`, este formulário é também o canal do titular. |
@@ -139,7 +139,7 @@ qualquer caso só depois de o visitante aceitar analytics no banner.
 
 ### 8. Proteção contra abuso (opcional)
 
-Existe só com `ARCJET_KEY` definida.
+Existe só com `ARCJET_KEY` definida e com o prefixo `ajkey_`. Um valor sem o prefixo desliga o limite na API.
 
 | Bloco | Conteúdo |
 |---|---|
@@ -149,7 +149,7 @@ Existe só com `ARCJET_KEY` definida.
 | Medidas de segurança | O log de bloqueio da API não grava endereço, cabeçalho nem corpo (`apps/api/proxy.ts:64-76`). |
 | Período de armazenamento | 30 dias na Arcjet, e dado agregado por mais tempo ([privacidade da Arcjet](https://docs.arcjet.com/privacy)). |
 | Processo, finalidade e hipótese legal | Processo: limite de requisições e bloqueio de bot. Finalidade: segurança do serviço. Hipótese sugerida: legítimo interesse (art. 7º, IX). `[FORK]` confirmar. |
-| Observações | Onde está no código: `packages/security/index.ts:39-48`, `packages/security/index.ts:81`. Transferência: várias regiões sem garantia; DPA da Arcjet não encontrado ([`SUBPROCESSORS.md`](SUBPROCESSORS.md)). |
+| Observações | Onde está no código: `packages/security/index.ts:37-47`, `packages/security/index.ts:80`. Transferência: várias regiões sem garantia; DPA da Arcjet não encontrado ([`SUBPROCESSORS.md`](SUBPROCESSORS.md)). |
 
 ### 9. Arquivos enviados (opcional)
 

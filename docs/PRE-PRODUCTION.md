@@ -566,7 +566,7 @@ Não impedem o deploy. Cada um é uma conta que chega depois.
 
 ### 8. `ARCJET_KEY`
 
-- [ ] Definida em produção
+- [ ] Definida em produção, com o prefixo `ajkey_`
 
 Sem ela o `@repo/security` degrada para **no-op** e a API avisa uma vez, no boot. Isso inclui o pedido de
 redefinição de senha e o reenvio de verificação: sem limite, os dois viram **gerador gratuito de e-mail em
@@ -575,6 +575,10 @@ nome do fork** — e a fatura do provedor é do fork.
 O cadastro também fica sem trava. `POST /auth/sign-up` cria a conta pelo Admin SDK, que não passa pelo
 limite do Firebase de 100 contas por hora por IP (esse limite vale para a criação pelo cliente). Sem
 `ARCJET_KEY`, um script cria contas pela API até o Firebase recusar por cota do projeto.
+
+Uma chave sem o prefixo `ajkey_` tem efeito diferente em cada app. Na `api` ela conta como ausente: o limite
+vira no-op e o boot registra um `console.error`, sem imprimir o valor. Em `app` e `web` o build falha em
+"Collecting page data" com `Invalid environment variables`, e na Vercel o deploy anterior continua no ar.
 
 ### 9. Branch protection na `main`
 
@@ -607,14 +611,15 @@ do Vitest em `apps/app/__tests__/accountSecurityForm.test.tsx`, com taxa de falh
 **#13** declarou `testTimeout: 20_000` nas **9** configs que existiam então.
 
 Remedido em **2026-09-30**, com o `HEAD` em `c7aa4d9` (PR #34 já mergeada), sem mudança de código no working
-tree. Os números de tasks, arquivos e testes abaixo são dessa medição:
+tree. Os números de tasks e arquivos abaixo são dessa medição. A contagem da suíte foi remedida depois, na
+mesma data, depois da PR #35 e com os testes novos da `ARCJET_KEY` malformada:
 
 | medição | comando | resultado |
 |---------|---------|-----------|
 | configs com `testTimeout` | `grep -rl testTimeout --include=vitest.config.* .` | **13 de 13** configs de workspace (`apps/api`, `apps/app`, `apps/e2e`, `apps/web`, `packages/analytics`, `packages/auth`, `packages/design-system`, `packages/email`, `packages/internationalization`, `packages/next-config`, `packages/payments`, `packages/security`, `packages/shared`); a de `packages/next-config` entrou em 2026-09-27, com a marca configurável, e a de `packages/design-system` na PR #32. O `vitest.config.mts` da raiz só agrega a cobertura e não roda teste |
 | gate completo, sem cache | `pnpm turbo run lint typecheck test test:emulator --force`, com JDK 21 | ✅ **29/29 tasks** (as 28 de `lint typecheck test` mais `api#test:emulator`), 0 em cache, **1 min 6,3 s** |
 | lint/format | `pnpm check` | **806 arquivos**, 0 correções |
-| suíte | 13 tasks de teste | **2452 testes em 226 arquivos**. A suíte contra emulador (`api#test:emulator`, 170 testes em 4 arquivos) fica fora desta contagem: ela roda no `pnpm test` e no `verify`, com JDK 21 |
+| suíte | `pnpm turbo run test`, 13 tasks de teste | **2485 testes em 227 arquivos**. A suíte contra emulador (`api#test:emulator`, 170 testes em 4 arquivos) fica fora desta contagem: ela roda no `pnpm test` e no `verify`, com JDK 21 |
 
 Distribuição da suíte, medida em 2026-09-25 com `--force`: `apps/api` 894 em 73 arquivos, `apps/app` 608 em
 78, `@repo/email` 137 em 7, `@repo/auth` 101 em 8, `@repo/internationalization` 59 em 6, `@repo/shared` 44
