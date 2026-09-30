@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-security-mfa
-updated: 2026-09-27
+updated: 2026-09-30
 ---
 
 # MFA, sessões ativas e política de senha
@@ -202,7 +202,7 @@ eficácia.
       comum deixa de ser um "sair de todos" silencioso.
       ◐ **Metade entregue por `account-settings` (PR #12), e a metade que falta é justamente a difícil.**
       Já existe `POST /account/sessions/revoke` (`apps/api/app/(routes)/account/sessions/revoke/route.ts:7`,
-      sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:98`, âncora remedida em 2026-09-24) e acionável pela UI
+      sob `requireCommonPanelApi`), exposto no SDK (`actions/account/action.ts:113`, âncora remedida em 2026-09-30: a PR #33 acrescentou `requestEmailChange` acima) e acionável pela UI
       (`AccountSecurityForm.tsx:137`). **Mas é tudo-ou-nada**, e o próprio código declara o porquê em
       `AccountSecurityForm.tsx:53-54`: *"Firebase cannot revoke sessions selectively, so both actions below
       end the current one too"*. Ou seja: o usuário ganhou um botão explícito de "sair de todos" — o que
@@ -217,9 +217,9 @@ eficácia.
       8`, `PASSWORD_MAX_LENGTH = 1024`, `EXISTING_PASSWORD_MIN_LENGTH = 6` para login e senha atual). Na borda
       da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
-      e na redefinição (`auth.schema.ts:23`, `:28`, `:82-83`), na troca (`account.schema.ts:46-47`, `:125-126`)
+      e na redefinição (`auth.schema.ts:23`, `:28`, `:82-83`), na troca (`account.schema.ts:47-48`, `:136-137`, âncoras remedidas em 2026-09-30)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:73`, `:187`, `:300`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:73`, `:192`, `:311`, remedidas em 2026-09-30). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
@@ -288,6 +288,27 @@ A spec passou a `in-progress` com `feature: account-security-mfa` e **não** é 
 in-progress` embora a PR tenha sido mergeada; a auditoria não escreve ali e registra a defasagem no
 `BACKLOG.md`. A próxima fatia deve abrir pasta própria em `docs/features/` ou reaproveitar esta com um
 `STATE.md` novo; decidir isso é do `/analyze` daquela fatia.
+
+### Achado ligado à fatia 2 (auditoria de 2026-09-30)
+
+**Conta desativada pelo admin segue com o ID token aceito pela API até ele expirar, em até 1 hora.** O
+`PUT /users/[id]` com `disabled: true` só chama `updateUser` (`apps/api/app/(routes)/users/[id]/route.ts:117-122`)
+e não revoga os tokens. O bearer passa por `getCurrentUser` (`packages/auth/server.ts:180-184`, chamado em
+`apps/api/(shared)/lib/resolve-api-actor.ts:24`), que usa `verifyIdToken` sem `checkRevoked`, compara o token
+com a marca de revogação e não confere `user.disabled`. O cookie de sessão não tem o problema, porque passa
+por `verifySessionCookie(..., true)` (`server.ts:298-301`). O `/test` de `compliance-docs-kit` mediu o
+comportamento em 2026-09-30 contra o projeto Firebase de desenvolvimento
+([`test/report.md`](../docs/features/compliance-docs-kit/test/report.md), linhas 20 e 51-53).
+
+O achado mora aqui porque o `contends_on` desta spec já cobre `server.ts` e `resolve-api-actor.ts`, e a fatia 2
+mexe no mesmo modelo de sessão. O status não muda. A correção cabe antes da fatia 2, como tarefa direta: o
+`getUser` já roda em `server.ts:181`, então recusar `user.disabled` ali não custa chamada a mais; revogar os
+refresh tokens no `PUT` de desativação é a outra metade.
+
+O teste da correção **não pode rodar no emulador**. No `firebase-admin@13.6.0`, `lib/auth/base-auth.js:119`
+confere revogação e `disabled` sozinho quando `checkRevoked || isEmulator`, então sob emulador o defeito não
+aparece e o teste passa mesmo sem a correção. Tem de ser teste de unidade ou de rota com o `getAuthInstance`
+mockado.
 
 ### Fora do corte
 
