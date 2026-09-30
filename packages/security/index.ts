@@ -6,9 +6,7 @@ import arcjet, {
     shield,
     slidingWindow,
 } from "@arcjet/next";
-import { keys } from "./keys";
-
-const arcjetKey = keys().ARCJET_KEY;
+import { readArcjetKey } from "./keys";
 
 const RATE_LIMIT_INTERVAL = "60s";
 /**
@@ -29,7 +27,7 @@ export type RateLimitResult =
       };
 
 /** Whether a request budget is actually being counted, or the limiter is a no-op. */
-export const isRateLimitEnforced = (): boolean => Boolean(arcjetKey);
+export const isRateLimitEnforced = (): boolean => Boolean(readArcjetKey());
 
 /**
  * Counts requests per source address in a shared store. Answers with a decision
@@ -39,6 +37,7 @@ export const isRateLimitEnforced = (): boolean => Boolean(arcjetKey);
 export const checkRateLimit = async (
     sourceRequest?: Request
 ): Promise<RateLimitResult> => {
+    const arcjetKey = readArcjetKey();
     if (!arcjetKey) {
         return { allowed: true, enforced: false };
     }
@@ -82,6 +81,7 @@ export const secure = async (
     allow: (ArcjetWellKnownBot | ArcjetBotCategory)[],
     sourceRequest?: Request
 ) => {
+    const arcjetKey = readArcjetKey();
     if (!arcjetKey) {
         return;
     }
