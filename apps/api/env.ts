@@ -5,6 +5,8 @@ import { keys as payments } from "@repo/payments/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+const STRIPE_LOOKUP_KEY_MAX_LENGTH = 80;
+
 export const env = createEnv({
     extends: [auth(), core(), email(), payments()],
     // Firestore is the API's database, reached with this service account. Unlike the
@@ -31,6 +33,12 @@ export const env = createEnv({
     // development run — and a reset link that resolves to nothing is a dead feature.
     client: {
         NEXT_PUBLIC_APP_URL: z.url().optional(),
+        // Lookup key of the provider feature that creating an entity demands while billing
+        // is on. Must match the app's value.
+        NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE: z
+            .string()
+            .max(STRIPE_LOOKUP_KEY_MAX_LENGTH)
+            .optional(),
     },
     runtimeEnv: {
         FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
@@ -42,6 +50,8 @@ export const env = createEnv({
             process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
             undefined,
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE:
+            process.env.NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE || undefined,
     },
     skipValidation: process.env.NODE_ENV === "development",
 });
