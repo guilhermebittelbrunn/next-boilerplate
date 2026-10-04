@@ -51,10 +51,36 @@ instante original na claim `sessionAuthTime`, e é ela que a verificação do te
 
 ## Logout
 
-`DELETE /api/auth/session` revoga os refresh tokens (`revokeUserSessions`) e limpa o cookie
-compartilhado (com o mesmo `Domain`), então o outro front-end perde o SSR na hora e o client
-dele falha no próximo refresh de token. O `signOut` do provider só dispara o DELETE — nunca
+`DELETE /api/auth/session` encerra **só a sessão deste navegador**. A rota pede à API
+`DELETE /auth/session`, que marca a sessão como encerrada na coleção `session`, e limpa o cookie
+compartilhado (com o mesmo `Domain`). Os outros aparelhos da conta continuam conectados. Se a API não
+responder, o cookie é limpo do mesmo jeito. O `signOut` do provider só dispara o DELETE: nunca
 limpamos o cookie passivamente, ou o 2º app deslogaria o usuário ao abrir.
+
+O outro front-end aberto no mesmo navegador conta como a mesma sessão, porque herdou o login pela
+claim `sessionAuthTime`. O cliente Firebase dele continua logado até tentar gravar o cookie de novo (na
+próxima carga da página ou na renovação do ID token, de hora em hora). Antes de gravar, as rotas
+`/api/auth/session`, `/api/auth/session/refresh` e `/api/auth/custom-token` dos dois front-ends perguntam à
+API (`GET /auth/session`) se a sessão segue ativa. Para uma sessão encerrada a resposta é
+`401 AUTH_SESSION_REVOKED`, o cookie é limpo e o provider faz logout local com o aviso "Esta sessão foi
+encerrada". Se a API não responder, o cookie é gravado como antes, e a API recusa a credencial quando
+voltar.
+
+O proxy da `apps/app` faz a mesma pergunta quando alguém com cookie válido no Firebase abre uma rota
+pública (sign-in, sign-up). Sessão encerrada: o proxy apaga o cookie e serve a página, em vez de mandar
+para a home. Sem isso, o layout recusaria a sessão e devolveria a pessoa ao sign-in, num loop.
+
+A aba Segurança da conta lista as sessões ativas e encerra uma específica ou todas as outras. O
+Firebase não revoga refresh token de uma sessão só (`revokeRefreshTokens` derruba todas), então a
+recusa acontece na API, nos dois transportes (ID token e cookie). O aparelho encerrado ainda tem um
+refresh token válido no Firebase; o que ele perde é a API e o cookie. Para cortar no Firebase também,
+o titular usa "Sair de todos os dispositivos", que segue chamando `revokeRefreshTokens`, ou troca a
+senha. Fork que queira o logout antigo (sair de todos) chama `POST /account/sessions/revoke` antes do
+`signOut`.
+
+A sessão é identificada pelo segundo do login, e o "encerrar as outras" guarda o instante em
+milissegundos. Um login no mesmo segundo do clique é recusado mesmo que tenha vindo depois dele, porque
+a API não distingue os dois casos: a pessoa entra de novo, e nenhuma sessão aberta antes do clique escapa.
 
 ## Modo de produto
 
@@ -92,7 +118,8 @@ A SSO real precisa de Firebase configurado (`.env.local` por app com `NEXT_PUBLI
 e `FIREBASE_ADMIN_*`). Com os apps no ar (`pnpm dev`):
 1. Logar na **web** (`:3001`) → conferir o cookie `access-token` **sem `Domain`** (host-only).
 2. Abrir o **app** (`:3000`) → proxy autentica via cookie; o provider faz o bootstrap por custom token; chamadas client→API funcionam.
-3. Logar no app e voltar à web → também autenticado. **Logout num** → ambos deslogam.
+3. Logar no app e voltar à web → também autenticado. **Logout num** → o outro desloga na próxima
+   carga ou renovação de token, com o aviso de sessão encerrada; um segundo navegador continua logado.
 
 Sem Firebase, as rotas respondem corretamente mesmo assim: `custom-token` → 401 `AUTH_NO_SESSION`,
 `session` POST sem corpo → 400 / cross-origin → 403, app protegido sem sessão → redirect a `sign-in`.

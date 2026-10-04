@@ -801,6 +801,29 @@ propósito.
 **Como decidir:** se o produto precisa de um corte rígido (conta compartilhada, dado sensível), reduza
 `SESSION_COOKIE_MAX_AGE_DAYS` junto com o teto, porque a folga é proporcional à vida do cookie.
 
+### Declaração — o que encerrar uma sessão pela lista não corta
+
+Não é pendência que bloqueie deploy: é o limite do que a lista de sessões da aba Segurança garante.
+
+O Firebase só revoga refresh token da conta inteira (`revokeRefreshTokens`), nunca de uma sessão. Por isso,
+encerrar uma sessão ou "todas as outras" grava a recusa na coleção `session`, e a API passa a recusar a
+credencial daquela sessão, por ID token ou por cookie. O aparelho encerrado perde a API e o cookie, mas
+**continua com um refresh token válido no Firebase**: consegue emitir ID tokens e chamar o Identity Toolkit
+direto com a chave pública. Firestore e Storage negam todo cliente (`firestore.rules`, `storage.rules`), e
+trocar senha, e-mail ou excluir a conta pelo Identity Toolkit exige login recente, ou seja, a senha. Para
+cortar também no Firebase, o titular usa "Sair de todos os dispositivos" ou troca a senha.
+
+O botão "Sair" passou a encerrar só a sessão do navegador atual. Fork que queira o comportamento antigo
+(sair de todos) chama `POST /account/sessions/revoke` antes do `signOut`.
+
+**Paridade de `SESSION_ABSOLUTE_MAX_AGE_DAYS`.** A API lê a mesma variável para esconder da lista as sessões
+além do teto absoluto. Se o fork mudou o valor na `apps/app` e na `apps/web`, precisa repetir o valor na
+`apps/api` (está no `.env.example` dela). Sem isso, a lista esconde sessões ainda vivas ou mostra sessões já
+vencidas, conforme o lado para que o valor mudou.
+
+**Não configure TTL na coleção `session`.** Apagar o documento de uma sessão encerrada a faria voltar a
+valer para um cliente Firebase que ainda tem o refresh token. Os documentos saem na exclusão da conta.
+
 ### Declaração — o campo `lastAccessAt` do perfil
 
 Não é pendência: é o que o fork precisa saber sobre um dado pessoal que ele herda ligado.
