@@ -6,7 +6,9 @@ import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { listActiveEntitlementKeys } from "@/(shared)/lib/billing";
 import {
+    toEntitlementsState,
     toPaidInvoiceRecord,
     toSubscriptionState,
 } from "@/(shared)/lib/billing-state";
@@ -146,6 +148,44 @@ async function recordPaidInvoice(
     });
 }
 
+/**
+ * The summary carries no metadata, so the profile is only found through the linked
+ * customer, which checkout links before the session exists. The lookup keys stay out of
+ * the log: they name what a person pays for.
+ */
+async function reconcileEntitlements(
+    stripe: Stripe,
+    event: Stripe.Event,
+    summary: Stripe.Entitlements.ActiveEntitlementSummary,
+    requestId: string | null
+): Promise<void> {
+    const profile = await userRepository.findByStripeCustomerId(
+        summary.customer
+    );
+    if (!profile) {
+        logProfileNotFound(event.type, requestId);
+        return;
+    }
+
+    const lookupKeys = summary.entitlements.has_more
+        ? await listActiveEntitlementKeys(stripe, summary.customer)
+        : summary.entitlements.data.map(
+              (entitlement) => entitlement.lookup_key
+          );
+    const state = toEntitlementsState(lookupKeys, event.created);
+    const result = await userRepository.applyEntitlementsState(
+        profile.id,
+        state
+    );
+
+    logEvent("payments", "webhook-entitlements-reconciled", {
+        eventType: event.type,
+        result,
+        featureCount: state.features.length,
+        requestId,
+    });
+}
+
 async function dispatch(
     stripe: Stripe,
     event: Stripe.Event,
@@ -169,6 +209,15 @@ async function dispatch(
         }
         case "invoice.paid": {
             await recordPaidInvoice(
+                stripe,
+                event,
+                event.data.object,
+                requestId
+            );
+            break;
+        }
+        case "entitlements.active_entitlement_summary.updated": {
+            await reconcileEntitlements(
                 stripe,
                 event,
                 event.data.object,

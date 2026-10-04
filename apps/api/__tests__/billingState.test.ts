@@ -3,8 +3,10 @@ import type { SubscriptionState } from "@repo/sdk/src/types";
 import { Timestamp } from "firebase-admin/firestore";
 import { describe, expect, it } from "vitest";
 import {
+    decideEntitlementsWrite,
     decideSubscriptionWrite,
     isLiveSubscription,
+    toEntitlementsState,
     toPaidInvoiceRecord,
     toPlanDTO,
     toPlanLabel,
@@ -503,5 +505,89 @@ describe("toPlanLabel", () => {
 
         expect(label.name).toBeNull();
         expect(label.productId).toBe("prod_pro");
+    });
+});
+
+describe("toEntitlementsState", () => {
+    it("drops repeated keys and sorts the list, so the stored document is stable", () => {
+        expect(
+            toEntitlementsState(
+                ["priority-support", "advanced-reports", "priority-support"],
+                EVENT_SECONDS
+            )
+        ).toEqual({
+            features: ["advanced-reports", "priority-support"],
+            lastEventAt: new Date(EVENT_SECONDS * MS),
+        });
+    });
+
+    it("keeps an empty list, which is how a customer loses every feature", () => {
+        expect(toEntitlementsState([], EVENT_SECONDS).features).toEqual([]);
+    });
+});
+
+describe("decideEntitlementsWrite", () => {
+    const next = (seconds: number) =>
+        toEntitlementsState(["advanced-reports"], seconds);
+
+    it("applies when nothing is stored", () => {
+        expect(decideEntitlementsWrite(undefined, next(EVENT_SECONDS))).toEqual(
+            { kind: "apply" }
+        );
+        expect(decideEntitlementsWrite(null, next(EVENT_SECONDS))).toEqual({
+            kind: "apply",
+        });
+    });
+
+    it("skips a summary older than the stored one", () => {
+        const storedEntitlements = {
+            features: [],
+            lastEventAt: Timestamp.fromMillis(LATER_SECONDS * MS),
+        };
+
+        expect(
+            decideEntitlementsWrite(storedEntitlements, next(EVENT_SECONDS))
+        ).toEqual({
+            kind: "skip",
+            reason: "stale",
+        });
+    });
+
+    it("applies a summary from the same second, so the last delivery stays", () => {
+        const storedEntitlements = {
+            features: [],
+            lastEventAt: Timestamp.fromMillis(EVENT_SECONDS * MS),
+        };
+
+        expect(
+            decideEntitlementsWrite(storedEntitlements, next(EVENT_SECONDS))
+        ).toEqual({
+            kind: "apply",
+        });
+    });
+
+    it("applies a newer summary", () => {
+        const storedEntitlements = {
+            features: ["advanced-reports"],
+            lastEventAt: new Date(EVENT_SECONDS * MS),
+        };
+
+        expect(
+            decideEntitlementsWrite(storedEntitlements, next(LATER_SECONDS))
+        ).toEqual({
+            kind: "apply",
+        });
+    });
+
+    it("applies over a stored instant it cannot read", () => {
+        expect(
+            decideEntitlementsWrite(
+                { features: [], lastEventAt: "not a date" },
+                next(EVENT_SECONDS)
+            )
+        ).toEqual({ kind: "apply" });
+        expect(
+            decideEntitlementsWrite({ features: [] }, next(EVENT_SECONDS))
+        ).toEqual({ kind: "apply" });
     });
 });

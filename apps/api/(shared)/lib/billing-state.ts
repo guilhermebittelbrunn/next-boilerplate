@@ -1,5 +1,6 @@
 import type { Stripe } from "@repo/payments";
 import {
+    type EntitlementsState,
     LIVE_SUBSCRIPTION_STATUSES,
     type PlanDTO,
     type PlanInterval,
@@ -228,4 +229,41 @@ export function decideSubscriptionWrite(
     }
 
     return APPLY;
+}
+
+export function toEntitlementsState(
+    lookupKeys: readonly string[],
+    eventCreatedSeconds: number
+): EntitlementsState {
+    return {
+        features: [...new Set(lookupKeys)].sort(),
+        lastEventAt: new Date(eventCreatedSeconds * MS_PER_SECOND),
+    };
+}
+
+export type EntitlementsWriteDecision =
+    | { kind: "apply" }
+    | { kind: "skip"; reason: "stale" };
+
+/**
+ * Every summary carries the customer's whole list, so the newest event wins outright. Two
+ * events in the same second both apply, and the last delivery stays: the provider gives no
+ * finer ordering than `created`.
+ */
+export function decideEntitlementsWrite(
+    stored: unknown,
+    next: EntitlementsState
+): EntitlementsWriteDecision {
+    const raw =
+        stored && typeof stored === "object"
+            ? (stored as { lastEventAt?: unknown }).lastEventAt
+            : undefined;
+    const storedMs = raw
+        ? Date.parse(normalizeFirestoreInstant(raw))
+        : Number.NaN;
+
+    if (Number.isNaN(storedMs) || next.lastEventAt.getTime() >= storedMs) {
+        return { kind: "apply" };
+    }
+    return { kind: "skip", reason: "stale" };
 }
