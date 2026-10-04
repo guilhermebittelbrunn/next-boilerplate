@@ -7,10 +7,15 @@ export function fetchMyAccount(): Promise<AccountDTO> {
     return apiClient.account.me();
 }
 
-export function useMyAccount() {
+type MyAccountQueryOptions = {
+    refetchOnMount?: boolean | "always";
+};
+
+export function useMyAccount({ refetchOnMount }: MyAccountQueryOptions = {}) {
     const { data, isLoading, isError } = useAuthorizedQuery({
         queryKey: queryKeys.account.me(),
         queryFn: fetchMyAccount,
+        refetchOnMount,
     });
 
     return { data, isLoading, isError };
