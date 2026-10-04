@@ -6,6 +6,7 @@ const {
     deleteObjectsByPrefixMock,
     purgeAllByUserIdMock,
     anonymizeUserLabelsMock,
+    purgeSessionsMock,
     purgeProfileMock,
     revokeUserSessionsMock,
     deleteUserMock,
@@ -17,6 +18,7 @@ const {
     deleteObjectsByPrefixMock: vi.fn(),
     purgeAllByUserIdMock: vi.fn(),
     anonymizeUserLabelsMock: vi.fn(),
+    purgeSessionsMock: vi.fn(),
     purgeProfileMock: vi.fn(),
     revokeUserSessionsMock: vi.fn(),
     deleteUserMock: vi.fn(),
@@ -51,6 +53,15 @@ vi.mock("@/(shared)/repositories/audit-event.repository", () => ({
         anonymizeUserLabels: (...args: unknown[]) => {
             calls.push("auditTrail");
             return anonymizeUserLabelsMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/repositories/session.repository", () => ({
+    sessionRepository: {
+        purgeAllByUid: (...args: unknown[]) => {
+            calls.push("sessions");
+            return purgeSessionsMock(...args);
         },
     },
 }));
@@ -129,6 +140,7 @@ function inputWithSubscription(status: string) {
 const PURGED_ENTITIES = 2;
 const ANONYMIZED_EVENTS = 3;
 const PURGED_OBJECTS = 4;
+const PURGED_SESSIONS = 5;
 
 function statusOf(
     report: Awaited<ReturnType<typeof runAccountErasure>>,
@@ -144,6 +156,7 @@ beforeEach(() => {
         deleteObjectsByPrefixMock,
         purgeAllByUserIdMock,
         anonymizeUserLabelsMock,
+        purgeSessionsMock,
         purgeProfileMock,
         revokeUserSessionsMock,
         deleteUserMock,
@@ -165,6 +178,7 @@ beforeEach(() => {
     isStorageConfiguredMock.mockReturnValue(false);
     purgeAllByUserIdMock.mockResolvedValue(PURGED_ENTITIES);
     anonymizeUserLabelsMock.mockResolvedValue(ANONYMIZED_EVENTS);
+    purgeSessionsMock.mockResolvedValue(PURGED_SESSIONS);
     purgeProfileMock.mockResolvedValue(undefined);
     revokeUserSessionsMock.mockResolvedValue(undefined);
     deleteUserMock.mockResolvedValue(undefined);
@@ -177,6 +191,7 @@ describe("runAccountErasure", () => {
         expect(calls).toEqual([
             "entities",
             "auditTrail",
+            "sessions",
             "profile",
             "revokeSessions",
             "authAccount",
@@ -191,9 +206,21 @@ describe("runAccountErasure", () => {
             "storage",
             "entities",
             "auditTrail",
+            "sessions",
             "profile",
             "authAccount",
         ]);
+    });
+
+    it("apaga as sessões do titular pelo uid, encerradas inclusive, antes do perfil", async () => {
+        const report = await runAccountErasure(INPUT);
+
+        expect(purgeSessionsMock).toHaveBeenCalledWith("uid-1");
+        expect(statusOf(report, "sessions")).toEqual({
+            step: "sessions",
+            status: "done",
+            count: PURGED_SESSIONS,
+        });
     });
 
     it("pula o expurgo de arquivos e diz por quê quando não há bucket", async () => {

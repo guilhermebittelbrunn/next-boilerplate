@@ -15,6 +15,7 @@ const {
     isStorageConfiguredMock,
     listObjectPathsMock,
     recordAuditEventMock,
+    findAllSessionsByUidMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
@@ -24,6 +25,7 @@ const {
     isStorageConfiguredMock: vi.fn(),
     listObjectPathsMock: vi.fn(),
     recordAuditEventMock: vi.fn(),
+    findAllSessionsByUidMock: vi.fn(),
 }));
 
 vi.mock("@/(shared)/lib/resolve-api-actor", () => ({
@@ -53,6 +55,12 @@ vi.mock("@/(shared)/repositories/audit-event.repository", () => ({
     auditEventRepository: {
         findAllByInvolvedUserId: (...args: unknown[]) =>
             findAllByInvolvedUserIdMock(...args),
+    },
+}));
+
+vi.mock("@/(shared)/repositories/session.repository", () => ({
+    sessionRepository: {
+        findAllByUid: (...args: unknown[]) => findAllSessionsByUidMock(...args),
     },
 }));
 
@@ -169,6 +177,7 @@ beforeEach(() => {
         isStorageConfiguredMock,
         listObjectPathsMock,
         recordAuditEventMock,
+        findAllSessionsByUidMock,
     ]) {
         mock.mockReset();
     }
@@ -187,6 +196,7 @@ beforeEach(() => {
     });
     isStorageConfiguredMock.mockReturnValue(false);
     recordAuditEventMock.mockResolvedValue(undefined);
+    findAllSessionsByUidMock.mockResolvedValue({ items: [], truncated: false });
 });
 
 describe("GET /account/export", () => {
@@ -369,6 +379,51 @@ describe("GET /account/export", () => {
         );
         expect(mergedUserMock).not.toHaveBeenCalled();
         expect(recordAuditEventMock).not.toHaveBeenCalled();
+    });
+
+    it("leva as sessões do titular, encerradas inclusive, sem o uid nem o id interno", async () => {
+        findAllSessionsByUidMock.mockResolvedValue({
+            items: [
+                {
+                    id: `${OWNER_UID}_1790500000`,
+                    uid: OWNER_UID,
+                    sessionKey: "1790500000",
+                    signedInAt: "2026-09-27T09:06:40.000Z",
+                    lastSeenAt: "2026-09-29T11:45:00.000Z",
+                    browser: "Safari",
+                    os: "iOS",
+                    deviceType: "mobile",
+                    revokedAt: "2026-09-30T08:00:00.000Z",
+                    revokedReason: "revoked",
+                    othersRevokedBefore: null,
+                    createdAt: "2026-09-27T09:06:40.000Z",
+                    updatedAt: "2026-09-30T08:00:00.000Z",
+                    deletedAt: null,
+                },
+            ],
+            truncated: false,
+        });
+
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(findAllSessionsByUidMock).toHaveBeenCalledWith(
+            OWNER_UID,
+            EXPORT_MAX_RECORDS
+        );
+        expect(payload.sessions).toEqual({
+            items: [
+                {
+                    id: "1790500000",
+                    browser: "Safari",
+                    os: "iOS",
+                    deviceType: "mobile",
+                    signedInAt: "2026-09-27T09:06:40.000Z",
+                    lastSeenAt: "2026-09-29T11:45:00.000Z",
+                    revokedAt: "2026-09-30T08:00:00.000Z",
+                },
+            ],
+            truncated: false,
+        });
     });
 
     it("registra a exportação na trilha", async () => {
