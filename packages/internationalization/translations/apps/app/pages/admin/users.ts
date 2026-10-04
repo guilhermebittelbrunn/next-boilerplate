@@ -3,6 +3,7 @@ export const adminUsersPageTranslations = {
         list: {
             searchPlaceholder: "Buscar por nome ou e-mail",
             statusToggle: "Usuário ativo: {name}",
+            selfStatusLocked: "Você não pode desativar a sua própria conta.",
             refresh: "Atualizar",
             empty: "Nenhum usuário encontrado.",
             columns: {
@@ -40,6 +41,8 @@ export const adminUsersPageTranslations = {
             confirmPassword: "Confirmar senha",
             displayName: "Nome de exibição",
             type: "Tipo de usuário",
+            typeSelfLocked:
+                "Você não pode tirar o seu próprio acesso de administrador.",
             save: "Salvar",
             cancel: "Cancelar",
             back: "Voltar",
@@ -60,6 +63,7 @@ export const adminUsersPageTranslations = {
         list: {
             searchPlaceholder: "Search by name or email",
             statusToggle: "User active: {name}",
+            selfStatusLocked: "You can't disable your own account.",
             refresh: "Refresh",
             empty: "No users found.",
             columns: {
@@ -97,6 +101,7 @@ export const adminUsersPageTranslations = {
             confirmPassword: "Confirm password",
             displayName: "Display name",
             type: "User type",
+            typeSelfLocked: "You can't remove your own admin access.",
             save: "Save",
             cancel: "Cancel",
             back: "Back",
@@ -117,6 +122,7 @@ export const adminUsersPageTranslations = {
         list: {
             searchPlaceholder: "Buscar por nombre o correo",
             statusToggle: "Usuario activo: {name}",
+            selfStatusLocked: "No puedes desactivar tu propia cuenta.",
             refresh: "Actualizar",
             empty: "No se encontraron usuarios.",
             columns: {
@@ -153,6 +159,8 @@ export const adminUsersPageTranslations = {
             confirmPassword: "Confirmar contraseña",
             displayName: "Nombre para mostrar",
             type: "Tipo de usuario",
+            typeSelfLocked:
+                "No puedes quitar tu propio acceso de administrador.",
             save: "Guardar",
             cancel: "Cancelar",
             back: "Volver",

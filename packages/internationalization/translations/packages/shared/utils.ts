@@ -30,6 +30,8 @@ export const sharedUtilsTranslations = {
             USERS_NOT_FOUND: "Usuário não encontrado.",
             USERS_DELETE_BILLING_FAILED:
                 "Não foi possível cancelar a assinatura deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
+            USERS_SELF_LOCKOUT_FORBIDDEN:
+                "Você não pode desativar, arquivar nem tirar o acesso de administrador da sua própria conta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para atualizar.",
             ACCOUNT_AVATAR_INVALID:
                 "A imagem informada não pode ser usada como foto de perfil.",
@@ -149,6 +151,8 @@ export const sharedUtilsTranslations = {
             USERS_NOT_FOUND: "User not found.",
             USERS_DELETE_BILLING_FAILED:
                 "We couldn't cancel this user's subscription, so they were not archived. Try again in a moment.",
+            USERS_SELF_LOCKOUT_FORBIDDEN:
+                "You can't disable, archive or remove admin access from your own account.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nothing to update.",
             ACCOUNT_AVATAR_INVALID:
                 "That image cannot be used as your profile picture.",
@@ -267,6 +271,8 @@ export const sharedUtilsTranslations = {
             USERS_NOT_FOUND: "Usuario no encontrado.",
             USERS_DELETE_BILLING_FAILED:
                 "No pudimos cancelar la suscripción de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
+            USERS_SELF_LOCKOUT_FORBIDDEN:
+                "No puedes desactivar, archivar ni quitar el acceso de administrador de tu propia cuenta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para actualizar.",
             ACCOUNT_AVATAR_INVALID:
                 "Esa imagen no se puede usar como foto de perfil.",
