@@ -61,6 +61,14 @@ export type AuthActionRequested = { requested: true };
 
 export type AuthActionConfirmed = { confirmed: true };
 
+export type AuthSessionStanding = { active: true };
+
+/**
+ * The front-ends ask on the way to writing the session cookie and from their proxy, so a
+ * slow API has to give up before it holds a page load hostage.
+ */
+const SESSION_STANDING_TIMEOUT_MS = 3000;
+
 export default class AuthActions {
     private readonly client: BaseClient;
 
@@ -173,5 +181,26 @@ export default class AuthActions {
         });
 
         return data.data;
+    }
+
+    /** Answers 401 `AUTH_SESSION_REVOKED` for a session ended from another device. */
+    async sessionStanding(): Promise<AuthSessionStanding> {
+        const { data } = await this.client.request<
+            Response<AuthSessionStanding>
+        >({
+            url: "/auth/session",
+            method: "GET",
+            timeout: SESSION_STANDING_TIMEOUT_MS,
+        });
+
+        return data.data;
+    }
+
+    async endSession(): Promise<void> {
+        await this.client.request({
+            url: "/auth/session",
+            method: "DELETE",
+            timeout: SESSION_STANDING_TIMEOUT_MS,
+        });
     }
 }

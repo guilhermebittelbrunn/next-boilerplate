@@ -4,6 +4,8 @@ export enum AuditAction {
     USER_UPDATE = "user.update",
     USER_DELETE = "user.delete",
     ACCOUNT_SESSIONS_REVOKE = "account.sessions.revoke",
+    ACCOUNT_SESSION_REVOKE = "account.session.revoke",
+    ACCOUNT_SESSIONS_REVOKE_OTHERS = "account.sessions.revokeOthers",
     ACCOUNT_PASSWORD_CHANGE = "account.password.change",
     ACCOUNT_EMAIL_CHANGE = "account.email.change",
     ACCOUNT_DATA_EXPORT = "account.data.export",
