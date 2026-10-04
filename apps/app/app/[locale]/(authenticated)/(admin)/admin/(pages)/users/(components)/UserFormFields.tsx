@@ -10,9 +10,13 @@ import { UserType } from "@repo/sdk/src/types";
 
 type UserFormFieldsProps = {
     mode: "create" | "update";
+    lockType?: boolean;
 };
 
-export function UserFormFields({ mode }: UserFormFieldsProps) {
+export function UserFormFields({
+    mode,
+    lockType = false,
+}: UserFormFieldsProps) {
     const { dictionary } = getDictionary();
     const adminUsers = dictionary.apps.app.pages.admin.users;
 
@@ -63,6 +67,10 @@ export function UserFormFields({ mode }: UserFormFieldsProps) {
 
             <div className="col-span-1 md:col-span-2">
                 <HookFormSelect
+                    description={
+                        lockType ? adminUsers.form.typeSelfLocked : undefined
+                    }
+                    disabled={lockType}
                     label={adminUsers.form.type}
                     name="type"
                     options={typeOptions}
