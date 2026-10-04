@@ -77,6 +77,33 @@ export const commonAccountPageTranslations = {
             signOutEverywhereConfirm:
                 "Tem certeza que deseja encerrar todas as sessões?",
             signOutEverywhereAction: "Encerrar sessões",
+            sessions: {
+                title: "Sessões ativas",
+                description:
+                    "Navegadores em que a sua conta está conectada. O último uso é atualizado a cada 15 minutos.",
+                columns: {
+                    device: "Dispositivo",
+                    signedInAt: "Entrou em",
+                    lastSeenAt: "Último uso",
+                    actions: "Ações",
+                },
+                current: "Esta sessão",
+                unknownDevice: "Dispositivo desconhecido",
+                deviceTypes: {
+                    desktop: "Computador",
+                    mobile: "Celular",
+                    tablet: "Tablet",
+                },
+                revoke: "Encerrar",
+                revokeAriaLabel: "Encerrar a sessão em {device}",
+                revokeOthers: "Encerrar as outras sessões",
+                revokeOthersDescription:
+                    "Mantém esta sessão e encerra as demais.",
+                revokeOthersConfirm:
+                    "Tem certeza que deseja encerrar todas as outras sessões?",
+                revokeOthersAction: "Encerrar outras",
+                empty: "Nenhuma sessão ativa.",
+            },
             cancel: "Cancelar",
             validation: {
                 required: "Informe a senha.",
@@ -178,6 +205,8 @@ export const commonAccountPageTranslations = {
                 "Link enviado para o novo e-mail. A troca acontece quando você abrir o link.",
             preferencesUpdated: "Preferências atualizadas.",
             sessionsRevoked: "Todas as sessões foram encerradas.",
+            sessionRevoked: "Sessão encerrada.",
+            otherSessionsRevoked: "As outras sessões foram encerradas.",
             dataExported: "Os seus dados foram baixados.",
             accountDeleted: "A sua conta foi excluída.",
             loadError: "Não foi possível carregar a sua conta.",
@@ -263,6 +292,33 @@ export const commonAccountPageTranslations = {
             signOutEverywhereConfirm:
                 "Are you sure you want to end every session?",
             signOutEverywhereAction: "End sessions",
+            sessions: {
+                title: "Active sessions",
+                description:
+                    "Browsers where your account is signed in. Last use is updated every 15 minutes.",
+                columns: {
+                    device: "Device",
+                    signedInAt: "Signed in",
+                    lastSeenAt: "Last used",
+                    actions: "Actions",
+                },
+                current: "This session",
+                unknownDevice: "Unknown device",
+                deviceTypes: {
+                    desktop: "Computer",
+                    mobile: "Phone",
+                    tablet: "Tablet",
+                },
+                revoke: "End",
+                revokeAriaLabel: "End the session on {device}",
+                revokeOthers: "End other sessions",
+                revokeOthersDescription:
+                    "Keeps this session and ends the rest.",
+                revokeOthersConfirm:
+                    "Are you sure you want to end every other session?",
+                revokeOthersAction: "End others",
+                empty: "No active sessions.",
+            },
             cancel: "Cancel",
             validation: {
                 required: "Enter the password.",
@@ -364,6 +420,8 @@ export const commonAccountPageTranslations = {
                 "Link sent to the new email. The change happens when you open the link.",
             preferencesUpdated: "Preferences updated.",
             sessionsRevoked: "Every session has been ended.",
+            sessionRevoked: "Session ended.",
+            otherSessionsRevoked: "The other sessions have been ended.",
             dataExported: "Your data has been downloaded.",
             accountDeleted: "Your account has been deleted.",
             loadError: "Your account could not be loaded.",
@@ -450,6 +508,33 @@ export const commonAccountPageTranslations = {
             signOutEverywhereConfirm:
                 "¿Seguro que quieres cerrar todas las sesiones?",
             signOutEverywhereAction: "Cerrar sesiones",
+            sessions: {
+                title: "Sesiones activas",
+                description:
+                    "Navegadores en los que tu cuenta tiene la sesión iniciada. El último uso se actualiza cada 15 minutos.",
+                columns: {
+                    device: "Dispositivo",
+                    signedInAt: "Inició sesión",
+                    lastSeenAt: "Último uso",
+                    actions: "Acciones",
+                },
+                current: "Esta sesión",
+                unknownDevice: "Dispositivo desconocido",
+                deviceTypes: {
+                    desktop: "Computadora",
+                    mobile: "Celular",
+                    tablet: "Tableta",
+                },
+                revoke: "Cerrar",
+                revokeAriaLabel: "Cerrar la sesión en {device}",
+                revokeOthers: "Cerrar las otras sesiones",
+                revokeOthersDescription:
+                    "Mantiene esta sesión y cierra las demás.",
+                revokeOthersConfirm:
+                    "¿Seguro que quieres cerrar todas las otras sesiones?",
+                revokeOthersAction: "Cerrar otras",
+                empty: "No hay sesiones activas.",
+            },
             cancel: "Cancelar",
             validation: {
                 required: "Indica la contraseña.",
@@ -552,6 +637,8 @@ export const commonAccountPageTranslations = {
                 "Enlace enviado al nuevo correo. El cambio ocurre cuando abras el enlace.",
             preferencesUpdated: "Preferencias actualizadas.",
             sessionsRevoked: "Se cerraron todas las sesiones.",
+            sessionRevoked: "Sesión cerrada.",
+            otherSessionsRevoked: "Se cerraron las otras sesiones.",
             dataExported: "Tus datos se han descargado.",
             accountDeleted: "Tu cuenta se ha eliminado.",
             loadError: "No se pudo cargar tu cuenta.",
