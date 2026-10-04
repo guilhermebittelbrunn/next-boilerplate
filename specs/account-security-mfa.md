@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/auth, packages/design-system, packages/inter
 mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
-feature: account-security-mfa
+feature: account-active-sessions
 updated: 2026-09-30
 ---
 
