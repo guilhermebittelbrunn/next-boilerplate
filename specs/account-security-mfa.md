@@ -219,7 +219,7 @@ eficácia.
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
       e na redefinição (`auth.schema.ts:23`, `:28`, `:82-83`), na troca (`account.schema.ts:47-48`, `:136-137`, âncoras remedidas em 2026-09-30)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:73`, `:192`, `:311`, remedidas em 2026-09-30). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:75`, `:196`, `:317`, remedidas em 2026-10-04). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
@@ -298,7 +298,7 @@ mergeada pela PR #35 (`1936369`) com CI verde, em dois pontos:
 - `getCurrentUser` recusa o bearer quando o `UserRecord` que já carrega vem com `disabled: true`
   (`packages/auth/server.ts:180-183`, sem chamada nova ao Firebase). A API responde `401 AUTH_INVALID_TOKEN`.
 - `PUT /users/[id]` com `disabled: true` chama `revokeUserSessions` depois do `updateUser`
-  (`apps/api/app/(routes)/users/[id]/route.ts:120-126`), então reativar a conta não devolve as sessões antigas.
+  (`apps/api/app/(routes)/users/[id]/route.ts:147-153`), então reativar a conta não devolve as sessões antigas.
 
 Os dois pontos são cobertos por teste de unidade com o Firebase mockado
 (`packages/auth/__tests__/serverSessionRevocation.test.ts` e `apps/api/__tests__/usersAdminAuditTrail.test.ts`).
