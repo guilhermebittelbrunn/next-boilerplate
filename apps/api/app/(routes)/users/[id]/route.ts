@@ -4,6 +4,7 @@ import {
     AuditAction,
     AuditTargetType,
     type UserDTO,
+    UserType,
 } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { logEvent } from "@repo/shared/utils/helpers/log";
@@ -26,12 +27,34 @@ import {
     type AdminUpdateUserInput,
     parseAdminUpdateUserInput,
 } from "@/(shared)/validation/user-admin.schema";
-import { requireAdminApi } from "@/app/(guards)/admin";
+import { type AdminAuthContext, requireAdminApi } from "@/app/(guards)/admin";
 
 /** Names only: recording the old and new values would copy the very data that changed. */
 function changedFieldsOf(patch: AdminUpdateUserInput): string[] {
     return Object.keys(patch).filter(
         (field) => patch[field as keyof AdminUpdateUserInput] !== undefined
+    );
+}
+
+/**
+ * Matched by uid, not by profile id: the disabled flag and the sessions belong to the
+ * Firebase Auth account, and more than one profile can point at it.
+ */
+function isOwnAccount(profile: UserDTO, ctx: AdminAuthContext): boolean {
+    return profile.reference_id === ctx.user.uid;
+}
+
+function locksOutOfPanel(patch: AdminUpdateUserInput): boolean {
+    return (
+        patch.disabled === true ||
+        (patch.type !== undefined && patch.type !== UserType.ADMIN)
+    );
+}
+
+function selfLockoutRefusal(): Response {
+    return Response.json(
+        { error: { code: "USERS_SELF_LOCKOUT_FORBIDDEN" } },
+        { status: HTTP_STATUS.FORBIDDEN }
     );
 }
 
@@ -105,6 +128,10 @@ export const PUT = requireAdminApi<RouteIdParamsContext>(async (req, ctx) => {
         return parsed.response;
     }
 
+    if (isOwnAccount(profile, ctx) && locksOutOfPanel(parsed.value)) {
+        return selfLockoutRefusal();
+    }
+
     if (parsed.value.type !== undefined) {
         await userRepository.update({ id, type: parsed.value.type });
     }
@@ -152,6 +179,10 @@ export const DELETE = requireAdminApi<RouteIdParamsContext>(
                 { error: { code: "USERS_NOT_FOUND" } },
                 { status: 404 }
             );
+        }
+
+        if (isOwnAccount(profile, ctx)) {
+            return selfLockoutRefusal();
         }
 
         // Read while the account is still there: the record that has to outlive the

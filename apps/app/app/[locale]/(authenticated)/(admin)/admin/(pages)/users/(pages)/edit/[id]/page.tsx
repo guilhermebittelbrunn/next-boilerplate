@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import useAuth from "@repo/auth/provider";
 import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
 import { UserType } from "@repo/sdk/src/types";
@@ -31,6 +32,10 @@ export default function EditUserPage() {
 
     const { data: user, isLoading, isError } = useFindUserById(id);
     const { updateUserMutation } = useUserCrud();
+    const { user: signedInUser } = useAuth();
+    const isOwnAccount = Boolean(
+        user && signedInUser && user.uid === signedInUser.uid
+    );
 
     const schema = useMemo(
         () => buildUpdateUserFormSchema(dictionary),
@@ -90,7 +95,10 @@ export default function EditUserPage() {
                         >
                             <Container className="p-0">
                                 <FormContainer>
-                                    <UserFormFields mode="update" />
+                                    <UserFormFields
+                                        lockType={isOwnAccount}
+                                        mode="update"
+                                    />
                                 </FormContainer>
                             </Container>
                             <Footer
