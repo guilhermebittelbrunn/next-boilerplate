@@ -1,13 +1,16 @@
 import type {
     AccountDataExportDTO,
     AccountDataExportRecord,
+    AccountDataExportSession,
     AccountDTO,
     AuditEventDTO,
     UserDTO,
 } from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
+import type { SessionRecord } from "../mappers/session.mapper";
 import { auditEventRepository } from "../repositories/audit-event.repository";
 import { entityRepository } from "../repositories/entity.repository";
+import { sessionRepository } from "../repositories/session.repository";
 import { resolvePreferences } from "./account-avatar";
 import { isStorageConfigured, listObjectPaths, ownerPrefix } from "./storage";
 import { getMergedUserByFirestoreDocId } from "./user-merge";
@@ -90,6 +93,18 @@ function toExportRecord(
     };
 }
 
+function toExportSession(session: SessionRecord): AccountDataExportSession {
+    return {
+        id: session.sessionKey,
+        browser: session.browser,
+        os: session.os,
+        deviceType: session.deviceType,
+        signedInAt: session.signedInAt,
+        lastSeenAt: session.lastSeenAt,
+        revokedAt: session.revokedAt,
+    };
+}
+
 async function readStorageObjects(
     profileId: string
 ): Promise<{ path: string }[]> {
@@ -115,14 +130,20 @@ export async function buildAccountDataExport(
         throw new AccountExportProfileMissingError(profile.id);
     }
 
-    const [entities, auditEvents, storageObjects] = await Promise.all([
-        entityRepository.findAllByUserId(profile.id, EXPORT_MAX_RECORDS),
-        auditEventRepository.findAllByInvolvedUserId(
-            profile.id,
-            EXPORT_MAX_RECORDS
-        ),
-        readStorageObjects(profile.id),
-    ]);
+    const [entities, auditEvents, storageObjects, sessions] = await Promise.all(
+        [
+            entityRepository.findAllByUserId(profile.id, EXPORT_MAX_RECORDS),
+            auditEventRepository.findAllByInvolvedUserId(
+                profile.id,
+                EXPORT_MAX_RECORDS
+            ),
+            readStorageObjects(profile.id),
+            sessionRepository.findAllByUid(
+                profile.reference_id,
+                EXPORT_MAX_RECORDS
+            ),
+        ]
+    );
 
     return {
         generatedAt: new Date().toISOString(),
@@ -140,5 +161,9 @@ export async function buildAccountDataExport(
             truncated: auditEvents.truncated,
         },
         storageObjects,
+        sessions: {
+            items: sessions.items.map(toExportSession),
+            truncated: sessions.truncated,
+        },
     };
 }

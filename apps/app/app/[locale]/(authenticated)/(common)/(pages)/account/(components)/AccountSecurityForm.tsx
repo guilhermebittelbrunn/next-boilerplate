@@ -27,6 +27,7 @@ import {
     type AccountPasswordFormValues,
     buildAccountPasswordSchema,
 } from "../(validations)/accountFormSchema";
+import { AccountSessionsPanel } from "./AccountSessionsPanel";
 
 export function AccountSecurityForm() {
     const { dictionary } = getDictionary();
@@ -50,8 +51,8 @@ export function AccountSecurityForm() {
         },
     });
 
-    // Firebase cannot revoke sessions selectively, so both actions below end the current
-    // one too: staying on a dead session would only fail the next request.
+    // A password change and "sign out everywhere" revoke every Firebase session of the
+    // account, this one included: staying on it would only fail the next request.
     const onSubmit = (values: AccountPasswordFormValues) => {
         changePasswordMutation.mutate(
             {
@@ -100,6 +101,8 @@ export function AccountSecurityForm() {
                     />
                 </form>
             </Form>
+
+            <AccountSessionsPanel />
 
             <div className="flex flex-col gap-2 rounded-lg border border-border p-4">
                 <span className="font-medium text-sm">

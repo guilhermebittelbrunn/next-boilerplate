@@ -1,5 +1,6 @@
 import { postAuthRedirectTarget } from "@repo/auth/redirect";
 import { getUserFromSessionCookie } from "@repo/auth/server";
+import { clearSessionCookie } from "@repo/auth/session";
 import { getDefaultLocale, locales } from "@repo/internationalization/utils";
 import { getBrandLogoOrigin } from "@repo/next-config/brand";
 import { secure } from "@repo/security";
@@ -11,6 +12,7 @@ import { handleClientError } from "@repo/shared/utils";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
+import { sessionAuthority } from "@/lib/server/sessionAuthority";
 import { APP_PATH_HEADER } from "@/shared/lib/onboarding";
 
 const IDENTITY_TOOLKIT_ORIGIN = "https://identitytoolkit.googleapis.com";
@@ -154,6 +156,22 @@ export default async function proxy(request: NextRequest) {
     return applySecurityHeaders(await route(request), securityOptions);
 }
 
+/**
+ * Firebase still accepts the cookie of a session ended from another device; only the API
+ * knows it ended. Bouncing that visitor home would loop, since the layout refuses the
+ * session and sends them back to sign-in.
+ */
+async function isEndedElsewhere(
+    token: string,
+    request: NextRequest
+): Promise<boolean> {
+    const standing = await sessionAuthority.check(
+        token,
+        request.headers.get("user-agent")
+    );
+    return standing === "revoked";
+}
+
 async function route(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
@@ -194,20 +212,24 @@ async function route(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
-    if (isPublic && sessionUser && !isOobActionPath(appPath)) {
-        // Honour the deep link the unauthenticated redirect stored, so returning through
-        // sign-in lands where the visitor was going. The role lives in Firestore, not in
-        // the session cookie, so resolving admin vs common here would cost an API call on
-        // the hot path: fall back to the common home and let `(common)/layout.tsx` forward
-        // admins to /admin — one server-side hop, no visible flash.
-        const target = postAuthRedirectTarget(
-            request.nextUrl.searchParams.get("redirect"),
-            `/${currentLocale}`
-        );
-        const redirectUrl = request.nextUrl.clone();
-        redirectUrl.search = "";
-        redirectUrl.pathname = target;
-        return NextResponse.redirect(redirectUrl);
+    if (isPublic && token && sessionUser && !isOobActionPath(appPath)) {
+        if (await isEndedElsewhere(token, request)) {
+            await clearSessionCookie();
+        } else {
+            // Honour the deep link the unauthenticated redirect stored, so returning through
+            // sign-in lands where the visitor was going. The role lives in Firestore, not in
+            // the session cookie, so resolving admin vs common here would cost an API call on
+            // the hot path: fall back to the common home and let `(common)/layout.tsx` forward
+            // admins to /admin — one server-side hop, no visible flash.
+            const target = postAuthRedirectTarget(
+                request.nextUrl.searchParams.get("redirect"),
+                `/${currentLocale}`
+            );
+            const redirectUrl = request.nextUrl.clone();
+            redirectUrl.search = "";
+            redirectUrl.pathname = target;
+            return NextResponse.redirect(redirectUrl);
+        }
     }
 
     const arcjetResponse = await arcjetMiddleware(request);

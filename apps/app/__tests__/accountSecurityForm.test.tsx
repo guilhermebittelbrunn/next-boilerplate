@@ -37,6 +37,11 @@ vi.mock(
     })
 );
 
+vi.mock(
+    "@/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountSessionsPanel",
+    () => ({ AccountSessionsPanel: () => null })
+);
+
 vi.mock("next/navigation", () => ({
     useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
     useParams: () => ({ locale: "pt-br" }),

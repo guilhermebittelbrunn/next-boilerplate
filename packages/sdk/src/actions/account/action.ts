@@ -5,6 +5,8 @@ import type {
     AccountDataExportDTO,
     AccountDTO,
     AccountEmailChangeRequested,
+    AccountOtherSessionsRevoked,
+    AccountSessionDTO,
     AdvanceOnboardingRequest,
     ChangeEmailRequest,
     ChangePasswordRequest,
@@ -116,6 +118,36 @@ export default class AccountActions {
             Response<AccountConfirmation>
         >({
             url: "/account/sessions/revoke",
+            method: "POST",
+        });
+
+        return data.data;
+    }
+
+    async listSessions(): Promise<AccountSessionDTO[]> {
+        const { data } = await this.client.request<
+            Response<AccountSessionDTO[]>
+        >({
+            url: "/account/sessions",
+            method: "GET",
+        });
+
+        return data.data;
+    }
+
+    async revokeSession(id: string): Promise<void> {
+        await this.client.request({
+            url: `/account/sessions/${encodeURIComponent(id)}`,
+            method: "DELETE",
+        });
+    }
+
+    /** Keeps the session making the call. */
+    async revokeOtherSessions(): Promise<AccountOtherSessionsRevoked> {
+        const { data } = await this.client.request<
+            Response<AccountOtherSessionsRevoked>
+        >({
+            url: "/account/sessions/revoke-others",
             method: "POST",
         });
 

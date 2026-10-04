@@ -27,6 +27,12 @@ vi.mock("@repo/auth/server", () => ({
 
 vi.mock("@repo/security", () => ({ secure: vi.fn() }));
 
+vi.mock("@repo/auth/session", () => ({ clearSessionCookie: vi.fn() }));
+
+vi.mock("@/lib/server/sessionAuthority", () => ({
+    sessionAuthority: { check: vi.fn(), end: vi.fn() },
+}));
+
 vi.mock("next/headers", () => ({
     cookies: () => Promise.resolve({ set: vi.fn() }),
 }));

@@ -1,17 +1,34 @@
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getUserFromSessionCookieMock, secureMock, cookieSetMock } = vi.hoisted(
-    () => ({
-        getUserFromSessionCookieMock: vi.fn(),
-        secureMock: vi.fn(),
-        cookieSetMock: vi.fn(),
-    })
-);
+const {
+    getUserFromSessionCookieMock,
+    secureMock,
+    cookieSetMock,
+    sessionCheckMock,
+    clearSessionCookieMock,
+} = vi.hoisted(() => ({
+    getUserFromSessionCookieMock: vi.fn(),
+    secureMock: vi.fn(),
+    cookieSetMock: vi.fn(),
+    sessionCheckMock: vi.fn(),
+    clearSessionCookieMock: vi.fn(),
+}));
 
 vi.mock("@repo/auth/server", () => ({
     getUserFromSessionCookie: (...args: unknown[]) =>
         getUserFromSessionCookieMock(...args),
+}));
+
+vi.mock("@repo/auth/session", () => ({
+    clearSessionCookie: () => clearSessionCookieMock(),
+}));
+
+vi.mock("@/lib/server/sessionAuthority", () => ({
+    sessionAuthority: {
+        check: (...args: unknown[]) => sessionCheckMock(...args),
+        end: vi.fn(),
+    },
 }));
 
 vi.mock("@repo/security", () => ({
@@ -35,13 +52,16 @@ function makeNextUrl(href: string) {
     return url;
 }
 
+const BROWSER_UA =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
+
 function makeRequest(path: string, options?: { token?: string }) {
     const href = `${ORIGIN}${path}`;
     return {
         method: "GET",
         url: href,
         nextUrl: makeNextUrl(href),
-        headers: new Headers(),
+        headers: new Headers({ "user-agent": BROWSER_UA }),
         cookies: {
             get: (name: string) =>
                 name === "access-token" && options?.token
@@ -70,6 +90,10 @@ beforeEach(() => {
     getUserFromSessionCookieMock.mockReset();
     secureMock.mockReset();
     cookieSetMock.mockReset();
+    sessionCheckMock.mockReset();
+    sessionCheckMock.mockResolvedValue("active");
+    clearSessionCookieMock.mockReset();
+    clearSessionCookieMock.mockResolvedValue(undefined);
 });
 
 describe("proxy static assets", () => {
@@ -195,6 +219,40 @@ describe("proxy bounce off the public paths", () => {
 
             expect(locationOf(response)).toBe("/pt-br");
         }
+    });
+});
+
+describe("proxy and a session ended from another device", () => {
+    it("drops the cookie and serves sign-in instead of bouncing home", async () => {
+        sessionCheckMock.mockResolvedValue("revoked");
+
+        const response = await proxy(signedIn("/pt-br/sign-in"));
+
+        expect(locationOf(response)).toBeNull();
+        expect(sessionCheckMock).toHaveBeenCalledWith(
+            "session-cookie",
+            BROWSER_UA
+        );
+        expect(clearSessionCookieMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("still bounces home when the API confirms the session or does not answer", async () => {
+        for (const standing of ["active", "unknown"]) {
+            sessionCheckMock.mockResolvedValue(standing);
+
+            const response = await proxy(signedIn("/pt-br/sign-in"));
+
+            expect(locationOf(response)).toBe("/pt-br");
+        }
+        expect(clearSessionCookieMock).not.toHaveBeenCalled();
+    });
+
+    it("does not ask the API on an authenticated route or without a cookie", async () => {
+        await proxy(signedIn("/pt-br/entities"));
+        await proxy(anonymous("/pt-br/sign-in"));
+        await proxy(signedIn("/pt-br/reset-password?oobCode=abc123"));
+
+        expect(sessionCheckMock).not.toHaveBeenCalled();
     });
 });
 

@@ -46,6 +46,30 @@ export type AccountConfirmation = {
     confirmed: boolean;
 };
 
+export type AccountSessionDeviceType = "desktop" | "mobile" | "tablet";
+
+/**
+ * A browser where the account is signed in. App and web opened in the same browser share
+ * one session, because the second front-end inherits the sign-in of the first.
+ */
+export type AccountSessionDTO = {
+    /** Instant, in seconds, of the sign-in that started the session. */
+    id: string;
+    current: boolean;
+    browser: string | null;
+    os: string | null;
+    deviceType: AccountSessionDeviceType | null;
+    signedInAt: string;
+    /** Advances at most once every 15 minutes. */
+    lastSeenAt: string;
+};
+
+export type AccountOtherSessionsRevoked = { revoked: number };
+
+export type AccountDataExportSession = Omit<AccountSessionDTO, "current"> & {
+    revokedAt: string | null;
+};
+
 export type AccountDataExportRecord = {
     action: string;
     /** Who acted, without naming anyone else: the data subject, or an operator. */
@@ -68,6 +92,7 @@ export type AccountDataExportDTO = {
     records: { entities: EntityDTO[]; truncated: boolean };
     auditEvents: { items: AccountDataExportRecord[]; truncated: boolean };
     storageObjects: { path: string }[];
+    sessions: { items: AccountDataExportSession[]; truncated: boolean };
 };
 
 export type DeleteAccountRequest = {

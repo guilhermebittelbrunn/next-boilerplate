@@ -44,14 +44,24 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 const UNAUTHORIZED_STATUS = 401;
 const SESSION_EXPIRED_CODE = "AUTH_SESSION_EXPIRED";
+const SESSION_REVOKED_CODE = "AUTH_SESSION_REVOKED";
 const NO_SESSION_CODE = "AUTH_NO_SESSION";
+
+type SessionEndReason = "expired" | "revoked";
 
 type RefreshOutcome =
     | "refreshed"
     | "skipped"
     | "no-session"
-    | "expired"
+    | SessionEndReason
     | "error";
+
+function sessionEndReasonFor(code: string | null): SessionEndReason | null {
+    if (code === SESSION_EXPIRED_CODE) {
+        return "expired";
+    }
+    return code === SESSION_REVOKED_CODE ? "revoked" : null;
+}
 
 async function readErrorCode(response: Response): Promise<string | null> {
     try {
@@ -120,7 +130,7 @@ export function AuthProvider({
     // Bootstrap-from-cookie is attempted at most once per mount (avoid loops).
     const bootstrapAttemptedRef = useRef(false);
     // Concurrent ID-token callbacks would otherwise each alert and each push to sign-in.
-    const sessionExpiredHandledRef = useRef(false);
+    const sessionEndHandledRef = useRef(false);
     const { dictionary, locale } = useDictionary();
 
     const redirectPath = () => getRedirectPath?.() ?? `/${locale}`;
@@ -197,7 +207,8 @@ export function AuthProvider({
     /**
      * Asks the server to slide the session cookie forward. The server throttles, so
      * calling it on every ID-token refresh costs a cheap `{ refreshed: false }` most
-     * of the time. Only the absolute-lifetime refusal is actionable by the client.
+     * of the time. Only a session that is over for good — past its absolute lifetime, or
+     * ended from another device — is actionable by the client.
      */
     const refreshSessionCookie = useCallback(
         async (idToken: string): Promise<RefreshOutcome> => {
@@ -218,8 +229,9 @@ export function AuthProvider({
                     return "error";
                 }
                 const code = await readErrorCode(res);
-                if (code === SESSION_EXPIRED_CODE) {
-                    return "expired";
+                const ended = sessionEndReasonFor(code);
+                if (ended) {
+                    return ended;
                 }
                 return code === NO_SESSION_CODE ? "no-session" : "error";
             } catch {
@@ -230,34 +242,37 @@ export function AuthProvider({
     );
 
     /** The server already cleared the shared cookie, so signing out locally is enough. */
-    const handleSessionExpired = useCallback(async () => {
-        if (sessionExpiredHandledRef.current) {
-            return;
-        }
-        sessionExpiredHandledRef.current = true;
-        await logout();
-        setAccessToken(null);
-        errorAlert(dictionary.packages.auth.provider.session.expired);
-        const signInPath = `/${locale}/sign-in`;
-        const destination = expiredSessionOrigin(signInPath);
-        router.push(
-            destination
-                ? `${signInPath}?redirect=${encodeURIComponent(destination)}`
-                : signInPath
-        );
-    }, [dictionary, errorAlert, locale, router]);
+    const handleSessionEnded = useCallback(
+        async (reason: SessionEndReason) => {
+            if (sessionEndHandledRef.current) {
+                return;
+            }
+            sessionEndHandledRef.current = true;
+            await logout();
+            setAccessToken(null);
+            errorAlert(dictionary.packages.auth.provider.session[reason]);
+            const signInPath = `/${locale}/sign-in`;
+            const destination = expiredSessionOrigin(signInPath);
+            router.push(
+                destination
+                    ? `${signInPath}?redirect=${encodeURIComponent(destination)}`
+                    : signInPath
+            );
+        },
+        [dictionary, errorAlert, locale, router]
+    );
 
     /**
      * `useDictionary()` and `useAlert()` return fresh references on every render, so
-     * `handleSessionExpired` changes identity on every render too. Reading it through a
+     * `handleSessionEnded` changes identity on every render too. Reading it through a
      * ref keeps it out of the ID-token subscription's dependencies — otherwise the
      * subscription would be torn down and re-created on each render, re-running the
      * whole sign-in side effect every time.
      */
-    const sessionExpiredRef = useRef(handleSessionExpired);
+    const sessionEndedRef = useRef(handleSessionEnded);
     useEffect(() => {
-        sessionExpiredRef.current = handleSessionExpired;
-    }, [handleSessionExpired]);
+        sessionEndedRef.current = handleSessionEnded;
+    }, [handleSessionEnded]);
 
     const applySignedInUser = useCallback(
         async (firebaseUser: User) => {
@@ -268,21 +283,22 @@ export function AuthProvider({
                 const outcome = await refreshSessionCookie(token);
                 if (outcome === "no-session") {
                     await syncSessionCookie(token);
-                } else if (outcome === "expired") {
-                    await sessionExpiredRef.current();
+                } else if (outcome === "expired" || outcome === "revoked") {
+                    await sessionEndedRef.current(outcome);
                 } else {
-                    sessionExpiredHandledRef.current = false;
+                    sessionEndHandledRef.current = false;
                 }
             } catch (error) {
                 setAccessToken(null);
-                // The cookie is gone and the absolute lifetime forbids minting a new
-                // one: without signing the Firebase user out here, every screen still
-                // sees a signed-in user and keeps bouncing off the proxy.
-                if (
-                    error instanceof SessionCookieRejectedError &&
-                    error.code === SESSION_EXPIRED_CODE
-                ) {
-                    await sessionExpiredRef.current();
+                // The cookie is gone and the server forbids minting a new one: without
+                // signing the Firebase user out here, every screen still sees a
+                // signed-in user and keeps bouncing off the proxy.
+                const ended =
+                    error instanceof SessionCookieRejectedError
+                        ? sessionEndReasonFor(error.code)
+                        : null;
+                if (ended) {
+                    await sessionEndedRef.current(ended);
                 }
             }
         },

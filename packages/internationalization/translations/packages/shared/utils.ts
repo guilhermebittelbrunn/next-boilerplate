@@ -42,6 +42,14 @@ export const sharedUtilsTranslations = {
                 "Não foi possível salvar a sua conta. Tente de novo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "Não foi possível encerrar as sessões. Tente de novo.",
+            AUTH_SESSION_REVOKED:
+                "Esta sessão foi encerrada. Entre novamente para continuar.",
+            ACCOUNT_SESSION_NOT_FOUND:
+                "Sessão não encontrada. Atualize a lista e tente de novo.",
+            ACCOUNT_SESSION_IS_CURRENT:
+                "Esta é a sessão que você está usando. Para encerrá-la, use Sair.",
+            ACCOUNT_SESSION_UNIDENTIFIED:
+                "Não foi possível identificar esta sessão. Entre novamente e tente de novo.",
             ACCOUNT_EXPORT_IMPERSONATION_FORBIDDEN:
                 "Não é possível exportar os dados enquanto você atua como outro usuário.",
             ACCOUNT_EXPORT_FAILED:
@@ -165,6 +173,14 @@ export const sharedUtilsTranslations = {
                 "Your account could not be saved. Try again.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "The sessions could not be ended. Try again.",
+            AUTH_SESSION_REVOKED:
+                "This session was ended. Sign in again to continue.",
+            ACCOUNT_SESSION_NOT_FOUND:
+                "Session not found. Refresh the list and try again.",
+            ACCOUNT_SESSION_IS_CURRENT:
+                "This is the session you are using. Use Sign out to end it.",
+            ACCOUNT_SESSION_UNIDENTIFIED:
+                "This session could not be identified. Sign in again and retry.",
             ACCOUNT_EXPORT_IMPERSONATION_FORBIDDEN:
                 "Data cannot be exported while you are acting as another user.",
             ACCOUNT_EXPORT_FAILED:
@@ -289,6 +305,14 @@ export const sharedUtilsTranslations = {
                 "No se pudo guardar tu cuenta. Inténtalo de nuevo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "No se pudieron cerrar las sesiones. Inténtalo de nuevo.",
+            AUTH_SESSION_REVOKED:
+                "Esta sesión fue cerrada. Inicia sesión de nuevo para continuar.",
+            ACCOUNT_SESSION_NOT_FOUND:
+                "Sesión no encontrada. Actualiza la lista e inténtalo de nuevo.",
+            ACCOUNT_SESSION_IS_CURRENT:
+                "Esta es la sesión que estás usando. Para cerrarla, usa Salir.",
+            ACCOUNT_SESSION_UNIDENTIFIED:
+                "No se pudo identificar esta sesión. Inicia sesión de nuevo e inténtalo otra vez.",
             ACCOUNT_EXPORT_IMPERSONATION_FORBIDDEN:
                 "No se pueden exportar los datos mientras actúas como otro usuario.",
             ACCOUNT_EXPORT_FAILED:

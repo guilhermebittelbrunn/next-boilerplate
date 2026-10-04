@@ -83,7 +83,7 @@ escreveu (`apps/web/proxy.ts:56,60`). O `[locale]` é decorativo para data loadi
 
 - `apps/api/proxy.ts` — CORS, 2 chamadas de `NextResponse`
 - `(routes)/webhooks/payments/route.ts:4,43-44` — `headers()` do `next/headers` (1 linha, substituível por `request.headers`)
-- `(shared)/lib/resolve-api-actor.ts:34` — `req.cookies.get(...)`, o único membro Next-específico de `NextRequest` realmente usado em todo o app
+- `(shared)/lib/resolve-api-actor.ts:45` — `req.cookies.get(...)`, o único membro Next-específico de `NextRequest` realmente usado em todo o app
 - `app/layout.tsx` + `app/global-error.tsx` — **vestígio de UI que arrasta `@repo/design-system` + geist para dentro de uma API JSON**
 
 O raw body do Stripe já funciona sem gambiarra (`await request.text()`, `route.ts:42`) — isso é web

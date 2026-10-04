@@ -4,6 +4,8 @@ export const authTranslations = {
             onSuccess: "Login realizado com sucesso!",
             session: {
                 expired: "Sua sessão expirou. Entre novamente para continuar.",
+                revoked:
+                    "Esta sessão foi encerrada. Entre novamente para continuar.",
             },
             firebase: {
                 error: {
@@ -31,6 +33,7 @@ export const authTranslations = {
             onSuccess: "Login successful!",
             session: {
                 expired: "Your session has expired. Sign in again to continue.",
+                revoked: "This session was ended. Sign in again to continue.",
             },
             firebase: {
                 error: {
@@ -60,6 +63,8 @@ export const authTranslations = {
             session: {
                 expired:
                     "Tu sesión ha expirado. Inicia sesión de nuevo para continuar.",
+                revoked:
+                    "Esta sesión fue cerrada. Inicia sesión de nuevo para continuar.",
             },
             firebase: {
                 error: {

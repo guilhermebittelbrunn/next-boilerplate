@@ -12,6 +12,7 @@ export const queryKeys = {
     account: {
         all: ["account"] as const,
         me: () => [...queryKeys.account.all, "me"] as const,
+        sessions: () => [...queryKeys.account.all, "sessions"] as const,
     },
     auditEvents: {
         all: ["auditEvents"] as const,
