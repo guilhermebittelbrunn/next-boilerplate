@@ -451,8 +451,13 @@ para quem vende assinatura; quem não vende pula inteiro.
 
 - [ ] Produtos e preços **recorrentes** criados no Dashboard da Stripe
 - [ ] Customer Portal configurado (cancelamento, troca de plano, cartão; reembolso conforme a lei)
-- [ ] Endpoint `https://<api>/webhooks/payments` registrado na versão `2025-09-30.clover`, com os cinco eventos
-      (inclui `invoice.paid`)
+- [ ] Endpoint `https://<api>/webhooks/payments` registrado na versão `2025-09-30.clover`, com os seis eventos
+      (inclui `invoice.paid` e `entitlements.active_entitlement_summary.updated`)
+- [ ] Recursos (Product catalog → Features) cadastrados com o `lookup_key` que o código do fork pede e ligados
+      aos produtos que os incluem, se o fork usa gate por recurso
+- [ ] Conferir na conta Stripe se o Entitlements tem custo: a documentação lida em 2026-09-30 não fala em preço
+- [ ] Opcional, só para ver a demonstração do gate: `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE` com o mesmo valor na
+      `apps/api` e na `apps/app`
 - [ ] `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` na `apps/api` (Vercel)
 - [ ] `NEXT_PUBLIC_APP_URL` na `apps/api` e na `apps/web`; `NEXT_PUBLIC_PRODUCT_MODE` igual nos três apps
 - [ ] Opcional: TTL do Firestore em `paymentEvent.expiresAt`, e em nenhuma outra coleção de cobrança
@@ -478,11 +483,17 @@ evento. Um fork que já vendia começa receita e contratações do zero no dia e
 cadastrado, porque faturas antigas não são importadas. Os nomes de plano aparecem conforme os eventos de cada
 preço chegam, o que leva até um ciclo de cobrança; até lá o gráfico mostra "Plano sem nome".
 
+Sem `entitlements.active_entitlement_summary.updated` no endpoint, ou sem recursos cadastrados na Stripe,
+nenhum perfil recebe a lista de recursos. O gate por status (`requirePlanApi` com `{}`) funciona; o gate por
+recurso responde 403 `PLAN_FEATURE_REQUIRED` a todo assinante. Com a cobrança desligada, nenhum dos dois
+bloqueia: `planAccess.enforced` vem `false`. Com `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE` vazia, a criação de
+`entity` não tem gate nenhum.
+
 **Risco aceito: assinatura duplicada.** O checkout só recusa com 409 `PAYMENTS_SUBSCRIPTION_ALREADY_ACTIVE`
 quando o perfil já tem uma assinatura viva gravada (`apps/api/app/(routes)/payments/checkout/route.ts:41`).
 Se a pessoa abrir o checkout em duas abas e pagar nas duas antes de o primeiro webhook chegar, a Stripe cria
 duas assinaturas. O perfil fica com a mais recente (`decideSubscriptionWrite`,
-`apps/api/(shared)/lib/billing-state.ts:141-147`) e tanto a exclusão de conta quanto o arquivamento pelo admin cancelam só essa
+`apps/api/(shared)/lib/billing-state.ts:207-214`) e tanto a exclusão de conta quanto o arquivamento pelo admin cancelam só essa
 (`apps/api/(shared)/lib/account-erasure.ts:95`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
 a sobrescrita foi aceita. Quem precisar fechar o caso antes do release:
 
@@ -512,10 +523,12 @@ O custo é uma chamada a mais à Stripe por checkout. Para saber se já acontece
    - URL: `https://<host-da-api>/webhooks/payments`
    - Versão de API: **`2025-09-30.clover`** (a mesma de `packages/payments/index.ts`)
    - Eventos: `checkout.session.completed`, `customer.subscription.created`,
-     `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`
+     `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`,
+     `entitlements.active_entitlement_summary.updated`
 
-   Num endpoint que já existe, edite-o e acrescente `invoice.paid` à lista de eventos. É esse evento que
-   alimenta a receita e as contratações recentes da home do admin.
+   Num endpoint que já existe, edite-o e acrescente o que faltar. `invoice.paid` alimenta a receita e as
+   contratações recentes da home do admin; `entitlements.active_entitlement_summary.updated` grava no perfil
+   os recursos do plano, que o gate por recurso consulta.
 
    Copie o *Signing secret* (`whsec_…`).
 4. **Variáveis**, no painel da Vercel de cada app:
@@ -523,10 +536,17 @@ O custo é uma chamada a mais à Stripe por checkout. Para saber se já acontece
    - `apps/api` e `apps/web` → `NEXT_PUBLIC_APP_URL` com o host real da `apps/app`
    - `NEXT_PUBLIC_PRODUCT_MODE` com o mesmo valor em `apps/api`, `apps/app` e `apps/web` (ausente vale
      `subscription`)
+   - Opcional: `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE` com o mesmo `lookup_key` em `apps/api` e `apps/app`,
+     para a criação de `entity` exigir aquele recurso. Na `apps/app` o valor entra no build: mudar pede
+     novo deploy.
 
    Uma chave com o prefixo errado (`pk_` no lugar de `sk_`) derruba o `next build` da API com
    `Invalid environment variables`. `apps/app` e `apps/web` não leem as chaves da Stripe.
-5. **TTL (opcional).** A coleção `paymentEvent` guarda um documento por evento processado. Para ela não
+5. **Recursos do plano (só para gate por recurso).** Dashboard → Product catalog → Features → *Create
+   feature*, com o `lookup_key` exato que o código pede (até 80 caracteres). Depois, em cada produto que
+   inclui o recurso, acrescente-o em *Features*. Quem já assina recebe o recurso só a partir do próximo
+   ciclo, segundo a documentação de Entitlements da Stripe.
+6. **TTL (opcional).** A coleção `paymentEvent` guarda um documento por evento processado. Para ela não
    crescer para sempre:
    ```bash
    gcloud firestore fields ttls update expiresAt \

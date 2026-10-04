@@ -10,9 +10,12 @@ import { useForm } from "react-hook-form";
 import { Container } from "@/shared/components/ui/Container";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { FormSkeleton } from "@/shared/components/ui/FormSkeleton";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { PlanGate } from "@/shared/components/ui/PlanGate";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
+import { entityPlanRequirement } from "@/shared/lib/entityPlanRequirement";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../paths";
 import { EntityFormFields } from "../../(components)/EntityFormFields";
@@ -56,6 +59,34 @@ export default function CreateEntityPage() {
         });
     };
 
+    const planRequirement = entityPlanRequirement();
+
+    const createForm = (
+        <Form {...form}>
+            <form
+                className="flex min-h-[50vh] w-full flex-1 flex-col"
+                onSubmit={form.handleSubmit(onSubmit)}
+            >
+                <Container className="flex flex-col gap-4 p-0">
+                    <ImpersonationReadOnlyNotice />
+                    <FormContainer>
+                        <EntityFormFields
+                            mode="create"
+                            uploadPhoto={uploadFile}
+                        />
+                    </FormContainer>
+                </Container>
+                <Footer
+                    confirmLabel={entitiesForm.save}
+                    disabled={isImpersonating || isUploading}
+                    isLoading={createEntityMutation.isPending}
+                    onBack={() => router.push(routes.entities.list.url)}
+                    showBack
+                />
+            </form>
+        </Form>
+    );
+
     return (
         <>
             <Header
@@ -69,29 +100,16 @@ export default function CreateEntityPage() {
                 page={routes.entities.create.label}
             />
             <Container contentOnly>
-                <Form {...form}>
-                    <form
-                        className="flex min-h-[50vh] w-full flex-1 flex-col"
-                        onSubmit={form.handleSubmit(onSubmit)}
+                {planRequirement ? (
+                    <PlanGate
+                        loadingFallback={<FormSkeleton />}
+                        requirement={planRequirement}
                     >
-                        <Container className="flex flex-col gap-4 p-0">
-                            <ImpersonationReadOnlyNotice />
-                            <FormContainer>
-                                <EntityFormFields
-                                    mode="create"
-                                    uploadPhoto={uploadFile}
-                                />
-                            </FormContainer>
-                        </Container>
-                        <Footer
-                            confirmLabel={entitiesForm.save}
-                            disabled={isImpersonating || isUploading}
-                            isLoading={createEntityMutation.isPending}
-                            onBack={() => router.push(routes.entities.list.url)}
-                            showBack
-                        />
-                    </form>
-                </Form>
+                        {createForm}
+                    </PlanGate>
+                ) : (
+                    createForm
+                )}
             </Container>
         </>
     );

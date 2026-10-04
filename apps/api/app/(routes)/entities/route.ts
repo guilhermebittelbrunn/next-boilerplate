@@ -5,6 +5,7 @@ import {
     withPhotoUrl,
     withPhotoUrls,
 } from "@/(shared)/lib/entity-photo";
+import { entityPlanRequirement } from "@/(shared)/lib/entity-plan";
 import { encodeCursor, isMissingIndexError } from "@/(shared)/lib/pagination";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import { PaginationCursorError } from "@/(shared)/repositories/base.repository";
@@ -12,6 +13,7 @@ import { entityRepository } from "@/(shared)/repositories/entity.repository";
 import { parseCreateEntity } from "@/(shared)/validation/entity.schema";
 import { parseListQuery } from "@/(shared)/validation/pagination.schema";
 import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
+import { requirePlanApi } from "@/app/(guards)/plan";
 
 const STATUS_CREATED = 201;
 
@@ -52,7 +54,7 @@ export const GET = requireCommonPanelApi(async (req, ctx) => {
     }
 });
 
-export const POST = requireCommonPanelApi(async (req, ctx) => {
+export const POST = requirePlanApi(entityPlanRequirement, async (req, ctx) => {
     const parsedBody = await parseRequestJson(req);
     if (!parsedBody.ok) {
         return parsedBody.response;

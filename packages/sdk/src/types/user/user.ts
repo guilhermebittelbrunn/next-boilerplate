@@ -1,5 +1,6 @@
 /** biome-ignore-all lint/style/noEnum: enums for role */
 import type { SubscriptionState } from "../payments/payments";
+import type { EntitlementsState } from "../payments/plan-access";
 
 export enum UserType {
     ADMIN = "admin",
@@ -63,6 +64,8 @@ export type UserDTO = {
     stripeCustomerId?: string | null;
     /** Written only by the payments webhook. Absent means the profile never subscribed. */
     subscription?: SubscriptionState | null;
+    /** Written only by the payments webhook. Absent means no feature was ever granted. */
+    entitlements?: EntitlementsState | null;
 };
 
 export type AdminCreateUserRequest = {

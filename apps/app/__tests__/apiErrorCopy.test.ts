@@ -102,6 +102,32 @@ describe("API error code to user copy", () => {
     });
 });
 
+describe("refused by the plan check", () => {
+    const planRefusal = (code: string) =>
+        apiError(HTTP_STATUS.FORBIDDEN, { error: { code } });
+
+    it("tells a missing feature apart from a missing subscription in every locale", () => {
+        expect(copyFor(planRefusal("PLAN_FEATURE_REQUIRED"), "pt-br")).toBe(
+            "O seu plano não inclui este recurso."
+        );
+        expect(copyFor(planRefusal("PLAN_FEATURE_REQUIRED"), "en")).toBe(
+            "Your plan does not include this feature."
+        );
+        expect(copyFor(planRefusal("PLAN_FEATURE_REQUIRED"), "es")).toBe(
+            "Tu plan no incluye esta función."
+        );
+        expect(
+            copyFor(planRefusal("PLAN_SUBSCRIPTION_REQUIRED"), "pt-br")
+        ).toBe("Esta ação exige uma assinatura ativa.");
+        expect(copyFor(planRefusal("PLAN_SUBSCRIPTION_REQUIRED"), "en")).toBe(
+            "This action requires an active subscription."
+        );
+        expect(copyFor(planRefusal("PLAN_SUBSCRIPTION_REQUIRED"), "es")).toBe(
+            "Esta acción requiere una suscripción activa."
+        );
+    });
+});
+
 const RETRY_AFTER_SECONDS = 43;
 
 /**

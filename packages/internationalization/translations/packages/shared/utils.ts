@@ -63,6 +63,8 @@ export const sharedUtilsTranslations = {
                 "Não há assinatura para gerenciar nesta conta.",
             PAYMENTS_PROVIDER_UNAVAILABLE:
                 "O serviço de pagamento não respondeu. Tente de novo em instantes.",
+            PLAN_SUBSCRIPTION_REQUIRED: "Esta ação exige uma assinatura ativa.",
+            PLAN_FEATURE_REQUIRED: "O seu plano não inclui este recurso.",
             ONBOARDING_STEP_NOT_SKIPPABLE: "Este passo não pode ser pulado.",
             ONBOARDING_STEP_OUT_OF_ORDER:
                 "Seu progresso mudou em outra aba. Atualizamos para o passo certo.",
@@ -184,6 +186,9 @@ export const sharedUtilsTranslations = {
                 "There is no subscription to manage on this account.",
             PAYMENTS_PROVIDER_UNAVAILABLE:
                 "The payment service did not respond. Try again in a moment.",
+            PLAN_SUBSCRIPTION_REQUIRED:
+                "This action requires an active subscription.",
+            PLAN_FEATURE_REQUIRED: "Your plan does not include this feature.",
             ONBOARDING_STEP_NOT_SKIPPABLE: "This step cannot be skipped.",
             ONBOARDING_STEP_OUT_OF_ORDER:
                 "Your progress changed in another tab. We moved you to the right step.",
@@ -305,6 +310,9 @@ export const sharedUtilsTranslations = {
                 "No hay ninguna suscripción que gestionar en esta cuenta.",
             PAYMENTS_PROVIDER_UNAVAILABLE:
                 "El servicio de pago no respondió. Inténtalo de nuevo en unos instantes.",
+            PLAN_SUBSCRIPTION_REQUIRED:
+                "Esta acción requiere una suscripción activa.",
+            PLAN_FEATURE_REQUIRED: "Tu plan no incluye esta función.",
             ONBOARDING_STEP_NOT_SKIPPABLE: "Este paso no se puede omitir.",
             ONBOARDING_STEP_OUT_OF_ORDER:
                 "Tu progreso cambió en otra pestaña. Te llevamos al paso correcto.",

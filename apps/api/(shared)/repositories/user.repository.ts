@@ -1,6 +1,7 @@
 import { getAuthInstance } from "@repo/auth/server";
 import type {
     BillingSubscriberDTO,
+    EntitlementsState,
     PlanInterval,
     SubscriptionState,
     UserActivitySummaryDTO,
@@ -16,7 +17,10 @@ import {
     buildActivityRecencyRanges,
     INACTIVE_AFTER_DAYS,
 } from "../lib/activity-windows";
-import { decideSubscriptionWrite } from "../lib/billing-state";
+import {
+    decideEntitlementsWrite,
+    decideSubscriptionWrite,
+} from "../lib/billing-state";
 import {
     mergeAuthAndFirestore,
     serializeFirestoreData,
@@ -109,6 +113,35 @@ class UserRepository extends BaseRepository<UserDTO> {
 
             transaction.update(ref, {
                 subscription: next,
+                updatedAt: new Date(),
+            });
+            return "applied";
+        });
+    }
+
+    /** Same transaction shape as `applySubscriptionState`, for the same race. */
+    applyEntitlementsState(
+        id: string,
+        next: EntitlementsState
+    ): Promise<"applied" | "skipped" | "missing"> {
+        const ref = this.db.collection(this.table).doc(id);
+
+        return this.db.runTransaction(async (transaction) => {
+            const snapshot = await transaction.get(ref);
+            if (!snapshot.exists) {
+                return "missing";
+            }
+
+            const decision = decideEntitlementsWrite(
+                snapshot.data()?.entitlements,
+                next
+            );
+            if (decision.kind === "skip") {
+                return "skipped";
+            }
+
+            transaction.update(ref, {
+                entitlements: next,
                 updatedAt: new Date(),
             });
             return "applied";
