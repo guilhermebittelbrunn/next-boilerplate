@@ -59,6 +59,8 @@ const SESSION_PATH = "/api/auth/session";
 
 const expiredCopy =
     getDictionary().dictionary.packages.auth.provider.session.expired;
+const revokedCopy =
+    getDictionary().dictionary.packages.auth.provider.session.revoked;
 
 const fetchMock = vi.fn();
 
@@ -228,6 +230,59 @@ describe("sessão recusada em definitivo", () => {
         });
         expect(logoutMock).toHaveBeenCalledTimes(ONE_CALL);
         expect(pushMock).toHaveBeenCalledTimes(ONE_CALL);
+    });
+});
+
+/**
+ * A session ended from another device is refused by the API, and the cookie routes answer
+ * `AUTH_SESSION_REVOKED`. Without signing out here, the Firebase client of this origin would
+ * stay signed in and keep trying to write the cookie back.
+ */
+describe("sessão encerrada noutro aparelho", () => {
+    it("desloga com o aviso próprio quando a renovação responde AUTH_SESSION_REVOKED", async () => {
+        givenServer({ refresh: unauthorized("AUTH_SESSION_REVOKED") });
+        renderProvider();
+
+        await emitSignedInUser();
+
+        await waitFor(() => {
+            expect(logoutMock).toHaveBeenCalledTimes(ONE_CALL);
+        });
+        expect(errorAlertMock).toHaveBeenCalledWith(revokedCopy);
+        expect(revokedCopy).not.toBe(expiredCopy);
+        expect(pushMock).toHaveBeenCalledWith(SIGN_IN_WITH_REDIRECT);
+        expect(sessionCalls()).toBe(0);
+    });
+
+    it("desloga quando a gravação do cookie responde AUTH_SESSION_REVOKED", async () => {
+        givenServer({
+            refresh: unauthorized("AUTH_NO_SESSION"),
+            session: unauthorized("AUTH_SESSION_REVOKED"),
+        });
+        renderProvider();
+
+        await emitSignedInUser();
+
+        await waitFor(() => {
+            expect(logoutMock).toHaveBeenCalledTimes(ONE_CALL);
+        });
+        expect(errorAlertMock).toHaveBeenCalledWith(revokedCopy);
+    });
+
+    it("mantém a sessão quando a gravação é recusada por outro motivo", async () => {
+        givenServer({
+            refresh: unauthorized("AUTH_NO_SESSION"),
+            session: unauthorized("AUTH_INVALID_TOKEN"),
+        });
+        renderProvider();
+
+        await emitSignedInUser();
+
+        await waitFor(() => {
+            expect(sessionCalls()).toBe(ONE_CALL);
+        });
+        expect(logoutMock).not.toHaveBeenCalled();
+        expect(errorAlertMock).not.toHaveBeenCalled();
     });
 });
 
