@@ -239,6 +239,26 @@ describe("GET /account/export", () => {
         expect("subscription" in payload.account).toBe(true);
     });
 
+    it("leva os recursos do plano gravados no perfil", async () => {
+        const entitlements = {
+            features: ["advanced-reports"],
+            lastEventAt: "2026-09-24T12:00:00.000Z",
+        };
+        mergedUserMock.mockResolvedValue(mergedAccount({ entitlements }));
+
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(payload.account.entitlements).toEqual(entitlements);
+    });
+
+    it("escreve null nos recursos de quem nunca recebeu um, e deixa o planAccess fora", async () => {
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(payload.account.entitlements).toBeNull();
+        expect("entitlements" in payload.account).toBe(true);
+        expect("planAccess" in payload.account).toBe(false);
+    });
+
     it("deixa a URL assinada do avatar fora do arquivo", async () => {
         mergedUserMock.mockResolvedValue(
             mergedAccount({ avatarUrl: "https://signed.example/a1b2.jpg" })

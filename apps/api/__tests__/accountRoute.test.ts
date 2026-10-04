@@ -12,13 +12,19 @@ const {
     updateUserMock,
     getMergedUserByFirestoreDocIdMock,
     deleteObjectQuietlyMock,
+    isBillingEnabledMock,
 } = vi.hoisted(() => ({
+    isBillingEnabledMock: vi.fn(),
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
     updateMock: vi.fn(),
     updateUserMock: vi.fn(),
     getMergedUserByFirestoreDocIdMock: vi.fn(),
     deleteObjectQuietlyMock: vi.fn(),
+}));
+
+vi.mock("@/(shared)/lib/billing", () => ({
+    isBillingEnabled: () => isBillingEnabledMock(),
 }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
@@ -105,9 +111,11 @@ describe("/account", () => {
             updateUserMock,
             getMergedUserByFirestoreDocIdMock,
             deleteObjectQuietlyMock,
+            isBillingEnabledMock,
         ]) {
             mock.mockReset();
         }
+        isBillingEnabledMock.mockReturnValue(false);
         resolveApiActorMock.mockResolvedValue({
             uid: OWNER_UID,
             email: "owner@example.com",
@@ -228,6 +236,115 @@ describe("/account", () => {
 
         expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
         expect(await codeOf(response)).toBe("USERS_NOT_FOUND");
+    });
+});
+
+describe("/account — plan access", () => {
+    const LIVE_SUBSCRIPTION = { subscriptionId: "sub_qa", status: "active" };
+    const ENTITLEMENTS = {
+        features: ["advanced-reports"],
+        lastEventAt: "2026-05-28T00:26:40.000Z",
+    };
+
+    beforeEach(() => {
+        for (const mock of [
+            resolveApiActorMock,
+            findByReferenceIdMock,
+            updateMock,
+            getMergedUserByFirestoreDocIdMock,
+            isBillingEnabledMock,
+        ]) {
+            mock.mockReset();
+        }
+        resolveApiActorMock.mockResolvedValue({ uid: OWNER_UID });
+        findByReferenceIdMock.mockResolvedValue({ ...OWNER_PROFILE });
+    });
+
+    async function planAccessOf(response: Response) {
+        const body = (await response.json()) as {
+            data: { planAccess: unknown; entitlements?: unknown };
+        };
+        return body.data;
+    }
+
+    it("reports nothing as enforced while billing is off, even for a subscriber", async () => {
+        isBillingEnabledMock.mockReturnValue(false);
+        getMergedUserByFirestoreDocIdMock.mockResolvedValue({
+            uid: OWNER_UID,
+            subscription: LIVE_SUBSCRIPTION,
+            entitlements: ENTITLEMENTS,
+        });
+
+        const data = await planAccessOf(await GET(request("GET")));
+
+        expect(data.planAccess).toEqual({
+            enforced: false,
+            subscribed: true,
+            features: ["advanced-reports"],
+        });
+    });
+
+    it("reports the subscription and the stored features while billing is on", async () => {
+        isBillingEnabledMock.mockReturnValue(true);
+        getMergedUserByFirestoreDocIdMock.mockResolvedValue({
+            uid: OWNER_UID,
+            subscription: LIVE_SUBSCRIPTION,
+            entitlements: ENTITLEMENTS,
+        });
+
+        const data = await planAccessOf(await GET(request("GET")));
+
+        expect(data.planAccess).toEqual({
+            enforced: true,
+            subscribed: true,
+            features: ["advanced-reports"],
+        });
+        expect(data.entitlements).toEqual(ENTITLEMENTS);
+    });
+
+    it("reads a profile that never subscribed as no subscription and no features", async () => {
+        isBillingEnabledMock.mockReturnValue(true);
+        getMergedUserByFirestoreDocIdMock.mockResolvedValue({ uid: OWNER_UID });
+
+        const data = await planAccessOf(await GET(request("GET")));
+
+        expect(data.planAccess).toEqual({
+            enforced: true,
+            subscribed: false,
+            features: [],
+        });
+    });
+
+    it("counts a canceled subscription as not subscribed, whatever features remain", async () => {
+        isBillingEnabledMock.mockReturnValue(true);
+        getMergedUserByFirestoreDocIdMock.mockResolvedValue({
+            uid: OWNER_UID,
+            subscription: { ...LIVE_SUBSCRIPTION, status: "canceled" },
+            entitlements: ENTITLEMENTS,
+        });
+
+        const data = await planAccessOf(await GET(request("GET")));
+
+        expect(data.planAccess).toMatchObject({ subscribed: false });
+    });
+
+    it("answers the update with the same plan access the read gives", async () => {
+        isBillingEnabledMock.mockReturnValue(true);
+        updateMock.mockResolvedValue(undefined);
+        getMergedUserByFirestoreDocIdMock.mockResolvedValue({
+            uid: OWNER_UID,
+            subscription: LIVE_SUBSCRIPTION,
+        });
+
+        const data = await planAccessOf(
+            await PUT(request("PUT", { phone: "1" }))
+        );
+
+        expect(data.planAccess).toEqual({
+            enforced: true,
+            subscribed: true,
+            features: [],
+        });
     });
 });
 

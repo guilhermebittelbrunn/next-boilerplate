@@ -1,5 +1,5 @@
 import { getAuthInstance } from "@repo/auth/server";
-import type { UserPreferences } from "@repo/sdk/src/types";
+import type { AccountDTO, UserPreferences } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import {
     resolvePreferences,
@@ -12,6 +12,7 @@ import {
 } from "@/(shared)/lib/entity-photo";
 import { omitUndefined } from "@/(shared)/lib/omit-undefined";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
+import { toPlanAccess } from "@/(shared)/lib/plan-access";
 import { deleteObjectQuietly } from "@/(shared)/lib/storage";
 import { getMergedUserByFirestoreDocId } from "@/(shared)/lib/user-merge";
 import { userRepository } from "@/(shared)/repositories/user.repository";
@@ -23,6 +24,13 @@ const notFound = (): Response =>
         { error: { code: "USERS_NOT_FOUND" } },
         { status: HTTP_STATUS.NOT_FOUND }
     );
+
+const toAccountResponse = async (
+    merged: Record<string, unknown>
+): Promise<AccountDTO> => ({
+    ...(await withAvatarUrl(merged)),
+    planAccess: toPlanAccess(merged),
+});
 
 type AvatarResolution =
     | { ok: true; value: string | null | undefined }
@@ -101,7 +109,7 @@ export const GET = requireCommonPanelApi(async (_req, ctx) => {
         return notFound();
     }
 
-    return Response.json({ data: await withAvatarUrl(merged) });
+    return Response.json({ data: await toAccountResponse(merged) });
 });
 
 export const PUT = requireCommonPanelApi(async (req, ctx) => {
@@ -163,5 +171,5 @@ export const PUT = requireCommonPanelApi(async (req, ctx) => {
         return notFound();
     }
 
-    return Response.json({ data: await withAvatarUrl(merged) });
+    return Response.json({ data: await toAccountResponse(merged) });
 });

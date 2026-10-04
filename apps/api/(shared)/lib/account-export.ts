@@ -34,9 +34,9 @@ export class AccountExportProfileMissingError extends Error {
     }
 }
 
-function toExportAccount(
-    merged: Record<string, unknown>
-): Omit<AccountDTO, "avatarUrl"> {
+type ExportAccount = AccountDataExportDTO["account"];
+
+function toExportAccount(merged: Record<string, unknown>): ExportAccount {
     const withoutSignedUrl = Object.fromEntries(
         Object.entries(merged).filter(
             ([key]) => !OMITTED_ACCOUNT_FIELDS.has(key)
@@ -57,14 +57,19 @@ function toExportAccount(
         merged.subscription && typeof merged.subscription === "object"
             ? (merged.subscription as AccountDTO["subscription"])
             : null;
+    const entitlements =
+        merged.entitlements && typeof merged.entitlements === "object"
+            ? (merged.entitlements as AccountDTO["entitlements"])
+            : null;
 
     return {
-        ...(withoutSignedUrl as unknown as Omit<AccountDTO, "avatarUrl">),
+        ...(withoutSignedUrl as unknown as ExportAccount),
         phone,
         avatar,
         preferences: resolvePreferences(merged.preferences),
         stripeCustomerId,
         subscription,
+        entitlements,
     };
 }
 
