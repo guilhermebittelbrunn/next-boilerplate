@@ -166,11 +166,14 @@ function isMintedBeforeRevocation(
 }
 
 /**
- * Get the current user from the request, or null. A disabled account is rejected from the
- * record loaded here, since the Admin SDK only checks it under `checkRevoked`, at a second fetch.
+ * User record **and** claims behind a Firebase ID token, or null. A disabled account is
+ * rejected from the record loaded here, since the Admin SDK only checks it under
+ * `checkRevoked`, at a second fetch.
  * @param token - Firebase ID token from the request
  */
-export const getCurrentUser = async (token: string | null) => {
+export const getIdTokenSession = async (
+    token: string | null
+): Promise<{ user: UserRecord; decoded: DecodedIdToken } | null> => {
     if (!token) {
         return null;
     }
@@ -182,7 +185,7 @@ export const getCurrentUser = async (token: string | null) => {
         if (user.disabled || isMintedBeforeRevocation(decodedToken, user)) {
             return null;
         }
-        return user;
+        return { user, decoded: decodedToken };
     } catch (error) {
         const code = firebaseAuthErrorCode(error);
         if (code && benignIdTokenVerifyCodes.has(code)) {
@@ -192,6 +195,10 @@ export const getCurrentUser = async (token: string | null) => {
         return null;
     }
 };
+
+/** Get the current user from the request, or null. */
+export const getCurrentUser = async (token: string | null) =>
+    (await getIdTokenSession(token))?.user ?? null;
 
 /**
  * Get user by UID

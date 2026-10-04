@@ -38,7 +38,8 @@ vi.mock("firebase-admin/storage", () => ({ getStorage: vi.fn() }));
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
-const { getCurrentUser, getUserFromSessionCookie } = await import("../server");
+const { getCurrentUser, getIdTokenSession, getUserFromSessionCookie } =
+    await import("../server");
 
 const UID = "uid-1";
 const REVOKED_AT = "Mon, 01 Jan 2024 12:00:00 GMT";
@@ -181,6 +182,43 @@ describe("getCurrentUser — conta desativada", () => {
         expect(verifyIdTokenMock.mock.calls[0]).toEqual(["id-token"]);
         expect(getUserMock).toHaveBeenCalledTimes(1);
         expect(getUserMock).toHaveBeenCalledWith(UID);
+    });
+});
+
+describe("getIdTokenSession — as claims acompanham o usuário", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.spyOn(console, "error").mockImplementation(vi.fn());
+    });
+
+    it("devolve o usuário e as claims verificadas", async () => {
+        const claims = {
+            ...decodedToken(REVOKED_AT_SECONDS + ONE_MINUTE_IN_SECONDS),
+            sessionAuthTime: REVOKED_AT_SECONDS,
+        };
+        verifyIdTokenMock.mockResolvedValue(claims);
+        getUserMock.mockResolvedValue(userRecord(REVOKED_AT));
+
+        await expect(getIdTokenSession("id-token")).resolves.toEqual({
+            user: userRecord(REVOKED_AT),
+            decoded: claims,
+        });
+    });
+
+    it("aplica as mesmas recusas que getCurrentUser", async () => {
+        verifyIdTokenMock.mockResolvedValue(
+            decodedToken(REVOKED_AT_SECONDS - ONE_MINUTE_IN_SECONDS)
+        );
+        getUserMock.mockResolvedValue(userRecord(REVOKED_AT));
+        await expect(getIdTokenSession("stale-id-token")).resolves.toBeNull();
+
+        verifyIdTokenMock.mockResolvedValue(decodedToken(REVOKED_AT_SECONDS));
+        getUserMock.mockResolvedValue(userRecord(undefined, true));
+        await expect(
+            getIdTokenSession("disabled-id-token")
+        ).resolves.toBeNull();
+
+        await expect(getIdTokenSession(null)).resolves.toBeNull();
     });
 });
 
