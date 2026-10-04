@@ -8,6 +8,8 @@ const { listUsersMock } = vi.hoisted(() => ({
     listUsersMock: vi.fn(),
 }));
 
+vi.mock("@repo/auth/provider", () => ({ default: () => ({ user: null }) }));
+
 vi.mock("next/navigation", () => ({
     useRouter: () => ({ push: vi.fn() }),
     useParams: () => ({ locale: "pt-br" }),

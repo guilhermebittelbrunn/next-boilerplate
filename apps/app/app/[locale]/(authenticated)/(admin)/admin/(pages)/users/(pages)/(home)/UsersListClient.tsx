@@ -1,5 +1,6 @@
 "use client";
 
+import useAuth from "@repo/auth/provider";
 import {
     ActionsMenu,
     AddButton,
@@ -23,6 +24,10 @@ export function UsersListClient() {
     const { dictionary, locale } = getDictionary();
     const formatDateTime = useFormatDisplayDateTime();
     const { deleteUserMutation, toggleUserStatusMutation } = useUserCrud();
+    const { user: signedInUser } = useAuth();
+
+    const isOwnRow = (record: UserWithAuthDTO) =>
+        record.uid === signedInUser?.uid;
 
     const routes = ADMIN_ROUTES(dictionary, locale);
     const adminUsersList = dictionary.apps.app.pages.admin.users.list;
@@ -110,8 +115,10 @@ export function UsersListClient() {
                         )}
                         checked={!value}
                         disabled={
-                            toggleUserStatusMutation.isPending &&
-                            toggleUserStatusMutation.variables?.id === record.id
+                            isOwnRow(record) ||
+                            (toggleUserStatusMutation.isPending &&
+                                toggleUserStatusMutation.variables?.id ===
+                                    record.id)
                         }
                         onCheckedChange={(checked) => {
                             const nextDisabled = !checked;
@@ -123,6 +130,11 @@ export function UsersListClient() {
                                 disabled: nextDisabled,
                             });
                         }}
+                        title={
+                            isOwnRow(record)
+                                ? adminUsersList.selfStatusLocked
+                                : undefined
+                        }
                     />
                 </div>
             ),
@@ -145,7 +157,11 @@ export function UsersListClient() {
                         confirmDescription:
                             adminUsersList.archive.confirmDescription,
                     }}
-                    onDelete={() => deleteUserMutation.mutate(record.id)}
+                    onDelete={
+                        isOwnRow(record)
+                            ? undefined
+                            : () => deleteUserMutation.mutate(record.id)
+                    }
                     onEdit={() =>
                         router.push(routes.users.update(record.id).url)
                     }
