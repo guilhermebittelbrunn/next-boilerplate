@@ -1,7 +1,7 @@
 ---
 id: plan-entitlements
 title: Acesso por plano espelhado na API
-status: proposed
+status: in-progress
 value: médio
 effort: M
 audience: produto
@@ -9,8 +9,8 @@ area: [apps/api, apps/app, packages/sdk, packages/internationalization]
 mode: subscription
 depends_on: []
 contends_on: ["apps/api/app/(routes)/webhooks/payments/route.ts", apps/api/(shared)/lib/billing-state.ts, packages/sdk/src/types/payments/payments.ts]
-feature: -
-updated: 2026-09-27
+feature: plan-entitlements
+updated: 2026-09-30
 ---
 
 # Acesso por plano espelhado na API
