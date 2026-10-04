@@ -1,7 +1,7 @@
 ---
 id: plan-entitlements
 title: Acesso por plano espelhado na API
-status: proposed
+status: in-progress
 value: médio
 effort: M
 audience: produto
@@ -9,8 +9,8 @@ area: [apps/api, apps/app, packages/sdk, packages/internationalization]
 mode: subscription
 depends_on: []
 contends_on: ["apps/api/app/(routes)/webhooks/payments/route.ts", apps/api/(shared)/lib/billing-state.ts, packages/sdk/src/types/payments/payments.ts]
-feature: -
-updated: 2026-09-27
+feature: plan-entitlements
+updated: 2026-09-30
 ---
 
 # Acesso por plano espelhado na API
@@ -33,7 +33,7 @@ traduz em convite para assinar.
   `packages/sdk/src/types/payments/payments.ts:30-44`).
 - `apps/api/(shared)/lib/billing-state.ts:16-22` — `isLiveSubscription`, sobre `LIVE_SUBSCRIPTION_STATUSES`
   do SDK. Hoje bloqueia checkout duplicado (`payments/checkout/route.ts:41`), decide o cancelamento no
-  arquivamento (`users/[id]/route.ts:49`) e no expurgo (`account-erasure.ts:77`) e, dentro de
+  arquivamento (`users/[id]/route.ts:72`) e no expurgo (`account-erasure.ts:77`) e, dentro de
   `decideSubscriptionWrite` (`billing-state.ts:210`), ignora um `deleted` atrasado de assinatura já
   substituída.
 - `apps/api/app/(guards)/common-panel.ts` — o guard do painel comum já entrega o `subjectProfile`, então uma

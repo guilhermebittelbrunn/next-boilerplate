@@ -19,11 +19,12 @@ tudo lido de coleções que o webhook alimenta.
 | Config | `packages/payments/keys.ts` | `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, string vazia lida como ausência. Chave com prefixo errado (`pk_` no lugar de `sk_`) falha a validação: o `next build` da API sai com erro e, em runtime, toda requisição responde 500 com `Invalid environment variables` no log. |
 | Cliente | `packages/payments/index.ts` | `getStripe()` (devolve `null` sem chave), `getWebhookSecret()` e `isPaymentsConfigured()` (as duas chaves ou nada). |
 | Toolkit | `packages/payments/ai.ts` | `getPaymentsAgentToolkit()`, construído sob demanda; devolve `null` sem chave. Serve para semear produtos e preços. |
-| Contrato | `packages/sdk/src/types/payments/`, `actions/payments/action.ts` | `PlanDTO`, `SubscriptionState`, `LIVE_SUBSCRIPTION_STATUSES`, `BillingSummaryDTO`; `apiClient.payments.listPlans()`, `.createCheckout()`, `.openPortal()`, `.summary()`. |
+| Contrato | `packages/sdk/src/types/payments/`, `actions/payments/action.ts` | `PlanDTO`, `SubscriptionState`, `LIVE_SUBSCRIPTION_STATUSES`, `BillingSummaryDTO`, `PlanAccessDTO`, `planAccessDenial`; `apiClient.payments.listPlans()`, `.createCheckout()`, `.openPortal()`, `.summary()`. |
 | Rotas | `apps/api/app/(routes)/payments/{plans,checkout,portal}` | Catálogo, sessão de checkout e sessão de portal, todas com `requireCommonPanelApi`. |
 | Resumo do admin | `apps/api/app/(routes)/payments/summary`, `(shared)/lib/billing-summary.ts` | `GET /payments/summary` com `requireAdminApi`: receita do mês por moeda, planos vigentes e contratações recentes. Nunca chama a Stripe. |
 | Lógica | `apps/api/(shared)/lib/billing.ts`, `billing-state.ts`, `plan-label.ts` | Fala com a Stripe; converte assinatura, fatura e preço em snapshot/DTO/registro; decide se um evento pode sobrescrever o estado gravado; mantém o cache de nomes de plano. |
-| Webhook | `apps/api/app/(routes)/webhooks/payments/route.ts` | Verifica a assinatura, deduplica por `event.id`, reconcilia o perfil e registra faturas pagas. |
+| Webhook | `apps/api/app/(routes)/webhooks/payments/route.ts` | Verifica a assinatura, deduplica por `event.id`, reconcilia o perfil (assinatura e recursos do plano) e registra faturas pagas. |
+| Acesso por plano | `apps/api/app/(guards)/plan.ts`, `(shared)/lib/plan-access.ts`, `apps/app/shared/components/ui/PlanGate.tsx` | `requirePlanApi` recusa na API quem não tem assinatura viva ou o recurso pedido; `PlanGate` antecipa a mesma decisão na tela. Ver "Acesso por plano". |
 | UI | `apps/app/.../account/(components)/AccountBillingPanel.tsx` | Planos, plano atual, badge de status, avisos de retorno do checkout. |
 | UI admin | `apps/app/.../admin/(pages)/(components)/BillingInsightsSection.tsx` | Seção de cobrança da home do admin: recebido no mês, planos mais vendidos, contratações recentes. |
 | Web | `apps/web/shared/lib/pricingCta.ts` | Os CTAs dos dois primeiros planos do `/pricing` levam a `<app>/<locale>/account?tab=billing`. |
@@ -38,6 +39,7 @@ as duas chaves Stripe e `NEXT_PUBLIC_APP_URL` na API (é a base das URLs de reto
 | `POST /payments/checkout`, `POST /payments/portal` | 503 `PAYMENTS_NOT_CONFIGURED` |
 | Aba billing | O mesmo placeholder "Cobrança em breve" que existia antes da feature |
 | Modo `simple` | Aba billing e item da sidebar somem; `?tab=billing` abre o perfil; a home do admin nem faz a requisição do resumo |
+| Rotas com `requirePlanApi`, `PlanGate` | Nada é bloqueado: `planAccess.enforced` vem `false` |
 
 O webhook depende só das duas chaves, porque um evento que chega precisa ser reconciliado em qualquer modo.
 Sem elas responde 503 `PAYMENTS_NOT_CONFIGURED`, e a Stripe reentrega por até 3 dias. Com só uma das duas
@@ -69,7 +71,11 @@ Coleção `user`, dois campos opcionais:
   `cancelAtPeriodEnd` e `lastEventAt`. O preço fica no snapshot para o card "Plano atual" funcionar mesmo
   com o preço arquivado ou com a listagem de planos fora do ar.
 
-Perfil sem os dois campos lê como "sem assinatura". Não há backfill.
+- `entitlements`: os recursos ativos do cliente, escritos só pelo webhook. Guarda `features` (os
+  `lookup_key` dos recursos, sem repetição e em ordem alfabética) e `lastEventAt`.
+
+Perfil sem os campos lê como "sem assinatura" e "nenhum recurso". Não há backfill: quem já assinava antes do
+evento de recursos estar cadastrado no endpoint passa a ter a lista no próximo evento daquele cliente.
 
 Coleção `paymentEvent`: um documento por evento processado, com id igual ao `event.id`, `type`,
 `createdAt` e `expiresAt` (30 dias depois, para uma política de TTL opcional).
@@ -95,6 +101,7 @@ acima de 5 000 assinaturas vigentes, vale trocar por um documento de contagem ma
 | `checkout.session.completed` | Liga o `customer` ao perfil de `client_reference_id` (ou `metadata.profileId`) se o vínculo faltar |
 | `customer.subscription.created` / `updated` / `deleted` | Acha o perfil pelo `customer` (fallback `metadata.profileId`) e grava o snapshot numa transação; garante o nome do plano no cache |
 | `invoice.paid` | Grava a fatura em `paidInvoice`; se for a primeira da assinatura (`subscription_create`), grava a contratação em `subscriptionActivation`; garante o nome do plano no cache |
+| `entitlements.active_entitlement_summary.updated` | Acha o perfil pelo `customer` (não há fallback: o resumo não traz metadata) e grava `entitlements` numa transação. O evento traz no máximo 10 recursos; com `has_more`, a lista completa é buscada em `entitlements.activeEntitlements.list` |
 | qualquer outro | Registra `webhook-unhandled-event` e responde 200 |
 
 `subscription_schedule.canceled` não é tratado: cancelar um schedule não cancela a assinatura. O
@@ -112,6 +119,12 @@ Stripe reentrega. A escrita do snapshot segue `decideSubscriptionWrite`:
    `updated`).
 4. Mesma assinatura e `event.created` anterior a `lastEventAt`: ignora.
 5. Caso contrário, aplica.
+
+A lista de recursos segue `decideEntitlementsWrite`, mais simples porque o resumo é sempre a lista inteira:
+nada gravado ou instante gravado ilegível, aplica; `event.created` anterior ao `lastEventAt` gravado, ignora;
+igual ou posterior, aplica. Dois resumos no mesmo segundo ficam com o último entregue. Se a listagem da
+Stripe falha no caso `has_more`, a rota responde 500 sem marcar o evento e a Stripe reentrega. O log
+`webhook-entitlements-reconciled` leva o resultado e a contagem de recursos, nunca os `lookup_key`.
 
 Perfil não encontrado responde 200, registra `webhook-profile-not-found` e marca o evento.
 
@@ -149,6 +162,44 @@ data.
 
 Os códigos novos têm tradução nos 3 idiomas em `apiErrors`.
 
+## Acesso por plano
+
+A API decide; a tela só antecipa a decisão com os dados que a API calculou. A regra pede as duas coisas, e a
+negação vence:
+
+| Cobrança ligada | Assinatura viva | Recurso pedido | Recurso no perfil | Resultado |
+|-----------------|-----------------|----------------|-------------------|-----------|
+| não | qualquer | qualquer | qualquer | passa |
+| sim | não | qualquer | qualquer | 403 `PLAN_SUBSCRIPTION_REQUIRED` |
+| sim | sim | nenhum | qualquer | passa |
+| sim | sim | `X` | não | 403 `PLAN_FEATURE_REQUIRED` |
+| sim | sim | `X` | sim | passa |
+
+"Assinatura viva" é `LIVE_SUBSCRIPTION_STATUSES` (`active`, `trialing`, `past_due`, `unpaid`, `paused`): o
+gate não bloqueia inadimplência, que fica a critério de cada fork. Status e recursos chegam em eventos
+diferentes, e a conjunção cobre a janela entre eles: quem cancelou perde o acesso assim que o status cai,
+mesmo com a lista de recursos ainda gravada. Logo depois do checkout, o gate por recurso nega por alguns
+segundos, até o evento de recursos chegar.
+
+- **API:** `requirePlanApi(requirement, handler)` em `apps/api/app/(guards)/plan.ts` compõe
+  `requireCommonPanelApi`. `requirement` é `{}` (só assinatura viva), `{ feature: "<lookup_key>" }`, `null`
+  (sem gate) ou uma função que devolve um desses, avaliada a cada requisição. A escrita personificada continua
+  recusada como `AUTH_REQUEST_IMPERSONATION_READ_ONLY` antes de o plano ser olhado. Para uma checagem no meio
+  do handler, `refusePlanAccess(profile, requirement)` devolve a `Response` 403 ou `null`.
+- **Conta:** `GET /account` e `PUT /account` devolvem `planAccess` (`enforced`, `subscribed`, `features`),
+  calculado a cada requisição sem chamar a Stripe. `enforced` é `isBillingEnabled()`.
+- **App:** `<PlanGate requirement={...} loadingFallback={...}>` em `apps/app/shared/components/ui/PlanGate.tsx`
+  lê a conta com `useMyAccount` e, negado, troca o conteúdo por um convite traduzido com link para
+  `/<locale>/account?tab=billing`. Se a conta não carrega, mostra o conteúdo: a API recusa de qualquer jeito e
+  o código chega traduzido no toast.
+- **Demonstração:** `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE`, com o mesmo valor na `apps/api` e na `apps/app`,
+  coloca a criação de `entity` (`POST /entities` e `/entities/create`) atrás desse recurso. Vazia, o CRUD é o
+  de sempre e a tela nem monta o `PlanGate`. Na `apps/app` o valor entra no build.
+- **Recursos na Stripe:** cada recurso é cadastrado em Product catalog → Features com o `lookup_key` que o
+  código pede, e ligado aos produtos que o incluem. Recurso ligado a um produto só vale para quem já assina
+  a partir do próximo ciclo (comportamento documentado pela Stripe). Fork que não cadastra recursos usa só o
+  gate por status: o gate por recurso nega todo mundo, porque a lista fica vazia.
+
 ## Exclusão e exportação de conta
 
 - O passo `billing` do expurgo roda **primeiro**. Com assinatura viva, cancela na Stripe
@@ -160,7 +211,8 @@ Os códigos novos têm tradução nos 3 idiomas em `apiErrors`.
   cancelamento falhar, ou se a Stripe estiver desligada com assinatura viva gravada, o usuário não é
   arquivado e a rota responde 503 `USERS_DELETE_BILLING_FAILED`. Sem assinatura viva, a Stripe não é
   chamada.
-- A exportação leva `account.subscription` e `account.stripeCustomerId`, com `null` quando não existem.
+- A exportação leva `account.subscription`, `account.entitlements` e `account.stripeCustomerId`, com `null`
+  quando não existem. `planAccess` fica fora: descreve o ambiente, não um dado do titular.
 
 ## Troca de e-mail do titular
 
@@ -174,8 +226,9 @@ desde que o portal esteja configurado para permitir a edição dos dados do clie
 ## Fora do corte
 
 Trial, cupom, downgrade proporcional, reembolso e faturas em UI própria; MRR, churn e receita líquida de
-reembolso no resumo do admin; importar faturas anteriores ao cadastro de `invoice.paid`; bloquear acesso por plano ou em
-`past_due` (o status só é exibido); cobrança por organização; nome e descrição de plano traduzidos (vêm da
+reembolso no resumo do admin; importar faturas anteriores ao cadastro de `invoice.paid`; bloquear acesso em
+`past_due`, `unpaid` ou `paused`; cotas, metering e créditos; assento por membro; tela de administração de
+recursos por plano; cobrança por organização; nome e descrição de plano traduzidos (vêm da
 Stripe num idioma só).
 
 Reembolso programático, se um fork precisar: `stripe.refunds.create({ payment_intent })` numa rota com

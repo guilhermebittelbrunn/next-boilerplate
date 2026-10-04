@@ -180,6 +180,68 @@ describe("userRepository.linkStripeCustomer", () => {
     });
 });
 
+describe("userRepository.applyEntitlementsState", () => {
+    const entitlements = (lastEventMs = EVENT_MS) => ({
+        features: ["advanced-reports"],
+        lastEventAt: new Date(lastEventMs),
+    });
+
+    it("grava a lista dentro da transação quando não há nada gravado", async () => {
+        docs.set("profile-1", {});
+
+        const result = await userRepository.applyEntitlementsState(
+            "profile-1",
+            entitlements()
+        );
+
+        expect(result).toBe("applied");
+        expect(runTransactionMock).toHaveBeenCalledTimes(1);
+        expect(transactionUpdates[0]?.data.entitlements).toEqual(
+            entitlements()
+        );
+        expect(transactionUpdates[0]?.data.updatedAt).toBeInstanceOf(Date);
+        expect(updates).toHaveLength(0);
+    });
+
+    it("não grava um resumo mais antigo que o gravado", async () => {
+        docs.set("profile-1", { entitlements: entitlements() });
+
+        const result = await userRepository.applyEntitlementsState(
+            "profile-1",
+            entitlements(EVENT_MS - ONE_SECOND_MS)
+        );
+
+        expect(result).toBe("skipped");
+        expect(transactionUpdates).toHaveLength(0);
+    });
+
+    it("substitui a lista por um resumo mais novo", async () => {
+        docs.set("profile-1", { entitlements: entitlements() });
+        const next = {
+            features: [],
+            lastEventAt: new Date(EVENT_MS + ONE_SECOND_MS),
+        };
+
+        const result = await userRepository.applyEntitlementsState(
+            "profile-1",
+            next
+        );
+
+        expect(result).toBe("applied");
+        expect(transactionUpdates[0]?.data.entitlements).toEqual(next);
+    });
+
+    it("devolve missing sem gravar quando o perfil sumiu", async () => {
+        const result = await userRepository.applyEntitlementsState(
+            "profile-gone",
+            entitlements()
+        );
+
+        expect(result).toBe("missing");
+        expect(transactionUpdates).toHaveLength(0);
+    });
+});
+
 describe("userRepository.applySubscriptionState", () => {
     it("grava o snapshot dentro da transação quando não há nada gravado", async () => {
         docs.set("profile-1", {});

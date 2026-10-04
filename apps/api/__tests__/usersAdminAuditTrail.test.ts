@@ -337,3 +337,172 @@ describe("PUT /users/[id] revokes sessions when disabling", () => {
         expect(revokeUserSessionsMock).not.toHaveBeenCalled();
     });
 });
+
+describe("PUT/DELETE /users/[id] refuse to lock the admin out of their own account", () => {
+    const ownContext = { params: { id: ADMIN_PROFILE.id } };
+    const OTHER_ADMIN_PROFILE = {
+        id: "p3",
+        reference_id: "admin-2",
+        type: UserType.ADMIN,
+    };
+
+    const SELF_LOCKOUT_REFUSAL = {
+        status: HTTP_STATUS.FORBIDDEN,
+        body: { error: { code: "USERS_SELF_LOCKOUT_FORBIDDEN" } },
+    };
+
+    async function outcomeOf(response: Response) {
+        return { status: response.status, body: await response.json() };
+    }
+
+    function writesMade() {
+        return Object.entries({
+            firestoreUpdate: updateMock,
+            authUpdate: updateUserMock,
+            sessionRevocation: revokeUserSessionsMock,
+            archive: deleteMock,
+            auditEvent: recordAuditEventMock,
+        })
+            .filter(([, mock]) => mock.mock.calls.length > 0)
+            .map(([write]) => write);
+    }
+
+    beforeEach(() => {
+        findByIdMock.mockResolvedValue(ADMIN_PROFILE);
+        getMergedUserMock.mockResolvedValue({ id: ADMIN_PROFILE.id });
+    });
+
+    it("refuses to disable the caller's own account and writes nothing", async () => {
+        const response = await PUT(request({ disabled: true }), ownContext);
+
+        expect(await outcomeOf(response)).toEqual(SELF_LOCKOUT_REFUSAL);
+        expect(writesMade()).toEqual([]);
+    });
+
+    it("refuses to demote the caller's own type", async () => {
+        const response = await PUT(
+            request({ type: UserType.COMMON }),
+            ownContext
+        );
+
+        expect(await outcomeOf(response)).toEqual(SELF_LOCKOUT_REFUSAL);
+        expect(writesMade()).toEqual([]);
+    });
+
+    it("refuses the whole patch when one field would lock the caller out", async () => {
+        const response = await PUT(
+            request({ displayName: "New Name", disabled: true }),
+            ownContext
+        );
+
+        expect(await outcomeOf(response)).toEqual(SELF_LOCKOUT_REFUSAL);
+        expect(writesMade()).toEqual([]);
+    });
+
+    it("lets the caller save their own name with type ADMIN", async () => {
+        const response = await PUT(
+            request({ type: UserType.ADMIN, displayName: "New Name" }),
+            ownContext
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateMock).toHaveBeenCalledWith({
+            id: ADMIN_PROFILE.id,
+            type: UserType.ADMIN,
+        });
+        expect(updateUserMock).toHaveBeenCalledWith(ADMIN_UID, {
+            displayName: "New Name",
+        });
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ["disabled: false", { disabled: false }],
+        ["a name alone", { displayName: "New Name" }],
+    ])("lets the caller send %s", async (_label, body) => {
+        const response = await PUT(request(body), ownContext);
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateUserMock).toHaveBeenCalledTimes(1);
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses to archive the caller's own account before reading the label", async () => {
+        const response = await DELETE(request(), ownContext);
+
+        expect(await outcomeOf(response)).toEqual(SELF_LOCKOUT_REFUSAL);
+        expect(resolveLabelMock).not.toHaveBeenCalled();
+        expect(writesMade()).toEqual([]);
+    });
+
+    it("matches the account by uid, not by profile id", async () => {
+        const duplicateContext = { params: { id: "p9" } };
+        findByIdMock.mockResolvedValue({
+            id: "p9",
+            reference_id: ADMIN_UID,
+            type: UserType.ADMIN,
+        });
+
+        const updated = await PUT(
+            request({ disabled: true }),
+            duplicateContext
+        );
+        const archived = await DELETE(request(), duplicateContext);
+
+        expect(await outcomeOf(updated)).toEqual(SELF_LOCKOUT_REFUSAL);
+        expect(await outcomeOf(archived)).toEqual(SELF_LOCKOUT_REFUSAL);
+        expect(writesMade()).toEqual([]);
+    });
+
+    it("still lets an admin disable, demote and archive another admin", async () => {
+        const otherContext = { params: { id: OTHER_ADMIN_PROFILE.id } };
+        findByIdMock.mockResolvedValue(OTHER_ADMIN_PROFILE);
+
+        const disabled = await PUT(request({ disabled: true }), otherContext);
+        const demoted = await PUT(
+            request({ type: UserType.COMMON }),
+            otherContext
+        );
+        const archived = await DELETE(request(), otherContext);
+
+        expect(disabled.status).toBe(HTTP_STATUS.OK);
+        expect(demoted.status).toBe(HTTP_STATUS.OK);
+        expect(archived.status).toBe(STATUS_NO_CONTENT);
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(
+            OTHER_ADMIN_PROFILE.reference_id
+        );
+        expect(updateMock).toHaveBeenCalledWith({
+            id: OTHER_ADMIN_PROFILE.id,
+            type: UserType.COMMON,
+        });
+        expect(deleteMock).toHaveBeenCalledWith(OTHER_ADMIN_PROFILE.id);
+    });
+
+    it("answers 400 for an empty or invalid patch before the self check", async () => {
+        const empty = await PUT(request({}), ownContext);
+        const invalid = await PUT(request({ disabled: "yes" }), ownContext);
+
+        expect(empty.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await empty.json()).toEqual({
+            error: { code: "USERS_NOTHING_TO_UPDATE" },
+        });
+        expect(invalid.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await invalid.json()).toEqual({
+            error: { code: "VALIDATION_FAILED" },
+        });
+    });
+
+    it("answers 404 for a missing profile before the self check", async () => {
+        findByIdMock.mockResolvedValue(null);
+
+        const updated = await PUT(request({ disabled: true }), ownContext);
+        const archived = await DELETE(request(), ownContext);
+
+        for (const response of [updated, archived]) {
+            expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+            expect(await response.json()).toEqual({
+                error: { code: "USERS_NOT_FOUND" },
+            });
+        }
+    });
+});

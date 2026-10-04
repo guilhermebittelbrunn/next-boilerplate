@@ -27,6 +27,7 @@ As **vinte** rotas de negócio restantes — `account/*` ×7, `entities` ×3, `f
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
 - `requireAdminApi` — exige perfil admin.
+  - `PUT` e `DELETE /users/:id` recusam com `403 USERS_SELF_LOCKOUT_FORBIDDEN` desativar, rebaixar (`type` diferente de `ADMIN`) ou arquivar a própria conta, comparando o `reference_id` do perfil alvo com o uid de quem chama (`apps/api/app/(routes)/users/[id]/route.ts:43-45`, `:131-133`, `:184-186`). Nenhum admin tira o próprio acesso pelo painel, mas isso não garante que sobre um admin ativo: dois admins que desativam um ao outro em pedidos simultâneos passam pelo guard antes de qualquer gravação. O console do Firebase e o Firestore direto continuam fora desse alcance.
 
 Os guards:
 1. Validam o Bearer token (Firebase Admin).

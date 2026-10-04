@@ -6,8 +6,8 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-09-30 (`/spec --sync`, dentro de um `/cycle` autônomo, pós-merge da PR #35) ·
-> **anteriores:** 2026-09-30 (PR #34) · 2026-09-30 (PR #33) · 2026-09-29 (PR #32) · 2026-09-29 (PR #31) · 2026-09-28 (PR #30) · 2026-09-27 (PR #29) · 2026-09-26 (`/spec` de descoberta, pedida pelo usuário) · 2026-09-26
+> **Última rodada:** 2026-10-03 (`/spec --sync`, dentro de um `/cycle` autônomo, pós-merge da PR #36) ·
+> **anteriores:** 2026-09-30 (PR #35) · 2026-09-30 (PR #34) · 2026-09-30 (PR #33) · 2026-09-29 (PR #32) · 2026-09-29 (PR #31) · 2026-09-28 (PR #30) · 2026-09-27 (PR #29) · 2026-09-26 (`/spec` de descoberta, pedida pelo usuário) · 2026-09-26
 > (PR #28) · 2026-09-25 (PRs #26 e #27) · 2026-09-25 (PR #25) · 2026-09-24 (PR #24) · 2026-09-23 (PR #23) ·
 > 2026-09-23 (PR #22) · 2026-09-19 (PR #21) · 2026-09-17 (PR #20) · 2026-09-17 (PR #19) · 2026-09-17 (PR #18) ·
 > 2026-09-16 (PR #17) · 2026-09-16 (PR #16) · 2026-09-16 (PR #15) · 2026-09-16 (PRs #13 e #14) · 2026-09-15 ·
@@ -15,40 +15,38 @@ constar na seção [Entregues](#entregues).
 > 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
 >
 > **O que mudou nesta rodada:**
-> 1. **O 🔴 da conta desativada fechou.** A tarefa direta
->    [`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md) entrou em `main` pela
->    PR #35 (`1936369`), com CI verde no SHA de merge nos quatro jobs. No código: `getCurrentUser` recusa
->    `user.disabled` (`packages/auth/server.ts:182`) e o `PUT /users/[id]` revoga as sessões ao desativar
->    (`apps/api/app/(routes)/users/[id]/route.ts:124-126`). O runbook de incidente foi corrigido no mesmo diff e
->    a frase nova confere com o código. Detalhe em
->    [Entrega confirmada](#entrega-confirmada-disabled-account-revocation-pr-35).
-> 2. **Nenhuma spec mudou de status.** A PR #35 não tinha spec. As quatro que seguem em `specs/` foram
->    reconferidas por `grep` e nenhuma ganhou código por tabela.
-> 3. **Gates remedidos com `--force`**, com JDK 21: 29/29 tasks em 1 min 39,9 s, 806 arquivos no `pnpm check`,
->    **2466** testes em 226 arquivos (+14, os da PR #35: 5 em `@repo/auth`, 9 na `apps/api`) e 170 em 4 contra o
->    emulador. O teste instável de `useListAuditEvents` não apareceu em três execuções; o acumulado fica em 2
->    falhas em 31.
-> 4. **Âncoras corrigidas**: o `PUT` ganhou quatro linhas e o `PRE-PRODUCTION.md` ganhou uma antes do §13 e
->    cinco na higiene. Seis âncoras deste arquivo foram remedidas; as da spec arquivada de `compliance-docs-kit`
->    ficaram registradas, porque a auditoria não edita spec arquivada.
-> 5. **Achados: 1 fechado, 1 novo, 83 abertos.** O novo é o `GET /auth/me` respondendo 401 sem `error.code`,
->    visto no `/test` da tarefa. Duas lacunas de teste novas vieram do mesmo `/test` e estão na seção dela.
+> 1. **O último 🔴 de código fechou.** A tarefa direta
+>    [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md) entrou em `main` pela
+>    PR #36 (`e791d3a`), com CI verde no SHA de merge nos quatro jobs (`gh run 36774114223`). No código: o
+>    pacote lê a chave a cada chamada com `readArcjetKey()`, que não lança (`packages/security/keys.ts:23-26`,
+>    usado em `index.ts:40` e `:84`), e o boot da API separa chave ausente (`warn`) de malformada (`error`, sem
+>    ecoar o valor) em `apps/api/instrumentation.ts:30-45`. Detalhe em
+>    [Entrega confirmada](#entrega-confirmada-arcjet-key-lazy-validation-pr-36).
+> 2. **Nenhuma spec mudou de status.** A PR #36 não tinha spec. As quatro que seguem em `specs/` foram
+>    reconferidas por `grep` e nenhuma ganhou código por tabela. As âncoras delas, que a rodada anterior tinha
+>    remedido no working tree da tarefa, agora estão em `main` e foram relidas uma a uma: nenhuma precisou de
+>    correção.
+> 3. **Gates remedidos com `--force`**, com JDK 21: 29/29 tasks em 49,8 s, 807 arquivos no `pnpm check`,
+>    **2485** testes em 227 arquivos (+19 e +1 arquivo, os da PR #36: 14 em `@repo/security`, 5 na `apps/api`) e
+>    170 em 4 contra o emulador. O teste instável de `useListAuditEvents` não apareceu em três execuções; o
+>    acumulado fica em 2 falhas em 34.
+> 4. **Âncoras**: as que a rodada anterior marcou como "só valem depois do merge" foram relidas em `main` e
+>    conferem. As citações do 🔴 que apontavam para o código antigo (`index.ts:11`, `instrumentation.ts:46-50`,
+>    `keys.ts:9-15`) saíram com o achado.
+> 5. **Achados: 1 fechado, 2 novos, 84 abertos.** Os dois novos são 🟢 do `/review` da tarefa: o `preprocess`
+>    do schema estrito repete a regra do leitor tolerante, e os `.env.example` de `app` e `web` não avisam que
+>    uma chave sem `ajkey_` derruba o build. O achado do admin que se desativa ganhou, por leitura, o `DELETE` e
+>    a troca de `type` para o próprio perfil, que também não comparam o alvo com o ator.
 > 6. **Lotes recalculados**: uma spec elegível, `plan-entitlements`, que segue `proposed`. Lote 1 só com ela.
-> 7. **Recomendação de #1: tarefa direta, sem spec**, para o 🔴 que sobrou: `packages/security/index.ts:11`
->    lê a `ARCJET_KEY` no import, e uma chave malformada derruba toda requisição da API. Tamanho P, provável
->    só com teste de unidade. Detalhe em [Ordem recomendada](#ordem-recomendada). A tarefa já corre nesta
->    mesma rodada como [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md), no
->    working tree e sem PR; o 🔴 segue aberto até o merge.
-> 8. **O que a tarefa mediu e este arquivo absorveu depois da auditoria:** o 🔴 foi reescrito (em `app` e `web`
->    a chave malformada recusa o build; só a API publicava um build que respondia erro a tudo); o
->    `skipValidation` da `apps/web` ganhou uma consequência medida (o bloqueio de bot da landing nunca roda),
->    com a decisão de ligá-lo em aberto (D8); o achado do `/auth/sign-in` ganhou dois 500 medidos; e as
->    âncoras que o diff da tarefa deslocou foram remedidas no working tree (tabela em
->    [Âncoras deslocadas](#âncoras-deslocadas-corrigidas-nesta-rodada)).
+> 7. **Recomendação de #1: tarefa direta, sem spec**, para o admin que tranca a si mesmo fora do painel
+>    (desativar, arquivar ou rebaixar o próprio perfil). Tamanho P, provável por teste de unidade na API, com a
+>    parte de UI conferida no `/test`. Detalhe em [Ordem recomendada](#ordem-recomendada).
+> 8. **A D1 saiu de "Precisam de decisão"**: a recomendação (no-op com erro no log) foi para `main` com a PR #36.
+>    A D8 (ligar o bloqueio de bot da landing) segue aberta, e entrou a D9, sobre o escopo da tarefa recomendada.
 
 ## Contadores
 
-Sobre as **4 specs que seguem em `specs/`**. Recontados do disco em 2026-09-30, lendo o frontmatter de cada
+Sobre as **4 specs que seguem em `specs/`**. Recontados do disco em 2026-10-03, lendo o frontmatter de cada
 arquivo.
 
 | status | qtd |
@@ -64,7 +62,7 @@ arquivo.
 **Por audiência:** `confianca` 1 (`in-progress`) · `dx` 1 (`in-progress`) · `produto` 2 (1 `proposed`,
 1 `deferred`). **Por esforço:** M 3 · G 1. **Por valor:** alto 2 · médio 2 · baixo 0.
 
-**Transições aplicadas: 0.** A PR #35 foi uma tarefa direta, sem spec. Nenhum arquivo foi movido e o índice
+**Transições aplicadas: 0.** A PR #36 foi uma tarefa direta, sem spec. Nenhum arquivo foi movido e o índice
 do git ficou vazio antes e depois da auditoria. As edições deste arquivo estão no working tree. Nada foi
 commitado.
 
@@ -80,7 +78,8 @@ Correções que vieram de achados deste arquivo, sem spec própria. Ficam regist
 | feature | PR | achados fechados |
 |---------|----|------------------|
 | [`i18n-hydration-admin-delete-billing`](../docs/features/i18n-hydration-admin-delete-billing/STATE.md) | #28, `295c8de`, 2026-09-26 | hidratação do dicionário client em `/en` e `/es`; A2 (arquivamento pelo admin sem cancelar a assinatura) |
-| [`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md) | #35, `1936369`, 2026-09-30 | 🔴 conta desativada pelo admin com o ID token aceito pela API por até 1 hora; a frase correspondente do runbook de incidente e o achado ligado em [`account-security-mfa`](account-security-mfa.md). Detalhe em [Entrega confirmada](#entrega-confirmada-disabled-account-revocation-pr-35) |
+| [`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md) | #35, `1936369`, 2026-09-30 | 🔴 conta desativada pelo admin com o ID token aceito pela API por até 1 hora; a frase correspondente do runbook de incidente e o achado ligado em [`account-security-mfa`](account-security-mfa.md). Resumo em [Entregas anteriores](#entregas-anteriores-sem-spec-pr-35) |
+| [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md) | #36, `e791d3a`, 2026-09-30 | 🔴 `ARCJET_KEY` malformada lida no import de `packages/security`, que fazia a API responder 500 a toda requisição. Detalhe em [Entrega confirmada](#entrega-confirmada-arcjet-key-lazy-validation-pr-36) |
 
 ### O que foi conferido no código da PR #28
 
@@ -105,37 +104,48 @@ segue no hero, no CTA, no FAQ e na página de preços; o achado da allowlist de 
   arquivo anterior a esta rodada; o `STATE.md` fica como está, porque a auditoria só escreve em
   `docs/features/` para arquivar spec.
 
-## Entrega confirmada: `disabled-account-revocation` (PR #35)
+## Entrega confirmada: `arcjet-key-lazy-validation` (PR #36)
 
-A PR #35 entrou em `main` como `1936369` ("fix: disabled accounts lose API access immediately") em 2026-09-30 às
-19:15 UTC, da branch `fix/disabled-account-revocation`, em cinco commits (`b4cb9f6` auth, `af69978` api, `a8653dc`
-documentos, `aeaee83` auditoria anterior, `d57dfee` artefatos da tarefa). Os quatro checks passaram na PR
-(`gh pr view 35`) e a execução de merge também: `gh run 36764362726`, `success` em `changes`, `verify`
-(3 min 2 s), `coverage` e `e2e` (4 min 11 s).
+A PR #36 entrou em `main` como `e791d3a` ("fix(security): malformed ARCJET_KEY no longer takes down the API") em
+2026-09-30 às 20:39 UTC, da branch `security/fix/arcjet-key-lazy-validation`, em cinco commits (`9f2d86e`
+security, `bff54f7` api, `ec16671` documentos, `a69eebf` auditoria anterior, `2e15265` artefatos da tarefa). Os
+quatro checks passaram na PR (`gh pr view 36`) e a execução de merge também: `gh run 36774114223`, `success` em
+`changes`, `verify` (2 min 48 s), `coverage` e `e2e` (4 min 1 s).
 
-`git diff --name-only c7aa4d9 1936369 -- apps packages` lista quatro arquivos: `packages/auth/server.ts`,
-`apps/api/app/(routes)/users/[id]/route.ts` e os dois testes. A auditoria conferiu cada ponto no disco:
+`git diff --stat 1936369 e791d3a -- apps packages` lista oito arquivos: `packages/security/keys.ts`,
+`packages/security/index.ts`, `apps/api/instrumentation.ts`, `apps/api/.env.example` e quatro testes (um novo,
+`apps/api/__tests__/proxyArcjetKey.test.ts`; três ampliados, `corsOriginBoot.test.ts`, `keys.test.ts` e
+`rateLimit.test.ts`). A auditoria conferiu cada ponto no disco:
 
 | o que a tarefa prometia | o que o código mostra |
 |-------------------------|-----------------------|
-| a API recusa o bearer de conta desativada | `getCurrentUser` testa `user.disabled` no `UserRecord` que já carrega, antes da marca de revogação (`packages/auth/server.ts:181-183`), sem chamada nova ao Firebase. Cobre os três chamadores: `resolve-api-actor.ts:24`, `packages/auth/middleware.ts:71` e `user-merge.ts:35` |
-| desativar pelo admin revoga as sessões | `PUT /users/[id]` chama `revokeUserSessions` quando o corpo traz `disabled: true` (`users/[id]/route.ts:124-126`), depois do `updateUser` (`:120-122`). `revokeUserSessions` engole a falha e só loga (`server.ts:323-329`), então a desativação vale mesmo se a revogação cair |
-| teste de unidade, não de emulador | `serverSessionRevocation.test.ts` ganhou cinco casos de `disabled` (`:140-190`), inclusive o que garante uma só busca do usuário (`:174`); `usersAdminAuditTrail.test.ts` confere a chamada com o uid do alvo e a ausência dela em `disabled: false` (`:258-297`). `@repo/auth` foi de 107 para 112 testes e a `apps/api` de 1022 para 1031, medidos nesta auditoria |
-| o runbook deixa de descrever o buraco | `docs/INCIDENT-RESPONSE.md:51-52` descreve o corte imediato nos dois transportes e a revogação no `PUT`; as seis âncoras de código da linha 51 foram lidas e conferem |
-| o achado ligado em `account-security-mfa` fecha | a seção da spec virou "corrigido", com `server.ts:180-183` e `users/[id]/route.ts:120-126`, conferidas |
+| importar o pacote não lança mais com chave malformada | `keys()` saiu do topo de `index.ts`; o único import de `keys.ts` é `readArcjetKey` (`index.ts:9`), que devolve `undefined` para chave ausente ou sem `ajkey_` (`keys.ts:23-26`) |
+| a chave é lida por chamada e a malformada vira no-op | `checkRateLimit` lê em `index.ts:40` e responde `{ allowed: true, enforced: false }` sem chave válida (`:41-43`); `secure()` faz o mesmo em `:84-87` |
+| o boot da API distingue ausente de malformada, sem ecoar o valor | `warnOnDisabledRateLimit` (`instrumentation.ts:30-45`): `console.warn` para `absent` (`:33-38`), `console.error` com texto fixo para `malformed` (`:40-44`), chamado em `register` (`:69`) |
+| o schema estrito continua recusando o build de `app` e `web` | `keys.ts:35-41`: o `preprocess` trata vazio como ausente e mantém `startsWith("ajkey_")` para valor presente |
+| testes de unidade, sem emulador nem conta na Arcjet | `rateLimit.test.ts` ganhou `describe("rate limit with a malformed key")` (`:169`) e a leitura por chamada (`:193`); `keys.test.ts`, os estados da chave (`:54`); `corsOriginBoot.test.ts`, o caso de erro sem eco (`:92`); `proxyArcjetKey.test.ts` importa o proxy real com o pacote real (`:60-72`). `@repo/security` foi de 31 para 45 testes e a `apps/api` de 1031 para 1036, medidos nesta auditoria |
 
-**Veredito:** fechado. O `/test` da tarefa não encontrou defeito: contra o projeto Firebase de desenvolvimento, o
-bearer de conta desativada recebeu `401 AUTH_INVALID_TOKEN` e voltou a passar quando a checagem foi retirada do
-código; depois de desativar e reativar pelo `PUT`, o bearer antigo seguiu recusado. A passada de navegador
-(pessoa desativada com o app aberto cai no sign-in) ficou 🔒 por custo, porque o diff não toca UI.
+**Veredito:** fechado. O `/test` da tarefa mediu contra o build de produção da API: com `ARCJET_KEY=invalida`,
+`GET /health` respondeu `200` (era `500` sem `x-request-id` com o `index.ts` anterior) e o boot imprimiu a linha
+de erro sem o valor. O `next build` de `app` e `web` sai com exit 1 com a mesma chave, como os documentos dizem.
+As três mutações do `/test` derrubam os testes novos. A chave válida contra a Arcjet real ficou 🔒.
 
-**Registro da feature:** o `STATE.md` traz as quatro etapas em `done` e `branch: fix/disabled-account-revocation
-(proposta; …)`. Pela primeira vez desde a PR #29 o nome proposto foi o usado, mas ele não tem o `<project>` do
-padrão, porque o diff cruza `packages/auth` e `apps/api` (ver E11). A branch segue viva no remoto (pendência 16).
+**Registro da feature:** o `STATE.md` traz as quatro etapas em `done`. **Pela primeira vez desde a regra, a
+branch mergeada segue `<project>/<type>/<title>`**: `security/fix/arcjet-key-lazy-validation`, com o nome do
+pacote como escopo. O campo `branch:` ainda carrega o parêntese "(proposta; a atual run-full-task-cycle-v3 falha
+no regex…)", que deixou de valer com o merge. A branch segue viva no remoto (pendência 16).
 
-A entrega anterior, `compliance-docs-kit` (PR #34, `c7aa4d9`), tem a evidência item a item na própria spec
-arquivada, [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md), e a linha
-dela em [Entregues](#entregues).
+### Entregas anteriores sem spec (PR #35)
+
+`disabled-account-revocation` entrou como `1936369` em 2026-09-30, com CI verde no merge (`gh run
+36764362726`). `getCurrentUser` recusa `user.disabled` no registro que já carrega (`packages/auth/server.ts:181-183`)
+e o `PUT /users/[id]` revoga as sessões ao desativar (`apps/api/app/(routes)/users/[id]/route.ts:124-126`).
+Âncoras relidas nesta rodada: conferem. A tabela item a item ficou no histórico deste arquivo (versão da PR #36)
+e no `docs/features/disabled-account-revocation/`.
+
+A entrega anterior com spec, `compliance-docs-kit` (PR #34, `c7aa4d9`), tem a evidência item a item na própria
+spec arquivada, [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md), e a
+linha dela em [Entregues](#entregues).
 
 ## Entrega parcial confirmada: fatia 1 de `account-security-mfa` (PR #29)
 
@@ -172,49 +182,50 @@ branch mergeada também não segue o padrão `<project>/<type>/<title>` de `.cla
 
 ## Gates medidos nesta auditoria
 
-Executados em 2026-09-30, com `--force`, neste workspace, com o `HEAD` em `1936369` (igual a `origin/main`) e o
+Executados em 2026-10-03, com `--force`, neste workspace, com o `HEAD` em `e791d3a` (igual a `origin/main`) e o
 working tree limpo. Não copiados do `/test` nem da rodada anterior.
 
 | comando | resultado |
 |---------|-----------|
-| `pnpm check` | ✅ **806 arquivos · 0 erros** (`No fixes applied`, 417 ms) |
-| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH` | ✅ **29/29 tasks · 0 em cache · 1 min 39,9 s**, na primeira execução; `api#test:emulator` **170 testes em 4 arquivos**. Ao fim, nenhuma das portas de emulador (8080, 9099, 9199, 4000, 4400, 4500, 9150, 8085) ficou ouvindo |
+| `pnpm check` | ✅ **807 arquivos · 0 erros** (`No fixes applied`, 347 ms) |
+| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH` | ✅ **29/29 tasks · 0 em cache · 49,8 s**, na primeira execução; `api#test:emulator` **170 testes em 4 arquivos**; nenhum erro não tratado no log. Ao fim, nenhuma das portas de emulador (8080, 9099, 9199, 4000, 4400, 4500, 9150, 8085) ficou ouvindo |
 | `vitest run` da `apps/app`, 2 execuções seguidas depois do turbo | 2 passagens, 756 testes cada, nenhum erro não tratado |
 
-O tempo subiu de 1 min 6,3 s para 1 min 39,9 s com a mesma quantidade de tasks. A suíte cresceu 14 testes, o que
-não explica a diferença; é contenção da máquina, como o `PRE-PRODUCTION.md` §9 já avisa.
+O tempo caiu de 1 min 39,9 s para 49,8 s com a mesma quantidade de tasks e 19 testes a mais. A variação acompanha
+a carga da máquina, como o `PRE-PRODUCTION.md` §9 já avisa; não é efeito do código.
 
 **O teste instável de `useListAuditEvents` não apareceu nesta rodada** (0 em 3 execuções da suíte da
-`apps/app`, contando a do turbo). O acumulado é 2 falhas em 31, todas em 2026-09-28. O arquivo não muda desde a
+`apps/app`, contando a do turbo). O acumulado é 2 falhas em 34, todas em 2026-09-28. O arquivo não muda desde a
 PR #18 e o CI segue verde; o achado continua aberto.
 
-| workspace | arquivos | testes | Δ vs. 2026-09-30 (PR #34) |
+| workspace | arquivos | testes | Δ vs. 2026-09-30 (PR #35) |
 |-----------|---------:|-------:|---------------------------|
-| `api` | 78 | 1031 | **+9** testes em arquivo existente (`usersAdminAuditTrail.test.ts`) |
+| `api` | 79 | 1036 | **+5** testes e +1 arquivo (`proxyArcjetKey.test.ts`, 2; `corsOriginBoot.test.ts`, +3) |
 | `app` | 91 | 756 | — |
 | `@repo/email` | 7 | 202 | — |
-| `@repo/auth` | 9 | 112 | **+5** testes em arquivo existente (`serverSessionRevocation.test.ts`) |
+| `@repo/auth` | 9 | 112 | — |
 | `web` | 13 | 82 | — |
 | `@repo/internationalization` | 6 | 59 | — |
 | `@repo/design-system` | 6 | 45 | — |
+| `@repo/security` | 3 | 45 | **+14** em arquivos existentes (`keys.test.ts`, `rateLimit.test.ts`) |
 | `@repo/shared` | 4 | 44 | — |
 | `@repo/analytics` | 2 | 34 | — |
 | `@repo/next-config` | 1 | 32 | — |
-| `@repo/security` | 3 | 31 | — |
 | `@repo/payments` | 4 | 22 | — |
 | `e2e` | 2 | 16 | — (testes unitários da suíte; os de navegador rodam no `pnpm e2e`) |
-| **total** | **226** | **2466** | **+14**, os da PR #35 |
+| **total** | **227** | **2485** | **+19**, os da PR #36 |
 | `api#test:emulator` (fora da linha acima) | 4 | 170 | — |
 
-O `docs/PRE-PRODUCTION.md` §9 registra 2452 testes em 226 arquivos, medidos no `c7aa4d9`. Ficou 14 testes
-defasado com a PR #35 (ver [Contradições](#contradições-doc--código-medidas-nesta-rodada)).
+O `docs/PRE-PRODUCTION.md` §9 registra 2485 testes em 227 arquivos, o número desta medição (a PR #36 atualizou a
+contagem). O mesmo parágrafo diz 806 arquivos no `pnpm check`, medidos no `c7aa4d9`; hoje são 807 (ver
+[Contradições](#contradições-doc--código-medidas-nesta-rodada)).
 
-CI: a execução de merge da **#35** (`1936369`, `gh run 36764362726`) terminou em **`success`** em `changes`,
-`verify`, `coverage` e `e2e`. As 16 últimas execuções do CI na `main` (`gh run list --branch main --limit 16`)
+CI: a execução de merge da **#36** (`e791d3a`, `gh run 36774114223`) terminou em **`success`** em `changes`,
+`verify`, `coverage` e `e2e`. As 18 últimas execuções do CI na `main` (`gh run list --branch main --limit 18`)
 estão verdes.
 
 Branch protection segue **não ligado**, remedido hoje: `gh api repos/:owner/:repo/branches/main/protection`
-→ **404** ("Branch not protected"), `rulesets` → **`[]`**. O repositório tem **35** PRs, nenhuma aberta.
+→ **404** ("Branch not protected"), `rulesets` → **`[]`**. O repositório tem **36** PRs, nenhuma aberta.
 
 ## Ordem recomendada
 
@@ -234,69 +245,51 @@ com `brand-config`, `storage-emulator-rules-tests`, `accessibility-conformance`,
 | 3 | [`observability-logging`](observability-logging.md) | `in-progress`, 5 dos 6 itens. **Fora do conjunto elegível.** Estacionada (E1) |
 | 4 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22. Estacionada (E2) |
 
-**Recomendação para a próxima rodada: tarefa direta, sem spec, para o 🔴 da `ARCJET_KEY` lida no import.** A
-única spec elegível, `plan-entitlements`, está `proposed` porque você a manteve assim em 2026-09-26, e o `/cycle`
-não aprova spec. Com o 🔴 da conta desativada fechado pela PR #35, este é o único 🔴 aberto. A tarefa é esta:
+**Recomendação para a próxima rodada: tarefa direta, sem spec, para o admin que tranca a si mesmo fora do
+painel.** A única spec elegível, `plan-entitlements`, está `proposed` porque você a manteve assim em 2026-09-26, e o
+`/cycle` não aprova spec. Com a PR #36, não sobra 🔴 de código; os 🔴 restantes são pendências de infra (índices
+do Firestore), que o `/cycle` não provisiona. A rodada anterior já tinha posto esta tarefa em segundo lugar. A
+tarefa é esta:
 
-- **O quê:** uma `ARCJET_KEY` presente e malformada (sem o prefixo `ajkey_`) deixa de derrubar as apps. O
-  pacote passa a ler a chave na primeira chamada, não no import, e trata chave inválida como ausência: o
-  limitador vira no-op, como já acontece sem a chave, e o problema aparece no log de boot da `apps/api` em vez
-  de em cada requisição.
-- **Por quê é a primeira:** é o último 🔴. O schema da chave (`packages/security/keys.ts:9-15`) recusa valor sem
-  o prefixo, e `keys()` roda no topo do módulo (`packages/security/index.ts:11`). Os três `proxy.ts` importam o
-  pacote (`apps/api/proxy.ts:1`, `apps/app/proxy.ts:5`, `apps/web/proxy.ts:5`). Na `apps/api` a exceção sobe
-  no grafo de módulos do middleware e toda requisição falha, sem nada no boot: o aviso de
-  `apps/api/instrumentation.ts:46-50` só olha se a variável existe. Basta colar a chave errada na Vercel.
-  **Corrigido depois pela medição da tarefa:** em `apps/app` e `apps/web` o efeito é outro, o `next build`
-  recusa a chave em "Collecting page data", porque o `env.ts` das duas estende o schema estrito. O 🔴 de
-  runtime era só da API.
-- **Arquivos:** `packages/security/index.ts:11` (leitura no import) e os usos de `arcjetKey` em `:32`,
-  `:42-47` e `:85-91`; `packages/security/keys.ts:9-15` (o schema, que continua valendo para o `env.ts` da `apps/app`
-  e da `apps/web`); `apps/api/instrumentation.ts:46-50` (aviso de boot que distingue ausente de malformada);
-  testes em `packages/security/__tests__/rateLimit.test.ts` (já carrega o módulo com chaves diferentes,
-  `:47-49`), `keys.test.ts` e `apps/api/__tests__/instrumentation.test.ts` (já faz `stubEnv("ARCJET_KEY", …)`
-  em `:64`).
-- **Tamanho:** P. Uma função de leitura preguiçosa no pacote, um ramo a mais no aviso de boot e testes de
-  unidade. Sem i18n, sem variável nova, sem dependência nova.
-- **O que a rodada autônoma prova sem infra:** tudo. A falha acontece na validação do schema, antes de
-  qualquer chamada à Arcjet, então uma string como `ARCJET_KEY=invalida` reproduz o defeito no teste de
-  unidade (importar o módulo não lança; `checkRateLimit` responde `enforced: false`; o boot loga). Nenhuma
-  conta na Arcjet é necessária. O caminho com chave válida já tem teste com a Arcjet mockada.
-- **Uma decisão que a tarefa toma sozinha:** chave malformada vira no-op com erro no log, e não queda do
-  processo. É o que a [`cycle-policy`](../.claude/cycle-policy.md) §3 manda para feature opt-in ("sem a env, a
-  app sobe"), e derrubar o boot não funcionaria de qualquer jeito: o `throw` do `CORS_ORIGIN` em
-  `instrumentation.ts:40-44` não derruba o processo (achado aberto). Fica registrada como pergunta, com essa
-  recomendação.
-- **Medido depois, pelo `/analyze` e pelo `/test` da tarefa:** o `next build` de `apps/app` e de `apps/web`
-  sai com exit 1 e `Invalid environment variables` com a chave malformada, inclusive na web, que usa
-  `skipValidation: true`: o `security()` do `extends` valida por conta própria antes de ser descartado. O
-  schema estrito ficou, como sinal alto no build.
-- **Contenção:** `packages/security/*` e `apps/api/instrumentation.ts` não estão no `contends_on` de nenhuma
-  spec viva.
-- **Em execução** desde 2026-09-30 como
-  [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md), no working tree e sem
-  PR: `readArcjetKey` e `arcjetKeyState` em `packages/security/keys.ts:11-26`, leitura por chamada em
-  `index.ts:40` e `:84`, boot da API separando ausente (`warn`) de malformada (`error`, sem ecoar o valor) em
-  `instrumentation.ts:30-45`. O `/test` fechou com 10 ✅, 0 ❌ e 1 🔒 (chave real da Arcjet). Fecha no
-  `/spec --sync` depois do merge.
+- **O quê:** a API recusa, com `error.code` traduzido nos 3 idiomas, as três operações em que o admin age sobre o
+  próprio perfil e perde o acesso: desativar (`disabled: true`), rebaixar o `type` para comum e arquivar
+  (`DELETE`). A listagem e o formulário deixam de oferecer esses controles na linha do próprio admin.
+- **Por quê é a primeira:** a PR #35 tornou o efeito imediato. Desativar o próprio perfil corta o bearer e
+  revoga as sessões na mesma requisição, e num fork com um admin só ninguém consegue reativá-lo pelo painel; a
+  saída é o console do Firebase. Nada no código impede o clique: o `PUT` (`apps/api/app/(routes)/users/[id]/route.ts:87-143`)
+  e o `DELETE` (`:145-188`) não comparam o `id` com `ctx.actorProfile.id`. Rebaixar o `type` (`:108-110`) tira o
+  admin do painel no guard seguinte, que exige `profile.type === ADMIN` (`apps/api/app/(guards)/admin.ts:47-49`,
+  lido, não medido). O efeito do auto-arquivamento sobre o login não foi medido nesta rodada.
+- **Arquivos:** `users/[id]/route.ts` (os dois handlers); `UsersListClient.tsx:102-125` (o switch de status,
+  mostrado também na linha do próprio admin) e o `ActionsMenu` de arquivar da mesma linha (`:141-148`); `UserFormFields.tsx:19-27` (as
+  opções de tipo); um código novo em `translations/packages/shared/utils.ts` (`apiErrors`). Testes de rota em
+  `apps/api/__tests__/` no molde de `usersAdminAuditTrail.test.ts`.
+- **Tamanho:** P. Um predicado nos dois handlers, um código de erro nos 3 idiomas e a mesma condição na listagem
+  e no formulário. Sem variável nova, sem dependência nova, sem infra.
+- **O que a rodada autônoma prova sem infra:** a recusa na API, por teste de unidade com o Firebase mockado, e os
+  controles escondidos, pela passada de navegador do `/test` sob o emulador. Nenhuma conta externa é necessária.
+- **Uma decisão que a tarefa toma sozinha:** cobrir as três operações, e não só a desativação que o achado
+  original nomeava. Fica registrada como D9, com essa recomendação.
+- **Contenção:** `users/[id]/route.ts`, `UsersListClient.tsx` e `UserFormFields.tsx` não estão no `contends_on`
+  de nenhuma spec viva. `plan-entitlements` cita `users/[id]/route.ts:49` só como leitura do estado de cobrança.
 
 ### O que **não** foi escolhido para #1, e por quê
 
 - **`plan-entitlements`** só não é #1 porque está `proposed`: o usuário a manteve assim em 2026-09-26, e metade
   dos critérios fica 🔒 sem conta Stripe.
-- **O admin que desativa a própria conta** (🟢, achado da PR #35) ficou mais caro com a correção: agora o admin
-  perde o painel na mesma requisição. Mas é recuperável pelo console do Firebase, e a correção pede código de
-  erro novo nos 3 idiomas e mudança na listagem. P, e o segundo da fila.
+- **Quatro rotas de `/account` e duas de `payments/*` fora do rate limit** (⚠️, `apps/api/proxy.ts:45-58`) é a
+  outra tarefa P de segurança. Fica atrás porque o limite é no-op em todo fork sem `ARCJET_KEY` e as seis rotas
+  exigem sessão; o admin trancado acontece com a configuração padrão e com um clique.
 - **O "Excluir" do menu de ações pelo teclado** (WCAG 2.1.1) segue a tarefa direta P mais urgente da lista de
   UI, mas só se prova numa passada de navegador.
 
-Os demais achados P (foco do diálogo de exclusão, rate limit de `payments/*` e `/account`, teste instável,
+Os demais achados P (foco do diálogo de exclusão, `/auth/me` e `/auth/sign-in` sem `error.code`, teste instável,
 `getDictionary()` do servidor, item da `review-checklist.md`) seguem na seção de achados, com `arquivo:linha`, e
 deixam de ser repetidos aqui pela §5.1 da `cycle-policy`.
 
 ## Lotes paralelos
 
-Para rodar o ciclo completo em 2–3 workspaces do Conductor ao mesmo tempo. Calculado em **2026-09-30**, depois
+Para rodar o ciclo completo em 2–3 workspaces do Conductor ao mesmo tempo. Calculado em **2026-10-03**, depois
 da reconciliação dos status, a partir do `contends_on` de cada spec, lido do disco, pelo algoritmo de
 [`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por
 disjunção → teto de 3.
@@ -316,7 +309,7 @@ coisa, rode o #1 da ordem.
 rodada:** nenhuma no lote. Os `contends_on` foram relidos do disco; nenhum mudou desde a rodada anterior.
 
 **A tarefa direta recomendada como #1 não é spec e não entra no cálculo**, mas o `contends_on` dela seria
-`packages/security/index.ts`, `packages/security/keys.ts` e `apps/api/instrumentation.ts`. É disjunto do de
+`apps/api/app/(routes)/users/[id]/route.ts`, `UsersListClient.tsx` e `UserFormFields.tsx`. É disjunto do de
 `plan-entitlements` e do de toda spec viva, então as duas podem correr em workspaces separados.
 
 ### Onde os lotes podem colidir mesmo disjuntos
@@ -324,13 +317,13 @@ rodada:** nenhuma no lote. Os `contends_on` foram relidos do disco; nenhum mudou
 - **`plan-entitlements` e o SDK**: acrescenta tipos em `types/payments/payments.ts`. Se mexer no índice de
   ações do cliente (`packages/sdk/src/client/index.ts`), que não declara, o conflito é com
   `teams-organizations`, que está fora da fila.
-- **`plan-entitlements` e a tarefa da `ARCJET_KEY`**: nenhuma das duas declara `docs/PRE-PRODUCTION.md` nem
-  `docs/SECURITY.md`, e as duas podem acabar editando esses arquivos (a segunda quase certamente, no §8 do
-  `PRE-PRODUCTION.md`). O conflito seria de texto e se resolve no merge.
+- **`plan-entitlements` e a tarefa do admin trancado**: as duas acrescentam código em `apiErrors` e podem tocar
+  `docs/SECURITY.md` (a segunda, se a recusa entrar na seção de autorização). Nenhuma declara o documento. O
+  conflito seria de texto e se resolve no merge.
 - Quase toda spec de código acrescenta códigos em `translations/packages/shared/utils.ts` (`apiErrors`). O
   conflito é aditivo e se resolve no merge.
 - **Gate local:** `pnpm test` roda também `test:emulator` e exige JDK 21 no `PATH`. Nesta máquina o `java`
-  padrão é o 17 e o 21 está em `/opt/homebrew/opt/openjdk@21/bin` (medido em 2026-09-30).
+  padrão é o 17 e o 21 está em `/opt/homebrew/opt/openjdk@21/bin` (medido em 2026-10-03: `17.0.13` e `21.0.12.1`).
   `pnpm turbo run test` continua sem Java.
 
 ### Nota de processo: a auditoria é de um workspace só
@@ -355,28 +348,35 @@ arquivos de código e tradução fora da lista, sem contar testes e documentos. 
 a PR #34 alterou `docs/PRE-PRODUCTION.md` e `docs/FORKING.md`, os dois arquivos compartilhados que a rodada
 anterior tinha apontado nesta seção. A tarefa direta da PR #35 foi prevista com dois arquivos de código e tocou
 exatamente esses dois, mais os dois testes, `docs/INCIDENT-RESPONSE.md` (previsto), `docs/BACKUP.md` e
-`docs/PRE-PRODUCTION.md` (não previstos: uma âncora deslocada e a medição do §9).
+`docs/PRE-PRODUCTION.md` (não previstos: uma âncora deslocada e a medição do §9). A da PR #36 foi prevista com
+três arquivos de código (`packages/security/index.ts`, `keys.ts` e `apps/api/instrumentation.ts`) e tocou os três,
+mais `apps/api/.env.example`, quatro testes e cinco documentos. Dos documentos, a recomendação só tinha previsto
+o `PRE-PRODUCTION.md`; `FORKING.md`, `ROPA.md`, `SECURITY.md` e `SUBPROCESSORS.md` entraram porque descreviam a
+chave.
 
 ## Precisam de decisão
 
-**Duas perguntas novas nesta rodada**: a D1 acompanha a recomendação de #1, e a D8 veio da medição da tarefa.
+**Uma pergunta nova nesta rodada** (D9, que acompanha a recomendação de #1). A D8 segue aberta. A D1 saiu: a
+recomendação dela foi para `main` com a PR #36.
 
 | # | pergunta | recomendação | por quê |
 |---|----------|--------------|---------|
-| D1 | `ARCJET_KEY` malformada: o limitador vira no-op com erro no log de boot, ou o processo recusa subir? | no-op com erro no log | a `cycle-policy` §3 pede modo degradado para feature opt-in; e o `throw` de boot não derruba o processo hoje (achado do `CORS_ORIGIN`), então recusar subir não funcionaria sem mexer nisso também. **Adotada** pela tarefa `arcjet-key-lazy-validation`, no working tree; muda se você disser o contrário antes do merge |
-| D8 | Ligar o bloqueio de bot da landing? Hoje ele nunca roda, nem com chave válida (achado do `skipValidation` da `apps/web`) | não ligar agora; declarar a decisão | ligar é pôr `detectBot` e `shield` em modo `LIVE` para visitante anônimo em todo fork que já tem a chave. Pede teste próprio (falso positivo de crawler, preview de link) e não cabe numa correção de configuração. Os documentos já descrevem o comportamento atual (`docs/ROPA.md:108`, `docs/SUBPROCESSORS.md:40`, `docs/FORKING.md` §7.3, no working tree) |
+| D8 | Ligar o bloqueio de bot da landing? Hoje ele nunca roda, nem com chave válida (achado do `skipValidation` da `apps/web`) | não ligar agora; declarar a decisão | ligar é pôr `detectBot` e `shield` em modo `LIVE` para visitante anônimo em todo fork que já tem a chave. Pede teste próprio (falso positivo de crawler, preview de link) e não cabe numa correção de configuração. Os documentos em `main` já descrevem o comportamento atual (`docs/ROPA.md:108`, `docs/SUBPROCESSORS.md:40`, `docs/FORKING.md:317-318`, no §7.3) |
+| D9 | A tarefa do admin trancado cobre só a desativação, que o achado original nomeava, ou também o arquivamento e o rebaixamento do `type` do próprio perfil? | as três | as três tiram o admin do painel e nenhuma compara o alvo com o ator (`users/[id]/route.ts:87-143`, `:145-188`). O predicado é o mesmo e o código de erro pode ser um só; cobrir só uma deixa as outras duas como achado da próxima rodada. O `/cycle` adota esta recomendação se você não disser nada |
 
 Os demais pontos foram resolvidos sem pergunta:
 
-- **O CI no SHA de merge da PR #35** foi medido: verde nos quatro jobs (`gh run 36764362726`).
-- **Se o 🔴 da conta desativada fechou de fato** foi medido no código, não lido do `STATE.md`: as duas mudanças
-  estão em `main` e os 14 testes novos passam no gate desta rodada.
+- **O CI no SHA de merge da PR #36** foi medido: verde nos quatro jobs (`gh run 36774114223`).
+- **Se o 🔴 da `ARCJET_KEY` fechou de fato** foi medido no código, não lido do `STATE.md`: as mudanças estão em
+  `main` e os 19 testes novos passam no gate desta rodada.
+- **A D1 (no-op com erro no log)** está em `main` desde a PR #36. Você mergeou a PR com ela; não volta como
+  pergunta.
 - **Aprovar `plan-entitlements`** é decisão sua desde 2026-09-26 e não é reapresentada como pergunta; a
   recomendação de #1 funciona com ou sem ela.
 - **`plan-entitlements` (Stripe Entitlements ou mapa local?)** segue em "Perguntas em aberto" da própria spec,
   pela §5.1 da `cycle-policy`; o `/cycle` adota a recomendação escrita lá se você não disser nada.
-- **O nome de branch fora do padrão** voltou na PR #35 (`fix/disabled-account-revocation`, sem `<project>`).
-  Está em E11 e não é reapresentado.
+- **O padrão de nome de branch** foi seguido pela PR #36 (`security/fix/arcjet-key-lazy-validation`). A
+  recomendação de E11 continua estacionada; esta rodada só atualizou o registro.
 
 ## Decisões estacionadas (§5.1)
 
@@ -389,7 +389,7 @@ Cada uma tem dono e endereço.
 |---|---------|------|---------------------|-------------------------|
 | E1 | `observability-logging` fecha como entregue, com o coletor virando spec P própria? (12 rodadas) | você | `docs/PRE-PRODUCTION.md` §11 (o coletor) | fechar e abrir spec P do coletor |
 | E2 | `teams-organizations` continua `deferred`? (14 rodadas sem as contrapartidas P) | você | este arquivo, [Achados](#-repositório-rotas-e-proxy) (predicado de posse) | status de sua escolha; as contrapartidas já são achados com arquivo e linha |
-| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-09-30, pós-PR #35: 404, `[]`, 35 PRs |
+| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-10-03, pós-PR #36: 404, `[]`, 36 PRs |
 | E4 | O gate `approved` não é usado (**oito** specs entregues sem passar por `approved`, incluindo `admin-billing-insights` e `e2e-testing`; a fatia 1 de `account-security-mfa` saiu da mesma forma, pela PR #29, com a spec em `proposed`). **Em 2026-09-26 o usuário aprovou cinco specs de uma vez, o primeiro uso do gate; `brand-config` (PR #30), `storage-emulator-rules-tests` (PR #31), `accessibility-conformance` (PR #32) e `account-email-change` (PR #33) e `compliance-docs-kit` (PR #34) são as cinco entregues depois de passar por ele** | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
 | E5 | Prazo de retenção da coleção `auditEvent` | você | `docs/PRE-PRODUCTION.md` §1.3 | decidir um prazo padrão sem invocar o art. 15 do Marco Civil |
 | E6 | Teto absoluto da sessão ultrapassável por até meia vida de cookie | — | `docs/PRE-PRODUCTION.md`, seção "Declaração — por quanto tempo uma sessão pode ser renovada" | manter o comportamento; o número está escrito onde o fork lê |
@@ -397,7 +397,7 @@ Cada uma tem dono e endereço.
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
 | E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral (3 rodadas) | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`), por isso precisa da sua palavra |
 | E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | este arquivo, achado A1 em [Achados](#-achados-abertos-reconferidos-ou-herdados) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer; a nota de medição do `docs/AUTH-SSO.md` fica como está |
-| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão (PRs #29 a #35) | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | o `STATE.md` de `account-security-mfa` segue com `review: in-progress` e o de `brand-config` com `branch: -`, ambos já mergeados, de `feat/account-security-password-policy` e `feat/brand-config`. Na PR #31 o `STATE.md` acompanhou o merge (`review: done`, branch gravada), mas a branch saiu de novo como `feat/<slug>`. Na PR #32 as duas coisas voltaram: `feat/accessibility-conformance` e `review: in-progress` no `STATE.md` depois do merge. Na PR #33 a tabela do `STATE.md` acompanhou (`review: done`, branch gravada), mas as notas do mesmo arquivo dizem que a etapa segue `in-progress`, e a branch saiu como `feat/account-email-change`. Na PR #34 a tabela acompanhou, mas o campo `branch:` guarda um nome proposto que não foi usado (`docs/compliance-docs-kit`), e a PR saiu da `run-full-task-cycle-v2`. Na PR #35 o nome proposto no `STATE.md` foi o usado pela primeira vez (`fix/disabled-account-revocation`), mas sem `<project>`, porque o diff cruza `packages/auth` e `apps/api`; o `review.md` da tarefa justificou a omissão pela regra de commit, que aceita omitir o escopo, enquanto a de branch não aceita. Recomendação: a regra aceitar `feat/<slug>` para feature que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
+| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão (PRs #29 a #35; a #36 seguiu o padrão) | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | o `STATE.md` de `account-security-mfa` segue com `review: in-progress` e o de `brand-config` com `branch: -`, ambos já mergeados, de `feat/account-security-password-policy` e `feat/brand-config`. Na PR #31 o `STATE.md` acompanhou o merge (`review: done`, branch gravada), mas a branch saiu de novo como `feat/<slug>`. Na PR #32 as duas coisas voltaram: `feat/accessibility-conformance` e `review: in-progress` no `STATE.md` depois do merge. Na PR #33 a tabela do `STATE.md` acompanhou (`review: done`, branch gravada), mas as notas do mesmo arquivo dizem que a etapa segue `in-progress`, e a branch saiu como `feat/account-email-change`. Na PR #34 a tabela acompanhou, mas o campo `branch:` guarda um nome proposto que não foi usado (`docs/compliance-docs-kit`), e a PR saiu da `run-full-task-cycle-v2`. Na PR #35 o nome proposto no `STATE.md` foi o usado pela primeira vez (`fix/disabled-account-revocation`), mas sem `<project>`, porque o diff cruza `packages/auth` e `apps/api`; o `review.md` da tarefa justificou a omissão pela regra de commit, que aceita omitir o escopo, enquanto a de branch não aceita. Na PR #36 a branch seguiu o padrão pela primeira vez (`security/fix/arcjet-key-lazy-validation`, com o pacote como `<project>`, porque o código tocado fica quase todo em `packages/security`) e a tabela do `STATE.md` acompanhou o merge; só o parêntese do campo `branch:` ficou com o texto de antes da aprovação. Recomendação: a regra aceitar `feat/<slug>` para feature que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
@@ -416,7 +416,7 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 
 ## Dependências e bloqueios
 
-| spec | `depends_on` | situação em 2026-09-30 |
+| spec | `depends_on` | situação em 2026-10-03 |
 |------|--------------|------------------------|
 | [`account-security-mfa`](account-security-mfa.md) | `account-settings` | ✅ satisfeita (PR #12, `a4df5ed`). A spec está `in-progress`, com a fatia 1 em `main` |
 | [`teams-organizations`](teams-organizations.md) | `transactional-emails` | ✅ satisfeita (PR #9, `400f290`) |
@@ -464,11 +464,12 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `account-email-change` | 2026-09-29 | [`docs/features/account-email-change/spec.md`](../docs/features/account-email-change/spec.md) — **5/5 do corte** (PR #33, `f377c84`), 16 ✅, 0 ❌ e 1 🔒 no `/test` (entrega real do aviso pela Resend). Quarta spec entregue depois de passar por `approved`. ⚠️ Quatro derivas sem efeito no comportamento; o diff introduziu e corrigiu antes do merge dois defeitos de foco no diálogo novo. Resend, `FIREBASE_WEB_API_KEY` e o e-mail de suporte são passo manual por fork (`PRE-PRODUCTION.md` §3, §4 e §13) |
 | `compliance-docs-kit` | 2026-09-30 | [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md) — **6/6 do corte** (PR #34, `c7aa4d9`), 18 ✅, 0 ❌ e 2 🔒 no `/test` (backup no Blaze e conformidade jurídica). Quinta spec entregue depois de passar por `approved`. ⚠️ Cinco derivas sem efeito no conteúdo. Preencher os `[FORK]`, aceitar os DPAs e decidir o backup são passo manual por fork (`PRE-PRODUCTION.md` §14) |
 
-**Verificado na auditoria de 2026-09-30 (pós-PR #35):** `docs/features/` tem **31** pastas e **25** `spec.md`
-arquivados. As seis pastas sem `spec.md` são `account-security-mfa` e `observability-logging` (specs
+**Verificado na auditoria de 2026-10-03 (pós-PR #36):** `docs/features/` tem **32** pastas e **25** `spec.md`
+arquivados. As sete pastas sem `spec.md` são `account-security-mfa` e `observability-logging` (specs
 `in-progress` em `specs/`), `auth-panel-context` e `impersonation-read-only` (as duas anteriores à semeadura),
-`i18n-hydration-admin-delete-billing` e `disabled-account-revocation` (tarefas diretas, sem spec, listadas em
-[Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec)). Nenhuma spec foi arquivada nesta rodada.
+`i18n-hydration-admin-delete-billing`, `disabled-account-revocation` e `arcjet-key-lazy-validation` (tarefas
+diretas, sem spec, listadas em [Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec)). Nenhuma spec foi
+arquivada nesta rodada.
 
 ### O que a PR #27 entregou **além** do corte (registrado em 2026-09-25)
 
@@ -479,19 +480,26 @@ arquivados. As seis pastas sem `spec.md` são `account-security-mfa` e `observab
 3. **Aviso de endpoint incompleto.** Com assinatura vigente e nenhuma fatura paga registrada, a seção avisa
    que falta `invoice.paid` no endpoint (`BillingInsightsSection.tsx:76-83`), em vez de mostrar receita
    zero sem explicação.
-4. **A declaração do expurgo ganhou as duas coleções novas** (`docs/PRE-PRODUCTION.md:739`, âncora remedida
-   em 2026-09-30 no working tree, com a PR #35 e a tarefa `arcjet-key-lazy-validation` somando seis linhas antes dela): ficam depois da exclusão, porque guardam só ids da Stripe, valor, moeda e datas.
+4. **A declaração do expurgo ganhou as duas coleções novas** (`docs/PRE-PRODUCTION.md:739`, relida em `main` em
+   2026-10-03, depois da PR #36): ficam depois da exclusão, porque guardam só ids da Stripe, valor, moeda e datas.
 
 ## Contradições doc × código, medidas nesta rodada
 
 Nenhum gate lê prosa. Pela [`cycle-policy` §4](../.claude/cycle-policy.md), afirmação barata de medir num
-doc é medida ao passar por ela. Nesta rodada foram medidos os documentos que a PR #35 alterou
-(`docs/INCIDENT-RESPONSE.md`, `docs/BACKUP.md`, `docs/PRE-PRODUCTION.md`) e os que citam o `PUT /users/[id]`. A
+doc é medida ao passar por ela. Nesta rodada foram medidos os cinco documentos que a PR #36 alterou
+(`docs/PRE-PRODUCTION.md`, `docs/FORKING.md`, `docs/ROPA.md`, `docs/SECURITY.md`, `docs/SUBPROCESSORS.md`). As
+linhas medidas em rodadas anteriores sobre documentos que a PR #36 não tocou mantêm o veredito e a data de lá. A
 auditoria não edita `docs/`; o que está defasado fica registrado aqui.
 
-| documento | afirma | realidade medida em 2026-09-30 | veredito |
-|-----------|--------|-------------------------------|----------|
-| `docs/PRE-PRODUCTION.md:613-622` (§9, gate) | medição no `c7aa4d9`: 29/29 tasks, 806 arquivos, 2452 testes em 226 arquivos | no `1936369`: 29/29 tasks, **806** arquivos, **2466** em **226**; `test:emulator` 170 em 4 | ⚠️ **defasado em 14 testes** pela PR #35, que atualizou o §9 com a medição da rodada anterior e somou os próprios testes depois. **No working tree**, a tarefa `arcjet-key-lazy-validation` já reescreveu o §9 com 2485 testes em 227 arquivos, contando os seus; a auditoria não remediu esse número |
+| documento | afirma | realidade medida | veredito |
+|-----------|--------|------------------|----------|
+| `docs/PRE-PRODUCTION.md:613-622` (§9, gate) | tasks e arquivos medidos no `c7aa4d9` (29/29, 806 arquivos); suíte remedida depois da PR #35 com os testes da `ARCJET_KEY`: 2485 testes em 227 arquivos | em 2026-10-03, no `e791d3a`: 29/29 tasks, **807** arquivos no `pnpm check`, **2485** em **227**; `test:emulator` 170 em 4 | ✅ **honesto** na suíte. O 806 está datado no próprio parágrafo e ficou um arquivo atrás (o teste novo da PR #36) |
+| os cinco documentos da PR #36 (âncoras de código) | 100 `arquivo:linha` com caminho único no repositório | em 2026-10-03, todos existem e cabem no arquivo; os da chave conferidos por leitura (`keys.ts:23-26`, `:35-41`; `index.ts:37`, `:40`; `instrumentation.ts:30-45`; `apps/web/env.ts:33`; `apps/web/proxy.ts:63`, `:68`) | ✅ **honesto** |
+| os mesmos cinco (links relativos) | 76 links | em 2026-10-03, 0 mortos pelo sistema de arquivos. O link de âncora do `FORKING.md:437` segue morto (linha abaixo): o verificador não lê âncora | ✅ **honesto**, com a ressalva da âncora |
+| `docs/PRE-PRODUCTION.md:579-581` (§8), `docs/FORKING.md:316-318` (§7.3), `docs/SECURITY.md:158` | chave sem `ajkey_` conta como ausente na `api`, com erro no boot sem o valor; o build de `app` e `web` falha; na `web` o bloqueio de bot nunca roda | em 2026-10-03: `readArcjetKey` (`keys.ts:23-26`), `warnOnDisabledRateLimit` (`instrumentation.ts:40-44`), o `preprocess` estrito (`keys.ts:35-41`) e o `skipValidation` (`apps/web/env.ts:33`) confirmam por leitura; o build e o boot foram medidos pelo `/test` da tarefa | ✅ **honesto** |
+| `docs/ROPA.md:108`, `docs/SUBPROCESSORS.md:40` | a landing não aplica bloqueio de bot, mesmo com `ARCJET_KEY` | `apps/web/proxy.ts:63` pula o `secure()` com `env.ARCJET_KEY` vazio | ✅ **honesto**; ligar o bloqueio é a D8 |
+| `docs/features/arcjet-key-lazy-validation/STATE.md` (`branch:`) | `security/fix/arcjet-key-lazy-validation (proposta; a atual run-full-task-cycle-v3 falha no regex e é renomeada na aprovação)` | a PR #36 saiu dessa branch | ⚠️ **defasado só no parêntese**; o nome está certo. Fica como está: a auditoria só escreve em `docs/features/` para arquivar spec |
+| `docs/features/arcjet-key-lazy-validation/STATE.md` (notas) | cita `specs/BACKLOG.md:640`, `:229-265` | as linhas eram do `BACKLOG.md` anterior à auditoria pós-PR #35 | ⚠️ **defasado**, mesmo caso das tarefas anteriores |
 | `docs/PRE-PRODUCTION.md:587-588` (§9) | proteção remedida em 2026-09-24: 404, `[]` | 404 e `[]` hoje | ✅ **honesto**; a data é a de uma medição antiga, o estado é o mesmo |
 | `docs/SUBPROCESSORS.md:25-86` e `ROPA.md`, `INCIDENT-RESPONSE.md`, `BACKUP.md` (âncoras) | 91 `arquivo:linha` de código | todos existem e cabem no arquivo; seis conferidos por leitura (`server.ts:180-183`, `:323-325`, `users/[id]/route.ts:87`, `sessions/revoke/route.ts:7-8`, `session.ts:150`, `:161`) | ✅ **honesto** |
 | os mesmos quatro (links) | 38 links relativos | 0 mortos | ✅ **honesto** |
@@ -509,9 +517,9 @@ auditoria não edita `docs/`; o que está defasado fica registrado aqui.
 | `docs/features/accessibility-conformance/STATE.md`, `account-security-mfa/STATE.md` e `brand-config/STATE.md` | `review: in-progress` / `branch: -` | PRs #29, #30 e #32 mergeadas | ⚠️ **defasados**, estacionados em E11 |
 | `docs/AUTH-SSO.md:66-71` e a pendência do modo `simple` no `PRE-PRODUCTION.md` | redirecionamento do comum para a web no `simple` | não remedido; estacionado (E10) | ⚠️ nota de medição anterior segue no lugar |
 
-Os documentos que as rodadas anteriores mediram e que a PR #35 não tocou (`docs/ROPA.md`, `docs/SUBPROCESSORS.md`,
-`docs/FORKING.md`, `docs/SECURITY.md`) mantêm o veredito da tabela acima; a PR #35 não criou rota nem mudou
-guard, então as contagens do `docs/SECURITY.md:15-17` seguem certas. Os que a PR #34 também não tocou (`docs/PAYMENTS.md`, `docs/SETUP.md`,
+Os documentos que a PR #36 não tocou (`docs/INCIDENT-RESPONSE.md`, `docs/BACKUP.md`) mantêm o veredito medido
+em 2026-09-30. A PR #36 não criou rota nem mudou guard, então as contagens do `docs/SECURITY.md:15-17` seguem
+certas (o arquivo mudou só nas linhas 158 e 161). Os que a PR #34 também não tocou (`docs/PAYMENTS.md`, `docs/SETUP.md`,
 `AGENTS.md`, `packages/CLAUDE.md`, `docs/ARCHITECTURE.md`, `apps/app/CLAUDE.md`, `README.md`) mantêm o veredito
 de lá.
 
@@ -520,63 +528,47 @@ de lá.
 **Deriva** = o corte foi implementado diferente do especificado, ou o mundo mudou embaixo da spec.
 
 **Nenhuma deriva de spec nesta rodada**: nenhuma spec foi entregue, e as quatro vivas não ganharam código. A
-tarefa direta da PR #35 não tinha corte de spec; contra a recomendação da rodada anterior, entregou o que foi
-prometido (as duas mudanças de código, os testes de unidade, o runbook e o achado em `account-security-mfa`) e
-acrescentou duas correções de documento que o diff tornou necessárias (`docs/BACKUP.md:94` e o §9 do
-`PRE-PRODUCTION.md`).
+tarefa direta da PR #36 não tinha corte de spec; contra a recomendação da rodada anterior, entregou o que foi
+prometido (leitura por chamada, chave malformada como ausência, aviso de boot que separa os dois casos, testes de
+unidade) e manteve o schema estrito, porque a medição do `/analyze` mostrou que em `app` e `web` a chave errada
+já recusava o build. Os testes do boot foram para `corsOriginBoot.test.ts`, não para `instrumentation.test.ts`
+como a recomendação sugeria; o arquivo já tinha o `describe` do aviso do limitador.
 
-**Deriva de pipeline:** a branch `fix/disabled-account-revocation` não tem o `<project>` de
-`<project>/<type>/<title>` e ficou viva no remoto depois do merge, como a `run-full-task-cycle-v2` da PR #34
-(E11, pendência 16).
+**Deriva de pipeline:** nenhuma nova. A branch `security/fix/arcjet-key-lazy-validation` segue o padrão e ficou
+viva no remoto depois do merge, como as anteriores (pendência 16).
 
-### Âncoras deslocadas, corrigidas nesta rodada
+### Âncoras: o que foi relido nesta rodada
 
-A PR #35 alterou quatro arquivos de código e três documentos. `packages/auth/server.ts` trocou três linhas de
-JSDoc por três, então nenhuma âncora do arquivo se moveu (conferido: `getCurrentUser` segue em `:173`, a
-checagem em `:182`, `revokeUserSessions` em `:323`). O `PUT /users/[id]` ganhou quatro linhas a partir da
-`:124`. O `docs/PRE-PRODUCTION.md` ganhou uma linha na `:631` (§9) e cinco na `:889` (higiene). Cada âncora
-abaixo foi lida no disco.
+A rodada anterior remediu no working tree da tarefa as âncoras que o diff dela deslocava e avisou que só valeriam
+depois do merge. Com a PR #36 em `main`, cada uma foi relida no disco no `e791d3a`:
 
-| onde | citado | real hoje | causa |
-|------|--------|-----------|-------|
-| este arquivo, achado do admin que se desativa | `users/[id]/route.ts:87-126` | **`:87-143`** | o `PUT` inteiro, que agora termina na `:143`; a faixa antiga cortava o handler no meio |
-| este arquivo, lacuna "Banir usuário pelo admin" | `users/[id]/route.ts:117-121`, `UsersListClient.tsx:102-119` | **`:117-126`**, **`:102-125`** | a revogação entrou em `:124-126`; o `onCheckedChange` do switch vai até a `:125` |
-| este arquivo, pendência 26 | `PRE-PRODUCTION.md:690-701` (§13) | **`:691-702`** | a linha nova do §9 |
-| este arquivo, PR #27 item 4 | `PRE-PRODUCTION.md:733` | **`:734`** | idem |
-| este arquivo, 🔴 da conta desativada | `server.ts:180-184`, `users/[id]/route.ts:117-122` | movido para os fechados, com `server.ts:181-183` e `route.ts:124-126` | o achado fechou |
+| onde | âncora | conteúdo hoje | veredito |
+|------|--------|---------------|----------|
+| `observability-logging`, linhas 56 e 60 | `apps/api/instrumentation.ts:20` | o `console.warn` da cobrança meio configurada | confere |
+| `observability-logging`, linhas 81 e 163 | `instrumentation.ts:76-77` | `onRequestError` | confere |
+| `observability-logging`, linha 123 | `instrumentation.ts:58-74` | `register` | confere |
+| `observability-logging`, linhas 148 e 241; `account-security-mfa`, linha 341 | `packages/security/index.ts:40-43` | `readArcjetKey()` e o retorno no-op de `checkRateLimit` | confere |
+| este arquivo, `CORS_ORIGIN` | `instrumentation.ts:63-67` | o `throw` de produção | confere |
+| este arquivo, `isRateLimitEnforced()` | `index.ts:30` | o export, ainda sem chamador fora dos testes | confere |
+| este arquivo, contradições, pendências e achados | `PRE-PRODUCTION.md:587-588`, `:613-622`, `:696-707`, `:739`, `:894-898`, §8 `:567-582`, `:575-577`, `:454-455` | o texto citado em cada caso | conferem |
+| este arquivo, link do CRUD de referência | `FORKING.md:437` | o link para `../README.md#crud-de-referência` | confere (o link segue morto) |
+| este arquivo, cadastro sem trava | `SECURITY.md:160` | o aviso de que o cadastro depende do limite | confere |
 
-**Deslocadas pela tarefa `arcjet-key-lazy-validation`, ainda no working tree.** O diff dela acrescentou 23
-linhas a `apps/api/instrumentation.ts`, tirou 2 de `packages/security/index.ts` e mexeu em cinco documentos. As
-âncoras abaixo foram remedidas no arquivo do working tree e só valem depois do merge; em `main` seguem as
-antigas.
-
-| onde | citado | real no working tree | causa |
-|------|--------|----------------------|-------|
-| `observability-logging`, linhas 56 e 60 | `apps/api/instrumentation.ts:19` | **`:20`** | o import de `arcjetKeyState` na linha 1 |
-| `observability-logging`, linhas 81 e 163 | `instrumentation.ts:58-59` | **`:76-77`** | `warnOnDisabledRateLimit` (`:25-45`) |
-| `observability-logging`, linha 123 | `instrumentation.ts:35-56` | **`:58-74`** | idem |
-| `observability-logging`, linhas 148 e 241; `account-security-mfa`, linha 341 | `packages/security/index.ts:42-44` | **`:40-43`** | a leitura da chave passou para dentro de `checkRateLimit` (`:40`) |
-| este arquivo, `CORS_ORIGIN` | `instrumentation.ts:40-44` | **`:63-67`** | idem ao primeiro |
-| este arquivo, `isRateLimitEnforced()` | `index.ts:32` | **`:30`** | o `const` do topo saiu |
-| este arquivo, contradições, pendências e achados | `PRE-PRODUCTION.md:583-584`, `:609-617`, `:691-702`, `:734`, `:889-893`, §8 `:567-577` | **`:587-588`**, **`:613-622`**, **`:696-707`**, **`:739`**, **`:894-898`**, **`:567-582`** | quatro linhas no §8 (chave malformada) e uma no §9 |
-| este arquivo, link do CRUD de referência | `FORKING.md:433` | **`:437`** | quatro linhas no §7.3 (Arcjet) |
-| este arquivo, cadastro sem trava | `SECURITY.md:159` | **`:160`** | uma linha sobre a chave sem prefixo em `:158` |
+As âncoras que apontavam para o código anterior à PR #36 (`packages/security/index.ts:11`,
+`packages/security/keys.ts:9-15`, `apps/api/instrumentation.ts:46-50`, `:40-44`) saíram deste arquivo junto com o
+🔴 e a recomendação que as usavam.
 
 **Não corrigidas, porque a auditoria não edita spec arquivada:** a
-[`spec de compliance-docs-kit`](../docs/features/compliance-docs-kit/spec.md) cita `PRE-PRODUCTION.md:670`
-(real `:671`), `:702-718` (real `:703-719`), `:704-707` (real `:705-708`) e `:741` (real `:742`), na linha 32 e
-na linha 60. O texto apontado é o mesmo, uma linha abaixo.
+[`spec de compliance-docs-kit`](../docs/features/compliance-docs-kit/spec.md) cita, na linha 32,
+`PRE-PRODUCTION.md:670` como o ponto em que "incidente" aparecia de passagem; o trecho está hoje na `:676`. Na
+linha 60, cita o §14 em `:702-718` com os quatro links em `:704-707` (hoje `:708-724` e `:710-713`) e `:741` (hoje
+`:747`, o link para o `BACKUP.md`). O texto apontado é o mesmo, seis linhas abaixo, deslocado pelas PRs #35 e #36.
 
-As demais âncoras em `docs/PRE-PRODUCTION.md` citadas neste arquivo (`:54-58`, `:454-455`, `:567-577`,
-`:575-577`, `:583-584`, `:609-617`) ficam antes da `:631` e foram relidas em `main`: conferem (as que a
-tarefa seguinte deslocou no working tree estão na tabela acima). As specs vivas não citam
-linha de `docs/`. As âncoras de `users/[id]/route.ts` em `account-security-mfa` (`:120-126`),
-`observability-logging` (`:163`) e `plan-entitlements` (`:49`) conferem, assim como as deste arquivo para o
-`DELETE` (`:161`, `:162-171`, `:161-173`), corrigidas pelo `/review` da tarefa. A contagem de `logEvent(` fora de
-testes em `observability-logging` segue em **33**, recontada; a PR #35 não acrescentou nem tirou chamada de
-`logEvent` ou de `console` (`git diff c7aa4d9 1936369 -- apps packages`, fora de testes: 0 linhas). A tarefa `arcjet-key-lazy-validation` acrescenta, no working tree, um `console.error` de boot
-(`apps/api/instrumentation.ts:41`), do mesmo tipo dos avisos de boot que a spec já conta; a contagem não foi
-refeita.
+As specs vivas não citam linha de `docs/`. As âncoras de `users/[id]/route.ts` em `account-security-mfa`
+(`:120-126`), `observability-logging` (`:163`) e `plan-entitlements` (`:49`) conferem; o arquivo não mudou desde a
+PR #35. A contagem de `logEvent(` fora de testes em `observability-logging` segue em **33**, recontada; a PR #36
+não acrescentou chamada de `logEvent` e somou um `console.error` de boot (`apps/api/instrumentation.ts:41`), do
+mesmo tipo dos avisos de boot que a spec já conta.
 
 ### O que a auditoria **não** encontrou
 
@@ -589,14 +581,19 @@ nenhuma colisão possível.
 
 Coisas que não merecem spec própria, mas que são correções pontuais. Viram tarefa direta no `/analyze`.
 
-> **Auditoria de 2026-09-30 (pós-PR #35).** A rodada anterior fechou com 83 linhas abertas (82 da auditoria e
-> o 🟢 que o `/review` da tarefa acrescentou); o número não foi recontado linha a linha nesta rodada. A PR #35
-> alterou quatro arquivos de código: `packages/auth/server.ts`, `apps/api/app/(routes)/users/[id]/route.ts` e
-> dois testes. As linhas que citam esses arquivos foram reabertas no disco; as demais seguem iguais, porque o
-> arquivo é o mesmo byte a byte. **Placar: 1 fechado (o 🔴 da conta desativada) · 1 novo (`GET /auth/me` sem
-> `error.code`, visto no `/test` da tarefa) · 2 âncoras remedidas (o achado do admin que se desativa e a lacuna
-> "Banir usuário") · 83 abertos.** As duas lacunas de
-> teste novas do `/test` da tarefa estão na seção dela e não entram no placar, como nas rodadas anteriores.
+> **Auditoria de 2026-10-03 (pós-PR #36).** A rodada anterior fechou com 83 linhas abertas; o número não foi
+> recontado linha a linha nesta rodada. A PR #36 alterou quatro arquivos de código (`packages/security/keys.ts`,
+> `packages/security/index.ts`, `apps/api/instrumentation.ts`, `apps/api/.env.example`) e quatro testes. As
+> linhas que citam esses arquivos foram reabertas no disco; as demais seguem iguais, porque o arquivo é o mesmo
+> byte a byte. **Placar: 1 fechado (o 🔴 da `ARCJET_KEY`) · 2 novos (🟢, do `/review` da tarefa) · 1 ampliado
+> (o admin que se desativa ganhou o `DELETE` e o `type`) · 84 abertos.** A lacuna de teste que o `/test` da
+> tarefa deixou aberta está na seção dela e não entra no placar, como nas rodadas anteriores.
+
+### ✅ Fechados na auditoria de 2026-10-03 (PR #36)
+
+| achado | onde estava | como fechou |
+|--------|-------------|-------------|
+| 🔴 **`ARCJET_KEY` malformada lida no import de `packages/security`, e a API respondia erro a toda requisição** | `packages/security/index.ts:11` · `packages/security/keys.ts:9-15` · `apps/api/instrumentation.ts:46-50` (antes da PR #36) | O pacote lê a chave a cada chamada com `readArcjetKey()`, que trata chave sem `ajkey_` como ausente e não lança (`keys.ts:23-26`; `index.ts:40`, `:84`); o boot da API registra `console.error` sem o valor para chave malformada (`instrumentation.ts:40-44`). Testes de unidade: `rateLimit.test.ts:169`, `keys.test.ts:54`, `corsOriginBoot.test.ts:92` e `proxyArcjetKey.test.ts:60-72`, este com o proxy e o pacote reais; três mutações do `/test` derrubam os casos. Medido pelo `/test` contra o build de produção: `GET /health` `200` com a chave malformada, onde antes respondia `500` sem `x-request-id`. Em `app` e `web` o build segue recusando a chave, por decisão do plano da tarefa |
 
 ### ✅ Fechados na auditoria de 2026-09-30 (PR #35)
 
@@ -637,7 +634,7 @@ dependências.
 
 ### ⚠️ Achados abertos, reconferidos ou herdados
 
-Reconferidos em 2026-09-30, pós-PR #35, que não alterou nenhum dos arquivos desta tabela.
+Reconferidos em 2026-10-03, pós-PR #36, que não alterou nenhum dos arquivos desta tabela.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
@@ -668,14 +665,13 @@ entrega; os três ficaram fora dela por decisão registrada.
 |--------|------|-----------------|
 | 🟡 **Reenviar o cadastro depois de conta criada e login falho responde `USERS_AUTH_EMAIL_ALREADY_IN_USE`** | `apps/app/.../sign-up/components/SignUpFormClient.tsx:112-119` · `apps/web/.../sign-up/components/sign-up-form-client.tsx:34-40` | A criação e o login são duas chamadas. Se a primeira passa e a segunda falha (rede, 429, cookie de sessão), a pessoa reenvia, recebe "e-mail já cadastrado" e precisa ir ao login por conta própria. O `/review` deixou como está porque a correção muda o fluxo; a alternativa registrada é tentar o `signIn` quando o reenvio receber esse código logo depois de um 201 na mesma tela |
 | 🟡 **`create-dev-admin.mjs` não aplica a política de senha** | `apps/api/scripts/create-dev-admin.mjs:36-46` | O script cria administrador com qualquer senha que o Firebase aceite (6 ou mais). Fora da fatia por decisão do plano (P4): o script roda em Node puro e repetir a constante criaria a 12ª cópia. Afeta só quem opera o fork |
-| 🟡 **Sem `ARCJET_KEY`, nada limita a criação de contas em massa** | `apps/api/proxy.ts:47` (`/auth/sign-up` na lista) · `docs/PRE-PRODUCTION.md:575-577` · `docs/SECURITY.md:160` (âncoras remedidas em 2026-09-30, a segunda no working tree) | A rota cria a conta pelo Admin SDK, que não passa pelo limite do Firebase de 100 contas por hora por IP. A rota está na lista de rate limit, mas o limite é no-op sem a chave. Está escrito nos dois documentos; o critério 19 do `/test` ficou 🔒 |
+| 🟡 **Sem `ARCJET_KEY`, nada limita a criação de contas em massa** | `apps/api/proxy.ts:47` (`/auth/sign-up` na lista) · `docs/PRE-PRODUCTION.md:575-577` · `docs/SECURITY.md:160` (âncoras relidas em `main` em 2026-10-03) | A rota cria a conta pelo Admin SDK, que não passa pelo limite do Firebase de 100 contas por hora por IP. A rota está na lista de rate limit, mas o limite é no-op sem a chave. Está escrito nos dois documentos; o critério 19 do `/test` ficou 🔒 |
 
-### 🔴 Segurança: seguem abertos, confirmados no código
+### Segurança: seguem abertos, confirmados no código
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🔴 **`packages/security/index.ts:11`** lê `keys().ARCJET_KEY` no **import**, e a `apps/api` publica um build que responde erro a toda requisição | `packages/security/index.ts:11` · `packages/security/keys.ts:9-15` · `apps/api/proxy.ts:1` · `apps/api/instrumentation.ts:46-50` (âncoras de `main`, `1936369`) | Reconferido em 2026-09-30, pós-PR #35, e **corrigido pela medição da tarefa**: uma `ARCJET_KEY` presente e sem o prefixo `ajkey_` lança dentro do grafo de módulos do middleware da API, e toda requisição falha (o `/test` mediu `500` sem `x-request-id` em `GET /health` com o `index.ts` de `main`). O aviso de boot só confere se a variável existe. Em `apps/app` e `apps/web` o efeito é outro, e menos grave: o `next build` recusa a chave em "Collecting page data", porque o `env.ts` das duas estende o schema estrito; nenhuma das duas chega a publicar. Único 🔴 aberto. **Em execução** desde 2026-09-30 como [`arcjet-key-lazy-validation`](../docs/features/arcjet-key-lazy-validation/STATE.md), no working tree e sem PR: fecha no `/spec --sync` depois do merge |
-| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo** | `apps/api/instrumentation.ts:63-67` | Reconferido: `throw` em `:63-67` no working tree (desceu 23 linhas com o aviso de chave malformada da tarefa `arcjet-key-lazy-validation`; em `main` segue em `:40-44`), zero `process.exit`. `/health/ready` detecta parte das falhas, não esta |
+| ⚠️ **O gate de produção do `CORS_ORIGIN` não derruba o processo** | `apps/api/instrumentation.ts:63-67` | Reconferido em 2026-10-03, em `main`: `throw` em `:63-67`, zero `process.exit`. `/health/ready` detecta parte das falhas, não esta. Nenhum 🔴 de código segue aberto nesta seção desde a PR #36 |
 | ⚠️ **Quatro das sete rotas de `/account` seguem fora do rate limit**, entre elas a troca de senha | `apps/api/proxy.ts:45-58` | Recontado em 2026-09-30: a PR #33 criou `POST /account/email` já na lista (`:57`). Ficam fora o `PUT /account`, `/account/password`, `/account/sessions/revoke` e `/account/onboarding`. A PR #25 acrescentou `POST /payments/checkout` e `POST /payments/portal`, também fora; cada checkout pode criar uma sessão na Stripe |
 | ⚠️ **Superfície não-guardada da API: 12 de 32** arquivos de rota exportam handler nu, 9 deles `/auth/*` | `apps/api/app/(routes)/auth/**` | Recontado em 2026-09-30: 32 arquivos, 20 com guard. A PR #33 acrescentou `account/email` (com guard) e `auth/email-change/confirm` (nua, como as outras confirmações por link, e na lista de rate limit). Os 12 nus: 9 em `/auth/*`, os dois `health` e o webhook de pagamento. `docs/SECURITY.md:15-17` traz os mesmos números |
 | 🟡 **O endpoint de renovação de sessão está fora do rate limit e aceita requisição sem `Origin`** | `packages/auth/session-routes.ts:87` · `packages/auth/session.ts:78-81` | Reconferido. A parte documental está fechada (`docs/SECURITY.md:155`, âncora remedida em 2026-09-30); o comportamento segue |
@@ -691,12 +687,12 @@ entrega; os três ficaram fora dela por decisão registrada.
 | 🟡 **`input-otp.tsx` é código morto** | `packages/design-system/components/ui/input-otp.tsx` | Reconferido: só ele, o barril, o `package.json` do pacote e o `playground`. `account-security-mfa` (fatia 3, segundo fator) é quem o usaria |
 | 🟡 **`import-in-the-middle` e `require-in-the-middle` instalados e nunca importados** | `apps/app/package.json:27,36` | Reconferido: 0 importadores |
 | 🟡 **`packages/internationalization` tem dois defeitos de `exports`** | `packages/internationalization/package.json:5-12` | Reconferido em 2026-09-26, depois da PR #28 mexer no arquivo: falta `"./utils/*"`, e `"."` (`:6`) aponta para `index.ts`, que não existe |
-| 🟡 **`isRateLimitEnforced()` é export morto** | `packages/security/index.ts:30` | Reconferido no working tree: a tarefa `arcjet-key-lazy-validation` passou a função a ler a chave por chamada e a âncora subiu de `:32` para `:30`. Todas as referências seguem em `__tests__/rateLimit.test.ts` (agora 9) |
+| 🟡 **`isRateLimitEnforced()` é export morto** | `packages/security/index.ts:30` | Reconferido em `main` em 2026-10-03: a PR #36 passou a função a ler a chave por chamada (`readArcjetKey()`), e ela segue sem chamador fora dos testes. As 9 referências estão em `__tests__/rateLimit.test.ts` |
 | 🟡 **`FormattedError.retryAfterSeconds` sem consumidor** fora dos testes | `packages/shared/utils/helpers/formattedError.ts:14,23` | Reconferido. O homônimo de outro tipo em `apps/api/proxy.ts:109` (âncora remedida em 2026-09-30) segue sem relação |
 | 🟡 **`reloadCurrentUser` sem teste próprio** | `packages/auth/client.ts:214` | Reconferido em 2026-09-27 (a âncora subiu dez linhas com a saída do `signUp` na PR #29): só `useEmailVerification.test.tsx`, que a mocka |
 | 🟡 **`packages/shared` tem `test` e não tem `typecheck`** | `packages/shared/package.json:11` (só `test`) | Metade fechada pela PR #32: o `@repo/design-system` ganhou a task de `test` (`packages/design-system/package.json:7`, 45 testes). Falta o `typecheck` do `packages/shared`, adiado desde a primeira auditoria |
 | 🟡 **`welcomeEmail` sem chamador de produção**; o formulário de contato da landing segue maquete | `packages/email/templates/welcome.tsx:50` | Reconferido: 4 ocorrências, 3 em teste. O canal de privacidade da `apps/web` cai nesse formulário quando `NEXT_PUBLIC_PRIVACY_CONTACT` está vazia (`privacyContact.ts:17-18`), então o fallback do canal aponta para uma maquete |
-| 🟡 **`useListAuditEvents.test.tsx` deixa trabalho do React pendente depois do teardown** (novo, 2026-09-28) | `apps/app/__tests__/useListAuditEvents.test.tsx:55-70` (um `QueryClient` por teste, sem `clear()` nem `unmount` ao fim) | A suíte da `apps/app` falhou em 2 de 6 execuções locais em 2026-09-28 com `ReferenceError: window is not defined`, que o Vitest atribui a este arquivo: os testes passam e o erro não tratado reprova a task. Na auditoria pós-PR #31 passou nas 6 execuções (688 testes cada) na pós-PR #32 também (6 de 6, 702 testes cada) e na pós-PR #33 também (6 de 6, 756 testes cada), então o acumulado é 2 falhas em 24. O arquivo não muda desde a PR #18. O CI passou nas execuções de merge das PRs #29 a #33. Correção provável, não testada: limpar o `QueryClient` e desmontar o hook no `afterEach`. Tarefa direta P |
+| 🟡 **`useListAuditEvents.test.tsx` deixa trabalho do React pendente depois do teardown** (novo, 2026-09-28) | `apps/app/__tests__/useListAuditEvents.test.tsx:55-70` (um `QueryClient` por teste, sem `clear()` nem `unmount` ao fim) | A suíte da `apps/app` falhou em 2 de 6 execuções locais em 2026-09-28 com `ReferenceError: window is not defined`, que o Vitest atribui a este arquivo: os testes passam e o erro não tratado reprova a task. Na auditoria pós-PR #31 passou nas 6 execuções (688 testes cada) na pós-PR #32 também (6 de 6, 702 testes cada) e na pós-PR #33 também (6 de 6, 756 testes cada), então o acumulado era 2 falhas em 24; com as execuções das rodadas pós-PR #34, #35 e #36, nenhuma com falha, é 2 em 34. O arquivo não muda desde a PR #18. O CI passou nas execuções de merge das PRs #29 a #36. Correção provável, não testada: limpar o `QueryClient` e desmontar o hook no `afterEach`. Tarefa direta P |
 
 ### 🟡 Repositório, rotas e proxy
 
@@ -856,12 +852,12 @@ desativada fechou com a PR #35 e está na lista de fechados.
 ### 🆕 Achado da tarefa `disabled-account-revocation` (2026-09-30)
 
 Vem da decisão D7 do plano da tarefa, entregue pela PR #35. O plano deixou o ponto para o backlog e nenhuma etapa
-o registrou; o `/review` da tarefa o trouxe para cá. Reconferido no `1936369`: o `PUT` segue sem comparar o alvo
-com o ator.
+o registrou; o `/review` da tarefa o trouxe para cá. Reconferido no `e791d3a` (2026-10-03): o `PUT` segue sem
+comparar o alvo com o ator, e o `DELETE` também não. **É a recomendação de #1 desta rodada**, com o escopo da D9.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟢 **O admin pode desativar a própria conta** | `apps/api/app/(routes)/users/[id]/route.ts:87-143` (o `PUT` não compara o `id` com `ctx.actorProfile.id`) · `UsersListClient.tsx:102-125` (o switch de status aparece também na linha do próprio admin) | Já acontecia antes da tarefa: o cookie de sessão recusava o admin desativado. Com a correção, o bearer também cai na requisição seguinte e as sessões são revogadas, então o admin perde o painel na hora e só volta pelas mãos de outro admin ou pelo console do Firebase. Num fork com um admin só, ninguém consegue reativá-lo pelo painel. Correção provável: a API recusa `disabled: true` para o próprio perfil, com `error.code` nos 3 idiomas, e a listagem esconde o switch nessa linha. P |
+| 🟢 **O admin pode desativar, arquivar ou rebaixar a própria conta** (ampliado em 2026-10-03) | `apps/api/app/(routes)/users/[id]/route.ts:87-143` (o `PUT` não compara o `id` com `ctx.actorProfile.id`; o `type` muda em `:108-110`) · `:145-188` (o `DELETE`, idem) · `UsersListClient.tsx:102-125` (o switch de status aparece também na linha do próprio admin) e `:141-148` (o `ActionsMenu` de arquivar, idem) | Já acontecia antes da tarefa: o cookie de sessão recusava o admin desativado. Com a correção, o bearer também cai na requisição seguinte e as sessões são revogadas, então o admin perde o painel na hora e só volta pelas mãos de outro admin ou pelo console do Firebase. Num fork com um admin só, ninguém consegue reativá-lo pelo painel. **Ampliação, por leitura:** rebaixar o próprio `type` para comum tira o admin do painel no guard seguinte (`apps/api/app/(guards)/admin.ts:47-49` exige `type === ADMIN`); o efeito do auto-arquivamento sobre o login não foi medido. Correção provável: a API recusa as três operações para o próprio perfil, com `error.code` nos 3 idiomas, e a listagem e o formulário escondem esses controles nessa linha. P |
 
 **Lacunas de teste e 🔒 herdados da entrega, com veredito desta auditoria:**
 
@@ -872,24 +868,42 @@ com o ator.
 | Pessoa desativada com o app aberto cai no sign-in com a mensagem certa, nos 3 idiomas | **continua aberta**, 🔒 | sem passada de navegador, por custo: o diff não toca UI e o 401 é o mesmo que a revogação de sessão já produzia |
 | Admin desativado como alvo (critério 1 medido só com conta comum) | **continua aberta**, nova, risco baixo | mesmo caminho de código; o `/test` não desativou a conta de QA de admin, que é compartilhada entre rodadas |
 
+### 🆕 Achados da tarefa `arcjet-key-lazy-validation` (2026-10-03)
+
+Vindos do `/review` da tarefa, entregue pela PR #36, e reconferidos no `e791d3a`. Nenhum bloqueou a entrega.
+
+| achado | onde | por que importa |
+|--------|------|-----------------|
+| 🟢 **A regra "aparar e tratar vazio como ausente" existe em duas cópias** | `packages/security/keys.ts:35-41` (o `preprocess` do schema estrito) · `:8-17` (`trimmedString` e `arcjetKeyState`) | O schema do build e o leitor de runtime decidem cada um, por conta própria, o que é chave válida. Se uma cópia mudar, o build de `app`/`web` e a API passam a discordar. O `/review` não aplicou porque o schema estrito ficou fora do escopo por decisão do plano. P |
+| 🟢 **Os `.env.example` de `app` e `web` não avisam que uma chave sem `ajkey_` derruba o build** | `apps/app/.env.example:29-30` · `apps/web/.env.example:8-9` | O comentário diz só que, sem a chave, o pacote vira no-op. O `.env.example` da `apps/api` foi atualizado pela PR #36; os outros dois ficaram fora do diff. Quem cola a chave errada descobre no deploy, que falha em "Collecting page data". Correção de texto, P |
+
+**Lacunas de teste e 🔒 herdados da entrega, com veredito desta auditoria:**
+
+| lacuna | veredito 2026-10-03 | motivo |
+|--------|---------------------|--------|
+| O proxy da API com o `@repo/security` real e a chave malformada | **fechada** pelo `/test` | `apps/api/__tests__/proxyArcjetKey.test.ts:60-72`; a mutação com o `index.ts` antigo derruba o caso |
+| O build de `app`/`web` falhando com a chave errada, sem teste automatizado | **fora de escopo** | o build não roda no CI; `keys.test.ts` protege a causa (o schema estrito), e o `/test` mediu o build à mão |
+| Chave válida contra a Arcjet real | **continua aberta**, 🔒 | exige credencial e IP de cliente; somada à pendência 24 |
+
 ## Pendências vivas sem dono
 
 > A maior parte destas tem **casa versionada** em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md).
-> Na auditoria pós-PR #35 foram remedidas as linhas 6, 8 e 16, e a 4, a 12 e a 15 ganharam informação do `/test`
-> da tarefa. As outras mantêm o veredito anterior com motivo: exigem console de provedor, ou dependem de arquivos
-> que a PR #35 não tocou. A PR #35 não criou índice, rule nem variável de ambiente, e não acrescentou passo
-> manual ao `PRE-PRODUCTION.md` ("Pré-requisitos manuais de infra: nenhum", no `STATE.md` da tarefa).
+> Na auditoria pós-PR #36 foram remedidas as linhas 6, 8 e 16, e a 24 ganhou o 🔒 da tarefa. As outras mantêm o
+> veredito anterior com motivo: exigem console de provedor, ou dependem de arquivos que a PR #36 não tocou. A PR
+> #36 não criou índice, rule nem variável de ambiente; acrescentou ao §8 do `PRE-PRODUCTION.md` o efeito da chave
+> malformada, que é texto e não passo manual ("Pré-requisitos manuais de infra: nenhum", no `STATE.md` da
+> tarefa).
 
-| # | pendência | onde vive | veredito 2026-09-30 |
+| # | pendência | onde vive | veredito 2026-10-03 |
 |---|-----------|-----------|---------------------|
 | 1 | 🔴 Publicar os três índices dos resumos da home (`GET /entities/summary` e `/users/summary` respondem 503 sem eles) | `PRE-PRODUCTION.md` §1.5 | **continua aberto**; não remedido nesta rodada, nada no repositório mudou |
 | 2 | 🔴 Publicar o índice das faixas de recência (`user`: `deletedAt` + `lastAccessAt`) | `PRE-PRODUCTION.md` §1.7 | **continua aberto**; idem |
 | 3 | 🔴 Publicar o índice da trilha de auditoria (filtro por usuário responde 503) | `PRE-PRODUCTION.md` §1.2 | **continua aberto**; idem |
 | 4 | 🔴 Publicar o índice da listagem paginada de `entity` | `PRE-PRODUCTION.md` §1.1 | **continua aberto, medido**: o `/test` da PR #35 recebeu `503 PAGINATION_INDEX_MISSING` em `GET /entities` contra o projeto de desenvolvimento (`test/report.md:85`), então o índice não está publicado nem lá. São **seis** índices sem publicação; o comando é um só |
 | 5 | Retenção da coleção `auditEvent` | `PRE-PRODUCTION.md` §1.3 | **continua aberto**, estacionado (E5) |
-| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-09-30 pós-PR #35 (404, `[]`, 35 PRs); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
+| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-10-03 pós-PR #36 (404, `[]`, 36 PRs); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
 | 7 | Backfill de instantes em base que já tem dado | `PRE-PRODUCTION.md` §1.4 | **continua aberto**; não é mensurável daqui |
-| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-09-30 pós-PR #35: `grep` por `@sentry`/`@logtail`/`@axiomhq`/`betterstack` nos `package.json` versionados devolve 0; estacionado (E1) |
+| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-10-03 pós-PR #36: `grep` por `@sentry`/`@logtail`/`@axiomhq`/`betterstack` nos `package.json` versionados devolve 0; estacionado (E1) |
 | 9 | Health check da plataforma não aponta para `/health/ready` | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: configuração de plataforma |
 | 10 | `SESSION_COOKIE_DOMAIN` em subdomínios distintos | `PRE-PRODUCTION.md` §7 | **continua aberto** (configuração de deploy) |
 | 11 | Cloud Storage não ativado (plano Blaze) | `PRE-PRODUCTION.md` §6 | **continua aberto** em produção. Desde a PR #31, upload, avatar e o passo `storage` do expurgo rodam e têm teste sob o emulador; contra bucket real seguem sem prova o objeto que não abre sem assinatura e a expiração da URL V4 |
@@ -897,7 +911,7 @@ com o ator.
 | 13 | Envio real de e-mail nunca provado | `PRE-PRODUCTION.md` §3 | **continua aberto** (exige domínio com SPF/DKIM). O `/test` da PR #24 viu o envio do e-mail de verificação falhar sob o emulador, com `RESEND_TOKEN` vazio, como esperado. O `/test` da PR #29 deixou 🔒 o e-mail de verificação depois do cadastro pela API (critério 20). O `/test` de `brand-config` deixou 🔒 o nome da marca com acento na caixa de entrada. O `/test` da PR #33 deixou 🔒 a entrega do aviso ao endereço antigo e do link ao novo; sem Resend o pedido responde `503 EMAIL_NOT_CONFIGURED`, medido nos 3 idiomas |
 | 14 | CSP Report-Only na `apps/web` | `PRE-PRODUCTION.md` §10 | **continua aberto**, deliberado |
 | 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:894-898`) e usou a `qa-admin@` compartilhada, sem senha; não acumulou nada |
-| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-09-30 pós-PR #35: `git ls-remote --heads origin` devolve 34, ou seja, 33 além de `main` (eram 32; a `fix/disabled-account-revocation` ficou viva depois do merge, como a `run-full-task-cycle-v2`) |
+| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-10-03 pós-PR #36: `git ls-remote --heads origin` devolve 35, ou seja, 34 além de `main` (eram 33; a `security/fix/arcjet-key-lazy-validation` ficou viva depois do merge, como a `fix/disabled-account-revocation`) |
 | 17 | Login com Google sem passe manual com conta real | *(só neste arquivo)* | **continua aberto**. O `/test` da PR #24 também não percorreu o Google no emulador; o nome do Google como valor inicial do passo 1 ficou fechado só por leitura |
 | 18 | `storage.rules` nunca publicado (o teste veio com a PR #31) | `PRE-PRODUCTION.md` §6 e `:54-58` | **metade fechada** pela PR #31: `storage.rules` e `firestore.rules` têm teste contra emulador no `verify` (20 e 145 testes; entrega em [`storage-emulator-rules-tests`](../docs/features/storage-emulator-rules-tests/spec.md)). **Continua aberto** publicar no projeto real, que depende da 11 |
 | 19 | Conferir a retenção de log da plataforma | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: painel do provedor |
@@ -905,11 +919,11 @@ com o ator.
 | 21 | No modo `simple` o titular não alcança a aba de privacidade | `PRE-PRODUCTION.md`, seção "Pendência — no modo `simple`…" | **premissa falsa, medida**: o `simple` não restringe o painel comum, então o titular alcança a aba. **Fechada pelo usuário em 2026-09-25.** A nota de correção fica no documento. Volta se o `simple` passar a restringir o painel comum (E10) |
 | 22 | `NEXT_PUBLIC_PRIVACY_CONTACT` precisa ser definida por fork | `PRE-PRODUCTION.md` §7 (checklist) | **continua aberto**. Vazia, o canal cai no formulário de contato, que é maquete |
 | 23 | Stripe por fork: catálogo recorrente, Customer Portal, endpoint de webhook na versão `2025-09-30.clover` com **cinco** eventos (a PR #27 acrescentou `invoice.paid`, `PRE-PRODUCTION.md:454-455`), chaves na `apps/api`, TTL opcional de `paymentEvent`; e a decisão sobre checar assinatura duplicada na Stripe antes do release | `PRE-PRODUCTION.md` §12 | **continua aberto**. A PR #33 acrescentou ao §12 habilitar a edição do e-mail no Customer Portal, porque a troca de e-mail não atualiza o `customer`. Cinco critérios de `billing-subscription`, quatro de `admin-billing-insights` o cancelamento real no arquivamento pelo admin (PR #28) e o botão de checkout em carregamento (PR #32) seguem 🔒 até uma conta real existir. `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` seguem vazias nos `.env` locais |
-| 24 | 🆕 `ARCJET_KEY` por fork: sem ela o rate limit é no-op, e o cadastro pela API passa a depender dela (a rota usa o Admin SDK, fora do limite do Firebase por IP) | `PRE-PRODUCTION.md` §8 (`:567-582`) | **aberto**, entrou com a PR #29. Critério 19 do `/test` da fatia 1 🔒 |
+| 24 | 🆕 `ARCJET_KEY` por fork: sem ela o rate limit é no-op, e o cadastro pela API passa a depender dela (a rota usa o Admin SDK, fora do limite do Firebase por IP) | `PRE-PRODUCTION.md` §8 (`:567-582`) | **aberto**, entrou com a PR #29. Critério 19 do `/test` da fatia 1 🔒. Desde a PR #36, a chave precisa ter o prefixo `ajkey_`: sem ele, a API trata a chave como ausente e registra um erro no boot, e o build de `app` e `web` falha (`PRE-PRODUCTION.md:579-581`). A chave válida contra a Arcjet real segue 🔒 (`/test` da tarefa `arcjet-key-lazy-validation`) |
 | 25 | 🆕 Fechar o cadastro pelo REST do Identity Toolkit com a chave pública, que ainda aceita senha de 6 ou 7 (Identity Platform: password policy em `ENFORCE` ou cadastro pelo cliente desligado) | `PRE-PRODUCTION.md`, "Declaração — o que a política de senha não alcança" | **opcional, declarado**: o upgrade tem custo ou teto (3.000 DAU no Spark). Critério 18 do `/test` da fatia 1 🔒 |
 | 26 | 🆕 Marca por fork: `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e `NEXT_PUBLIC_APP_SUPPORT_EMAIL` nos projetos `app`, `web` e `api`, logo numa URL `https` pública, ícones do produto no lugar dos padrões | `PRE-PRODUCTION.md` §13 (`:696-707`) | **aberto**, entrou com a PR #30. Sem ela, o produto sobe com o nome `next-boilerplate`; não bloqueia nada. Desde a PR #33, sem `NEXT_PUBLIC_APP_SUPPORT_EMAIL` o aviso de troca de e-mail sai sem a linha de suporte, que é o canal para contestar (`PRE-PRODUCTION.md` §3) |
 
-A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. A 4 foi medida no projeto de desenvolvimento em 2026-09-30. A 23 cresceu com as PRs #27, #28, #32 e #33; a 24 e a 25 vieram da PR #29; a 26, da PR #30, e ganhou peso com a #33. A 13 ganhou um 🔒 com a #33.
+A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. A 4 foi medida no projeto de desenvolvimento em 2026-09-30. A 23 cresceu com as PRs #27, #28, #32 e #33; a 24 e a 25 vieram da PR #29; a 26, da PR #30, e ganhou peso com a #33. A 13 ganhou um 🔒 com a #33, e a 24, um com a #36.
 
 ## Lacunas avaliadas e **não** especificadas
 
@@ -967,14 +981,14 @@ Descartadas de propósito, com o motivo. Reabrir exige argumento novo.
 | Waitlist / captura de lead | 2/10 | Decisão do fork. |
 | **Consertar o formulário de contato da landing** | — | Não é spec, é achado. É o fallback do canal de privacidade. |
 | **Migrar a listagem de usuários para o cursor** | — | O N+1 de `userRepository.list()` vem primeiro. |
-| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 24 execuções somando as rodadas de 2026-09-29 e 2026-09-30; ver achados), e o CI passou. O critério de reabertura era um segundo *flake* **no CI**; este ainda não conta. Consertar o teste é tarefa direta P. |
+| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 34 execuções locais até 2026-10-03; ver achados), e o CI passou. O critério de reabertura era um segundo *flake* **no CI**; este ainda não conta. Consertar o teste é tarefa direta P. |
 | Provedor de e-mail plugável · rastreio de abertura/clique | — | Fora do corte de `transactional-emails`. |
 | Múltiplos arquivos, galeria, thumbnails, antivírus, PDF | — | Fora do corte de `file-upload-storage`. |
 | Tracing distribuído (OpenTelemetry) · session replay · monitoramento sintético | prática 6 | Fora do corte de `observability-logging`. |
 | API keys do usuário · webhooks de saída | 1/10 cada | Só valem se o produto é uma API. |
 | Widget de feedback · referral/afiliados | 1/10 e 0/10 | Terceirizar é mais racional. |
 | SSO enterprise · SCIM | 0/10 | Só entra com o primeiro contrato enterprise. |
-| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | O pré-requisito (CI verde e estável) vale nas 13 últimas execuções de merge na `main`, de `e656331` a `f377c84` (`gh run list`, remedido em 2026-09-30). Reavaliar junto com o branch protection (E3). |
+| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | O pré-requisito (CI verde e estável) vale nas 30 últimas execuções do CI na `main`, até `e791d3a` (`gh run list --branch main --limit 30`, todas `success`, remedido em 2026-10-03). Reavaliar junto com o branch protection (E3). |
 | Remote Cache do Turbo | prática 1 | Arrasta conta e env; entra quando doer, como opt-in. |
 | Limiar de cobertura que bloqueia merge | prática 5 | A cobertura já é medida e consolidada (`pnpm coverage`, job `coverage` do CI), pela PR #26. O limiar ficou fora do corte de [`e2e-testing`](../docs/features/e2e-testing/spec.md); reavaliar depois de algumas medições. |
 | Changesets / versionamento · Storybook | — | Pacotes `private: true`; o `playground` serve de catálogo. |

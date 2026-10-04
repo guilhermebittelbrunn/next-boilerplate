@@ -1,13 +1,16 @@
 import { UserType } from "@repo/sdk/src/types";
 import { setCookie } from "@repo/shared/utils/helpers/cookies";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { listUsersMock, actionsMenuSpy } = vi.hoisted(() => ({
+const { listUsersMock, actionsMenuSpy, authMock } = vi.hoisted(() => ({
     listUsersMock: vi.fn(),
     actionsMenuSpy: vi.fn(),
+    authMock: vi.fn(),
 }));
+
+vi.mock("@repo/auth/provider", () => ({ default: () => authMock() }));
 
 vi.mock("next/navigation", () => ({
     useRouter: () => ({ push: vi.fn() }),
@@ -133,6 +136,8 @@ beforeEach(() => {
     cleanup();
     listUsersMock.mockReset();
     actionsMenuSpy.mockReset();
+    authMock.mockReset();
+    authMock.mockReturnValue({ user: null });
     givenLocale("pt-br");
 });
 
@@ -197,5 +202,91 @@ describe("status switch on the admin users list", () => {
                 name: "Usuário ativo: user@example.com",
             })
         ).toBeTruthy();
+    });
+});
+
+describe("the signed-in admin's own row", () => {
+    const OWN_UID = "admin-uid";
+    const ROW_COUNT = 2;
+
+    function givenOwnAndOtherRows() {
+        givenUsers([
+            user({
+                id: "p-own",
+                uid: OWN_UID,
+                reference_id: OWN_UID,
+                type: UserType.ADMIN,
+                displayName: "Own",
+            }),
+            user({
+                id: "p-other-admin",
+                uid: "other-admin-uid",
+                reference_id: "other-admin-uid",
+                type: UserType.ADMIN,
+                displayName: "Other",
+            }),
+        ]);
+    }
+
+    function statusSwitchOfRow(rowIndex: number) {
+        const statusCell = screen.getAllByTestId("cell-disabled")[rowIndex];
+        return within(statusCell as HTMLElement).getByRole("switch");
+    }
+
+    function actionsMenuPropsOfRow(rowIndex: number) {
+        const lastRender = actionsMenuSpy.mock.calls.slice(-ROW_COUNT);
+        return lastRender[rowIndex]?.[0] as { onDelete?: unknown } | undefined;
+    }
+
+    it.each([
+        ["pt-br", "Você não pode desativar a sua própria conta."],
+        ["en", "You can't disable your own account."],
+        ["es", "No puedes desactivar tu propia cuenta."],
+    ])("disables the status switch and explains why in %s", (locale, hint) => {
+        givenLocale(locale);
+        authMock.mockReturnValue({ user: { uid: OWN_UID } });
+        givenOwnAndOtherRows();
+
+        render(<UsersListClient />);
+
+        const ownSwitch = statusSwitchOfRow(0);
+        expect(ownSwitch).toHaveProperty("disabled", true);
+        expect(ownSwitch.getAttribute("title")).toBe(hint);
+    });
+
+    it("offers no archive action on the own row", () => {
+        authMock.mockReturnValue({ user: { uid: OWN_UID } });
+        givenOwnAndOtherRows();
+
+        render(<UsersListClient />);
+
+        expect(actionsMenuPropsOfRow(0)?.onDelete).toBeUndefined();
+    });
+
+    it("keeps both controls on other rows, other admins included", () => {
+        authMock.mockReturnValue({ user: { uid: OWN_UID } });
+        givenOwnAndOtherRows();
+
+        render(<UsersListClient />);
+
+        const otherSwitch = statusSwitchOfRow(1);
+        expect(otherSwitch).toHaveProperty("disabled", false);
+        expect(otherSwitch.getAttribute("title")).toBeNull();
+        expect(actionsMenuPropsOfRow(1)?.onDelete).toBeTypeOf("function");
+    });
+
+    it("treats no row as own while the signed-in user is unknown", () => {
+        givenOwnAndOtherRows();
+
+        render(<UsersListClient />);
+
+        for (const rowIndex of [0, 1]) {
+            expect(statusSwitchOfRow(rowIndex)).toHaveProperty(
+                "disabled",
+                false
+            );
+        }
+        expect(actionsMenuPropsOfRow(0)?.onDelete).toBeTypeOf("function");
+        expect(actionsMenuPropsOfRow(1)?.onDelete).toBeTypeOf("function");
     });
 });

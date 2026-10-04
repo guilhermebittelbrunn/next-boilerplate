@@ -23,7 +23,11 @@ const {
     recordPaidInvoiceMock,
     recordActivationMock,
     ensurePlanLabelMock,
+    applyEntitlementsStateMock,
+    listActiveEntitlementKeysMock,
 } = vi.hoisted(() => ({
+    applyEntitlementsStateMock: vi.fn(),
+    listActiveEntitlementKeysMock: vi.fn(),
     recordPaidInvoiceMock: vi.fn(),
     recordActivationMock: vi.fn(),
     ensurePlanLabelMock: vi.fn(),
@@ -76,6 +80,17 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
             calls.push("applySubscriptionState");
             return applySubscriptionStateMock(...args);
         },
+        applyEntitlementsState: (...args: unknown[]) => {
+            calls.push("applyEntitlementsState");
+            return applyEntitlementsStateMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/lib/billing", () => ({
+    listActiveEntitlementKeys: (...args: unknown[]) => {
+        calls.push("listActiveEntitlementKeys");
+        return listActiveEntitlementKeysMock(...args);
     },
 }));
 
@@ -188,6 +203,8 @@ beforeEach(() => {
     recordPaidInvoiceMock.mockResolvedValue("created");
     recordActivationMock.mockResolvedValue("created");
     ensurePlanLabelMock.mockResolvedValue(undefined);
+    applyEntitlementsStateMock.mockResolvedValue("applied");
+    listActiveEntitlementKeysMock.mockResolvedValue([]);
     warn = vi.spyOn(console, "warn").mockImplementation(() => {
         return;
     });
@@ -845,6 +862,174 @@ describe("POST /webhooks/payments — nome do plano nos eventos de assinatura", 
     });
 });
 
+/** Shaped after the example in the provider's Entitlements documentation, with fake ids. */
+function entitlementSummaryEvent(
+    lookupKeys: string[] = ["advanced-reports"],
+    overrides: { hasMore?: boolean; created?: number; customer?: string } = {}
+) {
+    const customer = overrides.customer ?? "cus_qa";
+    return {
+        id: "evt_qa_entitlements",
+        type: "entitlements.active_entitlement_summary.updated",
+        created: overrides.created ?? EVENT_CREATED,
+        data: {
+            object: {
+                object: "entitlements.active_entitlement_summary",
+                customer,
+                entitlements: {
+                    object: "list",
+                    data: lookupKeys.map((lookupKey, index) => ({
+                        id: `ent_qa_${index}`,
+                        object: "entitlements.active_entitlement",
+                        feature: `feat_qa_${index}`,
+                        livemode: false,
+                        lookup_key: lookupKey,
+                    })),
+                    has_more: overrides.hasMore ?? false,
+                    url: `/v1/customer/${customer}/entitlements`,
+                },
+                livemode: false,
+            },
+        },
+    };
+}
+
+describe("POST /webhooks/payments — entitlements.active_entitlement_summary.updated", () => {
+    it("grava a lista de recursos, sem repetição e em ordem, no perfil achado pelo customer", async () => {
+        constructEventMock.mockReturnValue(
+            entitlementSummaryEvent([
+                "priority-support",
+                "advanced-reports",
+                "priority-support",
+            ])
+        );
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(findByStripeCustomerIdMock).toHaveBeenCalledWith("cus_qa");
+        expect(applyEntitlementsStateMock).toHaveBeenCalledWith("profile-1", {
+            features: ["advanced-reports", "priority-support"],
+            lastEventAt: new Date(EVENT_CREATED * MS),
+        });
+        expect(listActiveEntitlementKeysMock).not.toHaveBeenCalled();
+        expect(calls).toEqual(["applyEntitlementsState", "markProcessed"]);
+    });
+
+    it("grava a lista vazia quando o cliente perdeu todos os recursos", async () => {
+        constructEventMock.mockReturnValue(entitlementSummaryEvent([]));
+
+        await POST(request());
+
+        expect(applyEntitlementsStateMock).toHaveBeenCalledWith(
+            "profile-1",
+            expect.objectContaining({ features: [] })
+        );
+    });
+
+    it("responde 200, registra e marca quando nenhum perfil corresponde", async () => {
+        findByStripeCustomerIdMock.mockResolvedValue(null);
+        constructEventMock.mockReturnValue(entitlementSummaryEvent());
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(applyEntitlementsStateMock).not.toHaveBeenCalled();
+        expect(findByIdMock).not.toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith(
+            "[payments] webhook-profile-not-found eventType=entitlements.active_entitlement_summary.updated"
+        );
+        expect(markProcessedMock).toHaveBeenCalledWith(
+            expect.objectContaining({ id: "evt_qa_entitlements" })
+        );
+    });
+
+    it("com has_more, busca a lista completa na Stripe pelo customer e usa o resultado", async () => {
+        listActiveEntitlementKeysMock.mockResolvedValue([
+            "feature-11",
+            "advanced-reports",
+        ]);
+        constructEventMock.mockReturnValue(
+            entitlementSummaryEvent(["advanced-reports"], { hasMore: true })
+        );
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(listActiveEntitlementKeysMock).toHaveBeenCalledWith(
+            expect.objectContaining({ webhooks: expect.any(Object) }),
+            "cus_qa"
+        );
+        expect(applyEntitlementsStateMock).toHaveBeenCalledWith(
+            "profile-1",
+            expect.objectContaining({
+                features: ["advanced-reports", "feature-11"],
+            })
+        );
+        expect(calls).toEqual([
+            "listActiveEntitlementKeys",
+            "applyEntitlementsState",
+            "markProcessed",
+        ]);
+    });
+
+    it("responde 500 e não marca quando a listagem da Stripe falha, para a Stripe reentregar", async () => {
+        listActiveEntitlementKeysMock.mockRejectedValue(
+            new Error("stripe unavailable")
+        );
+        constructEventMock.mockReturnValue(
+            entitlementSummaryEvent(["advanced-reports"], { hasMore: true })
+        );
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(applyEntitlementsStateMock).not.toHaveBeenCalled();
+        expect(markProcessedMock).not.toHaveBeenCalled();
+    });
+
+    it("responde 500 e não marca quando a gravação falha", async () => {
+        applyEntitlementsStateMock.mockRejectedValue(
+            new Error("firestore down")
+        );
+        constructEventMock.mockReturnValue(entitlementSummaryEvent());
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(markProcessedMock).not.toHaveBeenCalled();
+    });
+
+    it("registra o resultado e a contagem sem os lookup_key", async () => {
+        applyEntitlementsStateMock.mockResolvedValue("skipped");
+        constructEventMock.mockReturnValue(
+            entitlementSummaryEvent(["advanced-reports", "priority-support"])
+        );
+
+        await POST(request());
+        const logged = warn.mock.calls.flat().join("\n");
+
+        expect(warn).toHaveBeenCalledWith(
+            "[payments] webhook-entitlements-reconciled eventType=entitlements.active_entitlement_summary.updated result=skipped featureCount=2"
+        );
+        expect(logged).not.toContain("advanced-reports");
+        expect(logged).not.toContain("priority-support");
+    });
+
+    it("duplicado não roda o handler de recursos", async () => {
+        wasProcessedMock.mockResolvedValue(true);
+        constructEventMock.mockReturnValue(entitlementSummaryEvent());
+
+        const response = await POST(request());
+
+        await expect(response.json()).resolves.toEqual({
+            ok: true,
+            duplicate: true,
+        });
+        expect(applyEntitlementsStateMock).not.toHaveBeenCalled();
+    });
+});
+
 /**
  * Signed with the real Stripe helper, so the verification itself is exercised: the HMAC is
  * computed locally and no request leaves the process.
@@ -890,6 +1075,30 @@ describe("POST /webhooks/payments — assinatura real da Stripe", () => {
         );
         expect(markProcessedMock).toHaveBeenCalledWith(
             expect.objectContaining({ id: "evt_sub" })
+        );
+    });
+
+    it("processa o resumo de recursos com assinatura válida", async () => {
+        const stripe = await realStripe();
+        getStripeMock.mockReturnValue(stripe);
+        getWebhookSecretMock.mockReturnValue(WEBHOOK_SECRET);
+        const payload = JSON.stringify(entitlementSummaryEvent());
+        withSignature(
+            stripe.webhooks.generateTestHeaderString({
+                payload,
+                secret: WEBHOOK_SECRET,
+            })
+        );
+
+        const response = await POST(request(payload));
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(applyEntitlementsStateMock).toHaveBeenCalledWith("profile-1", {
+            features: ["advanced-reports"],
+            lastEventAt: new Date(EVENT_CREATED * MS),
+        });
+        expect(markProcessedMock).toHaveBeenCalledWith(
+            expect.objectContaining({ id: "evt_qa_entitlements" })
         );
     });
 

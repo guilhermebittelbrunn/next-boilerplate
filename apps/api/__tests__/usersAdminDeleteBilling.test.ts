@@ -270,4 +270,21 @@ describe("DELETE /users/[id] cancels the live subscription first", () => {
         expect(getStripeMock).not.toHaveBeenCalled();
         expect(deleteMock).not.toHaveBeenCalled();
     });
+
+    it("leaves the caller's own live subscription alone when refusing to archive them", async () => {
+        findByIdMock.mockResolvedValue({
+            ...ADMIN_PROFILE,
+            subscription: { subscriptionId: SUBSCRIPTION_ID, status: "active" },
+        });
+
+        const response = await archive();
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await response.json()).toEqual({
+            error: { code: "USERS_SELF_LOCKOUT_FORBIDDEN" },
+        });
+        expect(getStripeMock).not.toHaveBeenCalled();
+        expect(cancelMock).not.toHaveBeenCalled();
+        expect(deleteMock).not.toHaveBeenCalled();
+    });
 });

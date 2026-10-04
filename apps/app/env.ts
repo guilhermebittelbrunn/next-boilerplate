@@ -4,6 +4,8 @@ import { keys as security } from "@repo/security/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+const STRIPE_LOOKUP_KEY_MAX_LENGTH = 80;
+
 export const env = createEnv({
     extends: [core(), email(), security()],
     server: {
@@ -24,6 +26,12 @@ export const env = createEnv({
         // bucket and the emulator origin is allowed in the image policy.
         NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST: z.string().optional(),
         NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
+        // Lookup key of the provider feature that creating an entity demands while billing
+        // is on. Must match the API's value.
+        NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE: z
+            .string()
+            .max(STRIPE_LOOKUP_KEY_MAX_LENGTH)
+            .optional(),
     },
     runtimeEnv: {
         ONBOARDING_ENABLED: process.env.ONBOARDING_ENABLED,
@@ -37,5 +45,7 @@ export const env = createEnv({
             process.env.NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST,
         NEXT_PUBLIC_GA_MEASUREMENT_ID:
             process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+        NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE:
+            process.env.NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE || undefined,
     },
 });

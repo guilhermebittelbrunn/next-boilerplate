@@ -29,11 +29,16 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
+vi.mock("@/(shared)/lib/billing", () => ({
+    isBillingEnabled: () => true,
+}));
+
 const { assertReadOnlyWhileImpersonating } = await import(
     "@/(shared)/lib/impersonation-read-only"
 );
 const { requireAdminApi } = await import("@/app/(guards)/admin");
 const { requireCommonPanelApi } = await import("@/app/(guards)/common-panel");
+const { requirePlanApi } = await import("@/app/(guards)/plan");
 
 const ADMIN_UID = "admin-1";
 const TARGET_UID = "common-9";
@@ -54,6 +59,11 @@ const SAFE_METHODS = ["GET", "HEAD", "OPTIONS"];
 
 const GUARDS_DIRECTORY = resolve(__dirname, "../app/(guards)");
 const GUARD_WRAPPER_EXPORT = /export function require\w*Api/;
+const GUARD_WRAPPER_EXPORTS = /export function require\w*Api/g;
+const BASE_GUARD_FILES = ["admin.ts", "common-panel.ts"];
+const BASE_GUARD_IMPORT = /from "\.\/(?:admin|common-panel)"/;
+const BASE_GUARD_DELEGATIONS =
+    /return require(?:CommonPanel|Admin)Api\s*(?:<[^>]*>)?\(/g;
 
 function context(isImpersonating: boolean): ResolvedAuthRequestContext {
     return {
@@ -150,11 +160,34 @@ describe("read-only impersonation is symmetric across panels", () => {
             );
         }
     });
+
+    it("answers the same on the plan guard, before the plan is looked at", async () => {
+        for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+            const handler = vi.fn();
+
+            const commonResponse = await requireCommonPanelApi(handler)(
+                request(method)
+            );
+            const planResponse = await requirePlanApi(
+                { feature: "any-feature" },
+                handler
+            )(request(method));
+
+            expect(handler).not.toHaveBeenCalled();
+            expect(planResponse.status).toBe(commonResponse.status);
+            expect(await planResponse.json()).toEqual(
+                await commonResponse.json()
+            );
+        }
+    });
 });
 
 /**
  * A guard that forgets the rule is exactly how the asymmetry appeared in the first place,
- * and documentation did not prevent it. Every guard wrapper has to consume the helper.
+ * and documentation did not prevent it. Every guard wrapper has to consume the helper,
+ * either itself or by returning one of the two base guards, which do. A file with two
+ * wrappers and one delegation fails, and a composed guard still needs a behaviour test of
+ * its own proving the refusal comes first.
  */
 describe("every panel guard consumes the read-only helper", () => {
     const guardSources = readdirSync(GUARDS_DIRECTORY)
@@ -169,12 +202,34 @@ describe("every panel guard consumes the read-only helper", () => {
         expect(guardSources.length).toBeGreaterThanOrEqual(2);
     });
 
-    it.each(guardSources.map(({ file }) => file))(
+    it.each(BASE_GUARD_FILES)(
         "%s calls assertReadOnlyWhileImpersonating",
         (file) => {
             const guard = guardSources.find((entry) => entry.file === file);
 
             expect(guard?.source).toContain("assertReadOnlyWhileImpersonating");
+        }
+    );
+
+    it.each(
+        guardSources
+            .map(({ file }) => file)
+            .filter((file) => !BASE_GUARD_FILES.includes(file))
+    )(
+        "%s calls the helper or delegates every wrapper to a base guard",
+        (file) => {
+            const source =
+                guardSources.find((entry) => entry.file === file)?.source ?? "";
+            const callsHelper = source.includes(
+                "assertReadOnlyWhileImpersonating"
+            );
+            const wrappers = source.match(GUARD_WRAPPER_EXPORTS)?.length ?? 0;
+            const delegations =
+                source.match(BASE_GUARD_DELEGATIONS)?.length ?? 0;
+            const delegatesEveryWrapper =
+                BASE_GUARD_IMPORT.test(source) && delegations >= wrappers;
+
+            expect(callsHelper || delegatesEveryWrapper).toBe(true);
         }
     );
 });

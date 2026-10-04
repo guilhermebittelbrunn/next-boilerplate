@@ -44,7 +44,8 @@ Compõe [`/new-api-route`](../new-api-route/SKILL.md) (rotas) e [`/i18n-sync`](.
   transação.
 - **O estado da assinatura é escrito só pelo webhook.** Checkout e portal nunca gravam `subscription`.
 - **Nada de reler a Stripe no webhook**: o payload basta, e reler tornaria o webhook impossível de testar
-  sem conta.
+  sem conta. A única exceção é o resumo de recursos com `has_more` (o evento traz no máximo 10):
+  `listActiveEntitlementKeys` busca a lista completa, e uma falha ali responde 500 para a Stripe reentregar.
 - **Expurgo**: o passo `billing` roda primeiro e, se falhar, nada é apagado.
 
 ## Receitas
@@ -61,9 +62,20 @@ Compõe [`/new-api-route`](../new-api-route/SKILL.md) (rotas) e [`/i18n-sync`](.
 
 ### Gate de acesso por plano
 
-Leia `account.subscription` (UI) ou `ctx.subjectProfile.subscription` (API) com `isLiveSubscription` de
-`billing-state.ts`, que usa `LIVE_SUBSCRIPTION_STATUSES` do SDK. Espelhe o gate na API: esconder na UI não
-protege nada.
+- **API:** troque `requireCommonPanelApi` por `requirePlanApi(requirement, handler)` de
+  `apps/api/app/(guards)/plan.ts`. `requirement` é `{}` (só assinatura viva), `{ feature: "<lookup_key>" }`,
+  `null` (sem gate) ou uma função que devolve um desses a cada requisição. Para checar no meio do handler,
+  `refusePlanAccess(ctx.subjectProfile, requirement)` de `(shared)/lib/plan-access.ts` devolve a `Response`
+  403 ou `null`. Os códigos são `PLAN_SUBSCRIPTION_REQUIRED` e `PLAN_FEATURE_REQUIRED`, já em `apiErrors`.
+- **UI:** envolva o trecho em `<PlanGate requirement={...}>` de `apps/app/shared/components/ui/PlanGate.tsx`.
+  Ele decide com `account.planAccess`, que a API calcula com o mesmo `isBillingEnabled()`, e mostra o convite
+  com link para a aba de cobrança. Esconder na UI não protege nada: a rota precisa do gate também.
+- **Regra:** `planAccessDenial` do SDK. Cobrança desligada passa tudo; assinatura viva
+  (`LIVE_SUBSCRIPTION_STATUSES`) é exigida sempre; o recurso, quando pedido, tem de estar em
+  `user.entitlements.features`, gravado pelo webhook a partir de
+  `entitlements.active_entitlement_summary.updated`.
+- **Exemplo:** a criação de `entity` (`POST /entities` e `/entities/create`) atrás de
+  `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE`.
 
 ### Reembolso programático
 

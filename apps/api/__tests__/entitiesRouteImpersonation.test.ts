@@ -23,6 +23,11 @@ const {
     deleteMock: vi.fn(),
 }));
 
+// Billing reaches Stripe through `server-only`; switched off, nothing is plan-gated,
+// which is how every environment without Stripe keys behaves.
+vi.mock("@/(shared)/lib/billing", () => ({ isBillingEnabled: () => false }));
+vi.mock("@/env", () => ({ env: {} }));
+
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
     recordAuditEvent: vi.fn(),
     recordImpersonationSession: vi.fn(),

@@ -7,6 +7,8 @@ import { userRepository } from "../repositories/user.repository";
 import { toPlanDTO } from "./billing-state";
 
 const CATALOG_PAGE_SIZE = 100;
+const ENTITLEMENTS_PAGE_SIZE = 100;
+const MAX_ACTIVE_ENTITLEMENTS = 1000;
 const TRAILING_SLASHES = /\/+$/;
 
 const STRIPE_LOCALE: Record<Locale, "pt-BR" | "en" | "es"> = {
@@ -171,4 +173,19 @@ export async function cancelSubscriptionForErasure(
         }
         throw error;
     }
+}
+
+/**
+ * Only for a summary flagged `has_more`: the event inlines at most ten entitlements, and the
+ * rest of the list has to be paged from the provider.
+ */
+export async function listActiveEntitlementKeys(
+    stripe: Stripe,
+    customerId: string
+): Promise<string[]> {
+    const entitlements = await stripe.entitlements.activeEntitlements
+        .list({ customer: customerId, limit: ENTITLEMENTS_PAGE_SIZE })
+        .autoPagingToArray({ limit: MAX_ACTIVE_ENTITLEMENTS });
+
+    return entitlements.map((entitlement) => entitlement.lookup_key);
 }
