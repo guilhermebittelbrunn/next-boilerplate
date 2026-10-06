@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-09-30
+updated: 2026-10-04
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -46,11 +46,11 @@ segue invisível até alguém conferir a fatura.
   *(Âncoras e contagem remedidas em 2026-09-17: a PR #18 acrescentou o escopo `audit` à união, deslocando o
   restante do arquivo em uma linha.)*
 - **As variações de formato acabaram.** Os **16** pontos de log deliberado passam todos pelo helper, entre
-  eles `apps/api/proxy.ts:70`, `webhooks/payments/route.ts:223,235`, `users/route.ts:80`,
+  eles `apps/api/proxy.ts:70`, `webhooks/payments/route.ts:272,284`, `users/route.ts:80`,
   `auth/sign-up/route.ts:58`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
   `(shared)/lib/storage.ts:109`, `account-avatar.ts:45`, `entity-photo.ts:62` e os dois que a PR #18 trouxe
   em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). *(Âncoras de `proxy.ts` e `storage.ts` remedidas em 2026-09-23: a PR #23 deslocou as duas; a de `storage.ts` desceu de novo para `:109` com a PR #31, remedida em 2026-09-29. A PR #23 também
-  acrescentou dois pontos novos pelo helper, `account-export.ts:100` e `account-erasure.ts:159`: `git grep "logEvent("`
+  acrescentou dois pontos novos pelo helper, `account-export.ts:120` e `account-erasure.ts:165` (âncoras remedidas em 2026-10-04): `git grep "logEvent("`
   fora de `__tests__` dá 19 chamadas hoje, contra 17 no `03498ae`. A distância entre 17 e os 16 desta
   linha é de recorte, não de fato. Chamadas de `console` cru seguem em 19 linhas de 12 arquivos (recontado em 2026-09-27; o `console.warn` de
   `apps/api/instrumentation.ts:20`, da PR #25, não tinha entrado na soma), 7 delas em
@@ -69,7 +69,11 @@ segue invisível até alguém conferir a fatura.
   `:58`, e a de `users/route.ts` desceu para `:80`. Remedido em 2026-09-30, depois da PR #33: **33** linhas. As
   duas novas são do escopo `account`: `email-change-link-failed` (`account/email/route.ts:130`) e
   `email-change-audit-skipped` (`auth/email-change/confirm/route.ts:87`). O `console` cru segue em 19 linhas
-  de 12 arquivos.)* Os dois clones que esta spec
+  de 12 arquivos. Remedido em 2026-10-04, depois das PRs #37 a #39: **37** linhas. As quatro novas são
+  `webhook-entitlements-reconciled` (escopo `payments`, `webhooks/payments/route.ts:181`, PR #38) e três do
+  escopo `auth` no rastreio de sessões (`session-touch-failed` e `session-check-failed`, em
+  `(shared)/lib/session-tracker.ts:92`, `:117` e `:133`, PR #39). As duas âncoras de falha do webhook
+  desceram para `:272` e `:284`. Nenhuma das três PRs acrescentou `console` cru.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
 - **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:125` gera o UUID, `:164` o
@@ -95,7 +99,7 @@ segue invisível até alguém conferir a fatura.
   a indexa. Descobrir um erro continua dependendo de alguém abrir o painel. É o item 1 do corte, e é a
   razão de esta spec não estar fechada — detalhe em [Estado da entrega](#estado-da-entrega).
 - **`packages/auth/server.ts` não foi migrado** e concentra **7** das 14 chamadas de `console` cruas que
-  sobraram (`:191`, `:204`, `:220`, `:253`, `:279`, `:308`, `:327`), todas passando o objeto de erro e sem
+  sobraram (`:194`, `:211`, `:227`, `:260`, `:286`, `:315`, `:334`, remedidas em 2026-10-04 depois da PR #39), todas passando o objeto de erro e sem
   prefixo — num pacote de autenticação, que é onde o objeto de erro tem mais chance de carregar
   identificador de usuário.
   Recontagem de 2026-09-19, depois da PR #21: **16 chamadas `console.*` em 10 arquivos**, das quais 2 são o
@@ -162,7 +166,7 @@ continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário
 |---------------|----------|-----------|
 | 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:76-77`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
 | 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:125,164,78-79` · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
-| 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:223,235` · `users/route.ts:80` · `auth/sign-up/route.ts:58`, todos com `requestId` (âncoras remedidas em 2026-09-27) |
+| 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:272,284` · `users/route.ts:80` · `auth/sign-up/route.ts:58`, todos com `requestId` (âncoras remedidas em 2026-09-27) |
 | 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-57`, booleano nu, teto de 2 s em `:9` |
 | 5. Camada no-op sem a variável do serviço | **implementado**, por não haver serviço | zero dependência nova, zero env nova, zero linha em `.env.example` |
 | 6. Código morto de analytics removido | **implementado** | entregue por tabela em 2026-09-01 |
@@ -204,7 +208,7 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
       resposta de erro, colando o que o usuário vê ao que o servidor registrou. — `apps/api/proxy.ts:125`
       gera, `:164` repassa ao handler, `:78-79` carimba na resposta; `formattedError.ts:117` lê de volta.
 - [x] Os pontos que hoje usam `console` em fluxos críticos (webhook de pagamento, criação de perfil)
-      passam a emitir log estruturado com esse identificador. — `webhooks/payments/route.ts:223,235`,
+      passam a emitir log estruturado com esse identificador. — `webhooks/payments/route.ts:272,284`,
       `users/route.ts:80`, `auth/sign-up/route.ts:58`.
 - [x] O endpoint de saúde deixa de mentir: distingue "o processo está de pé" de "as dependências
       respondem", e não é pré-renderizado. — `health/route.ts:3` e `health/ready/route.ts`, sobre
@@ -245,7 +249,7 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
 - **Vazamento de dado pessoal no log** (prática 7): token, e-mail e corpo de requisição não podem entrar.
   Num repo com autenticação e pagamento, um log descuidado é um incidente de privacidade — e cruza com o
   escopo de `data-rights-lgpd`, entregue na PR #23. O expurgo de conta dela registra só o **nome** do erro
-  de cada passo, nunca a mensagem (`apps/api/(shared)/lib/account-erasure.ts:36-38`), porque a mensagem de
+  de cada passo, nunca a mensagem (`apps/api/(shared)/lib/account-erasure.ts:37-40`), porque a mensagem de
   uma falha do Firestore ou do Admin SDK carrega caminho de documento e payload do titular.
 - **Conflito de instrumentação** (prática 6): coletor e plataforma disputam a configuração de
   OpenTelemetry, e o sintoma é trace mudo — falha silenciosa, difícil de perceber. **Restrição de runtime**
@@ -262,7 +266,7 @@ Marcados com o resultado do `/test` da feature (16 critérios aprovados, 0 repro
 - ✅ A partir do identificador que o usuário vê numa tela de erro recupera-se toda a trilha da requisição —
   verificado em build de produção, não em `next dev`.
 - ❌ Uma falha no webhook de pagamento gera **alerta** rastreável. Hoje gera **registro** rastreável
-  (`webhooks/payments/route.ts:235`); alerta exige o coletor.
+  (`webhooks/payments/route.ts:284`); alerta exige o coletor.
 - ✅ Derrubar o acesso ao banco faz o endpoint de prontidão falhar; o de vida continua respondendo.
 - ✅ Subir tudo do zero sem nenhuma variável de coleta funciona — é o modo padrão.
 - ✅ Nenhum token, senha ou e-mail aparece nos logs: a assinatura do helper não aceita objeto, e a query

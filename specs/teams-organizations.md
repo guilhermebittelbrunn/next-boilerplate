@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: -
-updated: 2026-09-28
+updated: 2026-10-04
 ---
 
 # Organizações, membros e convites
@@ -36,8 +36,8 @@ updated: 2026-09-28
 >    |---------|--------|----------------|
 >    | `entities/[id]/route.ts` | `:24`, `:40`, `:102` | posse do **registro** (`row.userId !== ctx.subjectProfile.id`) |
 >    | `entities/[id]/route.ts` | `:67`, `:86` | posse do **objeto no bucket** (`isUsablePhotoReference`, `isOwnStorageObject`) |
->    | `entities/route.ts` | `:26`, `:71`, `:79` | escopo da listagem, posse do objeto, gravação do dono — as três desceram na PR #17, que paginou o `GET` |
->    | `account/route.ts` | `:41`, `:154` | posse do objeto — 🆕 **PR #12** |
+>    | `entities/route.ts` | `:28`, `:73`, `:81` | escopo da listagem, posse do objeto, gravação do dono. Desceram na PR #17, que paginou o `GET`, e de novo na PR #38, que pôs o gate por plano no `POST` (remedidas em 2026-10-04) |
+>    | `account/route.ts` | `:49`, `:162` | posse do objeto — 🆕 **PR #12** |
 >    | `files/route.ts` | `:27` | derivação do caminho pelo dono (`buildObjectPath`) |
 >
 >    Com o predicado num só lugar, trocar "dono = usuário" por "dono = organização" deixa de ser reescrita.
@@ -77,7 +77,7 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   (`:1`, `:5`, `:11`, `:14`), e no único consumidor, o JSON-LD da home da web
   (`apps/web/app/[locale]/(home)/page.tsx:4`, `:32`). É marcação da landing, nada a ver. *(Recontado em
   2026-09-27; âncoras da home remedidas em 2026-09-28, depois da PR #30.)*
-- `packages/sdk/src/types/user/user.ts:4` (âncora remedida em 2026-09-25; o import da PR #25 empurrou o enum) — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
+- `packages/sdk/src/types/user/user.ts:5` (âncora remedida em 2026-10-04; o import de `EntitlementsState` da PR #38 empurrou o enum mais uma linha) — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
   O papel é **global**, não relativo a um grupo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
   (`:27`) trata `ADMIN` como papel de plataforma.
@@ -109,6 +109,9 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   `where("userId", "==", userId)` (`:23`, `:40`, `:64`, `:72`). **Os 14 sítios contados em 2026-09-19 são
   piso, não número**: a auditoria desta rodada não recontou o resto pelo critério da tabela acima, só
   confirmou que o total subiu em pelo menos dois.
+  *(Nota de 2026-10-04: a PR #39 criou a coleção `session`, cujo repositório filtra por `where("uid", "==", uid)`
+  em três pontos (`session.repository.ts:69`, `:89`, `:211`). Não entram na contagem: sessão pertence à
+  pessoa, não a um grupo, e continuaria assim com organizações.)*
 - `apps/api/app/(routes)/entities/summary/route.ts:9` — o handler passa `ctx.subjectProfile.id` como
   chave de escopo para o repositório. **Décimo quarto sítio**, criado pela PR #19.
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
@@ -121,7 +124,7 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
   em prosa mas nunca numerou. São 4 três rodadas atrás e 14 hoje.
   A PR #11 passou a codificar a posse também no **prefixo do caminho no bucket**
   (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath:37`/`isOwnedBy:50`, âncora remedida em 2026-09-27), e a PR #12 replicou esse padrão
-  num terceiro recurso (`account/route.ts:41,154`).
+  num terceiro recurso (`account/route.ts:49,162`, remedidas em 2026-10-04: a PR #38 acrescentou o `planAccess` à resposta da conta).
   ⚠️ **Correção de fato, medida em 2026-09-19:** a versão anterior afirmava que esse prefixo está
   "espelhado em `storage.rules`". Não está. O arquivo é negação total (`allow read, write: if false` em
   `:28`) e não menciona `userId`, `uid` nem dono. A posse por prefixo existe só no código da API. Isso
@@ -222,7 +225,7 @@ ponta a ponta, não entregar administração de times completa.
   `deferred` é só adiar a conta com juros.
   > **Nota da auditoria de 2026-09-24.** As duas specs citadas acima como pré-requisito do adiamento foram
   > entregues: `account-settings` (PR #12) e `billing-subscription` (PR #25). A segunda gravou a
-  > assinatura no perfil do usuário (`packages/sdk/src/types/user/user.ts:63`, `:65`), então a cobrança por
+  > assinatura no perfil do usuário (`packages/sdk/src/types/user/user.ts:64`, `:66`, remedidas em 2026-10-04), então a cobrança por
   > organização, fora deste corte, agora pressupõe migrar esse vínculo. O motivo escrito do `deferred`
   > perdeu parte da base; a decisão de status continua sendo sua (E2 no `BACKLOG.md`).
 - Organização implícita (uma por usuário, invisível) ou explícita desde o início? — **recomendação:**
