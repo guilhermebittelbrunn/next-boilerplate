@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-04
+updated: 2026-10-07
 ---
 
 # MFA, sessões ativas e política de senha
@@ -300,7 +300,7 @@ e **não** é arquivada.
 |-------|----------------|----------|
 | 1 — política de senha | item 4 | ✅ **entregue** pela PR #29 (`597f641`), mergeada em 2026-09-26 com CI verde no SHA de merge. Evidência no item 4 acima |
 | 2 — sessões | item 2 e o resíduo do item 3 (logout local, encerramento seletivo) | ✅ **entregue** pela PR #39 (`d92d21b`), mergeada em 2026-10-04 com CI verde no SHA de merge (`gh run 37239437558`). Feature em `docs/features/account-active-sessions/`. Evidência nos itens 2 e 3 acima |
-| 3 — segundo fator | item 5, com códigos de recuperação, e o item 6 (opt-in) | ⏳ não iniciada, e **nenhuma feature ativa**. Preço do MFA no Identity Platform segue **não confirmado**. Enquanto a spec estiver `in-progress`, ela fica fora dos lotes paralelos; o destino da fatia é a decisão D10 do `BACKLOG.md` |
+| 3 — segundo fator | item 5, com códigos de recuperação, e o item 6 (opt-in) | ⏳ não iniciada, e **nenhuma feature ativa**. Preço do MFA no Identity Platform segue **não confirmado**. Enquanto a spec estiver `in-progress`, ela fica fora dos lotes paralelos; o destino da fatia é a decisão estacionada E12 do `BACKLOG.md` (era a D10 até 2026-10-07) |
 
 A spec passou a `in-progress` com `feature: account-security-mfa` e **não** foi arquivada depois da fatia 1.
 *(Auditoria de 2026-10-04: com a fatia 2 entregue, seguem abertos só os itens 5 e 6. O `feature:` do
