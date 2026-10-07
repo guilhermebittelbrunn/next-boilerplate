@@ -44,7 +44,7 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 ## i18n e a11y
 
 - **Não** use strings literais em JSX para mensagens de interface, placeholders, `aria-label`, confirmações, toasts ou títulos de coluna. Centralize em `@repo/internationalization` (mesmo padrão de chave em `pt-br`, `en`, `es`) — use a skill `/i18n-sync`.
-- Resolver locale: prefira `getDictionary()` (client/server). Os helpers já aplicam fallback/default. O do client segue o segmento `[locale]` via `LocaleProvider` (montado no root layout); o do servidor lê o cookie `x-locale`. Componente client acima do segmento `[locale]` usa `useDictionary()`, para re-renderizar na troca de idioma.
+- Resolver locale: prefira `getDictionary()` (client/server). Os helpers já aplicam fallback/default. O do client segue o segmento `[locale]` via `LocaleProvider` (montado no root layout); o do servidor segue o mesmo segmento, que o `proxy.ts` repassa no header `x-request-locale`, e só cai no cookie `x-locale` quando o header falta. Componente client acima do segmento `[locale]` usa `useDictionary()`, para re-renderizar na troca de idioma.
 - Ao guardar um objeto/fatia do dictionary em variável, use **nome descritivo** (`adminUsersForm`, `entitiesMessages`, …), **nunca** letras soltas como `t`/`d`.
 - Para Zod, injete mensagens a partir do `dictionary` (ex.: `buildXxxSchema(dictionary)`), não texto fixo no schema compartilhado.
 - Layouts responsivos: mobile primeiro, breakpoints consistentes com o design system.
@@ -78,7 +78,7 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 
 ## 404
 
-- UI de rota não encontrada: **`NotFoundPage`** (RSC) + `app/not-found.tsx` e `app/[locale]/not-found.tsx`; textos em `apps.app.pages.common.notFound`; botão "início" com `href` resolvido no servidor (`resolveNotFoundHomePath`: comum → `/{locale}`, admin → `/{locale}/admin`).
+- UI de rota não encontrada: **`NotFoundPage`** (RSC) + `app/not-found.tsx` (não há `not-found` sob `[locale]`); textos em `apps.app.pages.common.notFound`; botão "início" com `href` resolvido no servidor (`resolveNotFoundHomePath`: comum → `/{locale}`, admin → `/{locale}/admin`).
 
 ## Validação visual
 
