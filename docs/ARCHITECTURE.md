@@ -61,7 +61,7 @@ Monorepo **boilerplate full-stack** (fork customizado do [next-forge](https://gi
 
 - Pacote próprio `@repo/internationalization`, **sem serviço de terceiros**. Idiomas: `pt-br`, `en`, `es`.
 - Dicionário composto por arquivos-folha (cada um com as 3 chaves de idioma) que sobem por `index.ts` até `translations/global.ts`.
-- No servidor, `getDictionary()` de `@repo/internationalization/server` resolve o locale pelo cookie `x-locale`. No client, `getDictionary()` segue o segmento `[locale]` da URL por meio do `LocaleProvider`, montado nos root layouts de `apps/app` e `apps/web`, e usa o cookie só em árvore sem provider. Os dois aplicam fallback/default.
+- No servidor, `getDictionary()` de `@repo/internationalization/server` resolve o locale pelo segmento `[locale]` da URL, que os proxies de `apps/app` e `apps/web` repassam no header de requisição `x-request-locale`, sobrescrevendo o valor que o navegador tenha mandado. Sem header válido, cai no cookie `x-locale` e depois no padrão. Rota fora do `matcher` do proxy (`/api/*`, `_next/*`) recebe o header como o navegador mandou; como `getDictionary()` só aceita um dos três idiomas, um valor forjado escolhe no máximo o idioma da própria resposta (é o caso do 404 de `/api/inexistente` na app). O cookie continua sendo gravado pelos proxies, mas só chega na requisição seguinte. No client, `getDictionary()` segue o segmento `[locale]` da URL por meio do `LocaleProvider`, montado nos root layouts de `apps/app` e `apps/web`, e usa o cookie só em árvore sem provider. Os dois aplicam fallback/default.
 - Erros de API: a API responde `error.code` estável; o app traduz via `apiErrors` (`translations/packages/shared/utils.ts`) + `FormattedError`/`handleClientError`.
 
 ## UI, tema e responsividade
