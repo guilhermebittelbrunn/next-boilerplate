@@ -1,7 +1,7 @@
 ---
 id: plan-entitlements
 title: Acesso por plano espelhado na API
-status: in-progress
+status: done
 value: médio
 effort: M
 audience: produto
@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: ["apps/api/app/(routes)/webhooks/payments/route.ts", apps/api/(shared)/lib/billing-state.ts, packages/sdk/src/types/payments/payments.ts]
 feature: plan-entitlements
-updated: 2026-09-30
+updated: 2026-10-04
 ---
 
 # Acesso por plano espelhado na API
@@ -59,7 +59,7 @@ não existe mais no repositório.)*
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md), tabela
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), tabela
   original e adendo de 2026-09-26.
 - Prevalência: **2/10** para feature flags e 2/10 para metering na tabela original; o adendo confirma que o
   padrão dos kits é entregar o estado da assinatura e deixar o gate com quem constrói. O Makerkit documenta
@@ -75,15 +75,45 @@ não existe mais no repositório.)*
 
 ## Proposta — corte de MVP
 
-- [ ] A API tem uma checagem reutilizável que recusa, com código de erro próprio, quem não tem assinatura viva.
+- [x] A API tem uma checagem reutilizável que recusa, com código de erro próprio, quem não tem assinatura viva.
       A mesma checagem aceita um recurso nomeado e recusa quem não tem esse recurso.
-- [ ] A lista de recursos do titular é mantida no perfil a partir do webhook da Stripe e exposta ao front pelo
+- [x] A lista de recursos do titular é mantida no perfil a partir do webhook da Stripe e exposta ao front pelo
       SDK, junto do que a conta já devolve.
-- [ ] O app tem um jeito padrão de condicionar um trecho de tela ao plano, que mostra o convite para assinar
+- [x] O app tem um jeito padrão de condicionar um trecho de tela ao plano, que mostra o convite para assinar
       no lugar do conteúdo, com texto traduzido e link para a aba de cobrança.
-- [ ] O recurso de referência `entity` demonstra o gate atrás de um recurso configurável, desligado por
+- [x] O recurso de referência `entity` demonstra o gate atrás de um recurso configurável, desligado por
       padrão: fork que não configura nada vê o comportamento de hoje.
-- [ ] No modo `simple`, ou com a cobrança desligada, a checagem não bloqueia nada.
+- [x] No modo `simple`, ou com a cobrança desligada, a checagem não bloqueia nada.
+
+### Entrega (auditoria de 2026-10-04)
+
+Entregue pela PR #38 (`2ed0df2`, branch `feat/plan-entitlements`), mergeada em 2026-10-04 com os quatro checks
+verdes na PR e na execução de merge (`gh run 37239016680`). A auditoria conferiu cada item no código em `main`,
+sem partir do `STATE.md`:
+
+| item | evidência |
+|------|-----------|
+| 1. Checagem reutilizável na API | `requirePlanApi` compõe sobre o guard do painel comum (`apps/api/app/(guards)/plan.ts:21-32`) e recusa com `403` e `error.code` (`apps/api/(shared)/lib/plan-access.ts:32-44`). A decisão mora no SDK, para a tela e a API usarem a mesma regra: `planAccessDenial` devolve `PLAN_SUBSCRIPTION_REQUIRED` ou `PLAN_FEATURE_REQUIRED` (`packages/sdk/src/types/payments/plan-access.ts:33-47`). Códigos traduzidos nos 3 idiomas (`translations/packages/shared/utils.ts:74-75`, `:205-207`, `:337-339`) |
+| 2. Recursos no perfil pelo webhook e expostos pelo SDK | o webhook trata `entitlements.active_entitlement_summary.updated` (`webhooks/payments/route.ts:219`) e reconcilia em `reconcileEntitlements` (`:156`), que busca a lista completa quando o resumo vem com `has_more`; a gravação passa por `userRepository.applyEntitlementsState` (`user.repository.ts:123`), com a regra de ordem em `decideEntitlementsWrite` (`billing-state.ts:253`). `GET /account` e `PUT /account` devolvem `planAccess` (`account/route.ts:28-33`, `:112`, `:174`), tipado em `AccountDTO` |
+| 3. Jeito padrão de condicionar a tela | `PlanGate` (`apps/app/shared/components/ui/PlanGate.tsx:36-56`) mostra o convite traduzido com link para `/account?tab=billing` (`:58-82`). Relê a conta a cada montagem, porque o evento de recursos chega depois do de assinatura |
+| 4. Demonstração em `entity`, desligada por padrão | `POST /entities` usa `requirePlanApi(entityPlanRequirement, …)` (`entities/route.ts:57`); a página de criação embrulha o formulário em `PlanGate` só quando há requisito (`entities/(pages)/create/page.tsx:62`, `:103-112`). A variável `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE` vem vazia nos dois `.env.example` (`apps/api/.env.example:91`, `apps/app/.env.example:80`), e vazia vira "sem requisito" (`apps/api/(shared)/lib/entity-plan.ts:4-7`) |
+| 5. No-op com a cobrança desligada | `toPlanAccess` marca `enforced` com `isBillingEnabled()` (`plan-access.ts:22-30`), que exige modo `subscription`, chaves da Stripe e `NEXT_PUBLIC_APP_URL` (`apps/api/(shared)/lib/billing.ts:24-30`); `planAccessDenial` não nega nada com `enforced: false` |
+
+Testes da entrega, todos em Vitest sem emulador: `planGuard.test.ts`, `planAccess.test.ts`,
+`entitiesRoutePlanGate.test.ts`, `entityPlanEnv.test.ts`, `billingEntitlementKeys.test.ts` e os casos novos de
+`paymentsWebhookRoute.test.ts` na `apps/api`; `planGate.test.tsx`, `planGateAccountRefresh.test.tsx`,
+`entityCreatePlanGate.test.tsx` e `entityPlanRequirement*.test.ts` na `apps/app`. Passaram no gate desta
+auditoria.
+
+O `/test` fechou com 15 ✅, 0 ❌ e 1 🔒: a entrega real da Stripe e o catálogo de recursos só se provam com conta
+de teste. O skeleton do formulário em light, dark e 375 px ficou sem medição na segunda rodada. A pergunta em
+aberto sobre Entitlements ou mapa local foi decidida pela recomendação da spec (Entitlements).
+
+O que fica por fork: cadastrar os recursos no Dashboard da Stripe, assinar o sexto evento no endpoint e conferir
+o custo do Entitlements (`docs/PRE-PRODUCTION.md` §12, a partir da `:455`).
+
+O `STATE.md` da feature ficou com `review: in-progress`, embora a PR tenha sido mergeada. É a mesma defasagem
+registrada em outras entregas; a auditoria não edita o `STATE.md` além do campo `spec:`, que já estava certo.
 
 ### Fora do corte
 
@@ -91,7 +121,7 @@ não existe mais no repositório.)*
   reconciliação com a Stripe, e aparece em 2/10.
 - **Bloqueio em `past_due`**, trial, cupom e reembolso. Decisão de produto de cada fork; o Customer Portal
   cobre o lado de cobrança.
-- **Assento por membro.** Depende de [`teams-organizations`](teams-organizations.md), que está `deferred`.
+- **Assento por membro.** Depende de [`teams-organizations`](../../../specs/teams-organizations.md), que está `deferred`.
 - Tela de administração dos recursos por plano. O catálogo mora na Stripe.
 
 ## Impacto por camada
