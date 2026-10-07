@@ -7,29 +7,13 @@ import {
     CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { cn } from "@repo/design-system/lib/utils";
-import { getTranslations } from "@repo/internationalization/server";
-import {
-    getDefaultLocale,
-    type Locale,
-    locales,
-} from "@repo/internationalization/utils";
+import { getDictionary } from "@repo/internationalization/server";
 import { ArrowLeft } from "lucide-react";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { resolveNotFoundHomePath } from "@/lib/server/notFoundHome";
 
-async function resolveLocaleFromRequest(): Promise<Locale> {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get("x-locale")?.value;
-    if (raw && locales.includes(raw as Locale)) {
-        return raw as Locale;
-    }
-    return getDefaultLocale() as Locale;
-}
-
 export async function NotFoundPage() {
-    const locale = await resolveLocaleFromRequest();
-    const dictionary = await getTranslations(locale);
+    const { dictionary, locale } = await getDictionary();
     const notFoundCopy = dictionary.apps.app.pages.common.notFound;
     const homePath = await resolveNotFoundHomePath(locale);
 
