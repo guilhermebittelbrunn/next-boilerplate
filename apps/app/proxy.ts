@@ -1,7 +1,11 @@
 import { postAuthRedirectTarget } from "@repo/auth/redirect";
 import { getUserFromSessionCookie } from "@repo/auth/server";
 import { clearSessionCookie } from "@repo/auth/session";
-import { getDefaultLocale, locales } from "@repo/internationalization/utils";
+import {
+    getDefaultLocale,
+    LOCALE_REQUEST_HEADER,
+    locales,
+} from "@repo/internationalization/utils";
 import { getBrandLogoOrigin } from "@repo/next-config/brand";
 import { secure } from "@repo/security";
 import {
@@ -152,6 +156,21 @@ function pathWithoutLocale(pathname: string, locale: string): string {
     return stripped === "" ? "/" : stripped;
 }
 
+/**
+ * A missing asset still renders the root not-found page, which takes its language from
+ * the locale header when present. No locale is read from an asset path, so a value the
+ * browser sent is dropped and that page falls back to the cookie.
+ */
+function passStaticAsset(request: NextRequest) {
+    if (!request.headers.has(LOCALE_REQUEST_HEADER)) {
+        return NextResponse.next();
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.delete(LOCALE_REQUEST_HEADER);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export default async function proxy(request: NextRequest) {
     return applySecurityHeaders(await route(request), securityOptions);
 }
@@ -176,7 +195,7 @@ async function route(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     if (isStaticAssetPath(pathname)) {
-        return NextResponse.next();
+        return passStaticAsset(request);
     }
 
     const cookieStore = await cookies();
@@ -238,9 +257,10 @@ async function route(request: NextRequest) {
         return arcjetResponse;
     }
 
-    // Layouts cannot read the URL, so the path travels as a request header. Set, never
-    // appended: a value the browser sent must not reach the server components.
+    // Layouts cannot read the URL, so the path and its locale travel as request headers.
+    // Set, never appended: a value the browser sent must not reach the server components.
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set(APP_PATH_HEADER, pathname);
+    requestHeaders.set(LOCALE_REQUEST_HEADER, currentLocale);
     return NextResponse.next({ request: { headers: requestHeaders } });
 }

@@ -1,3 +1,4 @@
+import { LOCALE_REQUEST_HEADER } from "@repo/internationalization/utils";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -45,6 +46,7 @@ const proxy = (await import("@/proxy")).default;
 
 const ORIGIN = "http://localhost:3000";
 const TEMPORARY_REDIRECT = 307;
+const FORWARDED_LOCALE = `x-middleware-request-${LOCALE_REQUEST_HEADER}`;
 
 function makeNextUrl(href: string) {
     const url = new URL(href) as URL & { clone: () => URL };
@@ -118,6 +120,48 @@ describe("proxy locale", () => {
         await proxy(anonymous("/pt-br/sign-in"));
 
         expect(cookieSetMock).toHaveBeenCalledWith("x-locale", "pt-br");
+    });
+
+    it("hands the locale of the path to server rendering", async () => {
+        const anonymousResponse = await proxy(anonymous("/es/sign-in"));
+        const signedInResponse = await proxy(signedIn("/en/entities"));
+
+        expect(anonymousResponse.headers.get(FORWARDED_LOCALE)).toBe("es");
+        expect(signedInResponse.headers.get(FORWARDED_LOCALE)).toBe("en");
+        expect(
+            signedInResponse.headers.get("x-middleware-override-headers")
+        ).toContain(LOCALE_REQUEST_HEADER);
+    });
+
+    it("replaces a locale header the browser sent", async () => {
+        const request = signedIn("/pt-br/entities");
+        request.headers.set(LOCALE_REQUEST_HEADER, "es");
+
+        const response = await proxy(request);
+
+        expect(response.headers.get(FORWARDED_LOCALE)).toBe("pt-br");
+    });
+
+    it("drops a locale header the browser sent for a static asset", async () => {
+        const request = makeRequest("/missing-file.txt");
+        request.headers.set(LOCALE_REQUEST_HEADER, "es");
+
+        const response = await proxy(request);
+
+        const kept = response.headers.get("x-middleware-override-headers");
+        expect(kept).not.toBeNull();
+        expect(kept).not.toContain(LOCALE_REQUEST_HEADER);
+        expect(response.headers.get("x-middleware-request-user-agent")).toBe(
+            BROWSER_UA
+        );
+    });
+
+    it("leaves a plain static asset request untouched", async () => {
+        const response = await proxy(makeRequest("/logo.png"));
+
+        expect(
+            response.headers.get("x-middleware-override-headers")
+        ).toBeNull();
     });
 });
 
