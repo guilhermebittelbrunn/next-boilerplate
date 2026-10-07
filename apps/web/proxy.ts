@@ -1,6 +1,10 @@
 "use server";
 
-import { getDefaultLocale, locales } from "@repo/internationalization/utils";
+import {
+    getDefaultLocale,
+    LOCALE_REQUEST_HEADER,
+    locales,
+} from "@repo/internationalization/utils";
 import { getBrandLogoOrigin } from "@repo/next-config/brand";
 import { secure } from "@repo/security";
 import {
@@ -123,5 +127,9 @@ async function route(request: NextRequest) {
         return arcjetResponse;
     }
 
-    return NextResponse.next();
+    // Server components cannot read the URL, and the cookie set above only reaches the
+    // next request. Set, never appended: a value the browser sent must not reach them.
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(LOCALE_REQUEST_HEADER, currentLocale);
+    return NextResponse.next({ request: { headers: requestHeaders } });
 }

@@ -34,8 +34,6 @@ const Pricing = async ({ params }: PricingProps) => {
     const enterprise = pricingCopy.items[2];
     const planCtaHref = resolvePlanCtaHref({
         appUrl: env.NEXT_PUBLIC_APP_URL,
-        // The `x-locale` cookie is written on this same response, so on a language switch
-        // it still names the previous locale; the URL segment is the current one.
         locale: resolveLocale(routeLocale),
         subscriptionMode: isSubscriptionMode(),
     });
