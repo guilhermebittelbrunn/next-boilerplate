@@ -1,14 +1,20 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { globalTranslations } from "./translations/global";
 import {
-    getDefaultLocale,
     type IGetDictionaryResponse,
+    LOCALE_REQUEST_HEADER,
+    type Locale,
     locales,
+    resolveLocale,
 } from "./utils";
 
-type Locale = (typeof locales)[number];
+const LOCALE_COOKIE = "x-locale";
+
+function isSupportedLocale(value: string | null): value is Locale {
+    return value !== null && locales.includes(value as Locale);
+}
 
 // biome-ignore lint/suspicious/useAwait: módulo "use server": o Next exige que toda função exportada seja async, mesmo quando o corpo é síncrono.
 export async function getTranslations(locale: Locale) {
@@ -16,20 +22,16 @@ export async function getTranslations(locale: Locale) {
 }
 
 export async function getDictionary(): Promise<IGetDictionaryResponse> {
-    const cookieStore = await cookies();
-    const localeCookie = cookieStore.get("x-locale")?.value;
+    const [requestHeaders, cookieStore] = await Promise.all([
+        headers(),
+        cookies(),
+    ]);
+    // The cookie the proxy writes only reaches the next request, so on this one it can
+    // still name the previous language; the header carries the URL being rendered.
+    const urlLocale = requestHeaders.get(LOCALE_REQUEST_HEADER);
+    const locale = isSupportedLocale(urlLocale)
+        ? urlLocale
+        : resolveLocale(cookieStore.get(LOCALE_COOKIE)?.value);
 
-    if (localeCookie && locales.includes(localeCookie as Locale)) {
-        return {
-            dictionary: globalTranslations[localeCookie as Locale],
-            locale: localeCookie as Locale,
-        };
-    }
-
-    const defaultLocale = getDefaultLocale();
-
-    return {
-        dictionary: globalTranslations[defaultLocale as Locale],
-        locale: defaultLocale as Locale,
-    };
+    return { dictionary: globalTranslations[locale], locale };
 }

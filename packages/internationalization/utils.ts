@@ -4,6 +4,12 @@ export const locales = ["pt-br", "en", "es"] as const;
 
 export type Locale = (typeof locales)[number];
 
+/**
+ * Set by the proxies to the locale segment of the URL. Routes outside the proxy matcher
+ * still receive whatever the browser sent, so a reader must validate it against `locales`.
+ */
+export const LOCALE_REQUEST_HEADER = "x-request-locale";
+
 export type IGetDictionaryResponse = {
     dictionary: (typeof globalTranslations)[keyof typeof globalTranslations];
     locale: (typeof locales)[number];

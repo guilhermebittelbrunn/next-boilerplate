@@ -1,12 +1,22 @@
+import { LOCALE_REQUEST_HEADER } from "@repo/internationalization/utils";
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { cookieValueMock, homePathMock } = vi.hoisted(() => ({
+const { cookieValueMock, urlLocaleMock, homePathMock } = vi.hoisted(() => ({
     cookieValueMock: vi.fn(),
+    urlLocaleMock: vi.fn(),
     homePathMock: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({
+    headers: () => {
+        const urlLocale = urlLocaleMock();
+        return Promise.resolve(
+            new Headers(
+                urlLocale ? { [LOCALE_REQUEST_HEADER]: urlLocale } : undefined
+            )
+        );
+    },
     cookies: async () => ({
         get: () => {
             const value = cookieValueMock();
@@ -24,6 +34,7 @@ const renderPage = async () => render(await NotFoundPage());
 
 beforeEach(() => {
     cookieValueMock.mockReset();
+    urlLocaleMock.mockReset();
     homePathMock.mockReset();
 });
 
@@ -68,5 +79,17 @@ describe("NotFoundPage home action", () => {
         expect(container.querySelector("a")?.textContent).toBe(
             "Ir para o início"
         );
+    });
+
+    it("speaks the language of the URL rather than the one in the cookie", async () => {
+        urlLocaleMock.mockReturnValue("en");
+        cookieValueMock.mockReturnValue("pt-br");
+        homePathMock.mockResolvedValue("/en");
+
+        const { container } = await renderPage();
+
+        expect(homePathMock).toHaveBeenCalledWith("en");
+        expect(container.querySelector("a")?.textContent).toBe("Go to home");
+        expect(container.textContent).toContain("Page not found");
     });
 });

@@ -12,6 +12,7 @@ import { ToastContainer } from "react-toastify";
 import { getAppSessionUser } from "@/lib/server/authSession";
 import { resolvePreferredTimeZone } from "@/lib/server/displayTimeZone";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
+import { DocumentLangSync } from "@/shared/components/DocumentLangSync";
 import { privacyPolicyUrl } from "@/shared/lib/privacyPolicyUrl";
 import { AppDesignProvider } from "@/shared/providers/AppDesignProvider";
 import { DisplayTimeZoneProvider } from "@/shared/providers/DisplayTimeZoneProvider";
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             suppressHydrationWarning
         >
             <body>
+                <DocumentLangSync />
                 <LocaleProvider>
                     <QueryProvider>
                         <AnalyticsProvider
