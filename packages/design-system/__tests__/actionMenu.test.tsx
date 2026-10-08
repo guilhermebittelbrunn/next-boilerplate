@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ActionsMenu } from "@repo/design-system/components/ui/action-menu";
-import { AntdAppProvider } from "@repo/design-system/providers/antd-app";
+import {
+    AntdAppProvider,
+    antdSeedColors,
+} from "@repo/design-system/providers/antd-app";
 import { getDictionary } from "@repo/internationalization/client";
 import {
     cleanup,
@@ -94,9 +97,10 @@ describe("ActionsMenu", () => {
             ([, declarations]) => declarations
         );
 
-        expect(dangerRules).toContain("color:var(--color-destructive);");
+        const destructive = antdSeedColors.light.destructive;
+        expect(dangerRules).toContain(`color:${destructive};`);
         expect(dangerRules).toContain(
-            "color:var(--color-background);background-color:var(--color-destructive);"
+            `color:var(--color-background);background-color:${destructive};`
         );
     });
 
