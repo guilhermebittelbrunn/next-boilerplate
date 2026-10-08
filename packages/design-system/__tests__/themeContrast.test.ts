@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/noMagicNumbers: the OKLab and WCAG coefficients are published constants; naming each entry of a 3x3 matrix would hide the reference they are checked against. */
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { antdSeedColors } from "@repo/design-system/providers/antd-app";
 import { describe, expect, it } from "vitest";
 
 const WCAG_AA_TEXT = 4.5;
@@ -20,6 +21,12 @@ const PERCENT = 100;
 const DEGREES_PER_HALF_TURN = 180;
 const CUBE = 3;
 const LUMINANCE_FLARE = 0.05;
+const SRGB_LINEAR_LIMIT = 0.003_130_8;
+const SRGB_LINEAR_SLOPE = 12.92;
+const SRGB_GAMMA = 2.4;
+const SRGB_OFFSET = 0.055;
+const CHANNEL_MAX = 255;
+const HEX_RADIX = 16;
 
 /** OKLab ↔ linear sRGB, from Björn Ottosson's reference implementation. */
 const OKLAB_TO_LMS: Matrix = [
@@ -84,6 +91,21 @@ function oklchToLinearRgb(value: string): Rgb {
     return multiply(LMS_TO_LINEAR_SRGB, lms).map(clip) as Rgb;
 }
 
+function encodeSrgb(channel: number): number {
+    return channel <= SRGB_LINEAR_LIMIT
+        ? SRGB_LINEAR_SLOPE * channel
+        : (1 + SRGB_OFFSET) * channel ** (1 / SRGB_GAMMA) - SRGB_OFFSET;
+}
+
+function oklchToHex(value: string): string {
+    const channels = oklchToLinearRgb(value).map((channel) =>
+        Math.round(encodeSrgb(channel) * CHANNEL_MAX)
+            .toString(HEX_RADIX)
+            .padStart(2, "0")
+    );
+    return `#${channels.join("")}`;
+}
+
 function contrastRatio(foreground: string, background: string): number {
     const first = dot(WCAG_LUMINANCE_WEIGHTS, oklchToLinearRgb(foreground));
     const second = dot(WCAG_LUMINANCE_WEIGHTS, oklchToLinearRgb(background));
@@ -106,11 +128,13 @@ const textPairs: [keyof typeof themes, string, string][] = [
     ["light", "muted-foreground", "background"],
     ["light", "destructive", "background"],
     ["light", "background", "destructive"],
+    ["light", "warning", "background"],
     ["dark", "muted-foreground", "muted"],
     ["dark", "muted-foreground", "background"],
     ["dark", "destructive", "background"],
     ["dark", "destructive", "accent"],
     ["dark", "background", "destructive"],
+    ["dark", "warning", "background"],
 ];
 
 describe("theme tokens", () => {
@@ -124,6 +148,28 @@ describe("theme tokens", () => {
             );
 
             expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+        }
+    );
+});
+
+describe("antd seed colours mirror globals.css", () => {
+    const seedTokens = Object.entries(antdSeedColors).flatMap(
+        ([theme, colors]) =>
+            Object.entries(colors).map(
+                ([token, hex]) => [theme, token, hex] as const
+            )
+    );
+
+    it.each(seedTokens)(
+        "%s: --%s in globals.css is the antd seed %s",
+        (theme, token, hex) => {
+            const value = themes[theme as keyof typeof themes].get(token);
+
+            expect(
+                value,
+                `--${token} is missing from globals.css`
+            ).toBeDefined();
+            expect(oklchToHex(value ?? "")).toBe(hex);
         }
     );
 });
