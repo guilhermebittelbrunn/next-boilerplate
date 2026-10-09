@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+    act,
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { panelMock, exportMutateMock, deleteMutateMock, privacyPolicyUrlMock } =
@@ -202,5 +208,187 @@ describe("AccountPrivacyPanel — estados de exceção", () => {
         expect(
             screen.queryByText(privacyCopy.delete.unsupportedDescription)
         ).toBeNull();
+    });
+});
+
+function passwordField(): HTMLInputElement {
+    const field = document.querySelector('input[name="currentPassword"]');
+    if (!field) {
+        throw new Error("o campo de senha não foi renderizado");
+    }
+    return field as HTMLInputElement;
+}
+
+function deleteTrigger(): HTMLButtonElement {
+    const trigger = screen
+        .getAllByRole("button", { name: privacyCopy.delete.action })
+        .at(-1);
+    if (!trigger) {
+        throw new Error("o botão que abre o diálogo não foi renderizado");
+    }
+    return trigger as HTMLButtonElement;
+}
+
+function clickFocusedTrigger() {
+    const trigger = deleteTrigger();
+    trigger.focus();
+    fireEvent.click(trigger);
+    return { trigger, dialog: screen.getByRole("alertdialog") };
+}
+
+async function openFromFocusedTrigger() {
+    const opened = clickFocusedTrigger();
+    await vi.waitFor(() => {
+        if (document.activeElement !== passwordField()) {
+            throw new Error("o foco não chegou ao campo de senha");
+        }
+    });
+    return opened;
+}
+
+describe("AccountPrivacyPanel — foco do diálogo de exclusão", () => {
+    it("leva o foco ao campo de senha quando o diálogo abre", async () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+
+        const { dialog } = clickFocusedTrigger();
+
+        await vi.waitFor(() =>
+            expect(document.activeElement).toBe(passwordField())
+        );
+        expect(dialog.contains(document.activeElement)).toBe(true);
+    });
+
+    it("devolve o foco ao botão que abriu ao fechar pelo Esc", async () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        const { trigger } = await openFromFocusedTrigger();
+
+        fireEvent.keyDown(passwordField(), { key: "Escape" });
+
+        await vi.waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+        await vi.waitFor(() => expect(document.activeElement).toBe(trigger));
+    });
+
+    it("devolve o foco ao botão que abriu ao cancelar", async () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        const { trigger } = await openFromFocusedTrigger();
+
+        fireEvent.click(
+            screen.getByRole("button", { name: privacyCopy.delete.cancel })
+        );
+
+        await vi.waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+        await vi.waitFor(() => expect(document.activeElement).toBe(trigger));
+    });
+
+    it("mantém o Tab dentro do diálogo", async () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        await openFromFocusedTrigger();
+
+        const confirmButton = screen.getByRole("button", {
+            name: privacyCopy.delete.confirm,
+        });
+        confirmButton.focus();
+        fireEvent.keyDown(confirmButton, { key: "Tab" });
+
+        await vi.waitFor(() =>
+            expect(document.activeElement).toBe(passwordField())
+        );
+    });
+
+    it("limpa a senha digitada ao cancelar", async () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        await openFromFocusedTrigger();
+        fireEvent.change(passwordField(), {
+            target: { value: "typed-secret" },
+        });
+
+        fireEvent.click(
+            screen.getByRole("button", { name: privacyCopy.delete.cancel })
+        );
+        await vi.waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+        await openFromFocusedTrigger();
+
+        expect(passwordField().value).toBe("");
+    });
+
+    it("limpa a mensagem de validação ao fechar pelo Esc", async () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        await openFromFocusedTrigger();
+        fireEvent.click(
+            screen.getByRole("button", { name: privacyCopy.delete.confirm })
+        );
+        await screen.findByText(privacyCopy.delete.validation.required);
+
+        fireEvent.keyDown(passwordField(), { key: "Escape" });
+        await vi.waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+        await openFromFocusedTrigger();
+
+        expect(
+            screen.queryByText(privacyCopy.delete.validation.required)
+        ).toBeNull();
+    });
+});
+
+type DeleteMutateOptions = { onError?: (error: unknown) => void };
+
+async function submitPassword(password: string) {
+    fireEvent.change(passwordField(), { target: { value: password } });
+    const confirmButton = screen.getByRole("button", {
+        name: privacyCopy.delete.confirm,
+    });
+    confirmButton.focus();
+    fireEvent.click(confirmButton);
+    await vi.waitFor(() => {
+        if (
+            deleteMutateMock.mock.calls.length !== 1 ||
+            passwordField().disabled
+        ) {
+            throw new Error("a exclusão ainda não terminou de ser enviada");
+        }
+    });
+    return confirmButton;
+}
+
+function deleteMutateOptions(): DeleteMutateOptions {
+    return (deleteMutateMock.mock.calls[0]?.[1] ?? {}) as DeleteMutateOptions;
+}
+
+describe("AccountPrivacyPanel — senha recusada pela API", () => {
+    it("devolve o foco ao campo de senha com o texto selecionado", async () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        await openFromFocusedTrigger();
+        const confirmButton = await submitPassword("wrong-secret");
+        expect(document.activeElement).toBe(confirmButton);
+
+        act(() => {
+            deleteMutateOptions().onError?.({
+                error: { code: "ACCOUNT_CURRENT_PASSWORD_INVALID" },
+            });
+        });
+
+        const field = passwordField();
+        await vi.waitFor(() => expect(document.activeElement).toBe(field));
+        expect(field.value).toBe("wrong-secret");
+        expect(field.selectionStart).toBe(0);
+        expect(field.selectionEnd).toBe("wrong-secret".length);
+        expect(screen.getByRole("alertdialog")).toBeTruthy();
+    });
+
+    it("marca o campo como senha atual e obrigatório", () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        openDeleteDialog();
+
+        const field = passwordField();
+
+        expect(field.getAttribute("autocomplete")).toBe("current-password");
+        expect(field.getAttribute("aria-required")).toBe("true");
     });
 });
