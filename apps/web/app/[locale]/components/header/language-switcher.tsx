@@ -7,6 +7,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { getDictionary } from "@repo/internationalization/client";
 import { locales } from "@repo/internationalization/utils";
 import { setCookie } from "@repo/shared/utils";
 import { Check, Languages } from "lucide-react";
@@ -29,6 +30,8 @@ type LanguageSwitcherProps = {
 export const LanguageSwitcher = ({
     showLabel = true,
 }: LanguageSwitcherProps) => {
+    const { dictionary } = getDictionary();
+    const languageSwitcherCopy = dictionary.components.languageSwitcher;
     const router = useRouter();
     const pathname = usePathname();
     const params = useParams();
@@ -65,7 +68,9 @@ export const LanguageSwitcher = ({
                         </span>
                     )}
                     <Languages className="h-4 w-4 md:hidden" />
-                    <span className="sr-only">Switch language</span>
+                    <span className="sr-only">
+                        {languageSwitcherCopy.trigger}
+                    </span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
