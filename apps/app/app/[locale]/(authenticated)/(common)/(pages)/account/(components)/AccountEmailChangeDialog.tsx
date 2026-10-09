@@ -106,7 +106,11 @@ export function AccountEmailChangeDialog({
                 newEmail: values.newEmail.trim(),
                 currentPassword: values.currentPassword,
             },
-            { onSuccess: () => handleOpenChange(false) }
+            {
+                onSuccess: () => handleOpenChange(false),
+                onError: () =>
+                    form.setFocus("currentPassword", { shouldSelect: true }),
+            }
         );
     };
 
