@@ -1,8 +1,11 @@
+"use client";
+
 import {
   type Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
+import { getDictionary } from "@repo/internationalization/client";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -10,9 +13,10 @@ import {
 } from "lucide-react";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
+  const { dictionary } = getDictionary();
   return (
     <nav
-      aria-label="pagination"
+      aria-label={dictionary.components.pagination.label}
       className={cn("mx-auto flex w-full justify-center", className)}
       data-slot="pagination"
       {...props}
@@ -69,15 +73,16 @@ function PaginationPrevious({
   className,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) {
+  const paginationCopy = getDictionary().dictionary.components.pagination;
   return (
     <PaginationLink
-      aria-label="Go to previous page"
+      aria-label={paginationCopy.previousLabel}
       className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
       size="default"
       {...props}
     >
       <ChevronLeftIcon />
-      <span className="hidden sm:block">Previous</span>
+      <span className="hidden sm:block">{paginationCopy.previous}</span>
     </PaginationLink>
   );
 }
@@ -86,14 +91,15 @@ function PaginationNext({
   className,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) {
+  const paginationCopy = getDictionary().dictionary.components.pagination;
   return (
     <PaginationLink
-      aria-label="Go to next page"
+      aria-label={paginationCopy.nextLabel}
       className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
       size="default"
       {...props}
     >
-      <span className="hidden sm:block">Next</span>
+      <span className="hidden sm:block">{paginationCopy.next}</span>
       <ChevronRightIcon />
     </PaginationLink>
   );
@@ -103,6 +109,7 @@ function PaginationEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
+  const { dictionary } = getDictionary();
   return (
     <span
       aria-hidden
@@ -111,7 +118,7 @@ function PaginationEllipsis({
       {...props}
     >
       <MoreHorizontalIcon className="size-4" />
-      <span className="sr-only">More pages</span>
+      <span className="sr-only">{dictionary.components.pagination.morePages}</span>
     </span>
   );
 }

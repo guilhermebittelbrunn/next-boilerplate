@@ -68,10 +68,29 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
         defaultValues: { currentPassword: "" },
     });
 
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen) {
+            form.reset();
+        }
+        setConfirmOpen(nextOpen);
+    };
+
+    // Radix's AlertDialog sends the opening focus to an AlertDialogCancel, and this
+    // dialog has none (its buttons come from Footer), so focus would stay behind it.
+    const handleOpenAutoFocus = (event: Event) => {
+        event.preventDefault();
+        form.setFocus("currentPassword");
+    };
+
+    const focusPasswordAfterRefusal = () => {
+        form.setFocus("currentPassword", { shouldSelect: true });
+    };
+
     const onSubmit = (values: AccountDeletionFormValues) => {
-        deleteAccountMutation.mutate({
-            currentPassword: values.currentPassword,
-        });
+        deleteAccountMutation.mutate(
+            { currentPassword: values.currentPassword },
+            { onError: focusPasswordAfterRefusal }
+        );
     };
 
     return (
@@ -121,7 +140,7 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
                             {deleteCopy.description}
                         </p>
                         <AlertDialog
-                            onOpenChange={setConfirmOpen}
+                            onOpenChange={handleOpenChange}
                             open={confirmOpen}
                         >
                             <AlertDialogTrigger asChild>
@@ -134,7 +153,9 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
                                     {deleteCopy.action}
                                 </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
+                            <AlertDialogContent
+                                onOpenAutoFocus={handleOpenAutoFocus}
+                            >
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>
                                         {deleteCopy.dialogTitle}
@@ -150,10 +171,12 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
                                     >
                                         <FormContainer className="md:grid-cols-1">
                                             <HookFormInputPassword
+                                                autoComplete="current-password"
                                                 label={
                                                     deleteCopy.currentPassword
                                                 }
                                                 name="currentPassword"
+                                                required
                                             />
                                         </FormContainer>
                                         <Footer
@@ -163,7 +186,9 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
                                             isLoading={
                                                 deleteAccountMutation.isPending
                                             }
-                                            onBack={() => setConfirmOpen(false)}
+                                            onBack={() =>
+                                                handleOpenChange(false)
+                                            }
                                         />
                                     </form>
                                 </Form>

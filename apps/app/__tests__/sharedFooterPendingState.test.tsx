@@ -8,7 +8,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@repo/internationalization/client", () => ({
     getDictionary: () => ({
         dictionary: {
-            components: { footer: { back: "Voltar", confirm: "Confirmar" } },
+            components: {
+                footer: { back: "Voltar", confirm: "Confirmar" },
+                spinner: { loading: "Carregando" },
+            },
         },
         locale: "pt-br",
     }),

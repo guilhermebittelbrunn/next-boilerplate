@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+    act,
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -191,6 +197,50 @@ describe("AccountProfileForm — troca de e-mail", () => {
 
         await vi.waitFor(() => expect(errorAlertMock).toHaveBeenCalled());
         expect(successAlertMock).not.toHaveBeenCalled();
+        expect(screen.getByRole("alertdialog")).toBeTruthy();
+    });
+
+    it("devolve o foco à senha, com o texto selecionado, quando a API recusa", async () => {
+        let refuse: ((reason: unknown) => void) | undefined;
+        requestEmailChangeMock.mockReturnValue(
+            new Promise((_, reject) => {
+                refuse = reject;
+            })
+        );
+        renderForm(PASSWORD_ACCOUNT);
+        openDialog();
+        fireEvent.change(fieldNamed("newEmail"), {
+            target: { value: NEW_EMAIL },
+        });
+        fireEvent.change(fieldNamed("currentPassword"), {
+            target: { value: "wrong-secret" },
+        });
+        const confirmButton = screen.getByRole("button", {
+            name: emailChangeCopy.confirm,
+        });
+        confirmButton.focus();
+        fireEvent.click(confirmButton);
+        await vi.waitFor(() =>
+            expect(requestEmailChangeMock).toHaveBeenCalledTimes(1)
+        );
+        await vi.waitFor(() =>
+            expect(fieldNamed("currentPassword").disabled).toBe(false)
+        );
+        expect(document.activeElement).not.toBe(fieldNamed("currentPassword"));
+
+        act(() => {
+            refuse?.({
+                error: { code: "ACCOUNT_CURRENT_PASSWORD_INVALID" },
+            });
+        });
+
+        await vi.waitFor(() => expect(errorAlertMock).toHaveBeenCalled());
+        const passwordField = fieldNamed("currentPassword");
+        await vi.waitFor(() =>
+            expect(document.activeElement).toBe(passwordField)
+        );
+        expect(passwordField.selectionStart).toBe(0);
+        expect(passwordField.selectionEnd).toBe("wrong-secret".length);
         expect(screen.getByRole("alertdialog")).toBeTruthy();
     });
 
