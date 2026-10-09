@@ -1,11 +1,17 @@
 "use client";
 
+import { useDictionary } from "@repo/internationalization/client";
+import type { Locale } from "@repo/internationalization/utils";
 import {
     theme as antdTheme,
     ConfigProvider,
+    type ConfigProviderProps,
     type MappingAlgorithm,
     type ThemeConfig,
 } from "antd";
+import enUS from "antd/locale/en_US";
+import esES from "antd/locale/es_ES";
+import ptBR from "antd/locale/pt_BR";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 
@@ -141,12 +147,20 @@ export const antdThemes: Record<ThemeMode, ThemeConfig> = {
     dark: buildAntdTheme("dark"),
 };
 
+export const antdLocales = {
+    "pt-br": ptBR,
+    en: enUS,
+    es: esES,
+} satisfies Record<Locale, ConfigProviderProps["locale"]>;
+
 export function AntdAppProvider({ children }: { children: ReactNode }) {
     const { forcedTheme, resolvedTheme } = useTheme();
+    const { locale } = useDictionary();
     // next-themes keeps the stored preference in resolvedTheme even when a page forces a theme.
     const activeTheme = forcedTheme ?? resolvedTheme;
     return (
         <ConfigProvider
+            locale={antdLocales[locale]}
             theme={antdThemes[activeTheme === "dark" ? "dark" : "light"]}
             wave={{ disabled: false }}
         >
