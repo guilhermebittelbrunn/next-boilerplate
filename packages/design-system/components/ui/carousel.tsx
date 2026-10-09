@@ -3,6 +3,7 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
+import { getDictionary } from "@repo/internationalization/client";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react";
@@ -188,6 +189,7 @@ function CarouselPrevious({
   ...props
 }: ComponentProps<typeof Button>) {
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+  const { dictionary } = getDictionary();
 
   return (
     <Button
@@ -206,7 +208,7 @@ function CarouselPrevious({
       {...props}
     >
       <ArrowLeft />
-      <span className="sr-only">Previous slide</span>
+      <span className="sr-only">{dictionary.components.carousel.previousSlide}</span>
     </Button>
   );
 }
@@ -218,6 +220,7 @@ function CarouselNext({
   ...props
 }: ComponentProps<typeof Button>) {
   const { orientation, scrollNext, canScrollNext } = useCarousel();
+  const { dictionary } = getDictionary();
 
   return (
     <Button
@@ -236,7 +239,7 @@ function CarouselNext({
       {...props}
     >
       <ArrowRight />
-      <span className="sr-only">Next slide</span>
+      <span className="sr-only">{dictionary.components.carousel.nextSlide}</span>
     </Button>
   );
 }
