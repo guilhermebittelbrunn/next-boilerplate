@@ -15,6 +15,7 @@ export const headerTranslations = {
         noAccount: "Não tem uma conta? ",
         signOut: "Sair",
         goToPanel: "Ir para o painel",
+        menu: "Menu",
     },
     en: {
         home: "Home",
@@ -32,6 +33,7 @@ export const headerTranslations = {
         noAccount: "Don't have an account? ",
         signOut: "Sign Out",
         goToPanel: "Go to panel",
+        menu: "Menu",
     },
     es: {
         home: "Inicio",
@@ -49,5 +51,6 @@ export const headerTranslations = {
         noAccount: "No tienes una cuenta? ",
         signOut: "Cerrar sesión",
         goToPanel: "Ir al panel",
+        menu: "Menú",
     },
 };
