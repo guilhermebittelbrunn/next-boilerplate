@@ -34,11 +34,7 @@ function submitButtonOf(container: HTMLElement): HTMLButtonElement {
     return button;
 }
 
-/**
- * `Button` applies `disabled={loading}` before spreading the props it was given, so a
- * footer that passes both props loses the loading lock unless it merges them itself.
- * These cover the merge, not the button.
- */
+/** A footer passes both `disabled` and `loading` to its submit button; either one locks it. */
 describe("rodapés compartilhados durante o request", () => {
     it("o Footer bloqueia o envio enquanto carrega", () => {
         const { container } = render(<Footer isLoading />);
