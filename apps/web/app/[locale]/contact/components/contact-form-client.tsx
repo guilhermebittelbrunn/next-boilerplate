@@ -9,6 +9,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { calendarLocales } from "@repo/design-system/lib/calendar-locales";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import { format } from "date-fns";
@@ -16,7 +17,7 @@ import { CalendarIcon, Check, MoveRight } from "lucide-react";
 import { useState } from "react";
 
 export const ContactFormClient = () => {
-    const { dictionary } = getDictionary();
+    const { dictionary, locale } = getDictionary();
     const [date, setDate] = useState<Date | undefined>(new Date());
 
     return (
@@ -86,7 +87,11 @@ export const ContactFormClient = () => {
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {date ? (
-                                                format(date, "PPP")
+                                                format(date, "PPP", {
+                                                    locale: calendarLocales[
+                                                        locale
+                                                    ],
+                                                })
                                             ) : (
                                                 <span>
                                                     {
