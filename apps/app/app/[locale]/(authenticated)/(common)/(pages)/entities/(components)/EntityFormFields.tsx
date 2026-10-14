@@ -152,6 +152,7 @@ export function EntityFormFields({
 
             <div className="col-span-1 md:col-span-2">
                 <HookFormDateInput
+                    captionLayout="dropdown"
                     label={entitiesForm.birthdate}
                     name="birthdate"
                 />

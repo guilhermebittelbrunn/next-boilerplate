@@ -8,13 +8,21 @@ import { afterEach, describe, expect, it } from "vitest";
 const passwordToggleCopy = getDictionary().dictionary.components.inputPassword;
 const LABEL = "Password";
 
-function PasswordForm() {
+const DEFAULT_PLACEHOLDER = "••••••••";
+
+function PasswordForm(
+    fieldProps: Partial<Parameters<typeof HookFormInputPassword>[0]>
+) {
     const form = useForm<{ password: string }>({
         defaultValues: { password: "" },
     });
     return (
         <Form {...form}>
-            <HookFormInputPassword label={LABEL} name="password" />
+            <HookFormInputPassword
+                label={LABEL}
+                name="password"
+                {...fieldProps}
+            />
         </Form>
     );
 }
@@ -43,6 +51,32 @@ describe("HookFormInputPassword", () => {
         expect(
             screen.getByRole("button", { name: passwordToggleCopy.hide })
         ).toBeTruthy();
+        expect(screen.getByLabelText(LABEL).getAttribute("type")).toBe("text");
+    });
+
+    it("shows the placeholder the caller passes", () => {
+        render(<PasswordForm placeholder="Your password" />);
+
+        expect(screen.getByLabelText(LABEL).getAttribute("placeholder")).toBe(
+            "Your password"
+        );
+    });
+
+    it("falls back to the masked placeholder", () => {
+        render(<PasswordForm />);
+
+        expect(screen.getByLabelText(LABEL).getAttribute("placeholder")).toBe(
+            DEFAULT_PLACEHOLDER
+        );
+    });
+
+    it("still toggles visibility when the caller passes a type", () => {
+        render(<PasswordForm type="password" />);
+
+        fireEvent.click(
+            screen.getByRole("button", { name: passwordToggleCopy.show })
+        );
+
         expect(screen.getByLabelText(LABEL).getAttribute("type")).toBe("text");
     });
 });

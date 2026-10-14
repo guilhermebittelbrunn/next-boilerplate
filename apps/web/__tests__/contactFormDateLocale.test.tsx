@@ -1,3 +1,5 @@
+import { globalTranslations } from "@repo/internationalization/translations/global";
+import { type Locale, locales } from "@repo/internationalization/utils";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -16,6 +18,18 @@ const { ContactFormClient } = await import(
     "@/app/[locale]/contact/components/contact-form-client"
 );
 
+const DATE_LABEL_TAG = /<label[^>]*\bfor="date"/;
+const DATE_BUTTON_TAG = /<button[^>]*\bid="date"/;
+
+function renderContactForm(locale: Locale) {
+    params.locale = locale;
+    return renderToString(
+        <LocaleProvider>
+            <ContactFormClient />
+        </LocaleProvider>
+    );
+}
+
 describe("data do formulário de contato", () => {
     beforeEach(() => {
         vi.useFakeTimers({ toFake: ["Date"] });
@@ -26,19 +40,27 @@ describe("data do formulário de contato", () => {
         vi.useRealTimers();
     });
 
-    it.each([
-        ["pt-br", "13 de outubro de 2026"],
-        ["en", "October 13th, 2026"],
-        ["es", "13 de octubre de 2026"],
-    ])("formata a data do botão no idioma %s", (locale, expected) => {
-        params.locale = locale;
+    it.each(locales)("começa vazia, com o placeholder em %s", (locale) => {
+        const html = renderContactForm(locale);
 
-        const html = renderToString(
-            <LocaleProvider>
-                <ContactFormClient />
-            </LocaleProvider>
+        expect(html).toContain(
+            globalTranslations[locale].components.dateInput.placeholder
         );
+    });
 
-        expect(html).toContain(expected);
+    it("gera o mesmo HTML em dias diferentes", () => {
+        const firstDay = renderContactForm("pt-br");
+
+        vi.setSystemTime(new Date("2026-10-14T12:00:00"));
+        const nextDay = renderContactForm("pt-br");
+
+        expect(nextDay).toBe(firstDay);
+    });
+
+    it("liga o rótulo Data ao botão do calendário", () => {
+        const html = renderContactForm("pt-br");
+
+        expect(html).toMatch(DATE_LABEL_TAG);
+        expect(html).toMatch(DATE_BUTTON_TAG);
     });
 });

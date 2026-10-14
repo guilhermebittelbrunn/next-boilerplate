@@ -17,6 +17,7 @@ import {
     FormMessage,
 } from "../../ui/form";
 import { Input, type InputProps } from "../../ui/input";
+import { useSubmitEnterGuard } from "./useSubmitEnterGuard";
 
 interface HookFormInputPasswordProps<T extends FieldValues> extends InputProps {
     control?: Control<T>;
@@ -40,6 +41,7 @@ export function HookFormInputPassword<T extends FieldValues>(
         ...rest
     } = props;
     const { formState } = useFormContext();
+    const guardSubmitEnter = useSubmitEnterGuard();
     const { dictionary } = getDictionary();
     const passwordToggleCopy = dictionary.components.inputPassword;
     const [showPassword, setShowPassword] = useState(false);
@@ -77,10 +79,14 @@ export function HookFormInputPassword<T extends FieldValues>(
                                     className={
                                         errorMessage ? "border-destructive" : ""
                                     }
-                                    disabled={formState.isSubmitting}
+                                    placeholder="••••••••"
+                                    readOnly={formState.isSubmitting}
                                     {...field}
                                     {...rest}
-                                    placeholder="••••••••"
+                                    onKeyDown={(event) => {
+                                        guardSubmitEnter(event);
+                                        rest.onKeyDown?.(event);
+                                    }}
                                     type={showPassword ? "text" : "password"}
                                 />
                             </FormControl>

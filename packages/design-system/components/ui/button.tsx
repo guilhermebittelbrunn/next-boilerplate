@@ -55,6 +55,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       loading = false,
       icon,
       children,
+      disabled,
       ...props
     },
     ref
@@ -66,15 +67,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         data-size={size}
         data-slot="button"
         data-variant={variant}
-        disabled={loading}
         ref={ref}
         {...props}
+        disabled={loading || disabled}
       >
         {loading ? (
-          <>
-            <Spinner aria-hidden="true" />
-            <span className="sr-only">{children}</span>
-          </>
+          <div className="grid place-items-center">
+            {/* opacity-0 rather than invisible: the hidden content keeps the button's width and its text stays the accessible name. */}
+            <div className="col-start-1 row-start-1 flex items-center gap-2 opacity-0">
+              {icon}
+              {children}
+            </div>
+            <Spinner aria-hidden="true" className="col-start-1 row-start-1" />
+          </div>
         ) : (
           <div className="flex items-center gap-2">
             {icon && icon}

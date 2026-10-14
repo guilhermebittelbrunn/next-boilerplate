@@ -13,6 +13,7 @@ import { getDictionary } from "@repo/internationalization/client";
 import { format, isValid, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { forwardRef, useState } from "react";
+import type { PropsBase } from "react-day-picker";
 import { Label } from "./label";
 
 function parseIsoDate(value: string | undefined): Date | undefined {
@@ -36,7 +37,7 @@ export type DateInputProps = {
   onBlur?: () => void;
   disabled?: boolean;
   placeholder?: string;
-};
+} & Pick<PropsBase, "captionLayout" | "endMonth" | "startMonth">;
 
 export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
   function DateInput(
@@ -51,6 +52,9 @@ export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
       onBlur,
       disabled,
       placeholder,
+      captionLayout,
+      startMonth,
+      endMonth,
       "aria-describedby": ariaDescribedBy,
     },
     ref
@@ -93,12 +97,16 @@ export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-0">
             <Calendar
+              captionLayout={captionLayout}
+              defaultMonth={selected}
+              endMonth={endMonth}
               mode="single"
               onSelect={(date) => {
                 onChange?.(date ? format(date, "yyyy-MM-dd") : "");
                 setOpen(false);
               }}
               selected={selected}
+              startMonth={startMonth}
             />
           </PopoverContent>
         </Popover>
