@@ -1,24 +1,16 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
-import { Calendar } from "@repo/design-system/components/ui/calendar";
+import { DateInput } from "@repo/design-system/components/ui/date-input";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Label } from "@repo/design-system/components/ui/label";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
-import { calendarLocales } from "@repo/design-system/lib/calendar-locales";
-import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
-import { format } from "date-fns";
-import { CalendarIcon, Check, MoveRight } from "lucide-react";
+import { Check, MoveRight } from "lucide-react";
 import { useState } from "react";
 
 export const ContactFormClient = () => {
-    const { dictionary, locale } = getDictionary();
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const { dictionary } = getDictionary();
+    const [date, setDate] = useState("");
 
     return (
         <div className="w-full py-20 lg:py-40">
@@ -76,42 +68,11 @@ export const ContactFormClient = () => {
                                             .form.date
                                     }
                                 </Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            className={cn(
-                                                "w-full max-w-sm justify-start text-left font-normal",
-                                                !date && "text-muted-foreground"
-                                            )}
-                                            variant="outline"
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {date ? (
-                                                format(date, "PPP", {
-                                                    locale: calendarLocales[
-                                                        locale
-                                                    ],
-                                                })
-                                            ) : (
-                                                <span>
-                                                    {
-                                                        dictionary.apps.web
-                                                            .pages.contact.hero
-                                                            .form.date
-                                                    }
-                                                </span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            initialFocus
-                                            mode="single"
-                                            onSelect={setDate}
-                                            selected={date}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
+                                <DateInput
+                                    id="date"
+                                    onChange={setDate}
+                                    value={date}
+                                />
                             </div>
                             <div className="grid w-full max-w-sm items-center gap-1">
                                 <Label htmlFor="firstname">
