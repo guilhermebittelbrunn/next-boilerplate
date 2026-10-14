@@ -81,7 +81,7 @@ export const Header = () => {
 
     return (
         <header className="sticky top-0 left-0 z-40 w-full border-b bg-background px-4 md:px-2">
-            <div className="container relative mx-auto flex min-h-20 flex-row items-center gap-4 lg:grid lg:grid-cols-3">
+            <div className="container relative mx-auto flex min-h-20 flex-row items-center gap-4 lg:grid lg:grid-cols-[1fr_minmax(0,auto)_1fr]">
                 <div className="hidden flex-row items-center justify-start gap-4 lg:flex">
                     <NavigationMenu className="flex items-start justify-start">
                         <NavigationMenuList className="flex flex-row justify-start gap-4">
@@ -258,7 +258,12 @@ export const Header = () => {
                 </div>
 
                 <div className="flex w-12 shrink items-end justify-end lg:hidden">
-                    <Button onClick={() => setOpen(!isOpen)} variant="ghost">
+                    <Button
+                        aria-expanded={isOpen}
+                        aria-label={dictionary.components.header.menu}
+                        onClick={() => setOpen(!isOpen)}
+                        variant="ghost"
+                    >
                         {isOpen ? (
                             <X className="h-5 w-5" />
                         ) : (
