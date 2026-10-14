@@ -6,7 +6,7 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-10-13 (`/spec --sync`, pós-merge da PR #43; medições de 2026-10-13, entre 16:52 e 16:58 BRT) · **anteriores:** 2026-10-08 (PR #42) · 2026-10-07 (PR #41) · 2026-10-07 (PR #40) · 2026-10-04 (PRs #37, #38 e #39) · 2026-10-03 (PR #36) ·
+> **Última rodada:** 2026-10-14 (`/spec --sync`, pós-merge da PR #44; medições de 2026-10-14, entre 11:26 e 11:40 BRT) · **anteriores:** 2026-10-13 (PR #43) · 2026-10-08 (PR #42) · 2026-10-07 (PR #41) · 2026-10-07 (PR #40) · 2026-10-04 (PRs #37, #38 e #39) · 2026-10-03 (PR #36) ·
 > 2026-09-30 (PR #35) · 2026-09-30 (PR #34) · 2026-09-30 (PR #33) · 2026-09-29 (PR #32) · 2026-09-29 (PR #31) · 2026-09-28 (PR #30) · 2026-09-27 (PR #29) · 2026-09-26 (`/spec` de descoberta, pedida pelo usuário) · 2026-09-26
 > (PR #28) · 2026-09-25 (PRs #26 e #27) · 2026-09-25 (PR #25) · 2026-09-24 (PR #24) · 2026-09-23 (PR #23) ·
 > 2026-09-23 (PR #22) · 2026-09-19 (PR #21) · 2026-09-17 (PR #20) · 2026-09-17 (PR #19) · 2026-09-17 (PR #18) ·
@@ -15,39 +15,52 @@ constar na seção [Entregues](#entregues).
 > 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
 >
 > **O que mudou nesta rodada:**
-> 1. **A PR #43 (`7fb2fe9`) entregou duas tarefas diretas num PR só.** `account-deletion-dialog-focus` era a
->    recomendação #1 da rodada anterior, e os cinco itens do critério de pronto fecharam no código: o diálogo de
->    exclusão de conta leva o foco ao campo de senha ao abrir, prende o Tab e devolve o foco ao gatilho.
->    `ui-strings-and-password-focus` saiu de três achados deste arquivo e de um achado do `/test` da primeira: os
->    rótulos acessíveis do design system e dos dois seletores de idioma vêm do dicionário, a paginação do antd fala
->    o idioma da URL, e os dois diálogos de conta devolvem o foco à senha depois de uma recusa da API. Detalhe em
->    [Entregas desta rodada](#entregas-desta-rodada-pr-43).
-> 2. **Nenhuma transição de status.** A PR #43 alterou código em `packages/design-system`,
->    `packages/internationalization`, `apps/app` e `apps/web`, fora dos arquivos que as três specs vivas citam ou
->    declaram em `contends_on`. O status delas foi reconferido mesmo assim (ver [Deriva](#deriva)).
-> 3. **A PR #43 levou junto a auditoria anterior (pós-PR #42).** É a quinta vez (PRs #37, #40, #41, #42 e #43). Na
->    branch, a auditoria tinha commit `docs(specs)` próprio. A branch saiu como
->    `fix/ui-labels-and-account-dialog-focus`, sem `<project>`, porque o diff cruza quatro workspaces, e os dois
->    `STATE.md` ficaram com `review: in-progress` depois do merge. Registrado em E11, sem pergunta nova.
-> 4. **Gates remedidos com `--force` e JDK 21:** 30/30 tasks em 1 min 25,2 s, 873 arquivos no `pnpm check`,
->    **2850** testes em 261 arquivos (+51, todos da PR #43) e 186 contra o emulador. CI verde nos quatro jobs da
->    execução de merge (`gh run 37961048997`).
-> 5. **Achados: 3 fechados, 5 novos, 2 ampliados, 106 abertos** pela soma (104 − 3 + 5). Fecharam o foco do diálogo
->    de exclusão, as strings soltas do design system e dos seletores de idioma, e a paginação do antd em inglês. Os
->    novos vêm do plano, do handoff, do `/review` e do `/test` das duas tarefas. Detalhe em
->    [Achados](#achados-correções-pontuais-não-specs).
-> 6. **Âncoras.** Nenhuma spec viva nem nota de `research/` cita arquivo alterado pela PR #43. Neste arquivo, as
->    âncoras de `antd-app.tsx` (seis linhas a mais no topo), `AccountEmailChangeDialog.tsx` e
->    `sharedFooterPendingState.test.tsx` foram relidas e corrigidas. Fora de `docs/features/`, um documento ficou
->    com âncora deslocada: `docs/PRE-PRODUCTION.md:416` (ver [Contradições](#contradições-doc--código-medidas-nesta-rodada)).
-> 7. **Nenhuma pergunta nova.** Os achados que as duas tarefas mandaram para o backlog entraram como achados.
-> 8. **Nenhuma spec elegível**, pela quinta rodada seguida. A recomendação de #1 é outra tarefa direta: o
->    `DateInput` e o `Calendar` no idioma ativo, que fecham os dois últimos achados da família de strings soltas do
->    design system e tiram o inglês visível do CRUD de referência.
+> 1. **A PR #44 (`fa7041b`) entregou a recomendação #1 da rodada anterior.** `date-input-locale` fechou os seis
+>    itens do critério de pronto no código: o `DateInput` mostra o placeholder do dicionário e formata a data no
+>    idioma da URL, e o `Calendar` mostra mês, dias da semana, navegação e seletor de mês no idioma ativo, sem mudar o
+>    valor gravado. Levou junto a data do formulário de contato da web. Detalhe em
+>    [Entregas desta rodada](#entregas-desta-rodada-pr-44).
+> 2. **Nenhuma transição de status.** A PR #44 alterou código em `packages/design-system`,
+>    `packages/internationalization` e `apps/web`, fora dos arquivos que as três specs vivas citam ou declaram em
+>    `contends_on`. O status delas foi reconferido mesmo assim (ver [Deriva](#deriva)).
+> 3. **A PR #44 levou junto a auditoria anterior (pós-PR #43)**, pela sexta vez, e saiu da branch
+>    `fix/date-input-locale`, sem `<project>`. O `STATE.md` dela ficou com `review: in-progress` depois do merge.
+>    **A contagem desse estado estava errada:** a rodada anterior dizia seis `STATE.md`; lendo os 41, são 15. Os dois
+>    registros estão em E11, sem pergunta nova.
+> 4. **Gates remedidos com `--force` e JDK 21:** 30/30 tasks em 1 min 13,7 s, 876 arquivos no `pnpm check`,
+>    **2869** testes em 263 arquivos (+19, todos da PR #44) e 186 contra o emulador. CI verde nos quatro jobs da
+>    execução de merge (`gh run 38571621840`).
+> 5. **Achados: 2 fechados, 4 novos, 2 ampliados, 108 abertos** pela soma (106 − 2 + 4). Fecharam o "Pick a date" e
+>    a data e o calendário em inglês. Os novos vêm do plano e do `/test` da PR #44: o calendário que abre no mês
+>    atual, a hidratação da `/contact` com fuso diferente, o `initialFocus` obsoleto e o `data-day` no formato do
+>    navegador. Detalhe em [Achados](#achados-correções-pontuais-não-specs).
+> 6. **Âncoras.** Nenhuma spec viva nem nota de `research/` cita arquivo alterado pela PR #44. Neste arquivo, a âncora
+>    do rótulo de data do formulário de contato desceu uma linha (`:72` → `:73`). A PR #44 corrigiu a âncora do
+>    `docs/PRE-PRODUCTION.md:416` que a rodada anterior registrou, e esta rodada mediu uma que tinha ficado de fora,
+>    `docs/RESEARCH-tanstack-vs-next.md:40` (ver [Contradições](#contradições-doc--código-medidas-nesta-rodada)).
+> 7. **Nenhuma pergunta nova; uma estacionada (E14).** A sugestão de rodar o `/spec` de descoberta apareceu em cinco
+>    auditorias seguidas e saiu do relatório. Pelo mesmo motivo (§5.1), os candidatos a #1 que repetiam o motivo de
+>    não escolha desde 2026-10-07 deixaram de ser listados um a um.
+> 8. **Nenhuma spec elegível**, pela sexta rodada seguida. A recomendação de #1 é outra tarefa direta, nos mesmos
+>    componentes: o calendário abrir no mês da data, o campo de nascimento do CRUD de referência ganhar seletor de
+>    mês e ano, e a `/contact` parar de quebrar a hidratação.
+> 9. **Segunda passada do mesmo dia (2026-10-14, 12:40 BRT), sem merge novo.** O `HEAD` segue em `fa7041b`. O working
+>    tree ganhou a tarefa direta `date-input-navigation`, que era a recomendação #1 acima, com `/analyze`,
+>    `/develop`, `/review` e `/test` feitos (12 ✅, 0 ❌, 1 🔒). Ela **não está mergeada**, então nada fecha nesta
+>    passada: três achados da PR #44 ficam marcados como "fechado no working tree, pendente de merge", e o
+>    `data-day` segue aberto. Os gates não foram remedidos (`cycle-policy` §4); os números citados são os do `/test`
+>    dela. Achados: 2 novos (um já fechado no mesmo working tree), 1 ampliado, **110 abertos** pela soma, dos quais 4
+>    fechados no working tree. A recomendação de #1 passou a ser a próxima tarefa, nos primitivos de formulário do
+>    design system. Detalhe em [Em andamento no working tree](#em-andamento-no-working-tree-não-mergeado).
+>10. **Terceira passada do mesmo dia, também sem merge.** O working tree ganhou `form-field-focus-and-names`, a
+>    recomendação da segunda passada, com 10 ✅, 0 ❌ e 0 🔒 no `/test`, depois de uma volta ao `/review` para corrigir
+>    o Enter repetido que a própria tarefa abriu. Cinco achados ficam ◐ e seis entram novos (**116 abertos**, nove ◐).
+>    Os gates seguem citados do `/test`: `pnpm test` da raiz 15/15 e `pnpm e2e` 22/22. A recomendação de #1 passou
+>    para o header da landing: o botão do menu mobile sem nome e a rolagem horizontal em telas médias e grandes.
 
 ## Contadores
 
-Sobre as **3 specs que seguem em `specs/`**. Recontados do disco em 2026-10-13, pós-PR #43, lendo o
+Sobre as **3 specs que seguem em `specs/`**. Recontados do disco em 2026-10-14, pós-PR #44, lendo o
 frontmatter de cada arquivo.
 
 | status | qtd |
@@ -63,8 +76,9 @@ frontmatter de cada arquivo.
 **Por audiência:** `confianca` 1 (`in-progress`) · `dx` 1 (`in-progress`) · `produto` 1 (`deferred`).
 **Por esforço:** M 2 · G 1. **Por valor:** alto 2 · médio 1 · baixo 0.
 
-**Transições aplicadas: 0.** A PR #43 não tocou nenhuma das três specs vivas (`git diff --name-only dbcac2a
-7fb2fe9 -- specs/` devolve só este arquivo), e a releitura do código não achou item do corte entregue por tabela.
+**Transições aplicadas: 0.** A PR #44 não tocou nenhuma das três specs vivas (`git diff --name-only 7fb2fe9
+fa7041b -- specs/` devolve só este arquivo) nem código da área delas, e a releitura do código não achou item do
+corte entregue por tabela.
 Nada foi movido nem preparado no índice do git; as edições desta rodada estão só no working tree, neste arquivo.
 Nada foi commitado.
 
@@ -85,111 +99,177 @@ Correções que vieram de achados deste arquivo, sem spec própria. Ficam regist
 | [`action-menu-keyboard-delete`](../docs/features/action-menu-keyboard-delete/STATE.md) | #40, `5f4a8e9`, 2026-10-07 | 🟡 "Excluir" do menu de ações não funcionava pelo teclado (WCAG 2.1.1); 🟡 o gatilho do menu não publicava `aria-haspopup` nem `aria-expanded` |
 | [`server-locale-from-url`](../docs/features/server-locale-from-url/STATE.md) | #41, `0a49a3b`, 2026-10-07 | 🟡 o `getDictionary()` do servidor lia o cookie `x-locale`, não a URL: primeira visita a `/en` e `/es` da web com Server Components em pt-br, e `<html lang>` das duas apps uma navegação atrasado (WCAG 3.1.1) |
 | [`antd-theme-seed-colors`](../docs/features/antd-theme-seed-colors/STATE.md) | #42, `dbcac2a`, 2026-10-07 | 🟡 as cores-semente do antd, passadas como variável CSS, viravam `#000000`: ícone e "Sim" da confirmação de exclusão do `ActionsMenu` a 1,06:1 e anel de foco dos componentes antd a 1,31:1 no tema escuro (WCAG 1.4.11) |
-| [`account-deletion-dialog-focus`](../docs/features/account-deletion-dialog-focus/STATE.md) | #43, `7fb2fe9`, 2026-10-09 | 🟡 o diálogo de exclusão de conta não levava o foco para dentro ao abrir (WCAG 2.4.3); de quebra, a senha digitada e a mensagem de validação voltavam ao reabrir depois de "Cancelar". Detalhe em [Entregas desta rodada](#entregas-desta-rodada-pr-43) |
-| [`ui-strings-and-password-focus`](../docs/features/ui-strings-and-password-focus/STATE.md) | #43, `7fb2fe9`, 2026-10-09 | 🟡 strings de UI soltas no design system, nos dois seletores de idioma e no breadcrumb (regra de ouro 2); 🟡 a paginação do antd em inglês nos três idiomas; e, sem linha prévia neste arquivo, o foco perdido depois de uma recusa da API nos dois diálogos de conta e o campo de senha da exclusão sem `autoComplete` nem `required`. Detalhe em [Entregas desta rodada](#entregas-desta-rodada-pr-43) |
+| [`account-deletion-dialog-focus`](../docs/features/account-deletion-dialog-focus/STATE.md) | #43, `7fb2fe9`, 2026-10-09 | 🟡 o diálogo de exclusão de conta não levava o foco para dentro ao abrir (WCAG 2.4.3); de quebra, a senha digitada e a mensagem de validação voltavam ao reabrir depois de "Cancelar" |
+| [`ui-strings-and-password-focus`](../docs/features/ui-strings-and-password-focus/STATE.md) | #43, `7fb2fe9`, 2026-10-09 | 🟡 strings de UI soltas no design system, nos dois seletores de idioma e no breadcrumb (regra de ouro 2); 🟡 a paginação do antd em inglês nos três idiomas; e, sem linha prévia neste arquivo, o foco perdido depois de uma recusa da API nos dois diálogos de conta e o campo de senha da exclusão sem `autoComplete` nem `required` |
+| [`date-input-locale`](../docs/features/date-input-locale/STATE.md) | #44, `fa7041b`, 2026-10-14 | 🟡 "Pick a date" cravado no `DateInput`; 🟡 a data escolhida, o calendário e o seletor de mês em inglês em qualquer idioma; e, sem linha prévia neste arquivo, a data do formulário de contato da web também em inglês. Detalhe em [Entregas desta rodada](#entregas-desta-rodada-pr-44) |
 
 As tabelas de conferência item a item das PRs #28, #35 e #36 ficaram na versão deste arquivo em `02c31b5` (a PR
 #37 levou a auditoria pós-PR #36 junto); as das PRs #37, #38 e #39, na versão em `5f4a8e9` (a PR #40 levou a
 auditoria pós-PR #39 junto); a da PR #40, na versão em `0a49a3b` (a PR #41 levou a auditoria pós-PR #40 junto); a
 da PR #41, na versão em `dbcac2a` (a PR #42 levou a auditoria pós-PR #41 junto); a da PR #42, na versão em
-`7fb2fe9` (a PR #43 levou a auditoria pós-PR #42 junto). As cinco versões estão em `main`, e as pastas das
-features guardam o resto.
+`7fb2fe9` (a PR #43 levou a auditoria pós-PR #42 junto); as duas da PR #43, na versão em `fa7041b` (a PR #44 levou
+a auditoria pós-PR #43 junto). As seis versões estão em `main`, e as pastas das features guardam o resto.
 
-## Entregas desta rodada (PR #43)
+## Entregas desta rodada (PR #44)
 
-A PR #43 entrou em `main` em 2026-10-09 às 16:42 UTC (13:42 no horário de Brasília), com os quatro checks verdes na
-PR (`gh pr view 43`) e na execução de merge, `gh run 37961048997`, no SHA `7fb2fe9`: `success` em `changes`,
-`verify`, `coverage` e `e2e`. A branch `fix/ui-labels-and-account-dialog-focus` tinha onze commits (oito de código e
-i18n, a auditoria do backlog pós-PR #42 e os artefatos de cada feature); o squash juntou os onze num só.
+A PR #44 entrou em `main` em 2026-10-14 às 13:25 UTC (10:25 no horário de Brasília), com os quatro checks verdes na
+PR (`gh pr view 44`) e na execução de merge, `gh run 38571621840`, no SHA `fa7041b`: `success` em `changes`,
+`verify`, `coverage` e `e2e`. A branch `fix/date-input-locale` tinha seis commits: a auditoria do backlog pós-PR
+#43, a correção da âncora do `docs/PRE-PRODUCTION.md`, a folha de i18n, o design system, a web e os artefatos da
+feature. O squash juntou os seis num só.
 
-`git diff --stat dbcac2a 7fb2fe9`, fora de `docs/features` e `specs`: 30 arquivos. Código em
-`packages/design-system` (oito componentes em `components/ui` e o `providers/antd-app.tsx`), em
-`packages/internationalization` (oito folhas novas em `translations/components/ui` e o índice), em `apps/app`
-(`AccountPrivacyPanel.tsx`, `AccountEmailChangeDialog.tsx`, `LanguageSwitcher.tsx`, `PageBreadcrumb.tsx`) e em
-`apps/web` (`header/language-switcher.tsx`). Testes: quatro arquivos novos (`componentCopy.test.tsx` e
-`antdLocale.test.tsx` no design system, `sharedComponentCopy.test.tsx` na app, `languageSwitcher.test.tsx` na web) e
-três ampliados na app (`accountPrivacyPanel.test.tsx`, `accountEmailChangeDialog.test.tsx` e o mock de
-`sharedFooterPendingState.test.tsx`). Nenhum documento fora das pastas das features mudou.
+`git diff --stat 7fb2fe9 fa7041b`, fora de `docs/features` e `specs`: 10 arquivos. Código em
+`packages/design-system` (`components/ui/date-input.tsx`, `components/ui/calendar.tsx` e o módulo novo
+`lib/calendar-locales.ts`), em `packages/internationalization` (a folha nova `translations/components/ui/date-input.ts`
+e o índice) e em `apps/web` (`contact/components/contact-form-client.tsx`). Testes: dois arquivos novos,
+`dateInputLocale.test.tsx` no design system e `contactFormDateLocale.test.tsx` na web. Um documento fora das pastas
+das features mudou: `docs/PRE-PRODUCTION.md:416`, que agora cita `sidebar.tsx:29` (a âncora que a auditoria
+anterior tinha registrado como deslocada).
 
-Para encurtar, `<account>` é `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)` e `<ds>` é
-`packages/design-system/components/ui`.
+Para encurtar, `<ds>` é `packages/design-system/components/ui` e `<teste>` é
+`packages/design-system/__tests__/dateInputLocale.test.tsx`.
 
-### `account-deletion-dialog-focus` (PR #43, tarefa direta)
+### `date-input-locale` (PR #44, tarefa direta)
 
-Era a recomendação #1 da auditoria pós-PR #42. Conferência contra o critério de pronto que ela escreveu:
+Era a recomendação #1 da auditoria pós-PR #43. Conferência contra o critério de pronto que ela escreveu:
 
 | o que a recomendação pedia | o que o código mostra |
 |----------------------------|-----------------------|
-| (1) abrir o diálogo, pelo mouse ou pelo teclado, leva o foco para dentro dele (o campo de senha atual) | `<account>/AccountPrivacyPanel.tsx:156-158` passa `onOpenAutoFocus={handleOpenAutoFocus}` ao `AlertDialogContent`, e o handler (`:80-83`) cancela o foco padrão do Radix e chama `form.setFocus("currentPassword")`, no molde do diálogo de troca de e-mail (`AccountEmailChangeDialog.tsx:91-94`, `:121`). O caso `accountPrivacyPanel.test.tsx:250` exige o foco no campo. O `/test` mediu `activeElement` em `input[name="currentPassword"]` dentro de `[role=alertdialog]` abrindo por clique, Enter e Espaço, nos três idiomas e a 390 px |
-| (2) Tab não sai do diálogo; Esc e "Cancelar" devolvem o foco ao botão "Excluir minha conta" | casos `:261` (Esc), `:273` (Cancelar) e `:287` (Tab preso). Sem `onCloseAutoFocus`: o `AlertDialogTrigger` (`:146-155`) já devolve o foco, como o plano mediu. O `/test` percorreu campo, "Mostrar senha", "Cancelar", "Excluir para sempre" e a volta ao campo, e o Shift+Tab ao contrário |
-| (3) o fluxo de exclusão fica como está, com os dez casos atuais verdes | os dez casos anteriores seguem no arquivo (`:84-247`), intactos pelo `git diff --numstat` do `/review`; a personificação desabilita gatilho e rodapé (`:149`, `:185`); o campo vazio é recusado pelo schema. O `/test` refez a exclusão e a recusa no navegador |
-| (4) teste que falha com o código atual | seis casos novos no bloco de foco (`:249-362`). Mutação registrada pelo `/test`, sobre os 16 casos do arquivo naquele momento: no código anterior, 6 falham e 10 passam; sem `onOpenAutoFocus`, 6 e 10; sem `form.reset()`, 2 e 14 |
-| (5) `pnpm check`, `typecheck` e a suíte verdes, e o `/test` nos três idiomas e nos dois temas em build | todos os critérios ✅ no `/test`, com a app em `build && start` e a API em `next dev` (o build de produção da API exige credencial do Firebase Admin, já no `PRE-PRODUCTION.md`); 🔒 só a conta só Google no navegador, coberta pelo Vitest. Gates remedidos nesta auditoria (abaixo) |
+| (1) sem valor e sem `placeholder` do chamador, o placeholder do dicionário nos três idiomas; o `placeholder` do chamador continua vencendo | o default `"Pick a date"` saiu (`<ds>/date-input.tsx:53`), e o botão mostra `placeholder ?? dictionary.components.dateInput.placeholder` (`:91`), lido com `getDictionary()` (`:58`). A folha `translations/components/ui/date-input.ts:1-11` traz "Escolha uma data", "Pick a date" e "Elige una fecha", ligada em `translations/components/index.ts` nos três blocos. Casos `<teste>:108` (dicionário), `:124` (texto do chamador) e `:130` (placeholder vazio de propósito). O `/test` mediu os três textos em `/entities/create` e os dois filtros da `/admin/audit` com o `datePlaceholder` da tela |
+| (2) com data, o botão formata no idioma da URL | `format(selected, "PPP", { locale: calendarLocales[locale] })` em `<ds>/date-input.tsx:90`. Caso `<teste>:116`. O `/test` mediu "17 de abril de 1990", "April 17th, 1990" e "17 de abril de 1990" no `/edit` de uma entidade do seed |
+| (3) mês, dias da semana e rótulos de navegação no idioma ativo, acompanhando a troca sem recarregar; um `locale` do chamador continua vencendo | `calendarLocales` mapeia os três idiomas para `ptBR`, `enUS` e `es` de `react-day-picker/locale` (`packages/design-system/lib/calendar-locales.ts:5-9`, com `satisfies Record<Locale, DayPickerLocale>`). O `Calendar` lê o idioma com `getDictionary()` (`<ds>/calendar.tsx:39-40`), passa `locale={calendarLocale}` (`:200`) antes do `{...props}` (`:202`) e formata o seletor de mês pelo `dateLib` do DayPicker (`:192-197`), não mais pelo idioma do navegador. Casos `<teste>:138`, `:157` (troca sem remontar), `:175` (locale do chamador vence) e `:184` (seletor de mês). O `/test` mediu legenda, navegação e cabeçalho da semana nos três idiomas e a troca pt-br → en → es → pt-br com um marcador em `window` que sobreviveu, com o popover fechado e aberto |
+| (4) o valor gravado continua `yyyy-MM-dd`, sem mudar schema nem API | o `onSelect` não mudou (`<ds>/date-input.tsx:97-99`). Caso `<teste>:205`. O `/test` gravou e releu `"birthdate":"2026-10-20"` pela API contra o emulador, em es |
+| (5) teste que falha com o código atual | 16 casos (10 `it` com `each`). Mutação registrada no handoff: com `calendar.tsx` e `date-input.tsx` do `HEAD` anterior, 10 de 16 reprovam; com o `locale` depois do `{...props}`, 1; com o `formatMonthDropdown` antigo, 1. Na web, `contactFormDateLocale.test.tsx` (3 casos) reprova 2 de 3 com o arquivo anterior |
+| (6) `pnpm check`, `typecheck` e a suíte verdes, e o `/test` nos três idiomas e nos dois temas em build | 8/8 critérios ✅ no `/test`, com `app` e `web` em `next build && next start`, a API em `next dev` (o build de produção dela exige credencial do Firebase Admin) e o emulador; claro, escuro e 390 px. Gates remedidos nesta auditoria (abaixo) |
 
-**Veredito:** fechado. Além do pedido, o `handleOpenChange` (`:71-76`) passou a chamar `form.reset()` ao fechar,
-porque a senha digitada e a mensagem de validação voltavam ao reabrir depois de "Cancelar" (defeito medido pelo
-plano no mesmo diálogo; o diálogo gêmeo já limpava). Os dois achados que o `/test` viu fora do critério (foco depois
-da recusa da senha e clique no overlay) estão abaixo: o primeiro fechou na tarefa seguinte, no mesmo PR; o segundo
-entrou como achado.
+**Veredito:** fechado. Além do pedido, o formulário de contato da web passou a formatar a data no idioma da página
+(`apps/web/app/[locale]/contact/components/contact-form-client.tsx:90-94`, com `calendarLocales` e o `locale` de
+`getDictionary()` em `:20`), decisão P1 do plano, e o `/review` tirou o `calendarLocales` de dentro do módulo
+`"use client"` do `Calendar` para `lib/calendar-locales.ts`, porque a web o importa num componente próprio.
+`git grep "Pick a date"` em `apps` e `packages`, fora de testes, nesta auditoria: só a folha `en` nova e o
+`datePlaceholder` em inglês da trilha (`translations/apps/app/pages/admin/auditTrail.ts:72`), que é o caso que
+prova a precedência do chamador e ficou de propósito (§1.3 do plano). Os achados que a tarefa mandou para o backlog
+estão em [Achados da PR #44](#-achados-da-pr-44-2026-10-14).
 
-### `ui-strings-and-password-focus` (PR #43, tarefa direta)
+O `STATE.md` não acompanhou o merge: `review` segue `in-progress`, e as notas citam `specs/BACKLOG.md:230-272`, da
+versão anterior a esta rodada (E11).
 
-Sem recomendação prévia: saiu dos achados deste arquivo sobre strings soltas e sobre a paginação do antd, do achado
-do `/test` da tarefa anterior (foco depois da recusa) e da §13.3 do plano dela (`autoComplete` e `required`).
-Conferência contra o corte do plano (§1.2):
+## Em andamento no working tree (não mergeado)
 
-| o que o corte pedia | o que o código mostra |
-|---------------------|-----------------------|
-| (1) todo texto listado no achado sai do dicionário nos três idiomas | os oito componentes leem `dictionary.components.*` com `getDictionary()`: `<ds>/mode-toggle.tsx:24`, `<ds>/sidebar.tsx:190`, `:286`, `:309`, `<ds>/dialog.tsx:77`, `:119`, `<ds>/sheet.tsx:81`, `<ds>/pagination.tsx:19`, `:76`, `:94`, `:121`, `<ds>/breadcrumb.tsx:14`, `:112`, `<ds>/carousel.tsx:211`, `:242` e `<ds>/spinner.tsx:13`. `pagination.tsx`, `breadcrumb.tsx` e `spinner.tsx` ganharam `"use client"` na primeira linha. O `Spinner` foi corrigido na raiz, então `Container.tsx:28` e `FullScreenLoader.tsx:17` herdam o rótulo sem mudar. Os dois seletores de idioma leem `components.languageSwitcher` (`apps/app/shared/components/ui/LanguageSwitcher.tsx:40`, `:83`; `apps/web/app/[locale]/components/header/language-switcher.tsx:34`, `:72`), e o `PageBreadcrumb` leva à home do idioma, com o rótulo de `common.routes.home` (`PageBreadcrumb.tsx:23`, `:36`, `:38`), em vez de `href="/painel"` e "Início". `git grep` pelos literais do achado em `<ds>`, `providers`, `apps/app/shared` e `apps/web/app`, fora de testes, nesta auditoria: só sobra `date-input.tsx:51` ("Pick a date"), que o plano deixou fora de propósito por ter achado próprio. As oito folhas novas estão em `packages/internationalization/translations/components/ui/`, com paridade nos três idiomas pela suíte de i18n (67 testes) |
-| (2) a paginação e a tabela do antd falam o idioma da URL e mudam junto sem recarregar | `antdLocales` mapeia os três idiomas para os pacotes `antd/locale/*` (`packages/design-system/providers/antd-app.tsx:150-154`), e o `AntdAppProvider` lê o idioma com `useDictionary()` (`:158`) e o passa ao `ConfigProvider` (`:163`). `antdLocale.test.tsx:72` exige um pacote por idioma do produto, e `:87` troca o idioma sem remontar o provider. O `/test` mediu "10 / página" e "10 / page" na `/admin/users` em `next build && next start`, e a troca sem recarregar |
-| (3) depois de qualquer recusa da API nos dois diálogos de conta, o foco volta ao campo de senha com o texto selecionado | `onError` com `form.setFocus("currentPassword", { shouldSelect: true })` em `<account>/AccountPrivacyPanel.tsx:85-93` e em `<account>/AccountEmailChangeDialog.tsx:111-112`. Casos `accountPrivacyPanel.test.tsx:365` e `accountEmailChangeDialog.test.tsx:203`. O `/test` mediu nove recusas (400 e 503) nos três idiomas, claro e escuro, 1280 e 390 px; as recusas do diálogo de e-mail além do 503 ficaram 🔒 por exigirem a Resend |
-| (4) o campo de senha da exclusão tem `autoComplete="current-password"` e `required` | `<account>/AccountPrivacyPanel.tsx:174`, `:179`; caso `accountPrivacyPanel.test.tsx:385` |
+Registrado na segunda e na terceira passada de 2026-10-14. **Entregue, para esta auditoria, exige PR mergeada em
+`main` e CI verde no SHA de merge.** As duas tarefas abaixo existem só no working tree do workspace `stockholm` (`HEAD` em `fa7041b`, nada
+commitado, índice vazio), então os achados que elas resolvem ficam abertos, marcados como fechados no working tree
+e pendentes de merge. A próxima auditoria depois do merge confere de novo no código de `main` e só então os fecha.
 
-**Veredito:** fechado. 10 ✅, 0 ❌ no `/test`, com 🔒 dentro de critérios aprovados (diálogo de cookies,
-`Pagination` sem consumidor, carrossel, recusas e sucesso do diálogo de e-mail que exigem a Resend). O risco R1 do
-plano (componente com `getDictionary()` sem acompanhar a troca de idioma sem recarregar) foi medido no navegador e
-não reproduziu. O handoff registra 45 testes novos, dos quais 35 reprovam sem a correção. Ficaram fora do corte, por
-decisão do plano: `command.tsx:31-32`, o `DateInput` (`date-input.tsx:51`, `:86`), o menu mobile da web sem nome, o
-contraste do seletor de tamanho da paginação, a duplicação `lacksPasswordProvider`/`requiresPrivacyChannel` e a raiz
-do foco perdido no `HookFormInputPassword` (D7). Os que não tinham linha neste arquivo entraram na
-[seção de achados](#-achados-da-pr-43-2026-10-09).
+### `date-input-navigation` (tarefa direta, no working tree)
 
-Os dois `STATE.md` não acompanharam o merge: `review` segue `in-progress`, o campo `branch` diz "proposta, a
-criar", e as notas citam linhas deste arquivo (`:183-213`, `:793`, `:695`, `:942`) da versão anterior a esta
-rodada (E11).
+Era a recomendação #1 da primeira passada desta rodada. `STATE.md`: `analyze`, `develop`, `review` e `test` em
+`done`, `branch` "fix/date-pickers-and-form-fields (recomendada para a PR das duas tarefas, a renomear a partir de
+guilhermebittelbrunn/cycle-command-v4)" (corrigido na terceira passada; a segunda citava `fix/date-input-navigation`,
+que o `STATE.md` trocou quando a segunda tarefa entrou na mesma PR).
+Arquivos no working tree: `packages/design-system/components/ui/date-input.tsx`, `EntityFormFields.tsx`,
+`contact-form-client.tsx`, `AGENTS.md`, o teste reescrito `apps/web/__tests__/contactFormDateLocale.test.tsx` e três
+testes novos (`dateInputNavigation.test.tsx` no design system, `auditFiltersDateInput.test.tsx` e
+`entityBirthdateField.test.tsx` na app). Conferência contra o critério de pronto, lendo o working tree:
+
+| o que a recomendação pedia | o que o working tree mostra |
+|----------------------------|-----------------------------|
+| (1) com valor, o calendário abre no mês da data; sem valor, no mês atual | `defaultMonth={selected}` em `date-input.tsx:101`, para todos os consumidores. O `/test` abriu o `/edit` da entidade do seed em `abr`/`1990` e, depois de escolher 11/09/2001, reabriu em `set`/`2001`, também depois de recarregar |
+| (2) seletor de mês e ano no nascimento de `entity`, nos três idiomas, cobrindo cem anos; quem não pede o seletor fica como está, sem limite | o `DateInput` aceita `captionLayout`, `startMonth` e `endMonth` opcionais (`date-input.tsx:40`, `:55-57`, `:100-109`), e só o nascimento passa `captionLayout="dropdown"` (`EntityFormFields.tsx:155`). O `/test` contou 101 anos (1926 a 2026) nos três idiomas, com os rótulos do locale do react-day-picker. Nos filtros da trilha, o calendário abriu sem `<select>` e avançou seis meses além de outubro de 2026 sem `aria-disabled` (`auditFiltersDateInput.test.tsx`, novo) |
+| (3) valor gravado continua `yyyy-MM-dd` | `date-input.tsx:105`, sem mudança. O `/test` gravou e releu `2001-09-11` e `1990-04-17` pela API contra o emulador |
+| (4) `/contact` sem #418 com fusos diferentes, sem `initialFocus`, com o rótulo nomeando o botão | o bloco de data feito à mão deu lugar ao `DateInput` (`contact-form-client.tsx:71-72`), com o estado começando vazio (`:13`) e `id="date"` ligado ao `<Label htmlFor="date">` (`:65`). `git grep initialFocus` em `apps` e `packages` no working tree: 0. O `/test` subiu a web com `TZ=Pacific/Kiritimati` e o navegador em `America/Sao_Paulo`: zero erros em `/pt-br`, `/en` e `/es/contact` |
+| (5) teste que falha com o código atual | o handoff registra 17 testes novos ou reescritos, 16 reprovando no código anterior. Os quatro casos que o `/test` acrescentou não rodaram contra o código antigo; o relatório diz isso |
+| (6) gates verdes e `/test` em build | `/test`: `pnpm check` 879 arquivos sem erro; `pnpm test` da raiz 15/15 tasks com JDK 21, 13 do cache; design system 146 testes em 11 arquivos, app 845 em 105, web 95 em 16; `api:test:emulator` 186 em 4. App e web em `next build && next start`, claro, escuro, 390 px. 1 🔒: a lista nativa do `<select>` no escuro, que o navegador headless não desenha |
+
+**Veredito: fechado no working tree, pendente de merge.** Os números acima vêm do `/test` da tarefa e não foram
+remedidos nesta passada: o código mudou depois dos gates da primeira passada, mas o `/test` já rodou a suíte inteira
+depois do diff, e a `cycle-policy` §4 manda citar em vez de remedir. Desvio registrado no `STATE.md`: a `/contact`
+passou a usar o `DateInput` em vez de receber três remendos, e o teste SSR dela foi reescrito porque a data de hoje
+pré-selecionada saiu de propósito. Ficaram fora do corte, com motivo no plano: o `data-day` e limitar o nascimento a
+datas passadas, que é regra de produto (pergunta P2 do plano, adotada sem mudar o schema).
+
+O `/test` também registrou que o texto do plano (§9 e §10) diz duas coisas que o código não faz: clicar no rótulo
+"foca" o botão (na verdade abre o calendário) e o campo de nascimento "continua desabilitado" sob personificação
+(`EntityFormFields.tsx` não passa `disabled`; o bloqueio fica no botão de salvar). O código está certo, e o `/test`
+corrigiu os dois textos em `test/criterios-aceite.md`; o plano ficou como estava (ver Contradições).
+
+### `form-field-focus-and-names` (tarefa direta, no working tree)
+
+Era a recomendação #1 da segunda passada. `STATE.md`: `analyze`, `develop`, `review` (duas rodadas) e `test` em
+`done`; mesma branch recomendada da tarefa acima, porque as duas vão na mesma PR. Arquivos no working tree:
+`hookformInputPassword.tsx`, `hookformInput.tsx` (desvio do plano: o mesmo problema no campo de texto comum), o hook
+novo `useSubmitEnterGuard.ts`, `radio-group-input.tsx` e `button.tsx` no design system; `Footer.tsx` e
+`PageFormFooter.tsx` na app, que perderam o contorno do `disabled` (correção na raiz, `cycle-policy` §3); uma linha
+no `AGENTS.md`; quatro testes novos (`hookformSubmitReadOnly`, `hookformEnterResubmit` e `radioGroupInput` no design
+system, `signInEnterResubmit` na app) e três editados (`button.test.tsx`, `hookformInputPassword.test.tsx`,
+`sharedFooterPendingState.test.tsx`). A recomendação previa só `packages/design-system`; a tarefa também tocou
+`apps/app`, nos dois footers. Conferência contra o critério de pronto, lendo o working tree:
+
+| o que a recomendação pedia | o que o working tree mostra |
+|----------------------------|-----------------------------|
+| (1) durante o envio, o campo de senha não recebe `disabled`, não aceita digitação e mantém o foco depois da recusa, no login das duas apps e nos dois diálogos | `readOnly={formState.isSubmitting}` no lugar de `disabled` (`hookformInputPassword.tsx:83`; e `hookformInput.tsx:77`). O `/test` mediu em build: Enter com senha errada no login da app e da web deixa `activeElement` no campo, sem `focusout`; nos diálogos de exclusão e de troca de e-mail, o foco volta à senha com o texto selecionado; `readonly` liga cerca de 2 ms depois do `submit`, e `disabled` nunca aparece |
+| (2) o `placeholder` do chamador vence o padrão | o padrão vem antes do `{...rest}` (`hookformInputPassword.tsx:82`). Casos novos em `hookformInputPassword.test.tsx` |
+| (3) o grupo de rádio tem nome igual ao rótulo, nos três idiomas | `Label` com `id` (`radio-group-input.tsx:39`, `:44`) e `aria-labelledby` no grupo (`:49`). O `/test` leu `radiogroup "Gênero"`/`"Gender"`/`"Género"` em `/entities/create` e `"Tema"`/`"Theme"`/`"Tema"` nas preferências da conta |
+| (4) o `Button` em carregamento mantém a largura, e `loading` trava mesmo com `disabled={false}` | conteúdo em `opacity-0` sob o spinner (`button.tsx:74-82`) e `disabled={loading \|\| disabled}` depois do `{...props}` (`:58`, `:72`). O `/test` mediu diferença de 0,000 px em oito botões, claro, escuro e 390 px, e `disabled` com `aria-busy` em todas as medições. Os dois footers da app passam só o `disabled` do chamador (`Footer.tsx:58`, `:66`; `PageFormFooter.tsx:38`) |
+| (5) teste jsdom que falha no código atual | segundo o handoff e o `/review`, os testes novos reprovam no código anterior; os dois do R1 reprovam antes da correção (2 de 4, e 3 chamadas em vez de 1) |
+| (6) gates verdes e `/test` em build, com o axe sem regra nova | citados do `/test` e do `/review`, não remedidos: `pnpm check` 884 arquivos; `pnpm test` da raiz 15/15; design system 171, app 846, web 95, api 1205, `test:emulator` 186; `pnpm e2e` 22/22 com a allowlist do axe vazia |
+
+**O defeito que a própria tarefa criou, e a correção.** A primeira medição do `/test` reprovou o critério de Enter
+repetido: com o campo em `readOnly`, ele continua focado, e dois Enter a 2 a 5 ms mandavam dois logins (na web, 7 de 8
+rodadas). Com `disabled`, o campo deixava de receber tecla. A segunda rodada do `/review` acrescentou o
+`useSubmitEnterGuard` (`packages/design-system/components/form/hookform/useSubmitEnterGuard.ts`), que barra o Enter
+enquanto o envio corre e até um `setTimeout(0)` depois de ele terminar. Na remedição, 30 rodadas de Enter repetido
+deram um `signInWithPassword` cada. A janela que o hook fecha depende de o React Query entregar o novo estado da
+mutação por `setTimeout(0)`; isso entrou como achado (ver [Achados da PR #44](#-achados-da-pr-44-2026-10-14)).
+
+**Veredito: fechado no working tree, pendente de merge.** 10 ✅, 0 ❌, 0 🔒 no `/test`. Uma ressalva de método do
+`/test`: o `press` do `agent-browser` solta a tecla no mesmo instante, e o Radix só marca a opção do grupo de rádio
+enquanto a seta está pressionada; com `keydown`, 150 ms e `keyup`, marca. É limite da ferramenta, não defeito do
+produto, e fica registrado aqui para quem medir grupos de rádio no navegador.
 
 ## Gates medidos nesta auditoria
 
-Executados em 2026-10-13, às 16:52 BRT, com `--force`, neste workspace, com o `HEAD` em `7fb2fe9` (igual a `origin/main`) e o
-working tree limpo antes das edições desta auditoria. Não copiados do `/test` nem da rodada anterior.
+Medidos na primeira passada, antes das duas tarefas existirem no working tree. A segunda e a terceira passada não
+remediram; os números do working tree estão na [seção delas](#em-andamento-no-working-tree-não-mergeado).
+
+Executados em 2026-10-14, às 11:32 BRT, com `--force`, neste workspace, com o `HEAD` em `fa7041b` (igual a
+`origin/main`) e o working tree com só as edições desta auditoria em `specs/BACKLOG.md`. Não copiados do `/test` nem
+da rodada anterior.
+
+O workspace estava sem `node_modules`. A primeira tentativa de `pnpm install` usou o binário `~/.local/bin/pnpm`, que
+é x86_64 e roda sob Rosetta: ele baixava os pacotes nativos `darwin-x64` (`@next/swc`, `@biomejs/cli`, `sharp`) a
+7 KiB/s e foi interrompido. O `pnpm install --frozen-lockfile --prefer-offline` com o pnpm 10.19.0 do corepack, sob o
+Node arm64, terminou em 36,5 s, e os gates abaixo rodaram com esse pnpm no `PATH`. Não é defeito do repositório, mas
+explica por que uma rodada nova pode travar antes do primeiro gate.
 
 | comando | resultado |
 |---------|-----------|
-| `pnpm check` | ✅ **873 arquivos · 0 erros** (`No fixes applied`, 381 ms). Os doze arquivos a mais são os quatro testes novos e as oito folhas de i18n da PR #43 |
-| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH` | ✅ **30/30 tasks · 0 em cache · 1 min 25,2 s**, na primeira execução; `api#test:emulator` **186 testes em 4 arquivos**; nenhum erro não tratado no log. Ao fim, nenhuma das portas de emulador (8080, 9099, 9199, 4000, 4001, 4400, 4500, 9150, 8085) ficou ouvindo |
+| `pnpm check` | ✅ **876 arquivos · 0 erros** (`No fixes applied`, 377 ms). Os três arquivos a mais são os dois testes novos e a folha de i18n da PR #44; o `lib/` do design system fica fora do Biome |
+| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH` | ✅ **30/30 tasks · 0 em cache · 1 min 13,7 s**, na primeira execução; `api#test:emulator` **186 testes em 4 arquivos**; nenhum erro não tratado no log. Ao fim, nenhuma das portas de emulador (8080, 9099, 9199, 4000, 4001, 4400, 4500, 9150, 8085) ficou ouvindo |
 
-O `uptime` antes da execução marcava load average 5,9 no minuto; logo depois, 19,2 no minuto e 9,2 em cinco. A
-duração ficou na faixa das rodadas anteriores (1 min 25,8 s e 1 min 23 s). São 14 configs de workspace com
-`testTimeout`, todas; o `vitest.config.mts` da raiz, que só consolida a cobertura, não tem.
+O `uptime` antes da execução marcava load average 4,1 no minuto; logo depois, 17,9 no minuto e 9,0 em cinco. A
+duração ficou abaixo das rodadas anteriores (1 min 25,2 s, 1 min 25,8 s e 1 min 23 s), com a carga inicial menor. São
+14 configs de workspace com `testTimeout`, todas; o `vitest.config.mts` da raiz, que só consolida a cobertura, não
+tem.
 
-O log do `@repo/design-system` traz, no stderr do caso `componentCopy.test.tsx` "nomeia os dois botões de fechar do
-Dialog", o aviso do React `In HTML, <button> cannot be a descendant of <button>`. Não reprova a task; é o
-`DialogFooter` com `showCloseButton` que o handoff da PR #43 mandou para o backlog (ver
-[Achados da PR #43](#-achados-da-pr-43-2026-10-09)).
+O log do `@repo/design-system` segue trazendo, no stderr do caso `componentCopy.test.tsx` "nomeia os dois botões de
+fechar do Dialog", o aviso do React `In HTML, <button> cannot be a descendant of <button>` (uma ocorrência). Não
+reprova a task; é o `DialogFooter` com `showCloseButton`, achado aberto em
+[Achados da PR #43](#-achados-da-pr-43-2026-10-09).
 
 **O teste instável de `useListAuditEvents` não apareceu** (3 execuções da suíte da `apps/app` nesta rodada, a do
-turbo e mais duas com `pnpm --filter app test`, 841 testes cada). O acumulado fica em 2 falhas em 41. O arquivo não
+turbo e mais duas com `pnpm --filter app test`, 841 testes cada). O acumulado fica em 2 falhas em 44. O arquivo não
 muda desde a PR #18; o achado continua aberto.
 
-| workspace | arquivos | testes | Δ vs. 2026-10-07 pós-PR #42 |
+| workspace | arquivos | testes | Δ vs. 2026-10-13 pós-PR #43 |
 |-----------|---------:|-------:|-----------------------------|
 | `api` | 93 | 1205 | — |
-| `app` | 103 | 841 | **+1** arquivo, **+15** testes: 8 em `accountPrivacyPanel.test.tsx` (de 10 para 18), 1 em `accountEmailChangeDialog.test.tsx` e 6 em `sharedComponentCopy.test.tsx` (novo) |
+| `app` | 103 | 841 | — |
 | `@repo/email` | 7 | 202 | — |
+| `@repo/design-system` | 10 | 132 | **+1** arquivo, **+16** testes, em `dateInputLocale.test.tsx` (novo) |
 | `@repo/auth` | 10 | 127 | — |
-| `web` | 15 | 90 | **+1** arquivo, **+3** testes, em `languageSwitcher.test.tsx` (novo) |
-| `@repo/design-system` | 9 | 116 | **+2** arquivos, **+33** testes: 28 em `componentCopy.test.tsx` e 5 em `antdLocale.test.tsx`, os dois novos |
-| `@repo/internationalization` | 7 | 67 | — (a paridade das oito folhas novas passa pelos testes que já existiam) |
+| `web` | 16 | 93 | **+1** arquivo, **+3** testes, em `contactFormDateLocale.test.tsx` (novo) |
+| `@repo/internationalization` | 7 | 67 | — (a paridade da folha nova passa pelos testes que já existiam) |
 | `@repo/security` | 3 | 45 | — |
 | `@repo/shared` | 4 | 44 | — |
 | `@repo/analytics` | 2 | 34 | — |
@@ -197,19 +277,30 @@ muda desde a PR #18; o achado continua aberto.
 | `@repo/payments` | 4 | 22 | — |
 | `e2e` | 2 | 16 | — (testes unitários da suíte; os de navegador rodam no `pnpm e2e`) |
 | `@repo/sdk` | 1 | 9 | — |
-| **total** | **261** | **2850** | **+51** testes, **+4** arquivos, todos da PR #43 |
+| **total** | **263** | **2869** | **+19** testes, **+2** arquivos, todos da PR #44 |
 | `api#test:emulator` (fora da linha acima) | 4 | 186 | — |
+
+Duas medições pedidas pelos achados, cada uma abaixo de um minuto:
+
+- `pnpm turbo run typecheck --filter=app --dry=json`: o `app#typecheck` segue com `dependencies: []` e 290 inputs,
+  nenhum de `packages/design-system`. O achado do `turbo.json:11-14` continua aberto.
+- `tsc --noEmit` sobre os 21 arquivos de `packages/shared`, com um `tsconfig` temporário em `/tmp` que estende o
+  `nextjs.json` do repositório (removido depois; nada foi gravado no pacote): **0 erros** nos arquivos do pacote e
+  **2** `TS2580` (`Cannot find name 'process'`) em `packages/internationalization/utils.ts:22-23`, que o pacote importa,
+  porque `packages/shared` não declara `@types/node`. É o tamanho medido do achado do `typecheck` adiado desde a
+  primeira auditoria.
 
 O `docs/PRE-PRODUCTION.md` §9 segue com a medição de 2026-09-30 (29/29 tasks, 806 arquivos, 2485 testes em 227,
 170 contra emulador, 13 configs). O parágrafo data os números e manda remedir antes de citar, então está honesto;
 só ficou para trás (ver [Contradições](#contradições-doc--código-medidas-nesta-rodada)).
 
-CI: a execução de merge da PR **#43** (`gh run 37961048997`, SHA `7fb2fe9`) terminou em **`success`** nos quatro
-jobs. As 30 últimas execuções do CI na `main` (`gh run list --branch main --limit 30`) estão verdes.
+CI: a execução de merge da PR **#44** (`gh run 38571621840`, SHA `fa7041b`) terminou em **`success`** nos quatro
+jobs (`verify` em 3 min 51 s, `e2e` em 4 min 11 s). As 30 últimas execuções do CI na `main` (`gh run list --branch
+main --limit 30`) estão verdes.
 
-Branch protection segue **não ligado**, remedido hoje depois do merge da PR #43:
+Branch protection segue **não ligado**, remedido hoje depois do merge da PR #44:
 `gh api repos/:owner/:repo/branches/main/protection` → **404** ("Branch not protected"), `rulesets` → **`[]`**. O
-repositório tem **43** PRs, nenhuma aberta.
+repositório tem **44** PRs, nenhuma aberta.
 
 ## Ordem recomendada
 
@@ -226,89 +317,89 @@ Respeita `depends_on` (lido do frontmatter nesta rodada) e prioriza valor × esf
 | 2 | [`observability-logging`](observability-logging.md) | `in-progress`, 5 dos 6 itens. Estacionada (E1) |
 | 3 | [`teams-organizations`](teams-organizations.md) | `deferred` desde 2026-08-22. Estacionada (E2) |
 
-**Recomendação para a próxima rodada: tarefa direta, sem spec, para o `DateInput` e o `Calendar` do design system
-falarem o idioma ativo.** Slug sugerido: `date-input-locale`. Não sobra spec elegível, e as três que restam esperam
-uma decisão sua (E1, E2, E12), que o `/cycle` não toma. A PR #43 limpou as strings soltas do design system e deixou
-estas duas de fora de propósito, porque o formato da data pedia outro trabalho; são os dois últimos achados abertos
-dessa família.
+**As recomendações da primeira e da segunda passada (`date-input-navigation` e `form-field-focus-and-names`) estão no
+working tree, pendentes de merge** (ver [Em andamento no working tree](#em-andamento-no-working-tree-não-mergeado)).
 
-- **O quê:** o `DateInput` (`packages/design-system/components/ui/date-input.tsx`) crava o placeholder
-  `"Pick a date"` (`:51`) e formata a data escolhida com `format(selected, "PPP")` sem `locale` (`:86`). O
-  `Calendar` que ele abre (`packages/design-system/components/ui/calendar.tsx:38-194`) passa ao `DayPicker` nenhum
-  `locale`, então o react-day-picker 9.13.0 usa o `enUS` padrão (`DateLib.js:463`, no pacote instalado): mês, dias
-  da semana e os rótulos "Go to the Previous Month"/"Go to the Next Month" saem em inglês. O `formatMonthDropdown`
-  (`calendar.tsx:188-189`) usa `toLocaleString("default")`, que segue o idioma do navegador, não o da URL. Medido
-  nesta auditoria com o date-fns 4.1.0 do repo: `format(13/10/2026, "PPP")` dá `"October 13th, 2026"`; com o `ptBR`
-  do date-fns, `"13 de outubro de 2026"`; com o `es`, `"13 de octubre de 2026"`.
-- **Onde aparece:** no CRUD de referência, que todo fork copia pelo `/new-crud`. O campo de nascimento de `entity`
-  (`apps/app/app/[locale]/(authenticated)/(common)/(pages)/entities/(components)/EntityFormFields.tsx:154-157`) não
-  passa `placeholder`, então mostra "Pick a date" em pt-br e es, e a data escolhida em inglês. Os filtros de
-  período da trilha de auditoria (`admin/(pages)/audit/(components)/AuditFilters.tsx:82-91`) passam o placeholder do
-  dicionário, mas a data e o calendário saem em inglês. O `Calendar` também aparece no formulário de contato da web
-  (`contact-form-client.tsx:102`), que é maquete.
-- **Por que é a primeira:** é texto visível, não só nome acessível, em inglês na tela que serve de modelo para todo
-  CRUD de fork, e viola a regra de ouro 2. Os dois achados estão abertos desde antes da PR #11. O padrão está pronto:
-  os oito componentes da PR #43 leem o dicionário com `getDictionary()`, e o `antdLocales`
-  (`antd-app.tsx:150-154`) é o molde de mapa por idioma. Não depende de infraestrutura nem de dependência nova: o
-  react-day-picker 9.13.0 instalado já exporta `react-day-picker/locale` com `ptBR` e `es`, que estendem os locales
-  do date-fns com os rótulos traduzidos ("Ir para o próximo mês").
-- **Tamanho:** P. Uma chave de tradução nova (o placeholder padrão), sem variável, rota, índice ou dependência.
-- **O que a rodada autônoma prova:** Vitest jsdom no `@repo/design-system`, com o `LocaleProvider` como no
-  `componentCopy.test.tsx:100`: placeholder, data formatada e cabeçalho do calendário em cada idioma, e a troca de
-  idioma sem remontar, como o `antdLocale.test.tsx:87`. O caso falha no código atual. O `auditFilters.test.tsx` e o
-  `hookformAria.test.tsx` já renderizam o `DateInput` e servem de regressão. O `/test` mede em `build && start`, sob
-  o emulador com o `pnpm seed`, em `/entities/create`, `/entities/edit/<id>` e `/admin/audit`, nos três idiomas,
-  claro e escuro, a 390 px.
-- **`contends_on` proposto:** `packages/design-system/components/ui/date-input.tsx` e
-  `packages/design-system/components/ui/calendar.tsx`. A folha nova de tradução é aditiva e fica fora, pela mesma
-  regra do `translations/packages/shared/utils.ts`. Nenhuma spec viva declara algum deles.
-- **Critério de pronto:** (1) sem valor e sem `placeholder` do chamador, o `DateInput` mostra o placeholder do
-  dicionário nos três idiomas, e o `placeholder` do chamador continua vencendo (`AuditFilters.tsx:85`, `:90`); (2)
-  com data, o botão formata no idioma da URL: "13 de outubro de 2026", "13 de octubre de 2026", "October 13th, 2026";
-  (3) o calendário mostra mês, dias da semana e rótulos de navegação no idioma ativo e acompanha a troca de idioma
-  sem recarregar; um `locale` passado pelo chamador ao `Calendar` continua vencendo (o `{...props}` vem por último,
-  `calendar.tsx:193`); (4) o valor gravado no formulário continua `yyyy-MM-dd` (`date-input.tsx:93`), sem mudar o
-  schema nem a API de `entity`; (5) teste que falha com o código atual; (6) `pnpm check`, `typecheck` e a suíte
-  verdes, e o `/test` medindo os três idiomas nos dois temas em build de produção.
+**Recomendação para a próxima tarefa, na mesma PR: tarefa direta, sem spec, no header da `apps/web`.** Slug
+sugerido: `web-header-reflow-and-menu-name`. Junta quatro achados abertos num arquivo só,
+`apps/web/app/[locale]/components/header/index.tsx`, que nenhuma das duas tarefas do working tree tocou. O header é
+a primeira coisa que todo fork mostra na landing, nos três idiomas, e os quatro achados são de acessibilidade e de
+layout responsivo, no tema da PR.
 
-**Antes disso, as duas decisões que mais destravam:** E12 (o destino da fatia 3 de `account-security-mfa`) e E1
-(fechar `observability-logging` e abrir a spec P do coletor). As duas recomendações seguem o mesmo padrão:
-arquivar o que foi entregue e abrir uma spec `proposed` com o resto, para que ele volte aos lotes. Outra saída é
-rodar o `/spec` de descoberta: a última foi em 2026-09-26, e desde então o backlog ativo encolheu para três
-specs, nenhuma elegível há cinco rodadas.
+- **O quê:**
+  (a) O botão que abre o menu no celular (`index.tsx:261`) é um `Button` só com ícone (`Menu` ou `X`, `:262-266`), sem
+  `aria-label` e sem `aria-expanded`, embora o estado exista (`isOpen`, `:80`). O leitor de tela anuncia "botão", sem
+  nome (WCAG 4.1.2). Medido pelo `/test` da PR #32 a 390 px.
+  (b) O header deslogado passa da largura: 6 px em pt-br e 49 px em es a 1024 px (`/test` de `brand-config`), e em es
+  também a 1280 px (`scrollWidth` 1304, só o link "Registrarse" além da borda; `/test` de `date-input-navigation`).
+  (c) O header logado rola na horizontal: 5 px a 1280 px e 29 px a 1024 px (`/test` da PR #28).
+  A barra cheia aparece a partir de `lg` (`:85`, `:260`), e os itens da direita a partir de `md` (`:192-242`), então
+  entre 1024 px e a largura em que tudo cabe a página rola de lado.
+- **Por que agora:** são quatro linhas abertas, três delas desde setembro, no mesmo arquivo; a do menu sem nome é
+  um controle visível sem nome acessível na landing que todo fork herda. Nenhum arquivo do working tree
+  é tocado, o dicionário do header já existe (`translations/components/header/index.ts`), e a correção não pede
+  dependência nem infraestrutura.
+- **O limite de decisão:** a correção da rolagem não remove nada do header; ela muda a largura a partir da qual a
+  barra cheia aparece, ou deixa os itens da direita quebrarem ou encolherem, e o que sai da barra continua no menu.
+  Isso é escolha técnica de breakpoint, dentro do mandato do ciclo. Se o plano concluir que algum item precisa sair
+  do header para caber, isso vira pergunta de produto, e a tarefa entrega só (a) com a medição do resto.
+- **Tamanho:** P a M. Um arquivo de código, duas ou três chaves no dicionário do header nos três idiomas, e um teste.
+- **Workspaces:** `apps/web` e `packages/internationalization`.
+- **`contends_on` proposto:** `apps/web/app/[locale]/components/header/index.tsx`. A folha
+  `packages/internationalization/translations/components/header/index.ts` é aditiva e fica fora do campo pela regra
+  das traduções. Nenhum dos dois está em `git status`, e nenhuma spec viva os declara.
+- **Critério de pronto:** (1) o botão do menu móvel tem nome acessível do dicionário nos três idiomas ("abrir menu" e
+  "fechar menu", ou um nome fixo com `aria-expanded`) e `aria-expanded` igual a `isOpen` (`index.tsx:80`, `:261`); (2)
+  em 1024, 1280 e 1440 px, logado e deslogado, nos três idiomas, `document.documentElement.scrollWidth` igual à largura
+  da janela (hoje: 1304 em es a 1280 deslogado, +5 px a 1280 logado, +6 e +49 px a 1024 deslogado, +29 px a 1024
+  logado); (3) nenhum link do header deixa de ser alcançável: o que sai da barra está no menu (`:268-300`); (4) a 390 px
+  o header segue como hoje, com o menu abrindo e fechando; (5) teste jsdom que falha no código atual para (1); a
+  rolagem só se mede no navegador, porque o jsdom não calcula layout, e isso fica dito no plano; (6) `pnpm check`,
+  `typecheck`, a suíte e o `pnpm e2e` verdes, e o `/test` em build medindo (1) a (4), claro e escuro.
+
+E1 e E12 seguem sendo as decisões que mais destravam o backlog (ver [Decisões estacionadas](#decisões-estacionadas-51)).
 
 ### O que **não** foi escolhido para #1, e por quê
 
-- **O `HookFormInputPassword` desabilita o campo durante o envio** (`hookformInputPassword.tsx:80`, novo, da PR
-  #43): é a raiz do foco perdido depois de uma recusa, e o componente tem nove call sites, entre eles o login das
-  duas apps. É a segunda colocada. Fica atrás porque o efeito só foi medido nos dois diálogos de conta, que a PR #43
-  já corrigiu no call site, e a troca por `readOnly` (D7 do plano) muda o comportamento de um primitivo usado em
-  nove formulários. O primeiro passo é o `/test` medir o foco depois de uma senha errada no login.
-- **O cache do `typecheck` do turbo ignora os pacotes internos** (`turbo.json:11-14`): P e de DX. Remedido nesta
-  auditoria (`pnpm turbo run typecheck --filter=app --dry=json`: `dependencies: []`, 290 inputs, nenhum de
-  `packages/design-system`). Fica atrás porque o CI não guarda cache do turbo e roda o typecheck de verdade, então
-  nenhum merge passa com erro de tipo; o efeito é um verde falso no terminal, que a auditoria com `--force` também
-  não sofre.
-- **Item selecionado do seletor de tamanho da paginação a 2,74:1** (da PR #42): P, no design system, e é decisão de
-  cor. Aparece só na `/admin/users`, a única tabela com `showSizeChanger` (`UsersListClient.tsx:195`), e só para o
-  admin. A paginação do antd em inglês, que andava junto, fechou com a PR #43.
-- **`CommandDialog` com título e descrição em inglês** (`command.tsx:31-32`, novo): P, mas o componente não tem
-  consumidor no repo.
-- **Arquivo inexistente de um segmento na app vai para o login em vez do 404** (O1 da PR #41): P, mas a correção
-  mexe na resolução do segmento `[locale]` de toda rota da app e só aparece com URL digitada à mão.
-- **Query string perdida no deep link do onboarding e no bounce do proxy** (`apps/app/proxy.ts:263`, `:248`): P e
-  provável por teste, mas só afeta link de listagem filtrada aberto antes do login ou do onboarding.
-- **`/auth/me` e `/auth/sign-in` sem `error.code`** e **o webhook que responde 500 para assinatura inválida**
-  (A4): P e prováveis por teste, sem efeito que chegue a quem usa o produto. O `/auth/me` é lido só no servidor
-  (`apps/app/lib/server/authSession.ts`), e a Stripe só reentrega um evento que nunca vai validar.
-- **Rotas de `payments/*` e sete de `/account` fora do rate limit** (`apps/api/proxy.ts:45-58`): o limite é no-op
-  em todo fork sem `ARCJET_KEY`, então a correção não muda nada na configuração padrão.
-- **Âncoras de documentos deslocadas pelas PRs #37 a #39 e #43:** P e só de texto. Cabe junto de qualquer tarefa
-  que mexa em `docs/`.
+Com motivo novo ou revisto nesta rodada:
+
+- **Mudança de leitura sobre o header:** na segunda passada, o estouro do header em es ficou de fora por "pedir
+  escolher o que o header recolhe, que é decisão de design". Relido nesta passada, nenhum item precisa sair: a
+  correção é de breakpoint, com o menu cobrindo o que não couber. Junto com o botão sem nome e as duas outras linhas
+  de rolagem no mesmo arquivo, passou a valer como tarefa. Se o plano provar o contrário, ele entrega só o nome do
+  botão.
+- **"(Código do erro: <uuid>)" em recusa esperada** (`handleClientError.ts:4-11`): medido nesta passada. O sufixo é
+  deliberado desde a PR #15 e coberto por teste (`panelErrorRequestId.test.tsx:115`); escolher quais recusas o
+  escondem é decisão de copy e de suporte. Descartado como tarefa do ciclo; ficou como achado.
+- **Salvar as preferências em `/es` leva para `/pt-br`** (`AccountPreferencesForm.tsx:65`, `:89-99`): medido nesta
+  passada. O formulário segue a preferência de idioma da conta, como projetado; começar pelo idioma da URL é decisão
+  de produto. Descartado; ficou como achado.
+- **Campo de nascimento atrás do rodapé a 390 px** (`Footer.tsx:47`, `sticky bottom-0`): o rodapé é `sticky`, então
+  cobrir o fim do conteúdo sem rolar é o comportamento do padrão. O caso que importa é o foco do teclado ficar
+  escondido atrás dele (WCAG 2.4.11), que ninguém mediu. Além disso, a correção provável mexe no `Footer.tsx`, que
+  `form-field-focus-and-names` já alterou no working tree. Fica para medição primeiro.
+- **Asterisco do `Label` no nome acessível** (`label.tsx:27`): P, mas latente, porque nenhum consumidor passa
+  `required` aos quatro componentes que usam esse `Label`. Cabe de carona numa tarefa que torne um desses campos
+  obrigatório.
+- **Os outros seis `HookForm*` com `disabled` no envio:** lidos nesta passada; nenhum envia o formulário com Enter,
+  então não perdem o foco por esse caminho (ver o achado do botão de enviar).
+- **Foco que sai do botão de enviar** (`button.tsx:72`): a correção (`aria-disabled` no lugar de `disabled`) muda a
+  semântica de todo botão e mexe num arquivo já alterado no working tree. Pede medição no navegador e tarefa própria.
+- **`data-day` gravado com `toLocaleDateString()` do navegador** (`calendar.tsx:229`): sem efeito observável; um
+  teste para ele criaria um contrato que ninguém consome.
+- **`aria-describedby` órfão dos `HookForm*`, dica do `TextareaInput`, `DialogFooter` e `CommandDialog`**
+  (`form.tsx:115-119`, `textarea-input.tsx:42-43`, `dialog.tsx:117-121`, `command.tsx:31-32`): o axe não reclama, ou
+  o componente não tem consumidor no repositório.
+
+**Os demais candidatos não mudaram de motivo desde 2026-10-07 e não são mais reapresentados** (§5.1): o cache do
+`typecheck` do turbo, o contraste do seletor de tamanho da paginação, o `CommandDialog` em inglês, o 404 de arquivo
+inexistente (O1 da PR #41), a query string perdida no proxy, `/auth/me` e `/auth/sign-in` sem `error.code` com o
+webhook que responde 500 (A4), as rotas fora do rate limit e as âncoras de documento deslocadas. O motivo de cada um
+está na linha do achado, em [Achados](#achados-correções-pontuais-não-specs).
 
 ## Lotes paralelos
 
-Para rodar o ciclo completo em 2–3 workspaces do Conductor ao mesmo tempo. Calculado em **2026-10-13**, depois
+Para rodar o ciclo completo em 2–3 workspaces do Conductor ao mesmo tempo. Calculado em **2026-10-14**, depois
 da reconciliação dos status, a partir do `contends_on` de cada spec, lido do disco, pelo algoritmo de
 [`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por
 disjunção → teto de 3.
@@ -321,12 +412,22 @@ coisa, rode o #1 da ordem.
 `teams-organizations` (`deferred`). **Não há lote.**
 
 A tarefa direta recomendada não é spec e não entra no cálculo. O `contends_on` proposto para ela
-(`date-input.tsx` e `calendar.tsx`, no design system) é disjunto do de `account-security-mfa` (quatro arquivos em
-`packages/auth` e `resolve-api-actor.ts`), de `observability-logging` (`requestErrorReporter.ts`) e de
-`teams-organizations` (rota e repositório de `entity`, cliente do SDK, `packages/auth/types.ts` e
-`firestore.indexes.json`), conferido no frontmatter do disco em 2026-10-13, pós-PR #43. Os dez arquivos desses
-`contends_on` existem no disco. Se você destravar uma delas (E1, E2 ou E12), ela pode rodar ao lado da tarefa
-direta.
+(`apps/web/app/[locale]/components/header/index.tsx`) é disjunto dos arquivos que `date-input-navigation` e
+`form-field-focus-and-names` alteraram no working tree e do de `account-security-mfa` (quatro arquivos em `packages/auth` e `resolve-api-actor.ts`), de `observability-logging`
+(`requestErrorReporter.ts`) e de `teams-organizations` (rota e repositório de `entity` na API, cliente do SDK,
+`packages/auth/types.ts` e `firestore.indexes.json`), conferido no frontmatter do disco em 2026-10-14, pós-PR #44.
+Os dez arquivos desses `contends_on` existem no disco. Se você destravar uma delas (E1, E2 ou E12), ela pode rodar
+ao lado da tarefa direta.
+
+`form-field-focus-and-names`, no working tree, tinha `contends_on` proposto de três arquivos do design system e
+tocou os três, mais `hookformInput.tsx`, o hook novo `useSubmitEnterGuard.ts` e os dois footers da `apps/app`.
+
+`date-input-navigation`, no working tree, tinha `contends_on` proposto de três arquivos (`date-input.tsx`,
+`EntityFormFields.tsx`, `contact-form-client.tsx`) e tocou os três, mais `AGENTS.md` e os testes.
+
+A tarefa direta da PR #44 tinha `contends_on` proposto de dois arquivos, `date-input.tsx` e `calendar.tsx`, e tocou
+os dois, mais o formulário de contato da web (decisão P1 do plano, que o `STATE.md` já registrava), o módulo novo
+`lib/calendar-locales.ts` (do `/review`) e a folha de i18n, que a regra deixa fora do campo.
 
 As duas tarefas diretas da PR #43 rodaram em sequência no mesmo workspace e saíram num PR só. A auditoria propôs
 para a primeira `AccountPrivacyPanel.tsx` e o teste dele, e foi o que ela tocou. A segunda não teve previsão da
@@ -361,7 +462,7 @@ no código: ver as âncoras deslocadas em [Contradições](#contradições-doc--
 `--no-audit`. Sem essa disciplina, 3 agents regravam o `BACKLOG.md` ao mesmo tempo. É também por isso que
 `specs/BACKLOG.md` **não** aparece em nenhum `contends_on`: esse conflito se resolve por processo, não por
 dado (ver [`README.md`](README.md#depends_on--contends_on)). As PRs #38 e #39 seguiram a nota: nenhuma das duas
-tocou o `BACKLOG.md`. As PRs #40 a #43 tocaram, mas só para levar a auditoria anterior, feita num workspace só.
+tocou o `BACKLOG.md`. As PRs #40 a #44 tocaram, mas só para levar a auditoria anterior, feita num workspace só.
 
 ### A ressalva honesta
 
@@ -370,8 +471,8 @@ MVP, e o histórico mostra que ela erra para menos: `admin-billing-insights` dec
 `brand-config`, `storage-emulator-rules-tests`, `accessibility-conformance` e `account-email-change` tocaram de
 12 a 31 arquivos de código fora da lista; as PRs #38 e #39, acima, dividiram seis arquivos sem declarar nenhum;
 a tarefa direta da PR #41 tocou quatro dos cinco previstos e mais quatro fora. A da PR #42 acertou os dois arquivos
-de código, e a primeira da PR #43 acertou os dois previstos. Nenhuma rodada registrou conflito de merge causado por
-esses erros.
+de código, a primeira da PR #43 acertou os dois previstos, e a da PR #44 tocou os dois previstos e mais dois arquivos
+de código fora da lista. Nenhuma rodada registrou conflito de merge causado por esses erros.
 
 ## Precisam de decisão
 
@@ -380,22 +481,39 @@ esses erros.
 
 Resolvidos sem pergunta nesta rodada:
 
-- **O CI no SHA de merge da PR #43** foi medido: verde nos quatro jobs (`gh run 37961048997`), e as 30 últimas
+- **O CI no SHA de merge da PR #44** foi medido: verde nos quatro jobs (`gh run 38571621840`), e as 30 últimas
   execuções na `main` também.
-- **Se o foco do diálogo de exclusão fechou** foi medido no código, item a item do critério de pronto, e pela suíte
-  da `apps/app` nesta auditoria (`accountPrivacyPanel.test.tsx` com 18 casos), não lido do `STATE.md`.
-- **Se as strings soltas fecharam** foi medido por `git grep` dos literais do achado: só sobra o "Pick a date" do
-  `DateInput`, que tem achado próprio e virou a recomendação #1.
-- **Se o antd fala o idioma ativo** foi conferido no código (`antd-app.tsx:150-163`) e pela suíte do
-  `@repo/design-system` (116 testes, 5 em `antdLocale.test.tsx`).
-- **Se o cache do `typecheck` do turbo segue ignorando os pacotes internos** foi remedido com `--dry=json`: segue,
-  com `dependencies: []` e nenhum input do design system entre os 290 da `app`.
+- **Se o `DateInput` e o `Calendar` falam o idioma ativo** foi medido no código, item a item do critério de pronto,
+  e pela suíte do `@repo/design-system` nesta auditoria (`dateInputLocale.test.tsx`), não lido do `STATE.md`.
+- **Se sobrou literal "Pick a date"** foi medido por `git grep` em `apps` e `packages`, fora de testes: só a folha
+  `en` nova e o `datePlaceholder` em inglês da trilha, que é texto do dicionário.
 - **Se o teste instável de `useListAuditEvents` reapareceu** foi medido com duas execuções a mais da suíte da
   `apps/app`, além da do turbo: 3 de 3 verdes, 841 testes cada.
-- **Os achados que as duas tarefas da PR #43 mandaram para o backlog** entraram como achados, sem virar pergunta. O
-  do menu mobile da web sem nome já estava registrado.
-- **A PR #43 levar junto a auditoria anterior** é a quinta repetição do mesmo padrão, e os dois `STATE.md` com
-  `review: in-progress` depois do merge, a quinta e a sexta feature nesse estado. Pela §5.1, seguem em E11.
+- **Se o `typecheck` do `packages/shared` cabe numa tarefa pequena** foi medido com um `tsc` fora do pacote: 0 erros
+  nos arquivos dele, 2 por falta de `@types/node`. O número entrou na linha do achado.
+- **Os achados que a PR #44 mandou para o backlog** entraram como achados, sem virar pergunta. O estouro do header
+  em es ampliou uma linha que já existia.
+- **Quantos `STATE.md` seguem com `review: in-progress` depois do merge** foi medido lendo os 41: 15, não os seis que
+  a rodada anterior contava. A correção entrou em E11, sem pergunta nova.
+- **A PR #44 levar junto a auditoria anterior** é a sexta repetição do mesmo padrão. Pela §5.1, segue em E11.
+- **A sugestão de rodar o `/spec` de descoberta**, repetida em cinco auditorias, saiu da recomendação e virou E14.
+- **Os candidatos a #1 que repetiam o mesmo motivo de não escolha desde 2026-10-07** deixaram de ser listados um a
+  um; o motivo fica na linha do achado (§5.1).
+- **Segunda passada:** se `date-input-navigation` fecha achados foi lido no working tree, item a item, e a resposta é
+  "no working tree, pendente de merge", sem fechar nada. Os gates não foram remedidos; valem os números do `/test`
+  dela (`pnpm test` da raiz 15/15 depois do diff).
+- **Se o `HookFormInputPassword` perde o foco no login** foi medido por leitura (`SignInForm.tsx:131-136` e o
+  formulário da web chamam `mutate` sem aguardar, e o campo fica desabilitado durante a validação) e com um script de
+  jsdom, que mostrou que o jsdom 27.0.1 não aplica o "focus fixup" do HTML. O efeito no navegador fica para o `/test`
+  da próxima tarefa, que é a recomendação #1.
+- **Terceira passada:** se `form-field-focus-and-names` fecha achados foi lido no working tree, item a item:
+  cinco ficam ◐, pendentes de merge. Os gates foram citados do `/test` e do `/review`, sem `--force`. A âncora
+  `specs/BACKLOG.md:162`, que citava a branch antiga `fix/date-input-navigation`, foi corrigida para
+  `fix/date-pickers-and-form-fields`.
+- **Os achados que o `/test` da terceira passada viu fora do diff** foram medidos no código antes de entrar: o código
+  do erro em recusa esperada (`handleClientError.ts:4-11`) e o idioma das preferências (`AccountPreferencesForm.tsx:65`,
+  `:89-99`) entraram como achados que pedem decisão de copy ou de produto, não como pergunta. O `press` do
+  `agent-browser` no grupo de rádio é limite da ferramenta e ficou só como nota de método.
 
 ## Decisões estacionadas (§5.1)
 
@@ -407,7 +525,7 @@ Cada uma tem dono e endereço.
 |---|---------|------|---------------------|-------------------------|
 | E1 | `observability-logging` fecha como entregue, com o coletor virando spec P própria? (13 rodadas) | você | `docs/PRE-PRODUCTION.md` §11 (o coletor) | fechar e abrir spec P do coletor. A E12 pede a mesma coisa para `account-security-mfa` |
 | E2 | `teams-organizations` continua `deferred`? (15 rodadas sem as contrapartidas P) | você | este arquivo, [Achados](#-repositório-rotas-e-proxy) (predicado de posse) | status de sua escolha; as contrapartidas já são achados com arquivo e linha |
-| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-10-13, pós-PR #43: 404, `[]`, 43 PRs |
+| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-10-14, pós-PR #44: 404, `[]`, 44 PRs |
 | E4 | O gate `approved` não é usado. Em 2026-09-26 você aprovou cinco specs de uma vez, e as cinco foram entregues depois de passar por ele (PRs #30 a #34). `plan-entitlements` foi a nona entregue sem passar por `approved`: você a manteve `proposed` em 2026-09-26, e o `/analyze` de uma rodada do `/cycle` a levou direto a `in-progress` | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
 | E5 | Prazo de retenção da coleção `auditEvent` | você | `docs/PRE-PRODUCTION.md` §1.3 | decidir um prazo padrão sem invocar o art. 15 do Marco Civil |
 | E6 | Teto absoluto da sessão ultrapassável por até meia vida de cookie | — | `docs/PRE-PRODUCTION.md`, seção "Declaração — por quanto tempo uma sessão pode ser renovada" | manter o comportamento; o número está escrito onde o fork lê |
@@ -415,9 +533,10 @@ Cada uma tem dono e endereço.
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
 | E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral (3 rodadas) | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`), por isso precisa da sua palavra. O `PlanGate` da PR #38 leva a `/account?tab=billing` e funciona porque a aba é lida ao montar |
 | E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | este arquivo, achado A1 em [Achados](#-achados-abertos-reconferidos-ou-herdados) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer; a nota de medição do `docs/AUTH-SSO.md` fica como está |
-| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Atualizado em 2026-10-13, pós-PR #43:** a PR #43 saiu como `fix/ui-labels-and-account-dialog-focus`, sem `<project>`, porque o diff cruza `packages/design-system`, `packages/internationalization`, `apps/app` e `apps/web`, e juntou duas tarefas diretas num PR. Os dois `STATE.md` (`account-deletion-dialog-focus` e `ui-strings-and-password-focus`) ficaram com `review: in-progress` depois do merge, com o campo `branch` ainda dizendo "proposta, a criar" e notas que citam linhas da versão anterior deste arquivo. É a quinta PR (#37, #40, #41, #42 e #43) cujo squash leva a auditoria anterior junto; na branch, a auditoria tinha commit `docs(specs)` próprio, como a regra pede. Das PRs #29 a #43, só a #36, a #40 e a #42 seguiram o padrão de branch; as três tocam código de um pacote só. A #42 saiu como `design-system/fix/antd-theme-seed-colors`, e o `STATE.md` dela também ficou com `review: in-progress`, como o da #41 (`fix/server-locale-from-url`). A #40 saiu como `design-system/fix/action-menu-keyboard-delete`, e o `STATE.md` dela acompanhou o merge. As três de 2026-10-04 saíram como `fix/admin-self-lockout-guard`, `feat/plan-entitlements` e `feat/account-active-sessions`, sem `<project>`, porque cada diff cruza vários apps; a regra de commit aceita omitir o escopo, a de branch não. Seis `STATE.md` seguem com `review: in-progress` depois do merge (reconferido em 2026-10-13): `plan-entitlements`, `account-active-sessions`, `server-locale-from-url`, `antd-theme-seed-colors`, `account-deletion-dialog-focus` e `ui-strings-and-password-focus`. A auditoria não os edita, porque a `spec-audit` só a autoriza a acrescentar `spec:` ao arquivar. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
-| E12 | O destino da fatia 3 de `account-security-mfa` (segundo fator com códigos de recuperação, itens 5 e 6). Era a D10, aberta em 2026-10-04; estacionada em 2026-10-07, na segunda aparição. Opções: **(a)** arquivar a spec como entregue em 4/6, em `docs/features/account-security-mfa/spec.md`, e abrir uma spec `proposed` só do segundo fator; **(b)** voltar a spec para `proposed`, com as fatias entregues registradas nela, para que entre nos lotes; **(c)** manter `in-progress`; **(d)** marcar a fatia 3 como `deferred` dentro da spec | você | a spec [`account-security-mfa`](account-security-mfa.md) | **(a)**. Com `in-progress` e nenhuma feature ativa, a spec fica fora dos lotes para sempre, e o status afirma um trabalho que ninguém está fazendo. (a) segue o padrão recomendado na E1, deixa a evidência das fatias 1 e 2 junto da feature e abre uma spec pequena sobre o que falta: prevalência de 3/10, preço no GCIP não confirmado, ativação do recurso no projeto Firebase. A pasta de destino tem o mesmo nome do `id` e ainda não tem `spec.md` (reconferido em 2026-10-13), então não há colisão. (b) é a saída de menor esforço se você quiser manter o histórico num arquivo só |
+| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Atualizado em 2026-10-14, pós-PR #44:** a PR #44 saiu como `fix/date-input-locale`, sem `<project>`, porque o diff cruza `packages/internationalization`, `packages/design-system` e `apps/web` (o `/review` dela citou esta linha como precedente). É a sexta PR (#37, #40, #41, #42, #43 e #44) cujo squash leva a auditoria anterior junto; na branch, a auditoria tinha commit `docs(specs)` próprio, como a regra pede. Das PRs #29 a #44, só a #36, a #40 e a #42 seguiram o padrão de branch; as três tocam código de um pacote só. **Contagem corrigida nesta rodada:** a auditoria anterior dizia que seis `STATE.md` seguiam com `review: in-progress` depois do merge. Lendo a linha `review` de todos os 41 `STATE.md` em `fa7041b`, são **15**: `api-hardening`, `cursor-pagination`, `audit-log`, `user-activity-tracking`, `onboarding-flow`, `accessibility-conformance`, `account-security-mfa`, `observability-logging`, `plan-entitlements`, `account-active-sessions`, `server-locale-from-url`, `antd-theme-seed-colors`, `account-deletion-dialog-focus`, `ui-strings-and-password-focus` e `date-input-locale`, todas com PR mergeada e CI verde (`observability-logging` com a parte entregue). As outras rodadas contavam só as features recentes. Os 26 restantes têm `review: done`; `e2e-testing` tem `test: blocked`, por decisão sua. A auditoria não os edita, porque a `spec-audit` só a autoriza a acrescentar `spec:` ao arquivar. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
+| E12 | O destino da fatia 3 de `account-security-mfa` (segundo fator com códigos de recuperação, itens 5 e 6). Era a D10, aberta em 2026-10-04; estacionada em 2026-10-07, na segunda aparição. Opções: **(a)** arquivar a spec como entregue em 4/6, em `docs/features/account-security-mfa/spec.md`, e abrir uma spec `proposed` só do segundo fator; **(b)** voltar a spec para `proposed`, com as fatias entregues registradas nela, para que entre nos lotes; **(c)** manter `in-progress`; **(d)** marcar a fatia 3 como `deferred` dentro da spec | você | a spec [`account-security-mfa`](account-security-mfa.md) | **(a)**. Com `in-progress` e nenhuma feature ativa, a spec fica fora dos lotes para sempre, e o status afirma um trabalho que ninguém está fazendo. (a) segue o padrão recomendado na E1, deixa a evidência das fatias 1 e 2 junto da feature e abre uma spec pequena sobre o que falta: prevalência de 3/10, preço no GCIP não confirmado, ativação do recurso no projeto Firebase. A pasta de destino tem o mesmo nome do `id` e ainda não tem `spec.md` (reconferido em 2026-10-14), então não há colisão. (b) é a saída de menor esforço se você quiser manter o histórico num arquivo só |
 | E13 | Ligar o bloqueio de bot da landing? Hoje ele nunca roda, nem com chave válida (achado do `skipValidation` da `apps/web`). Era a D8, aberta em 2026-09-30; estacionada em 2026-10-07, na quarta aparição | você | este arquivo, [Achados](#-repositório-rotas-e-proxy), linha do `skipValidation` | não ligar agora e declarar a decisão. Ligar é pôr `detectBot` e `shield` em modo `LIVE` para visitante anônimo em todo fork que já tem a chave; pede teste próprio (falso positivo de crawler, preview de link) e não cabe numa correção de configuração. Os documentos em `main` já descrevem o comportamento atual (`docs/ROPA.md:108`, `docs/SUBPROCESSORS.md:40`, `docs/FORKING.md:317-318`, no §7.3). Tirar o `skipValidation` sem esta decisão liga o bloqueio por tabela |
+| E14 | Rodar o `/spec` de descoberta? A última foi em 2026-09-26; desde então o backlog ativo encolheu para três specs, nenhuma elegível há seis rodadas, e as rodadas do `/cycle` vivem de tarefas diretas tiradas dos achados. A sugestão apareceu em cinco auditorias seguidas (pós-PRs #39 a #43) como "outra saída" e sai do relatório aqui | você | este arquivo; o `/spec` sem argumento | rodar quando você quiser specs novas no lugar das tarefas diretas. Enquanto isso, a auditoria segue recomendando tarefa direta. Estacionada em 2026-10-14, na sexta aparição |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
@@ -436,7 +555,7 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 
 ## Dependências e bloqueios
 
-| spec | `depends_on` | situação em 2026-10-13, pós-PR #43 |
+| spec | `depends_on` | situação em 2026-10-14, pós-PR #44 |
 |------|--------------|------------------------|
 | [`account-security-mfa`](account-security-mfa.md) | `account-settings` | ✅ satisfeita (PR #12, `a4df5ed`). A spec está `in-progress`, com as fatias 1 e 2 em `main` |
 | [`teams-organizations`](teams-organizations.md) | `transactional-emails` | ✅ satisfeita (PR #9, `400f290`) |
@@ -483,13 +602,13 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `compliance-docs-kit` | 2026-09-30 | [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md) — **6/6 do corte** (PR #34, `c7aa4d9`), 18 ✅, 0 ❌ e 2 🔒 no `/test` (backup no Blaze e conformidade jurídica). Quinta spec entregue depois de passar por `approved`. ⚠️ Cinco derivas sem efeito no conteúdo. Preencher os `[FORK]`, aceitar os DPAs e decidir o backup são passo manual por fork (`PRE-PRODUCTION.md` §14) |
 | `plan-entitlements` | 2026-10-04 | [`docs/features/plan-entitlements/spec.md`](../docs/features/plan-entitlements/spec.md) — **5/5 do corte** (PR #38, `2ed0df2`), 15 ✅, 0 ❌ e 1 🔒 no `/test` (entrega real da Stripe). Entregue sem passar por `approved` (E4). Sem deriva. ⚠️ Recursos cadastrados no Dashboard da Stripe, o sexto evento no endpoint e o custo do Entitlements são passo manual por fork (`PRE-PRODUCTION.md` §12, a partir da `:455`); a demo em `entity` fica desligada sem `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE` |
 
-**Verificado na auditoria de 2026-10-13 (pós-PR #43):** `docs/features/` tem **40** pastas e **26** `spec.md`
-arquivados. As quatorze pastas sem `spec.md` são `account-security-mfa` e `account-active-sessions` (fatias 1 e 2 da
+**Verificado na auditoria de 2026-10-14 (pós-PR #44):** `docs/features/` tem **41** pastas e **26** `spec.md`
+arquivados. As quinze pastas sem `spec.md` são `account-security-mfa` e `account-active-sessions` (fatias 1 e 2 da
 spec `in-progress` em `specs/`), `observability-logging` (spec `in-progress`), `auth-panel-context` e
 `impersonation-read-only` (as duas anteriores à semeadura), e `i18n-hydration-admin-delete-billing`,
 `disabled-account-revocation`, `arcjet-key-lazy-validation`, `admin-self-lockout-guard`,
-`action-menu-keyboard-delete`, `server-locale-from-url`, `antd-theme-seed-colors`, `account-deletion-dialog-focus` e
-`ui-strings-and-password-focus` (tarefas diretas, listadas em
+`action-menu-keyboard-delete`, `server-locale-from-url`, `antd-theme-seed-colors`, `account-deletion-dialog-focus`,
+`ui-strings-and-password-focus` e `date-input-locale` (tarefas diretas, listadas em
 [Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec)). Nenhuma spec foi arquivada nesta rodada; a
 última foi `plan-entitlements`, em 2026-10-04.
 
@@ -508,13 +627,14 @@ spec `in-progress` em `specs/`), `observability-logging` (spec `in-progress`), `
 ## Contradições doc × código, medidas nesta rodada
 
 Nenhum gate lê prosa. Pela [`cycle-policy` §4](../.claude/cycle-policy.md), afirmação barata de medir num
-doc é medida ao passar por ela. A PR #43 não alterou documento fora de `docs/features/` e `specs/`. Fora de
-`docs/features/`, dois documentos citam com linha um arquivo que ela alterou (`git grep` em `docs`, `AGENTS.md`, nos
-`CLAUDE.md` e em `.claude`, pelos 14 arquivos de componente do diff): `docs/PRE-PRODUCTION.md:416`, deslocado (linha
-nova abaixo), e `docs/RESEARCH-tanstack-vs-next.md:40`, que cita `LanguageSwitcher.tsx:3` para o `"use client"` que
-está na linha 1 desde antes da PR #43 (fora do que esta rodada mede). As linhas das PRs #41 e #42 foram lidas nas
-rodadas anteriores; o código que os outros documentos citam não mudou, então as linhas medidas em 2026-10-04 mantêm
-o veredito e a data de lá. A auditoria não edita `docs/`; o que está defasado fica registrado aqui.
+doc é medida ao passar por ela. A PR #44 alterou um documento fora de `docs/features/` e `specs/`: a linha do
+`sidebar_state` do `docs/PRE-PRODUCTION.md:416`, que agora confere. Fora de `docs/features/`, nenhum documento cita
+com linha `date-input.tsx`, `calendar.tsx`, `contact-form-client.tsx` ou o índice de traduções (`git grep` em `docs`,
+`AGENTS.md`, nos `CLAUDE.md` e em `.claude`; `AGENTS.md:77` descreve o `DateInput` sem linha, e a descrição segue
+certa). Nesta rodada também foi medida a âncora do `docs/RESEARCH-tanstack-vs-next.md:40`, que a rodada anterior
+deixou de fora: ela cita `LanguageSwitcher.tsx:3` para o `"use client"`, que está na linha 1. As linhas das PRs #41 e
+#42 foram lidas nas rodadas anteriores; o código que os outros documentos citam não mudou, então as linhas medidas em
+2026-10-04 mantêm o veredito e a data de lá. A auditoria não edita `docs/`; o que está defasado fica registrado aqui.
 
 | documento | afirma | realidade medida | veredito |
 |-----------|--------|------------------|----------|
@@ -524,8 +644,11 @@ o veredito e a data de lá. A auditoria não edita `docs/`; o que está defasado
 | `docs/PRE-PRODUCTION.md:414` | o cookie `x-locale` é lido em `server.ts:13` e gravado em `apps/app/proxy.ts:214,218` e `apps/web/proxy.ts:111,115` | conferem em `0a49a3b`: `LOCALE_COOKIE` em `server.ts:13`, os quatro `cookieStore.set("x-locale", …)` nas linhas citadas | ✅ **corrigido pela PR #41** (era ❌, âncora deslocada) |
 | `docs/ARCHITECTURE.md:64`, `AGENTS.md:25`, `apps/app/CLAUDE.md:47`, `.claude/skills/i18n-sync/SKILL.md:14` | no servidor, o idioma vem do segmento da URL, repassado pelos proxies no header `x-request-locale`; sem header válido, cookie e depois padrão; fora do `matcher` o header chega como o navegador mandou | `server.ts:31-34`, `apps/web/proxy.ts:133`, `apps/app/proxy.ts:264`; o `matcher` da app exclui `api` e `_next/*` (`apps/app/proxy.ts:122`) | ✅ **honesto**, por leitura |
 | `docs/features/i18n-hydration-admin-delete-billing/test/report.md:67` | na troca suave de `/en/entities` para `/es/entities`, `document.documentElement.lang` "passou a `es`" | o `/test` da PR #41 mediu o contrário no código anterior à correção (`5f4a8e9`), em build: `lang` ficou `"en"` até recarregar. O root layout da app fica acima de `[locale]` e não renderiza de novo; quem atualiza o atributo hoje é o `DocumentLangSync` | ❌ **afirmação não reproduzida**; o modo da medição antiga (dev ou build) não está registrado. Sem efeito hoje, porque o comportamento correto passou a existir |
-| `docs/PRE-PRODUCTION.md:416` | o cookie `sidebar_state` é declarado em `sidebar.tsx:28` | o `SIDEBAR_COOKIE_NAME` está em `packages/design-system/components/ui/sidebar.tsx:29`; o import do `getDictionary()` da PR #43 empurrou o arquivo uma linha | ⚠️ **deslocada** pela PR #43 |
-| `docs/features/account-deletion-dialog-focus/STATE.md` e `docs/features/ui-strings-and-password-focus/STATE.md` | `review: in-progress`; `branch:` "proposta, a criar"; notas citam `specs/BACKLOG.md:183-213`, `:793`, `:695` e `:942` | PR #43 mergeada com CI verde, da branch `fix/ui-labels-and-account-dialog-focus`; as linhas são da versão pós-PR #42 deste arquivo, que esta rodada deslocou | ⚠️ **defasados**, estacionados em E11 |
+| `docs/PRE-PRODUCTION.md:416` | o cookie `sidebar_state` é declarado em `sidebar.tsx:29` | o `SIDEBAR_COOKIE_NAME` está em `packages/design-system/components/ui/sidebar.tsx:29` | ✅ **corrigida pela PR #44** (era ⚠️, deslocada pela PR #43) |
+| `docs/RESEARCH-tanstack-vs-next.md:40` | o `"use client"` do seletor de idioma da app está em `LanguageSwitcher.tsx:3` | está em `apps/app/shared/components/ui/LanguageSwitcher.tsx:1`; o documento não muda desde a PR #39 | ⚠️ **deslocada**, medida pela primeira vez nesta rodada |
+| `docs/features/date-input-navigation/analyze/plan.md` §9 e §10 (no working tree) | clicar no rótulo "Data" foca o botão; sob personificação o campo de nascimento continua desabilitado | o clique no `<label for="date">` abre o calendário (medido pelo `/test`); `EntityFormFields.tsx` não passa `disabled` aos campos, e a personificação bloqueia só o envio | ⚠️ **texto do plano não descreve o código**; o código está certo e o `/test` corrigiu os dois textos em `test/criterios-aceite.md`. Medido na segunda passada |
+| `docs/features/date-input-locale/STATE.md` | `review: in-progress`; notas citam `specs/BACKLOG.md:230-272` (a recomendação) | PR #44 mergeada com CI verde, da branch `fix/date-input-locale`, que o campo `branch` acerta; as linhas são da versão pós-PR #43 deste arquivo, que esta rodada reescreveu | ⚠️ **defasado**, estacionado em E11 |
+| `docs/features/account-deletion-dialog-focus/STATE.md` e `docs/features/ui-strings-and-password-focus/STATE.md` | `review: in-progress`; `branch:` "proposta, a criar"; notas citam `specs/BACKLOG.md:183-213`, `:793`, `:695` e `:942` | PR #43 mergeada com CI verde, da branch `fix/ui-labels-and-account-dialog-focus`; as linhas são da versão pós-PR #42 deste arquivo | ⚠️ **defasados**, estacionados em E11 |
 | `docs/features/antd-theme-seed-colors/STATE.md` | `review: in-progress`; notas citam `specs/BACKLOG.md:185-219` e `:737` | PR #42 mergeada com CI verde; as linhas eram da versão anterior à rodada pós-PR #42 | ⚠️ **defasado**, estacionado em E11 |
 | `docs/features/accessibility-conformance/spec.md:53-54`, `:166` (arquivada) | o `danger` do antd recebe o `colorError` em `var(...)` (`antd-app.tsx:20`) e o `Dropdown` tem override de `colorError` por componente (`antd-app.tsx:75-78`); `--destructive` do escuro em `globals.css:63` | desde a PR #42, o `colorError` é o hex do `--destructive` por tema (hoje `antd-app.tsx:136`, depois dos imports da PR #43), o override saiu (o `Dropdown` em `:103-105` só guarda o `colorTextLightSolid`) e o token escuro está em `globals.css:64`. A cor do item `danger` não mudou (`actionMenu.test.tsx:80-105`, `antdTheme.test.tsx:251`) | ⚠️ **histórico**: a spec descreve o mecanismo da data da entrega. Não é regressão; a capacidade segue coberta por teste |
 | `docs/features/server-locale-from-url/STATE.md` | `review: in-progress`; notas citam `specs/BACKLOG.md:177-210` e `:547` | PR #41 mergeada com CI verde; as linhas eram da versão anterior à rodada pós-PR #41 | ⚠️ **defasado**, estacionado em E11 |
@@ -535,7 +658,7 @@ o veredito e a data de lá. A auditoria não edita `docs/`; o que está defasado
 | `docs/ROPA.md:69` e `:83` | `lastAccessAt` em `user.ts:54-59`; `stripeCustomerId` e assinatura em `user.ts:62-65` | o import de `EntitlementsState` (PR #38) empurrou o arquivo uma linha: hoje `:55-60` e `:63-66`. A PR #39 editou a linha `:69` sem ver o deslocamento, porque partiu de `e791d3a` | ⚠️ **deslocadas** pela PR vizinha |
 | `docs/INCIDENT-RESPONSE.md:63` e `docs/BACKUP.md:88` | as ações auditadas em `audit.ts:2-11`; o alvo em `audit.ts:29-31` | a PR #39 acrescentou duas ações ao enum: hoje `:2-13` e `:31-33` | ⚠️ **deslocadas** pela própria PR #39 |
 | `docs/ROPA.md` e `docs/SUBPROCESSORS.md` (inventário do perfil) | o perfil guarda telefone, avatar, preferências, onboarding, `lastAccessAt`, `stripeCustomerId` e assinatura | o perfil guarda também `entitlements`, a lista de recursos pagos gravada pelo webhook desde a PR #38 (`packages/sdk/src/types/user/user.ts:67-68`) | ❌ **omissão**. Ver o achado novo em [compliance-docs-kit](#-achados-da-entrega-compliance-docs-kit-2026-09-30) |
-| `docs/PRE-PRODUCTION.md` §9 (gate) | 29/29 tasks, 806 arquivos, 2485 testes em 227, 170 contra emulador, 13 configs, medidos em 2026-09-30 | em 2026-10-13, pós-PR #43: 30/30, 873, 2850 em 261, 186, 14 configs | ✅ **honesto**, datado; o parágrafo manda remedir antes de citar |
+| `docs/PRE-PRODUCTION.md` §9 (gate) | 29/29 tasks, 806 arquivos, 2485 testes em 227, 170 contra emulador, 13 configs, medidos em 2026-09-30 | em 2026-10-14, pós-PR #44: 30/30, 876, 2869 em 263, 186, 14 configs | ✅ **honesto**, datado; o parágrafo manda remedir antes de citar |
 | `docs/PRE-PRODUCTION.md:825-845` e `docs/AUTH-SSO.md:74-76` (sessões) | o "Sair" encerra só o navegador atual; encerrar uma sessão corta a API e o cookie, não o refresh token no Firebase; Firestore e Storage negam todo cliente | `session-routes.ts:174-183`; `resolve-api-actor.ts:57-79`; `firestore.rules:32-34` e `storage.rules` negam tudo | ✅ **honesto**, por leitura |
 | `docs/PAYMENTS.md:27`, `:42`, `:104`, `:184-197` (acesso por plano) | `requirePlanApi`, `PlanGate`, o sexto evento e a demo desligada | conferem com `plan.ts`, `plan-access.ts`, `PlanGate.tsx` e `webhooks/payments/route.ts:219` | ✅ **honesto** |
 | `docs/features/plan-entitlements/analyze/plan.md:3` | link para `../../../../specs/plan-entitlements.md` | a spec foi movida nesta rodada para `../spec.md` | ❌ **link morto, criado por este arquivamento**. A auditoria não edita o plano; ver o achado novo |
@@ -556,10 +679,21 @@ o veredito e a data de lá. A auditoria não edita `docs/`; o que está defasado
 | `account-security-mfa` (item 3) | encerrar uma sessão específica | a API e os front-ends recusam a sessão encerrada; o refresh token do aparelho segue válido no Firebase | **a spec estava errada sobre o provedor**: o Firebase só revoga a conta inteira. A limitação está declarada em `docs/AUTH-SSO.md:74-76` e no `PRE-PRODUCTION.md`. Nota escrita no item |
 | `plan-entitlements` | o corte inteiro | o corte inteiro; a pergunta "Entitlements ou mapa local" foi decidida pela recomendação da spec | **sem deriva**. A variável da demo usa o prefixo `NEXT_PUBLIC_` também na API, para ter um nome só nos dois apps; é escolha do plano, não desvio |
 
-As PRs #40 a #43 não alteraram nenhuma spec viva nem código da área delas (`packages/auth`, `apps/api`,
+As PRs #40 a #44 não alteraram nenhuma spec viva nem código da área delas (`packages/auth`, `apps/api`,
 `packages/shared`, `packages/sdk`, `firestore.indexes.json`), então as três linhas acima seguem como em
 2026-10-04. A PR #41 tocou `specs/account-security-mfa.md`, mas só para levar a auditoria anterior (data e o
-nome da decisão estacionada E12). As PRs #42 e #43 não tocaram nenhum arquivo de spec viva.
+nome da decisão estacionada E12). As PRs #42 a #44 não tocaram nenhum arquivo de spec viva (`git diff --name-only
+7fb2fe9 fa7041b -- specs/` devolve só este arquivo).
+
+A tarefa direta da PR #44 também não tinha corte de spec. Contra a recomendação da auditoria pós-PR #43, entregou
+os seis itens do critério de pronto e mais duas coisas: a data do formulário de contato da web no idioma da página
+(pergunta P1 do plano, adotada, com um teste novo do `/test`) e o `calendarLocales` num módulo próprio, sem
+`"use client"`, porque o `/review` viu que a web passaria a importar um mapa de dados de dentro de um módulo de
+componente client. A recomendação previa `contends_on` de dois arquivos; a tarefa tocou os dois e mais o formulário
+de contato e o módulo novo. Ficaram fora, com motivo registrado no plano (§1.3): tirar o `datePlaceholder` da trilha,
+expor `locale` como prop do `DateInput` e capitalizar mês e dia da semana em pt-br e es. O `/review` registrou, sem
+corrigir, que um `locale={undefined}` explícito do chamador faz o `Calendar` voltar ao `enUS`, porque o `{...props}`
+vem depois (`calendar.tsx:200-202`); nenhum consumidor faz isso. Nenhum desvio piora o que a recomendação pedia.
 
 As duas tarefas diretas da PR #43 também não tinham corte de spec. `account-deletion-dialog-focus`, contra a
 recomendação da auditoria pós-PR #42, entregou os cinco itens do critério de pronto e mais uma coisa: o
@@ -599,6 +733,12 @@ operações e a UI, e acrescentou duas coisas: o `DELETE` recusa também um segu
 uid de quem chama (decisão D2 do plano da tarefa, fixada em teste), e o `HookFormSelect` ganhou a prop
 `description`.
 
+**Deriva de pipeline da PR #44:** seis commits na branch, um por assunto (a auditoria pós-PR #43, a âncora do
+`PRE-PRODUCTION.md`, a i18n, o design system, a web e os artefatos), juntados num só pelo squash. A branch
+`fix/date-input-locale` não segue `<project>/<type>/<title>`, porque o diff cruza três workspaces (E11), e ficou viva
+no remoto depois do merge (pendência 16). O `STATE.md` registrou cinco commits propostos; o sexto, da âncora, entrou
+como commit `docs` separado, como a `cycle-policy` §6 pede.
+
 **Deriva de pipeline da PR #43:** onze commits na branch, um por assunto (i18n primeiro, para cada commit ficar
 verde), juntados num só pelo squash. Duas tarefas diretas no mesmo PR, porque as duas mexiam no
 `AccountPrivacyPanel.tsx` e no teste dele. A branch `fix/ui-labels-and-account-dialog-focus` não segue
@@ -622,6 +762,14 @@ segue o padrão e ficou viva no remoto depois do merge (pendência 16).
 vivas no remoto depois do merge (pendência 16) e nenhuma segue `<project>/<type>/<title>` (E11).
 
 ### Âncoras relidas
+
+**Em 2026-10-14, pós-PR #44:** nenhuma spec viva nem nota de `research/` cita arquivo alterado pela PR #44 (`grep`
+por `date-input`, `calendar.tsx`, `calendar-locales`, `contact-form-client` e `components/index.ts` nos três arquivos
+de spec e nas quatro notas de `research/`: 0). Neste arquivo, a única linha aberta que citava arquivo deslocado pela
+PR é a do `<Label htmlFor="date">` do formulário de contato: `contact-form-client.tsx:72` → `:73`, com o import novo
+do `calendarLocales`. As duas linhas do `DateInput` e do `Calendar` em inglês saíram com os achados fechados, e as
+âncoras da recomendação anterior (`date-input.tsx:51`, `:86`, `:93`, `calendar.tsx:188-189`, `:193`) saíram com ela.
+`date-input.tsx:72` segue com o `aria-describedby` de `accessibility-conformance`.
 
 **Em 2026-10-13, pós-PR #43:** nenhuma spec viva nem nota de `research/` cita arquivo alterado pela PR #43 (`grep`
 pelos 14 componentes, pelos testes alterados e por `translations/components` nos três arquivos de spec e nas notas
@@ -667,16 +815,20 @@ alterado foi relida no `d92d21b` e corrigida na spec, com a data:
 
 ### O que a auditoria **não** encontrou
 
-Nenhuma spec `done` perdeu código. A PR #43 mexeu em peças de três specs arquivadas, e as três seguem inteiras:
+Nenhuma spec `done` perdeu código. A PR #44 mexeu no `DateInput`, que duas specs arquivadas usam, e as duas seguem
+inteiras: `accessibility-conformance` (o botão do `DateInput` mantém `aria-invalid` e `aria-describedby`,
+`date-input.tsx:72-73`, e o job `e2e` da execução de merge, com o axe, passou) e `audit-log` (os filtros de período
+passam o `placeholder` do chamador e gravam `yyyy-MM-dd`; o `/test` disparou `GET /audit-events` com `from` e `to`
+e recebeu 200). A PR #43 tinha mexido em peças de três specs arquivadas, e as três seguiam inteiras:
 `data-rights-lgpd` (a exclusão de conta pede a senha, recusa campo vazio e bloqueia a personificação, com os dez
 casos antigos de `accountPrivacyPanel.test.tsx` verdes), `account-email-change` (o diálogo segue com
 `onOpenAutoFocus` e `onCloseAutoFocus`, `AccountEmailChangeDialog.tsx:91-101`, `:120-121`, e os casos de foco do
 teste dele verdes) e `accessibility-conformance` (o job `e2e` da execução de merge, com o axe, passou; os nomes
 acessíveis só trocaram de texto fixo para o dicionário). Nenhuma feature em `docs/features/*/STATE.md` deveria ter
-`spec:` e não tem: as duas novas são tarefas diretas e gravam `spec: none`. Nenhuma entrega parcial órfã além da
+`spec:` e não tem: `date-input-locale` é tarefa direta e grava `spec: none`. Nenhuma entrega parcial órfã além da
 fatia 3 de `account-security-mfa`, que é a E12. `git grep` por `multiFactor`, `TOTP`, `passkey`, `organizationId`,
 `membership` e pelos SDKs de coletor (`@sentry`, `@logtail`, `@axiomhq`, `betterstack`) em `apps/` e `packages/`, em
-2026-10-13 pós-PR #43: 0 (as únicas ocorrências sem distinguir maiúsculas são `InputOTP*`, do `input-otp.tsx`).
+2026-10-14 pós-PR #44: 0 (as únicas ocorrências sem distinguir maiúsculas são `InputOTP*`, do `input-otp.tsx`).
 `logEvent(` fora de testes segue em 37, como `observability-logging` registra. O `input-otp.tsx` segue sem uso fora
 do barril e do `playground`. Os dez arquivos de `contends_on` das três specs existem no disco.
 
@@ -684,44 +836,52 @@ do barril e do `playground`. Os dez arquivos de `contends_on` das três specs ex
 
 Coisas que não merecem spec própria, mas que são correções pontuais. Viram tarefa direta no `/analyze`.
 
-> **Auditoria de 2026-10-13 (pós-PR #43).** A rodada anterior fechou com 104 linhas abertas. A PR #43 alterou 30
-> arquivos fora de `docs/features` e `specs`, em `packages/design-system`, `packages/internationalization`, `apps/app`
-> e `apps/web` (`git diff --stat dbcac2a 7fb2fe9`); as linhas que citam algum deles foram reabertas no disco, e as
-> que seguem abertas tiveram as âncoras corrigidas (ver [Âncoras relidas](#âncoras-relidas)). As demais seguem iguais,
-> porque o arquivo citado é o mesmo byte a byte (nenhum arquivo de `apps/api`, `packages/auth`, `packages/shared` ou
-> `packages/sdk` mudou). Também foram reconferidas no código, por amostragem, as de maior severidade: o gate do
-> `CORS_ORIGIN` (`instrumentation.ts:63-67`, `throw` sem `process.exit`), o `/auth/sign-in` com string crua (`:12`), o
-> export `./client-ui` sem arquivo, o `skipValidation` da web (`apps/web/env.ts:33`) e o cookie `x-locale` sem
-> `maxAge` (0 ocorrências em `apps/app/proxy.ts`). Todas seguem abertas. **Placar: 3 fechados (o foco do diálogo de
-> exclusão, as strings soltas do design system e dos seletores de idioma, e a paginação do antd em inglês) · 5 novos
-> · 2 ampliados (a duplicação entre os dois diálogos de conta, e o `DateInput` em inglês, agora com o `Calendar`) ·
-> 106 abertos, pela soma.** Dois defeitos que nunca
-> tiveram linha aqui (o foco perdido depois de uma recusa e o campo de senha da exclusão sem `autoComplete` nem
-> `required`) apareceram e fecharam dentro da própria PR #43, e ficam fora do placar. A tabela de fechados da PR #42
-> ficou na versão deste arquivo em `7fb2fe9`; a da PR #41, na versão em `dbcac2a`; a da PR #40, na versão em
-> `0a49a3b`; a de 2026-10-04, na versão em `5f4a8e9`; as de 2026-09-26 a 2026-10-03, na versão em `02c31b5`.
+> **Auditoria de 2026-10-14 (pós-PR #44).** A rodada anterior fechou com 106 linhas abertas. A PR #44 alterou 10
+> arquivos fora de `docs/features` e `specs`, em `packages/design-system`, `packages/internationalization`, `apps/web`
+> e `docs/PRE-PRODUCTION.md` (`git diff --stat 7fb2fe9 fa7041b`); as linhas que citam algum deles foram reabertas no
+> disco, e a que segue aberta teve a âncora corrigida (ver [Âncoras relidas](#âncoras-relidas)). As demais seguem
+> iguais, porque o arquivo citado é o mesmo byte a byte (nenhum arquivo de `apps/api`, `apps/app`, `packages/auth`,
+> `packages/shared` ou `packages/sdk` mudou). Também foram reconferidas no código, por amostragem, as de maior
+> severidade: o gate do `CORS_ORIGIN` (`instrumentation.ts:63-67`, `throw` e zero `process.exit`), o `/auth/sign-in`
+> com string crua (`:12`), o export `./client-ui` sem arquivo, o `skipValidation` da web (`apps/web/env.ts:33`), o
+> cookie `x-locale` sem `maxAge` (0 ocorrências nos dois `proxy.ts`), o `disabled={formState.isSubmitting}` do
+> `HookFormInputPassword` (`:80`), o `typecheck` do turbo com `"dependsOn": []` (`turbo.json:12`), o `CommandDialog`
+> em inglês (`command.tsx:31-32`) e o `DialogFooter` com `<button>` dentro de `<button>` (`dialog.tsx:117-121`). Todas
+> seguem abertas. **Placar: 2 fechados (o "Pick a date" do `DateInput`, e a data, o calendário e o seletor de mês em
+> inglês) · 4 novos · 2 ampliados (o header deslogado da web, agora também a 1280 px em es, e as âncoras de documento,
+> com a do `docs/RESEARCH-tanstack-vs-next.md:40`) · 108 abertos, pela soma.** A data do formulário de contato em
+> inglês, que nunca teve linha aqui, apareceu e fechou dentro da própria PR #44 e fica fora do placar. A tabela de
+> fechados da PR #43 ficou na versão deste arquivo em `fa7041b`; a da PR #42, na versão em `7fb2fe9`; a da PR #41, na
+> versão em `dbcac2a`; a da PR #40, na versão em `0a49a3b`; a de 2026-10-04, na versão em `5f4a8e9`; as de
+> 2026-09-26 a 2026-10-03, na versão em `02c31b5`.
+>
+> **Segunda passada de 2026-10-14 (working tree, sem merge novo).** Nada fecha, porque fechar exige merge. Placar
+> desta passada: **0 fechados · 2 novos (o caso de `dateInputLocale.test.tsx` preso a outubro de 2026, já resolvido
+> no mesmo working tree, e o campo de nascimento atrás do rodapé fixo a 390 px) · 1 ampliado (o header da web em es,
+> remedido em 1304 px) · 110 abertos, pela soma.** Quatro desses 110 estão marcados como **◐ fechado no working tree,
+> pendente de merge**: o calendário que abre no mês atual, a hidratação da `/contact`, o `initialFocus` e o caso preso
+> ao relógio. O `data-day` segue aberto, fora do corte da tarefa.
+>
+> **Terceira passada de 2026-10-14 (working tree, sem merge novo).** Nada fecha. Placar desta passada: **0 fechados ·
+> 6 novos (o foco que sai do botão de enviar, o asterisco do `Label`, o `required` que o grupo de rádio não repassa, o
+> risco do `useSubmitEnterGuard`, o código do erro em recusa esperada e o idioma das preferências) · 0 ampliados · 116
+> abertos, pela soma.** Nove deles estão **◐ fechados no working tree, pendentes de merge**: os quatro da segunda
+> passada e mais cinco de `form-field-focus-and-names` (o `disabled` do campo de senha, o placeholder ignorado, o
+> grupo de rádio sem nome, o botão que encolhe e o `disabled` antes do spread). O estouro do header em es, que o
+> `/test` mediu de novo em 1304 px, já tinha linha e não muda.
 
-### ✅ Fechado na auditoria de 2026-10-13 (PR #43)
+### ✅ Fechado na auditoria de 2026-10-14 (PR #44)
 
-`<account>` é `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)` e `<ds>` é
-`packages/design-system/components/ui`.
+`<ds>` é `packages/design-system/components/ui`.
 
 | achado | onde estava | como fechou |
 |--------|-------------|-------------|
-| 🟡 **O diálogo de exclusão de conta não levava o foco para dentro ao abrir** (registrado pelo `/test` da PR #33; WCAG 2.4.3) | `<account>/AccountPrivacyPanel.tsx:137`, no `dbcac2a` (`AlertDialogContent` sem `AlertDialogCancel` e sem `onOpenAutoFocus`) | `onOpenAutoFocus` com `form.setFocus("currentPassword")` (`:80-83`, `:156-158`), e `form.reset()` ao fechar (`:71-76`). Seis casos novos em `accountPrivacyPanel.test.tsx:249-362`; no código anterior, os seis falham. O `/test` mediu foco ao abrir, Tab preso, Esc e "Cancelar" devolvendo o foco, em build, nos três idiomas, claro, escuro e 390 px. Correção no call site: são dois diálogos nesse molde, abaixo do limite de três da `cycle-policy` §3 |
-| 🟡 **Strings de UI soltas**: "Switch language" nos dois apps; "Toggle theme", "Light", "Dark", "System", "Toggle Sidebar", "Close", os rótulos da `pagination`, do `breadcrumb` e do `carousel` e o "Loading" do `Spinner` no design system; "Início" e `href="/painel"` no `PageBreadcrumb` (registrado em 2026-09-26, ampliado em 2026-09-29 e pelo `/test` da PR #42) | `LanguageSwitcher.tsx:79` · `language-switcher.tsx:68` · `<ds>/mode-toggle.tsx:14-18`, `:39` · `<ds>/sidebar.tsx:299`, `:311`, `:314` · `PageBreadcrumb.tsx:28-30` · `<ds>/dialog.tsx:75` · `<ds>/sheet.tsx:79` · `<ds>/pagination.tsx:74`, `:91`, `:114` · `<ds>/breadcrumb.tsx:101` · `<ds>/carousel.tsx:209`, `:239` · `<ds>/spinner.tsx:9`, no `dbcac2a` | os oito componentes e os dois seletores leem `dictionary.components.*` (ver a tabela da [entrega](#ui-strings-and-password-focus-pr-43-tarefa-direta)); o `PageBreadcrumb` leva a `withLocalePath(locale, "/")` com o rótulo de `common.routes.home` (`PageBreadcrumb.tsx:23`, `:36`, `:38`). Oito folhas de i18n novas, com paridade nos três idiomas. `git grep` dos literais nesta auditoria: só sobra o "Pick a date" do `DateInput`, que tem linha própria e é a recomendação #1. 28 casos em `componentCopy.test.tsx`, 6 em `sharedComponentCopy.test.tsx`, 3 em `languageSwitcher.test.tsx` |
-| 🟡 **A paginação do antd falava inglês nos três idiomas** (O3 do `/test` da PR #42) | `packages/design-system/providers/antd-app.tsx:149-152`, no `dbcac2a` (o `ConfigProvider` sem `locale`) | `antdLocales` (`antd-app.tsx:150-154`) e `locale={antdLocales[locale]}` (`:163`), com o idioma de `useDictionary()` (`:158`). `antdLocale.test.tsx:72` e `:87`. O `/test` mediu "10 / página" e "10 / page" na `/admin/users` em build, e a troca sem recarregar. O contraste do item selecionado, que andava junto, segue aberto |
-
-Fecharam na mesma PR, sem linha prévia neste arquivo: o foco que caía no contêiner do diálogo depois de uma recusa
-da API (medido pelo `/test` de `account-deletion-dialog-focus`; `onError` com `form.setFocus("currentPassword",
-{ shouldSelect: true })` em `<account>/AccountPrivacyPanel.tsx:85-93` e `<account>/AccountEmailChangeDialog.tsx:111-112`)
-e o campo de senha da exclusão sem `autoComplete="current-password"` nem `required` (§13.3 do plano da mesma
-tarefa; `AccountPrivacyPanel.tsx:174`, `:179`). A raiz do primeiro, no `HookFormInputPassword`, entrou como achado
-novo.
+| 🟡 **`"Pick a date"` literal no `DateInput`** (aberto desde antes da PR #11; o CRUD de referência o mostrava em pt-br e es) | `<ds>/date-input.tsx:51`, no `7fb2fe9` (`placeholder = "Pick a date"`) | o default saiu (`<ds>/date-input.tsx:53`) e o botão mostra `placeholder ?? dictionary.components.dateInput.placeholder` (`:91`), com a folha `translations/components/ui/date-input.ts` nos três idiomas. Casos `dateInputLocale.test.tsx:108`, `:124`, `:130`. O `/test` mediu "Escolha uma data", "Pick a date" e "Elige una fecha" em `/entities/create`, em build. `git grep "Pick a date"` fora de testes: só a folha `en` e o `datePlaceholder` em inglês da trilha |
+| 🟡 **O `DateInput` formatava sempre em inglês, e o `Calendar` também** (ampliado em 2026-10-13) | `<ds>/date-input.tsx:86` · `<ds>/calendar.tsx:38-194` (`DayPicker` sem `locale`) · `:188-189` (`toLocaleString("default")`), no `7fb2fe9` | `format(selected, "PPP", { locale: calendarLocales[locale] })` (`<ds>/date-input.tsx:90`); o `Calendar` passa `locale={calendarLocale}` (`<ds>/calendar.tsx:200`) antes do `{...props}` e formata o seletor de mês pelo `dateLib` (`:192-197`); o mapa por idioma está em `packages/design-system/lib/calendar-locales.ts:5-9`. Casos `dateInputLocale.test.tsx:116`, `:138`, `:157`, `:175`, `:184`. O `/test` mediu data, legenda, navegação e dias da semana nos três idiomas, e a troca sem recarregar, em build, claro, escuro e 390 px |
 
 ### ⚠️ Achados abertos, reconferidos ou herdados
 
-Reconferidos em 2026-10-04, pós-PR #39, de novo em 2026-10-07, pós-PR #40, pós-PR #41 e pós-PR #42, e em 2026-10-13, pós-PR #43, nas linhas de maior severidade (ver o placar acima). Nenhum arquivo citado nesta tabela mudou com a PR #43.
+Reconferidos em 2026-10-04, pós-PR #39, de novo em 2026-10-07, pós-PR #40, pós-PR #41 e pós-PR #42, em 2026-10-13, pós-PR #43, e em 2026-10-14, pós-PR #44, nas linhas de maior severidade (ver o placar acima). Nenhum arquivo citado nesta tabela mudou com as PRs #43 e #44.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
@@ -776,9 +936,9 @@ entrega; os três ficaram fora dela por decisão registrada.
 | 🟡 **`isRateLimitEnforced()` é export morto** | `packages/security/index.ts:30` | Reconferido em `main` em 2026-10-03: a PR #36 passou a função a ler a chave por chamada (`readArcjetKey()`), e ela segue sem chamador fora dos testes. As 9 referências estão em `__tests__/rateLimit.test.ts` |
 | 🟡 **`FormattedError.retryAfterSeconds` sem consumidor** fora dos testes | `packages/shared/utils/helpers/formattedError.ts:14,23` | Reconferido. O homônimo de outro tipo em `apps/api/proxy.ts:109` (âncora remedida em 2026-09-30) segue sem relação |
 | 🟡 **`reloadCurrentUser` sem teste próprio** | `packages/auth/client.ts:214` | Reconferido em 2026-09-27 (a âncora subiu dez linhas com a saída do `signUp` na PR #29): só `useEmailVerification.test.tsx`, que a mocka |
-| 🟡 **`packages/shared` tem `test` e não tem `typecheck`** | `packages/shared/package.json:11` (só `test`) | Metade fechada pela PR #32: o `@repo/design-system` ganhou a task de `test` (`packages/design-system/package.json:7`, 45 testes). Falta o `typecheck` do `packages/shared`, adiado desde a primeira auditoria |
+| 🟡 **`packages/shared` tem `test` e não tem `typecheck`** | `packages/shared/package.json:11` (só `test`) | Metade fechada pela PR #32: o `@repo/design-system` ganhou a task de `test` (`packages/design-system/package.json:7`, 45 testes). Falta o `typecheck` do `packages/shared`, adiado desde a primeira auditoria. **Medido em 2026-10-14:** `tsc --noEmit` sobre os 21 arquivos do pacote, com um `tsconfig` temporário fora do repositório, dá 0 erros neles e 2 `TS2580` em `packages/internationalization/utils.ts:22-23` (`process` sem `@types/node`, que o pacote não declara). A correção é o script, um `tsconfig.json` e o `@types/node` que os outros workspaces já usam. P |
 | 🟡 **`welcomeEmail` sem chamador de produção**; o formulário de contato da landing segue maquete | `packages/email/templates/welcome.tsx:50` | Reconferido: 4 ocorrências, 3 em teste. O canal de privacidade da `apps/web` cai nesse formulário quando `NEXT_PUBLIC_PRIVACY_CONTACT` está vazia (`privacyContact.ts:17-18`), então o fallback do canal aponta para uma maquete |
-| 🟡 **`useListAuditEvents.test.tsx` deixa trabalho do React pendente depois do teardown** (novo, 2026-09-28) | `apps/app/__tests__/useListAuditEvents.test.tsx:55-70` (um `QueryClient` por teste, sem `clear()` nem `unmount` ao fim) | A suíte da `apps/app` falhou em 2 de 6 execuções locais em 2026-09-28 com `ReferenceError: window is not defined`, que o Vitest atribui a este arquivo: os testes passam e o erro não tratado reprova a task. Na auditoria pós-PR #31 passou nas 6 execuções (688 testes cada) na pós-PR #32 também (6 de 6, 702 testes cada) e na pós-PR #33 também (6 de 6, 756 testes cada), então o acumulado era 2 falhas em 24; com as execuções das rodadas pós-PR #34, #35, #36, #39, #40, #41, #42 e #43 (três nesta, 841 testes cada), nenhuma com falha, é 2 em 41. O arquivo não muda desde a PR #18. O CI passou nas execuções de merge das PRs #29 a #43. Correção provável, não testada: limpar o `QueryClient` e desmontar o hook no `afterEach`. Tarefa direta P |
+| 🟡 **`useListAuditEvents.test.tsx` deixa trabalho do React pendente depois do teardown** (novo, 2026-09-28) | `apps/app/__tests__/useListAuditEvents.test.tsx:55-70` (um `QueryClient` por teste, sem `clear()` nem `unmount` ao fim) | A suíte da `apps/app` falhou em 2 de 6 execuções locais em 2026-09-28 com `ReferenceError: window is not defined`, que o Vitest atribui a este arquivo: os testes passam e o erro não tratado reprova a task. Na auditoria pós-PR #31 passou nas 6 execuções (688 testes cada) na pós-PR #32 também (6 de 6, 702 testes cada) e na pós-PR #33 também (6 de 6, 756 testes cada), então o acumulado era 2 falhas em 24; com as execuções das rodadas pós-PR #34, #35, #36, #39, #40, #41, #42, #43 e #44 (três nesta, 841 testes cada), nenhuma com falha, é 2 em 44. O arquivo não muda desde a PR #18. O CI passou nas execuções de merge das PRs #29 a #44. Correção provável, não testada: limpar o `QueryClient` e desmontar o hook no `afterEach`. Tarefa direta P |
 
 ### 🟡 Repositório, rotas e proxy
 
@@ -802,8 +962,6 @@ entrega; os três ficaram fora dela por decisão registrada.
 |--------|------|-----------------|
 | 🟡 **O header logado da `apps/web` rola na horizontal no desktop** | `apps/web/app/[locale]/components/header/index.tsx` (grupo de ações à direita) | A 1280 px o "Sign Out" termina em x=1270 e a página rola 5 px; a 1024 px rola 29 px. Os números são os mesmos no `HEAD` anterior à correção do header, então o defeito é antigo. Medido em 2026-09-25 pelo `/test` da PR #28, já com o header corrigido. Não remedido nesta auditoria, que não sobe browser |
 | 🟡 **O deep link das abas da conta não acompanha a navegação** | `AccountTabs.tsx:51-53` (estado lido uma vez) · `:55-62` (`history.replaceState`) | Reconferido. A barra lateral muda a URL e a aba fica onde estava. Estacionado (E9) |
-| 🟡 **`"Pick a date"` literal no `DateInput`** | `packages/design-system/components/ui/date-input.tsx:51` | Reconferido em 2026-09-29; a âncora desceu uma linha com o `aria-describedby` da PR #32. Sobreviveu às PRs #11 a #32. Reconferido em 2026-10-13: é o único literal do achado de strings soltas que a PR #43 deixou, de propósito, e o CRUD de referência o mostra (`EntityFormFields.tsx:154-157` não passa `placeholder`). Recomendação #1 desta rodada, junto com a linha de baixo |
-| 🟡 **O `DateInput` formata sempre em inglês, e o `Calendar` também** (ampliado em 2026-10-13) | `date-input.tsx:86` · `packages/design-system/components/ui/calendar.tsx:38-194` (`DayPicker` sem `locale`) · `:188-189` (`toLocaleString("default")`) | Reconferido em 2026-10-13: `format(selected, "PPP")` sem `locale` dá "October 13th, 2026" em qualquer idioma (medido com o date-fns 4.1.0 do repo). **Ampliado:** o `Calendar` não recebe `locale`, então o react-day-picker 9.13.0 usa o `enUS` padrão (`DateLib.js:463`) para mês, dias da semana e rótulos de navegação, e o `formatMonthDropdown` segue o idioma do navegador. Recomendação #1 desta rodada |
 | 🟡 **A mensagem de erro padrão está cravada em pt-br num pacote** | `packages/shared/utils/helpers/handleClientError.ts:19` | Reconferido, literal |
 | 🟡 **`signInSchema.ts` da `apps/web` crava as mensagens em pt-br** | `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:5`, `:10` | Remedido em 2026-09-26: a PR #29 trocou o número pela constante `EXISTING_PASSWORD_MIN_LENGTH`, mas `"Email inválido"` (`:5`) e `"A senha deve ter pelo menos 6 caracteres"` (`:10`) seguem literais. O cadastro da web foi traduzido na mesma PR; o login não |
 | 🟡 **O filtro por usuário da trilha não alcança evento de usuário excluído** | `admin/(pages)/audit/(components)/AuditFilters.tsx:40` | Reconferido. A exclusão de conta apaga o perfil e anonimiza os rótulos, então esses eventos ficam sem entrada no `select` |
@@ -832,7 +990,7 @@ Medidos pelo `analista-qa` com o nome padrão da marca, em `build && start`, e r
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🟡 **O `/favicon.ico` da `apps/web` devolve o HTML da home** | `apps/web/app/` (sem ícone na raiz) · `apps/web/proxy.ts:61` (matcher, âncora remedida em 2026-10-07 pós-PR #41) | Resposta 200 com `text/html`; o `/icon.png` responde 307 para `/pt-br/icon.png`. Já existia antes da entrega. **Descrição corrigida em 2026-09-28:** o matcher do proxy já exclui `favicon.ico` (`:61`), então o pedido não passa pelo proxy e cai no segmento `[locale]` com `favicon.ico` no lugar do idioma. Correção provável, não testada: servir o arquivo na raiz de `apps/web/app/`, que hoje não tem root layout |
-| 🟡 **O header deslogado da `apps/web` passa da largura a 1024 px** | `apps/web/app/[locale]/components/header/index.tsx` | 6 px em pt-br e 49 px em es, com o nome padrão. Complementa o achado do header logado acima, que media 29 px a 1024 px |
+| 🟡 **O header deslogado da `apps/web` passa da largura a 1024 px e, em es, também a 1280 px** (ampliado em 2026-10-14) | `apps/web/app/[locale]/components/header/index.tsx` | 6 px em pt-br e 49 px em es, com o nome padrão. Complementa o achado do header logado acima, que media 29 px a 1024 px. **Ampliado:** o `/test` da PR #44 mediu em build, em `/es/contact`, `scrollWidth` 1293 para viewport de 1280, com o botão "Registrarse" cortado na borda direita; os outros idiomas não foram medidos a 1280 px deslogado. Remedido em 2026-10-14 pelo `/test` de `date-input-navigation`, também em `/es/contact` a 1280 px: `scrollWidth` 1304, com só o link "Registrarse" além da borda (borda direita em x=1304); pt-br e en ficam em 1280 |
 | 🟢 **Nome de marca com 30 caracteres quebra em duas linhas na barra lateral** | `apps/app/shared/components/ui/Sidebar.tsx` | O critério de 30 caracteres da spec só valia para o header da web. Decidir truncar ou aceitar a quebra |
 
 O atraso de idioma numa navegação (cookie `x-locale` lido no servidor) era o mesmo achado do `getDictionary()` do servidor, fechado pela PR #41.
@@ -873,13 +1031,13 @@ O dos seed tokens do antd fechou com a PR #42 e está na lista de fechados desta
 | 🟡 **Os tokens `Menu.dangerItem*` não alcançam o `Dropdown`** | `packages/design-system/providers/antd-app.tsx:97-101` (âncora remedida em 2026-10-13, pós-PR #43; era `:91-95` e, antes da PR #42, `:66-70`) | Configuração que não tem efeito onde o `danger` aparece no repo. Reconferido depois da PR #43: o item `danger` é pintado pelo `colorError` global, em hex (`:136`), e os testes esperam esse hex (`actionMenu.test.tsx:101-104`), não os tokens do `Menu`. A PR #42 não os resolveu, como a recomendação previa |
 | 🟡 **`<title>` igual em todas as páginas de cada área do painel** | `(common)/layout.tsx:23-30` · `(admin)/admin/layout.tsx:22-29` | Satisfaz o axe, mas o WCAG 2.4.2 pede título que descreva a página. Os rótulos por rota já existem em `common/routes` e `admin/routes`. Quatro das onze páginas são `"use client"` e precisariam de `layout.tsx` de segmento |
 | 🟡 **A página 404 da `apps/app` sai com `document.title` vazio** | `apps/app/app/not-found.tsx:3-5` | Fica fora dos layouts do painel, que são os que ganharam `generateMetadata` |
-| 🟡 **O `RadioGroup` não tem nome de grupo** | `packages/design-system/components/ui/radio-group-input.tsx:43` (`Label` sem `htmlFor`) · `form/hookform/hookformRadioGroup.tsx` | O grupo de gênero recebe como nome o texto das opções juntas ("Não informarMasculinoFemininoOutro"). Falta `aria-labelledby` |
+| 🟡 **O `RadioGroup` não tem nome de grupo** | `packages/design-system/components/ui/radio-group-input.tsx:43` (`Label` sem `htmlFor`) · `form/hookform/hookformRadioGroup.tsx` | O grupo de gênero recebe como nome o texto das opções juntas ("Não informarMasculinoFemininoOutro"). Falta `aria-labelledby`. **◐ Fechado no working tree, pendente de merge** (3ª passada de 2026-10-14): `aria-labelledby` no grupo (`radio-group-input.tsx:49` no working tree), medido nos três idiomas |
 | 🟡 **O botão do menu mobile da web não tem nome** | `apps/web/app/[locale]/components/header/index.tsx:261` | `Button` só com ícone (`Menu`/`X`), sem `aria-label`, a 390 px |
-| 🟡 **`Button` em carregamento encolhe para a largura do spinner** | `packages/design-system/components/ui/button.tsx:73-77` | 74 → 48 px no "Salvar", medido pelo `/test`. Já acontecia antes da PR #32 |
-| 🟡 **`disabled={loading}` vem antes do spread das props** | `button.tsx:69-71` | Um `disabled={false}` explícito do chamador desfaz a trava de carregamento. Já documentado em `sharedFooterPendingState.test.tsx:38-40` (âncora remedida em 2026-10-13; o mock da PR #43 empurrou o comentário três linhas) |
-| 🟡 **`HookFormInputPassword` ignora o `placeholder` do chamador** | `form/hookform/hookformInputPassword.tsx:83` | O valor `"••••••••"` é fixo |
+| 🟡 **`Button` em carregamento encolhe para a largura do spinner** | `packages/design-system/components/ui/button.tsx:73-77` | 74 → 48 px no "Salvar", medido pelo `/test`. Já acontecia antes da PR #32. **◐ Fechado no working tree, pendente de merge**: conteúdo em `opacity-0` sob o spinner (`button.tsx:74-82` no working tree), 0,000 px de diferença em oito botões |
+| 🟡 **`disabled={loading}` vem antes do spread das props** | `button.tsx:69-71` | Um `disabled={false}` explícito do chamador desfaz a trava de carregamento. Já documentado em `sharedFooterPendingState.test.tsx:38-40` (âncora remedida em 2026-10-13; o mock da PR #43 empurrou o comentário três linhas). **◐ Fechado no working tree, pendente de merge**: `disabled={loading || disabled}` depois do spread (`button.tsx:72` no working tree); os footers perderam o contorno |
+| 🟡 **`HookFormInputPassword` ignora o `placeholder` do chamador** | `form/hookform/hookformInputPassword.tsx:83` | O valor `"••••••••"` é fixo. **◐ Fechado no working tree, pendente de merge**: o padrão vem antes do `{...rest}` (`hookformInputPassword.tsx:82` no working tree) |
 | 🟡 **A dica do `TextareaInput` não entra no `aria-describedby`** | `packages/design-system/components/ui/textarea-input.tsx:42-43` | O `<p>` do `hint` não tem id |
-| 🟢 **No formulário de contato, `<Label htmlFor="date">` aponta para um id que não existe** | `apps/web/app/[locale]/contact/components/contact-form-client.tsx:72` | O rótulo não se liga ao botão de data. O formulário é maquete (ver `welcomeEmail`) |
+| 🟢 **No formulário de contato, `<Label htmlFor="date">` aponta para um id que não existe** | `apps/web/app/[locale]/contact/components/contact-form-client.tsx:73` (âncora remedida em 2026-10-14, pós-PR #44; era `:72`) | O rótulo não se liga ao botão de data. O formulário é maquete (ver `welcomeEmail`) |
 
 **Lacunas de teste e 🔒 herdados da entrega, com veredito desta auditoria:**
 
@@ -977,7 +1135,7 @@ Nenhum bloqueou uma entrega.
 | 🟢 **O expurgo apaga as sessões antes da conta no Firebase** | `apps/api/(shared)/lib/account-erasure.ts:123-129` | Uma requisição com credencial ainda válida que chegue entre os dois passos recria o documento da sessão pelo `trackSession`, e ele sobra depois da exclusão. O documento não tem nome nem e-mail, mas é dado pessoal residual. Inverter a ordem fecha a janela e muda o relatório de exclusão e o `accountErasure.test.ts`. Do `/review` da PR #39 |
 | 🟢 **`listByUid` lê todos os documentos de sessão da conta, sem limite** | `apps/api/(shared)/repositories/session.repository.ts:66-79` · `session-tracker.ts:43-54` | A coleção guarda um documento por login e não apaga os encerrados, de propósito (o `PRE-PRODUCTION.md` proíbe TTL nela). A lista e a checagem de "encerrar as outras" leem tudo a cada sessão nova. Para conta com muitos logins, cresce sem teto; hoje não pesa. Do `/review` da PR #39 |
 | 🟢 **O link do plano de `plan-entitlements` para a spec morreu com o arquivamento** | `docs/features/plan-entitlements/analyze/plan.md:3` | Aponta para `../../../../specs/plan-entitlements.md`, que esta rodada moveu para `../spec.md`. A auditoria só escreve em `docs/features/` para arquivar spec e não corrige o plano. Os planos de `account-active-sessions` e `account-security-mfa` têm o mesmo link e vão quebrar quando a spec deles for arquivada. Correção de uma linha, ou um passo novo na `spec-audit` §4.1 |
-| 🟢 **Âncoras de documento deslocadas pelas PRs #37 a #39** (reduzido em 2026-10-07: a PR #41 corrigiu a do `PRE-PRODUCTION.md:414`) | `docs/PRE-PRODUCTION.md:497` · `docs/SUBPROCESSORS.md:33`, `:35` · `docs/ROPA.md:69`, `:83` · `docs/INCIDENT-RESPONSE.md:63` · `docs/BACKUP.md:88` · `docs/SECURITY.md:15-34` (contagens) | Valores corretos em [Contradições](#contradições-doc--código-medidas-nesta-rodada). Metade veio do paralelo: as PRs #38 e #39 partiram do mesmo `e791d3a`, e cada uma editou documentos sem ver o deslocamento que a outra causava no código. Correção de texto, P |
+| 🟢 **Âncoras de documento deslocadas pelas PRs #37 a #39** (reduzido em 2026-10-07: a PR #41 corrigiu a do `PRE-PRODUCTION.md:414`; ampliado em 2026-10-14 com a do `RESEARCH-tanstack-vs-next.md:40`) | `docs/PRE-PRODUCTION.md:497` · `docs/SUBPROCESSORS.md:33`, `:35` · `docs/ROPA.md:69`, `:83` · `docs/INCIDENT-RESPONSE.md:63` · `docs/BACKUP.md:88` · `docs/SECURITY.md:15-34` (contagens) · `docs/RESEARCH-tanstack-vs-next.md:40` (`LanguageSwitcher.tsx:3`, hoje `:1`) | Valores corretos em [Contradições](#contradições-doc--código-medidas-nesta-rodada). Metade veio do paralelo: as PRs #38 e #39 partiram do mesmo `e791d3a`, e cada uma editou documentos sem ver o deslocamento que a outra causava no código. Correção de texto, P |
 
 **Lacunas de teste e 🔒 herdados das entregas, com veredito desta auditoria:**
 
@@ -1076,7 +1234,7 @@ na §13.3, já tinha linha neste arquivo e não conta como novo.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **O `HookFormInputPassword` desabilita o campo durante o envio, e o foco sai do campo** | `packages/design-system/components/form/hookform/hookformInputPassword.tsx:80` (`disabled={formState.isSubmitting}`) · nove call sites, entre eles `apps/app/.../sign-in/components/SignInForm.tsx` e `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx` | O navegador tira o foco de um campo desabilitado. Dentro de um `AlertDialog`, o `FocusScope` do Radix o devolve ao contêiner; fora dele, não há quem o segure. A PR #43 corrigiu o efeito nos dois diálogos de conta com um `onError` no call site, e o `/review` mostrou o limite disso: uma recusa que chegue antes de o React reabilitar o campo (erro lançado no SDK antes do `axios`) perde o foco em silêncio, porque `focus()` em campo desabilitado não faz nada. A raiz, trocar `disabled` por `readOnly` durante o envio, ficou fora (D7 do plano). **Não medido** fora dos dois diálogos: o login das duas apps é o primeiro lugar a medir. P no design system, com nove call sites a percorrer |
+| 🟡 **O `HookFormInputPassword` desabilita o campo durante o envio, e o foco sai do campo** | `packages/design-system/components/form/hookform/hookformInputPassword.tsx:80` (`disabled={formState.isSubmitting}`) · nove call sites, entre eles `apps/app/.../sign-in/components/SignInForm.tsx` e `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx` | O navegador tira o foco de um campo desabilitado. Dentro de um `AlertDialog`, o `FocusScope` do Radix o devolve ao contêiner; fora dele, não há quem o segure. A PR #43 corrigiu o efeito nos dois diálogos de conta com um `onError` no call site, e o `/review` mostrou o limite disso: uma recusa que chegue antes de o React reabilitar o campo (erro lançado no SDK antes do `axios`) perde o foco em silêncio, porque `focus()` em campo desabilitado não faz nada. A raiz, trocar `disabled` por `readOnly` durante o envio, ficou fora (D7 do plano). **Medido por leitura em 2026-10-14:** no login das duas apps, `form.handleSubmit` chama `signIn.mutate` sem aguardar (`SignInForm.tsx:131-136`), então o campo fica desabilitado só durante a validação, e quem envia com Enter perde o foco antes de a recusa chegar. O jsdom 27.0.1 do repo não aplica o "focus fixup" (um `input` focado que recebe `disabled` segue como `activeElement`), então só o navegador mede o efeito. P no design system, com nove call sites a percorrer. Recomendação #1 da segunda passada. **◐ Fechado no working tree, pendente de merge** (3ª passada): `readOnly` no lugar de `disabled` (`hookformInputPassword.tsx:83`, `hookformInput.tsx:77` no working tree) e o `useSubmitEnterGuard` contra o Enter repetido; o `/test` mediu o foco no campo depois da recusa no login das duas apps e nos dois diálogos |
 | 🟢 **`CommandDialog` com título e descrição padrão em inglês** | `packages/design-system/components/ui/command.tsx:31-32` (`"Command Palette"`, `"Search for a command to run..."`) | Lidos pelo leitor de tela quando o diálogo abre. Sem consumidor no repo hoje; o fork que adotar o componente herda o inglês. Fora do corte da PR #43 por isso. P, no molde dos oito componentes da PR |
 | 🟢 **`DialogFooter` com `showCloseButton` põe um `<button>` dentro de outro** | `packages/design-system/components/ui/dialog.tsx:117-121` (`DialogPrimitive.Close` sem `asChild` em volta do `Button`) | HTML inválido e erro de hidratação no primeiro consumidor. Sem consumidor hoje (`git grep showCloseButton -- apps`: 0). Medido nesta auditoria: o caso `componentCopy.test.tsx` "nomeia os dois botões de fechar do Dialog" imprime `In HTML, <button> cannot be a descendant of <button>` no stderr do `@repo/design-system`. Defeito do shadcn, anterior à PR #43. P |
 | 🟢 **Clique no overlay de um `AlertDialog` manda o foco para o `body`** | `@radix-ui/react-focus-scope` 1.1.16, `dist/index.mjs:49-50` (ignora `focusout` com `relatedTarget` nulo) · todo `AlertDialog` do repo | O diálogo não fecha, mas o foco sai dele; o Tab seguinte volta. Medido pelo `/test` de `account-deletion-dialog-focus` e anterior à mudança. É da biblioteca; fica registrado para quem auditar acessibilidade |
@@ -1099,33 +1257,65 @@ na §13.3, já tinha linha neste arquivo e não conta como novo.
 | `Pagination` do design system no navegador | **fora de escopo** | o componente não tem consumidor; o texto está no `componentCopy.test.tsx` |
 | Seletores de idioma e de tema da web a 390 px | **fora de escopo** | o cabeçalho esconde os dois nessa largura; o menu mobile sem nome já é achado |
 
+### 🆕 Achados da PR #44 (2026-10-14)
+
+Vindos do plano (§13.3), do `/review` e do `/test` (§"Achados para o backlog") da tarefa `date-input-locale`,
+conferidos no código em `fa7041b`. Todos existiam antes do diff; nenhum bloqueou a entrega. O estouro do header da
+web em es a 1280 px ampliou o achado do header deslogado, na linha dele.
+
+| achado | onde | por que importa |
+|--------|------|-----------------|
+| 🟡 **O calendário do `DateInput` abre no mês atual, não no da data escolhida, e o campo de nascimento só navega mês a mês** | `packages/design-system/components/ui/date-input.tsx:95-102` (o `Calendar` recebe `selected`, sem `defaultMonth`) · `react-day-picker` 9.13.0, `helpers/getInitialMonth.js:13-14` (`month \|\| defaultMonth \|\| today`) · `EntityFormFields.tsx:154-157` (nascimento, sem seletor de mês e ano) | Medido pelo `/test` da PR #44: com `1990-04-17`, o popover abre em "outubro 2026". Chegar a abril de 1990 pela navegação são 438 cliques em "mês anterior". O seletor de mês e ano já existe no `Calendar` (`captionLayout="dropdown"`, traduzido pela PR #44), sem consumidor. Ligá-lo para todo `DateInput` limitaria a navegação a cem anos atrás até o fim do ano corrente (`helpers/getNavMonth.js:33-44`). **◐ Fechado no working tree, pendente de merge** (2026-10-14, segunda passada): `date-input-navigation` passa `defaultMonth={selected}` (`date-input.tsx:101` no working tree) e liga o seletor só no nascimento (`EntityFormFields.tsx:155`) |
+| 🟡 **A data inicial do formulário de contato da web diverge na hidratação quando o dia do servidor difere do dia do navegador** | `apps/web/app/[locale]/contact/components/contact-form-client.tsx:21` (`useState(new Date())`) | Medido pelo `/test` da PR #44 em build: com a web em `TZ=Pacific/Kiritimati` e o navegador em `America/Sao_Paulo`, o HTML do servidor trouxe "14 de outubro de 2026", o DOM final "13 de outubro de 2026", e o React lançou o erro #418 (`text`). Na Vercel (UTC), acontece das 21h às 23h59 no horário de Brasília. A página é maquete, mas é o destino do CTA principal da home (`hero.tsx:36`). Existia antes da PR #44: o `format` já rodava com `new Date()` dos dois lados. Hipótese de correção, não testada: não pré-selecionar a data, ou preenchê-la num `useEffect`. **◐ Fechado no working tree, pendente de merge**: a `/contact` passou a usar o `DateInput`, começando vazia (`contact-form-client.tsx:13`, `:71-72` no working tree); zero erros no repro do fuso, em build |
+| 🟢 **O formulário de contato usa `initialFocus`, `@deprecated` no react-day-picker 9** | `contact-form-client.tsx:108` · `react-day-picker` 9.13.0, `types/props.d.ts:316-318` ("Use autoFocus instead") | Funciona hoje; some numa versão maior da biblioteca. Do plano da PR #44 (§13.3). **◐ Fechado no working tree, pendente de merge**: `git grep initialFocus` em `apps` e `packages` no working tree dá 0 |
+| 🟢 **O `Calendar` grava `data-day` com `toLocaleDateString()` do navegador** | `packages/design-system/components/ui/calendar.tsx:229` | O atributo segue o idioma e o formato do navegador, não o da página. Invisível hoje: nenhum teste nem CSS do repo o lê (`git grep data-day` fora do componente: 0). Vira defeito se alguém passar a depender dele. Do plano da PR #44 (§13.3). P |
+| 🟢 **Um caso de `dateInputLocale.test.tsx` só passa enquanto o relógio está em outubro de 2026** (novo, 2026-10-14, do plano de `date-input-navigation` §1.3) | `packages/design-system/__tests__/dateInputLocale.test.tsx:204-218` | O caso abre o `DateInput` com `2026-10-13` e clica no dia 20 de outubro; sem `defaultMonth`, o calendário abre no mês corrente, e em novembro de 2026 a grade não tem dias de outubro. O teste não muda: o `defaultMonth` de `date-input-navigation` faz o calendário abrir no mês do valor. **◐ Fechado no working tree, pendente de merge.** A sonda de novembro nunca rodou contra o código antigo (lacuna do `/test`) |
+| 🟢 **A 390 px, o campo de nascimento fica atrás do rodapé fixo de `/entities/edit`** (novo, 2026-10-14) | `apps/app/app/[locale]/(authenticated)/(common)/(pages)/entities/` (formulário de edição) · `Footer` de `apps/app/shared/components/ui/` | Medido pelo `/test` de `date-input-navigation` em build: sem rolar, o clique no botão "Data de nascimento" cai no rodapé (Voltar/Salvar). Rolando, o campo aparece e funciona. O relatório trata como o layout de sempre da tela; não medido no `HEAD` nem em outros formulários com o mesmo rodapé. P, e pede medição antes de correção |
+| 🟢 **Clicar no botão de enviar tira o foco do botão, e no login ele fica no `body` depois da recusa** (novo, 2026-10-14, 3ª passada, do plano de `form-field-focus-and-names`) | `packages/design-system/components/ui/button.tsx:72` (no working tree; `loading` liga `disabled`) | O botão focado fica `disabled` durante o pedido, e o navegador tira o foco dele. Nos dois diálogos de conta, o `onError` devolve o foco à senha; no login, não. Lido no código; **não medido** no navegador para o clique (o `/test` mediu o Enter no campo, que passou a manter o foco). Resolver pede `aria-disabled` no lugar de `disabled` no `Button`, que muda a semântica de todo botão do repositório. Os outros seis `HookForm*` que ainda ligam `disabled` no envio (`hookformTextarea.tsx:58`, `hookformSelect.tsx:90`, `hookformSwitch.tsx:65`, `hookformDateInput.tsx:54`, `hookformImageUpload.tsx:57`, `hookformRadioGroup.tsx:57`) não enviam o formulário com Enter, então só perderiam o foco por este caminho |
+| 🟢 **O asterisco de obrigatório do `Label` do design system entra no nome acessível, e a cor dele não existe** (novo, 2026-10-14, 3ª passada) | `packages/design-system/components/ui/label.tsx:27` (`<span className="text-error-500">*</span>`, sem `aria-hidden`) | Um campo `required` que usa este `Label` (`DateInput`, `TextareaInput`, `RadioGroupInput`, `ImageUploadInput`) teria o nome "Gênero *". O `FormLabel` dos `HookFormInput*` já esconde o asterisco com `aria-hidden` (`hookformInputPassword.tsx:66-72` no working tree). `git grep error-500` em `apps` e `packages`, fora do `label.tsx`: 0, então a classe não gera cor e o asterisco sai na cor do rótulo. Latente: nenhum consumidor passa `required` a esses quatro componentes hoje. Do plano de `form-field-focus-and-names` (§1.3). P |
+| 🟢 **O `RadioGroupInput` recebe `required` e não repassa ao Radix** (novo, 2026-10-14, 3ª passada) | `packages/design-system/components/ui/radio-group-input.tsx` (`required` só vai ao `Label`) | O grupo não publica `aria-required`. Repassar ao Radix marca também os `input` ocultos com `required`, o que liga a validação nativa do navegador dentro do `<form>`, por isso o plano deixou de fora. Latente: nenhum grupo de rádio do repositório é obrigatório. P |
+| 🟢 **O `useSubmitEnterGuard` depende de o React Query entregar o estado por `setTimeout(0)`** (novo, 2026-10-14, 3ª passada; risco, não defeito) | `packages/design-system/components/form/hookform/useSubmitEnterGuard.ts` (no working tree) | O hook barra o Enter enquanto o `isSubmitting` está ligado e por um `setTimeout(0)` depois, até o botão do formulário receber o `isPending` da mutação. A janela fecha porque o React Query notifica o estado nesse mesmo tempo. Um fork que troque o scheduler do React Query (`notifyManager.setScheduler`) ou dispare a mutação de outro jeito reabre a janela, e dois Enter a 2 a 5 ms voltam a mandar dois pedidos, como o `/test` mediu antes da correção. Os testes `hookformEnterResubmit.test.tsx` e `signInEnterResubmit.test.tsx` cobrem o comportamento atual. Registrado para quem mexer no React Query |
+| 🟢 **Os alertas de erro mostram "(Código do erro: <uuid>)" também em recusa esperada** (novo, 2026-10-14, 3ª passada) | `packages/shared/utils/helpers/handleClientError.ts:4-11` (anexa o `requestId` a toda resposta da API) · `formattedError.ts:112-121` | Visto pelo `/test` de `form-field-focus-and-names` nos diálogos de conta: "A senha atual está incorreta. (Código do erro: …)". O código existe para a pessoa citá-lo ao suporte (PR #15, `observability-logging`), e o `panelErrorRequestId.test.tsx:115` o exige num 404. Escolher quais recusas escondem o código (só 4xx de validação? todo 4xx?) é decisão de copy e de suporte, não técnica. Fica como achado até essa decisão |
+| 🟢 **Salvar as preferências em `/es` leva para `/pt-br`, porque o formulário começa com o idioma da conta** (novo, 2026-10-14, 3ª passada) | `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountPreferencesForm.tsx:65` (o campo começa com `account.preferences.locale`) · `:89-99` (grava o cookie e navega para o idioma salvo) | Medido pelo `/test` com a conta do seed, que guarda português: quem lê a tela em espanhol e salva o tema volta para o português. É o comportamento previsto da preferência de idioma, mas surpreende quem chegou pela URL. Se o campo deve começar com o idioma da URL é decisão de produto; fica como achado |
+
+**Lacunas de teste e 🔒 herdados da entrega, com veredito desta auditoria:**
+
+| lacuna | veredito 2026-10-14 | motivo |
+|--------|---------------------|--------|
+| Nenhum teste renderizava o `ContactFormClient` | **fechada** pelo `/test` | `apps/web/__tests__/contactFormDateLocale.test.tsx`, 3 casos com SSR em `node`; com o arquivo anterior, 2 de 3 reprovam |
+| Troca de idioma pela navegação do App Router sem teste automatizado | **continua aberta**, comportamento medido | o jsdom não reproduz a troca de rota; o `/test` mediu pt-br → en → es → pt-br com um marcador em `window`. Mesma lacuna da PR #43 |
+| `captionLayout="dropdown"` sem consumidor no produto | **◐ fechada no working tree**, pendente de merge | o nascimento de `entity` é o primeiro consumidor (`EntityFormFields.tsx:155`), medido no navegador nos três idiomas |
+| Precedência do `placeholder` do chamador no navegador | **continua aberta**, aceitável | os textos da trilha são iguais ao padrão, então a tela não distingue; o caso `:124` cobre |
+| `DateInput` sob personificação | **fora de escopo** | o diff não mexeu no `disabled`; `entityFormsReadOnly.test.tsx` cobre |
+| `locale={undefined}` explícito do chamador volta o `Calendar` ao `enUS` | **fora de escopo** | registrado pelo `/review` para quem ler a API (`calendar.tsx:200-202`); nenhum consumidor faz isso |
+
 ## Pendências vivas sem dono
 
 > A maior parte destas tem **casa versionada** em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md).
-> Na auditoria pós-PR #43 (2026-10-13) foram remedidas as linhas 6, 8 e 16. As outras mantêm o veredito de
-> 2026-10-04, com motivo: exigem console de provedor, ou dependem de arquivos que as PRs #40 a #43 não tocaram. A
-> PR #43 não criou índice, rule, variável nem passo manual, e não tocou o `docs/PRE-PRODUCTION.md` (os dois `STATE.md`
-> registram "Pré-requisitos manuais de infra: nenhum"). Na auditoria pós-PR #39 a 23 e a 24 tiveram as âncoras corrigidas, e entrou a
+> Na auditoria pós-PR #44 (2026-10-14) foram remedidas as linhas 6, 8, 15 e 16. As outras mantêm o veredito de
+> 2026-10-04, com motivo: exigem console de provedor, ou dependem de arquivos que as PRs #40 a #44 não tocaram. A
+> PR #44 não criou índice, rule, variável nem passo manual; no `docs/PRE-PRODUCTION.md`, só corrigiu a âncora do
+> `sidebar_state` (o `STATE.md` registra "Pré-requisitos manuais de infra: nenhum"). Na auditoria pós-PR #39 a 23 e a 24 tiveram as âncoras corrigidas, e entrou a
 > 27.
 
-| # | pendência | onde vive | veredito (2026-10-13, pós-PR #43, nas linhas remedidas; 2026-10-04 nas demais) |
+| # | pendência | onde vive | veredito (2026-10-14, pós-PR #44, nas linhas remedidas; 2026-10-04 nas demais) |
 |---|-----------|-----------|---------------------|
 | 1 | 🔴 Publicar os três índices dos resumos da home (`GET /entities/summary` e `/users/summary` respondem 503 sem eles) | `PRE-PRODUCTION.md` §1.5 | **continua aberto**; não remedido nesta rodada, nada no repositório mudou |
 | 2 | 🔴 Publicar o índice das faixas de recência (`user`: `deletedAt` + `lastAccessAt`) | `PRE-PRODUCTION.md` §1.7 | **continua aberto**; idem |
 | 3 | 🔴 Publicar o índice da trilha de auditoria (filtro por usuário responde 503) | `PRE-PRODUCTION.md` §1.2 | **continua aberto**; idem |
 | 4 | 🔴 Publicar o índice da listagem paginada de `entity` | `PRE-PRODUCTION.md` §1.1 | **continua aberto, medido**: o `/test` da PR #35 recebeu `503 PAGINATION_INDEX_MISSING` em `GET /entities` contra o projeto de desenvolvimento (`test/report.md:85`), então o índice não está publicado nem lá. São **seis** índices sem publicação; o comando é um só |
 | 5 | Retenção da coleção `auditEvent` | `PRE-PRODUCTION.md` §1.3 | **continua aberto**, estacionado (E5) |
-| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-10-13 pós-PR #43 (404, `[]`, 43 PRs); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
+| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-10-14 pós-PR #44 (404, `[]`, 44 PRs, nenhuma aberta); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
 | 7 | Backfill de instantes em base que já tem dado | `PRE-PRODUCTION.md` §1.4 | **continua aberto**; não é mensurável daqui |
-| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-10-13 pós-PR #43: `git grep` por `@sentry`, `@logtail`, `@axiomhq` e `betterstack` em `apps/` e `packages/` devolve 0; estacionado (E1) |
+| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-10-14 pós-PR #44: `git grep` por `@sentry`, `@logtail`, `@axiomhq` e `betterstack` em `apps/` e `packages/` devolve 0; estacionado (E1) |
 | 9 | Health check da plataforma não aponta para `/health/ready` | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: configuração de plataforma |
 | 10 | `SESSION_COOKIE_DOMAIN` em subdomínios distintos | `PRE-PRODUCTION.md` §7 | **continua aberto** (configuração de deploy) |
 | 11 | Cloud Storage não ativado (plano Blaze) | `PRE-PRODUCTION.md` §6 | **continua aberto** em produção. Desde a PR #31, upload, avatar e o passo `storage` do expurgo rodam e têm teste sob o emulador; contra bucket real seguem sem prova o objeto que não abre sem assinatura e a expiração da URL V4 |
 | 12 | Revogação de sessão nunca provada ponta a ponta | *(só neste arquivo)* | **metade fechada**, reconhecido na auditoria pós-PR #34: o `/test` de `compliance-docs-kit` mediu em 2026-09-30, contra o projeto Firebase de desenvolvimento, que depois de `revokeRefreshTokens` o cookie emitido antes volta `null`, o bearer volta `null` em `resolveApiActor` e `createSessionCookie` com o token anterior lança `auth/id-token-expired` (`docs/features/compliance-docs-kit/test/report.md`, tabela "Resultado bruto"). É a prova que a ressalva de `session-refresh` pedia para a camada de verificação. **Continua aberto** só o percurso de navegador: sair numa app e ver a outra perder a sessão. O `/test` da PR #35 somou a medição da conta desativada (bearer recusado com e sem revogação, e depois da reativação) e também não subiu navegador |
 | 13 | Envio real de e-mail nunca provado | `PRE-PRODUCTION.md` §3 | **continua aberto** (exige domínio com SPF/DKIM). O `/test` da PR #24 viu o envio do e-mail de verificação falhar sob o emulador, com `RESEND_TOKEN` vazio, como esperado. O `/test` da PR #29 deixou 🔒 o e-mail de verificação depois do cadastro pela API (critério 20). O `/test` de `brand-config` deixou 🔒 o nome da marca com acento na caixa de entrada. O `/test` da PR #33 deixou 🔒 a entrega do aviso ao endereço antigo e do link ao novo; sem Resend o pedido responde `503 EMAIL_NOT_CONFIGURED`, medido nos 3 idiomas |
 | 14 | CSP Report-Only na `apps/web` | `PRE-PRODUCTION.md` §10 | **continua aberto**, deliberado |
-| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:937`). Pelos relatórios, os `/test` das PRs #37 a #39 e #41 a #43 rodaram sob o emulador (os da #43 criaram contas `@example.com`, entre elas nove `qa-ui-strings-NN@example.com`, que existiram só no emulador); o console não foi aberto |
-| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-10-13 pós-PR #43: `git ls-remote --heads origin` devolve 42, ou seja, 41 além de `main` (eram 40; `fix/ui-labels-and-account-dialog-focus` ficou viva depois do merge, como as das PRs #37 a #42) |
+| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:937`). Pelos relatórios, os `/test` das PRs #37 a #39 e #41 a #44 rodaram sob o emulador (os da #43 criaram contas `@example.com`, entre elas nove `qa-ui-strings-NN@example.com`, que existiram só no emulador; o da #44 não criou conta, usou as duas do seed e criou a entidade `qa-date-input-locale-01`, também só no emulador); o console não foi aberto |
+| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-10-14 pós-PR #44: `git ls-remote --heads origin` devolve 43, ou seja, 42 além de `main` (eram 41; `fix/date-input-locale` ficou viva depois do merge, como as das PRs #37 a #43) |
 | 17 | Login com Google sem passe manual com conta real | *(só neste arquivo)* | **continua aberto**. O `/test` da PR #24 também não percorreu o Google no emulador; o nome do Google como valor inicial do passo 1 ficou fechado só por leitura |
 | 18 | `storage.rules` nunca publicado (o teste veio com a PR #31) | `PRE-PRODUCTION.md` §6 e `:54-58` | **metade fechada** pela PR #31: `storage.rules` e `firestore.rules` têm teste contra emulador no `verify` (20 e 145 testes; entrega em [`storage-emulator-rules-tests`](../docs/features/storage-emulator-rules-tests/spec.md)). **Continua aberto** publicar no projeto real, que depende da 11 |
 | 19 | Conferir a retenção de log da plataforma | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: painel do provedor |
@@ -1198,14 +1388,14 @@ Descartadas de propósito, com o motivo. Reabrir exige argumento novo.
 | Waitlist / captura de lead | 2/10 | Decisão do fork. |
 | **Consertar o formulário de contato da landing** | — | Não é spec, é achado. É o fallback do canal de privacidade. |
 | **Migrar a listagem de usuários para o cursor** | — | O N+1 de `userRepository.list()` vem primeiro. |
-| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 41 execuções locais até 2026-10-13, pós-PR #43; ver achados), e o CI passou. O critério de reabertura era um segundo *flake* **no CI**; este ainda não conta. Consertar o teste é tarefa direta P. |
+| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 44 execuções locais até 2026-10-14, pós-PR #44; ver achados), e o CI passou. O critério de reabertura era um segundo *flake* **no CI**; este ainda não conta. Consertar o teste é tarefa direta P. |
 | Provedor de e-mail plugável · rastreio de abertura/clique | — | Fora do corte de `transactional-emails`. |
 | Múltiplos arquivos, galeria, thumbnails, antivírus, PDF | — | Fora do corte de `file-upload-storage`. |
 | Tracing distribuído (OpenTelemetry) · session replay · monitoramento sintético | prática 6 | Fora do corte de `observability-logging`. |
 | API keys do usuário · webhooks de saída | 1/10 cada | Só valem se o produto é uma API. |
 | Widget de feedback · referral/afiliados | 1/10 e 0/10 | Terceirizar é mais racional. |
 | SSO enterprise · SCIM | 0/10 | Só entra com o primeiro contrato enterprise. |
-| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | O pré-requisito (CI verde e estável) vale nas 30 últimas execuções do CI na `main`, até `7fb2fe9` (`gh run list --branch main --limit 30`, todas `success`, remedido em 2026-10-13 pós-PR #43). Reavaliar junto com o branch protection (E3). |
+| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | O pré-requisito (CI verde e estável) vale nas 30 últimas execuções do CI na `main`, até `fa7041b` (`gh run list --branch main --limit 30`, todas `success`, remedido em 2026-10-14 pós-PR #44). Reavaliar junto com o branch protection (E3). |
 | Remote Cache do Turbo | prática 1 | Arrasta conta e env; entra quando doer, como opt-in. |
 | Limiar de cobertura que bloqueia merge | prática 5 | A cobertura já é medida e consolidada (`pnpm coverage`, job `coverage` do CI), pela PR #26. O limiar ficou fora do corte de [`e2e-testing`](../docs/features/e2e-testing/spec.md); reavaliar depois de algumas medições. |
 | Changesets / versionamento · Storybook | — | Pacotes `private: true`; o `playground` serve de catálogo. |
