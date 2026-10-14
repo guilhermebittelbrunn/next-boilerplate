@@ -6,7 +6,9 @@ import {
   Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
+import { calendarLocales } from "@repo/design-system/lib/calendar-locales";
 import { cn } from "@repo/design-system/lib/utils";
+import { getDictionary } from "@repo/internationalization/client";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -15,6 +17,7 @@ import {
 import type React from "react";
 import { useEffect, useRef } from "react";
 import {
+  DateLib,
   type DayButton,
   DayPicker,
   getDefaultClassNames,
@@ -33,6 +36,8 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const { locale } = getDictionary();
+  const calendarLocale = calendarLocales[locale];
 
   return (
     <DayPicker
@@ -185,10 +190,14 @@ function Calendar({
         ...components,
       }}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (month, dateLib) =>
+          (dateLib ?? new DateLib({ locale: calendarLocale })).format(
+            month,
+            "LLL"
+          ),
         ...formatters,
       }}
+      locale={calendarLocale}
       showOutsideDays={showOutsideDays}
       {...props}
     />
