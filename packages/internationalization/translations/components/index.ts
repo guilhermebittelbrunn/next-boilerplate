@@ -4,6 +4,7 @@ import { breadcrumbTranslations } from "./ui/breadcrumb";
 import { buttonTranslations } from "./ui/button";
 import { carouselTranslations } from "./ui/carousel";
 import { cookieConsentTranslations } from "./ui/cookie-consent";
+import { dateInputTranslations } from "./ui/date-input";
 import { dialogTranslations } from "./ui/dialog";
 import { footerTranslations } from "./ui/footer";
 import { inputPasswordTranslations } from "./ui/input-password";
@@ -35,6 +36,7 @@ export const componentsTranslations = {
         carousel: carouselTranslations["pt-br"],
         spinner: spinnerTranslations["pt-br"],
         languageSwitcher: languageSwitcherTranslations["pt-br"],
+        dateInput: dateInputTranslations["pt-br"],
     },
     en: {
         header: headerTranslations.en,
@@ -54,6 +56,7 @@ export const componentsTranslations = {
         carousel: carouselTranslations.en,
         spinner: spinnerTranslations.en,
         languageSwitcher: languageSwitcherTranslations.en,
+        dateInput: dateInputTranslations.en,
     },
     es: {
         header: headerTranslations.es,
@@ -73,5 +76,6 @@ export const componentsTranslations = {
         carousel: carouselTranslations.es,
         spinner: spinnerTranslations.es,
         languageSwitcher: languageSwitcherTranslations.es,
+        dateInput: dateInputTranslations.es,
     },
 };
