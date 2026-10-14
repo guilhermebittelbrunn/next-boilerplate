@@ -36,15 +36,17 @@ export function RadioGroupInput({
 }: RadioGroupInputProps) {
   const reactId = useId();
   const rootId = reactId.replace(/:/g, "");
+  const labelId = useId();
 
   return (
     <div className="grid gap-2">
       {label ? (
-        <Label invalid={Boolean(error)} required={required}>
+        <Label id={labelId} invalid={Boolean(error)} required={required}>
           {label}
         </Label>
       ) : null}
       <RadioGroup
+        aria-labelledby={label ? labelId : undefined}
         className={cn(
           orientation === "horizontal"
             ? "flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
