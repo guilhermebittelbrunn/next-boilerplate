@@ -7,7 +7,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { calendarLocales } from "@repo/design-system/lib/calendar-locales";
 import { cn } from "@repo/design-system/lib/utils";
+import { getDictionary } from "@repo/internationalization/client";
 import { format, isValid, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { forwardRef, useState } from "react";
@@ -48,11 +50,12 @@ export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
       onChange,
       onBlur,
       disabled,
-      placeholder = "Pick a date",
+      placeholder,
       "aria-describedby": ariaDescribedBy,
     },
     ref
   ) {
+    const { dictionary, locale } = getDictionary();
     const [open, setOpen] = useState(false);
     const selected = parseIsoDate(value);
 
@@ -83,7 +86,9 @@ export const DateInput = forwardRef<HTMLButtonElement, DateInputProps>(
               variant="outline"
             >
               <CalendarIcon className="size-4 shrink-0" />
-              {selected ? format(selected, "PPP") : placeholder}
+              {selected
+                ? format(selected, "PPP", { locale: calendarLocales[locale] })
+                : (placeholder ?? dictionary.components.dateInput.placeholder)}
             </Button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-0">

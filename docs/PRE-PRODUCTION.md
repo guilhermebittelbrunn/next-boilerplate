@@ -413,7 +413,7 @@ pelo próprio repositório**, mais dois do Google:
 | `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
 | `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:214,218` · `apps/web/proxy.ts:111,115` | preferência |
 | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:21` | preferência |
-| `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:28` | preferência |
+| `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:29` | preferência |
 | `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
 
 Um fork que acrescente ferramenta acrescenta cookie, e a lista precisa acompanhar. Conte no código antes de
