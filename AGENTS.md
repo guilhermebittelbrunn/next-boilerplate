@@ -70,12 +70,14 @@ Pacote: `packages/design-system/`. Caminho base: `packages/design-system/compone
 ### Label e erros (padrão alinhado ao `Input`)
 
 - **`label` opcional** em `TextareaInput`, `RadioGroupInput`, `DateInput`: só renderizar o componente `Label` quando `label` estiver definido, com `htmlFor={id}` quando o controlo expuser `id` (como em `Input`).
+- No **`RadioGroupInput`** o grupo é um `div role="radiogroup"`, que `htmlFor` não rotula: o `Label` recebe um `id` e o grupo aponta para ele com `aria-labelledby`. Composto de grupo novo segue o mesmo caminho.
 - **Prop de erro**: usar **`error`** (string opcional) nos compostos acima, **não** `errorMessage`, para alinhar com `Input` (`error`).
 
 ### Data (`DateInput`)
 
 - **`DateInput`** (`date-input.tsx`): calendário com **`Popover`** (Radix) + **`Calendar`** (react-day-picker) e botão de gatilho; valor controlado em string **`YYYY-MM-DD`**. Evitar `<input type="date">` nativo para manter UX e estilo consistentes com o resto do design system.
 - **`HookFormDateInput`** repassa `value` / `onChange` / `onBlur` / `ref` ao `DateInput` (o `onChange` recebe a string da data, não evento de `<input>`).
+- Com valor, o calendário abre no mês da data. `captionLayout="dropdown"` liga os seletores de mês e ano (usado na data de nascimento de `entity`); sem `startMonth`/`endMonth` o ano vai de cem anos atrás ao fim do ano corrente, então campo de data futura com seletor precisa passar `endMonth`.
 
 ### Switch
 
