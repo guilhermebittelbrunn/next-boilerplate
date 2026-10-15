@@ -2,6 +2,7 @@ import { locales } from "@repo/internationalization/utils";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { z } from "zod";
 import {
+    existingPasswordSchema,
     isPasswordTooShort,
     newPasswordSchema,
     passwordTooShortResponse,
@@ -28,6 +29,11 @@ export const signUpSchema = z.object({
     password: newPasswordSchema,
 });
 
+export const signInSchema = z.object({
+    email: z.string().trim().max(EMAIL_MAX).email(),
+    password: existingPasswordSchema,
+});
+
 export const emailVerificationSendSchema = z.object({
     locale: localeSchema.optional(),
 });
@@ -40,6 +46,7 @@ export type PasswordResetRequestInput = z.infer<
     typeof passwordResetRequestSchema
 >;
 export type SignUpInput = z.infer<typeof signUpSchema>;
+export type SignInInput = z.infer<typeof signInSchema>;
 export type PasswordResetConfirmInput = z.infer<
     typeof passwordResetConfirmSchema
 >;
@@ -87,6 +94,8 @@ function parseWithPasswordPolicy<T>(
 
 export const parseSignUp = (body: unknown) =>
     parseWithPasswordPolicy(signUpSchema, body);
+
+export const parseSignIn = (body: unknown) => parseWith(signInSchema, body);
 
 export const parsePasswordResetRequest = (body: unknown) =>
     parseWith(passwordResetRequestSchema, body);
