@@ -8,24 +8,27 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 - **Política de senha**: mínimo de 8 e máximo de 1024 caracteres para toda senha **definida** (cadastro, redefinição por link, troca na área de conta, criação pelo admin), sem regra de composição e sem aparar espaços. Quem confere uma senha que já existe (login, senha atual na troca e na exclusão de conta) segue aceitando 6, porque contas antigas podem ter senha de 6 ou 7. As três constantes vivem em `packages/shared/utils/helpers/passwordPolicy.ts`; a API responde `400 AUTH_PASSWORD_TOO_SHORT` para senha nova curta. Contornar o produto e chamar `identitytoolkit.googleapis.com/v1/accounts:signUp` com a chave web pública ainda cria conta com 6 ou 7 caracteres; fechar esse caminho exige Identity Platform (ver `docs/PRE-PRODUCTION.md`, "Declaração — o que a política de senha não alcança").
 - **No servidor** (`@repo/auth/server`), o Firebase **Admin SDK** verifica o token (`verifyIdToken`) a partir do cookie `access-token` ou do header `Authorization: Bearer`. Falhas benignas (token expirado/ inválido) viram "sem sessão", não erro 500.
 - **Identity Toolkit REST** (`FIREBASE_WEB_API_KEY`) é usado no servidor para o login (inclusive a conferência da senha atual na troca de senha, na troca de e-mail e na exclusão de conta), o login com Google, a redefinição de senha por link, a confirmação de e-mail, a confirmação da troca de e-mail e a criação de usuário pelo admin (`POST /users`).
+- **`POST /auth/sign-in`** (login pela API, sem consumidor nas front-ends do repo) valida o corpo com Zod e responde `400 VALIDATION_FAILED` para corpo ausente, JSON inválido, e-mail inválido ou senha com menos de 6 caracteres, sem chamar o Identity Toolkit. Toda recusa do provedor (senha errada, conta inexistente, conta desativada) vira o mesmo `400 AUTH_INVALID_CREDENTIALS`, que não diz se o e-mail existe nem ecoa a mensagem do provedor; o limite do provedor vira `429 USERS_AUTH_RATE_LIMITED`. `404 USERS_NOT_FOUND` só aparece depois de uma senha aceita, quando a conta sumiu do Auth entre o login e a leitura do perfil.
 - **Troca de e-mail**: `POST /account/email` pede a senha atual e só manda um link ao endereço novo depois que a Resend aceitou o aviso ao endereço antigo. Nada muda na conta até o link ser aberto. `POST /auth/email-change/confirm` é pública, porque o link pode ser aberto noutro aparelho: ela confere que o código é do tipo `VERIFY_AND_CHANGE_EMAIL` antes de aplicá-lo, e só então encerra todas as sessões da conta (`revokeUserSessions`) e grava `account.email.change` na trilha. `POST /auth/email-verification/confirm` faz a conferência inversa e só aplica código `VERIFY_EMAIL`; sem isso, um link de troca aberto sem o parâmetro `mode` mudaria o e-mail por ela, sem revogação nem evento. Quem tem o link consegue aplicar o código direto no Identity Toolkit com a chave web pública; nesse caso o e-mail muda, mas a revogação explícita e o evento de auditoria não acontecem.
 
 ## Autorização (guards da API)
 
-São **32** arquivos de rota em `apps/api/app/(routes)/`. **Vinte** exportam o handler embrulhado num guard,
-que roda **antes** da lógica; **doze** exportam handler nu, e cada grupo tem um motivo próprio
-(medido em 2026-09-29, com as rotas `account/email` e `auth/email-change/confirm`):
+São **36** arquivos de rota em `apps/api/app/(routes)/`. **Vinte e três** exportam o handler embrulhado num
+guard, que roda **antes** da lógica; **treze** exportam handler nu, e cada grupo tem um motivo próprio
+(medido em 2026-10-14 com `find "apps/api/app/(routes)" -name route.ts` e
+`grep -LE "require(CommonPanel|Admin|Plan)Api"`):
 
 | grupo | quantas | por que não tem guard |
 |-------|---------|------------------------|
-| `/auth/*` — `me`, `sign-in`, `sign-in/google`, `sign-up`, `password/reset`, `password/reset-request`, `email-verification/send`, `email-verification/confirm`, `email-change/confirm` | 9 | é a superfície **anterior à sessão**: um guard que exige sessão recusaria justamente quem vem criar uma. `/auth/me` é a exceção dentro da exceção — ela resolve o ator por dentro (`resolveApiActor`, `auth/me/route.ts:6`) e devolve 401 sem ele |
+| `/auth/*` — `me`, `session`, `sign-in`, `sign-in/google`, `sign-up`, `password/reset`, `password/reset-request`, `email-verification/send`, `email-verification/confirm`, `email-change/confirm` | 10 | é a superfície **anterior à sessão**: um guard que exige sessão recusaria justamente quem vem criar uma. `/auth/me` e `/auth/session` são a exceção dentro da exceção: resolvem a credencial por dentro (`resolveApiActor`, `auth/me/route.ts:13`; `resolveApiCredential`, `auth/session/route.ts:13`). Sem credencial ativa, ou com conta que não existe mais no Auth, `/auth/me` responde `401 AUTH_INVALID_TOKEN`, o mesmo código dos guards |
 | `/health`, `/health/ready` | 2 | sondas de plataforma, precisam responder sem credencial |
-| `/webhooks/payments` | 1 | autentica pela assinatura da Stripe (`constructEvent`), não por sessão |
+| `/webhooks/payments` | 1 | autentica pela assinatura da Stripe (`constructEvent`), não por sessão. Header `stripe-signature` ausente ou assinatura que não confere responde `400 VALIDATION_FAILED` |
 
-As **vinte** rotas de negócio restantes — `account/*` ×7, `entities` ×3, `files`, `users` ×4, `audit-events`,
-`payments/*` ×4 — passam por um dos dois guards:
+As **vinte e três** rotas de negócio restantes — `account/*` ×10, `entities` ×3, `files`, `users` ×4,
+`audit-events`, `payments/*` ×4 — passam por um dos três guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
+- `requirePlanApi` — composto sobre o `requireCommonPanelApi` (`apps/api/app/(guards)/plan.ts:21`); depois dele, recusa quem não tem o plano exigido. Hoje só o `POST /entities` usa.
 - `requireAdminApi` — exige perfil admin.
   - `PUT` e `DELETE /users/:id` recusam com `403 USERS_SELF_LOCKOUT_FORBIDDEN` desativar, rebaixar (`type` diferente de `ADMIN`) ou arquivar a própria conta, comparando o `reference_id` do perfil alvo com o uid de quem chama (`apps/api/app/(routes)/users/[id]/route.ts:43-45`, `:131-133`, `:184-186`). Nenhum admin tira o próprio acesso pelo painel, mas isso não garante que sobre um admin ativo: dois admins que desativam um ao outro em pedidos simultâneos passam pelo guard antes de qualquer gravação. O console do Firebase e o Firestore direto continuam fora desse alcance.
 
