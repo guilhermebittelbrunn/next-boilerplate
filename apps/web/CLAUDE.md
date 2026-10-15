@@ -25,11 +25,15 @@ Regras de escopo para a landing/CTA pública — marketing, SEO, performance e c
 ## Testes
 
 - A suíte fica em `apps/web/__tests__/`, roda com `pnpm --filter web test` e usa `environment: "node"`
-  (`vitest.config.mts`) — **sem jsdom e sem plugin do React**. É suíte de lógica pura: helpers de SEO,
+  (`vitest.config.mts`) — **sem jsdom por padrão e sem plugin do React**. É suíte de lógica pura: helpers de SEO,
   metadata, sitemap. Componente renderizado é validado com `agent-browser`, não aqui.
   - Exceção estreita: conferir **o que um Server Component escreve no HTML** (um `href`, qual locale ele
     usou) com `renderToStaticMarkup`, como em `pricingPage.test.tsx`. O `esbuild.jsx: "automatic"` do
     config existe para isso. Layout, tema e interação continuam com `agent-browser`.
+  - Exceção estreita: interação de Client Component cujo estado só muda por evento (abrir/fechar um
+    painel, clique num link) pode usar jsdom **no próprio arquivo**, com `// @vitest-environment jsdom` na
+    primeira linha e `@testing-library/react`, como em `headerMobileMenu.test.tsx`. O ambiente global
+    continua `node`. Layout, tema e largura seguem com `agent-browser`.
 - Os aliases `@` e `@repo` estão declarados no `vitest.config.mts`; um import novo que fuja desses dois
   prefixos precisa de alias próprio.
 - ⚠️ `turbo build` depende de `test`, então teste quebrado **bloqueia o build da web**. Mantenha a suíte
