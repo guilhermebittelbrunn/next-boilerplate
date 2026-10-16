@@ -1,21 +1,25 @@
 "use client";
 
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
     Card,
+    CardAction,
     CardContent,
     CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import type { PlanDTO } from "@repo/sdk/src/types";
+import { describePlanPrice } from "@repo/shared/utils/helpers/formatPlanPrice";
 import { CheckIcon } from "lucide-react";
-import { describePlanPrice } from "@/shared/lib/formatPlanPrice";
 
 type BillingPlanCardProps = {
     plan: PlanDTO;
+    highlighted?: boolean;
     disabled: boolean;
     loading: boolean;
     onSubscribe: (priceId: string) => void;
@@ -23,6 +27,7 @@ type BillingPlanCardProps = {
 
 export function BillingPlanCard({
     plan,
+    highlighted = false,
     disabled,
     loading,
     onSubscribe,
@@ -32,9 +37,19 @@ export function BillingPlanCard({
     const priceLabel = describePlanPrice(billingCopy, plan, locale);
 
     return (
-        <Card className="h-full">
+        <Card
+            className={cn(
+                "h-full",
+                highlighted && "border-primary ring-2 ring-primary"
+            )}
+        >
             <CardHeader>
                 <CardTitle>{plan.name}</CardTitle>
+                {highlighted ? (
+                    <CardAction>
+                        <Badge>{billingCopy.chosenPlan}</Badge>
+                    </CardAction>
+                ) : null}
                 {plan.description ? (
                     <CardDescription>{plan.description}</CardDescription>
                 ) : null}

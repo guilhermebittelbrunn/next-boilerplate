@@ -24,11 +24,11 @@ import {
     type SubscriptionStateDTO,
     type SubscriptionStatus,
 } from "@repo/sdk/src/types";
-import { useSearchParams } from "next/navigation";
 import {
     describePlanPrice,
     formatPeriodEnd,
-} from "@/shared/lib/formatPlanPrice";
+} from "@repo/shared/utils/helpers/formatPlanPrice";
+import { useSearchParams } from "next/navigation";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useCheckoutConfirmation } from "../(hooks)/useCheckoutConfirmation";
 import { useListPlans } from "../(hooks)/useListPlans";
@@ -166,6 +166,7 @@ function CurrentPlanCard({
 
 type PlanListProps = {
     plans: PlanDTO[];
+    highlightedPriceId: string | null;
     loadFailed: boolean;
     disabled: boolean;
     redirectingPriceId: string | null;
@@ -174,6 +175,7 @@ type PlanListProps = {
 
 function PlanList({
     plans,
+    highlightedPriceId,
     loadFailed,
     disabled,
     redirectingPriceId,
@@ -199,6 +201,7 @@ function PlanList({
                     {plans.map((plan) => (
                         <BillingPlanCard
                             disabled={disabled}
+                            highlighted={plan.priceId === highlightedPriceId}
                             key={plan.priceId}
                             loading={redirectingPriceId === plan.priceId}
                             onSubscribe={onSubscribe}
@@ -237,6 +240,7 @@ export function AccountBillingPanel({ account }: AccountBillingPanelProps) {
     const { isImpersonating } = useAuthRequestPanel();
     const searchParams = useSearchParams();
     const checkoutOutcome = searchParams.get("checkout");
+    const chosenPriceId = searchParams.get("plan");
     const { data: catalog, isError } = useListPlans();
     const { checkoutMutation, portalMutation } = usePaymentsMutations();
 
@@ -294,6 +298,7 @@ export function AccountBillingPanel({ account }: AccountBillingPanelProps) {
             ) : (
                 <PlanList
                     disabled={actionsDisabled}
+                    highlightedPriceId={chosenPriceId}
                     loadFailed={isError}
                     onSubscribe={(priceId) =>
                         checkoutMutation.mutate({ priceId })
