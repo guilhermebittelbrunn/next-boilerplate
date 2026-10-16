@@ -6,17 +6,22 @@ import { SignInForm } from "./components/SignInForm";
 
 type SignInProps = {
     readonly params: Promise<{ locale: string }>;
+    readonly searchParams: Promise<{ redirect?: string | string[] }>;
 };
 
 export const generateMetadata = async ({
     params,
-}: SignInProps): Promise<Metadata> => {
+}: Pick<SignInProps, "params">): Promise<Metadata> => {
     const { locale } = await params;
     const dictionary = await getTranslations(resolveLocale(locale));
 
     return createMetadata(dictionary.apps.web.pages.signIn.meta);
 };
 
-export default function SignIn() {
-    return <SignInForm />;
+export default async function SignIn({ searchParams }: SignInProps) {
+    const { redirect } = await searchParams;
+
+    return (
+        <SignInForm redirect={typeof redirect === "string" ? redirect : null} />
+    );
 }

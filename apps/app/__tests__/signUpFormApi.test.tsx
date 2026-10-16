@@ -76,7 +76,7 @@ const EMAIL = "qa-password-policy-app@example.com";
 const ACCEPTED_PASSWORD = "a".repeat(PASSWORD_MIN_LENGTH);
 const BAD_REQUEST_STATUS = 400;
 
-function renderForm() {
+function renderForm(redirect?: string) {
     const queryClient = new QueryClient({
         defaultOptions: {
             mutations: { retry: false },
@@ -85,7 +85,7 @@ function renderForm() {
     });
     render(
         <QueryClientProvider client={queryClient}>
-            <SignUpFormClient />
+            <SignUpFormClient redirect={redirect} />
         </QueryClientProvider>
     );
 }
@@ -183,6 +183,17 @@ describe("SignUpFormClient", () => {
             )
         );
         expect(signInMutateMock).not.toHaveBeenCalled();
+    });
+
+    it("hands the destination it was given to the sign-in link", () => {
+        renderForm("/pt-br/account?tab=billing&plan=price_1");
+
+        const signInLink = screen.getByRole("link", {
+            name: signUpCopy.signIn,
+        });
+        expect(signInLink.getAttribute("href")).toBe(
+            "/pt-br/sign-in?redirect=%2Fpt-br%2Faccount%3Ftab%3Dbilling%26plan%3Dprice_1"
+        );
     });
 
     it("refuses a password one character short inline without calling the API", async () => {
