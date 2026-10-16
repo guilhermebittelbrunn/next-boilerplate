@@ -8,6 +8,12 @@ import type {
     PaymentRedirectDTO,
 } from "../../types";
 
+/**
+ * The landing renders the catalog on every visit, so a slow API has to give up before it
+ * holds the page load hostage.
+ */
+const CATALOG_TIMEOUT_MS = 5000;
+
 export default class PaymentsActions {
     // biome-ignore lint/style/noParameterProperties: SDK client pattern
     constructor(private readonly client: Client) {
@@ -18,6 +24,17 @@ export default class PaymentsActions {
         const { data } = await this.client.request<Response<PaymentPlansDTO>>({
             url: "/payments/plans",
             method: "GET",
+        });
+
+        return data.data;
+    }
+
+    /** Public: answers without a session, for visitors who have no account yet. */
+    async listCatalog(): Promise<PaymentPlansDTO> {
+        const { data } = await this.client.request<Response<PaymentPlansDTO>>({
+            url: "/payments/catalog",
+            method: "GET",
+            timeout: CATALOG_TIMEOUT_MS,
         });
 
         return data.data;
