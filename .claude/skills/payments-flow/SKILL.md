@@ -6,9 +6,10 @@ description: Implementa ou estende o fluxo de assinatura/pagamento Stripe neste 
 # Fluxo de pagamentos (Stripe)
 
 O fluxo de assinatura já existe de ponta a ponta: catálogo, checkout, portal, webhook com dedupe e regra de
-ordem, aba billing no `apps/app`, CTAs do pricing na `apps/web`, cancelamento no expurgo e estado na
-exportação. Esta skill serve para **estender** esse fluxo sem quebrar as invariantes dele. Visão narrativa e
-tabela de eventos: [`docs/PAYMENTS.md`](../../../docs/PAYMENTS.md). Configuração de conta:
+ordem, aba billing no `apps/app`, página de preços da `apps/web` lendo o catálogo público (com o plano
+escolhido destacado na aba billing), cancelamento no expurgo e estado na exportação. Esta skill serve
+para **estender** esse fluxo sem quebrar as invariantes dele. Visão narrativa e tabela de eventos:
+[`docs/PAYMENTS.md`](../../../docs/PAYMENTS.md). Configuração de conta:
 [`docs/PRE-PRODUCTION.md`](../../../docs/PRE-PRODUCTION.md), item 12. Segurança:
 [`docs/SECURITY.md`](../../../docs/SECURITY.md).
 
@@ -26,7 +27,10 @@ Compõe [`/new-api-route`](../new-api-route/SKILL.md) (rotas) e [`/i18n-sync`](.
 | Lógica pura | `apps/api/(shared)/lib/billing-state.ts` (`toSubscriptionState`, `toPlanDTO`, `decideSubscriptionWrite`) |
 | Persistência | `userRepository.findByStripeCustomerId` / `linkStripeCustomer` / `applySubscriptionState`; `paymentEventRepository` |
 | Rotas | `apps/api/app/(routes)/payments/{plans,checkout,portal}`, `webhooks/payments` |
+| Catálogo público | `apps/api/app/(routes)/payments/catalog` (sem guard) e `(shared)/lib/plan-catalog-cache.ts` (1 h em memória) |
 | UI | `apps/app/.../account/(components)/AccountBillingPanel.tsx`, `BillingPlanCard.tsx`, hooks em `(hooks)/` |
+| Landing | `apps/web/app/[locale]/pricing/`, `apps/web/shared/lib/planCatalog.ts`, `pricingCta.ts` |
+| Formatação de preço | `packages/shared/utils/helpers/formatPlanPrice.ts` (usada pela app e pela landing) |
 
 ## Invariantes (não quebre)
 
