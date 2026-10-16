@@ -146,7 +146,7 @@ Um fork reescreve principalmente:
 | Pasta | Conteúdo |
 |-------|----------|
 | `apps/web/pages/hero`, `features`, `stats`, `faq`, `cta`, `home` | Seções da landing |
-| `apps/web/pages/pricing` | Página de preços da landing. É texto estático: mantenha os planos coerentes com o catálogo da Stripe ([seção 7.2](#72-stripe-assinaturas)) |
+| `apps/web/pages/pricing` | Página de preços da landing. Os planos vêm do catálogo da Stripe ([seção 7.2](#72-stripe-assinaturas)); o dicionário guarda só a cópia da página, o estado vazio e o card fixo de contato ("Enterprise") |
 | `apps/web/pages/contact` | Página de contato |
 | `apps/web/pages/legal` | Política de privacidade e termos de uso. São modelos e dizem isso no próprio corpo. Reescreva com o tratamento real de dados do produto antes do lançamento ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 7) |
 | `packages/email` | Assunto e corpo dos e-mails transacionais |
@@ -292,7 +292,9 @@ Detalhes: [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), itens 3 e 4.
 ### 7.2 Stripe (assinaturas)
 
 Só se o produto cobra. Sem as chaves, a cobrança fica desligada e o resto funciona: a aba de cobrança mostra
-"em breve" e as rotas de pagamento respondem `PAYMENTS_NOT_CONFIGURED`.
+"em breve", a página de preços da landing mostra "Planos em breve" e as rotas de pagamento respondem
+`PAYMENTS_NOT_CONFIGURED`. Com as chaves, os produtos e preços recorrentes criados no passo 1 aparecem
+sozinhos na página de preços, sem editar o dicionário.
 
 1. Crie os produtos e preços **recorrentes** no Dashboard.
 2. Configure o Customer Portal (cancelamento, troca de plano, cartão).

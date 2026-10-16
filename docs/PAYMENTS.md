@@ -19,25 +19,27 @@ tudo lido de coleções que o webhook alimenta.
 | Config | `packages/payments/keys.ts` | `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, string vazia lida como ausência. Chave com prefixo errado (`pk_` no lugar de `sk_`) falha a validação: o `next build` da API sai com erro e, em runtime, toda requisição responde 500 com `Invalid environment variables` no log. |
 | Cliente | `packages/payments/index.ts` | `getStripe()` (devolve `null` sem chave), `getWebhookSecret()` e `isPaymentsConfigured()` (as duas chaves ou nada). |
 | Toolkit | `packages/payments/ai.ts` | `getPaymentsAgentToolkit()`, construído sob demanda; devolve `null` sem chave. Serve para semear produtos e preços. |
-| Contrato | `packages/sdk/src/types/payments/`, `actions/payments/action.ts` | `PlanDTO`, `SubscriptionState`, `LIVE_SUBSCRIPTION_STATUSES`, `BillingSummaryDTO`, `PlanAccessDTO`, `planAccessDenial`; `apiClient.payments.listPlans()`, `.createCheckout()`, `.openPortal()`, `.summary()`. |
+| Contrato | `packages/sdk/src/types/payments/`, `actions/payments/action.ts` | `PlanDTO`, `SubscriptionState`, `LIVE_SUBSCRIPTION_STATUSES`, `BillingSummaryDTO`, `PlanAccessDTO`, `planAccessDenial`; `apiClient.payments.listPlans()`, `.listCatalog()`, `.createCheckout()`, `.openPortal()`, `.summary()`. |
 | Rotas | `apps/api/app/(routes)/payments/{plans,checkout,portal}` | Catálogo, sessão de checkout e sessão de portal, todas com `requireCommonPanelApi`. |
+| Catálogo público | `apps/api/app/(routes)/payments/catalog`, `(shared)/lib/plan-catalog-cache.ts` | `GET /payments/catalog` sem guard, com o contrato de `GET /payments/plans` e cache de uma hora na memória do processo. Ver "Página de preços da landing". |
 | Resumo do admin | `apps/api/app/(routes)/payments/summary`, `(shared)/lib/billing-summary.ts` | `GET /payments/summary` com `requireAdminApi`: receita do mês por moeda, planos vigentes e contratações recentes. Nunca chama a Stripe. |
 | Lógica | `apps/api/(shared)/lib/billing.ts`, `billing-state.ts`, `plan-label.ts` | Fala com a Stripe; converte assinatura, fatura e preço em snapshot/DTO/registro; decide se um evento pode sobrescrever o estado gravado; mantém o cache de nomes de plano. |
 | Webhook | `apps/api/app/(routes)/webhooks/payments/route.ts` | Verifica a assinatura, deduplica por `event.id`, reconcilia o perfil (assinatura e recursos do plano) e registra faturas pagas. |
 | Acesso por plano | `apps/api/app/(guards)/plan.ts`, `(shared)/lib/plan-access.ts`, `apps/app/shared/components/ui/PlanGate.tsx` | `requirePlanApi` recusa na API quem não tem assinatura viva ou o recurso pedido; `PlanGate` antecipa a mesma decisão na tela. Ver "Acesso por plano". |
 | UI | `apps/app/.../account/(components)/AccountBillingPanel.tsx` | Planos, plano atual, badge de status, avisos de retorno do checkout. |
 | UI admin | `apps/app/.../admin/(pages)/(components)/BillingInsightsSection.tsx` | Seção de cobrança da home do admin: recebido no mês, planos mais vendidos, contratações recentes. |
-| Web | `apps/web/shared/lib/pricingCta.ts` | Os CTAs dos dois primeiros planos do `/pricing` levam a `<app>/<locale>/account?tab=billing`. |
+| Web | `apps/web/app/[locale]/pricing/`, `apps/web/shared/lib/planCatalog.ts`, `pricingCta.ts` | `/pricing` monta um card por plano do catálogo público; o botão de cada um leva ao cadastro da app com o plano no `redirect`. |
 
 **"Cobrança ligada"** exige quatro coisas ao mesmo tempo: `NEXT_PUBLIC_PRODUCT_MODE` diferente de `simple`,
 as duas chaves Stripe e `NEXT_PUBLIC_APP_URL` na API (é a base das URLs de retorno). Faltando qualquer uma:
 
 | Superfície | Resposta |
 |------------|----------|
-| `GET /payments/plans` | 200 `{ "enabled": false, "plans": [] }`, sem chamar a Stripe |
+| `GET /payments/plans`, `GET /payments/catalog` | 200 `{ "enabled": false, "plans": [] }`, sem chamar a Stripe |
 | `GET /payments/summary` | 200 `{ "data": { "enabled": false } }`, sem ler as coleções de cobrança (o guard ainda lê o perfil do admin); a home do admin não mostra a seção |
 | `POST /payments/checkout`, `POST /payments/portal` | 503 `PAYMENTS_NOT_CONFIGURED` |
 | Aba billing | O mesmo placeholder "Cobrança em breve" que existia antes da feature |
+| `/pricing` da landing | Estado vazio "Planos em breve", sem preço, e o card fixo de contato |
 | Modo `simple` | Aba billing e item da sidebar somem; `?tab=billing` abre o perfil; a home do admin nem faz a requisição do resumo |
 | Rotas com `requirePlanApi`, `PlanGate` | Nada é bloqueado: `planAccess.enforced` vem `false` |
 
@@ -48,8 +50,10 @@ chaves, a API avisa no boot: `[payments] billing is DISABLED (no STRIPE_WEBHOOK_
 ## Fluxo
 
 ```
-  apps/app                        apps/api                        Stripe
-  ────────                        ────────                        ──────
+  apps/web, apps/app              apps/api                        Stripe
+  ──────────────────              ────────                        ──────
+  /pricing    ──── SDK ─────────► GET /payments/catalog ────────► prices.list (no máximo 1×/h por processo)
+     [Escolher plano] ─► cadastro ─► onboarding ─► aba billing com ?plan=<priceId>
   aba billing ──── SDK ─────────► GET /payments/plans ──────────► prices.list (recorrentes ativos)
   [Assinar]   ──── SDK ─────────► POST /payments/checkout ──────► customers.create (1ª vez, idempotente)
                                                                   checkout.sessions.create
@@ -59,6 +63,36 @@ chaves, a API avisa no boot: `[payments] billing is DISABLED (no STRIPE_WEBHOOK_
   relê GET /account a cada 3 s ◄── user.subscription ◄── POST /webhooks/payments ◄┘
   [Gerenciar] ──── SDK ─────────► POST /payments/portal ────────► billingPortal.sessions.create
 ```
+
+## Página de preços da landing
+
+A `/pricing` da `apps/web` é um Server Component que pede `GET /payments/catalog` pelo SDK a cada visita. A
+rota não tem guard e responde o mesmo `{ enabled, plans }` de `GET /payments/plans`, com o mesmo `PlanDTO`.
+Para a Stripe não receber uma chamada por visita, a API guarda o catálogo por uma hora na memória do
+processo: visitas simultâneas com o cache vazio dividem a mesma requisição, e uma falha não fica guardada.
+A validade vale por instância. Em serverless, cada instância quente pede o catálogo no máximo uma vez por
+hora, e um preço criado ou arquivado leva até uma hora para mudar na landing. A aba de cobrança da app
+continua lendo `GET /payments/plans` sem cache, e o checkout confere o preço na Stripe antes de abrir a
+sessão.
+
+A rota fica fora do rate limit: quem a chama é o servidor da landing, de um endereço só, e um orçamento por
+IP limitaria a própria página (ver [`SECURITY.md`](SECURITY.md), "Limite de requisições").
+
+O preço aparece na moeda do preço, formatado no idioma da página: um fork que vende em BRL mostra
+"R$29.00 / month" em `/en/pricing`. Nome, descrição e recursos vêm do produto na Stripe, num idioma só. O
+card "Enterprise" é cópia fixa do dicionário e leva ao `/contact` da landing.
+
+O botão de cada plano leva a `<app>/<locale>/sign-up?redirect=%2F<locale>%2Faccount%3Ftab%3Dbilling%26plan%3D<priceId>`.
+A escolha passa pelo login (os links entre cadastro e login carregam o `redirect`) e pelo onboarding (o
+proxy da app repassa caminho e query no header `x-app-path`). Na aba de cobrança, o card do `priceId`
+recebe o selo "Plano escolhido". Quem já tem sessão vai direto à aba. Um `plan` fora do catálogo, ou uma
+assinatura viva, não destaca nada.
+
+Sem cobrança ligada, em modo `simple` (a landing nem chama a API), sem `NEXT_PUBLIC_API_URL` na landing, com
+a API fora do ar (a chamada desiste em 5 s) ou com a Stripe falhando, a página mostra o estado vazio
+"Planos em breve" e nenhum preço. Uma falha deixa no log da landing a linha
+`[payments] catalog-unavailable status=<status> reason=<código>`, e a API registra
+`[payments] catalog-failed requestId=<id>` quando a Stripe falha.
 
 ## Dados
 
