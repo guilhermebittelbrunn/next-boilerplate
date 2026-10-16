@@ -1,5 +1,13 @@
 import { locales } from "@repo/internationalization/utils";
 
+const PLACEHOLDER_ORIGIN = "http://placeholder.invalid";
+
+function isLocalePrefixed(path: string): boolean {
+    return locales.some(
+        (locale) => path === `/${locale}` || path.startsWith(`/${locale}/`)
+    );
+}
+
 /**
  * Sanitizes the `redirect` query param set by the proxy into a safe destination.
  *
@@ -26,8 +34,11 @@ export function postAuthRedirectTarget(
     if (path.includes("//")) {
         return fallback;
     }
-    const isLocalePrefixed = locales.some(
-        (locale) => path === `/${locale}` || path.startsWith(`/${locale}/`)
-    );
-    return isLocalePrefixed ? path : fallback;
+    if (!isLocalePrefixed(path)) {
+        return fallback;
+    }
+    // The URL parser reads `\` as `/` and resolves `..`, so `/pt-br/../\evil.com` passes the
+    // checks above and still parses to `//evil.com`, which leaves the host once made relative.
+    const resolvedPath = new URL(path, PLACEHOLDER_ORIGIN).pathname;
+    return isLocalePrefixed(resolvedPath) ? path : fallback;
 }
