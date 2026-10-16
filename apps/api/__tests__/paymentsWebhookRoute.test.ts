@@ -125,6 +125,7 @@ const SIGNED_BODY = '{"id":"evt_qa"}';
 const EVENT_CREATED = 1_780_000_000;
 const PERIOD_END = 1_790_000_000;
 const MS = 1000;
+const ONE_HOUR_IN_SECONDS = 3600;
 
 function request(body = SIGNED_BODY) {
     return new Request("http://localhost:3002/webhooks/payments", {
@@ -271,31 +272,31 @@ describe("POST /webhooks/payments — assinatura", () => {
         );
     });
 
-    it("falha quando o header stripe-signature está ausente", async () => {
+    it("responde 400 VALIDATION_FAILED quando o header stripe-signature está ausente", async () => {
         withSignature(null);
 
         const response = await POST(request());
 
-        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         await expect(response.json()).resolves.toEqual({
-            message: "something went wrong",
-            ok: false,
+            error: { code: "VALIDATION_FAILED" },
         });
         expect(constructEventMock).not.toHaveBeenCalled();
+        expect(markProcessedMock).not.toHaveBeenCalled();
     });
 
-    it("falha quando a assinatura não confere", async () => {
+    it("responde 400 VALIDATION_FAILED quando a assinatura não confere", async () => {
         constructEventMock.mockImplementation(() => {
             throw new Error("No signatures found matching the expected");
         });
 
         const response = await POST(request());
 
-        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         await expect(response.json()).resolves.toEqual({
-            message: "something went wrong",
-            ok: false,
+            error: { code: "VALIDATION_FAILED" },
         });
+        expect(wasProcessedMock).not.toHaveBeenCalled();
         expect(markProcessedMock).not.toHaveBeenCalled();
     });
 
@@ -449,6 +450,9 @@ describe("POST /webhooks/payments — idempotência", () => {
         const response = await POST(request());
 
         expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "PAYMENTS_WEBHOOK_HANDLER_FAILED" },
+        });
         expect(markProcessedMock).not.toHaveBeenCalled();
         expect(warn).toHaveBeenCalledWith(
             "[payments] webhook-handler-failed eventType=customer.subscription.updated"
@@ -464,7 +468,11 @@ describe("POST /webhooks/payments — idempotência", () => {
         const response = await POST(request());
 
         expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "PAYMENTS_WEBHOOK_HANDLER_FAILED" },
+        });
         expect(applySubscriptionStateMock).not.toHaveBeenCalled();
+        expect(markProcessedMock).not.toHaveBeenCalled();
     });
 });
 
@@ -1120,7 +1128,10 @@ describe("POST /webhooks/payments — assinatura real da Stripe", () => {
             request(payload.replace('"active"', '"canceled"'))
         );
 
-        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "VALIDATION_FAILED" },
+        });
         expect(applySubscriptionStateMock).not.toHaveBeenCalled();
         expect(markProcessedMock).not.toHaveBeenCalled();
     });
@@ -1141,7 +1152,38 @@ describe("POST /webhooks/payments — assinatura real da Stripe", () => {
 
         const response = await POST(request(payload));
 
-        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "VALIDATION_FAILED" },
+        });
         expect(applySubscriptionStateMock).not.toHaveBeenCalled();
+        expect(markProcessedMock).not.toHaveBeenCalled();
+    });
+
+    it("recusa a assinatura com carimbo de tempo fora da tolerância", async () => {
+        const stripe = await realStripe();
+        getStripeMock.mockReturnValue(stripe);
+        getWebhookSecretMock.mockReturnValue(WEBHOOK_SECRET);
+        const payload = JSON.stringify(
+            subscriptionEvent("customer.subscription.updated")
+        );
+        const anHourAgo = Math.floor(Date.now() / MS) - ONE_HOUR_IN_SECONDS;
+        withSignature(
+            stripe.webhooks.generateTestHeaderString({
+                payload,
+                secret: WEBHOOK_SECRET,
+                timestamp: anHourAgo,
+            })
+        );
+
+        const response = await POST(request(payload));
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "VALIDATION_FAILED" },
+        });
+        expect(applySubscriptionStateMock).not.toHaveBeenCalled();
+        expect(markProcessedMock).not.toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith("[payments] webhook-failed");
     });
 });

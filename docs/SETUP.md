@@ -69,7 +69,7 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 | `NEXT_PUBLIC_API_URL` | `app`, `web`, `api` | Base URL do `@repo/sdk`. Em dev: `http://localhost:3002`. **Sem isto o front não fala com a API.** |
 | `NEXT_PUBLIC_APP_URL` | todos | URL do painel. Link "Ir para o painel" (web, modo subscription), redirect comum→painel, e **base das URLs de retorno do Stripe checkout/portal** (api). |
 | `NEXT_PUBLIC_WEB_URL` | todos | URL da web. Redirect do comum → web no modo `simple`. |
-| `NEXT_PUBLIC_DOCS_URL` | `app`, `web` | Link de Documentação no header (opcional; oculto se vazio). |
+| `NEXT_PUBLIC_DOCS_URL` | `web` | Link de Documentação no header e no footer da landing, em aba nova (opcional; oculto se vazio). Com o link, a barra completa do header aparece a partir de 1280 px. |
 | `CORS_ORIGIN` | `api` | **Lista de origens separada por vírgula** (`https://app.example.com,https://example.com`) autorizadas a chamar a API pelo browser. **Obrigatória em produção**: sem ela a API não sobe (`apps/api/instrumentation.ts`). Fora de produção, vazia = `http://localhost:3000,http://localhost:3001`. **Não existe coringa.** Requisição sem header `Origin` (servidor→servidor, prefetch RSC) passa sem cabeçalho de CORS; origem fora da lista recebe `403 AUTH_FORBIDDEN_ORIGIN`. |
 
 > ⚠️ **Preview deploys**: o domínio efêmero (`*.vercel.app`) não está em `CORS_ORIGIN` e o browser será recusado. Acrescente a origem do preview à variável do ambiente de preview — mesma armadilha dos *Authorized domains* do Firebase.

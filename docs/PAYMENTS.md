@@ -96,6 +96,16 @@ acima de 5 000 assinaturas vigentes, vale trocar por um documento de contagem ma
 
 ## Eventos de webhook
 
+**Assinatura recusada.** Sem o header `stripe-signature`, ou com uma assinatura que não confere (segredo
+errado, corpo alterado, carimbo de tempo fora da tolerância de 300 s do SDK da Stripe), a rota responde
+`400 { "error": { "code": "VALIDATION_FAILED" } }`, registra `webhook-failed` e não roda handler nem marca o
+evento. A resposta não repete a mensagem da Stripe, que pode citar o segredo. Para a Stripe, um `400` é falha
+como um `5xx`: ela reentrega por até três dias e assina cada tentativa de novo
+([documentação de webhooks](https://docs.stripe.com/webhooks), lida em 2026-10-14). Um
+`STRIPE_WEBHOOK_SECRET` errado aparece no painel de entregas como `4xx`, e corrigir o segredo dentro desse
+prazo recupera os eventos. Alarme que só olha `5xx` não pega esse caso; o sinal é a linha `webhook-failed`
+no log.
+
 | Evento | Ação |
 |--------|------|
 | `checkout.session.completed` | Liga o `customer` ao perfil de `client_reference_id` (ou `metadata.profileId`) se o vínculo faltar |
@@ -108,8 +118,9 @@ acima de 5 000 assinaturas vigentes, vale trocar por um documento de contagem ma
 cancelamento real chega como `customer.subscription.deleted`.
 
 **Idempotência e ordem.** Evento com `id` já processado responde 200 `{ duplicate: true }` sem rodar
-handler. O evento é marcado só depois de o handler terminar; se o handler lança, a rota responde 500 e a
-Stripe reentrega. A escrita do snapshot segue `decideSubscriptionWrite`:
+handler. O evento é marcado só depois de o handler terminar; se o handler (ou a leitura do dedupe) lança, a rota
+responde `500 { "error": { "code": "PAYMENTS_WEBHOOK_HANDLER_FAILED" } }`, registra `webhook-handler-failed`
+e a Stripe reentrega. A escrita do snapshot segue `decideSubscriptionWrite`:
 
 1. Nada gravado, ou outra assinatura gravada: aplica, a menos que a gravada esteja viva e a nova não (um
    `deleted` atrasado de uma assinatura antiga não derruba a atual).

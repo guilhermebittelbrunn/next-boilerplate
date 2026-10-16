@@ -17,9 +17,11 @@ export const env = createEnv({
         NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: z.string().optional(),
         NEXT_PUBLIC_API_URL: z.string().optional(),
         NEXT_PUBLIC_PRIVACY_CONTACT: z.string().optional(),
-        // Where every call to action sends a visitor. Same reason as above: the value
-        // `core()` declares would not reach the resolved object.
+        // Where every call to action sends a visitor, and the docs link of the header
+        // and footer. Same reason as above: the values `core()` declares would not
+        // reach the resolved object.
         NEXT_PUBLIC_APP_URL: z.string().optional(),
+        NEXT_PUBLIC_DOCS_URL: z.string().optional(),
     },
     runtimeEnv: {
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:
@@ -29,6 +31,7 @@ export const env = createEnv({
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
         NEXT_PUBLIC_PRIVACY_CONTACT: process.env.NEXT_PUBLIC_PRIVACY_CONTACT,
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || undefined,
+        NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL || undefined,
     },
     skipValidation: true,
 });

@@ -233,16 +233,23 @@ async function dispatch(
     }
 }
 
-const failure = () =>
+const signatureRejected = () =>
     NextResponse.json(
-        { message: "something went wrong", ok: false },
+        { error: { code: "VALIDATION_FAILED" } },
+        { status: HTTP_STATUS.BAD_REQUEST }
+    );
+
+const handlerFailed = () =>
+    NextResponse.json(
+        { error: { code: "PAYMENTS_WEBHOOK_HANDLER_FAILED" } },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
 
 /**
- * Answering 503 while unconfigured makes Stripe keep retrying for up to three days, so no
- * event is lost while a fork finishes setting up. An event is marked processed only after
- * its handler finished: a failure answers 500 and Stripe delivers it again.
+ * Stripe retries any answer outside 2xx for up to three days, signing each attempt again.
+ * Answering 503 while unconfigured means no event is lost while a fork finishes setting up.
+ * A missing or mismatched signature answers 400: the request is refused, not a server fault.
+ * An event is marked processed only after its handler finished: a failure answers 500.
  */
 export const POST = async (request: Request): Promise<Response> => {
     const stripe = getStripe();
@@ -270,7 +277,7 @@ export const POST = async (request: Request): Promise<Response> => {
         event = stripe.webhooks.constructEvent(body, signature, secret);
     } catch {
         logEvent("payments", "webhook-failed", { requestId });
-        return failure();
+        return signatureRejected();
     }
 
     try {
@@ -285,7 +292,7 @@ export const POST = async (request: Request): Promise<Response> => {
             eventType: event.type,
             requestId,
         });
-        return failure();
+        return handlerFailed();
     }
 
     return NextResponse.json({ ok: true });

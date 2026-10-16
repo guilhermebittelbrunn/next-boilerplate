@@ -32,6 +32,25 @@ import { apiClient } from "@/shared/lib/client";
 import { WEB_PATHS } from "../../paths";
 import { LanguageSwitcher } from "./language-switcher";
 
+// A fourth link on the left does not fit beside a centred brand at 1024 px, so with
+// the docs link configured the full bar only starts at 1280 px.
+const FULL_BAR_FROM = {
+    lg: {
+        row: "lg:grid lg:grid-cols-[1fr_minmax(0,auto)_1fr]",
+        nav: "lg:flex",
+        brand: "lg:justify-center",
+        menu: "lg:hidden",
+    },
+    xl: {
+        row: "xl:grid xl:grid-cols-[1fr_minmax(0,auto)_1fr]",
+        nav: "xl:flex",
+        brand: "xl:justify-center",
+        menu: "xl:hidden",
+    },
+} as const;
+
+const isExternal = (href: string) => href.startsWith("http");
+
 export const Header = () => {
     const { dictionary, locale } = getDictionary();
     const brand = getBrand();
@@ -69,20 +88,34 @@ export const Header = () => {
         },
     ];
 
-    if (env.NEXT_PUBLIC_DOCS_URL) {
+    const docsUrl = env.NEXT_PUBLIC_DOCS_URL;
+    const fullBar = FULL_BAR_FROM[docsUrl ? "xl" : "lg"];
+
+    if (docsUrl) {
         navigationItems.push({
             title: dictionary.components.header.docs,
-            href: env.NEXT_PUBLIC_DOCS_URL,
+            href: docsUrl,
             description: "",
         });
     }
 
     const [isOpen, setOpen] = useState(false);
+    const closeMenu = () => setOpen(false);
 
     return (
         <header className="sticky top-0 left-0 z-40 w-full border-b bg-background px-4 md:px-2">
-            <div className="container relative mx-auto flex min-h-20 flex-row items-center gap-4 lg:grid lg:grid-cols-[1fr_minmax(0,auto)_1fr]">
-                <div className="hidden flex-row items-center justify-start gap-4 lg:flex">
+            <div
+                className={cn(
+                    "container relative mx-auto flex min-h-20 flex-row items-center gap-4",
+                    fullBar.row
+                )}
+            >
+                <div
+                    className={cn(
+                        "hidden flex-row items-center justify-start gap-4",
+                        fullBar.nav
+                    )}
+                >
                     <NavigationMenu className="flex items-start justify-start">
                         <NavigationMenuList className="flex flex-row justify-start gap-4">
                             {navigationItems.map((item) => (
@@ -94,7 +127,19 @@ export const Header = () => {
                                                 variant: "ghost",
                                             })}
                                         >
-                                            <Link href={item.href}>
+                                            <Link
+                                                href={item.href}
+                                                rel={
+                                                    isExternal(item.href)
+                                                        ? "noopener noreferrer"
+                                                        : undefined
+                                                }
+                                                target={
+                                                    isExternal(item.href)
+                                                        ? "_blank"
+                                                        : undefined
+                                                }
+                                            >
                                                 {item.title}
                                             </Link>
                                         </NavigationMenuLink>
@@ -164,7 +209,7 @@ export const Header = () => {
                         </NavigationMenuList>
                     </NavigationMenu>
                 </div>
-                <div className="flex items-center gap-2 lg:justify-center">
+                <div className={cn("flex items-center gap-2", fullBar.brand)}>
                     <Avatar className="size-[18px] rounded-none">
                         <AvatarImage alt="" src={brand.logoUrl ?? undefined} />
                         <AvatarFallback className="rounded-none bg-transparent text-current">
@@ -257,7 +302,12 @@ export const Header = () => {
                     )}
                 </div>
 
-                <div className="flex w-12 shrink items-end justify-end lg:hidden">
+                <div
+                    className={cn(
+                        "flex w-12 shrink items-end justify-end",
+                        fullBar.menu
+                    )}
+                >
                     <Button
                         aria-expanded={isOpen}
                         aria-label={dictionary.components.header.menu}
@@ -279,13 +329,14 @@ export const Header = () => {
                                             <Link
                                                 className="flex items-center justify-between"
                                                 href={item.href}
+                                                onClick={closeMenu}
                                                 rel={
-                                                    item.href.startsWith("http")
+                                                    isExternal(item.href)
                                                         ? "noopener noreferrer"
                                                         : undefined
                                                 }
                                                 target={
-                                                    item.href.startsWith("http")
+                                                    isExternal(item.href)
                                                         ? "_blank"
                                                         : undefined
                                                 }
@@ -305,6 +356,7 @@ export const Header = () => {
                                                 className="flex items-center justify-between"
                                                 href={subItem.href}
                                                 key={subItem.title}
+                                                onClick={closeMenu}
                                             >
                                                 <span className="text-muted-foreground">
                                                     {subItem.title}

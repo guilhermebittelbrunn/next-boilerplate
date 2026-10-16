@@ -565,7 +565,7 @@ curl -s -o /dev/null -w '%{http_code}\n' https://<api>/payments/plans      # 401
 curl -s -o /dev/null -w '%{http_code}\n' https://<api>/payments/summary    # 401
 
 # webhook sem assinatura: a configuração está lida (sem chaves seria 503)
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<api>/webhooks/payments -d '{}'   # 500
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<api>/webhooks/payments -d '{}'   # 400
 ```
 
 Com a Stripe CLI logada na conta de teste, `stripe trigger customer.subscription.created` cria um cliente e

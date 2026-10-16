@@ -7,6 +7,7 @@ export const sharedUtilsTranslations = {
         apiErrors: {
             AUTH_MISSING_BEARER: "Token de autenticação ausente.",
             AUTH_INVALID_TOKEN: "Sessão inválida ou expirada.",
+            AUTH_INVALID_CREDENTIALS: "E-mail ou senha incorretos.",
             ADMIN_FORBIDDEN: "Você não tem permissão para esta ação.",
             AUTH_REQUEST_USER_ID_MISMATCH: "Contexto da requisição inválido.",
             AUTH_REQUEST_USER_ROLE_MISMATCH: "Contexto da requisição inválido.",
@@ -71,6 +72,8 @@ export const sharedUtilsTranslations = {
                 "Não há assinatura para gerenciar nesta conta.",
             PAYMENTS_PROVIDER_UNAVAILABLE:
                 "O serviço de pagamento não respondeu. Tente de novo em instantes.",
+            PAYMENTS_WEBHOOK_HANDLER_FAILED:
+                "Não foi possível processar o evento de pagamento.",
             PLAN_SUBSCRIPTION_REQUIRED: "Esta ação exige uma assinatura ativa.",
             PLAN_FEATURE_REQUIRED: "O seu plano não inclui este recurso.",
             ONBOARDING_STEP_NOT_SKIPPABLE: "Este passo não pode ser pulado.",
@@ -139,6 +142,7 @@ export const sharedUtilsTranslations = {
         apiErrors: {
             AUTH_MISSING_BEARER: "Missing authentication token.",
             AUTH_INVALID_TOKEN: "Invalid or expired session.",
+            AUTH_INVALID_CREDENTIALS: "Incorrect email or password.",
             ADMIN_FORBIDDEN: "You do not have permission for this action.",
             AUTH_REQUEST_USER_ID_MISMATCH: "Invalid request context.",
             AUTH_REQUEST_USER_ROLE_MISMATCH: "Invalid request context.",
@@ -202,6 +206,8 @@ export const sharedUtilsTranslations = {
                 "There is no subscription to manage on this account.",
             PAYMENTS_PROVIDER_UNAVAILABLE:
                 "The payment service did not respond. Try again in a moment.",
+            PAYMENTS_WEBHOOK_HANDLER_FAILED:
+                "The payment event could not be processed.",
             PLAN_SUBSCRIPTION_REQUIRED:
                 "This action requires an active subscription.",
             PLAN_FEATURE_REQUIRED: "Your plan does not include this feature.",
@@ -269,6 +275,8 @@ export const sharedUtilsTranslations = {
         apiErrors: {
             AUTH_MISSING_BEARER: "Falta el token de autenticación.",
             AUTH_INVALID_TOKEN: "Sesión inválida o expirada.",
+            AUTH_INVALID_CREDENTIALS:
+                "Correo electrónico o contraseña incorrectos.",
             ADMIN_FORBIDDEN: "No tienes permiso para esta acción.",
             AUTH_REQUEST_USER_ID_MISMATCH: "Contexto de solicitud no válido.",
             AUTH_REQUEST_USER_ROLE_MISMATCH: "Contexto de solicitud no válido.",
@@ -334,6 +342,8 @@ export const sharedUtilsTranslations = {
                 "No hay ninguna suscripción que gestionar en esta cuenta.",
             PAYMENTS_PROVIDER_UNAVAILABLE:
                 "El servicio de pago no respondió. Inténtalo de nuevo en unos instantes.",
+            PAYMENTS_WEBHOOK_HANDLER_FAILED:
+                "No se pudo procesar el evento de pago.",
             PLAN_SUBSCRIPTION_REQUIRED:
                 "Esta acción requiere una suscripción activa.",
             PLAN_FEATURE_REQUIRED: "Tu plan no incluye esta función.",
