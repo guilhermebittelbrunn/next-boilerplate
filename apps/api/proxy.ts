@@ -40,6 +40,10 @@ const securityOptions = buildApiOptions();
  * Identity Toolkit quota on each password attempt. The email change request spends it
  * too, and sends two emails on top.
  *
+ * `/payments/catalog` stays off the list on purpose: the landing's server asks for it on
+ * behalf of every visitor, from one address, so a per-address budget would throttle the
+ * page itself. Its cache already keeps the provider out of the request path.
+ *
  * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
 const RATE_LIMITED_PATHS = [
