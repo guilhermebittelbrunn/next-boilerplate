@@ -6,8 +6,8 @@ import {
     CardTitle,
 } from "@repo/design-system/components/ui/card";
 import type { BillingRevenueDTO } from "@repo/sdk/src/types";
+import { formatPlanPrice } from "@repo/shared/utils/helpers/formatPlanPrice";
 import { formatUtcDate, formatUtcMonth } from "@/shared/lib/billingInsights";
-import { formatPlanPrice } from "@/shared/lib/formatPlanPrice";
 
 export type BillingRevenueCopy = {
     title: string;

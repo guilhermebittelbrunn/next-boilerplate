@@ -151,6 +151,19 @@ const arcjetMiddleware = async (request: NextRequest) => {
     }
 };
 
+const PLACEHOLDER_ORIGIN = "http://placeholder.invalid";
+
+/**
+ * The target may carry a query, and assigning it to `pathname` would escape the `?`.
+ * Only the path and query of the parsed target are copied, so the response keeps the
+ * host the request came to.
+ */
+function pointAt(url: URL, target: string): void {
+    const parsed = new URL(target, PLACEHOLDER_ORIGIN);
+    url.pathname = parsed.pathname;
+    url.search = parsed.search;
+}
+
 function pathWithoutLocale(pathname: string, locale: string): string {
     const stripped = pathname.replace(new RegExp(`^/${locale}(?=/|$)`), "");
     return stripped === "" ? "/" : stripped;
@@ -192,7 +205,7 @@ async function isEndedElsewhere(
 }
 
 async function route(request: NextRequest) {
-    const { pathname } = request.nextUrl;
+    const { pathname, search } = request.nextUrl;
 
     if (isStaticAssetPath(pathname)) {
         return passStaticAsset(request);
@@ -210,7 +223,10 @@ async function route(request: NextRequest) {
             locales.includes(currentLocale as "pt-br" | "en" | "es")
         )
     ) {
-        const newUrl = new URL(`/${defaultLocale}${pathname}`, request.url);
+        const newUrl = new URL(
+            `/${defaultLocale}${pathname}${search}`,
+            request.url
+        );
         cookieStore.set("x-locale", defaultLocale);
         return NextResponse.redirect(newUrl);
     }
@@ -227,7 +243,8 @@ async function route(request: NextRequest) {
     if (!(isPublic || sessionUser)) {
         const url = request.nextUrl.clone();
         url.pathname = `/${currentLocale}/sign-in`;
-        url.searchParams.set("redirect", pathname);
+        url.search = "";
+        url.searchParams.set("redirect", `${pathname}${search}`);
         return NextResponse.redirect(url);
     }
 
@@ -245,8 +262,7 @@ async function route(request: NextRequest) {
                 `/${currentLocale}`
             );
             const redirectUrl = request.nextUrl.clone();
-            redirectUrl.search = "";
-            redirectUrl.pathname = target;
+            pointAt(redirectUrl, target);
             return NextResponse.redirect(redirectUrl);
         }
     }
@@ -257,10 +273,11 @@ async function route(request: NextRequest) {
         return arcjetResponse;
     }
 
-    // Layouts cannot read the URL, so the path and its locale travel as request headers.
-    // Set, never appended: a value the browser sent must not reach the server components.
+    // Layouts cannot read the URL, so the path, its query and its locale travel as request
+    // headers. Set, never appended: a value the browser sent must not reach the server
+    // components.
     const requestHeaders = new Headers(request.headers);
-    requestHeaders.set(APP_PATH_HEADER, pathname);
+    requestHeaders.set(APP_PATH_HEADER, `${pathname}${search}`);
     requestHeaders.set(LOCALE_REQUEST_HEADER, currentLocale);
     return NextResponse.next({ request: { headers: requestHeaders } });
 }

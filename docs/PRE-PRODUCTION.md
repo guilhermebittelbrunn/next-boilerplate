@@ -411,7 +411,7 @@ pelo próprio repositório**, mais dois do Google:
 | `bp:panel-request-role` | `apps/app/shared/lib/panelState.ts:18` | estritamente necessário (estado de painel) |
 | `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
 | `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
-| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:214,218` · `apps/web/proxy.ts:111,115` | preferência |
+| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:230,234` · `apps/web/proxy.ts:111,115` | preferência |
 | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:21` | preferência |
 | `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:29` | preferência |
 | `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
@@ -472,8 +472,12 @@ conta Stripe de cada fork, e nenhum teste alcança essa conta.
 `{ "enabled": false, "plans": [] }`, checkout e portal respondem 503 `PAYMENTS_NOT_CONFIGURED`, e o webhook
 responde 503 com o mesmo código. Com só uma das duas chaves, a API loga no boot
 `[payments] billing is DISABLED (no <chave que falta>)` e continua desligada. Sem catálogo mas com as
-chaves, a aba diz que não há planos. Com o endpoint numa versão de API anterior a 2025-03-31, a assinatura
-é gravada mas sem data de renovação (`currentPeriodEnd: null`).
+chaves, a aba diz que não há planos. Em qualquer desses casos, a `/pricing` da landing mostra o estado vazio
+"Planos em breve", sem preço, ao lado do card de contato; `GET /payments/catalog` responde o mesmo
+`{ "enabled": false, "plans": [] }` sem sessão. Com a cobrança ligada, um preço novo ou arquivado leva até
+uma hora para mudar na landing, que lê o catálogo por um cache em memória da API. Com o endpoint numa
+versão de API anterior a 2025-03-31, a assinatura é gravada mas sem data de renovação
+(`currentPeriodEnd: null`).
 
 Na home do admin, com a cobrança desligada ou no modo `simple`, a seção de cobrança não aparece e
 `GET /payments/summary` responde 200 `{ "data": { "enabled": false } }` sem ler as coleções de cobrança. Com a cobrança
@@ -563,6 +567,9 @@ O custo é uma chamada a mais à Stripe por checkout. Para saber se já acontece
 # sem sessão: o guard responde antes da Stripe
 curl -s -o /dev/null -w '%{http_code}\n' https://<api>/payments/plans      # 401
 curl -s -o /dev/null -w '%{http_code}\n' https://<api>/payments/summary    # 401
+
+# catálogo público, sem sessão: 200 com os planos que a landing mostra ("enabled": true quando ligada)
+curl -s https://<api>/payments/catalog
 
 # webhook sem assinatura: a configuração está lida (sem chaves seria 503)
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<api>/webhooks/payments -d '{}'   # 400

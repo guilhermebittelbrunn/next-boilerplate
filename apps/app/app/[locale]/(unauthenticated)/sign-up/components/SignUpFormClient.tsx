@@ -22,6 +22,7 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
+import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { apiClient } from "@/shared/lib/client";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
 import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
@@ -30,7 +31,13 @@ import {
     type SignUpFormValues,
 } from "../validations/signUpSchema";
 
-export default function SignUpFormClient() {
+type SignUpFormClientProps = {
+    redirect?: string | null;
+};
+
+export default function SignUpFormClient({
+    redirect = null,
+}: SignUpFormClientProps) {
     const router = useRouter();
     const { dictionary, locale } = getDictionary();
     const { errorAlert, successAlert } = useAlert();
@@ -222,7 +229,7 @@ export default function SignUpFormClient() {
                     </span>
                     <Link
                         className="text-primary hover:underline"
-                        href={`/${locale}/sign-in`}
+                        href={withRedirectQuery(`/${locale}/sign-in`, redirect)}
                     >
                         {dictionary.apps.app.pages.signUp.signIn}
                     </Link>

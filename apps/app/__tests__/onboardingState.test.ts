@@ -178,3 +178,19 @@ describe("withDestinationLocale", () => {
         expect(withDestinationLocale("/entities", "en")).toBe("/entities");
     });
 });
+
+describe("a destination carrying a query through the onboarding", () => {
+    const billingWithPlan = "/pt-br/account?tab=billing&plan=price_1";
+
+    it("keeps the query when building the detour and when switching the language", () => {
+        expect(buildOnboardingPath("pt-br", billingWithPlan)).toBe(
+            "/pt-br/onboarding?redirect=%2Fpt-br%2Faccount%3Ftab%3Dbilling%26plan%3Dprice_1"
+        );
+        expect(resolveOnboardingDestination(billingWithPlan, "pt-br")).toBe(
+            billingWithPlan
+        );
+        expect(withDestinationLocale(billingWithPlan, "en")).toBe(
+            "/en/account?tab=billing&plan=price_1"
+        );
+    });
+});

@@ -524,3 +524,75 @@ describe("AccountBillingPanel — volta do checkout", () => {
         expect(confirmationMock).toHaveBeenLastCalledWith(false);
     });
 });
+
+describe("AccountBillingPanel — plano escolhido na página de preços", () => {
+    it("põe o selo só no card do plano que veio em ?plan=", () => {
+        searchParamsMock.mockReturnValue(
+            new URLSearchParams("tab=billing&plan=price_business")
+        );
+
+        render(<AccountBillingPanel account={accountWith()} />);
+
+        const badges = screen.getAllByText(billingCopy.chosenPlan);
+        expect(badges).toHaveLength(1);
+        const highlightedCard = badges[0].closest('[data-slot="card"]');
+        expect(highlightedCard?.textContent).toContain("Business");
+        expect(highlightedCard?.textContent).not.toContain("Pro");
+        for (const button of screen.getAllByRole("button", {
+            name: billingCopy.subscribe,
+        })) {
+            expect((button as HTMLButtonElement).disabled).toBe(false);
+        }
+    });
+
+    it("durante personificação, mostra o selo e mantém assinar desligado", () => {
+        panelMock.mockReturnValue({ isImpersonating: true });
+        searchParamsMock.mockReturnValue(
+            new URLSearchParams("tab=billing&plan=price_business")
+        );
+
+        render(<AccountBillingPanel account={accountWith()} />);
+
+        const badges = screen.getAllByText(billingCopy.chosenPlan);
+        expect(badges).toHaveLength(1);
+        expect(badges[0].closest('[data-slot="card"]')?.textContent).toContain(
+            "Business"
+        );
+        for (const button of screen.getAllByRole("button", {
+            name: billingCopy.subscribe,
+        })) {
+            expect((button as HTMLButtonElement).disabled).toBe(true);
+        }
+    });
+
+    it("não destaca nada quando o plano não está no catálogo", () => {
+        searchParamsMock.mockReturnValue(
+            new URLSearchParams("tab=billing&plan=price_unknown")
+        );
+
+        render(<AccountBillingPanel account={accountWith()} />);
+
+        expect(screen.queryByText(billingCopy.chosenPlan)).toBeNull();
+        expect(
+            screen.getAllByRole("button", { name: billingCopy.subscribe })
+        ).toHaveLength(2);
+    });
+
+    it("com assinatura viva, não lista planos nem mostra o selo", () => {
+        searchParamsMock.mockReturnValue(
+            new URLSearchParams("tab=billing&plan=price_business")
+        );
+
+        render(
+            <AccountBillingPanel
+                account={accountWith({ subscription: subscription() })}
+            />
+        );
+
+        expect(screen.queryByText(billingCopy.chosenPlan)).toBeNull();
+        expect(
+            screen.queryByRole("button", { name: billingCopy.subscribe })
+        ).toBeNull();
+        expect(screen.getByText(billingCopy.currentPlan)).toBeTruthy();
+    });
+});

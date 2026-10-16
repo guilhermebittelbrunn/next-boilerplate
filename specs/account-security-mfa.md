@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-07
+updated: 2026-10-16
 ---
 
 # MFA, sessões ativas e política de senha
@@ -222,7 +222,7 @@ eficácia.
       `trackSession` em `session-tracker.ts:106`). O "Sair" ficou local (`session-routes.ts:174-183`). Quatro
       códigos novos nos 3 idiomas (`AUTH_SESSION_REVOKED`, `ACCOUNT_SESSION_NOT_FOUND`,
       `ACCOUNT_SESSION_IS_CURRENT`, `ACCOUNT_SESSION_UNIDENTIFIED`, a partir de
-      `translations/packages/shared/utils.ts:45`).
+      `translations/packages/shared/utils.ts:46`, remedida em 2026-10-16 depois da PR #46).
       **Deriva, a spec estava errada sobre o que o Firebase permite:** encerrar uma sessão corta a API e o
       cookie, mas o refresh token daquele aparelho continua válido no Firebase, que só revoga a conta inteira.
       Firestore e Storage negam todo cliente, então o aparelho encerrado não alcança dado por fora da API. A
@@ -236,9 +236,9 @@ eficácia.
       8`, `PASSWORD_MAX_LENGTH = 1024`, `EXISTING_PASSWORD_MIN_LENGTH = 6` para login e senha atual). Na borda
       da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
-      e na redefinição (`auth.schema.ts:23`, `:28`, `:82-83`), na troca (`account.schema.ts:47-48`, `:136-137`, âncoras remedidas em 2026-09-30)
+      e na redefinição (`auth.schema.ts:24`, `:29`, `:89-90`, remedidas em 2026-10-16 depois da PR #46), na troca (`account.schema.ts:47-48`, `:136-137`, âncoras remedidas em 2026-09-30)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:85`, `:217`, `:349`, remedidas em 2026-10-04 depois da PR #39). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:88`, `:223`, `:359`, remedidas em 2026-10-16 depois da PR #46). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API

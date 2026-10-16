@@ -35,6 +35,16 @@ function signUpRequest(): NextRequest {
     } as unknown as NextRequest;
 }
 
+/** The landing's server asks for the catalog without an `Origin`, on behalf of every visitor. */
+function catalogRequest(): NextRequest {
+    return {
+        method: "GET",
+        headers: new Headers(),
+        url: "http://localhost:3002/payments/catalog",
+        nextUrl: { pathname: "/payments/catalog" },
+    } as unknown as NextRequest;
+}
+
 async function loadProxyWithKey(arcjetKey: string) {
     vi.stubEnv("ARCJET_KEY", arcjetKey);
     envMock.CORS_ORIGIN = APP_ORIGIN;
@@ -92,5 +102,23 @@ describe("proxy with the real rate limiter", () => {
         expect(arcjetMock).toHaveBeenCalledWith(
             expect.objectContaining({ key: "ajkey_test" })
         );
+    });
+
+    it("lets the public catalog through without asking the limiter, even with the budget spent", async () => {
+        protectMock.mockResolvedValue({
+            isDenied: () => true,
+            reason: {
+                isRateLimit: () => true,
+                isBot: () => false,
+                reset: RETRY_AFTER_SECONDS,
+            },
+        });
+        const proxy = await loadProxyWithKey("ajkey_test");
+
+        const response = await proxy(catalogRequest());
+
+        expect(response.status).not.toBe(TOO_MANY_REQUESTS);
+        expect(response.headers.get("x-middleware-next")).toBe("1");
+        expect(protectMock).not.toHaveBeenCalled();
     });
 });

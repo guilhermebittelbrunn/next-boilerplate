@@ -54,6 +54,46 @@ describe("postAuthRedirectTarget", () => {
         );
     });
 
+    it("rejects a path whose dot segments climb out of the locale to another host", () => {
+        for (const target of [
+            "/pt-br/../\\evil.com",
+            "/pt-br/%2e%2e/\\evil.com",
+            "/pt-br/%2e%2e/%5cevil.com",
+            "/pt-br/..\\\\evil.com",
+            "/pt-br/../\t/evil.com",
+            "/pt-br/x/../../\\evil.com",
+            "%2Fpt-br%2F..%2F%5Cevil.com",
+            "%2Fpt-br%2F%252e%252e%2F%255cevil.com",
+        ]) {
+            expect(postAuthRedirectTarget(target, FALLBACK)).toBe(FALLBACK);
+        }
+    });
+
+    it("rejects a path whose dot segments leave every locale", () => {
+        expect(postAuthRedirectTarget("/pt-br/..", FALLBACK)).toBe(FALLBACK);
+        expect(postAuthRedirectTarget("/pt-br/../entities", FALLBACK)).toBe(
+            FALLBACK
+        );
+    });
+
+    it("accepts dot segments that stay inside a locale, returning the path unchanged", () => {
+        expect(postAuthRedirectTarget("/pt-br/x/../entities", FALLBACK)).toBe(
+            "/pt-br/x/../entities"
+        );
+        expect(postAuthRedirectTarget("/pt-br/../en/entities", FALLBACK)).toBe(
+            "/pt-br/../en/entities"
+        );
+    });
+
+    it("keeps the query of an accepted deep link", () => {
+        expect(
+            postAuthRedirectTarget(
+                "%2Fpt-br%2Faccount%3Ftab%3Dbilling%26plan%3Dprice_1",
+                FALLBACK
+            )
+        ).toBe("/pt-br/account?tab=billing&plan=price_1");
+    });
+
     it("rejects a relative path", () => {
         expect(postAuthRedirectTarget("entities", FALLBACK)).toBe(FALLBACK);
         expect(postAuthRedirectTarget("../pt-br", FALLBACK)).toBe(FALLBACK);

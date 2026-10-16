@@ -116,6 +116,16 @@ describe("proxy locale", () => {
         expect(locationOf(response)).toBe("/pt-br/entities");
     });
 
+    it("keeps the query when it prefixes the locale", async () => {
+        const response = await proxy(
+            anonymous("/account?tab=billing&plan=price_1")
+        );
+
+        expect(locationOf(response)).toBe(
+            "/pt-br/account?tab=billing&plan=price_1"
+        );
+    });
+
     it("stores the locale of the path being served", async () => {
         await proxy(anonymous("/pt-br/sign-in"));
 
@@ -175,6 +185,16 @@ describe("proxy default deny", () => {
         );
     });
 
+    it("carries the query inside the deep link instead of leaving it loose on sign-in", async () => {
+        const response = await proxy(
+            anonymous("/pt-br/account?tab=billing&plan=price_1")
+        );
+
+        expect(locationOf(response)).toBe(
+            "/pt-br/sign-in?redirect=%2Fpt-br%2Faccount%3Ftab%3Dbilling%26plan%3Dprice_1"
+        );
+    });
+
     it("protects a route nobody listed as public", async () => {
         const response = await proxy(anonymous("/pt-br/brand-new-feature"));
 
@@ -228,6 +248,18 @@ describe("proxy bounce off the public paths", () => {
         expect(locationOf(response)).toBe("/pt-br/entities/create");
     });
 
+    it("keeps the query of the deep link, on the host the request came to", async () => {
+        const response = await proxy(
+            signedIn(
+                "/pt-br/sign-up?redirect=%2Fpt-br%2Faccount%3Ftab%3Dbilling%26plan%3Dprice_1"
+            )
+        );
+
+        expect(response.headers.get("location")).toBe(
+            `${ORIGIN}/pt-br/account?tab=billing&plan=price_1`
+        );
+    });
+
     it("falls back to the locale home with no deep link", async () => {
         const response = await proxy(signedIn("/pt-br/sign-in"));
 
@@ -255,12 +287,41 @@ describe("proxy bounce off the public paths", () => {
         for (const redirect of [
             "https%3A%2F%2Fevil.example.com",
             "%2F%2Fevil.example.com",
+            "%2F%5Cevil.example.com",
             "%2Fno-locale%2Fpath",
         ]) {
             const response = await proxy(
                 signedIn(`/pt-br/sign-in?redirect=${redirect}`)
             );
 
+            expect(locationOf(response)).toBe("/pt-br");
+        }
+    });
+
+    it("never lets a backslash in the deep link change the host", async () => {
+        const response = await proxy(
+            signedIn("/pt-br/sign-in?redirect=%2Fpt-br%2F%5Cevil.example.com")
+        );
+
+        expect(response.headers.get("location")?.startsWith(`${ORIGIN}/`)).toBe(
+            true
+        );
+        expect(locationOf(response)?.startsWith("//")).toBe(false);
+    });
+
+    it("refuses a deep link whose dot segments resolve to a protocol-relative location", async () => {
+        for (const redirect of [
+            "%2Fpt-br%2F..%2F%5Cevil.example.com",
+            "%2Fpt-br%2F%252e%252e%2F%255cevil.example.com",
+            "%2Fpt-br%2F..%2F%09%2Fevil.example.com",
+            "%2Fpt-br%2F%2e%2e%2F%5Cevil.example.com",
+            "%2Fpt-br%2F..%5C%5Cevil.example.com",
+        ]) {
+            const response = await proxy(
+                signedIn(`/pt-br/sign-in?redirect=${redirect}`)
+            );
+
+            expect(locationOf(response)?.startsWith("//")).toBe(false);
             expect(locationOf(response)).toBe("/pt-br");
         }
     });
@@ -306,6 +367,16 @@ describe("proxy requested path", () => {
 
         expect(response.headers.get("x-middleware-request-x-app-path")).toBe(
             "/pt-br/entities/create"
+        );
+    });
+
+    it("forwards the query with the path, so a detour can bring the visitor back to it", async () => {
+        const response = await proxy(
+            signedIn("/pt-br/account?tab=billing&plan=price_1")
+        );
+
+        expect(response.headers.get("x-middleware-request-x-app-path")).toBe(
+            "/pt-br/account?tab=billing&plan=price_1"
         );
     });
 

@@ -5,7 +5,7 @@ lens: produto
 panel: [next-forge, makerkit, shipfast, supastarter, saas-ui-pro, vercel-platforms, supabase-stripe-starter, open-saas, nextacular, divjoy]
 reference: [better-auth, clerk, workos]
 collected: 2026-08-21
-amended: 2026-09-26
+amended: 2026-10-16
 revalidate_after: 2027-02-21
 confidence: média
 ---
@@ -39,7 +39,7 @@ plataformas de referência (Better-Auth, Clerk, WorkOS) entram só como baseline
 | Exclusão de conta (LGPD/GDPR) | 4/10 | confiança/legal | M |
 | Admin/super-admin (listar, banir) | 4/10 | operacional | M |
 | Onboarding pós-signup multi-step | 3/10 | **muito alto** | M |
-| Notificações in-app + preferências | 3/10 | médio | G |
+| Notificações in-app + preferências | 3/10 (remedido em 2026-10-16: 4/10, ver adendo) | médio | G |
 | MFA/2FA (TOTP/passkey) com UI | 3/10 | médio | M |
 | Dashboard de métricas do produto | 3/10 | médio | M |
 | Feature flags | 2/10 | indireto | P |
@@ -195,3 +195,147 @@ seis do painel não foram verificados neste tema.
 - <https://makerkit.dev/docs/next-supabase-turbo/recipes/subscription-entitlements> · <https://docs.opensaas.sh/general/user-overview/>
 - <https://docs.stripe.com/billing/entitlements.md?dashboard-or-api=api> — Entitlements
 - <https://www.next-forge.com/docs/setup/installation> · <https://makerkit.dev/docs/next-supabase-turbo/configuration/application-configuration> · <https://shipfa.st/docs> · <https://supastarter.dev/docs/nextjs/configuration>
+
+## Adendo de 2026-10-16: login, preços, compra avulsa, notificações e contato
+
+Coletado na descoberta de 2026-10-16, com foco em produto, para sete perguntas que a tabela original não cobria
+ou que precisavam de nova medição. Todas as páginas foram lidas em 2026-10-16.
+
+**Mudança no painel.** O `supabase-stripe-starter` (`vercel/nextjs-subscription-payments`) está arquivado. O
+README diz: "This repo has been sunset and replaced by a new template: https://github.com/nextjs/saas-starter".
+Ele continua no painel como amostra histórica, marcado "arquivado". O sucessor, `nextjs/saas-starter`, entra como
+referência fora da contagem. `vercel-platforms` e `divjoy` não foram verificados em nenhum dos temas abaixo, então
+cada fração tem no mínimo dois "não verificados".
+
+### Página de preços: de onde vêm os planos exibidos
+
+| referência | o que a página mostra | como foi verificado |
+|---|---|---|
+| next-forge | estática: "$40" três vezes, planos escritos no JSX, botões sem checkout | código de `apps/web/app/[locale]/pricing/page.tsx` no repositório |
+| Makerkit | "Pricing table generated from your billing config" | página de features |
+| Supastarter | o hook `usePlanData` "dynamically iterates over the plans defined in your payments config" | doc de planos |
+| ShipFast | "Just add a plan to your `config.js` file to show more" | doc do componente de preços |
+| supabase-stripe-starter (arquivado) | sincronizada dos produtos da Stripe | README |
+| Open SaaS | `PricingPage.tsx` existe; a origem do preço exibido não foi verificada | listagem de `template/app/src/payment` |
+| nextjs/saas-starter (fora da contagem) | `getStripePrices()` e `getStripeProducts()`, `revalidate = 3600`, botão que dispara `checkoutAction` | código de `app/(dashboard)/pricing/page.tsx` |
+| Saas UI, Nextacular | não verificado | — |
+
+**4 de 10** geram a página de uma fonte única (config ou Stripe); 1 é estática (next-forge, de onde este
+repositório herdou a página); 1 tem página com origem não verificada; 4 não verificados. O sucessor do starter da
+Vercel lê a Stripe direto, com cache de uma hora.
+
+### Pagamento avulso (compra única)
+
+| referência | entrega? | evidência |
+|---|---|---|
+| Makerkit | sim, desligado por padrão | pedidos na tabela `orders`; eventos `checkout.session.completed`, `checkout.session.async_payment_failed` e `checkout.session.async_payment_succeeded`; "from version 2.12.0+, orders and subscriptions can coexist" |
+| Supastarter | sim | "the type of the price, can be `subscription` or `one-time`", com exemplo de plano vitalício |
+| ShipFast | sim | "use the `ButtonCheckout` to automatically create a checkout session (one-time payment or subscription)" |
+| Open SaaS | sim, como pacote de créditos | `plans.ts`: `hobby` e `pro` com `kind: "subscription"`, `credits10` com `kind: "credits"` |
+| supabase-stripe-starter (arquivado) | não | README: só preço recorrente |
+| next-forge | não | o pacote de pagamentos não tem UI de compra |
+| Saas UI | não mencionado | a página lista assinatura, preço por assento e cobrança medida |
+| Nextacular, nextjs/saas-starter | não mencionado | — |
+
+**4 de 10** confirmados. Requisito de provedor: o Checkout tem os modos `payment` e `subscription`, e o guia de
+fulfillment da Stripe manda executar a entrega "only once per payment", porque a função "might be called multiple
+times, possibly concurrently", e ouvir também `checkout.session.async_payment_succeeded` para meios de pagamento
+com confirmação posterior. O mesmo guia diz que o webhook é obrigatório: não dá para depender só da página de
+retorno.
+
+O Stripe Entitlements, que o repositório usa para o acesso por plano, é descrito sobre assinatura. A página diz
+"This guide assumes that you're already using Stripe Subscriptions" e "As long as a customer maintains an active
+subscription for a feature, they retain an active entitlement". Se ele concede recurso numa compra avulsa:
+**não confirmado**.
+
+### Entrar com link por e-mail (link mágico)
+
+| referência | entrega? | evidência |
+|---|---|---|
+| Makerkit | sim, desligado por padrão | `NEXT_PUBLIC_AUTH_MAGIC_LINK=false`, "Enable magic link auth" |
+| Supastarter | sim | "better-auth supports magic link (email-based) authentication" |
+| ShipFast | sim, é o padrão | NextAuth com login por link enviado por e-mail |
+| Nextacular | sim, é o único método | `src/lib/server/auth.ts` importa `EmailProvider`; `docs/ARCHITECTURE.md` do projeto: "a single `EmailProvider` (magic link)" (busca de código com `gh`) |
+| supabase-stripe-starter (arquivado) | sim | README |
+| Open SaaS | não | a lista de métodos do Wasp é e-mail, usuário e senha, Google, GitHub, Keycloak, Slack e Discord |
+| next-forge | delega ao Clerk; o padrão não foi verificado | — |
+| Saas UI | o componente de auth suporta; o kit não foi verificado | — |
+
+**5 de 10**, um deles arquivado; 1 confirmado sem. No Firebase, o link por e-mail é gratuito e, na web, não
+depende do Firebase Dynamic Links: o encerramento de 25/08/2025 afetou "email link authentication for mobile
+apps". O Admin SDK gera o link com `generateSignInWithEmailLink`, o que permite enviar pelo provedor de e-mail
+próprio. O e-mail precisa ser o mesmo para o qual o link foi enviado; em outro aparelho, o usuário "must provide
+the associated email again". Projetos criados depois de 28/04/2025 não trazem mais `localhost` como domínio
+autorizado. O emulador de Auth cobre o fluxo.
+
+Ressalva normativa: a NIST SP 800-63B-4, §3.1.3.1, diz que "Email SHALL NOT be used for out-of-band
+authentication". A regra trata de autenticador fora de banda. Quem tem o e-mail já consegue redefinir a senha pelo
+fluxo de recuperação, então o link mágico não baixa o piso de segurança de uma conta sem segundo fator; também não
+serve como segundo fator.
+
+### Vincular métodos de login à mesma conta
+
+| referência | entrega? | evidência |
+|---|---|---|
+| Makerkit | sim, desligado por padrão | `NEXT_PUBLIC_AUTH_IDENTITY_LINKING`: o usuário pode "link multiple authentication methods (e.g., link Google to an existing email account)" |
+| Supastarter | não mencionado na doc de autenticação | — |
+| next-forge (Clerk) | não verificado: a página do `<UserProfile />` não detalha contas conectadas | — |
+| demais | não mencionado | — |
+
+**1 de 10** confirmado. O Firebase vincula nativamente (`linkWithPopup`, `linkWithCredential` com
+`EmailAuthProvider.credential`, `unlink`), e a doc avisa: "If a user signs in again with the same provider after
+it has been unlinked, Firebase creates a new, separate user account" (página atualizada em 2026-10-14). O emulador
+cobre provedores federados com página de login falsa.
+
+### Provedores sociais além do Google
+
+Makerkit ("Google, GitHub, Facebook, X, Discord, and many more"), Supastarter (Google, GitHub, Apple), Open SaaS
+(Google, GitHub, Discord, Keycloak, Slack), Saas UI (Google e Facebook) e o supabase-stripe-starter arquivado
+(GitHub) oferecem pelo menos um provedor além do Google: **5 de 10**. ShipFast tem só o Google; Nextacular, só
+e-mail; o next-forge depende do que for ligado no Clerk. O emulador do Firebase só aceita `signInWithCredential`
+para provedores com ID token JWT (Google, Apple e outros); access token do Facebook ou do X não é suportado.
+
+### Notificações in-app (remedição)
+
+| referência | entrega? | como |
+|---|---|---|
+| next-forge | sim | Knock, serviço externo, com workflows criados no painel do Knock |
+| Makerkit | sim, ligado por padrão | tabela própria; tempo real opcional (`NEXT_PUBLIC_REALTIME_NOTIFICATIONS=false`); sem tempo real, "fetched via React Query on component mount", que a doc chama de alternativa sem custo; sino com contador, três níveis (info, warning, error) |
+| Supastarter | sim, segundo a página inicial ("In-app notification center") | a página de doc específica respondeu 404 |
+| Saas UI | sim | a página do kit lista um router de `notifications` na API |
+| demais | não mencionado | — |
+
+**4 de 10** (eram 3 de 10 em 2026-08-21). Só o next-forge depende de serviço pago; o Makerkit entrega sem serviço
+externo e sem tempo real.
+
+### Formulário de contato que entrega
+
+Supastarter ("Contact form") e Makerkit (`CONTACT_EMAIL`, "The email address for contact inquiries") entregam. O
+next-forge tem o mesmo formulário de fachada que este repositório herdou: o `<Button>` não tem `onClick`, e a
+página não tem `<form>` nem ação. O ShipFast tem um link de e-mail de suporte, sem formulário. **2 de 4
+verificados**; seis não verificados.
+
+### Lidos e sem sinal
+
+Nenhuma das quatro páginas de features lidas por inteiro (Makerkit, Supastarter, ShipFast, Open SaaS) menciona PWA
+nem banner de aviso global. Exemplo com LLM aparece em 2 delas (chatbot do Supastarter, integração OpenAI do Open
+SaaS). Convite de usuário pelo admin: o plugin de admin do Better-Auth cria usuário com senha definida pelo admin,
+como este repositório; o Clerk tem convite de aplicação por e-mail, que "expire after a month". Nos starters, o
+tema não foi verificado.
+
+### Fontes do adendo
+
+- <https://github.com/vercel/next-forge/tree/main/apps/web/app/%5Blocale%5D> e o `pricing/page.tsx` e o `contact-form.tsx` da mesma pasta (código)
+- <https://makerkit.dev/nextjs-saas-starter-kit> · <https://makerkit.dev/docs/next-supabase-turbo/configuration/authentication-configuration> · <https://makerkit.dev/docs/next-supabase-turbo/configuration/environment-variables> · <https://makerkit.dev/docs/next-supabase-turbo/billing/one-off-payments> · <https://makerkit.dev/docs/next-supabase-turbo/notifications/notifications-configuration> · <https://makerkit.dev/docs/next-supabase-turbo/notifications>
+- <https://supastarter.dev/> · <https://supastarter.dev/docs/nextjs/authentication/overview> · <https://supastarter.dev/docs/nextjs/payments/plans>
+- <https://shipfa.st/docs> · <https://shipfa.st/docs/features/magic-links> · <https://shipfa.st/docs/features/payments> · <https://shipfa.st/docs/components/pricing>
+- <https://docs.opensaas.sh/> · <https://wasp.sh/docs/auth/overview> · <https://github.com/wasp-lang/open-saas/tree/main/template/app/src/payment> · <https://raw.githubusercontent.com/wasp-lang/open-saas/main/template/app/src/payment/plans.ts>
+- <https://www.saas-js.com/docs/starter-kits/nextjs>
+- <https://github.com/nextacular/nextacular> e busca de código `EmailProvider` no mesmo repositório
+- <https://github.com/vercel/nextjs-subscription-payments> · <https://github.com/nextjs/saas-starter> · <https://raw.githubusercontent.com/nextjs/saas-starter/main/app/(dashboard)/pricing/page.tsx>
+- <https://www.next-forge.com/docs/packages/authentication> · <https://www.next-forge.com/docs/packages/notifications>
+- <https://firebase.google.com/docs/auth/web/email-link-auth> · <https://firebase.google.com/docs/auth/web/account-linking> · <https://firebase.google.com/docs/emulator-suite/connect_auth>
+- <https://docs.stripe.com/payments/checkout/how-checkout-works.md?payment-ui=stripe-hosted> · <https://docs.stripe.com/checkout/fulfillment.md?payment-ui=stripe-hosted> · <https://docs.stripe.com/billing/entitlements.md?dashboard-or-api=api>
+- <https://pages.nist.gov/800-63-4/sp800-63b.html> — §3.1.3.1
+- <https://clerk.com/docs/users/invitations> · <https://www.better-auth.com/docs/plugins/admin>
+- <https://nextjs.org/docs/app/guides/progressive-web-apps> (atualizada em 2026-07-30): manifest nativo do App Router e HTTPS bastam para instalar

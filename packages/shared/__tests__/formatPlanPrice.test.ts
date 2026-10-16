@@ -3,7 +3,7 @@ import {
     describePlanPrice,
     formatPeriodEnd,
     formatPlanPrice,
-} from "@/shared/lib/formatPlanPrice";
+} from "../utils/helpers/formatPlanPrice";
 
 const COPY = {
     pricePerInterval: "{price} / {interval}",
