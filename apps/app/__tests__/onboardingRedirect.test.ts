@@ -69,6 +69,16 @@ describe("resolveOnboardingRedirect", () => {
         );
     });
 
+    it("keeps the query of the deep link the visitor was opening", async () => {
+        givenSession({ uid: "uid-1", type: "common", onboarding: PENDING });
+        givenRequestedPath("/pt-br/account?tab=billing&plan=price_1");
+        const resolveOnboardingRedirect = await loadResolver();
+
+        expect(await resolveOnboardingRedirect(LOCALE)).toBe(
+            "/pt-br/onboarding?redirect=%2Fpt-br%2Faccount%3Ftab%3Dbilling%26plan%3Dprice_1"
+        );
+    });
+
     it("omits the deep link when the request was the home", async () => {
         givenSession({ uid: "uid-1", type: "common", onboarding: PENDING });
         givenRequestedPath("/pt-br");
