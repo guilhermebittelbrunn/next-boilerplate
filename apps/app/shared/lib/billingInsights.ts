@@ -1,5 +1,5 @@
 import type { BillingPlanCountDTO, PlanInterval } from "@repo/sdk/src/types";
-import { toBcp47Locale } from "./formatPlanPrice";
+import { toBcp47Locale } from "@repo/shared/utils/helpers/formatPlanPrice";
 
 /** The design system ships five chart colours, and the axis never hides a label. */
 export const MAX_CHART_PLANS = 5;
