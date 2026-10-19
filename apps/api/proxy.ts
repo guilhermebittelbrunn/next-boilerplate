@@ -44,6 +44,10 @@ const securityOptions = buildApiOptions();
  * behalf of every visitor, from one address, so a per-address budget would throttle the
  * page itself. Its cache already keeps the provider out of the request path.
  *
+ * `/contact` is public and every accepted request sends an email to the fork's support
+ * inbox, billed by the provider. The visitor's browser calls it, so the address counted
+ * is the visitor's.
+ *
  * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
 const RATE_LIMITED_PATHS = [
@@ -59,6 +63,7 @@ const RATE_LIMITED_PATHS = [
     "/account/export",
     "/account/deletion",
     "/account/email",
+    "/contact",
 ];
 
 function isRateLimitedPath(pathname: string): boolean {
