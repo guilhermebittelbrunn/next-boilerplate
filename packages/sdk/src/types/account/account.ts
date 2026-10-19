@@ -32,6 +32,16 @@ export type ChangePasswordRequest = {
     password: string;
 };
 
+/** For an account without a password; the token proves a Google sign-in from the last minutes. */
+export type SetPasswordRequest = {
+    reauthIdToken: string;
+    password: string;
+};
+
+export type SignInMethodLinkedRequest = {
+    providerId: string;
+};
+
 export type ChangeEmailRequest = {
     newEmail: string;
     currentPassword: string;

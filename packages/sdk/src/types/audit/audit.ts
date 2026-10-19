@@ -10,6 +10,9 @@ export enum AuditAction {
     ACCOUNT_EMAIL_CHANGE = "account.email.change",
     ACCOUNT_DATA_EXPORT = "account.data.export",
     ACCOUNT_DELETE = "account.delete",
+    ACCOUNT_PASSWORD_SET = "account.password.set",
+    ACCOUNT_SIGN_IN_METHOD_LINK = "account.signInMethod.link",
+    ACCOUNT_SIGN_IN_METHOD_UNLINK = "account.signInMethod.unlink",
 }
 
 export enum AuditTargetType {
