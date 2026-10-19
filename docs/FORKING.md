@@ -174,6 +174,14 @@ prefixo. Defina o mesmo valor em `app` e `web`.
    rules e na API.
 3. **Ligue os métodos de login** (Authentication → Sign-in method): **E-mail/senha** e **Google**. O painel
    oferece login com Google.
+
+   Decida também o **User account linking** (Authentication → Settings → User account linking). O padrão
+   do Firebase é uma conta por e-mail; a alternativa cria uma conta por provedor. A aba Segurança da área
+   de conta, que lista os métodos de login, define a primeira senha e vincula ou desvincula o Google,
+   funciona nas duas. Com o padrão, o Google é tratado como provedor confiável: o primeiro login com Google
+   numa conta cujo e-mail não foi verificado pode apagar a senha dela. A conta passa a entrar só pelo
+   Google, e a pessoa define a senha de novo pela aba Segurança. O popup de vínculo e o de confirmação do
+   Google rodam no domínio do painel, então o item 4 vale para eles também.
 4. **Autorize os domínios** (Authentication → Settings → Authorized domains): o host da landing e o do
    painel. Sem isso o login com Google falha em produção. Deploys de preview (`*.vercel.app`) precisam ser
    acrescentados um a um, se você for testar login neles.

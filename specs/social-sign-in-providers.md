@@ -36,9 +36,9 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   `providerId=google.com` fixo.
 - `apps/api/app/(routes)/auth/sign-in/google/route.ts:9-30` — a rota lê o corpo sem validação e devolve a mensagem
   crua do provedor em 401 (achado novo desta rodada).
-- `apps/app/.../sign-in/components/SignInForm.tsx:181-191` e `sign-up/components/SignUpFormClient.tsx` — um botão
+- `apps/app/.../sign-in/components/SignInForm.tsx:187-197` (era `:181-191` até a PR #47) e `sign-up/components/SignUpFormClient.tsx` — um botão
   do Google em cada tela.
-- `apps/api/proxy.ts:45-58` — `/auth/sign-in/google` está no rate limit.
+- `apps/api/proxy.ts:49-62` — `/auth/sign-in/google` está no rate limit (era `:45-58` até a PR #47).
 - `docs/FORKING.md:175` — o roteiro do fork descreve "e-mail/senha e Google".
 - **Lacuna:** não há forma de ligar outro provedor sem escrever um fluxo novo inteiro.
 

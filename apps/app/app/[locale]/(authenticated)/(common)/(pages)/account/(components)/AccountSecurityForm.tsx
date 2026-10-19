@@ -17,19 +17,27 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
+import type { AccountDTO } from "@repo/sdk/src/types";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { lacksPasswordProvider } from "@/shared/lib/signInMethods";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useAccountMutations } from "../(hooks)/useAccountMutations";
 import {
     type AccountPasswordFormValues,
     buildAccountPasswordSchema,
 } from "../(validations)/accountFormSchema";
+import { AccountPasswordSetForm } from "./AccountPasswordSetForm";
 import { AccountSessionsPanel } from "./AccountSessionsPanel";
+import { AccountSignInMethodsPanel } from "./AccountSignInMethodsPanel";
 
-export function AccountSecurityForm() {
+type AccountSecurityFormProps = {
+    account: AccountDTO | undefined;
+};
+
+export function AccountSecurityForm({ account }: AccountSecurityFormProps) {
     const { dictionary } = getDictionary();
     const { isImpersonating } = useAuthRequestPanel();
     const { signOut } = useAuth();
@@ -65,42 +73,48 @@ export function AccountSecurityForm() {
 
     return (
         <div className="flex w-full flex-1 flex-col gap-6">
-            <Form {...form}>
-                <form
-                    className="flex w-full flex-col"
-                    onSubmit={form.handleSubmit(onSubmit)}
-                >
-                    <p className="mb-4 text-muted-foreground text-sm">
-                        {accountSecurity.description}
-                    </p>
-                    <FormContainer>
-                        <div className="col-span-1 md:col-span-2">
-                            <HookFormInputPassword
-                                label={accountSecurity.currentPassword}
-                                name="currentPassword"
-                            />
-                        </div>
-                        <div className="col-span-1">
-                            <HookFormInputPassword
-                                label={accountSecurity.newPassword}
-                                name="password"
-                            />
-                        </div>
-                        <div className="col-span-1">
-                            <HookFormInputPassword
-                                label={accountSecurity.confirmPassword}
-                                name="confirmPassword"
-                            />
-                        </div>
-                    </FormContainer>
-                    <Footer
-                        confirmLabel={accountSecurity.save}
-                        disabled={isImpersonating}
-                        isLoading={changePasswordMutation.isPending}
-                        showBack={false}
-                    />
-                </form>
-            </Form>
+            <AccountSignInMethodsPanel account={account} />
+
+            {lacksPasswordProvider(account) ? (
+                <AccountPasswordSetForm />
+            ) : (
+                <Form {...form}>
+                    <form
+                        className="flex w-full flex-col"
+                        onSubmit={form.handleSubmit(onSubmit)}
+                    >
+                        <p className="mb-4 text-muted-foreground text-sm">
+                            {accountSecurity.description}
+                        </p>
+                        <FormContainer>
+                            <div className="col-span-1 md:col-span-2">
+                                <HookFormInputPassword
+                                    label={accountSecurity.currentPassword}
+                                    name="currentPassword"
+                                />
+                            </div>
+                            <div className="col-span-1">
+                                <HookFormInputPassword
+                                    label={accountSecurity.newPassword}
+                                    name="password"
+                                />
+                            </div>
+                            <div className="col-span-1">
+                                <HookFormInputPassword
+                                    label={accountSecurity.confirmPassword}
+                                    name="confirmPassword"
+                                />
+                            </div>
+                        </FormContainer>
+                        <Footer
+                            confirmLabel={accountSecurity.save}
+                            disabled={isImpersonating}
+                            isLoading={changePasswordMutation.isPending}
+                            showBack={false}
+                        />
+                    </form>
+                </Form>
+            )}
 
             <AccountSessionsPanel />
 

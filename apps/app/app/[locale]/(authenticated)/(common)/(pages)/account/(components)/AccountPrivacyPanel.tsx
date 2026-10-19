@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { privacyPolicyUrl } from "@/shared/lib/privacyPolicyUrl";
+import { lacksPasswordProvider } from "@/shared/lib/signInMethods";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useAccountDataRights } from "../(hooks)/useAccountDataRights";
 import {
@@ -26,26 +27,9 @@ import {
     buildAccountDeletionSchema,
 } from "../(validations)/accountDeletionSchema";
 
-const PASSWORD_PROVIDER_ID = "password";
-
 type AccountPrivacyPanelProps = {
     account: AccountDTO | undefined;
 };
-
-/**
- * Without a password provider there is no credential to re-enter, and the API refuses the
- * deletion for that reason. An account still loading is treated as able to confirm, so a
- * missing answer never shows the wrong block.
- */
-function requiresPrivacyChannel(account: AccountDTO | undefined): boolean {
-    const providers = account?.providerData;
-    if (!providers) {
-        return false;
-    }
-    return !providers.some(
-        (provider) => provider.providerId === PASSWORD_PROVIDER_ID
-    );
-}
 
 export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
     const { dictionary, locale } = getDictionary();
@@ -56,7 +40,7 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
         useAccountDataRights();
     const [confirmOpen, setConfirmOpen] = useState(false);
     const policyHref = privacyPolicyUrl(locale);
-    const askPrivacyChannel = requiresPrivacyChannel(account);
+    const askPrivacyChannel = lacksPasswordProvider(account);
 
     const schema = useMemo(
         () => buildAccountDeletionSchema(dictionary),

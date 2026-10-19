@@ -12,6 +12,8 @@ import type {
     ChangePasswordRequest,
     DeleteAccountRequest,
     OnboardingStateDTO,
+    SetPasswordRequest,
+    SignInMethodLinkedRequest,
     UpdateAccountRequest,
 } from "../../types";
 
@@ -52,6 +54,40 @@ export default class AccountActions {
         });
 
         return data.data;
+    }
+
+    async setPassword(body: SetPasswordRequest): Promise<AccountConfirmation> {
+        const { data } = await this.client.request<
+            Response<AccountConfirmation>
+        >({
+            url: "/account/password/set",
+            method: "POST",
+            data: body,
+        });
+
+        return data.data;
+    }
+
+    /** The link itself happens in the browser; this only records it once Firebase lists it. */
+    async confirmSignInMethodLinked(
+        body: SignInMethodLinkedRequest
+    ): Promise<AccountConfirmation> {
+        const { data } = await this.client.request<
+            Response<AccountConfirmation>
+        >({
+            url: "/account/sign-in-methods/linked",
+            method: "POST",
+            data: body,
+        });
+
+        return data.data;
+    }
+
+    async unlinkSignInMethod(providerId: string): Promise<void> {
+        await this.client.request({
+            url: `/account/sign-in-methods/${encodeURIComponent(providerId)}`,
+            method: "DELETE",
+        });
     }
 
     async requestEmailChange(

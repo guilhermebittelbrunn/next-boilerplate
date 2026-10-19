@@ -39,6 +39,14 @@ export const sharedUtilsTranslations = {
             ACCOUNT_CURRENT_PASSWORD_INVALID: "A senha atual está incorreta.",
             ACCOUNT_PASSWORD_UNSUPPORTED:
                 "Esta conta não usa senha. Entre pelo provedor de acesso original.",
+            ACCOUNT_PASSWORD_ALREADY_SET:
+                "Esta conta já tem senha. Use a troca de senha.",
+            ACCOUNT_REAUTH_INVALID:
+                "Não conseguimos confirmar a sua conta Google. Tente de novo.",
+            ACCOUNT_SIGN_IN_METHOD_NOT_FOUND:
+                "Este método de login não está vinculado à conta.",
+            ACCOUNT_SIGN_IN_METHOD_LAST:
+                "Não é possível remover o único método de login da conta.",
             ACCOUNT_UPDATE_FAILED:
                 "Não foi possível salvar a sua conta. Tente de novo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
@@ -173,6 +181,14 @@ export const sharedUtilsTranslations = {
             ACCOUNT_CURRENT_PASSWORD_INVALID: "The current password is wrong.",
             ACCOUNT_PASSWORD_UNSUPPORTED:
                 "This account does not use a password. Sign in with your original provider.",
+            ACCOUNT_PASSWORD_ALREADY_SET:
+                "This account already has a password. Use the password change instead.",
+            ACCOUNT_REAUTH_INVALID:
+                "We could not confirm your Google account. Try again.",
+            ACCOUNT_SIGN_IN_METHOD_NOT_FOUND:
+                "This sign-in method is not linked to the account.",
+            ACCOUNT_SIGN_IN_METHOD_LAST:
+                "The account's only sign-in method cannot be removed.",
             ACCOUNT_UPDATE_FAILED:
                 "Your account could not be saved. Try again.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
@@ -309,6 +325,14 @@ export const sharedUtilsTranslations = {
                 "La contraseña actual es incorrecta.",
             ACCOUNT_PASSWORD_UNSUPPORTED:
                 "Esta cuenta no usa contraseña. Entra con tu proveedor de acceso original.",
+            ACCOUNT_PASSWORD_ALREADY_SET:
+                "Esta cuenta ya tiene contraseña. Usa el cambio de contraseña.",
+            ACCOUNT_REAUTH_INVALID:
+                "No pudimos confirmar tu cuenta de Google. Inténtalo de nuevo.",
+            ACCOUNT_SIGN_IN_METHOD_NOT_FOUND:
+                "Este método de inicio de sesión no está vinculado a la cuenta.",
+            ACCOUNT_SIGN_IN_METHOD_LAST:
+                "No se puede quitar el único método de inicio de sesión de la cuenta.",
             ACCOUNT_UPDATE_FAILED:
                 "No se pudo guardar tu cuenta. Inténtalo de nuevo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:

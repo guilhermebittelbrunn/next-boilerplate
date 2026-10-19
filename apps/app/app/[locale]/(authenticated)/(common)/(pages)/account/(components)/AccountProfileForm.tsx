@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
+import { lacksPasswordProvider } from "@/shared/lib/signInMethods";
 import { isStorageEnabled } from "@/shared/lib/storageEnabled";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useAccountMutations } from "../(hooks)/useAccountMutations";
@@ -23,10 +24,7 @@ import {
     type AccountProfileFormValues,
     buildAccountProfileSchema,
 } from "../(validations)/accountFormSchema";
-import {
-    AccountEmailChangeDialog,
-    lacksPasswordProvider,
-} from "./AccountEmailChangeDialog";
+import { AccountEmailChangeDialog } from "./AccountEmailChangeDialog";
 
 type AccountProfileFormProps = {
     account: AccountDTO | undefined;

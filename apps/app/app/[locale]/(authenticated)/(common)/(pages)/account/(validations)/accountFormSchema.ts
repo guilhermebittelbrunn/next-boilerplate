@@ -44,6 +44,11 @@ export type AccountPasswordFormValues = {
     confirmPassword: string;
 };
 
+export type AccountPasswordSetFormValues = {
+    password: string;
+    confirmPassword: string;
+};
+
 export const accountThemeValues = ["light", "dark", "system"] as const;
 export const accountLocaleValues = ["pt-br", "en", "es"] as const;
 
@@ -88,6 +93,24 @@ export function buildAccountPasswordSchema(dictionary: Dictionary) {
                 .string()
                 .min(1, validation.required)
                 .min(EXISTING_PASSWORD_MIN_LENGTH, validation.min),
+            password: z
+                .string()
+                .min(1, validation.required)
+                .min(PASSWORD_MIN_LENGTH, validation.newPasswordMin),
+            confirmPassword: z.string().min(1, validation.required),
+        })
+        .refine((values) => values.password === values.confirmPassword, {
+            message: validation.mismatch,
+            path: ["confirmPassword"],
+        });
+}
+
+export function buildAccountPasswordSetSchema(dictionary: Dictionary) {
+    const validation =
+        dictionary.apps.app.pages.common.account.security.validation;
+
+    return z
+        .object({
             password: z
                 .string()
                 .min(1, validation.required)

@@ -1,3 +1,4 @@
+import type { AccountDTO } from "@repo/sdk/src/types";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,11 +7,13 @@ const {
     signOutMutateMock,
     changePasswordMutateMock,
     revokeSessionsMutateMock,
+    setPasswordMutateMock,
 } = vi.hoisted(() => ({
     panelMock: vi.fn(),
     signOutMutateMock: vi.fn(),
     changePasswordMutateMock: vi.fn(),
     revokeSessionsMutateMock: vi.fn(),
+    setPasswordMutateMock: vi.fn(),
 }));
 
 vi.mock("@/shared/providers/AuthRequestPanelContext", () => ({
@@ -38,6 +41,24 @@ vi.mock(
 );
 
 vi.mock(
+    "@/app/[locale]/(authenticated)/(common)/(pages)/account/(hooks)/useSignInMethodMutations",
+    () => ({
+        useSignInMethodMutations: () => ({
+            setPasswordMutation: {
+                mutate: setPasswordMutateMock,
+                isPending: false,
+            },
+            linkGoogleMutation: { mutate: vi.fn(), isPending: false },
+            unlinkMutation: {
+                mutate: vi.fn(),
+                isPending: false,
+                variables: undefined,
+            },
+        }),
+    })
+);
+
+vi.mock(
     "@/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountSessionsPanel",
     () => ({ AccountSessionsPanel: () => null })
 );
@@ -56,6 +77,22 @@ const { globalTranslations } = await import(
 
 const accountSecurity =
     globalTranslations["pt-br"].apps.app.pages.common.account.security;
+
+function accountWith(...providerIds: string[]): AccountDTO {
+    return {
+        providerData: providerIds.map((providerId) => ({
+            providerId,
+            uid: `${providerId}-uid`,
+            displayName: null,
+            email: "owner@example.com",
+            phoneNumber: null,
+        })),
+    } as unknown as AccountDTO;
+}
+
+const PASSWORD_ACCOUNT = accountWith("password");
+const SETTLE_DELAY_MS = 20;
+const GOOGLE_ONLY_ACCOUNT = accountWith("google.com");
 
 function openConfirmationDialog() {
     const trigger = screen
@@ -76,7 +113,7 @@ afterEach(cleanup);
 
 describe("AccountSecurityForm — sair de todos os dispositivos", () => {
     it("só encerra as sessões depois da confirmação no diálogo", () => {
-        render(<AccountSecurityForm />);
+        render(<AccountSecurityForm account={PASSWORD_ACCOUNT} />);
 
         expect(revokeSessionsMutateMock).not.toHaveBeenCalled();
 
@@ -95,7 +132,7 @@ describe("AccountSecurityForm — sair de todos os dispositivos", () => {
     });
 
     it("desloga o navegador atual quando o encerramento das sessões confirma", () => {
-        render(<AccountSecurityForm />);
+        render(<AccountSecurityForm account={PASSWORD_ACCOUNT} />);
         openConfirmationDialog();
         fireEvent.click(
             screen.getByRole("button", {
@@ -113,7 +150,7 @@ describe("AccountSecurityForm — sair de todos os dispositivos", () => {
     });
 
     it("não dispara requisição quando o diálogo é cancelado", () => {
-        render(<AccountSecurityForm />);
+        render(<AccountSecurityForm account={PASSWORD_ACCOUNT} />);
         openConfirmationDialog();
 
         fireEvent.click(
@@ -125,7 +162,9 @@ describe("AccountSecurityForm — sair de todos os dispositivos", () => {
     });
 
     it("não aninha um botão dentro de outro nos controles do diálogo", () => {
-        const { container } = render(<AccountSecurityForm />);
+        const { container } = render(
+            <AccountSecurityForm account={PASSWORD_ACCOUNT} />
+        );
         openConfirmationDialog();
 
         expect(
@@ -135,7 +174,7 @@ describe("AccountSecurityForm — sair de todos os dispositivos", () => {
 
     it("bloqueia as duas ações durante uma personificação", () => {
         panelMock.mockReturnValue({ isImpersonating: true });
-        render(<AccountSecurityForm />);
+        render(<AccountSecurityForm account={PASSWORD_ACCOUNT} />);
 
         const save = screen.getByRole("button", {
             name: accountSecurity.save,
@@ -164,7 +203,9 @@ describe("AccountSecurityForm — troca de senha", () => {
     }
 
     it("não envia a troca quando a confirmação não bate", async () => {
-        const { container } = render(<AccountSecurityForm />);
+        const { container } = render(
+            <AccountSecurityForm account={PASSWORD_ACCOUNT} />
+        );
         fillPasswords(container, {
             currentPassword: "current-secret",
             password: "brand-new-secret",
@@ -180,7 +221,9 @@ describe("AccountSecurityForm — troca de senha", () => {
     });
 
     it("envia apenas a senha atual e a nova, nunca a confirmação", async () => {
-        const { container } = render(<AccountSecurityForm />);
+        const { container } = render(
+            <AccountSecurityForm account={PASSWORD_ACCOUNT} />
+        );
         fillPasswords(container, {
             currentPassword: "current-secret",
             password: "brand-new-secret",
@@ -198,5 +241,153 @@ describe("AccountSecurityForm — troca de senha", () => {
             currentPassword: "current-secret",
             password: "brand-new-secret",
         });
+    });
+});
+
+describe("AccountSecurityForm — conta sem senha", () => {
+    function fillPasswords(
+        container: HTMLElement,
+        values: Record<string, string>
+    ) {
+        for (const [name, value] of Object.entries(values)) {
+            const field = container.querySelector(`input[name="${name}"]`);
+            if (!field) {
+                throw new Error(`o campo ${name} não foi renderizado`);
+            }
+            fireEvent.change(field, { target: { value } });
+        }
+    }
+
+    it("mostra o formulário de definir senha e esconde o de troca", () => {
+        const { container } = render(
+            <AccountSecurityForm account={GOOGLE_ONLY_ACCOUNT} />
+        );
+
+        expect(
+            screen.getByRole("button", {
+                name: accountSecurity.setPassword.save,
+            })
+        ).toBeTruthy();
+        expect(
+            screen.queryByRole("button", { name: accountSecurity.save })
+        ).toBeNull();
+        expect(
+            container.querySelector('input[name="currentPassword"]')
+        ).toBeNull();
+    });
+
+    it("com senha, mostra só o formulário de troca", () => {
+        render(
+            <AccountSecurityForm
+                account={accountWith("password", "google.com")}
+            />
+        );
+
+        expect(
+            screen.getByRole("button", { name: accountSecurity.save })
+        ).toBeTruthy();
+        expect(
+            screen.queryByRole("button", {
+                name: accountSecurity.setPassword.save,
+            })
+        ).toBeNull();
+    });
+
+    it("não abre o popup com a senha curta", async () => {
+        const { container } = render(
+            <AccountSecurityForm account={GOOGLE_ONLY_ACCOUNT} />
+        );
+        fillPasswords(container, {
+            password: "short",
+            confirmPassword: "short",
+        });
+
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: accountSecurity.setPassword.save,
+            })
+        );
+        await screen.findByText(accountSecurity.validation.newPasswordMin);
+
+        expect(setPasswordMutateMock).not.toHaveBeenCalled();
+    });
+
+    it("não abre o popup quando a confirmação não bate", async () => {
+        const { container } = render(
+            <AccountSecurityForm account={GOOGLE_ONLY_ACCOUNT} />
+        );
+        fillPasswords(container, {
+            password: "brand-new-secret",
+            confirmPassword: "another-secret",
+        });
+
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: accountSecurity.setPassword.save,
+            })
+        );
+        await screen.findByText(accountSecurity.validation.mismatch);
+
+        expect(setPasswordMutateMock).not.toHaveBeenCalled();
+    });
+
+    it("envia só a senha nova e sai depois do sucesso", async () => {
+        const { container } = render(
+            <AccountSecurityForm account={GOOGLE_ONLY_ACCOUNT} />
+        );
+        fillPasswords(container, {
+            password: "brand-new-secret",
+            confirmPassword: "brand-new-secret",
+        });
+
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: accountSecurity.setPassword.save,
+            })
+        );
+        await vi.waitFor(() =>
+            expect(setPasswordMutateMock).toHaveBeenCalledTimes(1)
+        );
+
+        const [password, options] = setPasswordMutateMock.mock.calls[0] as [
+            string,
+            { onSuccess: () => void },
+        ];
+        expect(password).toBe("brand-new-secret");
+        options.onSuccess();
+        expect(signOutMutateMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("um segundo envio antes de a primeira tentativa terminar não abre outro popup", async () => {
+        const { container } = render(
+            <AccountSecurityForm account={GOOGLE_ONLY_ACCOUNT} />
+        );
+        fillPasswords(container, {
+            password: "brand-new-secret",
+            confirmPassword: "brand-new-secret",
+        });
+        const save = screen.getByRole("button", {
+            name: accountSecurity.setPassword.save,
+        });
+
+        fireEvent.click(save);
+        await vi.waitFor(() =>
+            expect(setPasswordMutateMock).toHaveBeenCalledTimes(1)
+        );
+        fireEvent.click(save);
+        await new Promise((resolve) => setTimeout(resolve, SETTLE_DELAY_MS));
+
+        expect(setPasswordMutateMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("bloqueia a definição de senha durante uma personificação", () => {
+        panelMock.mockReturnValue({ isImpersonating: true });
+        render(<AccountSecurityForm account={GOOGLE_ONLY_ACCOUNT} />);
+
+        const save = screen.getByRole("button", {
+            name: accountSecurity.setPassword.save,
+        }) as HTMLButtonElement;
+
+        expect(save.disabled).toBe(true);
     });
 });

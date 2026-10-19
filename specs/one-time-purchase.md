@@ -34,8 +34,9 @@ e só então liberar o acesso no servidor.
 - `apps/api/(shared)/lib/billing.ts:52-68` — o catálogo lê só `type: "recurring"`; `billing.ts:130-140` abre o
   checkout só com `mode: "subscription"`.
 - `apps/api/(shared)/lib/billing-state.ts:63-73` — `toPlanDTO` devolve `null` para preço avulso.
-- `docs/PAYMENTS.md:165-166` — preço avulso pedido no checkout responde 404 `PAYMENTS_PLAN_NOT_FOUND`;
-  `docs/PRE-PRODUCTION.md:513-516` avisa o fork de que preço avulso não aparece.
+- `docs/PAYMENTS.md:199-200` — preço avulso pedido no checkout responde 404 `PAYMENTS_PLAN_NOT_FOUND`;
+  `docs/PRE-PRODUCTION.md:517-520` avisa o fork de que preço avulso não aparece. *(Âncoras remedidas em 2026-10-16:
+  a PR #47 acrescentou texto aos dois documentos; eram `:165-166` e `:513-516`.)*
 - `apps/api/app/(routes)/payments/checkout/route.ts:39-46` — o checkout recusa quem já tem assinatura viva. Uma
   compra avulsa não pode herdar essa recusa.
 - `apps/api/app/(routes)/webhooks/payments/route.ts:194-232` — o webhook trata `checkout.session.completed` só para
@@ -90,7 +91,7 @@ e só então liberar o acesso no servidor.
 | `packages/sdk` | Tipo de produto avulso no catálogo, tipo de compra, ação de checkout avulso e de listagem das compras. |
 | `apps/api` | Catálogo com preços avulsos, checkout de pagamento único, entrega idempotente no webhook, coleção de compras por dono e acesso por recurso que soma assinatura e compras. |
 | `apps/app` | Seção de compras avulsas na aba de cobrança. |
-| `apps/web` | Se [`pricing-page-catalog`](pricing-page-catalog.md) vier antes, a página pública passa a mostrar o produto avulso. |
+| `apps/web` | A página pública já lê o catálogo da Stripe desde [`pricing-page-catalog`](../docs/features/pricing-page-catalog/spec.md) (PR #47), mas só preços recorrentes (`listPlans`, `billing.ts:52-68`). Mostrar o produto avulso nela exige abrir essa leitura. |
 | `packages/*` | i18n: textos da seção e `apiErrors` novos nos três idiomas. |
 | Infra/env | Novos eventos no endpoint de webhook de cada fork (`PRE-PRODUCTION.md` §12) e um índice por dono. Nenhuma variável. |
 

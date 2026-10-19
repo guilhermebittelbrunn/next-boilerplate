@@ -14,7 +14,6 @@ import {
 } from "@repo/design-system/components/ui/alert-dialog";
 import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
-import type { AccountDTO } from "@repo/sdk/src/types";
 import { type RefObject, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
@@ -25,25 +24,6 @@ import {
     type AccountEmailChangeFormValues,
     buildAccountEmailChangeSchema,
 } from "../(validations)/accountEmailChangeSchema";
-
-const PASSWORD_PROVIDER_ID = "password";
-
-/**
- * The API asks for the current password before sending the link, so an account without a
- * password provider has nothing to confirm with. An account still loading is treated as
- * able to confirm, so a missing answer never shows the wrong block.
- */
-export function lacksPasswordProvider(
-    account: AccountDTO | undefined
-): boolean {
-    const providers = account?.providerData;
-    if (!providers) {
-        return false;
-    }
-    return !providers.some(
-        (provider) => provider.providerId === PASSWORD_PROVIDER_ID
-    );
-}
 
 type AccountEmailChangeDialogProps = {
     currentEmail: string | null;

@@ -6,8 +6,10 @@ import {
     connectAuthEmulator,
     GoogleAuthProvider,
     getAuth,
+    linkWithPopup,
     onAuthStateChanged,
     onIdTokenChanged,
+    reauthenticateWithPopup,
     reload,
     signInWithCustomToken,
     signInWithEmailAndPassword,
@@ -151,6 +153,34 @@ export const signInWithGoogle = () => {
     const auth = getAuthClient();
     const provider = new GoogleAuthProvider();
     return signInWithPopup(auth, provider);
+};
+
+const requireCurrentUser = (): User => {
+    const user = getAuthClient().currentUser;
+    if (!user) {
+        throw new Error("No signed-in user");
+    }
+    return user;
+};
+
+/**
+ * Links a Google account to the signed-in user. Firebase checks ownership in the popup and
+ * refuses a Google account already linked elsewhere (`auth/credential-already-in-use`).
+ */
+export const linkGoogle = () =>
+    linkWithPopup(requireCurrentUser(), new GoogleAuthProvider());
+
+/**
+ * A fresh ID token whose sign-in provider is Google, for operations that need a recent
+ * proof of who is at the keyboard. Only the Google account already linked passes
+ * (`auth/user-mismatch` otherwise).
+ */
+export const reauthenticateWithGoogle = async (): Promise<string> => {
+    const result = await reauthenticateWithPopup(
+        requireCurrentUser(),
+        new GoogleAuthProvider()
+    );
+    return result.user.getIdToken();
 };
 
 /**
