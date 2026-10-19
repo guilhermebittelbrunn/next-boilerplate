@@ -31,6 +31,8 @@ export const sharedUtilsTranslations = {
             USERS_NOT_FOUND: "Usuário não encontrado.",
             USERS_DELETE_BILLING_FAILED:
                 "Não foi possível cancelar a assinatura deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
+            USERS_DELETE_AUTH_FAILED:
+                "Não foi possível bloquear o acesso deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "Você não pode desativar, arquivar nem tirar o acesso de administrador da sua própria conta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para atualizar.",
@@ -175,6 +177,8 @@ export const sharedUtilsTranslations = {
             USERS_NOT_FOUND: "User not found.",
             USERS_DELETE_BILLING_FAILED:
                 "We couldn't cancel this user's subscription, so they were not archived. Try again in a moment.",
+            USERS_DELETE_AUTH_FAILED:
+                "We couldn't block this user's access, so they were not archived. Try again in a moment.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "You can't disable, archive or remove admin access from your own account.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nothing to update.",
@@ -320,6 +324,8 @@ export const sharedUtilsTranslations = {
             USERS_NOT_FOUND: "Usuario no encontrado.",
             USERS_DELETE_BILLING_FAILED:
                 "No pudimos cancelar la suscripción de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
+            USERS_DELETE_AUTH_FAILED:
+                "No pudimos bloquear el acceso de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "No puedes desactivar, archivar ni quitar el acceso de administrador de tu propia cuenta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para actualizar.",
