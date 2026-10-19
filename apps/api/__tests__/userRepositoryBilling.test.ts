@@ -170,6 +170,36 @@ describe("userRepository.findByStripeCustomerId", () => {
     });
 });
 
+describe("userRepository.hasArchivedProfile", () => {
+    it("acha o perfil arquivado do uid com um filtro só de igualdade", async () => {
+        docs.set("profile-old", {
+            reference_id: "uid-qa",
+            deletedAt: new Date(),
+        });
+
+        await expect(userRepository.hasArchivedProfile("uid-qa")).resolves.toBe(
+            true
+        );
+        expect(whereCalls).toEqual([
+            { field: "reference_id", op: "==", value: "uid-qa" },
+        ]);
+        expect(selectCalls[0]).toEqual(["deletedAt"]);
+    });
+
+    it("não conta o perfil vivo nem o documento sem deletedAt", async () => {
+        docs.set("profile-live", { reference_id: "uid-qa", deletedAt: null });
+        docs.set("profile-legacy", { reference_id: "uid-qa" });
+        docs.set("profile-other", {
+            reference_id: "uid-other",
+            deletedAt: new Date(),
+        });
+
+        await expect(userRepository.hasArchivedProfile("uid-qa")).resolves.toBe(
+            false
+        );
+    });
+});
+
 describe("userRepository.linkStripeCustomer", () => {
     it("grava só o vínculo", async () => {
         await userRepository.linkStripeCustomer("profile-1", "cus_qa");
