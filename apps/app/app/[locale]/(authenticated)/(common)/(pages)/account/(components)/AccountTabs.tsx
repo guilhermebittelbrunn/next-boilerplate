@@ -83,7 +83,7 @@ export function AccountTabs({ account }: AccountTabsProps) {
                 <AccountProfileForm account={account} />
             </TabsContent>
             <TabsContent value="security">
-                <AccountSecurityForm />
+                <AccountSecurityForm account={account} />
             </TabsContent>
             <TabsContent value="preferences">
                 <AccountPreferencesForm account={account} />
