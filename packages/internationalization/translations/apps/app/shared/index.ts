@@ -2,6 +2,7 @@ export const appSharedTranslations = {
     "pt-br": {
         profileDropdown: {
             myAccount: "Minha conta",
+            helpAndContact: "Ajuda e contato",
             triggerLabel: "Abrir menu do perfil",
             signOut: "Sair",
         },
@@ -21,6 +22,7 @@ export const appSharedTranslations = {
     en: {
         profileDropdown: {
             myAccount: "My account",
+            helpAndContact: "Help and contact",
             triggerLabel: "Open profile menu",
             signOut: "Sign out",
         },
@@ -40,6 +42,7 @@ export const appSharedTranslations = {
     es: {
         profileDropdown: {
             myAccount: "Mi cuenta",
+            helpAndContact: "Ayuda y contacto",
             triggerLabel: "Abrir menú del perfil",
             signOut: "Salir",
         },
