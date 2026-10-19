@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-16
+updated: 2026-10-19
 ---
 
 # MFA, sessões ativas e política de senha
@@ -30,7 +30,7 @@ eficácia.
 
 - `packages/auth/server.ts:330`: `revokeUserSessions` revoga todas as sessões da conta no Firebase. Desde a
   PR #39 ela é chamada só por "Sair de todos os dispositivos" (`apps/api/app/(routes)/account/sessions/revoke/route.ts:8`,
-  acionado pela aba Segurança em `AccountSecurityForm.tsx:140`), pela troca de senha e pela desativação pelo
+  acionado pela aba Segurança em `AccountSecurityForm.tsx:154`, era `:140` até a PR #48), pela troca de senha e pela desativação pelo
   admin. O botão "Sair" deixou de ser um "sair de todos": `sessionDELETE`
   (`packages/auth/session-routes.ts:174-183`) apaga o cookie e pede à API que marque só a sessão atual como
   encerrada. *(Até a PR #39 este bloco descrevia o logout global, com âncoras em `server.ts:323` e
@@ -178,7 +178,7 @@ eficácia.
 > 2026-10-04), o que está correto e é fácil de inverter sem ninguém perceber.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
-> (`packages/auth/client.ts:214-225`, remedido em 2026-09-27), que força `reload(user)` + `getIdToken(true)`. É o primeiro
+> (`packages/auth/client.ts:244-255`, remedido em 2026-10-19 depois da PR #48), que força `reload(user)` + `getIdToken(true)`. É o primeiro
 > precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
 > do lado do browser. A suíte de `packages/auth` deixou de ser o ponto cego que esta nota apontava: passou
 > de 2 arquivos / 29 testes para **8 arquivos / 101 testes** (recontado em 2026-09-17, rodando o gate sem
@@ -203,9 +203,9 @@ eficácia.
       `GET /account/sessions` (`apps/api/app/(routes)/account/sessions/route.ts:11-27`) devolve as sessões
       vivas do titular, com a atual marcada e as encerradas ou anteriores à revogação geral fora da lista
       (`selectActiveSessions`, `apps/api/(shared)/lib/session-tracker.ts:156`). O painel "Sessões ativas" fica
-      na aba Segurança (`AccountSecurityForm.tsx:105`, `AccountSessionsPanel.tsx`), com navegador e sistema,
+      na aba Segurança (`AccountSecurityForm.tsx:119`, era `:105` até a PR #48, e `AccountSessionsPanel.tsx`), com navegador e sistema,
       instante do login e último uso. SDK: `listSessions`, `revokeSession` e `revokeOtherSessions`
-      (`packages/sdk/src/actions/account/action.ts:127`, `:138`, `:146`).
+      (`packages/sdk/src/actions/account/action.ts:163`, `:174`, `:182`; eram `:127`, `:138` e `:146` até a PR #48).
       **Deriva de letra, a spec estava imprecisa:** "origem" virou navegador, sistema e tipo de aparelho,
       tirados do user-agent. IP não é gravado, coerente com a lacuna "IP, user-agent, dispositivo e
       geolocalização" do `BACKLOG.md` (o Marco Civil, art. 5º, VIII, muda a natureza do dado com IP). App e web
@@ -222,7 +222,7 @@ eficácia.
       `trackSession` em `session-tracker.ts:106`). O "Sair" ficou local (`session-routes.ts:174-183`). Quatro
       códigos novos nos 3 idiomas (`AUTH_SESSION_REVOKED`, `ACCOUNT_SESSION_NOT_FOUND`,
       `ACCOUNT_SESSION_IS_CURRENT`, `ACCOUNT_SESSION_UNIDENTIFIED`, a partir de
-      `translations/packages/shared/utils.ts:46`, remedida em 2026-10-16 depois da PR #46).
+      `translations/packages/shared/utils.ts:54`, remedida em 2026-10-19 depois da PR #48).
       **Deriva, a spec estava errada sobre o que o Firebase permite:** encerrar uma sessão corta a API e o
       cookie, mas o refresh token daquele aparelho continua válido no Firebase, que só revoga a conta inteira.
       Firestore e Storage negam todo cliente, então o aparelho encerrado não alcança dado por fora da API. A
@@ -236,9 +236,9 @@ eficácia.
       8`, `PASSWORD_MAX_LENGTH = 1024`, `EXISTING_PASSWORD_MIN_LENGTH = 6` para login e senha atual). Na borda
       da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
-      e na redefinição (`auth.schema.ts:24`, `:29`, `:89-90`, remedidas em 2026-10-16 depois da PR #46), na troca (`account.schema.ts:47-48`, `:136-137`, âncoras remedidas em 2026-09-30)
+      e na redefinição (`auth.schema.ts:24`, `:29`, `:89-90`, remedidas em 2026-10-16 depois da PR #46), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:88`, `:223`, `:359`, remedidas em 2026-10-16 depois da PR #46). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:96`, `:239`, `:383`, remedidas em 2026-10-19 depois da PR #48). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
@@ -340,7 +340,11 @@ no nosso código.
   motivo está no código: entrar pelo cookie de sessão compartilhado regrava o instante de autenticação, então
   uma sessão roubada se apresenta como recente. Quem desenhar o contrato de "sessão recente" precisa partir
   dessa restrição, e a conta sem provedor de senha fica sem caminho: a rota recusa com
-  `ACCOUNT_DELETION_REAUTH_UNSUPPORTED` em `:48-53`.)*
+  `ACCOUNT_DELETION_REAUTH_UNSUPPORTED` em `:48-53`.)* *(2026-10-19, pós-PR #48: a conta só Google ganhou um
+  caminho, definir uma senha na aba Segurança, e o repositório ganhou a primeira prova de login recente que não
+  depende da idade da sessão: `apps/api/(shared)/lib/recent-google-sign-in.ts:13-30` aceita só um ID token com
+  `sign_in_provider` `google.com` e `auth_time` de até 300 s, porque o token do bootstrap do cookie sai com
+  provedor `custom`. É o ponto de partida natural para o contrato de "sessão recente".)*
 - Detecção de login suspeito, alerta de novo dispositivo e bloqueio por tentativa — pertencem a
   `observability-logging`/`audit-log` e a anti-abuso. Verificação contra bases de senhas vazadas depende
   de serviço externo.
