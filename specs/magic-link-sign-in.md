@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/auth/client.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", apps/api/(shared)/lib/auth-action-links.ts, apps/api/proxy.ts]
 feature: -
-updated: 2026-10-16
+updated: 2026-10-19
 ---
 
 # Entrar com link enviado por e-mail
@@ -27,7 +27,7 @@ tem até o texto de um e-mail de acesso pronto, sem uso. Falta o fluxo de entrad
 
 ## O que já existe no repo
 
-- `packages/auth/client.ts:142-155` — a app entra com e-mail e senha ou com Google por popup. Não há
+- `packages/auth/client.ts:144-157` (era `:142-155` até a PR #48) — a app entra com e-mail e senha ou com Google por popup. Não há
   `sendSignInLinkToEmail`, `isSignInWithEmailLink` nem `signInWithEmailLink` no repositório (grep vazio).
 - `apps/api/(shared)/lib/auth-action-links.ts:20-23`, `:55-80` — a API gera links de ação pelo Admin SDK, só envia
   com e-mail configurado e devolve "sem link" para conta inexistente, sem erro que revele a conta.
@@ -100,8 +100,13 @@ tem até o texto de um e-mail de acesso pronto, sem uso. Falta o fluxo de entrad
 - **Leitores de link em e-mail corporativo** abrem o link antes da pessoa. Como a conclusão exige o e-mail guardado
   no navegador de quem pediu, um leitor automático não deveria consumir o acesso. O `/test` precisa confirmar isso.
 - **Vínculo com a senha.** No Firebase, o link por e-mail é uma forma de entrar do provedor de senha. A interação com
-  a lista de métodos de [`linked-sign-in-methods`](linked-sign-in-methods.md) precisa ser conferida no `/analyze`
-  da spec que vier por segundo.
+  a lista de métodos de [`linked-sign-in-methods`](../docs/features/linked-sign-in-methods/spec.md) precisa ser conferida no `/analyze`
+  da spec que vier por segundo. *(Nota de 2026-10-19, pós-PR #48: a lista foi entregue primeiro, então a conferência
+  cabe a esta spec. A aba Segurança decide "tem senha?" pelo provedor `password` (`apps/app/shared/lib/signInMethods.ts:22-23`,
+  e na API `apps/api/(shared)/lib/auth-providers.ts:17-19`). Pela documentação do `EmailAuthProvider`, o link por
+  e-mail também entra pelo provedor `password`; se isso valer, uma conta que só entra por link apareceria como
+  "E-mail e senha" e veria o formulário de troca de senha, e a exclusão e a troca de e-mail pediriam uma senha que
+  não existe. Não medido nesta rodada; o `/analyze` mede no emulador antes de desenhar.)*
 
 ## Sinais de pronto
 

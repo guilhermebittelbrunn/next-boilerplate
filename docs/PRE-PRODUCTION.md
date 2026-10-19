@@ -267,7 +267,8 @@ vazio" e passa a exigir as outras duas. Detalhes em [`SETUP.md`](SETUP.md).
 **Sem isto, quem esquece a senha perde a conta.** A recuperação de senha, a verificação de e-mail e a troca
 de e-mail do titular dependem de entrega real; sem credencial, o pedido de redefinição e o pedido de troca
 de e-mail respondem `EMAIL_NOT_CONFIGURED` (503) em vez de fingir que enviaram. O erro é honesto, mas a
-funcionalidade não existe.
+funcionalidade não existe. O formulário de contato da landing também depende disso: sem a Resend, o envio
+responde `CONTACT_UNAVAILABLE` (503) e a pessoa vê o aviso de canal indisponível.
 
 ⛔ **Nunca foi provado de ponta a ponta.** Toda a validação da base de e-mail e da recuperação de senha foi
 feita com preview local e placeholder — **nenhuma mensagem saiu de verdade**, porque isso exige o passo de
@@ -599,6 +600,9 @@ Sem ela o `@repo/security` degrada para **no-op** e a API avisa uma vez, no boot
 redefinição de senha e o reenvio de verificação: sem limite, os dois viram **gerador gratuito de e-mail em
 nome do fork** — e a fatura do provedor é do fork.
 
+O formulário de contato (`POST /contact`) entra na mesma conta. A rota é pública e cada envio aceito vai para
+a caixa de suporte do fork; sem a chave, qualquer script enche essa caixa e gasta a cota da Resend.
+
 O cadastro também fica sem trava. `POST /auth/sign-up` cria a conta pelo Admin SDK, que não passa pelo
 limite do Firebase de 100 contas por hora por IP (esse limite vale para a criação pelo cliente). Sem
 `ARCJET_KEY`, um script cria contas pela API até o Firebase recusar por cota do projeto.
@@ -729,8 +733,10 @@ provedor e nenhum deles é código — o quarto, já resolvido, era.
 - [ ] Ícones do app (`apps/app/app/`) e da web (`apps/web/app/[locale]/`) trocados pelos do produto
 
 Sem as variáveis, o produto sobe normalmente e o cliente vê `next-boilerplate` no painel, na landing, no
-título da aba e nos e-mails. As variáveis são `NEXT_PUBLIC_*`, então defini-las sem refazer o deploy não
-muda nada. Passo a passo em [`FORKING.md`](FORKING.md), passo 1.
+título da aba e nos e-mails. Sem `NEXT_PUBLIC_APP_SUPPORT_EMAIL`, o formulário de contato da landing mostra
+o canal como indisponível e a API recusa o envio com `CONTACT_UNAVAILABLE`: é essa caixa que recebe as
+mensagens, e alguém precisa lê-la, porque o core não guarda cópia. As variáveis são `NEXT_PUBLIC_*`, então
+defini-las sem refazer o deploy não muda nada. Passo a passo em [`FORKING.md`](FORKING.md), passo 1.
 
 ### 14. Documentos de conformidade
 
@@ -804,7 +810,8 @@ desta feature, e por isso não foi tratada junto dela.
 
 1. Expor a aba de privacidade fora do painel comum, numa rota que o modo `simple` alcance.
 2. Manter como está e exigir que todo fork `simple` preencha `NEXT_PUBLIC_PRIVACY_CONTACT` com um endereço
-   monitorado — hoje o vazio cai no formulário de `/contact`, que entrega em `ownerInbox()`.
+   monitorado — hoje o vazio cai no formulário de `/contact`, que entrega na caixa de
+   `NEXT_PUBLIC_APP_SUPPORT_EMAIL` e fica indisponível sem ela.
 3. Declarar que o modo `simple` não atende titular final e serve só a ferramenta interna.
 
 **Como verificar que o fork está coberto:** com `NEXT_PUBLIC_PRODUCT_MODE=simple`, entre como usuário

@@ -51,7 +51,7 @@ O registro é também uma resposta pronta: a ANPD pode pedi-lo durante a apuraç
 | Categorias de titulares | Titulares em geral. `[FORK]` marcar crianças e adolescentes ou idosos se o produto os atende. |
 | Dados pessoais | Nome, e-mail, telefone. Outros: senha (o Firebase guarda só o hash), foto de perfil, preferência de tema e idioma, estado do onboarding, uid do Firebase, IP e user agent vistos pelo Firebase no login. |
 | Compartilhamento | Google (Firebase Authentication e Cloud Firestore). Com Storage ligado, Google (Cloud Storage) para a foto. |
-| Medidas de segurança | `firestore.rules` nega todo acesso direto de cliente, e só a API lê a base, com service account. Senha nova com no mínimo 8 caracteres. Limite de requisições no login, no cadastro e na redefinição de senha, se `ARCJET_KEY` estiver definida (`apps/api/proxy.ts:49-62`). `[FORK]` acrescentar as medidas próprias. |
+| Medidas de segurança | `firestore.rules` nega todo acesso direto de cliente, e só a API lê a base, com service account. Senha nova com no mínimo 8 caracteres. Limite de requisições no login, no cadastro e na redefinição de senha, se `ARCJET_KEY` estiver definida (`apps/api/proxy.ts:53-67`). `[FORK]` acrescentar as medidas próprias. |
 | Período de armazenamento | Até a exclusão da conta, que é imediata e sem janela de arrependimento ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), "Declaração: até onde a exclusão de conta alcança"). O Google remove a conta do Authentication dos backups dele em até 180 dias e guarda o IP de login por algumas semanas ([privacidade do Firebase](https://firebase.google.com/support/privacy)). Com o backup do Firestore ligado, o perfil apagado continua nos backups até o fim da retenção deles, de até 14 semanas ([`BACKUP.md`](BACKUP.md)). `[FORK]` prazo para conta inativa, se houver. |
 | Processo, finalidade e hipótese legal | Processo: cadastro de usuários. Finalidade: dar acesso ao produto. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar. |
 | Observações | Onde está no código: `apps/api/app/(routes)/auth/sign-up/route.ts`, `packages/sdk/src/types/user/user.ts`, `apps/api/(shared)/validation/account.schema.ts`. Atendimento ao titular: exportação em `/account/export` e exclusão em `/account/deletion`. Canal do titular: `NEXT_PUBLIC_PRIVACY_CONTACT` (vazio, o canal é o formulário de `/contact`). Transferência: Firebase Authentication processa só nos Estados Unidos. `[FORK]` encarregado. |
@@ -66,7 +66,7 @@ O registro é também uma resposta pronta: a ANPD pode pedi-lo durante a apuraç
 | Medidas de segurança | Cookie de sessão `httpOnly` conferido com revogação; o titular vê as sessões ativas na área de conta e encerra uma, todas as outras ou todas. A API recusa a credencial de uma sessão encerrada. |
 | Período de armazenamento | Cookie de sessão: 5 dias por padrão (`SESSION_COOKIE_MAX_AGE_DAYS`, até 14), com teto absoluto de 30 dias desde o login (`SESSION_ABSOLUTE_MAX_AGE_DAYS`, até 90), em `packages/auth/session.ts:23-29`. Registros da coleção `session`: até a exclusão da conta, encerrados inclusive, que entram na exportação e são apagados num passo próprio da exclusão (`sessions`). Registro de acesso: 6 meses para provedor de aplicação constituído como pessoa jurídica com fins econômicos (Marco Civil, art. 15); o prazo real é o da retenção de log da plataforma ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §11). `[FORK]` confirmar a retenção configurada. |
 | Processo, finalidade e hipótese legal | Processo: manter a sessão e guardar o registro de acesso. Finalidade: autenticar as requisições e cumprir a guarda do registro de acesso. Hipóteses sugeridas: execução de contrato (art. 7º, V) para a sessão; cumprimento de obrigação legal (art. 7º, II) para o registro de acesso do Marco Civil. `[FORK]` confirmar. |
-| Observações | Onde está no código: `packages/auth/session.ts`, `packages/auth/server.ts:296-309`, `packages/sdk/src/types/user/user.ts:54-59`, `apps/api/(shared)/repositories/session.repository.ts`, `apps/api/(shared)/lib/user-agent.ts`. O log estruturado da API não grava IP (`apps/api/proxy.ts:68-80`); o IP que existe está no log de requisição da plataforma. |
+| Observações | Onde está no código: `packages/auth/session.ts`, `packages/auth/server.ts:296-309`, `packages/sdk/src/types/user/user.ts:54-59`, `apps/api/(shared)/repositories/session.repository.ts`, `apps/api/(shared)/lib/user-agent.ts`. O log estruturado da API não grava IP (`apps/api/proxy.ts:73-85`); o IP que existe está no log de requisição da plataforma. |
 
 ### 3. Cobrança de assinatura (opcional)
 
@@ -91,24 +91,26 @@ Existe só com `RESEND_TOKEN` e `RESEND_FROM` definidas.
 | Categorias de titulares | Titulares em geral. |
 | Dados pessoais | E-mail. Outros: idioma do e-mail e link de ação (verificação, redefinição de senha, troca de e-mail). |
 | Compartilhamento | Resend. |
-| Medidas de segurança | Os links de ação são códigos do Firebase conferidos pela API antes de aplicar; o aviso de troca de e-mail vai ao endereço antigo antes de o link ir ao novo. Com `ARCJET_KEY`, o pedido de redefinição e o reenvio de verificação têm limite de requisições (`apps/api/proxy.ts:49-62`). |
+| Medidas de segurança | Os links de ação são códigos do Firebase conferidos pela API antes de aplicar; o aviso de troca de e-mail vai ao endereço antigo antes de o link ir ao novo. Com `ARCJET_KEY`, o pedido de redefinição e o reenvio de verificação têm limite de requisições (`apps/api/proxy.ts:53-67`). |
 | Período de armazenamento | O core não guarda o e-mail enviado. Na Resend, não informado nas páginas lidas. `[FORK]` conferir no painel da Resend. |
 | Processo, finalidade e hipótese legal | Processo: e-mails de conta. Finalidade: verificar endereço, recuperar acesso, confirmar troca de e-mail. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar. |
 | Observações | Onde está no código: `packages/email/index.ts`, `apps/api/app/(routes)/auth/password/reset-request/route.ts`, `apps/api/app/(routes)/auth/email-verification/send/route.ts`, `apps/api/app/(routes)/account/email/route.ts`. Transferência: dados da conta Resend nos Estados Unidos. |
 
 ### 5. Formulário de contato da landing
 
-Envia só com `RESEND_TOKEN` e `RESEND_FROM` definidas.
+Envia só com `NEXT_PUBLIC_APP_SUPPORT_EMAIL`, `RESEND_TOKEN` e `RESEND_FROM` definidas na API. Sem
+`NEXT_PUBLIC_APP_SUPPORT_EMAIL` no build da `web`, a landing mostra o canal como indisponível; sem a caixa ou sem a
+Resend na API, a API responde `503 CONTACT_UNAVAILABLE`.
 
 | Bloco | Conteúdo |
 |---|---|
-| Categorias de titulares | Titulares em geral (visitantes da landing). |
+| Categorias de titulares | Titulares em geral (visitantes da landing e usuários do painel que abrem "Ajuda e contato"). |
 | Dados pessoais | Nome, e-mail. Outros: mensagem em texto livre, que pode conter qualquer coisa que o visitante escreva. |
-| Compartilhamento | Resend, que entrega a mensagem na caixa do `RESEND_FROM`. |
-| Medidas de segurança | Nenhuma cópia no Firestore. A landing não aplica bloqueio de bot, mesmo com `ARCJET_KEY` definida: o `skipValidation` de `apps/web/env.ts:33` deixa `env.ARCJET_KEY` vazio, e `apps/web/proxy.ts:63` pula a checagem. |
+| Compartilhamento | Resend, que entrega a mensagem na caixa de `NEXT_PUBLIC_APP_SUPPORT_EMAIL`, com o e-mail do visitante no "responder para". |
+| Medidas de segurança | Nenhuma cópia no Firestore. Validação de tamanho e formato na API, e o destino é fixo no servidor: quem chama não escolhe para quem o e-mail vai. `POST /contact` está na lista de rate limit do proxy da API (20 requisições por minuto por IP), que só vale com `ARCJET_KEY`. A rota não registra nome, e-mail nem mensagem em log. Para quem chega logado pelo painel, o e-mail é preenchido pela sessão compartilhada entre os apps, nunca pela URL. |
 | Período de armazenamento | O core não guarda. A mensagem fica na caixa de entrada do fork. `[FORK]` prazo de guarda da caixa. |
 | Processo, finalidade e hipótese legal | Processo: atendimento a contato. Finalidade: responder a quem escreveu. Hipótese sugerida: procedimento preliminar a contrato a pedido do titular (art. 7º, V) ou legítimo interesse (art. 7º, IX). `[FORK]` confirmar. |
-| Observações | Onde está no código: `apps/web/app/[locale]/contact/actions/contact.tsx:7-22`. Sem `NEXT_PUBLIC_PRIVACY_CONTACT`, este formulário é também o canal do titular. |
+| Observações | Onde está no código: `apps/api/app/(routes)/contact/route.ts` (envio), `apps/api/(shared)/validation/contact.schema.ts` (validação) e `apps/web/app/[locale]/contact/components/contact-form-client.tsx` (formulário). Sem `NEXT_PUBLIC_PRIVACY_CONTACT`, este formulário é também o canal do titular. |
 
 ### 6. Medição de audiência com consentimento (opcional)
 
@@ -146,7 +148,7 @@ Existe só com `ARCJET_KEY` definida e com o prefixo `ajkey_`. Um valor sem o pr
 | Categorias de titulares | Titulares em geral (qualquer pessoa que faz requisição). |
 | Dados pessoais | Outros: IP e cabeçalhos da requisição. |
 | Compartilhamento | Arcjet. |
-| Medidas de segurança | O log de bloqueio da API não grava endereço, cabeçalho nem corpo (`apps/api/proxy.ts:68-80`). |
+| Medidas de segurança | O log de bloqueio da API não grava endereço, cabeçalho nem corpo (`apps/api/proxy.ts:73-85`). |
 | Período de armazenamento | 30 dias na Arcjet, e dado agregado por mais tempo ([privacidade da Arcjet](https://docs.arcjet.com/privacy)). |
 | Processo, finalidade e hipótese legal | Processo: limite de requisições e bloqueio de bot. Finalidade: segurança do serviço. Hipótese sugerida: legítimo interesse (art. 7º, IX). `[FORK]` confirmar. |
 | Observações | Onde está no código: `packages/security/index.ts:37-47`, `packages/security/index.ts:80`. Transferência: várias regiões sem garantia; DPA da Arcjet não encontrado ([`SUBPROCESSORS.md`](SUBPROCESSORS.md)). |

@@ -337,6 +337,32 @@ describe("api proxy rate limit", () => {
         expect(checkRateLimitMock).toHaveBeenCalledTimes(1);
     });
 
+    it("counts the public contact endpoint", async () => {
+        const proxy = await loadProxy(WEB_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                origin: WEB_ORIGIN,
+                method: "POST",
+                path: "/contact",
+            })
+        );
+
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("matches the contact endpoint exactly, not by prefix", async () => {
+        const proxy = await loadProxy(WEB_ORIGIN);
+
+        for (const path of ["/contact/", "/contact/x", "/contacts"]) {
+            await proxy(
+                makeRequest({ origin: WEB_ORIGIN, method: "POST", path })
+            );
+        }
+
+        expect(checkRateLimitMock).not.toHaveBeenCalled();
+    });
+
     it("leaves the rest of the account area unlimited", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
 
@@ -394,7 +420,7 @@ describe("api proxy rate limit", () => {
         });
     });
 
-    it.each(["/account/email", "/auth/email-change/confirm"])(
+    it.each(["/account/email", "/auth/email-change/confirm", "/contact"])(
         "answers a spent budget on %s with AUTH_RATE_LIMITED",
         async (path) => {
             const proxy = await loadProxy(APP_ORIGIN);

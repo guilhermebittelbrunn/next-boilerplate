@@ -133,21 +133,33 @@ describe("RESEND_TOKEN", () => {
     });
 });
 
-describe("ownerInbox", () => {
-    it("answers the configured sender", async () => {
-        configure(DISPLAY_NAME_SENDER, TOKEN);
-        vi.resetModules();
-        const { ownerInbox } = await import("../index");
+describe("supportInbox", () => {
+    const ORIGINAL_SUPPORT_EMAIL = process.env.NEXT_PUBLIC_APP_SUPPORT_EMAIL;
+    const SUPPORT_ADDRESS = "support@acme.com";
 
-        expect(ownerInbox()).toBe(DISPLAY_NAME_SENDER);
+    afterEach(() => {
+        applyEnv("NEXT_PUBLIC_APP_SUPPORT_EMAIL", ORIGINAL_SUPPORT_EMAIL);
     });
 
-    it("answers null when no sender is configured", async () => {
-        configure("", TOKEN);
+    async function supportInboxWith(value: string | undefined) {
+        configure(DISPLAY_NAME_SENDER, TOKEN);
+        applyEnv("NEXT_PUBLIC_APP_SUPPORT_EMAIL", value);
         vi.resetModules();
-        const { ownerInbox } = await import("../index");
+        const { supportInbox } = await import("../index");
+        return supportInbox();
+    }
 
-        expect(ownerInbox()).toBeNull();
+    it("answers the configured support address, never the sender", async () => {
+        expect(await supportInboxWith(SUPPORT_ADDRESS)).toBe(SUPPORT_ADDRESS);
+    });
+
+    it.each([
+        ["empty", ""],
+        ["blank", "   "],
+        ["absent", undefined],
+        ["not an address", "support"],
+    ])("answers null when the support address is %s", async (_label, value) => {
+        expect(await supportInboxWith(value)).toBeNull();
     });
 });
 

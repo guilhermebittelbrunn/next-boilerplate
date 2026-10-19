@@ -10,14 +10,22 @@ mode: ambos
 depends_on: [linked-sign-in-methods]
 contends_on: [packages/auth/client.ts, apps/api/(shared)/lib/firebase-identity-toolkit.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: -
-updated: 2026-10-16
+updated: 2026-10-19
 ---
 
 # Login com GitHub e Microsoft, ligados por configuração
 
-> **`deferred` em 2026-10-16 — motivo.** Depende de [`linked-sign-in-methods`](linked-sign-in-methods.md), aprovada
+> **`deferred` em 2026-10-16 — motivo.** Depende de [`linked-sign-in-methods`](../docs/features/linked-sign-in-methods/spec.md), aprovada
 > no mesmo dia e ainda não entregue, e nenhum fork pediu GitHub ou Microsoft. Volta para a fila quando a dependência
 > for entregue e um fork pedir o provedor.
+>
+> **Atualização de 2026-10-19 (`/spec --sync`, pós-PR #48):** a dependência foi entregue e arquivada em
+> [`docs/features/linked-sign-in-methods/spec.md`](../docs/features/linked-sign-in-methods/spec.md). Metade do
+> motivo do adiamento caiu; a outra metade (nenhum fork pediu GitHub ou Microsoft) continua. O status segue
+> `deferred` até você decidir. Duas coisas da entrega encurtam o corte desta spec: o `DELETE
+> /account/sign-in-methods/[id]` aceita qualquer provedor que a conta liste (`[id]/route.ts:36-42`), e a lista da
+> aba Segurança já mostra um provedor desconhecido com o id cru (`AccountSignInMethodsPanel.tsx:85-91`). Falta o
+> botão de vincular, que hoje só existe para o Google (`:210-223`).
 
 ## Problema
 
@@ -28,8 +36,10 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
 
 ## O que já existe no repo
 
-- `packages/auth/client.ts:150-155` — `signInWithGoogle` abre o popup com `GoogleAuthProvider`; não há outro
-  provedor no repositório (grep por `GithubAuthProvider`, `OAuthProvider` e `microsoft` vazio fora de testes).
+- `packages/auth/client.ts:152-157` (era `:150-155` até a PR #48) — `signInWithGoogle` abre o popup com
+  `GoogleAuthProvider`; não há outro provedor no repositório (grep por `GithubAuthProvider`, `OAuthProvider` e
+  `microsoft` vazio fora de testes). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:170`, `:178`)
+  também usam só o Google.
 - `apps/app/shared/lib/googleSignInApi.ts:17-36` — o fluxo da app: popup do Google, ID token do Google, ação
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
@@ -64,7 +74,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
       outros métodos.
 - [ ] Se o e-mail já pertence a uma conta de outro método, a tela explica com código traduzido e orienta a entrar
       pelo método existente e vincular o provedor na aba Segurança. Nenhuma conta duplicada nasce desse caso.
-- [ ] A lista de métodos de login de [`linked-sign-in-methods`](linked-sign-in-methods.md) mostra os provedores
+- [ ] A lista de métodos de login de [`linked-sign-in-methods`](../docs/features/linked-sign-in-methods/spec.md) mostra os provedores
       novos e permite vinculá-los e desvinculá-los.
 - [ ] O fluxo do Google passa a ser um caso do mesmo mecanismo, sem mudar o que o usuário vê.
 

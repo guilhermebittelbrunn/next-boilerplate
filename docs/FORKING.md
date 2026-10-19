@@ -111,7 +111,7 @@ Três variáveis públicas, lidas por `getBrand()` em `packages/next-config/bran
 |-----|------------|-------|
 | `NEXT_PUBLIC_APP_NAME` | Nome na barra lateral do painel, no painel das telas de entrada, no header e footer da web, no `<title>` e Open Graph (`createMetadata`), no JSON-LD da home, no corpo e no assunto dos e-mails, e no nome do remetente ([seção 7.1](#71-resend-e-mail)). | `next-boilerplate` |
 | `NEXT_PUBLIC_APP_LOGO_URL` | Logo na barra lateral, no painel de entrada, no header da web, no cabeçalho dos e-mails e no `logo` do JSON-LD. A origem da URL entra no `img-src` da CSP do app e da web. | Cada superfície mostra o seu ícone genérico: a inicial do nome na barra lateral, um ícone no painel de entrada, o triângulo na web e o nome em texto no e-mail. |
-| `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | Linha "Dúvidas? Escreva para …" no rodapé dos e-mails de boas-vindas e de ação. O e-mail de contato, que vai para o dono do produto, não recebe a linha. | Sem linha de suporte. |
+| `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | Caixa que recebe as mensagens do formulário de contato da landing (`/contact`), com o e-mail de quem escreveu no "responder para". Também é a linha "Dúvidas? Escreva para …" no rodapé dos e-mails de boas-vindas e de ação; o e-mail de contato, que vai para essa mesma caixa, não recebe a linha. | O formulário de contato mostra o canal como indisponível e a API recusa o envio com `CONTACT_UNAVAILABLE`. Sem linha de suporte nos e-mails. |
 
 O logo precisa ser uma URL absoluta `https` (ou `http`), pública e de uma marca quadrada. O mesmo arquivo
 serve às três superfícies, e cliente de e-mail não resolve caminho relativo. Um valor relativo, com outro
@@ -393,7 +393,7 @@ Legenda da coluna "Prod": **obrigatória** (sem ela o app não sobe ou uma funç
 |-----|------|------|------------|-------|
 | `NEXT_PUBLIC_APP_NAME` | api, app, web | recomendada | Nome do produto em telas, metadata, JSON-LD, e-mails e remetente ([seção 3.1](#31-marca)) | `next-boilerplate` |
 | `NEXT_PUBLIC_APP_LOGO_URL` | api, app, web | recomendada | Logo em telas e e-mails; a origem entra na CSP | Ícone genérico em cada superfície |
-| `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | api (app e web por simetria) | recomendada | Linha de suporte no rodapé dos e-mails para usuários | Sem a linha |
+| `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | api, web (app por simetria) | obrigatória para o contato | Destino do formulário de contato (na `api`), decide se o formulário aparece (na `web`) e é a linha de suporte no rodapé dos e-mails | Formulário de contato indisponível (`CONTACT_UNAVAILABLE`) e e-mails sem a linha |
 | `NEXT_PUBLIC_APP_AUTHOR` · `NEXT_PUBLIC_APP_AUTHOR_URL` | app, web | opcional | Autor e `publisher` da metadata | O nome da marca; sem URL |
 | `NEXT_PUBLIC_TWITTER_HANDLE` | app, web | opcional | `twitter:creator` | Sem a tag |
 

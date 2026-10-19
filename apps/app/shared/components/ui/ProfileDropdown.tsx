@@ -17,9 +17,10 @@ import {
     DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { getDictionary } from "@repo/internationalization/client";
-import { CookieIcon, LogOutIcon, UserIcon } from "lucide-react";
+import { CookieIcon, LifeBuoyIcon, LogOutIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useMyAccount } from "@/shared/hooks/useMyAccount";
+import { contactPageUrl } from "@/shared/lib/contactPageUrl";
 import { withLocalePath } from "@/shared/lib/localePath";
 
 export default function ProfileDropdown() {
@@ -28,6 +29,7 @@ export default function ProfileDropdown() {
     const { data: account } = useMyAccount();
     const cookieConsent = useCookieConsent();
     const profileDropdown = dictionary.apps.app.shared.profileDropdown;
+    const helpHref = contactPageUrl(locale);
 
     // The Firebase client user is the fallback, not the source: it does not know the
     // avatar reference and keeps a stale display name until the token refreshes.
@@ -65,6 +67,14 @@ export default function ProfileDropdown() {
                             <span>{profileDropdown.myAccount}</span>
                         </Link>
                     </DropdownMenuItem>
+                    {helpHref && (
+                        <DropdownMenuItem asChild>
+                            <a href={helpHref} rel="noreferrer" target="_blank">
+                                <LifeBuoyIcon className="text-muted-foreground" />
+                                <span>{profileDropdown.helpAndContact}</span>
+                            </a>
+                        </DropdownMenuItem>
+                    )}
                     {cookieConsent.available && (
                         <DropdownMenuItem
                             onClick={cookieConsent.openPreferences}
