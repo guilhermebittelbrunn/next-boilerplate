@@ -87,7 +87,7 @@ mesma fonte. Um arquivo de configuração, como nos kits pagos, seria uma segund
   Stripe, num idioma só.
 - **Trial e cupom no checkout**: mesma linha da tabela de lacunas.
 - **Plano "fale conosco"** (Enterprise) gerado do catálogo: continua como cópia fixa que leva ao contato, coberto
-  por [`contact-support-channel`](../../../specs/contact-support-channel.md).
+  por [`contact-support-channel`](../contact-support-channel/spec.md).
 
 ## Impacto por camada
 

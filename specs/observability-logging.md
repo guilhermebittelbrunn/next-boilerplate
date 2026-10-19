@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-10-16
+updated: 2026-10-19
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -46,7 +46,7 @@ segue invisível até alguém conferir a fatura.
   *(Âncoras e contagem remedidas em 2026-09-17: a PR #18 acrescentou o escopo `audit` à união, deslocando o
   restante do arquivo em uma linha.)*
 - **As variações de formato acabaram.** Os **16** pontos de log deliberado passam todos pelo helper, entre
-  eles `apps/api/proxy.ts:74`, `webhooks/payments/route.ts:279,291`, `users/route.ts:80`,
+  eles `apps/api/proxy.ts:79` (era `:74` até a PR #49), `webhooks/payments/route.ts:279,291`, `users/route.ts:80`,
   `auth/sign-up/route.ts:58`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
   `(shared)/lib/storage.ts:109`, `account-avatar.ts:45`, `entity-photo.ts:62` e os dois que a PR #18 trouxe
   em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). *(Âncoras de `proxy.ts` e `storage.ts` remedidas em 2026-09-23: a PR #23 deslocou as duas; a de `storage.ts` desceu de novo para `:109` com a PR #31, remedida em 2026-09-29. A PR #23 também
@@ -80,10 +80,11 @@ segue invisível até alguém conferir a fatura.
   #47 não acrescentou `console` cru.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
-- **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:129` gera o UUID, `:168` o
-  repassa ao handler pelo header de entrada e `:82-83` o carimba na resposta (âncoras remedidas em
-  2026-09-30, quando a PR #33 acrescentou três linhas à lista de rate limit, e de novo em 2026-10-16, depois
-  das quatro linhas de comentário que a PR #47 pôs acima dela).
+- **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:134` gera o UUID, `:173` o
+  repassa ao handler pelo header de entrada e `:87-88` o carimba na resposta (âncoras remedidas em
+  2026-09-30, quando a PR #33 acrescentou três linhas à lista de rate limit, em 2026-10-16, depois
+  das quatro linhas de comentário que a PR #47 pôs acima dela, e em 2026-10-19, depois das cinco da PR #49:
+  eram `:129`, `:168` e `:82-83`).
   `packages/shared/utils/helpers/request-id.ts:6` concentra o nome do header, e
   `formattedError.ts:24,117` o lê de volta da resposta que o browser recebeu, para que o identificador do
   toast case com o `requestId=` da linha de log.
@@ -114,12 +115,12 @@ segue invisível até alguém conferir a fatura.
   apontando há cinco rodadas. *(As âncoras `:263` e `:276` da versão anterior deslocaram para `:253` e
   `:279`. E a rodada de 2026-09-16 escreveu "9 arquivos": subtraiu as 2 chamadas do total e esqueceu de
   subtrair os 2 arquivos que as hospedam.)*
-- **`packages/email` mantém um helper próprio.** `packages/email/index.ts:40-50` (`logEmail`) produz
+- **`packages/email` mantém um helper próprio.** `packages/email/index.ts:41-51` (`logEmail`; era `:40-50` até a PR #49, que acrescentou um import) produz
   exatamente o mesmo formato do `logEvent`, com `console.warn` direto. Não é divergência de formato, é
   duplicação de código — e o teste que reprova quem logar o objeto de erro
   (`packages/email/__tests__/logPrivacy.test.ts`) vigia só esta cópia.
 - **`provider-error` continua colapsando três falhas distintas** — cota estourada, domínio não verificado e
-  chave revogada — num único motivo (`packages/email/index.ts:121-131`). Descartar o objeto de erro é
+  chave revogada — num único motivo (`packages/email/index.ts:122-132`, era `:121-131` até a PR #49). Descartar o objeto de erro é
   correto e deliberado (ele carrega o endereço do destinatário), mas ninguém distingue "acabou a cota" de
   "revogaram a chave" sem abrir o painel do provedor.
 - **`import-in-the-middle` e `require-in-the-middle` seguem declarados e nunca importados**
@@ -170,7 +171,7 @@ continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário
 | item do corte | veredito | evidência |
 |---------------|----------|-----------|
 | 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:76-77`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
-| 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:129,168,82-83` · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
+| 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:134,173,87-88` (remedidas em 2026-10-19, pós-PR #49) · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
 | 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:279,291` · `users/route.ts:80` · `auth/sign-up/route.ts:58`, todos com `requestId` (âncoras do webhook remedidas em 2026-10-16, depois da PR #46) |
 | 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-57`, booleano nu, teto de 2 s em `:9` |
 | 5. Camada no-op sem a variável do serviço | **implementado**, por não haver serviço | zero dependência nova, zero env nova, zero linha em `.env.example` |
@@ -210,8 +211,8 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
       e contexto do usuário — e chega a quem opera sem o cliente precisar avisar. — **parcial:** a trilha
       existe e é correlacionável; o coletor e a notificação não.
 - [x] Cada requisição da API carrega um identificador que aparece em todo log daquela requisição e volta na
-      resposta de erro, colando o que o usuário vê ao que o servidor registrou. — `apps/api/proxy.ts:129`
-      gera, `:168` repassa ao handler, `:82-83` carimba na resposta; `formattedError.ts:117` lê de volta.
+      resposta de erro, colando o que o usuário vê ao que o servidor registrou. — `apps/api/proxy.ts:134`
+      gera, `:173` repassa ao handler, `:87-88` carimba na resposta; `formattedError.ts:117` lê de volta.
 - [x] Os pontos que hoje usam `console` em fluxos críticos (webhook de pagamento, criação de perfil)
       passam a emitir log estruturado com esse identificador. — `webhooks/payments/route.ts:279,291`,
       `users/route.ts:80`, `auth/sign-up/route.ts:58`.

@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/(shared)/lib/billing.ts, apps/api/(shared)/lib/billing-state.ts, apps/api/(shared)/lib/plan-access.ts, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/(shared)/lib/account-export.ts, "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountBillingPanel.tsx"]
 feature: -
-updated: 2026-10-16
+updated: 2026-10-19
 ---
 
 # Compra avulsa com acesso vitalício
@@ -35,8 +35,9 @@ e só então liberar o acesso no servidor.
   checkout só com `mode: "subscription"`.
 - `apps/api/(shared)/lib/billing-state.ts:63-73` — `toPlanDTO` devolve `null` para preço avulso.
 - `docs/PAYMENTS.md:199-200` — preço avulso pedido no checkout responde 404 `PAYMENTS_PLAN_NOT_FOUND`;
-  `docs/PRE-PRODUCTION.md:517-520` avisa o fork de que preço avulso não aparece. *(Âncoras remedidas em 2026-10-16:
-  a PR #47 acrescentou texto aos dois documentos; eram `:165-166` e `:513-516`.)*
+  `docs/PRE-PRODUCTION.md:518-521` avisa o fork de que preço avulso não aparece. *(Âncoras remedidas em 2026-10-16:
+  a PR #47 acrescentou texto aos dois documentos; eram `:165-166` e `:513-516`. A do `PRE-PRODUCTION.md` desceu uma
+  linha com a PR #49, remedida em 2026-10-19.)*
 - `apps/api/app/(routes)/payments/checkout/route.ts:39-46` — o checkout recusa quem já tem assinatura viva. Uma
   compra avulsa não pode herdar essa recusa.
 - `apps/api/app/(routes)/webhooks/payments/route.ts:194-232` — o webhook trata `checkout.session.completed` só para
