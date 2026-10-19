@@ -35,7 +35,8 @@ export const keys = () =>
                 .optional(),
             /**
              * Address the legal pages publish as the privacy channel. Empty, they link
-             * the contact form instead, which every fork already has working.
+             * the contact form instead, which only delivers once the fork sets
+             * `NEXT_PUBLIC_APP_SUPPORT_EMAIL` and the email provider.
              */
             NEXT_PUBLIC_PRIVACY_CONTACT: z.string().optional(),
             /**
