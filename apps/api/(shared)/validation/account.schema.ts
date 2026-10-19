@@ -12,6 +12,8 @@ const DISPLAY_NAME_MAX = 120;
 const PHONE_MAX = 32;
 const AVATAR_REFERENCE_MAX = 2048;
 const EMAIL_MAX = 320;
+const REAUTH_ID_TOKEN_MAX = 4096;
+const PROVIDER_ID_RE = /^[a-z0-9.]{1,64}$/;
 
 export const themeSchema = z.enum(["light", "dark", "system"]);
 export const localeSchema = z.enum(["pt-br", "en", "es"]);
@@ -49,6 +51,20 @@ export const changePasswordSchema = z
     })
     .strict();
 
+/** Same `.strict()` guard: whose password is set comes from the token, never from the body. */
+export const setPasswordSchema = z
+    .object({
+        reauthIdToken: z.string().min(1).max(REAUTH_ID_TOKEN_MAX),
+        password: newPasswordSchema,
+    })
+    .strict();
+
+export const signInMethodIdSchema = z.string().regex(PROVIDER_ID_RE);
+
+export const signInMethodLinkedSchema = z
+    .object({ providerId: signInMethodIdSchema })
+    .strict();
+
 /** Same `.strict()` guard: whose address changes comes from the token, never from the body. */
 export const changeEmailSchema = z
     .object({
@@ -84,6 +100,8 @@ export const advanceOnboardingSchema = z
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type SetPasswordInput = z.infer<typeof setPasswordSchema>;
+export type SignInMethodLinkedInput = z.infer<typeof signInMethodLinkedSchema>;
 export type ChangeEmailInput = z.infer<typeof changeEmailSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
 export type AdvanceOnboardingInput = z.infer<typeof advanceOnboardingSchema>;
@@ -139,6 +157,39 @@ export function parseChangePassword(
         };
     }
     return { ok: true, value: parsed.data };
+}
+
+export function parseSetPassword(
+    body: unknown
+): { ok: true; value: SetPasswordInput } | { ok: false; response: Response } {
+    const parsed = setPasswordSchema.safeParse(body);
+    if (!parsed.success) {
+        return {
+            ok: false,
+            response: isPasswordTooShort(parsed.error)
+                ? passwordTooShortResponse()
+                : validationFailed(),
+        };
+    }
+    return { ok: true, value: parsed.data };
+}
+
+export function parseSignInMethodLinked(
+    body: unknown
+):
+    | { ok: true; value: SignInMethodLinkedInput }
+    | { ok: false; response: Response } {
+    const parsed = signInMethodLinkedSchema.safeParse(body);
+    if (!parsed.success) {
+        return { ok: false, response: validationFailed() };
+    }
+    return { ok: true, value: parsed.data };
+}
+
+/** `null` for anything that cannot be a Firebase provider id. */
+export function parseSignInMethodId(raw: string | undefined): string | null {
+    const parsed = signInMethodIdSchema.safeParse(raw);
+    return parsed.success ? parsed.data : null;
 }
 
 export function parseChangeEmail(
