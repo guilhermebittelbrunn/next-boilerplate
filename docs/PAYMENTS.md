@@ -256,6 +256,10 @@ segundos, até o evento de recursos chegar.
   cancelamento falhar, ou se a Stripe estiver desligada com assinatura viva gravada, o usuário não é
   arquivado e a rota responde 503 `USERS_DELETE_BILLING_FAILED`. Sem assinatura viva, a Stripe não é
   chamada.
+- Depois do cancelamento, o arquivamento desativa a conta no Firebase Auth e revoga as sessões dela. Se a
+  desativação falhar, o usuário não é arquivado e a rota responde 503 `USERS_DELETE_AUTH_FAILED`, com a
+  assinatura já cancelada. Na nova tentativa a Stripe só é chamada de novo se o webhook ainda não tiver
+  gravado o cancelamento no perfil.
 - A exportação leva `account.subscription`, `account.entitlements` e `account.stripeCustomerId`, com `null`
   quando não existem. `planAccess` fica fora: descreve o ambiente, não um dado do titular.
 
