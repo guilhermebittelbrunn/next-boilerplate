@@ -78,7 +78,7 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 | Var | App | Para quê |
 |-----|-----|----------|
 | `NEXT_PUBLIC_PRODUCT_MODE` | `app`, `web` | `subscription` (usuário opera no painel; assinatura Stripe) \| `simple` (usuário opera na web; painel admin-only). Default `subscription`. Dirige roteamento/navbar/áreas — ver [`docs/AUTH-SSO.md`](AUTH-SSO.md) e [`docs/PAYMENTS.md`](PAYMENTS.md). |
-| `NEXT_PUBLIC_PRIVACY_CONTACT` | `web` | Endereço publicado como canal de privacidade nas páginas legais. Vazio: o canal cai no formulário de `/contact`, que entrega em `ownerInbox()`. |
+| `NEXT_PUBLIC_PRIVACY_CONTACT` | `web` | Endereço publicado como canal de privacidade nas páginas legais. Vazio: o canal cai no formulário de `/contact`, que entrega na caixa de `NEXT_PUBLIC_APP_SUPPORT_EMAIL`. |
 | `SESSION_COOKIE_DOMAIN` | `app`, `web` | **Vazio em dev** (cookie host-only em `localhost`, compartilhado entre portas). Em prod: domínio registrável pai (`example.com`) para `app.example.com` + `example.com` compartilharem a sessão. Nunca um public suffix (`vercel.app`). |
 | `SESSION_COOKIE_MAX_AGE_DAYS` | `app`, `web` | Duração da sessão em dias (Firebase: ~0.0035–14). Default 5. |
 | `SESSION_ABSOLUTE_MAX_AGE_DAYS` | `app`, `web` | Teto absoluto da sessão em dias, contado da autenticação original. Enquanto a aba está aberta o cookie é renovado; passado o teto a renovação é recusada com `AUTH_SESSION_EXPIRED` e o cookie é limpo. Default 30, grampeado entre `SESSION_COOKIE_MAX_AGE_DAYS` e 90. |
@@ -93,7 +93,7 @@ Todas opcionais. Vazias ou ausentes, valem os padrões neutros, e valor malforma
 |-----|-----|----------|
 | `NEXT_PUBLIC_APP_NAME` | `app`, `web`, `api` | Nome do produto na barra lateral, no painel de entrada, no header/footer da web, no `<title>`/Open Graph, no JSON-LD, nos e-mails e no nome do remetente. Padrão `next-boilerplate`. |
 | `NEXT_PUBLIC_APP_LOGO_URL` | `app`, `web`, `api` | URL absoluta `http(s)` e pública do logo, usada no app, na web e nos e-mails. A origem entra no `img-src` da CSP. Vazia: cada superfície mostra seu ícone genérico. |
-| `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | `api` (e-mails); `app` e `web` por simetria | Linha de suporte no rodapé dos e-mails para usuários. Vazia: sem linha. |
+| `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | `api` e `web`; `app` por simetria | Na `api`, destino do formulário de contato e linha de suporte no rodapé dos e-mails para usuários. Na `web`, decide se o formulário de `/contact` aparece. Vazia: o formulário mostra o canal como indisponível, a API responde `CONTACT_UNAVAILABLE` e os e-mails saem sem a linha. |
 | `NEXT_PUBLIC_APP_AUTHOR` | `app`, `web` | Autor e `publisher` na metadata. Vazio: o nome da marca. |
 | `NEXT_PUBLIC_APP_AUTHOR_URL` | `app`, `web` | URL do autor na metadata. |
 | `NEXT_PUBLIC_TWITTER_HANDLE` | `app`, `web` | `twitter:creator`. |
