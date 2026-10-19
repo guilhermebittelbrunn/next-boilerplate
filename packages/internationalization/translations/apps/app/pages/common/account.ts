@@ -18,7 +18,7 @@ export const commonAccountPageTranslations = {
             emailChange: {
                 action: "Trocar e-mail",
                 unsupported:
-                    "Esta conta entra pelo Google e não tem senha para confirmar a troca de e-mail.",
+                    "Esta conta entra pelo Google e não tem senha. Defina uma senha na aba Segurança para trocar o e-mail.",
                 dialogTitle: "Trocar o e-mail da conta",
                 dialogDescription:
                     "Enviamos um link para o novo endereço. O e-mail só muda quando você abrir esse link; até lá, você continua entrando com o atual. O endereço atual recebe um aviso.",
@@ -77,6 +77,38 @@ export const commonAccountPageTranslations = {
             signOutEverywhereConfirm:
                 "Tem certeza que deseja encerrar todas as sessões?",
             signOutEverywhereAction: "Encerrar sessões",
+            signInMethods: {
+                title: "Métodos de login",
+                description:
+                    "Formas de entrar nesta conta. Mantenha pelo menos uma.",
+                methods: { password: "E-mail e senha", google: "Google" },
+                linked: "Vinculado",
+                notLinked: "Não vinculado",
+                linkGoogle: "Vincular conta Google",
+                unlink: "Desvincular",
+                unlinkAriaLabel: "Desvincular {method}",
+                lastMethodHint:
+                    "É o único método de login da conta e não pode ser removido.",
+                unlinkDialog: {
+                    title: "Desvincular {method}?",
+                    passwordWarning:
+                        "E-mail e senha deixam de abrir esta conta, e todas as sessões são encerradas, inclusive esta. Até você definir uma senha de novo, não dá para trocar o e-mail, e a exclusão da conta passa pelo canal de privacidade.",
+                    googleWarning:
+                        "Entrar com o Google depois disso pode não abrir esta conta. Para usá-lo de novo, vincule por esta tela.",
+                    otherWarning:
+                        "Entrar com este método depois disso pode não abrir esta conta. Para usá-lo de novo, vincule-o outra vez.",
+                    confirm: "Desvincular",
+                    cancel: "Cancelar",
+                },
+            },
+            setPassword: {
+                title: "Definir senha",
+                description:
+                    "Esta conta entra só pelo Google. Defina uma senha para entrar também com e-mail e senha. O Google vai pedir confirmação, e todas as sessões serão encerradas.",
+                newPassword: "Nova senha",
+                confirmPassword: "Confirmar nova senha",
+                save: "Confirmar com o Google e definir senha",
+            },
             sessions: {
                 title: "Sessões ativas",
                 description:
@@ -192,7 +224,7 @@ export const commonAccountPageTranslations = {
                 cancel: "Cancelar",
                 unsupportedTitle: "Exclusão pelo canal de privacidade",
                 unsupportedDescription:
-                    "A sua conta entra pelo Google e não tem senha para confirmar a exclusão. Peça a exclusão pelo canal de privacidade da política.",
+                    "A sua conta entra pelo Google e não tem senha para confirmar a exclusão. Defina uma senha na aba Segurança ou peça a exclusão pelo canal de privacidade da política.",
                 validation: {
                     required: "Informe a senha.",
                     min: "A senha deve ter ao menos 6 caracteres.",
@@ -211,6 +243,10 @@ export const commonAccountPageTranslations = {
             dataExported: "Os seus dados foram baixados.",
             accountDeleted: "A sua conta foi excluída.",
             loadError: "Não foi possível carregar a sua conta.",
+            passwordSet: "Senha definida. Entre de novo para continuar.",
+            signInMethodLinked: "Conta Google vinculada.",
+            signInMethodUnlinked: "Método de login removido.",
+            passwordUnlinked: "Senha removida. Entre de novo para continuar.",
         },
     },
     en: {
@@ -232,7 +268,7 @@ export const commonAccountPageTranslations = {
             emailChange: {
                 action: "Change email",
                 unsupported:
-                    "This account signs in with Google and has no password to confirm an email change.",
+                    "This account signs in with Google and has no password. Set a password in the Security tab to change the email.",
                 dialogTitle: "Change the account email",
                 dialogDescription:
                     "We send a link to the new address. The email only changes when you open that link; until then, you keep signing in with the current one. The current address gets a notice.",
@@ -293,6 +329,38 @@ export const commonAccountPageTranslations = {
             signOutEverywhereConfirm:
                 "Are you sure you want to end every session?",
             signOutEverywhereAction: "End sessions",
+            signInMethods: {
+                title: "Sign-in methods",
+                description:
+                    "Ways to sign in to this account. Keep at least one.",
+                methods: { password: "Email and password", google: "Google" },
+                linked: "Linked",
+                notLinked: "Not linked",
+                linkGoogle: "Link Google account",
+                unlink: "Unlink",
+                unlinkAriaLabel: "Unlink {method}",
+                lastMethodHint:
+                    "This is the account's only sign-in method and cannot be removed.",
+                unlinkDialog: {
+                    title: "Unlink {method}?",
+                    passwordWarning:
+                        "Email and password will no longer open this account, and every session will be ended, this one included. Until you set a password again, the email cannot be changed and deleting the account goes through the privacy channel.",
+                    googleWarning:
+                        "Signing in with Google afterwards may not open this account. To use it again, link it from this screen.",
+                    otherWarning:
+                        "Signing in with this method afterwards may not open this account. To use it again, link it once more.",
+                    confirm: "Unlink",
+                    cancel: "Cancel",
+                },
+            },
+            setPassword: {
+                title: "Set a password",
+                description:
+                    "This account signs in only with Google. Set a password to also sign in with email and password. Google will ask you to confirm, and every session will be ended.",
+                newPassword: "New password",
+                confirmPassword: "Confirm new password",
+                save: "Confirm with Google and set password",
+            },
             sessions: {
                 title: "Active sessions",
                 description:
@@ -408,7 +476,7 @@ export const commonAccountPageTranslations = {
                 cancel: "Cancel",
                 unsupportedTitle: "Deletion through the privacy channel",
                 unsupportedDescription:
-                    "Your account signs in with Google and has no password to confirm the deletion. Ask for it through the privacy channel in the policy.",
+                    "Your account signs in with Google and has no password to confirm the deletion. Set a password in the Security tab, or ask for the deletion through the privacy channel in the policy.",
                 validation: {
                     required: "Enter the password.",
                     min: "The password must have at least 6 characters.",
@@ -427,6 +495,10 @@ export const commonAccountPageTranslations = {
             dataExported: "Your data has been downloaded.",
             accountDeleted: "Your account has been deleted.",
             loadError: "Your account could not be loaded.",
+            passwordSet: "Password set. Sign in again to continue.",
+            signInMethodLinked: "Google account linked.",
+            signInMethodUnlinked: "Sign-in method removed.",
+            passwordUnlinked: "Password removed. Sign in again to continue.",
         },
     },
     es: {
@@ -448,7 +520,7 @@ export const commonAccountPageTranslations = {
             emailChange: {
                 action: "Cambiar correo",
                 unsupported:
-                    "Esta cuenta entra con Google y no tiene contraseña para confirmar el cambio de correo.",
+                    "Esta cuenta entra con Google y no tiene contraseña. Define una contraseña en la pestaña Seguridad para cambiar el correo.",
                 dialogTitle: "Cambiar el correo de la cuenta",
                 dialogDescription:
                     "Enviamos un enlace a la nueva dirección. El correo solo cambia cuando abras ese enlace; hasta entonces, sigues entrando con el actual. La dirección actual recibe un aviso.",
@@ -510,6 +582,41 @@ export const commonAccountPageTranslations = {
             signOutEverywhereConfirm:
                 "¿Seguro que quieres cerrar todas las sesiones?",
             signOutEverywhereAction: "Cerrar sesiones",
+            signInMethods: {
+                title: "Métodos de inicio de sesión",
+                description:
+                    "Formas de entrar en esta cuenta. Mantén al menos una.",
+                methods: {
+                    password: "Correo y contraseña",
+                    google: "Google",
+                },
+                linked: "Vinculado",
+                notLinked: "No vinculado",
+                linkGoogle: "Vincular cuenta de Google",
+                unlink: "Desvincular",
+                unlinkAriaLabel: "Desvincular {method}",
+                lastMethodHint:
+                    "Es el único método de inicio de sesión de la cuenta y no se puede quitar.",
+                unlinkDialog: {
+                    title: "¿Desvincular {method}?",
+                    passwordWarning:
+                        "El correo y la contraseña dejarán de abrir esta cuenta y se cerrarán todas las sesiones, incluida esta. Hasta que definas una contraseña de nuevo, no podrás cambiar el correo y la eliminación de la cuenta pasará por el canal de privacidad.",
+                    googleWarning:
+                        "Entrar con Google después de esto puede no abrir esta cuenta. Para volver a usarlo, vincúlalo desde esta pantalla.",
+                    otherWarning:
+                        "Entrar con este método después de esto puede no abrir esta cuenta. Para volver a usarlo, vincúlalo otra vez.",
+                    confirm: "Desvincular",
+                    cancel: "Cancelar",
+                },
+            },
+            setPassword: {
+                title: "Definir contraseña",
+                description:
+                    "Esta cuenta entra solo con Google. Define una contraseña para entrar también con correo y contraseña. Google pedirá confirmación y se cerrarán todas las sesiones.",
+                newPassword: "Nueva contraseña",
+                confirmPassword: "Confirmar nueva contraseña",
+                save: "Confirmar con Google y definir contraseña",
+            },
             sessions: {
                 title: "Sesiones activas",
                 description:
@@ -625,7 +732,7 @@ export const commonAccountPageTranslations = {
                 cancel: "Cancelar",
                 unsupportedTitle: "Eliminación por el canal de privacidad",
                 unsupportedDescription:
-                    "Tu cuenta entra con Google y no tiene contraseña para confirmar la eliminación. Solicítala por el canal de privacidad de la política.",
+                    "Tu cuenta entra con Google y no tiene contraseña para confirmar la eliminación. Define una contraseña en la pestaña Seguridad o solicítala por el canal de privacidad de la política.",
                 validation: {
                     required: "Indica la contraseña.",
                     min: "La contraseña debe tener al menos 6 caracteres.",
@@ -645,6 +752,11 @@ export const commonAccountPageTranslations = {
             dataExported: "Tus datos se han descargado.",
             accountDeleted: "Tu cuenta se ha eliminado.",
             loadError: "No se pudo cargar tu cuenta.",
+            passwordSet: "Contraseña definida. Vuelve a entrar para continuar.",
+            signInMethodLinked: "Cuenta de Google vinculada.",
+            signInMethodUnlinked: "Método de inicio de sesión quitado.",
+            passwordUnlinked:
+                "Contraseña quitada. Vuelve a entrar para continuar.",
         },
     },
 };

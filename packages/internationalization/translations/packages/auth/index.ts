@@ -24,6 +24,16 @@ export const authTranslations = {
                         "Erro de conexão. Verifique sua internet.",
                     "auth/popup-closed-by-user": "Login cancelado.",
                     "auth/cancelled-popup-request": "Login cancelado.",
+                    "auth/credential-already-in-use":
+                        "Esta conta Google já está vinculada a outra conta.",
+                    "auth/provider-already-linked":
+                        "Este método de login já está vinculado.",
+                    "auth/popup-blocked":
+                        "O navegador bloqueou a janela de login. Permita pop-ups e tente de novo.",
+                    "auth/user-mismatch":
+                        "Escolha a mesma conta Google vinculada a esta conta.",
+                    "auth/unauthorized-domain":
+                        "Este endereço não está autorizado para login com Google.",
                 },
             },
         },
@@ -53,6 +63,16 @@ export const authTranslations = {
                         "Network request failed. Verify your internet connection.",
                     "auth/popup-closed-by-user": "Login canceled.",
                     "auth/cancelled-popup-request": "Login canceled.",
+                    "auth/credential-already-in-use":
+                        "This Google account is already linked to another account.",
+                    "auth/provider-already-linked":
+                        "This sign-in method is already linked.",
+                    "auth/popup-blocked":
+                        "The browser blocked the sign-in window. Allow pop-ups and try again.",
+                    "auth/user-mismatch":
+                        "Choose the same Google account linked to this account.",
+                    "auth/unauthorized-domain":
+                        "This address is not authorized for Google sign-in.",
                 },
             },
         },
@@ -85,6 +105,16 @@ export const authTranslations = {
                     "auth/popup-closed-by-user": "Inicio de sesión cancelado.",
                     "auth/cancelled-popup-request":
                         "Inicio de sesión cancelado.",
+                    "auth/credential-already-in-use":
+                        "Esta cuenta de Google ya está vinculada a otra cuenta.",
+                    "auth/provider-already-linked":
+                        "Este método de inicio de sesión ya está vinculado.",
+                    "auth/popup-blocked":
+                        "El navegador bloqueó la ventana de inicio de sesión. Permite las ventanas emergentes e inténtalo de nuevo.",
+                    "auth/user-mismatch":
+                        "Elige la misma cuenta de Google vinculada a esta cuenta.",
+                    "auth/unauthorized-domain":
+                        "Esta dirección no está autorizada para iniciar sesión con Google.",
                 },
             },
         },
