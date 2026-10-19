@@ -9,6 +9,7 @@ import {
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { revokeAccountAccess } from "@/(shared)/lib/account-access";
 import { resolveUserAuditLabel } from "@/(shared)/lib/audit-label";
 import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import { cancelSubscriptionForErasure } from "@/(shared)/lib/billing";
@@ -18,6 +19,7 @@ import {
     type RouteIdParamsContext,
     resolveIdFromContext,
 } from "@/(shared)/lib/resolve-route-id";
+import { adminAuthErrorReason } from "@/(shared)/lib/toolkit-error-codes";
 import {
     getMergedUserByFirestoreDocId,
     getMergedUserByUid,
@@ -197,6 +199,20 @@ export const DELETE = requireAdminApi<RouteIdParamsContext>(
             });
             return Response.json(
                 { error: { code: "USERS_DELETE_BILLING_FAILED" } },
+                { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
+            );
+        }
+
+        // Billing first: a refused cancellation must leave the account untouched.
+        try {
+            await revokeAccountAccess(profile.reference_id);
+        } catch (error) {
+            logEvent("auth", "admin-user-delete-auth-failed", {
+                requestId: requestIdFrom(req),
+                reason: adminAuthErrorReason(error),
+            });
+            return Response.json(
+                { error: { code: "USERS_DELETE_AUTH_FAILED" } },
                 { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
             );
         }

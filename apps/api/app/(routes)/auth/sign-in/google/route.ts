@@ -1,3 +1,4 @@
+import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import {
     IdentityToolkitError,
     identitySignInWithGoogleIdToken,
@@ -14,6 +15,13 @@ export async function POST(req: Request) {
     try {
         const session = await identitySignInWithGoogleIdToken(idToken, uri);
         const user = await getMergedUserByUid(session.localId);
+
+        if (!user) {
+            return Response.json(
+                { error: { code: "USERS_NOT_FOUND" } },
+                { status: HTTP_STATUS.NOT_FOUND }
+            );
+        }
 
         return Response.json({
             session: {

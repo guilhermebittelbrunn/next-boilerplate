@@ -1,7 +1,7 @@
 ---
 id: contact-support-channel
 title: Canal de contato e suporte que entrega a mensagem
-status: approved
+status: done
 value: médio
 effort: P
 audience: produto
@@ -9,13 +9,13 @@ area: [apps/web, apps/api, apps/app, packages/sdk, packages/email, packages/inte
 mode: ambos
 depends_on: []
 contends_on: ["apps/web/app/[locale]/contact/components/contact-form-client.tsx", apps/api/proxy.ts, apps/app/shared/components/ui/ProfileDropdown.tsx, packages/sdk/src/client/index.ts]
-feature: -
-updated: 2026-10-16
+feature: contact-support-channel
+updated: 2026-10-19
 ---
 
 # Canal de contato e suporte que entrega a mensagem
 
-> **Reabertura.** A tabela "Lacunas avaliadas e não especificadas" do [`BACKLOG.md`](BACKLOG.md) tinha a linha
+> **Reabertura.** A tabela "Lacunas avaliadas e não especificadas" do [`BACKLOG.md`](../../../specs/BACKLOG.md) tinha a linha
 > "Consertar o formulário de contato da landing", com o motivo "Não é spec, é achado. É o fallback do canal de
 > privacidade." O achado ficou aberto desde 2026-09-26 sem virar tarefa direta. O que mudou: (1) a prevalência foi
 > medida pela primeira vez, 2 de 4 starters verificados entregam a mensagem; (2) apareceram dois consumidores
@@ -59,7 +59,7 @@ Para o fork, isso significa perder o primeiro contato de um cliente interessado 
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Formulário de contato que entrega".
 - Prevalência: **2 de 4** verificados entregam (Supastarter, "Contact form"; Makerkit, `CONTACT_EMAIL`, "The email
   address for contact inquiries"). O next-forge tem a mesma fachada que este repositório herdou; o ShipFast oferece
@@ -127,3 +127,44 @@ Para o fork, isso significa perder o primeiro contato de um cliente interessado 
 
 - O usuário logado usa a página da landing ou um diálogo dentro da app? — **recomendação:** a página da landing,
   para manter um formulário só; o `/analyze` pode inverter se o SSO entre as apps complicar o preenchimento.
+
+## Estado da entrega
+
+Entregue pela PR #49, mergeada em `main` em 2026-10-19 às 17:50 UTC (`4eeb07b`), a partir da branch
+`feat/contact-support-channel`. A execução de merge do CI (`gh run 39297601758`, SHA `4eeb07b`) terminou em `success`
+nos quatro jobs: `changes`, `verify` (2 min 56 s), `coverage` e `e2e` (3 min 59 s). O `/test` da feature fechou com
+16 ✅, 0 ❌ e 4 🔒: a entrega real pela Resend, a confirmação de envio vista no navegador, o `429` com `ARCJET_KEY` e o
+e-mail preenchido num domínio de produção. Os quatro exigem infraestrutura real. Arquivada pelo `/spec --sync` de
+2026-10-19, que releu cada item do corte no código de `4eeb07b`.
+
+| item do corte | situação | evidência |
+|---------------|----------|-----------|
+| 1. O formulário de `/contact` pede nome, e-mail e mensagem, valida nos três idiomas e entrega na caixa de suporte com o e-mail do visitante como resposta; o visitante vê confirmação ou erro traduzidos | **implementado** | campos em `contact-form-client.tsx:109-127`, envio pelo SDK em `:54-70` (`apiClient.contact.send`), confirmação em `:86-96` e erro pelo `handleClientError` em `:57-58`; schema traduzido em `apps/web/app/[locale]/contact/validations/contact.ts:12-31`; a rota entrega em `supportInbox()` com `replyTo` do visitante (`apps/api/app/(routes)/contact/route.ts:31-37`; `packages/email/index.ts:83`). Data, sobrenome e currículo saíram do formulário |
+| 2. A entrega passa pela API, com validação na borda, rate limit e um código por situação, sem depender do bloqueio de bot da landing | **implementado** | Zod em `apps/api/(shared)/validation/contact.schema.ts:11-16`; `/contact` na lista de rate limit (`apps/api/proxy.ts:66`); códigos `VALIDATION_FAILED` (400), `CONTACT_UNAVAILABLE` (503), `EMAIL_SEND_FAILED` (503) e `AUTH_RATE_LIMITED` (429, do proxy); ação pública no SDK (`packages/sdk/src/actions/contact/action.ts:12-22`, barril em `packages/sdk/src/client/index.ts:36`). A server action antiga foi removida |
+| 3. Sem e-mail configurado, ou sem caixa de suporte, o formulário diz que o canal está indisponível e não finge ter enviado | **implementado, com deriva de letra** | sem caixa, a página mostra o aviso no lugar do formulário (`page.tsx:17`, `contact-form-client.tsx:73-84`); sem Resend, a API responde `503 CONTACT_UNAVAILABLE` antes de ler o corpo (`route.ts:15-18`) e o aviso aparece no envio, com os campos preservados. Texto em `translations/packages/shared/utils.ts:115`, `:257` e `:406` |
+| 4. Na app, o menu do perfil ganha "Ajuda e contato", que leva ao mesmo canal com o e-mail da conta preenchido | **implementado** | `ProfileDropdown.tsx:70-77`, com o destino de `apps/app/shared/lib/contactPageUrl.ts:4-7`; o e-mail vem da sessão compartilhada na landing (`contact-form-client.tsx:44-49`), nunca da URL; textos em `translations/apps/app/shared/index.ts:5`, `:25` e `:45` |
+| 5. O canal de privacidade e o plano "Enterprise" continuam apontando para `/contact`, agora funcionando; o comentário de `privacyContact.ts` descreve o comportamento real | **implementado** | `privacyContact.ts:5-10` (JSDoc) e `:17-19`; o card da `/pricing` segue em `pricing/page.tsx:73-76`. O `/test` clicou nos três caminhos (home, `/pricing` e `/legal/privacy`) e chegou ao formulário |
+
+**Deriva, com a leitura de cada uma:**
+
+- **Sem Resend, o aviso aparece só no envio.** O item 3 fala do formulário dizendo que o canal está indisponível. Sem
+  caixa de suporte, o aviso vem antes de digitar; sem Resend, a landing não tem como saber (quem envia é a API) e o
+  aviso chega como alerta traduzido depois do clique. O plano escolheu isso de propósito (pergunta 2), para não criar
+  uma rota pública de disponibilidade. O resultado pedido, não fingir que enviou, vale nos dois casos.
+- **O `docs/ROPA.md` não ganhou atividade nova.** A atividade "formulário de contato" já existia (§5); a entrega
+  corrigiu o conteúdo dela. A spec estava imprecisa.
+- **O item do menu só aparece com `NEXT_PUBLIC_WEB_URL`**, e só no painel comum: o admin fora da personificação não
+  o vê (pergunta 10 do plano). A spec não tratava os dois casos.
+- **`contends_on` previu quatro arquivos e a entrega tocou os quatro**, mais `packages/email/index.ts`, os tipos e o
+  barril de tipos do SDK, `packages/shared`, dois dicionários além do da página, `packages/next-config/keys.ts`,
+  `page.tsx` e `contact-form.tsx` da landing, `corsOrigin.test.ts` e sete documentos.
+
+**Além do corte:** o inventário de guards do `docs/SECURITY.md` passou a 41 rotas e 15 sem guard, com a linha de
+`/contact`; seis âncoras de documento deslocadas pelo `proxy.ts` foram corrigidas; e a trava contra envio duplo
+(`contact-form-client.tsx:51-70`) entrou na rodada 2 do `/review`, depois de o `/test` medir duas requisições com dois
+`submit` na mesma tarefa de JS.
+
+**Ficou para o backlog** (achados em `specs/BACKLOG.md`): as rotas públicas que leem o corpo inteiro antes do Zod, a
+`apps/web` que ainda declara `RESEND_*` e depende de `@repo/email` sem enviar nada, o título "Next Boilerplate" e a
+promessa de resposta em 24 horas na página de contato, o `Textarea` do design system que cresce sem limite, e o
+cartão do formulário encostado na borda a 375 px.

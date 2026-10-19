@@ -2,13 +2,19 @@ import { UserType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { signInWithGoogleMock, findByReferenceIdMock, createMock, getUserMock } =
-    vi.hoisted(() => ({
-        signInWithGoogleMock: vi.fn(),
-        findByReferenceIdMock: vi.fn(),
-        createMock: vi.fn(),
-        getUserMock: vi.fn(),
-    }));
+const {
+    signInWithGoogleMock,
+    findByReferenceIdMock,
+    hasArchivedProfileMock,
+    createMock,
+    getUserMock,
+} = vi.hoisted(() => ({
+    signInWithGoogleMock: vi.fn(),
+    findByReferenceIdMock: vi.fn(),
+    hasArchivedProfileMock: vi.fn(),
+    createMock: vi.fn(),
+    getUserMock: vi.fn(),
+}));
 
 vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
     IdentityToolkitError: class extends Error {},
@@ -20,6 +26,8 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     userRepository: {
         findByReferenceId: (...args: unknown[]) =>
             findByReferenceIdMock(...args),
+        hasArchivedProfile: (...args: unknown[]) =>
+            hasArchivedProfileMock(...args),
         create: (...args: unknown[]) => createMock(...args),
     },
 }));
@@ -27,8 +35,10 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({
         getUser: (...a: unknown[]) => getUserMock(...a),
+        updateUser: vi.fn(),
     }),
     getCurrentUser: vi.fn(),
+    revokeUserSessions: vi.fn(),
 }));
 
 const UID = "google-uid-1";
@@ -54,6 +64,7 @@ function existingProfile() {
 describe("POST /auth/sign-in/google", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        hasArchivedProfileMock.mockResolvedValue(false);
         signInWithGoogleMock.mockResolvedValue({
             localId: UID,
             idToken: "session-id-token",
@@ -120,5 +131,21 @@ describe("POST /auth/sign-in/google", () => {
                 onboarding: { step: "profile", completedAt: null },
             })
         );
+    });
+
+    it("answers 404 without a session when the account's only profile is archived", async () => {
+        findByReferenceIdMock.mockResolvedValue(null);
+        hasArchivedProfileMock.mockResolvedValue(true);
+
+        const { POST } = await import(
+            "@/app/(routes)/auth/sign-in/google/route"
+        );
+        const response = await POST(googleRequest());
+
+        expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+        const body = await response.json();
+        expect(body).toEqual({ error: { code: "USERS_NOT_FOUND" } });
+        expect(body).not.toHaveProperty("session");
+        expect(createMock).not.toHaveBeenCalled();
     });
 });

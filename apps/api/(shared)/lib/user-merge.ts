@@ -1,9 +1,12 @@
 import { getAuthInstance, getCurrentUser } from "@repo/auth/server";
 import { type UserDTO, UserType } from "@repo/sdk/src/types";
+import { logEvent } from "@repo/shared/utils/helpers/log";
 import type { UserRecord } from "firebase-admin/auth";
 import { mergeAuthAndFirestore } from "../mappers/user.mapper";
 import { userRepository } from "../repositories/user.repository";
+import { revokeAccountAccess } from "./account-access";
 import { initialOnboardingState } from "./onboarding";
+import { adminAuthErrorReason } from "./toolkit-error-codes";
 
 export const USER_COLLECTION = "user";
 
@@ -17,10 +20,9 @@ export async function getMergedUserByUid(
     } catch {
         return null;
     }
-    let profile = await userRepository.findByReferenceId(uid);
-
+    const profile = await findOrCreateProfile(uid);
     if (!profile) {
-        profile = await createDefaultUserProfile(uid);
+        return null;
     }
 
     return mergeAuthAndFirestore(userRecord, profile);
@@ -36,13 +38,35 @@ export async function getMergedUserFromIdToken(
     if (!authUser) {
         return null;
     }
-    let profile = await userRepository.findByReferenceId(authUser.uid);
-
+    const profile = await findOrCreateProfile(authUser.uid);
     if (!profile) {
-        profile = await createDefaultUserProfile(authUser.uid);
+        return null;
     }
 
     return mergeAuthAndFirestore(authUser, profile);
+}
+
+/**
+ * An archived profile means the admin took this account's access away: signing in again
+ * must not hand it a fresh profile. Accounts archived while still enabled in Firebase
+ * Auth are disabled here, on their first contact; a failure is retried on the next one.
+ */
+async function findOrCreateProfile(uid: string): Promise<UserDTO | null> {
+    const profile = await userRepository.findByReferenceId(uid);
+    if (profile) {
+        return profile;
+    }
+
+    if (await userRepository.hasArchivedProfile(uid)) {
+        await revokeAccountAccess(uid).catch((error: unknown) =>
+            logEvent("auth", "archived-account-lockout-failed", {
+                reason: adminAuthErrorReason(error),
+            })
+        );
+        return null;
+    }
+
+    return createDefaultUserProfile(uid);
 }
 
 export function createDefaultUserProfile(uid: string, dto?: Partial<UserDTO>) {

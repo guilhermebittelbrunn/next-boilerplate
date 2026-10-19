@@ -1,7 +1,12 @@
 "use client";
 
 import { getAuthClient } from "@repo/auth/client";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    type UserCredential,
+} from "firebase/auth";
 import { apiClient } from "@/shared/lib/client";
 
 export type GoogleApiSignInResult = {
@@ -22,6 +27,20 @@ export async function signInWithGoogleViaApi(): Promise<GoogleApiSignInResult> {
     const auth = getAuthClient();
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
+
+    // The popup has already signed the Firebase client in. If the API turns the account
+    // away, that client user has to go, or the screens keep treating it as signed in.
+    try {
+        return await exchangeForApiSession(result);
+    } catch (error) {
+        await signOut(auth).catch(() => null);
+        throw error;
+    }
+}
+
+async function exchangeForApiSession(
+    result: UserCredential
+): Promise<GoogleApiSignInResult> {
     const cred = GoogleAuthProvider.credentialFromResult(result);
     const googleIdToken = cred?.idToken;
     if (!googleIdToken) {
