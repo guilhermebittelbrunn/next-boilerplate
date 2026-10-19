@@ -1,4 +1,5 @@
 import { getDictionary } from "@repo/internationalization/server";
+import { getBrand } from "@repo/next-config/brand";
 import type { Metadata } from "next";
 import { buildLocaleMetadata } from "@/shared/lib/seo";
 import { ContactForm } from "./components/contact-form";
@@ -13,5 +14,5 @@ export const generateMetadata = async (): Promise<Metadata> => {
 };
 
 export default function Contact() {
-    return <ContactForm />;
+    return <ContactForm available={getBrand().supportEmail !== null} />;
 }
