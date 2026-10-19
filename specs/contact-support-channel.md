@@ -48,10 +48,13 @@ Para o fork, isso significa perder o primeiro contato de um cliente interessado 
 - `apps/web/shared/lib/privacyContact.ts:5-8`, `:14-18` — sem `NEXT_PUBLIC_PRIVACY_CONTACT`, o canal de privacidade
   cai em `/contact`; o comentário afirma que o formulário "already delivers to the owner inbox", o que o código
   desmente.
-- `apps/web/app/[locale]/pricing/page.tsx:176` — o plano "Enterprise" leva a `/contact`.
+- `apps/web/app/[locale]/pricing/page.tsx:73-76` e `components/contact-plan-card.tsx` — o card fixo "Enterprise" leva a
+  `/contact`. *(Âncora remedida em 2026-10-16: a PR #47 trocou a página pela leitura do catálogo e manteve o card;
+  era `page.tsx:176`.)*
 - `apps/app/shared/components/ui/ProfileDropdown.tsx:61-85` — o menu do perfil tem "Minha conta", "Cookies" e
   "Sair".
-- `apps/api/proxy.ts:45-58` — a lista de rotas com rate limit, onde uma rota pública nova precisa entrar.
+- `apps/api/proxy.ts:49-62` — a lista de rotas com rate limit, onde uma rota pública nova precisa entrar. *(Era
+  `:45-58`; a PR #47 acrescentou quatro linhas ao comentário acima da lista.)*
 - **Lacuna:** nenhum caminho do produto entrega uma mensagem do visitante ou do usuário a quem opera o fork.
 
 ## Evidência de mercado

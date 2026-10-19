@@ -41,7 +41,8 @@ tem até o texto de um e-mail de acesso pronto, sem uso. Falta o fluxo de entrad
   separa as ações pelo `mode`.
 - `packages/auth/session-routes.ts:91` — `sessionPOST` troca o ID token pelo cookie de sessão compartilhado; o login
   por link precisa terminar no mesmo lugar que o login por senha.
-- `apps/api/proxy.ts:45-58` — rotas com rate limit, onde o pedido de link precisa entrar.
+- `apps/api/proxy.ts:49-62` — rotas com rate limit, onde o pedido de link precisa entrar. *(Era `:45-58` até a PR
+  #47.)*
 - **Lacuna:** não existe forma de entrar sem senha além do Google.
 
 ## Evidência de mercado
