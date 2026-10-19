@@ -916,6 +916,31 @@ sem custo, depois US$ 0,0025 a 0,0055 por MAU, segundo `firebase.google.com/docs
 **Como verificar:** com a política ligada, a chamada REST acima com senha de 7 caracteres tem de ser
 recusada em vez de criar a conta.
 
+### Declaração — o que o vínculo de métodos de login não alcança
+
+Não é pendência que bloqueie deploy: é o limite do que a aba Segurança garante sem custo.
+
+Na tela, definir a primeira senha passa pela API, que exige um login com Google dos últimos 5 minutos,
+aplica a política de senha, encerra as sessões e grava `account.password.set` na trilha. Desvincular também
+passa pela API, que recusa o último método. Vincular o Google acontece no navegador, e a API só grava o
+evento depois que o Firebase lista o provedor na conta.
+
+**O caminho que fica aberto.** O SDK do Firebase no cliente oferece `linkWithCredential`, `linkWithPopup` e
+`updatePassword` a quem tem um ID token da conta (para operações sensíveis o Firebase pode pedir um login
+recente, que a própria pessoa consegue fazer). Quem tem a sessão aberta consegue, fora do produto,
+ligar um Google ou uma senha à conta sem passar pela API: sem a janela de 5 minutos, sem a política de senha
+e sem evento na trilha. É a mesma classe de limite da política de senha acima. O Firebase não oferece gancho
+de servidor no vínculo do plano gratuito. Se as blocking functions do Identity Platform cobrem o vínculo,
+ninguém verificou.
+
+**Configuração que o fork decide.** O "User account linking" do projeto (uma conta por e-mail ou uma por
+provedor) muda o que acontece no primeiro login com Google de uma conta com senha. Explicação em
+[`FORKING.md`](FORKING.md), §4, passo 3.
+
+**Como verificar o fluxo da tela num projeto real:** o popup do Google só abre em domínio autorizado
+(Authentication → Settings → Authorized domains). Num domínio fora da lista, "Vincular conta Google" e
+"Definir senha" mostram a mensagem traduzida de `auth/unauthorized-domain`, e nenhuma rota responde 500.
+
 - [ ] **Contas de QA acumuladas** no projeto Firebase de desenvolvimento (`next-boilerplate-576d0`).
       Todas `example.com`, sem PII real e sem senha em arquivo. Limpar em Authentication **e** o doc `user`
       no Firestore. Nenhuma existe no projeto de produção; a limpeza é para o ambiente de dev não virar
