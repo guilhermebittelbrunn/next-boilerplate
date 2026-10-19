@@ -1,4 +1,5 @@
 import { type Locale, resolveLocale } from "@repo/internationalization/utils";
+import { getBrand } from "@repo/next-config/brand";
 import { Resend } from "resend";
 import { emailCopy } from "./copy";
 import { keys } from "./keys";
@@ -78,8 +79,8 @@ export const isEmailEnabled = (): boolean => {
     return Boolean(RESEND_FROM && RESEND_TOKEN);
 };
 
-/** The address a fork sends from, and the inbox contact messages land in. */
-export const ownerInbox = (): string | null => keys().RESEND_FROM ?? null;
+/** The fork's support address, where contact messages land. Null until the fork sets one. */
+export const supportInbox = (): string | null => getBrand().supportEmail;
 
 /**
  * Renders a template in the requested language and hands it to the provider.
