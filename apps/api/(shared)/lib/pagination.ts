@@ -15,7 +15,7 @@ const MENTIONS_INDEX_RE = /index/i;
  * driver throws on an invalid path instead of answering "not found" — which would turn a
  * forged cursor into a 500.
  */
-function isUsableDocumentId(id: string): boolean {
+export function isUsableDocumentId(id: string): boolean {
     return (
         id.length > 0 &&
         id.length <= DOCUMENT_ID_MAX_LENGTH &&
