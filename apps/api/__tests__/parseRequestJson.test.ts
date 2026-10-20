@@ -68,6 +68,13 @@ async function refusalOf(result: ParseResult) {
 
 const refusedWith = (status: number) => ({ status, body: VALIDATION_FAILED });
 
+function connectionHeaderOf(result: ParseResult) {
+    if (result.ok) {
+        throw new Error("expected a refusal");
+    }
+    return result.response.headers.get("connection");
+}
+
 describe("parseRequestJson", () => {
     it("parses a small JSON body", async () => {
         const result = await parseRequestJson(
@@ -109,6 +116,24 @@ describe("parseRequestJson", () => {
             refusedWith(HTTP_STATUS.PAYLOAD_TOO_LARGE)
         );
         expect(request.bodyUsed).toBe(false);
+    });
+
+    it("closes the connection when refusing a declared length over the cap", async () => {
+        const result = await parseRequestJson(
+            jsonRequest("{}", {
+                "content-length": String(REQUEST_JSON_MAX_BYTES + 1),
+            })
+        );
+
+        expect(connectionHeaderOf(result)).toBe("close");
+    });
+
+    it("closes the connection when refusing a stream that passes the cap", async () => {
+        const result = await parseRequestJson(
+            streamRequest(chunkedSource(oversizedChunks()))
+        );
+
+        expect(connectionHeaderOf(result)).toBe("close");
     });
 
     it("refuses a body longer than its declared length", async () => {
@@ -201,6 +226,12 @@ describe("parseRequestJson", () => {
         expect(await refusalOf(result)).toEqual(
             refusedWith(HTTP_STATUS.BAD_REQUEST)
         );
+    });
+
+    it("keeps the connection reusable when refusing a body that is not JSON", async () => {
+        const result = await parseRequestJson(jsonRequest("{not json"));
+
+        expect(connectionHeaderOf(result)).toBeNull();
     });
 
     it("answers 400 for a body that was already read", async () => {
