@@ -40,12 +40,12 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   `GoogleAuthProvider`; não há outro provedor no repositório (grep por `GithubAuthProvider`, `OAuthProvider` e
   `microsoft` vazio fora de testes). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:170`, `:178`)
   também usam só o Google.
-- `apps/app/shared/lib/googleSignInApi.ts:17-36` — o fluxo da app: popup do Google, ID token do Google, ação
+- `apps/app/shared/lib/googleSignInApi.ts:21-79` (era `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
   `providerId=google.com` fixo.
-- `apps/api/app/(routes)/auth/sign-in/google/route.ts:9-30` — a rota lê o corpo sem validação e devolve a mensagem
-  crua do provedor em 401 (achado novo desta rodada).
+- `apps/api/app/(routes)/auth/sign-in/google/route.ts:10-40` (era `:9-30` até a PR #50, que acrescentou o 404 sem perfil) — a rota lê o corpo sem validação (`:11`) e devolve a mensagem
+  crua do provedor em 401 (`:36`).
 - `apps/app/.../sign-in/components/SignInForm.tsx:187-197` (era `:181-191` até a PR #47) e `sign-up/components/SignUpFormClient.tsx` — um botão
   do Google em cada tela.
 - `apps/api/proxy.ts:53-67` — `/auth/sign-in/google` está no rate limit (era `:49-62` até a PR #49 e `:45-58` até a PR #47).
