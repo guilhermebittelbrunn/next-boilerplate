@@ -1,6 +1,6 @@
 const CURSOR_VERSION = 1;
 
-const DOCUMENT_ID_MAX_LENGTH = 1500;
+const DOCUMENT_ID_MAX_BYTES = 1500;
 
 const RESERVED_DOCUMENT_ID_RE = /^__.*__$/;
 
@@ -11,14 +11,14 @@ const REQUIRES_AN_INDEX_RE = /requires an index/i;
 const MENTIONS_INDEX_RE = /index/i;
 
 /**
- * A document id is rejected here, before it reaches `doc(id)`, because the Firestore
- * driver throws on an invalid path instead of answering "not found" — which would turn a
- * forged cursor into a 500.
+ * A document id is rejected here, before it reaches `doc(id)`, because Firestore throws on
+ * an invalid path or a reserved id instead of answering "not found" — which would turn a
+ * forged cursor or route id into a 500.
  */
 export function isUsableDocumentId(id: string): boolean {
     return (
         id.length > 0 &&
-        id.length <= DOCUMENT_ID_MAX_LENGTH &&
+        Buffer.byteLength(id, "utf8") <= DOCUMENT_ID_MAX_BYTES &&
         !id.includes("/") &&
         id !== "." &&
         id !== ".." &&
