@@ -25,7 +25,9 @@ const {
     ensurePlanLabelMock,
     applyEntitlementsStateMock,
     listActiveEntitlementKeysMock,
+    emitOnceMock,
 } = vi.hoisted(() => ({
+    emitOnceMock: vi.fn(),
     applyEntitlementsStateMock: vi.fn(),
     listActiveEntitlementKeysMock: vi.fn(),
     recordPaidInvoiceMock: vi.fn(),
@@ -119,6 +121,17 @@ vi.mock("@/(shared)/lib/plan-label", () => ({
     },
 }));
 
+// The repository, not `emitNotificationQuietly`: the quiet wrapper is part of what the
+// webhook relies on to keep answering 200 when the notice cannot be stored.
+vi.mock("@/(shared)/repositories/notification.repository", () => ({
+    notificationRepository: {
+        emitOnce: (...args: unknown[]) => {
+            calls.push("emitNotification");
+            return emitOnceMock(...args);
+        },
+    },
+}));
+
 const { POST } = await import("@/app/(routes)/webhooks/payments/route");
 
 const SIGNED_BODY = '{"id":"evt_qa"}';
@@ -206,6 +219,7 @@ beforeEach(() => {
     ensurePlanLabelMock.mockResolvedValue(undefined);
     applyEntitlementsStateMock.mockResolvedValue("applied");
     listActiveEntitlementKeysMock.mockResolvedValue([]);
+    emitOnceMock.mockResolvedValue("created");
     warn = vi.spyOn(console, "warn").mockImplementation(() => {
         return;
     });
@@ -633,6 +647,106 @@ describe("POST /webhooks/payments — customer.subscription.*", () => {
 
         expect(warn).toHaveBeenCalledWith(
             "[payments] webhook-subscription-reconciled eventType=customer.subscription.updated result=skipped"
+        );
+    });
+});
+
+describe("POST /webhooks/payments — notificação da mudança de assinatura", () => {
+    const storedSubscription = (overrides: Record<string, unknown> = {}) => ({
+        subscriptionId: "sub_qa",
+        status: "active",
+        cancelAtPeriodEnd: false,
+        ...overrides,
+    });
+
+    function ownerWith(subscription: unknown) {
+        findByStripeCustomerIdMock.mockResolvedValue({
+            ...PROFILE,
+            subscription,
+        });
+    }
+
+    it("avisa o dono, uma vez por evento, quando o pagamento fica pendente", async () => {
+        ownerWith(storedSubscription());
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated", {
+                status: "past_due",
+            })
+        );
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(emitOnceMock).toHaveBeenCalledTimes(1);
+        expect(emitOnceMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                userId: "profile-1",
+                type: "subscriptionPaymentPending",
+                params: {},
+            }),
+            "subscriptionPaymentPending_evt_sub"
+        );
+        expect(calls.indexOf("emitNotification")).toBeGreaterThan(
+            calls.indexOf("applySubscriptionState")
+        );
+    });
+
+    it("avisa o cancelamento quando a assinatura termina", async () => {
+        ownerWith(storedSubscription());
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.deleted", {
+                status: "canceled",
+            })
+        );
+
+        await POST(request());
+
+        expect(emitOnceMock).toHaveBeenCalledWith(
+            expect.objectContaining({ type: "subscriptionCanceled" }),
+            "subscriptionCanceled_evt_sub"
+        );
+    });
+
+    it("não avisa nada quando o evento foi ignorado", async () => {
+        ownerWith(storedSubscription());
+        applySubscriptionStateMock.mockResolvedValue("skipped");
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated", {
+                status: "past_due",
+            })
+        );
+
+        await POST(request());
+
+        expect(emitOnceMock).not.toHaveBeenCalled();
+    });
+
+    it("não avisa a primeira ativação", async () => {
+        ownerWith(undefined);
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.created")
+        );
+
+        await POST(request());
+
+        expect(emitOnceMock).not.toHaveBeenCalled();
+    });
+
+    it("segue respondendo 200 e marca o evento quando o aviso não grava", async () => {
+        ownerWith(storedSubscription());
+        emitOnceMock.mockRejectedValue(new TypeError("firestore down"));
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated", {
+                status: "unpaid",
+            })
+        );
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(markProcessedMock).toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith(
+            "[notifications] emit-failed type=subscriptionPaymentPending reason=TypeError"
         );
     });
 });
