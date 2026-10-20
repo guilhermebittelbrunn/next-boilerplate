@@ -144,6 +144,9 @@ export const sharedUtilsTranslations = {
                 "A listagem está indisponível no momento. Tente de novo em instantes.",
             SUMMARY_INDEX_MISSING:
                 "O resumo está indisponível no momento. Tente de novo em instantes.",
+            NOTIFICATION_NOT_FOUND: "Notificação não encontrada.",
+            NOTIFICATIONS_INDEX_MISSING:
+                "As notificações estão indisponíveis no momento. Tente de novo em instantes.",
         },
     },
     en: {
@@ -289,6 +292,9 @@ export const sharedUtilsTranslations = {
                 "The listing is unavailable right now. Try again shortly.",
             SUMMARY_INDEX_MISSING:
                 "The summary is unavailable right now. Try again shortly.",
+            NOTIFICATION_NOT_FOUND: "Notification not found.",
+            NOTIFICATIONS_INDEX_MISSING:
+                "Notifications are unavailable right now. Try again shortly.",
         },
     },
     es: {
@@ -441,6 +447,9 @@ export const sharedUtilsTranslations = {
                 "El listado no está disponible ahora. Inténtalo de nuevo en unos instantes.",
             SUMMARY_INDEX_MISSING:
                 "El resumen no está disponible ahora. Inténtalo de nuevo en unos instantes.",
+            NOTIFICATION_NOT_FOUND: "Notificación no encontrada.",
+            NOTIFICATIONS_INDEX_MISSING:
+                "Las notificaciones no están disponibles ahora. Inténtalo de nuevo en unos instantes.",
         },
     },
 };

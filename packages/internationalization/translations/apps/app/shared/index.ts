@@ -1,3 +1,5 @@
+import { notificationsTranslations } from "./notifications";
+
 export const appSharedTranslations = {
     "pt-br": {
         profileDropdown: {
@@ -18,6 +20,7 @@ export const appSharedTranslations = {
             },
             viewPlans: "Ver planos",
         },
+        notifications: notificationsTranslations["pt-br"],
     },
     en: {
         profileDropdown: {
@@ -38,6 +41,7 @@ export const appSharedTranslations = {
             },
             viewPlans: "View plans",
         },
+        notifications: notificationsTranslations.en,
     },
     es: {
         profileDropdown: {
@@ -58,5 +62,6 @@ export const appSharedTranslations = {
             },
             viewPlans: "Ver planes",
         },
+        notifications: notificationsTranslations.es,
     },
 };
