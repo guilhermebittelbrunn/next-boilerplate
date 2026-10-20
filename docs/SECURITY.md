@@ -14,9 +14,9 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autorização (guards da API)
 
-São **41** arquivos de rota em `apps/api/app/(routes)/`. **Vinte e seis** exportam o handler embrulhado num
+São **45** arquivos de rota em `apps/api/app/(routes)/`. **Trinta** exportam o handler embrulhado num
 guard, que roda **antes** da lógica; **quinze** exportam handler nu, e cada grupo tem um motivo próprio
-(medido em 2026-10-19 com `find "apps/api/app/(routes)" -name route.ts` e
+(medido em 2026-10-20 com `find "apps/api/app/(routes)" -name route.ts` e
 `grep -LE "require(CommonPanel|Admin|Plan)Api"`):
 
 | grupo | quantas | por que não tem guard |
@@ -27,8 +27,8 @@ guard, que roda **antes** da lógica; **quinze** exportam handler nu, e cada gru
 | `/payments/catalog` | 1 | a landing mostra os planos a visitantes que ainda não têm conta. Só lê o catálogo da Stripe; sem cobrança configurada responde `{ enabled: false, plans: [] }` |
 | `/contact` | 1 | o formulário de contato da landing recebe quem ainda não tem conta. O destino é fixo no servidor (a caixa de `NEXT_PUBLIC_APP_SUPPORT_EMAIL`), então quem chama não escolhe para quem o e-mail vai; o corpo é validado com Zod e a rota está na lista de rate limit. Sem caixa ou sem Resend responde `503 CONTACT_UNAVAILABLE` antes de ler o corpo |
 
-As **vinte e seis** rotas de negócio restantes — `account/*` ×13, `entities` ×3, `files`, `users` ×4,
-`audit-events`, `payments/*` ×4 — passam por um dos três guards:
+As **trinta** rotas de negócio restantes — `account/*` ×13, `entities` ×3, `files`, `users` ×4,
+`audit-events`, `payments/*` ×4, `notifications/*` ×4 — passam por um dos três guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).
 - `requirePlanApi` — composto sobre o `requireCommonPanelApi` (`apps/api/app/(guards)/plan.ts:21`); depois dele, recusa quem não tem o plano exigido. Hoje só o `POST /entities` usa.
@@ -172,6 +172,10 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 ### Tamanho do corpo
 
 O `parseRequestJson` (`apps/api/(shared)/lib/parse-request-json.ts`) lê o corpo de todas as rotas que recebem JSON (22 handlers, contados em 2026-10-19) e recusa acima de **100 KiB** com `413 VALIDATION_FAILED`, antes do `JSON.parse` e do Zod. Um `content-length` declarado acima do teto é recusado sem ler o corpo. Sem o header, ou com um valor menor que o real, o helper soma os bytes enquanto lê e para de ler ao passar do teto, soltando o stream sem cancelá-lo: no corpo que o Next monta sobre o `Readable` do Node, o cancelamento deixa um `unhandledRejection` (`AbortError`) no log a cada recusa. O maior corpo legítimo de hoje é o da criação de entidade: cerca de 74 KB no pior caso, com todo caractere escapado como `\uXXXX`.
+
+A resposta 413 sai com `connection: close`. O helper não lê o resto do corpo, e sem esse header o Node mantém o socket aberto esperando por ele até o `requestTimeout` (300 s por padrão). Medido em `next start` no dia 2026-10-20, com 50 envios simultâneos de 5 MiB para `/auth/sign-in`: sem o header, 40 das 50 conexões com corpo em `chunked` continuavam ESTABLISHED 2 s e 60 s depois; com ele, nenhuma ficou aberta aos 60 s, em três rajadas. Com `content-length` declarado, com ou sem `Expect: 100-continue`, o `curl` encerra a conexão por conta própria ao receber o 413, e nenhuma ficou aberta antes nem depois da mudança.
+
+Fechar a conexão tem um custo para o cliente que ainda está enviando quando o 413 chega. O `fetch` do Node 22 mandando 5 MiB pelo localhost recebeu o 413 em 230 de 240 tentativas. Nas outras 10 (8 com `content-length`, 2 em `chunked`; 9 delas em lotes de 30 envios simultâneos), a escrita falhou com `ECONNRESET` ou `EPIPE` e o cliente não viu o 413 nem o `error.code`. Sem o header, as 120 tentativas de controle receberam o 413. Através de um proxy local que atrasa cada sentido em 25 ms ou 100 ms, as 40 tentativas receberam o 413, mas esse proxy não reproduz como uma rede real entrega o `RST`. Na Vercel nada disso foi medido. Corpo acima de 100 KiB não é uso legítimo, então um erro de socket nesse caso é aceitável. O 400 de JSON inválido mantém a conexão, porque nele o corpo foi lido inteiro.
 
 Duas rotas leem o corpo por fora do helper: `/webhooks/payments`, que precisa dos bytes crus para conferir a assinatura da Stripe, e `/files`, que tem teto próprio de 4 MiB (`file.schema.ts`).
 
