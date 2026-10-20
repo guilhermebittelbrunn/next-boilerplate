@@ -10,6 +10,7 @@ import { env } from "@/env";
 import { resolveOnboardingRedirect } from "@/lib/server/onboarding";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
 import { resolveSidebarDefaultOpen } from "@/lib/server/sidebarState";
+import NotificationsBell from "@/shared/components/notifications/NotificationsBell";
 import { EmailNotVerifiedNotice } from "@/shared/components/ui/EmailNotVerifiedNotice";
 import Navbar from "@/shared/components/ui/Navbar";
 import { isImpersonatingSnapshot } from "@/shared/lib/panelState";
@@ -58,7 +59,7 @@ const AppLayout = async ({ children, params }: AppLayoutProperties) => {
     return (
         <SidebarProvider defaultOpen={await resolveSidebarDefaultOpen()}>
             <SidebarCommon>
-                <Navbar />
+                <Navbar notifications={<NotificationsBell />} />
                 <EmailNotVerifiedNotice />
                 {children}
             </SidebarCommon>
