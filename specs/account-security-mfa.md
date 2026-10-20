@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # MFA, sessões ativas e política de senha
@@ -238,7 +238,7 @@ eficácia.
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
       e na redefinição (`auth.schema.ts:27`, `:32`, `:101-102`, remedidas em 2026-10-19 depois da PR #51, que acrescentou o schema do login com Google; eram `:24`, `:29` e `:89-90`), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:98`, `:245`, `:393`, remedidas em 2026-10-19 depois da PR #50, que acrescentou `USERS_DELETE_AUTH_FAILED` nos três idiomas; eram `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:98`, `:248`, `:399`, remedidas em 2026-10-20 depois da PR #52, que acrescentou os dois códigos de notificação nos três idiomas; eram `:245` e `:393`, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
