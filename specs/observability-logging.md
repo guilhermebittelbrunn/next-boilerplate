@@ -79,7 +79,13 @@ segue invisível até alguém conferir a fatura.
   (`payments/catalog/route.ts:24`) e `catalog-unavailable` na landing (`apps/web/shared/lib/planCatalog.ts:32`). A PR
   #47 não acrescentou `console` cru. Recontado em 2026-10-19, depois da PR #50: **41**. As duas novas são do escopo
   `auth`, no arquivamento pelo admin: `admin-user-delete-auth-failed` (`users/[id]/route.ts:210`) e
-  `archived-account-lockout-failed` (`(shared)/lib/user-merge.ts:62`). A PR #50 não acrescentou `console` cru.)* Os dois clones que esta spec
+  `archived-account-lockout-failed` (`(shared)/lib/user-merge.ts:62`). A PR #50 não acrescentou `console` cru.
+  Recontado em 2026-10-19, depois da PR #51: **42**. A nova é do escopo `account`:
+  `password-unlink-email-restore-failed` (`account/sign-in-methods/[id]/route.ts:125`), com `uid`, `requestId`,
+  `reason` e `attempts`, sem o endereço, emitida quando a devolução do e-mail falha nas duas tentativas depois de
+  desvincular a senha. A PR #51 não acrescentou `console` cru; o `/review` dela registrou de novo o `console.error` de
+  `revokeUserSessions` (`packages/auth/server.ts:334`), que a rota passou a chamar também nessa falha, e ele já está
+  entre os sete de `packages/auth/server.ts` listados abaixo.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
 - **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:134` gera o UUID, `:173` o

@@ -9,7 +9,7 @@ area: [apps/api, apps/app, packages/sdk, packages/design-system, packages/intern
 mode: ambos
 depends_on: []
 contends_on: [packages/sdk/src/client/index.ts, apps/api/(shared)/lib/account-export.ts, apps/api/(shared)/lib/account-erasure.ts, apps/api/app/(routes)/webhooks/payments/route.ts, firestore.indexes.json]
-feature: -
+feature: in-app-notifications
 updated: 2026-10-16
 ---
 
