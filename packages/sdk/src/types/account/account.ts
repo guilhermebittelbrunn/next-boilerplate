@@ -1,4 +1,5 @@
 import type { EntityDTO } from "../entity/entity";
+import type { NotificationDTO } from "../notification/notification";
 import type { SubscriptionStateDTO } from "../payments/payments";
 import type {
     EntitlementsStateDTO,
@@ -103,6 +104,7 @@ export type AccountDataExportDTO = {
     auditEvents: { items: AccountDataExportRecord[]; truncated: boolean };
     storageObjects: { path: string }[];
     sessions: { items: AccountDataExportSession[]; truncated: boolean };
+    notifications: { items: NotificationDTO[]; truncated: boolean };
 };
 
 export type DeleteAccountRequest = {

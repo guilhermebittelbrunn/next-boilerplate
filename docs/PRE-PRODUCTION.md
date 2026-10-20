@@ -219,8 +219,10 @@ não prova que ela existe.
 #### 1.8 Quais das sete entradas já estão publicadas
 
 Medido em **2026-09-23** neste workspace, com `npx -y firebase-tools@latest firestore:indexes --project
-next-boilerplate-576d0`, contra as **7** entradas declaradas em
-[`firestore.indexes.json`](../firestore.indexes.json).
+next-boilerplate-576d0`, contra as **7** entradas que
+[`firestore.indexes.json`](../firestore.indexes.json) declarava naquela data. Desde 2026-10-20 o arquivo
+declara **9**: as duas de `notification` (§1.9) entraram depois da medição e ninguém conferiu se estão
+publicadas. Contam como pendentes até alguém rodar o comando de novo.
 
 | coleção | campos | publicado no projeto de referência |
 |---------|--------|-----------------------------------|
@@ -231,6 +233,8 @@ next-boilerplate-576d0`, contra as **7** entradas declaradas em
 | `user` | `deletedAt` + `type` | não |
 | `user` | `deletedAt` + `lastAccessAt` | não |
 | `auditEvent` | `involvedUserIds` + `createdAt` | não |
+| `notification` | `userId` + `createdAt` | não medido (entrada posterior) |
+| `notification` | `userId` + `readAt` | não medido (entrada posterior) |
 
 **Uma de sete.** As subseções acima marcam cada índice como pendente uma a uma, o que estava certo em
 substância e escondia que a de `reference_id` já tinha subido — provavelmente junto com a publicação das
@@ -243,6 +247,52 @@ Uma consulta que esta entrega acrescentou **não** entrou nessa fila, de propós
 ordena por `FieldPath.documentId()` sobre um `array-contains`, e todo índice de campo único termina em
 `__name__`. Sondada em leitura contra o projeto real em 2026-09-23, com e sem cursor: nenhuma
 `FAILED_PRECONDITION`.
+
+#### 1.9 Índices e retenção da central de notificações
+
+- [ ] índices de `notification` publicados no projeto de referência
+- [ ] índices de `notification` publicados **no projeto do seu fork**
+- [ ] política de TTL em `notification.expiresAt` ligada (exige faturamento ativo)
+
+O sino do painel comum lê duas consultas que pedem índice composto. As duas estão declaradas em
+[`firestore.indexes.json`](../firestore.indexes.json) e cobertas por
+`apps/api/__tests__/firestoreIndexes.test.ts`.
+
+| coleção | campos | serve |
+|---------|--------|-------|
+| `notification` | `userId` + `createdAt` (desc) | a lista paginada de `GET /notifications` |
+| `notification` | `userId` + `readAt` | a contagem de `GET /notifications/unread-count` e o lote de `POST /notifications/read-all` |
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:indexes
+```
+
+**Sem os índices, nada responde 500.** A lista responde `503 PAGINATION_INDEX_MISSING`, e a contagem e o
+"marcar todas" respondem `503 NOTIFICATIONS_INDEX_MISSING`. O sino fica sem número (o erro da contagem não
+vira alerta, porque a consulta se repete a cada dois minutos), o popover mostra o erro traduzido e o resto
+do painel segue navegável. A contagem só usa igualdades, e a documentação do Firestore diz que esse tipo de
+consulta pode ser servido por *index merging* sem índice composto. Se isso acontecer no seu projeto, a
+contagem funciona antes do deploy, mas o índice continua declarado para manter o custo da agregação preso
+às não lidas do dono. Mesmo aviso das outras entradas: o emulador serve as duas consultas com ou sem
+índice.
+
+**Retenção.** Cada notificação nasce com `expiresAt` em 90 dias. Quem apaga o documento vencido é a
+política de TTL do Firestore, que não vem ligada:
+
+```bash
+gcloud firestore fields ttls update expiresAt \
+  --collection-group=notification --enable-ttl --project=<project-id>
+```
+
+A TTL exige faturamento ativo no projeto (a página de cotas do Firestore lista as remoções por TTL entre o
+que não tem uso gratuito). Sem ela, nada quebra: as notificações ficam até a exclusão da conta, que as
+apaga num passo próprio (`notifications` no log `erasure-step`). A lista é paginada e a contagem para em
+100, então o volume não pesa na tela. O que deixa de valer é o prazo de 90 dias declarado no
+[`ROPA.md`](ROPA.md). A política também não entra no backup agendado; ver [`BACKUP.md`](BACKUP.md).
+
+Para conferir depois de publicar: `npx -y firebase-tools@latest firestore:indexes` lista as duas entradas
+de `notification`, e `gcloud firestore fields ttls list --project=<project-id>` mostra `expiresAt` ativo em
+`notification`.
 
 ### 2. Service account do Firebase Admin
 
@@ -762,10 +812,12 @@ Enterprise, e no plano Spark do Firebase o Firestore não tem backup de nenhum t
 Não é pendência de configuração: é o que o fork precisa saber antes de prometer ao titular que a conta
 some inteira.
 
-`runAccountErasure` (`apps/api/(shared)/lib/account-erasure.ts`) roda seis passos nomeados e devolve o
-estado de cada um. Quatro apagam de verdade no boilerplate como ele vem: os registros de `entity` do
-titular, os rótulos pessoais na trilha de auditoria, o documento de perfil e a conta no Firebase Auth —
-que é o que libera o e-mail para um novo cadastro. Os outros dois dependem de infra do fork:
+`runAccountErasure` (`apps/api/(shared)/lib/account-erasure.ts`) roda oito passos nomeados e devolve o
+estado de cada um (contados no `STEPS_AFTER_BILLING` do arquivo, mais o `billing`, em 2026-10-20). Seis
+apagam de verdade no boilerplate como ele vem: os registros de `entity` do titular (`entities`), os rótulos
+pessoais na trilha de auditoria (`auditTrail`), os registros de sessão (`sessions`), as notificações do
+sino (`notifications`), o documento de perfil (`profile`) e a conta no Firebase Auth (`authAccount`), que é
+o que libera o e-mail para um novo cadastro. Os outros dois dependem de infra do fork:
 
 | Passo | Estado no boilerplate | O que destrava |
 |---|---|---|

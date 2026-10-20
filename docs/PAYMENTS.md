@@ -173,6 +173,15 @@ Stripe falha no caso `has_more`, a rota responde 500 sem marcar o evento e a Str
 
 Perfil não encontrado responde 200, registra `webhook-profile-not-found` e marca o evento.
 
+**Notificação ao dono.** Quando o snapshot de assinatura é aplicado (resultado `applied`), o webhook compara
+o estado novo com o que o perfil guardava antes e grava uma notificação no sino do painel em três casos:
+pagamento pendente (`past_due` ou `unpaid` vindo de outro estado), assinatura encerrada (`canceled`) e
+assinatura ativa de novo (saída de `past_due`/`unpaid`, ou cancelamento agendado desfeito). A primeira
+ativação e o cancelamento agendado não geram aviso. O id do documento leva o `event.id`, então a reentrega
+do mesmo evento não duplica. A gravação é silenciosa: uma falha registra `[notifications] emit-failed` e não
+muda a resposta do webhook, porque a reentrega encontraria o estado novo já gravado e não teria transição a
+avisar. A regra está em `apps/api/(shared)/lib/subscription-notifications.ts`.
+
 A fatura e a contratação têm uma segunda camada de idempotência: o id do documento é o da fatura e o da
 assinatura, então um handler que roda de novo (evento marcado sem sucesso, ou duas entregas concorrentes)
 encontra o documento e não escreve nada. A receita é somada na leitura, sem contador a incrementar.

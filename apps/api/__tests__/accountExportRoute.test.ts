@@ -16,6 +16,7 @@ const {
     listObjectPathsMock,
     recordAuditEventMock,
     findAllSessionsByUidMock,
+    findAllNotificationsMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
@@ -26,6 +27,7 @@ const {
     listObjectPathsMock: vi.fn(),
     recordAuditEventMock: vi.fn(),
     findAllSessionsByUidMock: vi.fn(),
+    findAllNotificationsMock: vi.fn(),
 }));
 
 vi.mock("@/(shared)/lib/resolve-api-actor", () => ({
@@ -61,6 +63,13 @@ vi.mock("@/(shared)/repositories/audit-event.repository", () => ({
 vi.mock("@/(shared)/repositories/session.repository", () => ({
     sessionRepository: {
         findAllByUid: (...args: unknown[]) => findAllSessionsByUidMock(...args),
+    },
+}));
+
+vi.mock("@/(shared)/repositories/notification.repository", () => ({
+    notificationRepository: {
+        findAllByUserId: (...args: unknown[]) =>
+            findAllNotificationsMock(...args),
     },
 }));
 
@@ -178,6 +187,7 @@ beforeEach(() => {
         listObjectPathsMock,
         recordAuditEventMock,
         findAllSessionsByUidMock,
+        findAllNotificationsMock,
     ]) {
         mock.mockReset();
     }
@@ -197,6 +207,7 @@ beforeEach(() => {
     isStorageConfiguredMock.mockReturnValue(false);
     recordAuditEventMock.mockResolvedValue(undefined);
     findAllSessionsByUidMock.mockResolvedValue({ items: [], truncated: false });
+    findAllNotificationsMock.mockResolvedValue({ items: [], truncated: false });
 });
 
 describe("GET /account/export", () => {
@@ -443,6 +454,35 @@ describe("GET /account/export", () => {
                 },
             ],
             truncated: false,
+        });
+    });
+
+    it("leva as notificações do titular, lidas ou não, com o aviso de corte", async () => {
+        const notification = {
+            id: "welcome_profile-1",
+            userId: "profile-1",
+            type: "welcome",
+            params: {},
+            readAt: null,
+            expiresAt: "2027-01-18T12:00:00.000Z",
+            createdAt: "2026-10-20T12:00:00.000Z",
+            updatedAt: "2026-10-20T12:00:00.000Z",
+            deletedAt: null,
+        };
+        findAllNotificationsMock.mockResolvedValue({
+            items: [notification],
+            truncated: true,
+        });
+
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(findAllNotificationsMock).toHaveBeenCalledWith(
+            "profile-1",
+            EXPORT_MAX_RECORDS
+        );
+        expect(payload.notifications).toEqual({
+            items: [notification],
+            truncated: true,
         });
     });
 

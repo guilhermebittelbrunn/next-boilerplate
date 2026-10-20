@@ -5,6 +5,7 @@ import type { UserRecord } from "firebase-admin/auth";
 import { mergeAuthAndFirestore } from "../mappers/user.mapper";
 import { userRepository } from "../repositories/user.repository";
 import { revokeAccountAccess } from "./account-access";
+import { emitNotificationQuietly } from "./notifications";
 import { initialOnboardingState } from "./onboarding";
 import { adminAuthErrorReason } from "./toolkit-error-codes";
 
@@ -69,7 +70,14 @@ async function findOrCreateProfile(uid: string): Promise<UserDTO | null> {
     return createDefaultUserProfile(uid);
 }
 
-export function createDefaultUserProfile(uid: string, dto?: Partial<UserDTO>) {
+/**
+ * The welcome notice is quiet on purpose: sign-up deletes the account when this function
+ * throws, and a notice that failed to store must not undo an account that was created.
+ */
+export async function createDefaultUserProfile(
+    uid: string,
+    dto?: Partial<UserDTO>
+): Promise<UserDTO> {
     const defaultProps = {
         type: UserType.COMMON,
         reference_id: uid,
@@ -77,7 +85,18 @@ export function createDefaultUserProfile(uid: string, dto?: Partial<UserDTO>) {
         ...dto,
     };
 
-    return userRepository.create({ ...defaultProps });
+    const created = await userRepository.create({ ...defaultProps });
+
+    if (created.type === UserType.COMMON) {
+        await emitNotificationQuietly({
+            userId: created.id,
+            type: "welcome",
+            params: {},
+            dedupeKey: created.id,
+        });
+    }
+
+    return created;
 }
 
 export async function getMergedUserByFirestoreDocId(

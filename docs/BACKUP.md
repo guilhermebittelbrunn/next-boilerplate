@@ -43,8 +43,9 @@ segurança do produto.
 - **Dados na Stripe.** A Stripe é a fonte da verdade da cobrança. Depois de uma restauração, o estado de
   assinatura gravado no perfil volta ao da data do backup; confira com o painel da Stripe.
 - **Variáveis de ambiente e a service account.** Ficam no painel da Vercel e no console do Firebase.
-- **Políticas de TTL.** A de `paymentEvent` ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 12, passo 5) não
-  vai no backup e precisa ser reaplicada se o banco restaurado virar o banco em uso.
+- **Políticas de TTL.** A de `paymentEvent` ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 12, passo 6) e a
+  de `notification` (mesmo arquivo, §1.9) não vão no backup e precisam ser reaplicadas se o banco restaurado
+  virar o banco em uso.
 
 ## Ligar o backup agendado (Blaze)
 
@@ -130,7 +131,8 @@ precisam voltar ao `(default)` por um dos dois caminhos do passo 3.
      --destination-database='(default)'
    ```
 
-   Nesse caminho, reaplique a TTL de `paymentEvent` e confira os índices contra `firestore.indexes.json`.
+   Nesse caminho, reaplique as TTL de `paymentEvent` e de `notification` e confira os índices contra
+   `firestore.indexes.json`.
 4. **Reaplique as exclusões da lista do passo 1.** A restauração traz de volta o perfil e os registros de
    quem se excluiu depois do backup, e os rótulos pessoais na trilha voltam junto. O core não tem ferramenta
    para reaplicar uma exclusão de conta sobre um perfil cuja conta no Authentication já não existe.

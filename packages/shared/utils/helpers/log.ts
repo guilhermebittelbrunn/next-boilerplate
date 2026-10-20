@@ -8,6 +8,7 @@ export type LogScope =
     | "auth"
     | "auth-action-link"
     | "email"
+    | "notifications"
     | "payments"
     | "request"
     | "security"

@@ -21,6 +21,10 @@ const {
     logEventMock: vi.fn(),
 }));
 
+vi.mock("@/(shared)/lib/notifications", () => ({
+    emitNotificationQuietly: vi.fn(),
+}));
+
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({
         getUser: (...args: unknown[]) => getUserMock(...args),

@@ -7,6 +7,7 @@ const {
     purgeAllByUserIdMock,
     anonymizeUserLabelsMock,
     purgeSessionsMock,
+    purgeNotificationsMock,
     purgeProfileMock,
     revokeUserSessionsMock,
     deleteUserMock,
@@ -19,6 +20,7 @@ const {
     purgeAllByUserIdMock: vi.fn(),
     anonymizeUserLabelsMock: vi.fn(),
     purgeSessionsMock: vi.fn(),
+    purgeNotificationsMock: vi.fn(),
     purgeProfileMock: vi.fn(),
     revokeUserSessionsMock: vi.fn(),
     deleteUserMock: vi.fn(),
@@ -62,6 +64,15 @@ vi.mock("@/(shared)/repositories/session.repository", () => ({
         purgeAllByUid: (...args: unknown[]) => {
             calls.push("sessions");
             return purgeSessionsMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/repositories/notification.repository", () => ({
+    notificationRepository: {
+        purgeAllByUserId: (...args: unknown[]) => {
+            calls.push("notifications");
+            return purgeNotificationsMock(...args);
         },
     },
 }));
@@ -141,6 +152,7 @@ const PURGED_ENTITIES = 2;
 const ANONYMIZED_EVENTS = 3;
 const PURGED_OBJECTS = 4;
 const PURGED_SESSIONS = 5;
+const PURGED_NOTIFICATIONS = 6;
 
 function statusOf(
     report: Awaited<ReturnType<typeof runAccountErasure>>,
@@ -157,6 +169,7 @@ beforeEach(() => {
         purgeAllByUserIdMock,
         anonymizeUserLabelsMock,
         purgeSessionsMock,
+        purgeNotificationsMock,
         purgeProfileMock,
         revokeUserSessionsMock,
         deleteUserMock,
@@ -179,6 +192,7 @@ beforeEach(() => {
     purgeAllByUserIdMock.mockResolvedValue(PURGED_ENTITIES);
     anonymizeUserLabelsMock.mockResolvedValue(ANONYMIZED_EVENTS);
     purgeSessionsMock.mockResolvedValue(PURGED_SESSIONS);
+    purgeNotificationsMock.mockResolvedValue(PURGED_NOTIFICATIONS);
     purgeProfileMock.mockResolvedValue(undefined);
     revokeUserSessionsMock.mockResolvedValue(undefined);
     deleteUserMock.mockResolvedValue(undefined);
@@ -192,6 +206,7 @@ describe("runAccountErasure", () => {
             "entities",
             "auditTrail",
             "sessions",
+            "notifications",
             "profile",
             "revokeSessions",
             "authAccount",
@@ -207,6 +222,7 @@ describe("runAccountErasure", () => {
             "entities",
             "auditTrail",
             "sessions",
+            "notifications",
             "profile",
             "authAccount",
         ]);
@@ -221,6 +237,33 @@ describe("runAccountErasure", () => {
             status: "done",
             count: PURGED_SESSIONS,
         });
+    });
+
+    it("apaga as notificações do titular pelo id do perfil, num passo próprio", async () => {
+        const report = await runAccountErasure(INPUT);
+
+        expect(purgeNotificationsMock).toHaveBeenCalledWith("profile-1");
+        expect(statusOf(report, "notifications")).toEqual({
+            step: "notifications",
+            status: "done",
+            count: PURGED_NOTIFICATIONS,
+        });
+    });
+
+    it("segue para o perfil e a conta de Auth quando o expurgo das notificações falha", async () => {
+        purgeNotificationsMock.mockRejectedValue(
+            new TypeError("firestore down")
+        );
+
+        const report = await runAccountErasure(INPUT);
+
+        expect(statusOf(report, "notifications")).toEqual({
+            step: "notifications",
+            status: "failed",
+            reason: "TypeError",
+        });
+        expect(purgeProfileMock).toHaveBeenCalledWith("profile-1");
+        expect(deleteUserMock).toHaveBeenCalledWith("uid-1");
     });
 
     it("pula o expurgo de arquivos e diz por quê quando não há bucket", async () => {

@@ -94,6 +94,25 @@ describe("firestore.indexes.json", () => {
         });
     });
 
+    it("declares the indexes the notification list and unread count need", () => {
+        expect(indexes).toContainEqual({
+            collectionGroup: "notification",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "userId", order: "ASCENDING" },
+                { fieldPath: "createdAt", order: "DESCENDING" },
+            ],
+        });
+        expect(indexes).toContainEqual({
+            collectionGroup: "notification",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "userId", order: "ASCENDING" },
+                { fieldPath: "readAt", order: "ASCENDING" },
+            ],
+        });
+    });
+
     it("keeps the index the profile lookup already depended on", () => {
         expect(indexes).toContainEqual({
             collectionGroup: "user",

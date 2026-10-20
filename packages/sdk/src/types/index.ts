@@ -4,6 +4,7 @@ export * from "./audit";
 export * from "./contact";
 export * from "./entity";
 export * from "./file";
+export * from "./notification";
 export * from "./pagination";
 export * from "./payments";
 export * from "./user";

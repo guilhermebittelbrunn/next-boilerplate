@@ -12,7 +12,9 @@ import {
     toPaidInvoiceRecord,
     toSubscriptionState,
 } from "@/(shared)/lib/billing-state";
+import { emitNotificationQuietly } from "@/(shared)/lib/notifications";
 import { ensurePlanLabel } from "@/(shared)/lib/plan-label";
+import { subscriptionNotificationFor } from "@/(shared)/lib/subscription-notifications";
 import { paidInvoiceRepository } from "@/(shared)/repositories/paid-invoice.repository";
 import { paymentEventRepository } from "@/(shared)/repositories/payment-event.repository";
 import { subscriptionActivationRepository } from "@/(shared)/repositories/subscription-activation.repository";
@@ -100,6 +102,21 @@ async function reconcileSubscription(
             result,
             requestId,
         });
+
+        // Quiet: a 500 here would not bring the notice back, because the redelivery finds
+        // the new state already stored and no transition left to report.
+        const notificationType =
+            result === "applied"
+                ? subscriptionNotificationFor(profile.subscription, state)
+                : null;
+        if (notificationType) {
+            await emitNotificationQuietly({
+                userId: profile.id,
+                type: notificationType,
+                params: {},
+                dedupeKey: event.id,
+            });
+        }
     } else {
         logProfileNotFound(event.type, requestId);
     }

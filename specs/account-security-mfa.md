@@ -236,7 +236,7 @@ eficácia.
       8`, `PASSWORD_MAX_LENGTH = 1024`, `EXISTING_PASSWORD_MIN_LENGTH = 6` para login e senha atual). Na borda
       da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
-      e na redefinição (`auth.schema.ts:24`, `:29`, `:89-90`, remedidas em 2026-10-16 depois da PR #46), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
+      e na redefinição (`auth.schema.ts:27`, `:32`, `:101-102`, remedidas em 2026-10-19 depois da PR #51, que acrescentou o schema do login com Google; eram `:24`, `:29` e `:89-90`), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
       (`translations/packages/shared/utils.ts:98`, `:245`, `:393`, remedidas em 2026-10-19 depois da PR #50, que acrescentou `USERS_DELETE_AUTH_FAILED` nos três idiomas; eram `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de

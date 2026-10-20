@@ -14,6 +14,10 @@ if (refusal) {
 
 const USERS_COLLECTION = "user";
 const ENTITIES_COLLECTION = "entity";
+const NOTIFICATIONS_COLLECTION = "notification";
+const NOTIFICATION_RETENTION_DAYS = 90;
+const MS_PER_DAY = 86_400_000;
+const MS_PER_MINUTE = 60_000;
 const SEED_PASSWORD = "demo1234";
 const EMAIL_COLUMN_WIDTH = 20;
 const TYPE_COLUMN_WIDTH = 7;
@@ -86,6 +90,26 @@ const ENTITIES_BY_OWNER = {
     ],
 };
 
+const SEEDED_WELCOME_NOTIFICATIONS = 21;
+
+/**
+ * Newest first. 25 for one owner so the bell pages through three loads of 10; one of
+ * each core type plus a type no build knows, which must render the generic copy. The
+ * second common account gets none, for the empty state.
+ */
+const NOTIFICATIONS_BY_OWNER = {
+    "user@example.com": [
+        { type: "subscriptionPaymentPending", read: false },
+        { type: "subscriptionCanceled", read: false },
+        { type: "subscriptionReactivated", read: true },
+        { type: "legacyTypeRemoved", read: false },
+        ...Array.from({ length: SEEDED_WELCOME_NOTIFICATIONS }, (_, index) => ({
+            type: "welcome",
+            read: index % 2 === 0,
+        })),
+    ],
+};
+
 async function wipe() {
     const auth = await fetch(
         `http://${target.authHost}/emulator/v1/projects/${target.projectId}/accounts`,
@@ -145,6 +169,30 @@ async function createEntities(db, profileId, entities) {
     }
 }
 
+async function createNotifications(db, profileId, notifications) {
+    const newest = Date.now();
+    for (const [index, notification] of notifications.entries()) {
+        const createdAt = new Date(newest - index * MS_PER_MINUTE);
+        await db
+            .collection(NOTIFICATIONS_COLLECTION)
+            .doc(`seed_${profileId}_${String(index).padStart(2, "0")}`)
+            .set({
+                userId: profileId,
+                type: notification.type,
+                params: {},
+                // `null`, never absent: the unread count filters on `readAt == null`.
+                readAt: notification.read ? createdAt : null,
+                expiresAt: new Date(
+                    createdAt.getTime() +
+                        NOTIFICATION_RETENTION_DAYS * MS_PER_DAY
+                ),
+                createdAt,
+                updatedAt: createdAt,
+                deletedAt: null,
+            });
+    }
+}
+
 async function main() {
     initializeApp({ projectId: target.projectId });
     const auth = getAuth();
@@ -157,7 +205,13 @@ async function main() {
         const { profileId } = await createAccount(auth, db, account);
         const entities = ENTITIES_BY_OWNER[account.email] ?? [];
         await createEntities(db, profileId, entities);
-        rows.push({ ...account, entities: entities.length });
+        const notifications = NOTIFICATIONS_BY_OWNER[account.email] ?? [];
+        await createNotifications(db, profileId, notifications);
+        rows.push({
+            ...account,
+            entities: entities.length,
+            notifications: notifications.length,
+        });
     }
 
     process.stdout.write(
@@ -166,7 +220,7 @@ async function main() {
             "",
             ...rows.map(
                 (row) =>
-                    `  ${row.email.padEnd(EMAIL_COLUMN_WIDTH)} ${row.type.padEnd(TYPE_COLUMN_WIDTH)} ${row.entities} entities`
+                    `  ${row.email.padEnd(EMAIL_COLUMN_WIDTH)} ${row.type.padEnd(TYPE_COLUMN_WIDTH)} ${row.entities} entities, ${row.notifications} notifications`
             ),
             "",
             "This state lives only in the emulators and is rebuilt from scratch every run.",

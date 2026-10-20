@@ -23,7 +23,8 @@ updated: 2026-10-19
 > [`docs/features/linked-sign-in-methods/spec.md`](../docs/features/linked-sign-in-methods/spec.md). Metade do
 > motivo do adiamento caiu; a outra metade (nenhum fork pediu GitHub ou Microsoft) continua. O status segue
 > `deferred` até você decidir. Duas coisas da entrega encurtam o corte desta spec: o `DELETE
-> /account/sign-in-methods/[id]` aceita qualquer provedor que a conta liste (`[id]/route.ts:36-42`), e a lista da
+> /account/sign-in-methods/[id]` aceita qualquer provedor que a conta liste (`[id]/route.ts:64-70`; era `:36-42` até
+> a PR #51, que acrescentou a nova tentativa de devolução do e-mail), e a lista da
 > aba Segurança já mostra um provedor desconhecido com o id cru (`AccountSignInMethodsPanel.tsx:85-91`). Falta o
 > botão de vincular, que hoje só existe para o Google (`:210-223`).
 
@@ -44,8 +45,13 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
   `providerId=google.com` fixo.
-- `apps/api/app/(routes)/auth/sign-in/google/route.ts:10-40` (era `:9-30` até a PR #50, que acrescentou o 404 sem perfil) — a rota lê o corpo sem validação (`:11`) e devolve a mensagem
-  crua do provedor em 401 (`:36`).
+- `apps/api/app/(routes)/auth/sign-in/google/route.ts:16-64` (era `:10-40` até a PR #51 e `:9-30` até a PR #50) —
+  desde a PR #51 a rota valida o corpo com `parseRequestJson` e `parseGoogleSignIn` (`:17-25`; o schema é
+  `googleSignInSchema`, `(shared)/validation/auth.schema.ts:40-46`, com `requestUri` restrito a `http` e `https`) e
+  responde a recusa do provedor com `{ error: { code } }`, `400 AUTH_INVALID_CREDENTIALS` ou
+  `429 USERS_AUTH_RATE_LIMITED` (`:33-45`). Antes ela lia o corpo sem validação e devolvia a mensagem crua do
+  provedor em 401. A parte "a rota do Google entra no mesmo contrato" do impacto na `apps/api` já está paga; falta
+  generalizar a rota para outros provedores.
 - `apps/app/.../sign-in/components/SignInForm.tsx:187-197` (era `:181-191` até a PR #47) e `sign-up/components/SignUpFormClient.tsx` — um botão
   do Google em cada tela.
 - `apps/api/proxy.ts:53-67` — `/auth/sign-in/google` está no rate limit (era `:49-62` até a PR #49 e `:45-58` até a PR #47).

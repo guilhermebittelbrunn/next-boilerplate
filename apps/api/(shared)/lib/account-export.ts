@@ -10,6 +10,7 @@ import { logEvent } from "@repo/shared/utils/helpers/log";
 import type { SessionRecord } from "../mappers/session.mapper";
 import { auditEventRepository } from "../repositories/audit-event.repository";
 import { entityRepository } from "../repositories/entity.repository";
+import { notificationRepository } from "../repositories/notification.repository";
 import { sessionRepository } from "../repositories/session.repository";
 import { resolvePreferences } from "./account-avatar";
 import { isStorageConfigured, listObjectPaths, ownerPrefix } from "./storage";
@@ -130,8 +131,8 @@ export async function buildAccountDataExport(
         throw new AccountExportProfileMissingError(profile.id);
     }
 
-    const [entities, auditEvents, storageObjects, sessions] = await Promise.all(
-        [
+    const [entities, auditEvents, storageObjects, sessions, notifications] =
+        await Promise.all([
             entityRepository.findAllByUserId(profile.id, EXPORT_MAX_RECORDS),
             auditEventRepository.findAllByInvolvedUserId(
                 profile.id,
@@ -142,8 +143,11 @@ export async function buildAccountDataExport(
                 profile.reference_id,
                 EXPORT_MAX_RECORDS
             ),
-        ]
-    );
+            notificationRepository.findAllByUserId(
+                profile.id,
+                EXPORT_MAX_RECORDS
+            ),
+        ]);
 
     return {
         generatedAt: new Date().toISOString(),
@@ -164,6 +168,10 @@ export async function buildAccountDataExport(
         sessions: {
             items: sessions.items.map(toExportSession),
             truncated: sessions.truncated,
+        },
+        notifications: {
+            items: notifications.items,
+            truncated: notifications.truncated,
         },
     };
 }

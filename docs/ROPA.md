@@ -167,7 +167,19 @@ Existe só com o bucket configurado (`FIREBASE_STORAGE_BUCKET`).
 | Processo, finalidade e hipótese legal | Processo: guarda de arquivos do usuário. Finalidade: exibir as imagens no produto. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar. |
 | Observações | Onde está no código: `apps/api/(shared)/lib/storage.ts:46-57`, `apps/api/app/(routes)/files/route.ts`, [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §6. |
 
-### 10. `[FORK]` Dados do domínio do produto
+### 10. Notificações no painel
+
+| Bloco | Conteúdo |
+|---|---|
+| Categorias de titulares | Titulares em geral (usuários do painel comum). |
+| Dados pessoais | Outros: id do perfil dono, tipo do aviso, parâmetros do aviso, quando foi criado, quando foi lido e quando expira (coleção `notification`). O texto não é gravado: a app o monta no idioma de quem lê. Os quatro tipos do core (boas-vindas e mudanças de assinatura) não têm parâmetros. |
+| Compartilhamento | Google (Cloud Firestore, coleção `notification`). |
+| Medidas de segurança | `firestore.rules` nega acesso direto de cliente. A API só lista, conta e marca as notificações do próprio perfil, e devolve 404 para o id de outro dono. Sob personificação o admin vê os avisos do usuário, mas não consegue marcá-los como lidos. Nenhuma rota cria notificação: só o servidor emite. |
+| Período de armazenamento | 90 dias a partir da criação, lida ou não, quando a política de TTL do Firestore em `notification.expiresAt` está ligada ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §1.9). Sem a política, até a exclusão da conta, que apaga as notificações num passo próprio (`notifications`). Com o backup do Firestore ligado, também nos backups até o fim da retenção deles ([`BACKUP.md`](BACKUP.md)). `[FORK]` confirmar o prazo. |
+| Processo, finalidade e hipótese legal | Processo: avisos sobre a conta dentro do produto. Finalidade: informar o titular de mudanças na conta e na assinatura. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar, e revisar se o fork criar tipos com parâmetros pessoais. |
+| Observações | Onde está no código: `packages/sdk/src/types/notification/notification.ts`, `apps/api/(shared)/lib/notifications.ts`, `apps/api/(shared)/repositories/notification.repository.ts`, `apps/api/app/(routes)/notifications/`. Atendimento ao titular: as notificações entram na exportação de `/account/export`. |
+
+### 11. `[FORK]` Dados do domínio do produto
 
 O recurso `entity` do boilerplate é exemplo e sai quando o fork o substitui pelo domínio real. Cada
 processo novo ganha um registro no mesmo formato.

@@ -34,6 +34,12 @@ export const queryKeys = {
         detail: (id: string) =>
             [...queryKeys.entities.all, "detail", id] as const,
     },
+    notifications: {
+        all: ["notifications"] as const,
+        list: () => [...queryKeys.notifications.all, "list"] as const,
+        unreadCount: () =>
+            [...queryKeys.notifications.all, "unreadCount"] as const,
+    },
     users: {
         all: ["users"] as const,
         // `type` is part of the key because the API scopes the listing server-side —
