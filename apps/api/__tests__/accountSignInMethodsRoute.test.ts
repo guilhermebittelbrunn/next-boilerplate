@@ -2,6 +2,7 @@ import { UserRoleLevel } from "@repo/auth/types";
 import { AuditAction, AuditTargetType, UserType } from "@repo/sdk/src/types";
 import { AUTH_REQUEST_HEADER } from "@repo/shared/utils/helpers/auth-request-headers";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { REQUEST_ID_HEADER } from "@repo/shared/utils/helpers/request-id";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,12 +12,14 @@ const {
     updateUserMock,
     revokeUserSessionsMock,
     recordAuditEventMock,
+    logEventMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
     updateUserMock: vi.fn(),
     revokeUserSessionsMock: vi.fn(),
     recordAuditEventMock: vi.fn(),
+    logEventMock: vi.fn(),
 }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
@@ -41,6 +44,14 @@ vi.mock("@repo/auth/server", () => ({
     revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
 }));
 
+vi.mock("@repo/shared/utils/helpers/log", () => ({
+    logEvent: (...args: unknown[]) => logEventMock(...args),
+}));
+
+const { logEvent: realLogEvent } = await vi.importActual<
+    typeof import("@repo/shared/utils/helpers/log")
+>("@repo/shared/utils/helpers/log");
+
 const { DELETE: unlinkMethod } = await import(
     "@/app/(routes)/account/sign-in-methods/[id]/route"
 );
@@ -52,6 +63,14 @@ const NO_CONTENT = 204;
 const PROVIDER_ID_MAX_LENGTH = 64;
 const OWNER_UID = "owner-1";
 const OWNER_EMAIL = "owner@example.com";
+const ADDRESS_RESTORE_ATTEMPTS = 2;
+const UNLINK_THEN_EVERY_RESTORE_CALLS = [
+    [OWNER_UID, { providersToUnlink: ["password"] }],
+    ...Array.from({ length: ADDRESS_RESTORE_ATTEMPTS }, () => [
+        OWNER_UID,
+        { email: OWNER_EMAIL, emailVerified: true },
+    ]),
+];
 const OWNER_PROFILE = {
     id: "profile-1",
     reference_id: OWNER_UID,
@@ -68,6 +87,11 @@ const OWNER_HEADERS = {
     [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.COMMON,
     [AUTH_REQUEST_HEADER.REQUEST_ROLE]: UserRoleLevel.COMMON,
     [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: OWNER_UID,
+};
+const REQUEST_ID = "req-unlink-1";
+const OWNER_HEADERS_WITH_REQUEST_ID = {
+    ...OWNER_HEADERS,
+    [REQUEST_ID_HEADER]: REQUEST_ID,
 };
 const IMPERSONATION_HEADERS = {
     [AUTH_REQUEST_HEADER.USER_ID]: "admin-1",
@@ -113,6 +137,15 @@ async function codeOf(response: Response): Promise<string> {
     return body.error.code;
 }
 
+const lastUpdateUserCallOrder = () =>
+    updateUserMock.mock.invocationCallOrder.at(-1) ?? 0;
+
+function failEveryAddressRestore(message = "restore failed") {
+    updateUserMock
+        .mockResolvedValueOnce({ uid: OWNER_UID })
+        .mockRejectedValue({ code: "auth/internal-error", message });
+}
+
 function impersonateOwner() {
     resolveApiActorMock.mockResolvedValue({
         uid: "admin-1",
@@ -139,6 +172,7 @@ beforeEach(() => {
         updateUserMock,
         revokeUserSessionsMock,
         recordAuditEventMock,
+        logEventMock,
     ]) {
         mock.mockReset();
     }
@@ -178,6 +212,7 @@ describe("DELETE /account/sign-in-methods/[id]", () => {
         );
 
         expect(response.status).toBe(NO_CONTENT);
+        expect(updateUserMock).toHaveBeenCalledTimes(2);
         expect(updateUserMock).toHaveBeenNthCalledWith(1, OWNER_UID, {
             providersToUnlink: ["password"],
         });
@@ -192,6 +227,28 @@ describe("DELETE /account/sign-in-methods/[id]", () => {
         expect(
             revokeUserSessionsMock.mock.invocationCallOrder[0]
         ).toBeGreaterThan(updateUserMock.mock.invocationCallOrder[1] ?? 0);
+        expect(logEventMock).not.toHaveBeenCalled();
+    });
+
+    it("tenta a devolução do e-mail de novo quando a primeira falha e responde 204", async () => {
+        updateUserMock
+            .mockResolvedValueOnce({ uid: OWNER_UID })
+            .mockRejectedValueOnce({ code: "auth/internal-error" });
+
+        const response = await unlinkMethod(
+            deleteRequest(),
+            idContext("password")
+        );
+
+        expect(response.status).toBe(NO_CONTENT);
+        expect(updateUserMock.mock.calls).toEqual(
+            UNLINK_THEN_EVERY_RESTORE_CALLS
+        );
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(OWNER_UID);
+        expect(
+            revokeUserSessionsMock.mock.invocationCallOrder[0]
+        ).toBeGreaterThan(lastUpdateUserCallOrder());
+        expect(logEventMock).not.toHaveBeenCalled();
     });
 
     it("responde 409 ao tentar remover o único método", async () => {
@@ -249,10 +306,8 @@ describe("DELETE /account/sign-in-methods/[id]", () => {
         expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
-    it("registra o desvínculo da senha mesmo quando a devolução do e-mail falha", async () => {
-        updateUserMock
-            .mockResolvedValueOnce({ uid: OWNER_UID })
-            .mockRejectedValueOnce(new Error("auth is down"));
+    it("não repete o desvínculo da senha quando o Firebase o recusa", async () => {
+        updateUserMock.mockRejectedValue({ code: "auth/internal-error" });
 
         const response = await unlinkMethod(
             deleteRequest(),
@@ -261,10 +316,116 @@ describe("DELETE /account/sign-in-methods/[id]", () => {
 
         expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
         expect(await codeOf(response)).toBe("ACCOUNT_UPDATE_FAILED");
+        expect(updateUserMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+        expect(logEventMock).not.toHaveBeenCalled();
+    });
+
+    it("revoga as sessões e registra o uid quando a devolução do e-mail falha nas duas tentativas", async () => {
+        const restoreFailureMessage = `${OWNER_EMAIL} is unavailable`;
+        updateUserMock
+            .mockResolvedValueOnce({ uid: OWNER_UID })
+            .mockRejectedValue({
+                code: "auth/internal-error",
+                message: restoreFailureMessage,
+            });
+
+        const response = await unlinkMethod(
+            deleteRequest(),
+            idContext("password")
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("ACCOUNT_UPDATE_FAILED");
+        expect(updateUserMock.mock.calls).toEqual(
+            UNLINK_THEN_EVERY_RESTORE_CALLS
+        );
         expect(recordAuditEventMock).toHaveBeenCalledWith(
             expect.objectContaining({ changedFields: ["password"] })
         );
-        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(OWNER_UID);
+        expect(
+            revokeUserSessionsMock.mock.invocationCallOrder[0]
+        ).toBeGreaterThan(lastUpdateUserCallOrder());
+        expect(logEventMock).toHaveBeenCalledWith(
+            "account",
+            "password-unlink-email-restore-failed",
+            {
+                uid: OWNER_UID,
+                requestId: null,
+                reason: "auth/internal-error",
+                attempts: ADDRESS_RESTORE_ATTEMPTS,
+            }
+        );
+        const loggedCalls = JSON.stringify(logEventMock.mock.calls);
+        expect(loggedCalls).not.toContain(OWNER_EMAIL);
+        expect(loggedCalls).not.toContain(restoreFailureMessage);
+    });
+
+    it("grava o mesmo requestId no log e na trilha quando a devolução do e-mail falha", async () => {
+        failEveryAddressRestore();
+
+        const response = await unlinkMethod(
+            deleteRequest(OWNER_HEADERS_WITH_REQUEST_ID),
+            idContext("password")
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(recordAuditEventMock).toHaveBeenCalledWith(
+            expect.objectContaining({ requestId: REQUEST_ID })
+        );
+        expect(logEventMock).toHaveBeenCalledWith(
+            "account",
+            "password-unlink-email-restore-failed",
+            expect.objectContaining({ requestId: REQUEST_ID })
+        );
+    });
+
+    it("imprime uma linha só, sem o e-mail, quando a devolução do e-mail falha", async () => {
+        failEveryAddressRestore(`${OWNER_EMAIL}\nforged line`);
+        logEventMock.mockImplementation(realLogEvent);
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+            return;
+        });
+
+        await unlinkMethod(
+            deleteRequest(OWNER_HEADERS_WITH_REQUEST_ID),
+            idContext("password")
+        );
+        const printedLines = warnSpy.mock.calls.map((call) => call.join(" "));
+        warnSpy.mockRestore();
+
+        expect(printedLines).toEqual([
+            `[account] password-unlink-email-restore-failed uid=${OWNER_UID} requestId=${REQUEST_ID} reason=auth/internal-error attempts=${ADDRESS_RESTORE_ATTEMPTS}`,
+        ]);
+    });
+
+    it("desvincula a senha de uma conta sem e-mail sem tentar devolvê-lo e revoga as sessões", async () => {
+        resolveApiActorMock.mockResolvedValue({
+            ...BOTH_METHODS_USER,
+            email: undefined,
+            emailVerified: false,
+            displayName: "Owner",
+        });
+
+        const response = await unlinkMethod(
+            deleteRequest(),
+            idContext("password")
+        );
+
+        expect(response.status).toBe(NO_CONTENT);
+        expect(updateUserMock.mock.calls).toEqual([
+            [OWNER_UID, { providersToUnlink: ["password"] }],
+        ]);
+        expect(recordAuditEventMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                changedFields: ["password"],
+                targetLabel: "Owner",
+            })
+        );
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(OWNER_UID);
+        expect(logEventMock).not.toHaveBeenCalled();
     });
 
     it("recusa quando o titular do perfil não é quem está autenticado", async () => {

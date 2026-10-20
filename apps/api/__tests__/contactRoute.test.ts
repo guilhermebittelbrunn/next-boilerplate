@@ -4,6 +4,7 @@ import {
 } from "@repo/shared/utils/helpers/contactMessage";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { REQUEST_JSON_MAX_BYTES } from "@/(shared)/lib/parse-request-json";
 
 const { sendEmailMock, isEmailEnabledMock, supportInboxMock } = vi.hoisted(
     () => ({
@@ -138,6 +139,36 @@ describe("POST /contact validation", () => {
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         expect(await errorCodeOf(response)).toBe("VALIDATION_FAILED");
+        expect(sendEmailMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses a body over the cap without calling the provider", async () => {
+        const response = await postContact({
+            ...VALID_BODY,
+            message: "a".repeat(REQUEST_JSON_MAX_BYTES),
+        });
+
+        expect(response.status).toBe(HTTP_STATUS.PAYLOAD_TOO_LARGE);
+        expect(await errorCodeOf(response)).toBe("VALIDATION_FAILED");
+        expect(sendEmailMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses a declared length over the cap without reading the body", async () => {
+        const { POST } = await import("@/app/(routes)/contact/route");
+        const request = new Request("http://localhost:3002/contact", {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "content-length": String(REQUEST_JSON_MAX_BYTES + 1),
+            },
+            body: JSON.stringify(VALID_BODY),
+        });
+
+        const response = await POST(request);
+
+        expect(response.status).toBe(HTTP_STATUS.PAYLOAD_TOO_LARGE);
+        expect(await errorCodeOf(response)).toBe("VALIDATION_FAILED");
+        expect(request.bodyUsed).toBe(false);
         expect(sendEmailMock).not.toHaveBeenCalled();
     });
 

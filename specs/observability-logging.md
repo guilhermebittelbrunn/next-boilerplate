@@ -62,7 +62,7 @@ segue invisível até alguém conferir a fatura.
   duas novas do escopo `payments` (`webhook-invoice-recorded` no webhook e `plan-label-unresolved` em
   `(shared)/lib/plan-label.ts:49`). As duas âncoras de falha do webhook desceram para `:223` e `:235`.
   Remedido em 2026-09-26, depois da PR #28: **29** linhas. A nova é `admin-user-delete-billing-failed`,
-  escopo `payments`, em `users/[id]/route.ts:194`, emitida quando o arquivamento pelo admin não consegue
+  escopo `payments`, em `users/[id]/route.ts:196` (era `:194` até a PR #50), emitida quando o arquivamento pelo admin não consegue
   cancelar a assinatura. As âncoras do webhook conferem. Remedido em 2026-09-27, depois da PR #29: **31**
   linhas. As duas novas são do escopo `auth`, na rota de cadastro: `sign-up-failed` (`auth/sign-up/route.ts:44`)
   e `sign-up-rollback-failed` (`:62`). A chamada antiga da mesma rota, `profile-create-failed`, desceu para
@@ -77,7 +77,9 @@ segue invisível até alguém conferir a fatura.
   2026-10-16, depois da PR #46: **37** linhas, e a PR #46 também não acrescentou `console` cru. Recontado no mesmo dia,
   depois da PR #47: **39**. As duas novas são do escopo `payments`, para o catálogo público: `catalog-failed` na API
   (`payments/catalog/route.ts:24`) e `catalog-unavailable` na landing (`apps/web/shared/lib/planCatalog.ts:32`). A PR
-  #47 não acrescentou `console` cru.)* Os dois clones que esta spec
+  #47 não acrescentou `console` cru. Recontado em 2026-10-19, depois da PR #50: **41**. As duas novas são do escopo
+  `auth`, no arquivamento pelo admin: `admin-user-delete-auth-failed` (`users/[id]/route.ts:210`) e
+  `archived-account-lockout-failed` (`(shared)/lib/user-merge.ts:62`). A PR #50 não acrescentou `console` cru.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
 - **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:134` gera o UUID, `:173` o
