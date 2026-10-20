@@ -1,6 +1,7 @@
 import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
 import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import {
@@ -11,13 +12,40 @@ import {
     type RouteIdParamsContext,
     resolveIdFromContext,
 } from "@/(shared)/lib/resolve-route-id";
+import { adminAuthErrorReason } from "@/(shared)/lib/toolkit-error-codes";
 import { parseSignInMethodId } from "@/(shared)/validation/account.schema";
 import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
 
 const NO_CONTENT = 204;
+const ADDRESS_RESTORE_ATTEMPTS = 2;
 
 function errorResponse(code: string, status: number) {
     return Response.json({ error: { code } }, { status });
+}
+
+type AddressRestoreResult =
+    | { restored: true }
+    | { restored: false; reason: string };
+
+/**
+ * The Admin SDK already retries 503s and dropped connections. Anything else gets one more
+ * immediate try here: a failed restore leaves the account without its address, and the
+ * caller cannot repeat the request because the password is already gone.
+ */
+async function restoreUnlinkedAddress(
+    uid: string,
+    address: { email: string; emailVerified: boolean }
+): Promise<AddressRestoreResult> {
+    let reason = "unknown";
+    for (let attempt = 1; attempt <= ADDRESS_RESTORE_ATTEMPTS; attempt += 1) {
+        try {
+            await getAuthInstance().updateUser(uid, address);
+            return { restored: true };
+        } catch (error) {
+            reason = adminAuthErrorReason(error);
+        }
+    }
+    return { restored: false, reason };
 }
 
 /**
@@ -77,27 +105,34 @@ export const DELETE = requireCommonPanelApi<RouteIdParamsContext>(
             return new Response(null, { status: NO_CONTENT });
         }
 
+        // Unlinking the password also clears the account's address and its verified
+        // flag in Firebase. Put them back, or the account loses its e-mail and a
+        // password set later never becomes a sign-in method.
         const email = ctx.user.email;
-        if (email) {
-            // Unlinking the password also clears the account's address and its verified
-            // flag in Firebase. Put them back, or the account loses its e-mail and a
-            // password set later never becomes a sign-in method.
-            try {
-                await auth.updateUser(ctx.user.uid, {
-                    email,
-                    emailVerified: ctx.user.emailVerified,
-                });
-            } catch {
-                return errorResponse(
-                    "ACCOUNT_UPDATE_FAILED",
-                    HTTP_STATUS.INTERNAL_SERVER_ERROR
-                );
-            }
-        }
+        const restore: AddressRestoreResult = email
+            ? await restoreUnlinkedAddress(ctx.user.uid, {
+                  email,
+                  emailVerified: ctx.user.emailVerified,
+              })
+            : { restored: true };
 
-        // Firebase treats the restored address as an e-mail change and revokes every
-        // refresh token, so the password unlink always ends every session, this one too.
+        // The password is gone either way, so every session ends, this one too. Firebase
+        // already revokes the refresh tokens when the address comes back; this call makes
+        // it hold when the address does not.
         await revokeUserSessions(ctx.user.uid);
+
+        if (!restore.restored) {
+            logEvent("account", "password-unlink-email-restore-failed", {
+                uid: ctx.user.uid,
+                requestId: requestIdFrom(req),
+                reason: restore.reason,
+                attempts: ADDRESS_RESTORE_ATTEMPTS,
+            });
+            return errorResponse(
+                "ACCOUNT_UPDATE_FAILED",
+                HTTP_STATUS.INTERNAL_SERVER_ERROR
+            );
+        }
 
         return new Response(null, { status: NO_CONTENT });
     }
