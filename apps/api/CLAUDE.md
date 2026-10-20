@@ -15,7 +15,7 @@ Regras de escopo para a API Next — rotas, validação, auth na borda. O Claude
 
 ## Helpers HTTP compartilhados (`(shared)/lib`)
 
-- `parseRequestJson(req)` — body JSON com resposta 400 padronizada em falha de parse.
+- `parseRequestJson(req)` — body JSON com `VALIDATION_FAILED` padronizado: 400 em falha de parse, 413 acima de 100 KiB (`REQUEST_JSON_MAX_BYTES`).
 - `omitUndefined(partial)` — PATCH que não sobrescreve campos omitidos pelo cliente (remove entradas `undefined` antes do `update`).
 - `resolveIdFromContext` + tipo `RouteIdParamsContext` (`resolve-route-id.ts`) — rotas dinâmicas `[id]` com `params` síncrono ou `Promise`.
 
