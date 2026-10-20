@@ -4,6 +4,7 @@ import type { UserDTO } from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { auditEventRepository } from "../repositories/audit-event.repository";
 import { entityRepository } from "../repositories/entity.repository";
+import { notificationRepository } from "../repositories/notification.repository";
 import { sessionRepository } from "../repositories/session.repository";
 import { userRepository } from "../repositories/user.repository";
 import { cancelSubscriptionForErasure } from "./billing";
@@ -20,6 +21,7 @@ export type ErasureStepName =
     | "entities"
     | "auditTrail"
     | "sessions"
+    | "notifications"
     | "profile"
     | "authAccount";
 
@@ -103,6 +105,7 @@ const STEPS_AFTER_BILLING: ErasureStepName[] = [
     "entities",
     "auditTrail",
     "sessions",
+    "notifications",
     "profile",
     "authAccount",
 ];
@@ -122,6 +125,9 @@ async function eraseData(
         ),
         await runStep("sessions", () =>
             sessionRepository.purgeAllByUid(input.uid)
+        ),
+        await runStep("notifications", () =>
+            notificationRepository.purgeAllByUserId(profileId)
         ),
         await runStep("profile", () => userRepository.purgeProfile(profileId)),
         await runStep("authAccount", async () => {
