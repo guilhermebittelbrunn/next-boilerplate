@@ -29,6 +29,10 @@ vi.mock("@/(shared)/lib/resolve-api-actor", () => ({
     resolveApiActor: (...args: unknown[]) => resolveApiActorMock(...args),
 }));
 
+vi.mock("@/(shared)/lib/notifications", () => ({
+    emitNotificationQuietly: vi.fn(),
+}));
+
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ getUser: getUserMock, updateUser: vi.fn() }),
     getCurrentUser: vi.fn(),

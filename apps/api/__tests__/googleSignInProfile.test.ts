@@ -8,12 +8,19 @@ const {
     hasArchivedProfileMock,
     createMock,
     getUserMock,
+    emitNotificationMock,
 } = vi.hoisted(() => ({
     signInWithGoogleMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
     hasArchivedProfileMock: vi.fn(),
     createMock: vi.fn(),
     getUserMock: vi.fn(),
+    emitNotificationMock: vi.fn(),
+}));
+
+vi.mock("@/(shared)/lib/notifications", () => ({
+    emitNotificationQuietly: (...args: unknown[]) =>
+        emitNotificationMock(...args),
 }));
 
 vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
@@ -96,6 +103,7 @@ describe("POST /auth/sign-in/google", () => {
 
         expect(response.status).toBe(HTTP_STATUS.OK);
         expect(createMock).not.toHaveBeenCalled();
+        expect(emitNotificationMock).not.toHaveBeenCalled();
     });
 
     it("creates the profile exactly once when the account has none", async () => {
@@ -114,6 +122,10 @@ describe("POST /auth/sign-in/google", () => {
                 reference_id: UID,
                 type: UserType.COMMON,
             })
+        );
+        expect(emitNotificationMock).toHaveBeenCalledTimes(1);
+        expect(emitNotificationMock).toHaveBeenCalledWith(
+            expect.objectContaining({ userId: "profile-1", type: "welcome" })
         );
     });
 

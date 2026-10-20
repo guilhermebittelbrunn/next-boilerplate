@@ -37,6 +37,10 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
+vi.mock("@/(shared)/lib/notifications", () => ({
+    emitNotificationQuietly: vi.fn(),
+}));
+
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => getAuthMock(),
     getCurrentUser: vi.fn(),

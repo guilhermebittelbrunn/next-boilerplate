@@ -6,10 +6,17 @@ import {
 } from "@repo/shared/utils/helpers/passwordPolicy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createUserMock, createMock, deleteUserMock } = vi.hoisted(() => ({
-    createUserMock: vi.fn(),
-    createMock: vi.fn(),
-    deleteUserMock: vi.fn(),
+const { createUserMock, createMock, deleteUserMock, emitNotificationMock } =
+    vi.hoisted(() => ({
+        createUserMock: vi.fn(),
+        createMock: vi.fn(),
+        deleteUserMock: vi.fn(),
+        emitNotificationMock: vi.fn(),
+    }));
+
+vi.mock("@/(shared)/lib/notifications", () => ({
+    emitNotificationQuietly: (...args: unknown[]) =>
+        emitNotificationMock(...args),
 }));
 
 vi.mock("@/(shared)/repositories/user.repository", () => ({
@@ -76,6 +83,17 @@ describe("POST /auth/sign-up", () => {
             reference_id: UID,
             type: UserType.COMMON,
             onboarding: { step: "profile", completedAt: null },
+        });
+    });
+
+    it("leaves a welcome notification for the new profile", async () => {
+        await POST(signUpRequest());
+
+        expect(emitNotificationMock).toHaveBeenCalledWith({
+            userId: "profile-1",
+            type: "welcome",
+            params: {},
+            dedupeKey: "profile-1",
         });
     });
 
