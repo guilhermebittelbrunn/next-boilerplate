@@ -446,6 +446,31 @@ admin".
 - **O `entity` de exemplo** pode ficar como referência ou ser removido. Se remover, apague as quatro camadas
   juntas (as pastas estão no [README](../README.md#crud-de-referência)).
 
+### Avisar o usuário: um tipo de notificação novo
+
+O sino do painel comum mostra avisos que o servidor grava para o dono da conta. O core traz quatro tipos
+(boas-vindas e três mudanças de assinatura). Um tipo do produto entra em cinco passos:
+
+1. Acrescente o nome em `NOTIFICATION_TYPES` e os parâmetros dele em `NotificationParamsByType`
+   (`packages/sdk/src/types/notification/notification.ts`). O TypeScript passa a recusar a emissão com
+   parâmetro errado.
+2. Escreva título e corpo nos três idiomas em
+   `packages/internationalization/translations/apps/app/shared/notifications.ts`, dentro de `types`. Use
+   `{nomeDoParametro}` para interpolar. O teste `apps/app/__tests__/notificationCopy.test.ts` falha se o
+   tipo existir no contrato e faltar no dicionário.
+3. Declare nível (`info`, `warning`, `error`) e, se houver, o destino em `notificationPresentation`
+   (`apps/app/shared/lib/notifications.ts`). O destino é um caminho sem locale montado a partir dos
+   parâmetros; o documento nunca guarda URL.
+4. No ponto do servidor onde o evento acontece, chame `emitNotificationQuietly` de
+   `apps/api/(shared)/lib/notifications.ts` com o id do perfil dono e um `dedupeKey` estável (o id do
+   evento, do pedido, do registro). A mesma chave nunca gera dois avisos. Use `emitNotification` quando a
+   falha ao gravar deve interromper o produtor.
+5. Nada a fazer na exportação nem na exclusão de conta: as notificações do titular já entram nas duas,
+   com os parâmetros. Se um parâmetro carregar dado pessoal, ele segue o mesmo caminho.
+
+O texto nunca é gravado no documento, então mudar a copy vale também para os avisos que já existem. Uma
+notificação de um tipo que o build não conhece mais aparece com o texto genérico (`fallback`).
+
 ## 11. Conferência antes de abrir para usuários
 
 Com os três apps no ar:
@@ -484,6 +509,7 @@ painel que nenhum teste cobra, com o comando de verificação de cada um.
 | `packages/internationalization/translations/packages/email/*` | Textos dos e-mails | [3.3](#33-textos) |
 | `firestore.indexes.json` | Índices das coleções novas do produto | [10](#10-onde-entra-o-código-do-produto) |
 | `apps/app/proxy.ts`, `apps/web/proxy.ts` | Origens externas novas na CSP | [10](#10-onde-entra-o-código-do-produto) |
+| `packages/sdk/src/types/notification/notification.ts`, `translations/apps/app/shared/notifications.ts`, `apps/app/shared/lib/notifications.ts` | Tipos de notificação do produto | [10](#avisar-o-usuário-um-tipo-de-notificação-novo) |
 | Painel da Vercel dos três projetos | Todas as variáveis de produção | [6](#6-vercel), [8](#8-referência-das-variáveis-de-ambiente) |
 
 O que **não** precisa mudar: `firestore.rules` (o `deny-all` vale para qualquer produto), `firebase.json`,
