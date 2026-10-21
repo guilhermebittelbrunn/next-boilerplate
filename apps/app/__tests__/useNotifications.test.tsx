@@ -59,6 +59,8 @@ type ListPages = { pages: { items: Row[]; nextCursor: string | null }[] };
 const READ_AT = "2026-10-20T12:00:00.000Z";
 const CACHED_COUNT = 5;
 const FRESH_COUNT = 7;
+/** Same as the app-wide `staleTime` in `QueryProvider`. */
+const LIST_STALE_MS = 60_000;
 /** Long enough for a query that was going to fire to have fired. */
 const SETTLE_MS = 20;
 
@@ -75,7 +77,7 @@ function wrapper({ children }: { children: ReactNode }) {
     );
 }
 
-function seedCache() {
+function seedList() {
     queryClient.setQueryData(queryKeys.notifications.list(), {
         pages: [
             {
@@ -89,6 +91,10 @@ function seedCache() {
         ],
         pageParams: [null, "c1"],
     });
+}
+
+function seedCache() {
+    seedList();
     queryClient.setQueryData(queryKeys.notifications.unreadCount(), {
         count: CACHED_COUNT,
     });
@@ -99,6 +105,35 @@ function rowInCache(id: string) {
         .getQueryData<ListPages>(queryKeys.notifications.list())
         ?.pages.flatMap((page) => page.items)
         .find((row) => row.id === id);
+}
+
+function countState() {
+    return queryClient.getQueryState(queryKeys.notifications.unreadCount());
+}
+
+function listIsInvalidated() {
+    return queryClient.getQueryState(queryKeys.notifications.list())
+        ?.isInvalidated;
+}
+
+function refetchCount() {
+    return act(() =>
+        queryClient.refetchQueries({
+            queryKey: queryKeys.notifications.unreadCount(),
+        })
+    );
+}
+
+/** Count answered 2 once, then the next read failed: error status with the old data kept. */
+async function renderCountThatFailedAfterSuccess() {
+    const rendered = renderHook(() => useUnreadNotificationsCount(), {
+        wrapper,
+    });
+    await waitFor(() => expect(rendered.result.current.count).toBe(2));
+    unreadCountMock.mockRejectedValue(new Error("unavailable"));
+    await refetchCount();
+    await waitFor(() => expect(countState()?.status).toBe("error"));
+    return rendered;
 }
 
 function countInCache() {
@@ -158,6 +193,40 @@ describe("useListNotifications", () => {
             limit: NOTIFICATIONS_PAGE_SIZE,
             cursor: null,
         });
+    });
+
+    it("carregar mais com a lista velha mantém a marca para a próxima abertura", async () => {
+        listMock.mockResolvedValueOnce({
+            items: [{ id: "n1", readAt: null }],
+            nextCursor: "c1",
+        });
+        const { result } = renderHook(
+            () => useListNotifications({ enabled: true }),
+            { wrapper }
+        );
+        await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+
+        queryClient.invalidateQueries({
+            queryKey: queryKeys.notifications.list(),
+            refetchType: "none",
+        });
+        listMock.mockResolvedValueOnce({
+            items: [{ id: "n2", readAt: null }],
+            nextCursor: null,
+        });
+        await act(() => result.current.fetchNextPage());
+
+        expect(listMock).toHaveBeenLastCalledWith({
+            limit: NOTIFICATIONS_PAGE_SIZE,
+            cursor: "c1",
+        });
+        await waitFor(() =>
+            expect(result.current.data.map((row) => row.id)).toEqual([
+                "n1",
+                "n2",
+            ])
+        );
+        expect(listIsInvalidated()).toBe(true);
     });
 });
 
@@ -222,6 +291,100 @@ describe("useUnreadNotificationsCount", () => {
         expect(result.current.count).toBe(0);
         expect(errorAlertMock).not.toHaveBeenCalled();
     });
+
+    it("esconde o número quando uma releitura falha depois de um sucesso", async () => {
+        const { result } = await renderCountThatFailedAfterSuccess();
+
+        expect(countState()?.data).toEqual({ count: 2 });
+        expect(result.current.count).toBe(0);
+        expect(result.current.error).toBeTruthy();
+        expect(errorAlertMock).not.toHaveBeenCalled();
+    });
+
+    it("volta a mostrar o número quando a contagem se recupera", async () => {
+        const { result } = await renderCountThatFailedAfterSuccess();
+
+        unreadCountMock.mockResolvedValue({ count: FRESH_COUNT });
+        await refetchCount();
+
+        await waitFor(() => expect(result.current.count).toBe(FRESH_COUNT));
+        expect(result.current.error).toBeNull();
+    });
+
+    it("marca a lista como velha quando o servidor muda a contagem", async () => {
+        seedList();
+        const { result } = renderHook(() => useUnreadNotificationsCount(), {
+            wrapper,
+        });
+        await waitFor(() => expect(result.current.count).toBe(2));
+        expect(listIsInvalidated()).toBe(false);
+
+        unreadCountMock.mockResolvedValue({ count: FRESH_COUNT });
+        await refetchCount();
+
+        await waitFor(() => expect(result.current.count).toBe(FRESH_COUNT));
+        expect(listIsInvalidated()).toBe(true);
+        expect(listMock).not.toHaveBeenCalled();
+    });
+
+    it("não mexe na lista quando o servidor confirma o número do cache", async () => {
+        seedList();
+        const { result } = renderHook(() => useUnreadNotificationsCount(), {
+            wrapper,
+        });
+        await waitFor(() => expect(result.current.count).toBe(2));
+
+        act(() => {
+            queryClient.setQueryData(queryKeys.notifications.unreadCount(), {
+                count: 1,
+            });
+        });
+        unreadCountMock.mockResolvedValue({ count: 1 });
+        await refetchCount();
+
+        await waitFor(() => expect(unreadCountMock).toHaveBeenCalledTimes(2));
+        expect(result.current.count).toBe(1);
+        expect(listIsInvalidated()).toBe(false);
+    });
+
+    it("reabrir sem contagem nova não relê; com contagem nova relê uma vez", async () => {
+        queryClient.setQueryDefaults(queryKeys.notifications.list(), {
+            staleTime: LIST_STALE_MS,
+        });
+        seedList();
+        const count = renderHook(() => useUnreadNotificationsCount(), {
+            wrapper,
+        });
+        await waitFor(() => expect(count.result.current.count).toBe(2));
+
+        const firstOpening = renderHook(
+            () => useListNotifications({ enabled: true }),
+            { wrapper }
+        );
+        await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+        expect(listMock).not.toHaveBeenCalled();
+        firstOpening.unmount();
+
+        unreadCountMock.mockResolvedValue({ count: FRESH_COUNT });
+        await refetchCount();
+        await waitFor(() =>
+            expect(count.result.current.count).toBe(FRESH_COUNT)
+        );
+
+        const secondOpening = renderHook(
+            () => useListNotifications({ enabled: true }),
+            { wrapper }
+        );
+        await waitFor(() =>
+            expect(secondOpening.result.current.isLoading).toBe(false)
+        );
+        await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+        expect(listMock).toHaveBeenCalledTimes(1);
+        expect(listMock).toHaveBeenCalledWith({
+            limit: NOTIFICATIONS_PAGE_SIZE,
+            cursor: null,
+        });
+    });
 });
 
 describe("useNotificationActions · markRead", () => {
@@ -273,6 +436,48 @@ describe("useNotificationActions · markRead", () => {
         expect(countInCache()).toBe(CACHED_COUNT);
         expect(errorAlertMock).toHaveBeenCalledTimes(1);
     });
+
+    it("mantém a lista marcada como velha quando a pessoa marca uma como lida", async () => {
+        seedCache();
+        queryClient.invalidateQueries({
+            queryKey: queryKeys.notifications.list(),
+            refetchType: "none",
+        });
+        const { result } = renderHook(() => useNotificationActions(), {
+            wrapper,
+        });
+
+        markReadMock.mockResolvedValueOnce({ id: "n1", readAt: READ_AT });
+        await act(() => result.current.markRead.mutateAsync("n1"));
+        expect(rowInCache("n1")?.readAt).toBe(READ_AT);
+        expect(listIsInvalidated()).toBe(true);
+
+        markReadMock.mockRejectedValueOnce(new Error("403"));
+        act(() => result.current.markRead.mutate("n3"));
+        await waitFor(() => expect(result.current.markRead.isError).toBe(true));
+        expect(rowInCache("n3")?.readAt).toBeNull();
+        expect(listIsInvalidated()).toBe(true);
+    });
+
+    it("com a contagem em erro, marcar como lida não traz o número de volta", async () => {
+        await renderCountThatFailedAfterSuccess();
+        seedList();
+        const { result } = renderHook(() => useNotificationActions(), {
+            wrapper,
+        });
+
+        markReadMock.mockResolvedValueOnce({ id: "n1", readAt: READ_AT });
+        await act(() => result.current.markRead.mutateAsync("n1"));
+        expect(rowInCache("n1")?.readAt).toBe(READ_AT);
+        expect(countState()?.status).toBe("error");
+
+        markReadMock.mockRejectedValueOnce(new Error("403"));
+        act(() => result.current.markRead.mutate("n3"));
+        await waitFor(() => expect(result.current.markRead.isError).toBe(true));
+        expect(rowInCache("n3")?.readAt).toBeNull();
+        expect(errorAlertMock).toHaveBeenCalledTimes(1);
+        expect(countState()?.status).toBe("error");
+    });
 });
 
 describe("useNotificationActions · markAllRead", () => {
@@ -311,5 +516,36 @@ describe("useNotificationActions · markAllRead", () => {
         expect(countInCache()).toBe(CACHED_COUNT);
         expect(rowInCache("n1")?.readAt).toBeNull();
         expect(errorAlertMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("mantém a lista marcada como velha depois de marcar todas", async () => {
+        seedCache();
+        queryClient.invalidateQueries({
+            queryKey: queryKeys.notifications.list(),
+            refetchType: "none",
+        });
+        markAllReadMock.mockResolvedValue({ updated: 2 });
+        const { result } = renderHook(() => useNotificationActions(), {
+            wrapper,
+        });
+
+        await act(() => result.current.markAllRead.mutateAsync());
+
+        expect(rowInCache("n1")?.readAt).not.toBeNull();
+        expect(listIsInvalidated()).toBe(true);
+    });
+
+    it("com a contagem em erro, marcar todas não grava zero por cima do erro", async () => {
+        await renderCountThatFailedAfterSuccess();
+        seedList();
+        markAllReadMock.mockResolvedValue({ updated: 2 });
+        const { result } = renderHook(() => useNotificationActions(), {
+            wrapper,
+        });
+
+        await act(() => result.current.markAllRead.mutateAsync());
+
+        expect(rowInCache("n1")?.readAt).not.toBeNull();
+        expect(countState()?.status).toBe("error");
     });
 });
