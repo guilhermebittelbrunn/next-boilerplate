@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useAuthorizedQuery } from "@/shared/hooks/useAuthorizedQuery";
+import { markNotificationsListStale } from "@/shared/hooks/useListNotifications";
 import { apiClient } from "@/shared/lib/client";
 import { NOTIFICATIONS_POLL_INTERVAL_MS } from "@/shared/lib/pagination";
 import { queryKeys } from "@/shared/lib/queryKeys";
@@ -25,7 +26,18 @@ export const useUnreadNotificationsCount = () => {
 
     const query = useAuthorizedQuery({
         queryKey: queryKeys.notifications.unreadCount(),
-        queryFn: fetchUnreadNotificationsCount,
+        queryFn: async () => {
+            const known = queryClient.getQueryData<NotificationUnreadCountDTO>(
+                queryKeys.notifications.unreadCount()
+            );
+            const latest = await fetchUnreadNotificationsCount();
+            // Mark-as-read writes the count optimistically and keeps the list in step, so
+            // only a server answer that disagrees with the cache means the list moved.
+            if (known && known.count !== latest.count) {
+                markNotificationsListStale(queryClient);
+            }
+            return latest;
+        },
         staleTime: UNREAD_COUNT_STALE_MS,
         refetchInterval: NOTIFICATIONS_POLL_INTERVAL_MS,
         refetchIntervalInBackground: false,
@@ -48,7 +60,7 @@ export const useUnreadNotificationsCount = () => {
     }, [pathname, queryClient]);
 
     return {
-        count: query.data?.count ?? 0,
+        count: query.isError ? 0 : (query.data?.count ?? 0),
         isLoading: query.isLoading,
         error: query.error,
     };

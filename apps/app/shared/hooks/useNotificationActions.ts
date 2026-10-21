@@ -12,6 +12,10 @@ import {
     useMutation,
     useQueryClient,
 } from "@tanstack/react-query";
+import {
+    isNotificationsListStale,
+    markNotificationsListStale,
+} from "@/shared/hooks/useListNotifications";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 
@@ -42,25 +46,47 @@ function markItems(
 
 /**
  * Optimistic and cache-only: the server changes nothing the client does not already
- * know, so there is nothing to invalidate. Notifications that were not loaded yet arrive
- * already read from the server.
+ * know, so nothing is read again on its account. Notifications that were not loaded yet
+ * arrive already read from the server.
  */
 export const useNotificationActions = () => {
     const { errorAlert } = useAlert();
     const { locale } = getDictionary();
     const queryClient = useQueryClient();
 
+    const writeList = (
+        update: (
+            old: NotificationListPages | undefined
+        ) => NotificationListPages | undefined
+    ) => {
+        const listWasStale = isNotificationsListStale(queryClient);
+        queryClient.setQueryData<NotificationListPages>(
+            queryKeys.notifications.list(),
+            update
+        );
+        if (listWasStale) {
+            markNotificationsListStale(queryClient);
+        }
+    };
+
     const snapshotCache = async (): Promise<NotificationCacheSnapshot> => {
         await queryClient.cancelQueries({
             queryKey: queryKeys.notifications.all,
         });
+        // Writing the count clears its error state and would bring back the number the
+        // badge hid after a failed read.
+        const countIsCurrent =
+            queryClient.getQueryState(queryKeys.notifications.unreadCount())
+                ?.status === "success";
         return {
             previousList: queryClient.getQueryData<NotificationListPages>(
                 queryKeys.notifications.list()
             ),
-            previousCount: queryClient.getQueryData<NotificationUnreadCountDTO>(
-                queryKeys.notifications.unreadCount()
-            ),
+            previousCount: countIsCurrent
+                ? queryClient.getQueryData<NotificationUnreadCountDTO>(
+                      queryKeys.notifications.unreadCount()
+                  )
+                : undefined,
         };
     };
 
@@ -68,11 +94,9 @@ export const useNotificationActions = () => {
         error: unknown,
         context: NotificationCacheSnapshot | undefined
     ) => {
-        if (context?.previousList) {
-            queryClient.setQueryData(
-                queryKeys.notifications.list(),
-                context.previousList
-            );
+        const previousList = context?.previousList;
+        if (previousList) {
+            writeList(() => previousList);
         }
         if (context?.previousCount) {
             queryClient.setQueryData(
@@ -92,16 +116,14 @@ export const useNotificationActions = () => {
                 .find((item) => item.id === id);
             const wasUnread = target ? target.readAt === null : true;
 
-            queryClient.setQueryData<NotificationListPages>(
-                queryKeys.notifications.list(),
-                (old) =>
-                    markItems(
-                        old,
-                        (item) => item.id === id && item.readAt === null,
-                        new Date().toISOString()
-                    )
+            writeList((old) =>
+                markItems(
+                    old,
+                    (item) => item.id === id && item.readAt === null,
+                    new Date().toISOString()
+                )
             );
-            if (wasUnread) {
+            if (wasUnread && snapshot.previousCount) {
                 queryClient.setQueryData<NotificationUnreadCountDTO>(
                     queryKeys.notifications.unreadCount(),
                     (old) => old && { count: Math.max(0, old.count - 1) }
@@ -110,14 +132,12 @@ export const useNotificationActions = () => {
             return snapshot;
         },
         onSuccess: (response) => {
-            queryClient.setQueryData<NotificationListPages>(
-                queryKeys.notifications.list(),
-                (old) =>
-                    markItems(
-                        old,
-                        (item) => item.id === response.id,
-                        response.readAt
-                    )
+            writeList((old) =>
+                markItems(
+                    old,
+                    (item) => item.id === response.id,
+                    response.readAt
+                )
             );
         },
         onError: (error, _id, context) => restoreCache(error, context),
@@ -127,19 +147,19 @@ export const useNotificationActions = () => {
         mutationFn: () => apiClient.notification.markAllRead(),
         onMutate: async () => {
             const snapshot = await snapshotCache();
-            queryClient.setQueryData<NotificationListPages>(
-                queryKeys.notifications.list(),
-                (old) =>
-                    markItems(
-                        old,
-                        (item) => item.readAt === null,
-                        new Date().toISOString()
-                    )
+            writeList((old) =>
+                markItems(
+                    old,
+                    (item) => item.readAt === null,
+                    new Date().toISOString()
+                )
             );
-            queryClient.setQueryData<NotificationUnreadCountDTO>(
-                queryKeys.notifications.unreadCount(),
-                { count: 0 }
-            );
+            if (snapshot.previousCount) {
+                queryClient.setQueryData<NotificationUnreadCountDTO>(
+                    queryKeys.notifications.unreadCount(),
+                    { count: 0 }
+                );
+            }
             return snapshot;
         },
         onError: (error, _variables, context) => restoreCache(error, context),

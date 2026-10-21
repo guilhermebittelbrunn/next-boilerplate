@@ -6,6 +6,7 @@ import {
     type Firestore,
     type Query,
 } from "firebase-admin/firestore";
+import { isUsableDocumentId } from "@/(shared)/lib/pagination";
 import type Mapper from "@/(shared)/mappers/Mapper";
 
 export type CreateRequest<DTO> = Omit<
@@ -141,6 +142,9 @@ export class BaseRepository<DTO> {
     }
 
     async findById(id: string): Promise<DTO | null> {
+        if (!isUsableDocumentId(id)) {
+            return null;
+        }
         const snap = await this.db.collection(this.table).doc(id).get();
         if (!snap.exists) {
             return null;

@@ -14,6 +14,8 @@ import { useState } from "react";
 import { useUnreadNotificationsCount } from "@/shared/hooks/useUnreadNotificationsCount";
 import { NotificationsList } from "./NotificationsList";
 
+const POPOVER_EDGE_GAP_PX = 12;
+
 export function formatUnreadBadge(count: number): string {
     return count >= NOTIFICATION_UNREAD_COUNT_CAP
         ? `${NOTIFICATION_UNREAD_COUNT_CAP - 1}+`
@@ -61,6 +63,7 @@ export default function NotificationsBell() {
             <PopoverContent
                 align="end"
                 className="w-[min(24rem,calc(100vw-1.5rem))] p-0"
+                collisionPadding={POPOVER_EDGE_GAP_PX}
             >
                 <NotificationsList
                     onNavigate={() => setOpen(false)}

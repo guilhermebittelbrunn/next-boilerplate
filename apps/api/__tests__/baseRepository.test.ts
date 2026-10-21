@@ -331,6 +331,8 @@ const repository = new BaseRepository<EntityDTO>(
 );
 
 const CREATED_AT_ISO = "2024-03-01T10:00:00.000Z";
+const DOCUMENT_ID_MAX_BYTES = 1500;
+const TWO_BYTE_CHAR = "é";
 
 function entityRow(overrides: Row = {}): Row {
     return {
@@ -422,6 +424,46 @@ describe("BaseRepository.findById", () => {
 
         expect(found?.createdAt).toBe(CREATED_AT_ISO);
         expect(found?.updatedAt).toBe(CREATED_AT_ISO);
+    });
+
+    it.each([
+        ["a slash", "a/b"],
+        ["two slashes", "a/b/c"],
+        ["a reserved name", "__reserved__"],
+        ["a single dot", "."],
+        ["a double dot", ".."],
+        ["ASCII over 1500 bytes", "x".repeat(DOCUMENT_ID_MAX_BYTES + 1)],
+        [
+            "two-byte characters over 1500 bytes",
+            TWO_BYTE_CHAR.repeat(DOCUMENT_ID_MAX_BYTES / 2 + 1),
+        ],
+    ])(
+        "returns null without touching Firestore for an id with %s",
+        async (_label, id) => {
+            const collectionSpy = vi.spyOn(fakeDb, "collection");
+
+            try {
+                await expect(repository.findById(id)).resolves.toBeNull();
+                expect(collectionSpy).not.toHaveBeenCalled();
+            } finally {
+                collectionSpy.mockRestore();
+            }
+        }
+    );
+
+    it("still reads an id of exactly 1500 bytes", async () => {
+        const collectionSpy = vi.spyOn(fakeDb, "collection");
+
+        try {
+            await expect(
+                repository.findById(
+                    TWO_BYTE_CHAR.repeat(DOCUMENT_ID_MAX_BYTES / 2)
+                )
+            ).resolves.toBeNull();
+            expect(collectionSpy).toHaveBeenCalledWith("entity");
+        } finally {
+            collectionSpy.mockRestore();
+        }
     });
 
     it("keeps an already-ISO createdAt untouched", async () => {

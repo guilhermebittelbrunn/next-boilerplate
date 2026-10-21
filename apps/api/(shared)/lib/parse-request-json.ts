@@ -8,13 +8,18 @@ type ParsedJson =
     | { ok: true; value: unknown }
     | { ok: false; response: Response };
 
-const refuse = (status: number): ParsedJson => ({
+const refuse = (status: number, headers?: HeadersInit): ParsedJson => ({
     ok: false,
     response: Response.json(
         { error: { code: "VALIDATION_FAILED" } },
-        { status }
+        { status, headers }
     ),
 });
+
+// The rest of an oversized body is never read, so Node would keep the keep-alive socket
+// open waiting for it until requestTimeout. Closing it frees the socket right away.
+const refuseTooLarge = (): ParsedJson =>
+    refuse(HTTP_STATUS.PAYLOAD_TOO_LARGE, { connection: "close" });
 
 const exceedsDeclaredLength = (req: Request): boolean => {
     const declared = Number(req.headers.get("content-length"));
@@ -45,11 +50,11 @@ async function readCapped(
 
 /**
  * Parses JSON body for POST/PUT handlers; returns a consistent 400 on invalid JSON
- * and 413 past the cap, measured before the body is parsed.
+ * and 413 past the cap, measured before the body is parsed. The 413 closes the connection.
  */
 export async function parseRequestJson(req: Request): Promise<ParsedJson> {
     if (exceedsDeclaredLength(req)) {
-        return refuse(HTTP_STATUS.PAYLOAD_TOO_LARGE);
+        return refuseTooLarge();
     }
     try {
         if (!req.body) {
@@ -58,7 +63,7 @@ export async function parseRequestJson(req: Request): Promise<ParsedJson> {
         }
         const bytes = await readCapped(req.body);
         if (!bytes) {
-            return refuse(HTTP_STATUS.PAYLOAD_TOO_LARGE);
+            return refuseTooLarge();
         }
         return { ok: true, value: JSON.parse(new TextDecoder().decode(bytes)) };
     } catch {

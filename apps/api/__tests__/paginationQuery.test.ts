@@ -4,6 +4,7 @@ import {
     decodeCursor,
     encodeCursor,
     isMissingIndexError,
+    isUsableDocumentId,
 } from "@/(shared)/lib/pagination";
 import {
     PAGE_SIZE_DEFAULT,
@@ -13,6 +14,8 @@ import {
 
 const SMALL_PAGE = 5;
 const OVERSIZED_CURSOR_LENGTH = 600;
+const FIRESTORE_DOCUMENT_ID_MAX_BYTES = 1500;
+const TWO_BYTE_CHAR = "é";
 
 function listRequest(query = "") {
     return new Request(`https://api.test/entities${query}`);
@@ -117,6 +120,48 @@ describe("parseListQuery · cursor", () => {
 
     it("decodes only what it encoded", () => {
         expect(decodeCursor("clearly-not-a-cursor")).toBeNull();
+    });
+
+    it("decodes an id of two-byte characters at the byte limit", () => {
+        const id = TWO_BYTE_CHAR.repeat(FIRESTORE_DOCUMENT_ID_MAX_BYTES / 2);
+
+        expect(decodeCursor(encodeCursor(id))).toBe(id);
+    });
+
+    it("refuses an id over the byte limit even when its length is under it", () => {
+        const id = TWO_BYTE_CHAR.repeat(
+            FIRESTORE_DOCUMENT_ID_MAX_BYTES / 2 + 1
+        );
+
+        expect(decodeCursor(encodeCursor(id))).toBeNull();
+    });
+});
+
+describe("isUsableDocumentId", () => {
+    it.each([
+        [
+            "ASCII at the byte limit",
+            "x".repeat(FIRESTORE_DOCUMENT_ID_MAX_BYTES),
+        ],
+        [
+            "two-byte characters at the byte limit",
+            TWO_BYTE_CHAR.repeat(FIRESTORE_DOCUMENT_ID_MAX_BYTES / 2),
+        ],
+    ])("accepts %s", (_label, id) => {
+        expect(isUsableDocumentId(id)).toBe(true);
+    });
+
+    it.each([
+        [
+            "ASCII one byte over the limit",
+            "x".repeat(FIRESTORE_DOCUMENT_ID_MAX_BYTES + 1),
+        ],
+        [
+            "two-byte characters over the byte limit but under it in length",
+            TWO_BYTE_CHAR.repeat(FIRESTORE_DOCUMENT_ID_MAX_BYTES / 2 + 1),
+        ],
+    ])("refuses %s", (_label, id) => {
+        expect(isUsableDocumentId(id)).toBe(false);
     });
 });
 
