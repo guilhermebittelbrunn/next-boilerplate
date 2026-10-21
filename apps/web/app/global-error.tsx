@@ -10,20 +10,17 @@ type GlobalErrorProperties = {
     readonly reset: () => void;
 };
 
-const GlobalError = ({ error, reset }: GlobalErrorProperties) => {
+const GlobalError = ({ reset }: GlobalErrorProperties) => {
+    // This screen replaces the root layout, so no LocaleProvider is mounted: the locale
+    // comes from the last one rendered or from the cookie the proxy writes on each page request.
     const { dictionary, locale } = getDictionary();
-    // Log error to console in development
-    if (process.env.NODE_ENV === "development") {
-        console.error("Global error:", error);
-    }
-
-    const copy = dictionary.apps.web.pages.error;
+    const globalErrorCopy = dictionary.apps.web.pages.error;
 
     return (
-        <html className={fonts} lang={locale || "pt-br"}>
+        <html className={fonts} lang={locale}>
             <body>
-                <h1>{copy.title}</h1>
-                <Button onClick={() => reset()}>{copy.retry}</Button>
+                <h1>{globalErrorCopy.title}</h1>
+                <Button onClick={() => reset()}>{globalErrorCopy.retry}</Button>
             </body>
         </html>
     );
