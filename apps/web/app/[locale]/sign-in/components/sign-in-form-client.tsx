@@ -11,12 +11,13 @@ import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
 import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { apiClient } from "@/shared/lib/client";
 import {
+    buildSignInSchema,
     type SignInFormValues,
-    signInSchema,
 } from "../validations/signInSchema";
 
 export const SignInFormClient = () => {
@@ -25,8 +26,10 @@ export const SignInFormClient = () => {
 
     const isLoading = signIn.isPending || signInWithGoogle.isPending;
 
+    const schema = useMemo(() => buildSignInSchema(dictionary), [dictionary]);
+
     const form = useForm<SignInFormValues>({
-        resolver: zodResolver(signInSchema),
+        resolver: zodResolver(schema),
         defaultValues: {
             email: "",
             password: "",
