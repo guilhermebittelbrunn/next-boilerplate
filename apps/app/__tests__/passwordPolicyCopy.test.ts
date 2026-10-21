@@ -33,6 +33,7 @@ function existingPasswordMessages(locale: Locale): Record<string, string> {
     const { apps } = globalTranslations[locale];
     return {
         "app signIn.passwordMin": apps.app.pages.signIn.validation.passwordMin,
+        "web signIn.passwordMin": apps.web.pages.signIn.validation.passwordMin,
         "app account.security.min":
             apps.app.pages.common.account.security.validation.min,
         "app account.privacy.delete.min":
