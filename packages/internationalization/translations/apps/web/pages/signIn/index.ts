@@ -11,6 +11,10 @@ export const signInTranslations = {
             passwordPlaceholder: "••••••••",
             submit: "Entrar",
         },
+        validation: {
+            emailInvalid: "Email inválido",
+            passwordMin: "A senha deve ter pelo menos 6 caracteres",
+        },
         signIn: "Entrar",
         enterWithYourAccount: "Entre com sua conta para continuar",
         orContinueWith: "Ou continue com",
@@ -30,6 +34,10 @@ export const signInTranslations = {
             passwordPlaceholder: "••••••••",
             submit: "Sign In",
         },
+        validation: {
+            emailInvalid: "Invalid email",
+            passwordMin: "Password must be at least 6 characters",
+        },
         signIn: "Sign In",
         enterWithYourAccount: "Enter with your account to continue",
         orContinueWith: "Or continue with",
@@ -48,6 +56,10 @@ export const signInTranslations = {
             password: "Contraseña",
             passwordPlaceholder: "••••••••",
             submit: "Iniciar sesión",
+        },
+        validation: {
+            emailInvalid: "Email no válido",
+            passwordMin: "La contraseña debe tener al menos 6 caracteres",
         },
         signIn: "Iniciar sesión",
         enterWithYourAccount: "Inicia sesión en tu cuenta para continuar",
