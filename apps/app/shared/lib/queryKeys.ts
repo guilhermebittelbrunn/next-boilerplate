@@ -14,6 +14,11 @@ export const queryKeys = {
         me: () => [...queryKeys.account.all, "me"] as const,
         sessions: () => [...queryKeys.account.all, "sessions"] as const,
     },
+    auth: {
+        all: ["auth"] as const,
+        emailLinkAvailability: () =>
+            [...queryKeys.auth.all, "emailLinkAvailability"] as const,
+    },
     auditEvents: {
         all: ["auditEvents"] as const,
         // The filters belong in the key because the API resolves each combination as a

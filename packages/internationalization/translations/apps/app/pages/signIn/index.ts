@@ -22,6 +22,7 @@ export const signInTranslations = {
         signUp: "Cadastrar",
         noAccount: "Não tem uma conta? ",
         forgotPassword: "Esqueci minha senha",
+        emailLink: "Receber link de acesso por e-mail",
     },
     en: {
         meta: {
@@ -46,6 +47,7 @@ export const signInTranslations = {
         signUp: "Sign Up",
         noAccount: "Don't have an account? ",
         forgotPassword: "Forgot your password?",
+        emailLink: "Get a sign-in link by email",
     },
     es: {
         meta: {
@@ -70,5 +72,6 @@ export const signInTranslations = {
         signUp: "Registrarse",
         noAccount: "¿No tienes una cuenta? ",
         forgotPassword: "¿Olvidaste tu contraseña?",
+        emailLink: "Recibir un enlace de acceso por correo",
     },
 };

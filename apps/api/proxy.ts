@@ -31,7 +31,9 @@ const securityOptions = buildApiOptions();
  * Account entry and recovery endpoints: no guard to hang a budget on, and each one
  * spends the project's Identity Toolkit quota or sends mail on the fork's account.
  * `/auth/me` is authenticated and on the hot path, `/webhooks/payments` is retried
- * aggressively by Stripe — throttling either costs more than it protects.
+ * aggressively by Stripe — throttling either costs more than it protects. The GET on
+ * `/auth/sign-in/email-link` stays off for the same reason as `/auth/me`: every visit to the
+ * sign-in screen reads it, and it only describes the configuration.
  *
  * `/files` is the exception that is authenticated: a guard is no budget when the caller
  * is a legitimate user in a loop, and every accepted request writes to the fork's bucket
@@ -54,6 +56,7 @@ const RATE_LIMITED_PATHS = [
     "/auth/sign-in",
     "/auth/sign-up",
     "/auth/sign-in/google",
+    "/auth/sign-in/email-link/request",
     "/auth/password/reset-request",
     "/auth/password/reset",
     "/auth/email-verification/send",

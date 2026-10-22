@@ -26,6 +26,8 @@ export const env = createEnv({
         // inherited, which below is every development run — and the upload capability
         // would read as switched off on every local machine.
         FIREBASE_STORAGE_BUCKET: z.string().optional(),
+        // "true" turns on sign-in by email link. Anything else, empty included, keeps it off.
+        EMAIL_LINK_SIGN_IN_ENABLED: z.string().optional(),
     },
     // Base of the links the account action emails carry. Redeclared here even though
     // `core()` already provides it: `skipValidation` makes createEnv answer with this
@@ -49,6 +51,8 @@ export const env = createEnv({
             process.env.FIREBASE_STORAGE_BUCKET ||
             process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
             undefined,
+        EMAIL_LINK_SIGN_IN_ENABLED:
+            process.env.EMAIL_LINK_SIGN_IN_ENABLED || undefined,
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
         NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE:
             process.env.NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE || undefined,

@@ -21,6 +21,7 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
+import { useEmailLinkAvailability } from "@/shared/hooks/useEmailLinkSignIn";
 import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { apiClient } from "@/shared/lib/client";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
@@ -39,6 +40,7 @@ export const SignInForm = ({ redirect = null }: SignInFormProps) => {
     const { errorAlert, successAlert } = useAlert();
     const router = useRouter();
     const { signIn, user, loading: authLoading } = useAuth();
+    const emailLinkAvailability = useEmailLinkAvailability();
 
     const googleSignIn = useMutation({
         mutationFn: signInWithGoogleViaApi,
@@ -204,6 +206,16 @@ export const SignInForm = ({ redirect = null }: SignInFormProps) => {
                             {dictionary.apps.app.pages.signIn.forgotPassword}
                         </Link>
                     </p>
+                    {emailLinkAvailability.data?.enabled ? (
+                        <p>
+                            <Link
+                                className="text-primary hover:underline"
+                                href={`/${locale}/sign-in/email-link`}
+                            >
+                                {dictionary.apps.app.pages.signIn.emailLink}
+                            </Link>
+                        </p>
+                    ) : null}
                     <p>
                         <span className="text-muted-foreground">
                             {dictionary.apps.app.pages.signIn.noAccount}

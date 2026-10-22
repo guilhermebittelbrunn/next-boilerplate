@@ -36,6 +36,14 @@ export type PasswordResetRequestBody = {
     locale?: string;
 };
 
+export type EmailLinkSignInAvailability = { enabled: boolean };
+
+export type EmailLinkSignInRequestBody = {
+    email: string;
+    /** Language of the email. Absent falls back to the fork's default locale. */
+    locale?: string;
+};
+
 export type PasswordResetConfirmBody = {
     oobCode: string;
     password: string;
@@ -120,6 +128,31 @@ export default class AuthActions {
             Response<AuthActionRequested>
         >({
             url: "/auth/password/reset-request",
+            method: "POST",
+            data: body,
+        });
+
+        return data.data;
+    }
+
+    async emailLinkSignInAvailability(): Promise<EmailLinkSignInAvailability> {
+        const { data } = await this.client.request<
+            Response<EmailLinkSignInAvailability>
+        >({
+            url: "/auth/sign-in/email-link",
+            method: "GET",
+        });
+
+        return data.data;
+    }
+
+    async requestEmailLinkSignIn(
+        body: EmailLinkSignInRequestBody
+    ): Promise<AuthActionRequested> {
+        const { data } = await this.client.request<
+            Response<AuthActionRequested>
+        >({
+            url: "/auth/sign-in/email-link/request",
             method: "POST",
             data: body,
         });

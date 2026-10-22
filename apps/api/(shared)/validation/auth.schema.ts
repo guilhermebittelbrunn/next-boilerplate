@@ -22,6 +22,11 @@ export const passwordResetRequestSchema = z.object({
     locale: localeSchema.optional(),
 });
 
+export const emailLinkSignInRequestSchema = z.object({
+    email: z.string().trim().max(EMAIL_MAX).email(),
+    locale: localeSchema.optional(),
+});
+
 export const passwordResetConfirmSchema = z.object({
     oobCode: oobCodeSchema,
     password: newPasswordSchema,
@@ -55,6 +60,9 @@ export const emailVerificationConfirmSchema = z.object({
 
 export type PasswordResetRequestInput = z.infer<
     typeof passwordResetRequestSchema
+>;
+export type EmailLinkSignInRequestInput = z.infer<
+    typeof emailLinkSignInRequestSchema
 >;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
@@ -114,6 +122,9 @@ export const parseGoogleSignIn = (body: unknown) =>
 
 export const parsePasswordResetRequest = (body: unknown) =>
     parseWith(passwordResetRequestSchema, body);
+
+export const parseEmailLinkSignInRequest = (body: unknown) =>
+    parseWith(emailLinkSignInRequestSchema, body);
 
 export const parsePasswordResetConfirm = (body: unknown) =>
     parseWithPasswordPolicy(passwordResetConfirmSchema, body);

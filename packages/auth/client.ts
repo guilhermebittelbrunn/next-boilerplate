@@ -13,6 +13,7 @@ import {
     reload,
     signInWithCustomToken,
     signInWithEmailAndPassword,
+    signInWithEmailLink,
     signInWithPopup,
     signOut,
     type User,
@@ -22,7 +23,7 @@ import {
     DEMO_PROJECT_ID,
     DEMO_WEB_API_KEY,
 } from "./emulator";
-import type { SignInDTO } from "./types";
+import type { EmailLinkSignInDTO, SignInDTO } from "./types";
 
 let firebaseApp: FirebaseApp | undefined;
 let firebaseAuth: Auth | undefined;
@@ -144,6 +145,22 @@ export const getAuthClient = () => {
 export const signIn = ({ email, password }: SignInDTO) => {
     const auth = getAuthClient();
     return signInWithEmailAndPassword(auth, email, password);
+};
+
+/**
+ * The SDK only accepts a full action URL carrying the sign-in mode and an API key, and
+ * reads nothing from it but the code — while the email carries the code alone.
+ */
+export const signInWithEmailLinkCode = ({
+    email,
+    oobCode,
+}: EmailLinkSignInDTO) => {
+    const auth = getAuthClient();
+    const actionUrl = new URL(window.location.pathname, window.location.origin);
+    actionUrl.searchParams.set("mode", "signIn");
+    actionUrl.searchParams.set("oobCode", oobCode);
+    actionUrl.searchParams.set("apiKey", auth.app.options.apiKey ?? "");
+    return signInWithEmailLink(auth, email, actionUrl.toString());
 };
 
 /**
