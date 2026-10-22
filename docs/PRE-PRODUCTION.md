@@ -636,6 +636,40 @@ mostra o valor em "Recebido em <mês>" e a contratação na lista. Se `GET /paym
 `SUMMARY_INDEX_MISSING` num projeto real, alguma consulta precisou de índice; nenhuma foi desenhada para
 precisar, então isso é defeito a reportar, não índice a publicar.
 
+### 15. Entrar com link por e-mail — só se o fork liga
+
+Numerado depois dos demais pelo mesmo motivo do item 12. Só é bloqueador para o fork que define
+`EMAIL_LINK_SIGN_IN_ENABLED="true"` na `apps/api`; com a variável vazia, a tela de login fica como sempre foi.
+
+- [ ] Firebase console › Authentication › Sign-in method: provedor "E-mail/senha" ativo **e** a opção "Link de
+      e-mail (login sem senha)" ativa. O emulador não confere isso.
+- [ ] Firebase console › Authentication › Settings › Domínios autorizados: o host de `NEXT_PUBLIC_APP_URL` da
+      `apps/api`. Projeto criado depois de 28/04/2025 não traz `localhost` na lista.
+- [ ] Itens 3 (Resend com domínio verificado), 4 (`NEXT_PUBLIC_APP_URL` na `apps/api`) e 8 (`ARCJET_KEY`)
+      resolvidos. Sem o 3 ou o 4, a opção não aparece na tela de login e `POST /auth/sign-in/email-link/request`
+      responde `EMAIL_NOT_CONFIGURED` (503). Sem o 8, o pedido de link não tem limite por IP e envia e-mail sem
+      teto, como a recuperação de senha.
+- [ ] `EMAIL_LINK_SIGN_IN_ENABLED="true"` na `apps/api` do ambiente que quer o recurso. Só `"true"` liga
+      (maiúsculas e espaços não importam); qualquer outro valor deixa desligado.
+
+**O que dá errado em silêncio.** Se o provedor de link estiver desligado no console ou o domínio não estiver
+autorizado, o pedido continua respondendo `200` e a tela mostra "Confira seu e-mail", mas nenhum e-mail sai: a
+API registra `[auth-action-link] refused kind=sign-in code=auth/operation-not-allowed` (ou
+`auth/unauthorized-continue-uri`) no log. Procure essa linha depois de ligar.
+
+**Quem recebe o link.** Só conta com senha e e-mail confirmado. Conta que entra só pelo Google e conta que nunca
+confirmou o e-mail recebem a mesma resposta e nenhum e-mail (log `code=not-eligible`). O motivo é a documentação
+do Firebase: concluir o login por link remove a senha de uma conta não verificada e acrescenta um provedor de
+senha sem senha a uma conta só Google, e a área de conta passaria a pedir uma senha que não existe.
+
+**Desligar com links já enviados.** Voltar a variável para vazio esconde a opção e recusa pedidos novos com
+`AUTH_EMAIL_LINK_DISABLED` (404), mas um link já enviado continua concluindo até expirar. Para cortar na hora,
+desligue "Link de e-mail" no console.
+
+⛔ **Nunca foi provado de ponta a ponta fora do emulador.** Rode o ciclo uma vez depois de configurar: pedir o
+link na tela de login → receber → abrir no mesmo navegador → cair no painel. O prazo de validade do link é do
+Firebase e não está documentado.
+
 ---
 
 ## ⚠️ Fortemente recomendados

@@ -115,6 +115,12 @@ no boot. Uma chave com prefixo errado (`pk_` como secret, por exemplo) falha a v
 ### Resend — e-mail · pacote `@repo/email` (`packages/email/keys.ts`)
 `RESEND_TOKEN` (API key `re_...`) e `RESEND_FROM` (remetente verificado).
 
+Entrar com link por e-mail é opcional e nasce desligado: `EMAIL_LINK_SIGN_IN_ENABLED="true"` na `apps/api` liga.
+Exige as duas variáveis acima e `NEXT_PUBLIC_APP_URL` na API; sem elas a opção não aparece no login. Em projeto
+real também exige o "Link de e-mail" ativo no Firebase e o domínio da app autorizado
+([`docs/PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 15). Com o emulador, o código do link aparece em
+`GET http://127.0.0.1:9099/emulator/v1/projects/demo-next-boilerplate/oobCodes`.
+
 ### Arcjet — segurança · pacote `@repo/security` (`packages/security/keys.ts`)
 `ARCJET_KEY` (opcional para dev; recomendado em produção).
 
