@@ -245,7 +245,7 @@ eficácia.
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
-      (`apiClient.authApi.signUp`, `SignUpFormClient.tsx:121`, remedida em 2026-10-16 depois da PR #47, e `sign-up-form-client.tsx:36`, rota
+      (`apiClient.authApi.signUp`, `SignUpFormClient.tsx:121`, remedida em 2026-10-16 depois da PR #47, e `sign-up-form-client.tsx:52`, remedida em 2026-10-21 depois da PR #55, que acrescentou o pedido de verificação; era `:36`, rota
       `auth/sign-up/route.ts:19-77` com Admin SDK); `git grep createUserWithEmailAndPassword` em `apps/` e
       `packages/`: **0**. O `/test` confirmou colar nos campos de senha (item 10 do relatório). CI de merge
       verde (`gh run 36257926749`: `verify`, `changes`, `e2e`, `coverage`).

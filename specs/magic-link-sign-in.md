@@ -8,9 +8,9 @@ audience: produto
 area: [apps/app, apps/api, packages/auth, packages/sdk, packages/email, packages/internationalization]
 mode: ambos
 depends_on: []
-contends_on: [packages/auth/client.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", apps/api/(shared)/lib/auth-action-links.ts, apps/api/proxy.ts]
+contends_on: [packages/auth/client.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", apps/api/(shared)/lib/auth-action-links.ts, apps/api/proxy.ts, apps/app/shared/lib/signInMethods.ts, apps/api/(shared)/lib/auth-providers.ts]
 feature: -
-updated: 2026-10-19
+updated: 2026-10-21
 ---
 
 # Entrar com link enviado por e-mail
@@ -69,13 +69,17 @@ tem até o texto de um e-mail de acesso pronto, sem uso. Falta o fluxo de entrad
       último acesso, desvio para o onboarding pendente. Em outro navegador, a tela pede o e-mail antes de concluir.
 - [ ] Link expirado ou já usado mostra erro traduzido com a opção de pedir outro.
 - [ ] Conta desativada pelo admin não entra pelo link, como já não entra pela senha.
+- [ ] Conta que só entra por link não vê o formulário de troca de senha nem recebe pedido de senha na exclusão de
+      conta e na troca de e-mail; recebe o mesmo caminho que a conta só Google já tem. *(Item acrescentado em
+      2026-10-21, pós-PR #55, depois da medição no emulador descrita em "Riscos". Com ele, a spec fica no alto do M.)*
 
 ### Fora do corte
 
 - **Cadastro pelo link**: o Firebase cria a conta se o e-mail não existir. No corte, só contas existentes recebem o
   link, para que todo cadastro continue passando pela rota com rate limit e pelo perfil criado no cadastro.
-- **Link na landing**: o login da `apps/web` tem outros problemas abertos (não redireciona depois de entrar, não tem
-  "esqueci a senha"); fica para depois de resolvidos.
+- **Link na landing**: o login da `apps/web` ainda não tem "esqueci a senha"; fica para depois de resolvido. *(Até a
+  PR #55 o motivo incluía o login da landing não levar a lugar nenhum depois de entrar. A tarefa `web-auth-forms`
+  corrigiu isso: `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:52-56`.)*
 - **Código numérico por e-mail (OTP)**: o Firebase não oferece de forma nativa.
 - **Link como segundo fator**: a NIST SP 800-63B-4, §3.1.3.1, proíbe e-mail como autenticador fora de banda.
 
@@ -88,7 +92,7 @@ tem até o texto de um e-mail de acesso pronto, sem uso. Falta o fluxo de entrad
 | `apps/app` | Opção na tela de login, tela de conclusão do link e de confirmação do e-mail em outro navegador. |
 | `apps/web` | N/A no corte. |
 | `packages/*` | `auth`: concluir o login pelo link no cliente. `email`: usa o template de link de ação com o slug `confirmAccess`. i18n: textos e `apiErrors` nos três idiomas. |
-| Infra/env | Uma variável opcional que liga o recurso. O domínio da app precisa estar entre os domínios autorizados do Firebase; projetos criados depois de 28/04/2025 não trazem `localhost` por padrão. |
+| Infra/env | Uma variável opcional que liga o recurso. No console do Firebase (Authentication › Sign-in method), o provedor "E-mail/senha" e a opção "Link de e-mail (login sem senha)" precisam estar ativados; o emulador não confere isso. O domínio da app precisa estar entre os domínios autorizados do Firebase; projetos criados depois de 28/04/2025 não trazem `localhost` por padrão. O link sai pelo Resend do fork, com `NEXT_PUBLIC_APP_URL` definida (`auth-action-links.ts:20-23`). Fonte: <https://firebase.google.com/docs/auth/web/email-link-auth>, lida em 2026-10-21. |
 
 ## Riscos e trade-offs
 
@@ -107,6 +111,16 @@ tem até o texto de um e-mail de acesso pronto, sem uso. Falta o fluxo de entrad
   e-mail também entra pelo provedor `password`; se isso valer, uma conta que só entra por link apareceria como
   "E-mail e senha" e veria o formulário de troca de senha, e a exclusão e a troca de e-mail pediriam uma senha que
   não existe. Não medido nesta rodada; o `/analyze` mede no emulador antes de desenhar.)*
+  *(Medido em 2026-10-21, pós-PR #55, no emulador de Auth do `firebase-tools` 15.30.1, com o Admin SDK gerando o link e
+  o SDK cliente concluindo com `signInWithEmailLink`. Uma conta criada só com e-mail, sem senha, sai do login por link
+  com `providerData` igual a `["password"]`, `sign_in_provider` do token igual a `password` e nenhum `passwordHash` no
+  registro do Admin SDK. A conta com senha fica igual, com `passwordHash` presente. **O risco se confirma no emulador:**
+  pelo provedor, as duas contas são indistinguíveis, e `lacksPasswordProvider` (`apps/app/shared/lib/signInMethods.ts:22`)
+  e `hasPasswordProvider` (`apps/api/(shared)/lib/auth-providers.ts:17`) diriam que a conta só de link tem senha. Por
+  isso a aba Segurança e os dois diálogos que pedem senha (exclusão e troca de e-mail) entram no corte; o `/analyze`
+  escolhe como distinguir. O `passwordHash` é um caminho possível, mas se o Admin SDK o devolve em projeto real não foi
+  confirmado. Dois fatos medidos no mesmo teste: o link deixa `emailVerified` em `true`, e o Admin SDK gera link para
+  e-mail sem conta, sem erro. A rota de pedido tem de consultar a conta antes, como `auth-action-links.ts:55-80` já faz.)*
 
 ## Sinais de pronto
 
@@ -116,6 +130,8 @@ tem até o texto de um e-mail de acesso pronto, sem uso. Falta o fluxo de entrad
 - Abrir o link num navegador sem o e-mail guardado pede o e-mail; com um e-mail diferente, o acesso é recusado.
 - Uma conta desativada recebe a recusa traduzida.
 - Com a variável desligada, a tela de login fica como hoje.
+- Uma conta sem senha que entrou pelo link abre a aba Segurança sem formulário de troca de senha, e a exclusão de conta
+  e a troca de e-mail não pedem senha.
 
 ## Decisões
 
