@@ -185,6 +185,15 @@ describe("SignUpFormClient", () => {
         expect(signInMutateMock).not.toHaveBeenCalled();
     });
 
+    it("invites to create an account and asks whether the visitor already has one", () => {
+        renderForm();
+
+        expect(screen.getByText(signUpCopy.createYourAccount)).toBeTruthy();
+        expect(
+            screen.getByText(signUpCopy.alreadyHaveAccount.trim())
+        ).toBeTruthy();
+    });
+
     it("hands the destination it was given to the sign-in link", () => {
         renderForm("/pt-br/account?tab=billing&plan=price_1");
 

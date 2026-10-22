@@ -18,16 +18,16 @@ export const signUpTranslations = {
             passwordsDoNotMatch: "As senhas não coincidem",
         },
         signUp: "Cadastrar",
-        enterWithYourAccount: "Entre com sua conta para continuar",
+        createYourAccount: "Crie sua conta para começar",
         orContinueWith: "Ou continue com",
         googleSignIn: "Continuar com Google",
         signIn: "Entrar",
-        noAccount: "Não tem uma conta? ",
+        alreadyHaveAccount: "Já tem uma conta? ",
     },
     en: {
         meta: {
             title: "Sign Up",
-            description: "Sign up to your account",
+            description: "Create your account",
         },
         form: {
             email: "Email",
@@ -43,16 +43,16 @@ export const signUpTranslations = {
             passwordsDoNotMatch: "Passwords do not match",
         },
         signUp: "Sign Up",
-        enterWithYourAccount: "Enter with your account to continue",
+        createYourAccount: "Create your account to get started",
         orContinueWith: "Or continue with",
         googleSignIn: "Continue with Google",
         signIn: "Sign In",
-        noAccount: "Don't have an account? ",
+        alreadyHaveAccount: "Already have an account? ",
     },
     es: {
         meta: {
             title: "Registrarse",
-            description: "Regístrate en tu cuenta",
+            description: "Crea tu cuenta",
         },
         form: {
             email: "Email",
@@ -68,10 +68,10 @@ export const signUpTranslations = {
             passwordsDoNotMatch: "Las contraseñas no coinciden",
         },
         signUp: "Registrarse",
-        enterWithYourAccount: "Regístrate en tu cuenta para continuar",
+        createYourAccount: "Crea tu cuenta para empezar",
         orContinueWith: "O continuar con",
         googleSignIn: "Continuar con Google",
         signIn: "Iniciar sesión",
-        noAccount: "¿No tienes una cuenta? ",
+        alreadyHaveAccount: "¿Ya tienes una cuenta? ",
     },
 };
