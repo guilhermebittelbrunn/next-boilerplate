@@ -2,9 +2,24 @@ import { globalTranslations } from "@repo/internationalization/translations/glob
 import type { ComponentProps } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { storeActiveTheme } from "@/shared/lib/themePreference";
 
 /** `geist/font` relies on the Next font transform, which this runner does not apply. */
 vi.mock("@repo/design-system/lib/fonts", () => ({ fonts: "" }));
+
+let systemPrefersDark = false;
+
+// jsdom ships without matchMedia, and next-themes reads it to resolve the system theme.
+window.matchMedia = ((query: string) => ({
+    matches: query === "(prefers-color-scheme: dark)" && systemPrefersDark,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+})) as unknown as typeof window.matchMedia;
 
 const { default: GlobalError } = await import("@/app/global-error");
 
@@ -28,6 +43,23 @@ function renderGlobalError() {
     return renderToString(<GlobalError error={renderError} reset={vi.fn()} />);
 }
 
+function runThemeScript(html: string) {
+    const themeScript = new DOMParser()
+        .parseFromString(html, "text/html")
+        .querySelector("script")?.textContent;
+    if (!themeScript) {
+        throw new Error("The rendered screen carries no theme script");
+    }
+    new Function(themeScript)();
+}
+
+const THEME_CASES = [
+    { storedTheme: null, systemPrefersDark: false, expectedTheme: "light" },
+    { storedTheme: null, systemPrefersDark: true, expectedTheme: "dark" },
+    { storedTheme: "dark", systemPrefersDark: false, expectedTheme: "dark" },
+    { storedTheme: "light", systemPrefersDark: true, expectedTheme: "light" },
+] as const;
+
 beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_DEFAULT_LOCALE", "");
 });
@@ -35,6 +67,10 @@ beforeEach(() => {
 afterEach(() => {
     clearLocaleCookie();
     vi.unstubAllEnvs();
+    window.localStorage.clear();
+    systemPrefersDark = false;
+    document.documentElement.className = "";
+    document.documentElement.style.colorScheme = "";
 });
 
 describe("global error screen", () => {
@@ -60,4 +96,21 @@ describe("global error screen", () => {
         expect(html).toContain(copy.title);
         expect(html).toContain(copy.retry);
     });
+
+    it.each(THEME_CASES)(
+        "paints $expectedTheme with stored theme $storedTheme and a dark system $systemPrefersDark",
+        ({ storedTheme, systemPrefersDark: prefersDark, expectedTheme }) => {
+            if (storedTheme) {
+                storeActiveTheme(storedTheme);
+            }
+            systemPrefersDark = prefersDark;
+
+            runThemeScript(renderGlobalError());
+
+            const root = document.documentElement;
+            expect(root.classList.contains(expectedTheme)).toBe(true);
+            expect(root.classList.length).toBe(1);
+            expect(root.style.colorScheme).toBe(expectedTheme);
+        }
+    );
 });
