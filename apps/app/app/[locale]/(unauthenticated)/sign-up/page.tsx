@@ -15,7 +15,7 @@ export const generateMetadata = async ({
     const { locale } = await params;
     const dictionary = await getTranslations(resolveLocale(locale));
 
-    return createMetadata(dictionary.apps.web.pages.signUp.meta);
+    return createMetadata(dictionary.apps.app.pages.signUp.meta);
 };
 
 export default async function SignUp({ searchParams }: SignUpProps) {
