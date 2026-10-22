@@ -277,6 +277,22 @@ describe("proxy bounce off the public paths", () => {
         }
     });
 
+    it("lets an anonymous visitor open an email sign-in link", async () => {
+        const response = await proxy(
+            anonymous("/pt-br/sign-in/email-link?oobCode=abc123")
+        );
+
+        expect(locationOf(response)).toBeNull();
+    });
+
+    it("sends a signed-in visitor home from an email sign-in link instead of switching accounts", async () => {
+        const response = await proxy(
+            signedIn("/pt-br/sign-in/email-link?oobCode=abc123")
+        );
+
+        expect(locationOf(response)).toBe("/pt-br");
+    });
+
     it("still bounces a signed-in visitor off the request screen", async () => {
         const response = await proxy(signedIn("/pt-br/forgot-password"));
 
