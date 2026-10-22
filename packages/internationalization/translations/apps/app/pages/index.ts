@@ -1,5 +1,6 @@
 import { adminTranslations } from "./admin";
 import { commonTranslations } from "./common";
+import { emailLinkSignInTranslations } from "./emailLinkSignIn";
 import { emailVerificationTranslations } from "./emailVerification";
 import { forgotPasswordTranslations } from "./forgotPassword";
 import { impersonationTranslations } from "./impersonation";
@@ -16,6 +17,7 @@ export const pagesTranslations = {
         forgotPassword: forgotPasswordTranslations["pt-br"],
         resetPassword: resetPasswordTranslations["pt-br"],
         emailVerification: emailVerificationTranslations["pt-br"],
+        emailLinkSignIn: emailLinkSignInTranslations["pt-br"],
         common: commonTranslations["pt-br"],
         admin: adminTranslations["pt-br"],
         navbar: navbarTranslations["pt-br"],
@@ -28,6 +30,7 @@ export const pagesTranslations = {
         forgotPassword: forgotPasswordTranslations.en,
         resetPassword: resetPasswordTranslations.en,
         emailVerification: emailVerificationTranslations.en,
+        emailLinkSignIn: emailLinkSignInTranslations.en,
         common: commonTranslations.en,
         admin: adminTranslations.en,
         navbar: navbarTranslations.en,
@@ -40,6 +43,7 @@ export const pagesTranslations = {
         forgotPassword: forgotPasswordTranslations.es,
         resetPassword: resetPasswordTranslations.es,
         emailVerification: emailVerificationTranslations.es,
+        emailLinkSignIn: emailLinkSignInTranslations.es,
         common: commonTranslations.es,
         admin: adminTranslations.es,
         navbar: navbarTranslations.es,

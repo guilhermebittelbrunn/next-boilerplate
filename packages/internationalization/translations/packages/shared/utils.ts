@@ -118,6 +118,7 @@ export const sharedUtilsTranslations = {
                 "O canal de contato não está disponível no momento.",
             AUTH_OOB_CODE_INVALID: "Este link não é válido. Peça um novo.",
             AUTH_OOB_CODE_EXPIRED: "Este link expirou. Peça um novo.",
+            AUTH_EMAIL_LINK_DISABLED: "Entrar por link não está disponível.",
             AUTH_PASSWORD_RESET_FAILED:
                 "Não foi possível redefinir a senha. Peça um novo link.",
             AUTH_EMAIL_VERIFICATION_FAILED:
@@ -265,6 +266,7 @@ export const sharedUtilsTranslations = {
                 "The contact channel is not available right now.",
             AUTH_OOB_CODE_INVALID: "This link is not valid. Request a new one.",
             AUTH_OOB_CODE_EXPIRED: "This link has expired. Request a new one.",
+            AUTH_EMAIL_LINK_DISABLED: "Sign-in by email link is not available.",
             AUTH_PASSWORD_RESET_FAILED:
                 "Could not reset the password. Request a new link.",
             AUTH_EMAIL_VERIFICATION_FAILED:
@@ -421,6 +423,8 @@ export const sharedUtilsTranslations = {
                 "Este enlace no es válido. Solicita uno nuevo.",
             AUTH_OOB_CODE_EXPIRED:
                 "Este enlace ha caducado. Solicita uno nuevo.",
+            AUTH_EMAIL_LINK_DISABLED:
+                "El acceso por enlace no está disponible.",
             AUTH_PASSWORD_RESET_FAILED:
                 "No se pudo restablecer la contraseña. Solicita un enlace nuevo.",
             AUTH_EMAIL_VERIFICATION_FAILED:
