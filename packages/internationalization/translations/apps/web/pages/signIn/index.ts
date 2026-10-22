@@ -66,6 +66,6 @@ export const signInTranslations = {
         orContinueWith: "O continuar con",
         googleSignIn: "Continuar con Google",
         signUp: "Registrarse",
-        noAccount: "No tienes una cuenta? ",
+        noAccount: "¿No tienes una cuenta? ",
     },
 };
