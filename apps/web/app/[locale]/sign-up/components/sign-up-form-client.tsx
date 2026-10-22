@@ -14,6 +14,7 @@ import type { SignUpRequest } from "@repo/sdk/src/actions/auth/action";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation } from "@tanstack/react-query";
+import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
@@ -31,12 +32,28 @@ export const SignUpFormClient = () => {
     const { errorAlert } = useAlert();
     const { signIn, signInWithGoogle, loading: authLoading, user } = useAuth();
 
+    // The account already exists when this runs, so a refused or failed request (an API
+    // without an e-mail provider answers 503) must not turn the sign-up into an error.
+    const requestVerificationEmail = async (credential: UserCredential) => {
+        const accessToken = await credential.user
+            .getIdToken()
+            .catch(() => null);
+        if (!accessToken) {
+            return;
+        }
+        apiClient.setAuthorizationHeader(accessToken);
+        await apiClient.authApi
+            .sendEmailVerification({ locale })
+            .catch(() => null);
+    };
+
     const createAccount = useMutation({
         mutationFn: (credentials: SignUpRequest) =>
             apiClient.authApi.signUp(credentials),
         onError: (error) =>
             errorAlert(handleClientError(new FormattedError(error, locale))),
-        onSuccess: (_created, credentials) => signIn.mutate(credentials),
+        onSuccess: (_created, credentials) =>
+            signIn.mutate(credentials, { onSuccess: requestVerificationEmail }),
     });
 
     const schema = useMemo(() => buildSignUpSchema(dictionary), [dictionary]);
@@ -71,7 +88,7 @@ export const SignUpFormClient = () => {
     }
 
     return (
-        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center py-20">
+        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center px-4 py-20 md:px-2">
             <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
                 <div className="space-y-2 text-center">
                     <h1 className="font-bold text-3xl">
@@ -85,6 +102,7 @@ export const SignUpFormClient = () => {
                 <Form {...form}>
                     <form
                         className="space-y-4"
+                        noValidate
                         onSubmit={form.handleSubmit(onSubmit)}
                     >
                         <HookFormInput

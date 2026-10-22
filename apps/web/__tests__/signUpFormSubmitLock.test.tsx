@@ -67,13 +67,19 @@ const { SignUpFormClient } = await import(
 const signUpCopy = globalTranslations["pt-br"].apps.web.pages.signUp;
 const BUTTON_MARKUP = /<button\b[^>]*>[\s\S]*?<\/button>/g;
 const DISABLED_ATTRIBUTE = /\sdisabled(=""|\s|>)/;
+const FORM_OPENING_TAG = /<form\b[^>]*>/;
+const NO_VALIDATE_ATTRIBUTE = /\snovalidate(=""|\s|>)/i;
 
-function renderedButtonTag(label: string): string {
-    const html = renderToString(
+function renderForm(): string {
+    return renderToString(
         <LocaleProvider>
             <SignUpFormClient />
         </LocaleProvider>
     );
+}
+
+function renderedButtonTag(label: string): string {
+    const html = renderForm();
     const buttons = html.match(BUTTON_MARKUP) ?? [];
     const button = buttons.find((markup) => markup.includes(label));
     if (!button) {
@@ -113,5 +119,11 @@ describe("web SignUpFormClient submit lock", () => {
         expect(isDisabled(renderedButtonTag(signUpCopy.form.submit))).toBe(
             true
         );
+    });
+
+    it("leaves e-mail validation to the translated form messages instead of the browser bubble", () => {
+        const formTag = renderForm().match(FORM_OPENING_TAG)?.[0] ?? "";
+
+        expect(formTag).toMatch(NO_VALIDATE_ATTRIBUTE);
     });
 });
