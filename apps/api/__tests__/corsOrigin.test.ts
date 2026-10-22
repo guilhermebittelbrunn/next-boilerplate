@@ -283,6 +283,28 @@ describe("api proxy rate limit", () => {
         );
     });
 
+    it("counts the email link request but not the availability read", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "GET",
+                path: "/auth/sign-in/email-link",
+            })
+        );
+        expect(checkRateLimitMock).not.toHaveBeenCalled();
+
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "POST",
+                path: "/auth/sign-in/email-link/request",
+            })
+        );
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(1);
+    });
+
     it("counts the account recovery endpoints", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
         const recoveryPaths = [
