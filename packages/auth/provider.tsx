@@ -4,6 +4,7 @@ import {
     loginWithCustomToken,
     logout,
     signIn,
+    signInWithEmailLinkCode,
     signInWithGoogle,
     subscribeToIdTokenState,
 } from "@repo/auth/client";
@@ -29,7 +30,7 @@ import {
     useState,
 } from "react";
 import { postAuthRedirectTarget } from "./redirect";
-import type { SignInDTO, UserDTO } from "./types";
+import type { EmailLinkSignInDTO, SignInDTO, UserDTO } from "./types";
 
 type AuthContextType = {
     user: UserDTO | null;
@@ -37,6 +38,12 @@ type AuthContextType = {
     loading: boolean;
     signIn: UseMutationResult<UserCredential, Error, SignInDTO>;
     signInWithGoogle: UseMutationResult<UserCredential, Error, void, unknown>;
+    /** Reports no error itself: the page shows the refusal where the link was opened. */
+    signInWithEmailLink: UseMutationResult<
+        UserCredential,
+        Error,
+        EmailLinkSignInDTO
+    >;
     signOut: UseMutationResult<void, Error, void, unknown>;
 };
 
@@ -376,6 +383,11 @@ export function AuthProvider({
         onSuccess: onAuthSuccess,
     });
 
+    const signInWithEmailLinkMutation = useMutation({
+        mutationFn: signInWithEmailLinkCode,
+        onSuccess: onAuthSuccess,
+    });
+
     const signOutMutation = useMutation({
         mutationFn: logout,
         onError: (error) =>
@@ -397,6 +409,7 @@ export function AuthProvider({
                 accessToken,
                 signIn: signInMutation,
                 signInWithGoogle: signInWithGoogleMutation,
+                signInWithEmailLink: signInWithEmailLinkMutation,
                 signOut: signOutMutation,
             }}
         >

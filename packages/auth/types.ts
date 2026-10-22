@@ -60,6 +60,11 @@ export type SignInDTO = {
     password: string;
 };
 
+export type EmailLinkSignInDTO = {
+    email: string;
+    oobCode: string;
+};
+
 export function parseUserProfileResponse(data: unknown): UserProfile | null {
     if (!data || typeof data !== "object") {
         return null;
