@@ -10,13 +10,21 @@ type CapturedMutation = {
     onSuccess: (data: unknown, variables: unknown) => void;
 };
 
-const { mutations, signUpApiMock, signInMutateMock, errorAlertMock } =
-    vi.hoisted(() => ({
-        mutations: [] as CapturedMutation[],
-        signUpApiMock: vi.fn(),
-        signInMutateMock: vi.fn(),
-        errorAlertMock: vi.fn(),
-    }));
+const {
+    mutations,
+    signUpApiMock,
+    signInMutateMock,
+    errorAlertMock,
+    setAuthorizationHeaderMock,
+    sendEmailVerificationMock,
+} = vi.hoisted(() => ({
+    mutations: [] as CapturedMutation[],
+    signUpApiMock: vi.fn(),
+    signInMutateMock: vi.fn(),
+    errorAlertMock: vi.fn(),
+    setAuthorizationHeaderMock: vi.fn(),
+    sendEmailVerificationMock: vi.fn(),
+}));
 
 /**
  * This workspace renders on the server only (no DOM in its test setup), so the form is
@@ -50,7 +58,13 @@ vi.mock("@repo/design-system/hooks/useAlert", () => ({
 
 vi.mock("@/shared/lib/client", () => ({
     apiClient: {
-        authApi: { signUp: (...args: unknown[]) => signUpApiMock(...args) },
+        setAuthorizationHeader: (...args: unknown[]) =>
+            setAuthorizationHeaderMock(...args),
+        authApi: {
+            signUp: (...args: unknown[]) => signUpApiMock(...args),
+            sendEmailVerification: (...args: unknown[]) =>
+                sendEmailVerificationMock(...args),
+        },
     },
 }));
 
@@ -80,6 +94,12 @@ const CREDENTIALS = {
     password: "oito-car",
 };
 const BAD_REQUEST_STATUS = 400;
+const SERVICE_UNAVAILABLE_STATUS = 503;
+const FRESH_ID_TOKEN = "fresh-id-token";
+
+type SignInOptions = {
+    onSuccess: (credential: unknown) => Promise<void>;
+};
 
 function renderAndCaptureSignUp(): CapturedMutation {
     renderToString(
@@ -94,22 +114,37 @@ function renderAndCaptureSignUp(): CapturedMutation {
     return createAccount;
 }
 
-function apiError(code: string): AxiosError {
+function apiError(code: string, status = BAD_REQUEST_STATUS): AxiosError {
     const headers = new AxiosHeaders();
     const config = { headers };
     return new AxiosError("Request failed", "ERR_BAD_REQUEST", config, {}, {
-        status: BAD_REQUEST_STATUS,
-        statusText: "Bad Request",
+        status,
+        statusText: "Request failed",
         headers,
         config,
         data: { error: { code } },
     } as never);
 }
 
+function signInOptionsAfterSignUp(): SignInOptions {
+    const createAccount = renderAndCaptureSignUp();
+    createAccount.onSuccess({ created: true }, CREDENTIALS);
+    const [, options] = signInMutateMock.mock.calls[0] as [
+        unknown,
+        SignInOptions,
+    ];
+    return options;
+}
+
+function credentialWithToken(getIdToken: () => Promise<string>) {
+    return { user: { getIdToken } };
+}
+
 beforeEach(() => {
     vi.clearAllMocks();
     mutations.length = 0;
     signUpApiMock.mockResolvedValue({ created: true });
+    sendEmailVerificationMock.mockResolvedValue({ requested: true });
 });
 
 describe("web SignUpFormClient", () => {
@@ -126,7 +161,63 @@ describe("web SignUpFormClient", () => {
 
         createAccount.onSuccess({ created: true }, CREDENTIALS);
 
-        expect(signInMutateMock).toHaveBeenCalledWith(CREDENTIALS);
+        expect(signInMutateMock).toHaveBeenCalledWith(
+            CREDENTIALS,
+            expect.objectContaining({ onSuccess: expect.any(Function) })
+        );
+    });
+
+    it("asks for the verification e-mail with the new account's token once the sign-in succeeds", async () => {
+        const options = signInOptionsAfterSignUp();
+
+        await options.onSuccess(
+            credentialWithToken(() => Promise.resolve(FRESH_ID_TOKEN))
+        );
+
+        expect(setAuthorizationHeaderMock).toHaveBeenCalledWith(FRESH_ID_TOKEN);
+        expect(sendEmailVerificationMock).toHaveBeenCalledWith({
+            locale: "en",
+        });
+        expect(
+            setAuthorizationHeaderMock.mock.invocationCallOrder[0]
+        ).toBeLessThan(
+            sendEmailVerificationMock.mock.invocationCallOrder[0] ?? 0
+        );
+    });
+
+    it("finishes the sign-up silently when the API has no e-mail provider configured", async () => {
+        const consoleErrorSpy = vi.spyOn(console, "error");
+        sendEmailVerificationMock.mockRejectedValue(
+            apiError("EMAIL_NOT_CONFIGURED", SERVICE_UNAVAILABLE_STATUS)
+        );
+        const options = signInOptionsAfterSignUp();
+
+        await expect(
+            options.onSuccess(
+                credentialWithToken(() => Promise.resolve(FRESH_ID_TOKEN))
+            )
+        ).resolves.toBeUndefined();
+
+        expect(sendEmailVerificationMock).toHaveBeenCalledTimes(1);
+        expect(errorAlertMock).not.toHaveBeenCalled();
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
+        consoleErrorSpy.mockRestore();
+    });
+
+    it("skips the verification request when the new account's token cannot be read", async () => {
+        const options = signInOptionsAfterSignUp();
+
+        await expect(
+            options.onSuccess(
+                credentialWithToken(() =>
+                    Promise.reject(new Error("token unavailable"))
+                )
+            )
+        ).resolves.toBeUndefined();
+
+        expect(setAuthorizationHeaderMock).not.toHaveBeenCalled();
+        expect(sendEmailVerificationMock).not.toHaveBeenCalled();
+        expect(errorAlertMock).not.toHaveBeenCalled();
     });
 
     it("shows the translated API error in the route's language and does not sign in", () => {
@@ -139,5 +230,6 @@ describe("web SignUpFormClient", () => {
                 .AUTH_PASSWORD_TOO_SHORT
         );
         expect(signInMutateMock).not.toHaveBeenCalled();
+        expect(sendEmailVerificationMock).not.toHaveBeenCalled();
     });
 });

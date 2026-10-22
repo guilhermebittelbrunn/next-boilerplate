@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # MFA, sessões ativas e política de senha
@@ -117,6 +117,9 @@ eficácia.
   > Achado lateral, fora do escopo desta spec:
   > `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:10` (remedido em 2026-09-27) tem a mensagem em pt-br cravada no código
   > (`"A senha deve ter pelo menos 6 caracteres"`), fora do dicionário — viola a regra de ouro 2.
+  > *(Fechado pela PR #54, em 2026-10-21: o schema virou `buildSignInSchema(dictionary)`
+  > (`signInSchema.ts:7-16`), com as mensagens em `apps.web.pages.signIn.validation` nos três idiomas, e a linha `:10`
+  > deixou de existir. O mínimo segue `EXISTING_PASSWORD_MIN_LENGTH`.)*
 
 ## Evidência de mercado
 

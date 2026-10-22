@@ -146,7 +146,7 @@ export default function SignUpFormClient({
                         {dictionary.apps.app.pages.signUp.meta.title}
                     </h1>
                     <p className="text-muted-foreground text-sm">
-                        {dictionary.apps.app.pages.signUp.enterWithYourAccount}
+                        {dictionary.apps.app.pages.signUp.createYourAccount}
                     </p>
                 </div>
 
@@ -225,7 +225,7 @@ export default function SignUpFormClient({
 
                 <div className="text-center text-sm">
                     <span className="text-muted-foreground">
-                        {dictionary.apps.app.pages.signUp.noAccount}
+                        {dictionary.apps.app.pages.signUp.alreadyHaveAccount}
                     </span>
                     <Link
                         className="text-primary hover:underline"
