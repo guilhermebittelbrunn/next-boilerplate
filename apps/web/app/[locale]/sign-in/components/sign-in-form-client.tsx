@@ -11,7 +11,8 @@ import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
 import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { apiClient } from "@/shared/lib/client";
@@ -21,8 +22,10 @@ import {
 } from "../validations/signInSchema";
 
 export const SignInFormClient = () => {
+    const router = useRouter();
     const { dictionary, locale } = getDictionary();
     const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
+    const signInStartedHereRef = useRef(false);
 
     const isLoading = signIn.isPending || signInWithGoogle.isPending;
 
@@ -44,12 +47,20 @@ export const SignInFormClient = () => {
         }
     };
 
+    // A sign-in started on this screen is navigated by the auth provider, which honours
+    // `?redirect=`; only a visitor who arrives already signed in is sent home from here.
+    useEffect(() => {
+        if (!authLoading && user && !signInStartedHereRef.current) {
+            router.push(`/${locale}`);
+        }
+    }, [user, authLoading, router, locale]);
+
     if (user && !authLoading) {
         return null;
     }
 
     return (
-        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center py-20">
+        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center px-4 py-20 md:px-2">
             <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
                 <div className="space-y-2 text-center">
                     <h1 className="font-bold text-3xl">
@@ -63,12 +74,14 @@ export const SignInFormClient = () => {
                 <Form {...form}>
                     <form
                         className="space-y-4"
-                        onSubmit={form.handleSubmit((data) =>
+                        noValidate
+                        onSubmit={form.handleSubmit((data) => {
+                            signInStartedHereRef.current = true;
                             signIn.mutate(
                                 { ...data },
                                 { onSuccess: handleSuccessSignIn }
-                            )
-                        )}
+                            );
+                        })}
                     >
                         <HookFormInput
                             label={dictionary.apps.web.pages.signIn.form.email}
@@ -116,11 +129,12 @@ export const SignInFormClient = () => {
                 <Button
                     className="w-full"
                     disabled={isLoading}
-                    onClick={() =>
+                    onClick={() => {
+                        signInStartedHereRef.current = true;
                         signInWithGoogle.mutate(undefined, {
                             onSuccess: handleSuccessSignIn,
-                        })
-                    }
+                        });
+                    }}
                     type="button"
                     variant="outline"
                 >
