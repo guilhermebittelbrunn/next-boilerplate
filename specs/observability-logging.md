@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -88,7 +88,9 @@ segue invisível até alguém conferir a fatura.
   entre os sete de `packages/auth/server.ts` listados abaixo. Recontado em 2026-10-20, depois da PR #52: **43**. A nova
   é do escopo `notifications`, que a PR acrescentou à união: `emit-failed` (`(shared)/lib/notifications.ts:46`), com o
   tipo da notificação e só o **nome** do erro, emitida quando a emissão falha e o produtor (cadastro ou webhook) segue
-  sem ela. A PR #52 não acrescentou `console` cru.)* Os dois clones que esta spec
+  sem ela. A PR #52 não acrescentou `console` cru. Recontado em 2026-10-21, depois das PRs #53 e #54: **43**. A PR #54
+  tirou um `console` cru, o `console.error` de desenvolvimento do `global-error` antigo da web
+  (`apps/web/app/[locale]/global-error.tsx:17` em `d19e6fd`); o arquivo novo, `apps/web/app/global-error.tsx`, não loga.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
 - **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:134` gera o UUID, `:173` o

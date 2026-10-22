@@ -6,8 +6,12 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-10-21 (`/spec --sync` incremental, sem PR nova em `main` e com a tarefa `leftover-ui-strings`
-> sem commit no working tree, passo 1 do segundo `/cycle` do dia) · **anteriores:** 2026-10-21 (`/spec --sync`, pós-merge
+> **Última rodada:** 2026-10-21 (`/spec --sync` incremental, sem PR nova em `main` e com as tarefas `web-auth-forms` e
+> `global-error-theme` sem commit no working tree, passo 1 do terceiro `/cycle` da noite) · **anteriores:** 2026-10-21
+> (`/spec --sync` incremental, com `web-auth-forms` sem commit, passo 1 do segundo `/cycle` da noite) · 2026-10-21 (`/spec --sync`, pós-merge
+> da PR #54, passo 1 de um `/cycle`; medições entre 20:30 e 20:45 BRT) · 2026-10-21 (`/spec --sync` incremental, com
+> `leftover-ui-strings` sem commit no working tree) ·
+> 2026-10-21 (`/spec --sync`, pós-merge
 > da PR #53, passo 1 de um `/cycle`; medições entre 10:03 e 10:20 BRT) · 2026-10-20 (`/spec --sync` incremental, com a PR #53 aberta) · 2026-10-20 (`/spec --sync`, pós-merge da PR #52) · 2026-10-19 (`/spec --sync`, pós-merge da PR #51) · 2026-10-19 (`/spec --sync`, pós-merge da PR #50) · 2026-10-19 (`/spec --sync`, pós-merge da PR #49) · 2026-10-19 (`/spec --sync`, pós-merge da PR #48) · 2026-10-16 (`/spec --sync`, pós-merge da PR #47) · 2026-10-16 (`/spec --sync`, pós-merge da PR #46) · 2026-10-16 (`/spec` de
 > descoberta, foco em `produto`, pedida pelo usuário) · 2026-10-14 (`/spec --sync`, pós-merge da PR #45) · 2026-10-14 (PR #44, três passadas) · 2026-10-13 (PR #43) · 2026-10-08 (PR #42) · 2026-10-07 (PR #41) · 2026-10-07 (PR #40) · 2026-10-04 (PRs #37, #38 e #39) · 2026-10-03 (PR #36) ·
 > 2026-09-30 (PR #35) · 2026-09-30 (PR #34) · 2026-09-30 (PR #33) · 2026-09-29 (PR #32) · 2026-09-29 (PR #31) · 2026-09-28 (PR #30) · 2026-09-27 (PR #29) · 2026-09-26 (`/spec` de descoberta, pedida pelo usuário) · 2026-09-26
@@ -17,53 +21,79 @@ constar na seção [Entregues](#entregues).
 > 2026-09-14 · 2026-09-11 · 2026-09-10 · 2026-09-09 (2 rodadas) · 2026-09-02 · 2026-09-01 (3 rodadas) ·
 > 2026-08-31 · **origem:** semeadura inicial (2026-08-21).
 >
-> **O que mudou nesta passada incremental (2026-10-21, segundo `/cycle` do dia):**
-> 1. **Nenhuma spec mudou de status.** `origin/main` segue em `d19e6fd`, o mesmo SHA da auditoria pós-PR #53 da manhã,
->    nenhuma PR nova foi aberta, e os frontmatters das seis specs em `specs/` são os mesmos daquela rodada
->    (`git diff d19e6fd -- specs/` só mostra este arquivo). Contadores e lotes não mudam.
-> 2. **A tarefa recomendada pela auditoria da manhã foi executada no working tree e está sem commit.**
->    [`leftover-ui-strings`](../docs/features/leftover-ui-strings/STATE.md) chegou a `test: done` (9/9 critérios), mas
->    não está em `main` nem numa PR, então não conta como entregue. Ver
->    [Executada no working tree](#executada-no-working-tree-sem-commit-leftover-ui-strings).
-> 3. **Achados: 0 fechados, 2 corrigidos no working tree aguardando merge, 3 novos, 1 reescrito, 139 abertos**
->    (136 + 3). Os dois corrigidos são os da recomendação da manhã (a validação do login da landing em pt-br e a tela de
->    erro global da app em inglês) e só saem da conta de abertos depois do merge. Os três novos vêm da tarefa: a tela de
->    erro global da app sem estilo nem tema, o cartão do login da landing colado na borda a 375 px e o login da landing
->    sem `noValidate`. O reescrito é o do `global-error` da web, que deixou de ser "não medido": medido no build de produção, o
->    arquivo entra no bundle, mas nunca é renderizado. Ver
->    [Achados da tarefa `leftover-ui-strings`](#-achados-da-tarefa-leftover-ui-strings-2026-10-21-working-tree).
-> 4. **Gates não remedidos.** `main` não mudou, então valem os números da auditoria da manhã (30/30 tasks, 965 arquivos,
->    3383 testes, 207 contra o emulador), pela [`cycle-policy` §4](../.claude/cycle-policy.md). O `/test` da tarefa mediu o
->    working tree: `web` com 184 testes (+15 sobre `main`), `app` com 975 (+7) e `pnpm test` da raiz com 15/15 tasks.
-> 5. **A recomendação de #1 é outra tarefa direta: tornar efetivo o `global-error` da landing**, que hoje mostra a tela
->    embutida do Next, em inglês e sem botão de tentar de novo. Toca só `apps/web` e não tem arquivo em comum com o diff
->    sem commit. Ver [A próxima](#a-próxima-tarefa-direta-na-tela-de-erro-global-da-landing). Ela já está em andamento no
->    working tree, como [`web-global-error`](../docs/features/web-global-error/STATE.md) (`analyze: done` às 14:47).
+> **O que mudou nesta passada incremental (2026-10-21, noite, terceiro `/cycle` depois da PR #54):**
+> 1. **Nenhuma spec mudou de status.** `origin/main` e `HEAD` seguem em `af763bb`, sem PR nova, e os seis frontmatters são
+>    os mesmos. Contadores e lotes não mudam.
+> 2. **A tarefa recomendada pela passada anterior foi executada no working tree e está sem commit.**
+>    [`global-error-theme`](../docs/features/global-error-theme/STATE.md) chegou a `test: done` (11 de 11 ✅, nenhum 🔒). O
+>    `/review` dela criou a branch `fix/auth-forms-and-global-error-theme` a partir da `web/fix/auth-forms`, que ficou
+>    intacta; as duas apontam para `af763bb`, sem commit à frente. Não conta como entregue. Ver
+>    [Executada no working tree (`global-error-theme`)](#executada-no-working-tree-sem-commit-global-error-theme).
+> 3. **Achados: 0 fechados, 1 corrigido no working tree aguardando merge, 2 novos, 1 reescrito, 144 abertos** (142 + 2). O
+>    corrigido é o 🟢 das telas de erro global sem estilo e sem tema, nas duas apps. Os novos são o quadro claro antes do
+>    escuro na tela de erro e a tela de erro global da `apps/api` com texto fixo em pt-br. O reescrito é o do `start` sem
+>    porta: a correção "`-p` como no `dev`" passaria por cima da variável `PORT`. Ver
+>    [Achados da tarefa `global-error-theme`](#-achados-da-tarefa-global-error-theme-2026-10-21-working-tree).
+> 4. **Gates não remedidos**, pela [`cycle-policy` §4](../.claude/cycle-policy.md): `main` não mudou. O `/test` da tarefa
+>    mediu o working tree com as duas tarefas: `app` 979, `web` 207, `pnpm test` da raiz 15/15 tasks e `pnpm check` com
+>    971 arquivos.
+> 5. **A recomendação de #1 é a copy do cadastro da `apps/app`**, a metade da linha da copy do cadastro que não divide
+>    arquivo com o diff sem commit. A metade da landing espera o merge. Ver
+>    [A próxima](#a-próxima-tarefa-direta-na-copy-do-cadastro-da-app).
 >
-> **O que mudou na rodada anterior (2026-10-21, pós-PR #53):**
-> 1. **A PR #53 entrou em `main` levando duas tarefas diretas.** O merge (`d19e6fd`) foi às 13:02 UTC de 2026-10-21, e
->    a execução de merge do CI (`gh run 39604516025`) passou nos quatro jobs. Além de
->    [`api-edge-413-close-and-route-id`](../docs/features/api-edge-413-close-and-route-id/STATE.md), a branch
->    `guilhermebittelbrunn/cycle-command-v6` recebeu depois a tarefa do sino recomendada pela passada incremental,
->    [`notifications-bell-freshness`](../docs/features/notifications-bell-freshness/STATE.md): dez commits, juntados num
->    só pelo squash. Conferência item a item em [Entregas desta rodada](#entregas-desta-rodada-pr-53).
-> 2. **Nenhuma spec mudou de status.** As duas entregas não tinham spec, os seis frontmatters seguem iguais e o código das
->    seis specs vivas não foi tocado pela PR (nenhum arquivo do diff aparece num `contends_on`). Contadores e lotes não
->    mudam.
-> 3. **Gates remedidos com `--force` e JDK 21:** 30/30 tasks em 1 min 30 s, 965 arquivos no `pnpm check`, **3383** testes
->    em 308 arquivos (+27, todos da PR #53: `api` +17, `app` +10) e **207** contra o emulador. Ver [Gates](#gates-medidos-nesta-auditoria).
-> 4. **Achados: 5 fechados, 3 novos, 1 reduzido, 136 abertos** (138, menos 5, mais 3). Fecharam os dois 🟡 da borda da API e os três
->    🟢 do sino. Os novos vêm do `/review` e do `/test` do sino, todos 🟢. O reduzido é o das âncoras de documento: a PR
->    corrigiu duas. Ver [Achados](#achados-correções-pontuais-não-specs).
-> 5. **Âncoras corrigidas neste arquivo.** A PR #53 deslocou `base.repository.ts` (+4 linhas a partir do `findById`),
->    `parse-request-json.ts`, `NotificationsBell.tsx` e o `docs/SECURITY.md` (+4 depois da `:175`). Nenhuma spec viva nem
->    nota de `research/` cita esses arquivos com número de linha.
-> 6. **A recomendação de #1 é outra tarefa direta: as strings de UI soltas que sobram fora do dicionário** (o login da
->    landing e a tela de erro global da app), regra de ouro 2, P. Foi executada no mesmo dia, no working tree. Ver
-   [Executada no working tree](#executada-no-working-tree-sem-commit-leftover-ui-strings).
+> **O que mudou na passada incremental anterior (2026-10-21, noite, segundo `/cycle` depois da PR #54):**
+> 1. **Nenhuma spec mudou de status.** `origin/main` segue em `af763bb`, o mesmo SHA da auditoria pós-PR #54, nenhuma PR
+>    nova foi aberta, e os frontmatters das seis specs são os mesmos daquela auditoria. As únicas mudanças em `specs/` são
+>    as que a própria auditoria pós-PR #54 deixou sem commit (este arquivo, `account-security-mfa.md` e
+>    `observability-logging.md`). Contadores e lotes não mudam.
+> 2. **A tarefa recomendada pela auditoria pós-PR #54 foi executada no working tree e está sem commit.**
+>    [`web-auth-forms`](../docs/features/web-auth-forms/STATE.md) chegou a `test: done` (11 ✅, 0 ❌, 1 🔒), na branch
+>    `web/fix/auth-forms`, criada pelo `/review` a partir de `af763bb` e sem commit à frente dela. Não está em `main` nem
+>    numa PR, então não conta como entregue. Ver
+>    [Executada no working tree](#executada-no-working-tree-sem-commit-web-auth-forms).
+> 3. **Achados: 0 fechados, 2 corrigidos no working tree aguardando merge, 1 reduzido no working tree aguardando merge,
+>    4 novos, 142 abertos** (138 + 4). Os dois corrigidos são os 🟢 do cartão colado na borda a 375 px e da falta de
+>    `noValidate`; o reduzido é o 🟡 do login e do cadastro da landing, que perde as duas metades da tarefa e fica com o
+>    link de "esqueci a senha". Os três só mudam a conta depois do merge. Os quatro novos vêm do `/review` e do `/test`
+>    da tarefa. Ver [Achados da tarefa `web-auth-forms`](#-achados-da-tarefa-web-auth-forms-2026-10-21-working-tree).
+> 4. **Gates não remedidos.** `main` não mudou, então valem os números da auditoria pós-PR #54 (30/30 tasks, 969
+>    arquivos, 3410 testes, 207 contra o emulador), pela [`cycle-policy` §4](../.claude/cycle-policy.md). O `/test` da
+>    tarefa mediu o working tree: `web` com 203 testes (+14 sobre `main`), `pnpm check` com 971 arquivos e `pnpm test` da
+>    raiz com 15/15 tasks e 3631 testes.
+> 5. **A recomendação de #1 é o estilo e o tema das duas telas de erro global**, a segunda da fila da auditoria anterior.
+>    A decisão de desenho que ela pedia sai da escada da `cycle-policy`: o mesmo `ThemeProvider` do design system e o
+>    `styles.css` de cada app. Toca `apps/app/app/global-error.tsx` e `apps/web/app/global-error.tsx`, nenhum arquivo do
+>    diff sem commit. Foi executada na mesma noite: ver
+>    [Executada no working tree (`global-error-theme`)](#executada-no-working-tree-sem-commit-global-error-theme).
 >
-> **Rodadas anteriores:** a passada incremental de 2026-10-20, com a PR #53 aberta, não teve transição e recomendou a
-> tarefa do sino, que entrou na mesma PR. A auditoria pós-PR #52 arquivou `in-app-notifications` (6/6) e recomendou a
+> **O que mudou na rodada anterior (2026-10-21, pós-PR #54):**
+> 1. **A PR #54 entrou em `main` levando duas tarefas diretas.** O merge (`af763bb`) foi às 19:27 UTC de 2026-10-21, e a
+>    execução de merge do CI (`gh run 39661769265`) passou nos quatro jobs. A branch `guilhermebittelbrunn/cycle-command-v7`
+>    levou [`leftover-ui-strings`](../docs/features/leftover-ui-strings/STATE.md), que a passada anterior registrava como
+>    "executada no working tree, sem commit", e [`web-global-error`](../docs/features/web-global-error/STATE.md), a
+>    recomendação daquela passada: oito commits, juntados num só pelo squash. Conferência item a item em
+>    [Entregas desta rodada](#entregas-desta-rodada-pr-54).
+> 2. **Nenhuma spec mudou de status.** As duas entregas não tinham spec, os seis frontmatters seguem iguais e nenhum dos
+>    11 arquivos de código que a PR alterou aparece num `contends_on`. Contadores e lotes não mudam.
+> 3. **Gates remedidos com `--force` e JDK 21:** 30/30 tasks em 1 min 19 s, 969 arquivos no `pnpm check`, **3410** testes
+>    em 311 arquivos (+27, todos da PR #54: `web` +20, `app` +7) e **207** contra o emulador. Ver [Gates](#gates-medidos-nesta-auditoria).
+> 4. **Achados: 2 fechados, 1 reduzido, 1 ampliado, 1 novo, 138 abertos** (139, menos 2, mais 1). Fecharam os dois 🟡 que a
+>    passada anterior marcava "corrigido no working tree, aguardando merge": a validação do login da landing em pt-br e
+>    a tela de erro global da app em inglês. O reduzido é o da `apps/web` sem `not-found`, `error` e `global-error`: a
+>    parte do `global-error` fechou, e a landing passou a mostrar a própria tela de erro. O ampliado é o da tela de erro
+>    sem estilo nem tema, que agora vale para as duas apps, porque a da web passou a ser renderizada. O novo é o `start`
+>    da `web` e da `api` sem porta fixa. Ver [Achados](#achados-correções-pontuais-não-specs).
+> 5. **A recomendação de #1 é outra tarefa direta: os formulários de login e cadastro da landing**. Desde o merge
+>    da PR #54, nenhum diff pendente toca neles. Fecha dois 🟡 e dois 🟢 nos mesmos dois arquivos, só em `apps/web`. Foi
+>    executada na mesma noite, no working tree: ver
+>    [Executada no working tree](#executada-no-working-tree-sem-commit-web-auth-forms).
+>
+> **Rodadas anteriores:** a passada incremental da tarde de 2026-10-21 não teve transição, registrou `leftover-ui-strings`
+> sem commit e recomendou a tela de erro global da landing, que entrou na mesma PR #54. A auditoria pós-PR #53, na manhã
+> do mesmo dia, conferiu as duas tarefas da PR #53 (`api-edge-413-close-and-route-id` e `notifications-bell-freshness`) e
+> recomendou as strings de UI soltas; o detalhe das duas passadas está na versão deste arquivo em `af763bb`. A passada
+> incremental de 2026-10-20, com a PR #53 aberta, não teve transição e recomendou a tarefa do sino, que entrou na mesma
+> PR. A auditoria pós-PR #52 arquivou `in-app-notifications` (6/6) e recomendou a
 > borda da API; o detalhe das duas está na versão deste arquivo em `d19e6fd`. Pós-PR #51, três tarefas diretas
 > (`google-sign-in-error-contract`, `password-unlink-email-restore` e `request-body-size-limit`) e gates em 3252 testes,
 > tabelas na versão em `3a118c6`; pós-PR #50, a tarefa direta `admin-archive-access-revocation` (3/3), tabelas em
@@ -74,7 +104,7 @@ constar na seção [Entregues](#entregues).
 
 ## Contadores
 
-Sobre as **6 specs que seguem em `specs/`**. Recontados do disco em 2026-10-21, pós-PR #53, lendo o frontmatter de
+Sobre as **6 specs que seguem em `specs/`**. Recontados do disco em 2026-10-21, pós-PR #54, lendo o frontmatter de
 cada arquivo; os 30 `spec.md` arquivados em `docs/features/` têm todos `status: done`.
 
 | status | qtd |
@@ -90,22 +120,32 @@ cada arquivo; os 30 `spec.md` arquivados em `docs/features/` têm todos `status:
 **Por audiência:** `produto` 4 (1 `proposed`, 3 `deferred`) · `confianca` 1 (`in-progress`) · `dx` 1 (`in-progress`).
 **Por esforço:** P 0 · M 5 · G 1. **Por valor:** alto 2 · médio 4 · baixo 0.
 
-**Transições aplicadas nesta rodada (pós-PR #53): 0.** As duas tarefas da PR #53 não tinham spec. Para cada spec viva,
+**Transições aplicadas na terceira passada incremental da noite: 0.** `git rev-parse HEAD origin/main` deu `af763bb` nos
+dois. `git status --short` mostra, além das duas tarefas sem spec (`web-auth-forms` na `apps/web` e `global-error-theme`
+nos dois `global-error.tsx` e nos dois `globalErrorLocale.test.tsx`), só os três arquivos de `specs/` que as passadas
+anteriores deixaram sem commit. Nenhum desses arquivos de código está num `contends_on`.
+
+**Transições aplicadas na passada incremental anterior da noite: 0.** `origin/main` segue em `af763bb`, e `git diff af763bb --
+specs/` só mostra o que a auditoria pós-PR #54 deixou sem commit: este arquivo e, nas duas specs `in-progress`, o
+`updated` e uma nota de reconferência (o achado lateral do `signInSchema.ts` fechado em `account-security-mfa`, a
+recontagem de `console` cru em `observability-logging`), sem mudança de `status`, `depends_on` ou `contends_on`. A tarefa `web-auth-forms`, no working
+tree, não tem spec e toca só a `apps/web`, fora de qualquer `contends_on`.
+
+**Transições aplicadas na auditoria pós-PR #54: 0.** As duas tarefas da PR #54 não tinham spec. Para cada spec viva,
 a auditoria procurou no código de `main` a capacidade que falta (`git grep` por `sendSignInLinkToEmail`,
 `isSignInWithEmailLink`, `GithubAuthProvider`, `microsoft.com`, `mode: "payment"`, `multiFactor`, `TOTP`, `passkey`,
 `organizationId`, `membership` e pelos SDKs de coletor em `apps/` e `packages/`: 0 fora do `input-otp.tsx`) e conferiu que
-nenhum dos 15 arquivos de código e documento que a PR alterou fora de `docs/features` e `specs` está num `contends_on`.
+nenhum dos 11 arquivos de código que a PR alterou fora de `docs/features` e `specs` está num `contends_on`
+(`git diff --name-only d19e6fd af763bb` contra os 24 caminhos dos seis frontmatters: 0).
 
 > **Elegíveis: 1 de 6**, `magic-link-sign-in` (`proposed`), e nenhuma `approved`. Fora ficam `one-time-purchase`,
 > `social-sign-in-providers` e `teams-organizations` (`deferred`, por decisão sua) e `account-security-mfa` e
 > `observability-logging` (`in-progress` sem feature em andamento).
 
-**Passada incremental de 2026-10-21 (segundo `/cycle`): 0 transições.** `origin/main` não mudou desde a auditoria da
-manhã, e nenhum arquivo de spec foi tocado. A tarefa no working tree não tem spec.
-
-**Registro das rodadas anteriores:** passada incremental de 2026-10-20 (PR #53 aberta), pós-PR #51 e pós-PR #50,
-nenhuma transição; pós-PR #52, uma, `in-app-notifications`, de `proposed` para `done`, com o `git mv` no commit `357346d`,
-que entrou em `main` pela PR #53; pós-PR #49, uma, `contact-support-channel`, de `approved` para `done`.
+**Registro das rodadas anteriores:** passada incremental da tarde de 2026-10-21, pós-PR #53, passada incremental de
+2026-10-20 (PR #53 aberta), pós-PR #51 e pós-PR #50, nenhuma transição; pós-PR #52, uma, `in-app-notifications`, de
+`proposed` para `done`, com o `git mv` no commit `357346d`, que entrou em `main` pela PR #53; pós-PR #49, uma,
+`contact-support-channel`, de `approved` para `done`.
 
 ## Tarefas diretas entregues (sem spec)
 
@@ -135,6 +175,8 @@ Correções que vieram de achados deste arquivo, sem spec própria. Ficam regist
 | [`request-body-size-limit`](../docs/features/request-body-size-limit/STATE.md) | #51, `9b37e02`, 2026-10-19 | 🟢 as rotas públicas liam o corpo inteiro antes de o Zod recusar tamanho; de quebra, a conta das rotas de `/account` fora do rate limit no `docs/SECURITY.md:160` |
 | [`api-edge-413-close-and-route-id`](../docs/features/api-edge-413-close-and-route-id/STATE.md) | #53, `d19e6fd`, 2026-10-21 | 🟡 a conexão que ficava aberta depois do `413` do teto de corpo (PR #51); 🟡 o id com `%2F` que chegava ao `findById` de `entities/[id]` e `users/[id]` (PR #52); de quebra, a omissão do `docs/SECURITY.md` sobre o `413` e três âncoras de documento deslocadas pela PR #52 |
 | [`notifications-bell-freshness`](../docs/features/notifications-bell-freshness/STATE.md) | #53, `d19e6fd`, 2026-10-21 | 🟢 a lista do sino atrás do badge por até 60 s; 🟢 o badge que conservava o número depois de uma falha da contagem; 🟢 o popover encostado na borda a 375 px |
+| [`leftover-ui-strings`](../docs/features/leftover-ui-strings/STATE.md) | #54, `af763bb`, 2026-10-21 | 🟡 o login da landing validava em pt-br nos três idiomas; 🟡 a tela de erro global da app fixa em inglês, com `lang="en"` |
+| [`web-global-error`](../docs/features/web-global-error/STATE.md) | #54, `af763bb`, 2026-10-21 | a parte do `global-error` do 🟡 da `apps/web` sem `not-found`, `error` e `global-error`: a landing mostrava a tela embutida do Next, em inglês e sem botão de tentar de novo |
 
 As tabelas de conferência item a item das PRs #28, #35 e #36 ficaram na versão deste arquivo em `02c31b5` (a PR
 #37 levou a auditoria pós-PR #36 junto); as das PRs #37, #38 e #39, na versão em `5f4a8e9` (a PR #40 levou a
@@ -151,130 +193,186 @@ auditoria pós-PR #49 junto), e a da PR #50 (`admin-archive-access-revocation`),
 auditoria pós-PR #50 junto), e as três da PR #51 (`google-sign-in-error-contract`, `password-unlink-email-restore` e
 `request-body-size-limit`), na versão em `3a118c6` (a PR #52 levou a auditoria pós-PR #51 junto). A conferência da PR #52
 (`in-app-notifications`, que tinha spec) ficou na versão em `d19e6fd` (a PR #53 levou a auditoria pós-PR #52 e a passada
-incremental junto). As quinze versões estão em `main`, e as pastas das features guardam o resto. As duas tarefas da PR
-#53 têm a conferência abaixo.
+incremental junto). As duas da PR #53 (`api-edge-413-close-and-route-id` e `notifications-bell-freshness`) ficaram na
+versão em `af763bb` (a PR #54 levou a auditoria pós-PR #53 junto). As dezesseis versões estão em `main`, e as pastas das
+features guardam o resto. As duas tarefas da PR #54 têm a conferência abaixo.
 
-## Executada no working tree, sem commit (`leftover-ui-strings`)
+## Entregas desta rodada (PR #54)
 
-A tarefa direta recomendada pela auditoria da manhã, [`leftover-ui-strings`](../docs/features/leftover-ui-strings/STATE.md),
-passou pelas quatro etapas neste workspace e está **sem commit**: o `STATE.md` registra `analyze`, `develop`, `review` e
-`test` como `done` (10:19 a 10:38), e o `/review` deixou um plano de seis commits sem executar nenhum. A branch é
-`guilhermebittelbrunn/cycle-command-v7`, sem upstream e sem commit à frente de `origin/main`; o `/review` reprovou o nome no
-regex e propôs `fix/leftover-ui-strings` (o caso da E11). **Não está entregue:** o código não está em `main` nem numa PR, e
-os dois achados que ela corrige seguem contados como abertos até o merge.
+A PR #54 (`fix: translate leftover ui strings and render the landing global error screen`) entrou em `main` em 2026-10-21
+às 19:27 UTC, no SHA `af763bb`, com os quatro checks verdes na PR (`gh pr view 54`) e na execução de merge, `gh run
+39661769265`: `success` em `changes`, `verify` (3 min 29 s), `coverage` e `e2e` (4 min 34 s), na imagem `ubuntu-24.04`
+(versão 20261012.334.1). A auditoria conferiu as duas com `gh`. A branch `guilhermebittelbrunn/cycle-command-v7` tinha oito
+commits: a auditoria pós-PR #53, cinco de código (um da web para o `global-error`, um da web para o schema, um da app, um
+de teste e um de i18n) e os artefatos das duas features. O squash juntou tudo num só.
 
-`git status --short`, fora de `docs/features` e `specs`: seis arquivos alterados e três novos. Na `apps/web`,
-`signInSchema.ts` e `sign-in-form-client.tsx`, com o teste novo `apps/web/__tests__/signInSchema.test.ts`; na `apps/app`,
-`global-error.tsx`, o teste novo `globalErrorLocale.test.tsx` e uma linha a mais em `passwordPolicyCopy.test.ts`; no
-dicionário, o bloco `validation` em `translations/apps/web/pages/signIn/index.ts` e a folha nova
-`translations/apps/app/pages/common/globalError.ts`, ligada em `common/index.ts`. Nenhuma dependência, variável,
-`error.code` ou rota nova.
+`git diff --stat d19e6fd af763bb`, fora de `docs/features` e `specs`: 11 arquivos. Na `apps/web`, o `global-error.tsx`
+movido de `app/[locale]/` para `app/` (rename a 52%), `signInSchema.ts`, `sign-in-form-client.tsx` e dois testes novos
+(`signInSchema.test.ts` e `globalErrorLocale.test.tsx`); na `apps/app`, `global-error.tsx`, o teste novo
+`globalErrorLocale.test.tsx` e uma linha a mais em `passwordPolicyCopy.test.ts`; no dicionário, o bloco `validation` em
+`translations/apps/web/pages/signIn/index.ts` e a folha nova `translations/apps/app/pages/common/globalError.ts`, ligada em
+`common/index.ts`. Nenhuma dependência, variável, `error.code`, rota ou documento fora de `docs/features` e `specs`.
+
+### `leftover-ui-strings` (PR #54, tarefa direta)
+
+| item | veredito | o que o código de `main` mostra |
+|------|----------|----------------------------------|
+| 🟡 o login da landing valida em pt-br nos três idiomas | ✅ fechado | o schema é `buildSignInSchema(dictionary)` (`apps/web/app/[locale]/sign-in/validations/signInSchema.ts:7-16`), no molde do cadastro da landing, e o formulário o monta com `useMemo` (`sign-in-form-client.tsx:29`). As mensagens vêm de `apps.web.pages.signIn.validation` nos três idiomas (`translations/apps/web/pages/signIn/index.ts:14-17`, `:37-40`, `:60-63`), e o mínimo segue `EXISTING_PASSWORD_MIN_LENGTH` (`:2`, `:14`). O `/test` mediu as mensagens em `/pt-br`, `/en` e `/es` do `/sign-in`, em claro, escuro e 375 px |
+| 🟡 a tela de erro global da app fixa em inglês | ✅ fechado | `apps/app/app/global-error.tsx:13-27`: `getDictionary()` no corpo, `lang={locale}` e a copy de `apps.app.pages.common.globalError` (`translations/apps/app/pages/common/globalError.ts:1-14`). O `/test` forçou um `throw` no root layout em `next build && start` e mediu título, botão e `lang` em en, es e pt-br; o `throw` foi removido |
+
+**Veredito:** entregue, 9 de 9 critérios ✅, nenhum defeito. Testes novos: `signInSchema.test.ts` (T1, 15 casos),
+`globalErrorLocale.test.tsx` da app (T3, 4 casos) e uma entrada a mais em `passwordPolicyCopy.test.ts` (T2, que roda
+nos três idiomas: +3 casos). Nenhuma conta
+ou dado de QA criado. As lacunas herdadas seguem com o veredito da passada anterior: a do teste de componente do formulário
+fechou pelo navegador, e a do T3 que não clica no botão para conferir o `reset()` **continua aberta**, P (o `/test` de
+`web-global-error` clicou no botão da web, que é o mesmo componente com outra chave).
+
+### `web-global-error` (PR #54, tarefa direta)
+
+| item | veredito | o que o código de `main` mostra |
+|------|----------|----------------------------------|
+| o `global-error` da landing nunca era renderizado | ✅ fechado | o arquivo está em `apps/web/app/global-error.tsx:1-29`, a raiz que o Next 16 lê, e `apps/web/app/[locale]/` não tem mais `global-error.tsx`. Mesma forma do da app, com a chave `apps.web.pages.error` (`:16-17`, `:20`), sem o fallback `\|\| "pt-br"` e sem o `console.error` de desenvolvimento. O `/test` mediu em build de produção, com `throw` no `apps/web/app/[locale]/layout.tsx`: status 500, `lang`, `<h1>` e botão certos em `/pt-br`, `/en` e `/es`, contra a linha de base com "Application error" e "Digest" visíveis, sem botão e com `lang` vazio |
+| o build sem `app/layout.tsx` na raiz | ✅ medido | o `/test` fez três builds com exit 0, com os arquivos `_global-error.*` gerados e 9 manifests apontando para o arquivo novo |
+
+**Veredito:** entregue, 8 de 8 critérios ✅, os 6 itens do "Verificar no `/test`" confirmados, nenhum defeito. Teste novo:
+`apps/web/__tests__/globalErrorLocale.test.tsx` (T1, 5 casos); a suíte da `web` foi de 169 para 189 com os dois testes da
+PR. Nenhum dado criado. O relatório registrou três observações: o `start` da web sobe na porta 3000 (virou linha em
+[Achados da PR #54](#-achados-da-pr-54-2026-10-21)), o `reset()` refaz a árvore sem pedir de novo ao servidor
+(comportamento do Next, sem linha) e o estilo e o tema seguem fora (ampliou a linha que já existia).
+
+**Contra as recomendações:** as duas tarefas entregaram o escopo que a auditoria da manhã e a passada da tarde
+descreveram, sem item a mais nem a menos. A da web corrigiu a premissa da auditoria: o build é Turbopack, não o
+`next-app-loader` do webpack, e a medição foi feita nos artefatos do `.next`. O estilo e o tema das duas telas ficaram
+fora, como as duas recomendações pediam.
+
+## Executada no working tree, sem commit (`web-auth-forms`)
+
+A tarefa direta recomendada pela auditoria pós-PR #54, [`web-auth-forms`](../docs/features/web-auth-forms/STATE.md),
+passou pelas quatro etapas neste workspace e está **sem commit**. O `STATE.md` registra `analyze`, `develop` e `test`
+como `done` (20:56 a 21:25) e `review` como `in-progress`, porque o plano de quatro commits do `/review` ainda não foi
+executado. A branch é `web/fix/auth-forms`, que o `/review` criou a partir de `af763bb` e validou no regex; ela não tem
+upstream nem commit à frente de `origin/main` (`git log af763bb..HEAD` vazio). Desde a terceira passada da noite, o
+workspace está na `fix/auth-forms-and-global-error-theme`, que o `/review` de `global-error-theme` criou a partir dela;
+o `STATE.md` da tarefa já registra a branch nova, e as duas seguem em `af763bb`. **Não está entregue:** o código não está
+em `main` nem numa PR, e os achados que ela corrige seguem contados como abertos até o merge.
+
+`git status --short`, fora de `docs/features` e `specs`: quatro arquivos alterados e dois novos, todos na `apps/web`. Os
+dois formulários (`sign-in-form-client.tsx` e `sign-up-form-client.tsx`), os testes editados `signUpFormApi.test.tsx` e
+`signUpFormSubmitLock.test.tsx` e os testes novos `signInFormRedirect.test.tsx` (6 casos) e `signUpFormValidation.test.tsx`
+(4 casos), este último do `/test`. Nenhuma dependência, variável, `error.code`, rota ou chave de tradução nova, e nenhum
+arquivo em `packages/*`.
 
 | achado | o que a tarefa faz | onde, no working tree | estado |
 |--------|--------------------|-----------------------|--------|
-| 🟡 o login da landing valida em pt-br nos três idiomas | o schema vira `buildSignInSchema(dictionary)`, como o cadastro da landing e o login da app, e o formulário o monta com `useMemo` | `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:7-16`; `sign-in-form-client.tsx:29`; chaves `apps.web.pages.signIn.validation` nos três idiomas | corrigido no working tree, aguardando merge. O `/test` mediu as mensagens em `/pt-br`, `/en` e `/es` do `/sign-in`, com o formulário vazio e com `qa@example` + `12345`, em claro, escuro e 375 px |
-| 🟡 a tela de erro global da app fixa em inglês | o `global-error` lê o idioma com `getDictionary()` (último `LocaleProvider` renderizado ou o cookie `x-locale` do proxy) e publica `lang={locale}` | `apps/app/app/global-error.tsx:13-27`; folha `translations/apps/app/pages/common/globalError.ts:1-14` | corrigido no working tree, aguardando merge. O `/test` forçou um `throw` no root layout em `next build && start` e mediu título, botão e `lang` em en, es e pt-br; o `throw` foi removido |
+| 🟡 o login da landing não leva a lugar nenhum depois de entrar | quem chega já autenticado vai para `/${locale}` num efeito; o login feito na própria tela continua navegado pelo `AuthProvider`, que respeita o `?redirect=`, e o `signInStartedHereRef` separa os dois casos | `sign-in-form-client.tsx:28`, `:52-56`, `:79`, `:133` | corrigido no working tree, aguardando merge. O `/test` mediu nos três idiomas, depois do SSO pela app e com o `?redirect=` preservado em 5 de 5 tentativas (4 por e-mail, 1 pelo Google) |
+| 🟡 o cadastro da landing não pede o e-mail de verificação | depois do login, pede `apiClient.authApi.sendEmailVerification({ locale })` e descarta a falha, porque a conta já existe | `sign-up-form-client.tsx:35-48`, ligado em `:55-56` | corrigido no working tree, aguardando merge. Sem Resend, o `/test` viu `POST /auth/email-verification/send` responder `503 EMAIL_NOT_CONFIGURED` nos três idiomas, com o cadastro concluído e sem toast de erro. A entrega real fica 🔒 (pendência 13) |
+| 🟢 o cartão encosta na borda a 375 px | `px-4 md:px-2` no contêiner, o recuo do header e do footer da web | `sign-in-form-client.tsx:63`, `sign-up-form-client.tsx:91` | corrigido no working tree, aguardando merge. Medido: 16 px de cada lado a 375 px, centralizado com 448 px a 768 e 1280 px, claro e escuro |
+| 🟢 sem `noValidate`, o balão nativo aparece antes do Zod | `noValidate` nos dois `<form>`, como o contato já fazia | `sign-in-form-client.tsx:77`, `sign-up-form-client.tsx:105` | corrigido no working tree, aguardando merge. Medido em 18 combinações (2 formulários × 3 idiomas × 3 entradas); o `signUpFormValidation.test.tsx` falha com o atributo removido |
 
-**Veredito do `/test`:** 9 de 9 critérios ✅, nenhum defeito, nenhum teste novo além dos três do `/develop` (T1 com 15
-casos, T2 com uma entrada, T3 com 4 casos). Gates do working tree, medidos pelo `/review` e pelo `/test`: `pnpm check` com
-968 arquivos e nenhuma correção, typecheck de `web`, `app` e `@repo/internationalization` sem erro, `web` com 184 testes,
-`app` com 975 e `pnpm test` da raiz com 15/15 tasks (inclui o `test:emulator`, 207). Nenhuma conta ou dado de QA criado.
+O link de "esqueci a senha" no login da landing, terceira parte do 🟡 de
+[Achados do inventário de 2026-10-16](#-achados-do-inventário-da-descoberta-2026-10-16), ficou fora do corte, como a
+recomendação pedia. Com o merge, aquela linha é reduzida a ele.
+
+**Veredito do `/test`:** 11 critérios ✅, 0 ❌ e 1 🔒 (a entrega real do e-mail de verificação, que depende de Resend,
+`NEXT_PUBLIC_APP_URL` e `FIREBASE_WEB_API_KEY`). Os seis itens do "Verificar no `/test`" foram confirmados no navegador,
+sob o emulador; o fim de sessão, por uma resposta `401 AUTH_SESSION_REVOKED` simulada com o cookie limpo pelo
+`DELETE /api/auth/session` real. Gates do working tree, medidos pelo `/review` e pelo `/test`: `pnpm check` com 971
+arquivos e nenhuma correção, typecheck da `web` sem erro, `web` com 203 testes e `pnpm test` da raiz com 15/15 tasks e
+3631 testes (inclui os 207 do emulador). O `/review` não fez correção.
+
+**Desvio da recomendação:** o efeito do login não é a cópia literal do cadastro. A cópia concorreria com o `AuthProvider`
+e perderia o `?redirect=` do fim de sessão, por isso o ref (D1 do plano). A recomendação não tinha previsto a corrida.
+
+**Contas de QA,** todas no emulador, mortas com o processo: `qa-web-auth-forms-1@example.com` a `-5`,
+`qa-web-auth-forms-google@example.com` e `qa-web-auth-forms-google2@example.com`. Nada vai para o
+`docs/PRE-PRODUCTION.md`.
 
 **Lacunas herdadas, com veredito desta passada:**
 
 | lacuna | veredito 2026-10-21 | motivo |
 |--------|---------------------|--------|
-| Sem teste de componente do `sign-in-form-client.tsx` | **fechada** pelo `/test` | a passada de navegador nos três idiomas mediu a ligação entre schema, formulário e mensagem |
-| O T3 não clica no botão para conferir o `reset()` | **continua aberta**, P | o `onClick` não mudou no diff e o `/test` viu o handler ligado no navegador; teste só para isso não se paga |
-| `noValidate` no login da landing, `global-error` inerte da web e tela de erro da app sem `styles.css` | **viraram linhas** nesta passada | ver [Achados da tarefa `leftover-ui-strings`](#-achados-da-tarefa-leftover-ui-strings-2026-10-21-working-tree) |
+| Nenhum teste automatizado prova a ordem entre o efeito do login e o `onAuthSuccess` do provider real | **continua aberta**, fora de escopo | o `/test` mediu no navegador (5 tentativas, com log de navegação). O lugar de um teste persistente é a suíte Playwright, e a tarefa não a tocou |
+| O cadastro sem teste em jsdom da mensagem do Zod com `noValidate` | **fechada** no working tree | `signUpFormValidation.test.tsx`, que o `/test` provou por mutação |
+| `px-4 md:px-2` sem teste | **fora de escopo** | medido no navegador; teste de unidade não mede layout |
+| Quem chega autenticado com `?redirect=` vai para `/${locale}` | **fora de escopo**, sem linha nova | o `/test` confirmou o comportamento, e nenhum caminho da web leva a esse estado hoje: o único que escreve `?redirect=` no login, o `handleSessionEnded`, desloga antes (`packages/auth/provider.tsx:250-260`) |
 
-A próxima auditoria depois do merge confere o SHA e o CI e move os dois achados para fechados. Se o usuário juntar esta
-tarefa e a recomendada abaixo numa PR só, as duas aparecem lá juntas.
+## Executada no working tree, sem commit (`global-error-theme`)
 
-## Entregas desta rodada (PR #53)
+A tarefa direta recomendada pela passada incremental anterior,
+[`global-error-theme`](../docs/features/global-error-theme/STATE.md), passou pelas quatro etapas neste workspace e está
+**sem commit**. O `STATE.md` registra `analyze`, `develop` e `test` como `done` (21:42 a 22:04) e `review` como
+`in-progress`, porque o plano de sete commits do `/review`, que junta esta tarefa, `web-auth-forms` e a auditoria, ainda não
+foi executado. A branch `fix/auth-forms-and-global-error-theme` não tem prefixo de projeto porque o diff cruza `apps/app` e
+`apps/web`; o `/review` a validou no regex. **Não está entregue:** o achado que ela corrige segue contado como aberto até
+o merge.
 
-A PR #53 (`fix(api): close the connection on 413 and answer 404 for unusable route ids`) entrou em `main` em 2026-10-21 às
-13:02 UTC, no SHA `d19e6fd`, com os quatro checks verdes na PR (`gh pr view 53`) e na execução de merge, `gh run
-39604516025`: `success` em `changes`, `verify` (4 min 21 s), `coverage` e `e2e` (4 min 19 s), na imagem `ubuntu-24.04`
-(versão 20261018.339.1). A auditoria conferiu as duas com `gh`. A branch `guilhermebittelbrunn/cycle-command-v6` tinha dez
-commits: os seis da borda da API (com a auditoria pós-PR #52 e o arquivamento de `in-app-notifications`), dois de código
-do sino, a passada incremental do `BACKLOG.md` e os artefatos do sino. O squash juntou tudo num só, e o título da PR só
-fala da primeira tarefa.
+`git diff --stat` da tarefa: `apps/app/app/global-error.tsx`, `apps/web/app/global-error.tsx` e os dois
+`globalErrorLocale.test.tsx`, os quatro arquivos que a recomendação previa. Nenhuma dependência, variável, `error.code`,
+rota ou chave de tradução nova. Nenhum arquivo em comum com `web-auth-forms`.
 
-`git diff --stat 3a118c6 d19e6fd`, fora de `docs/features` e `specs`: 15 arquivos. Na `apps/api`,
-`parse-request-json.ts`, `pagination.ts` e `base.repository.ts`, com três arquivos de teste; na `apps/app`, três hooks
-(`useListNotifications.ts`, `useUnreadNotificationsCount.ts` e `useNotificationActions.ts`), o `NotificationsBell.tsx` e
-`useNotifications.test.tsx`; e quatro documentos (`docs/SECURITY.md`, `docs/PRE-PRODUCTION.md`, `docs/SUBPROCESSORS.md`
-e `AGENTS.md`). Nenhuma dependência, variável, `error.code` ou chave de tradução nova.
+| achado | o que a tarefa faz | onde, no working tree | estado |
+|--------|--------------------|-----------------------|--------|
+| 🟢 as telas de erro global das duas apps saem sem estilo e sem tema | cada tela importa o `styles.css` do próprio app, monta o `ThemeProvider` do design system, ganha `suppressHydrationWarning` no `<html>` e um cartão com título e botão | `apps/app/app/global-error.tsx:3`, `:11`, `:28-49`; `apps/web/app/global-error.tsx:3`, `:11`, `:28-49` | corrigido no working tree, aguardando merge. O `/test` mediu em build de produção das duas apps: o CSS chega pela entrada `"G"` do payload e fica no DOM depois de montar, os quatro estados de tema (sistema claro e escuro, escolha salva clara e escura) batem, cabe em 375 px e o idioma segue certo nos três |
 
-### `api-edge-413-close-and-route-id` (PR #53, tarefa direta)
+**Veredito do `/test`:** 11 de 11 critérios ✅, nenhum ❌ e nenhum 🔒. Os seis itens do "Verificar no `/test`" foram
+confirmados, inclusive que as páginas normais não baixam CSS a mais. Gates do working tree, com as duas tarefas: `app` 979
+testes, `web` 207, `pnpm test` da raiz 15/15 tasks, `pnpm check` com 971 arquivos e typecheck das duas apps sem erro. O
+`/review` corrigiu um 🟢 nos testes (o `runThemeScript` passou a falhar de forma explícita quando não há `<script>`).
+Nenhuma conta nem dado de QA criado; a sonda de `throw` nos dois root layouts foi removida com `git checkout` e conferida
+por `grep` no código e nos dois `.next`.
 
-| item | veredito | o que o código de `main` mostra |
-|------|----------|----------------------------------|
-| 🟡 conexão aberta depois do `413` do teto de corpo (PR #51) | ✅ fechado | as duas recusas por tamanho passam por `refuseTooLarge()`, que responde com `connection: close` (`apps/api/(shared)/lib/parse-request-json.ts:21-22`, chamadas em `:57` e `:66`). O `/test` mediu em `next start`: 0 conexões abertas aos 60 s depois de 50 envios em `chunked`, contra 40 sem o header |
-| 🟡 id com `%2F` nas rotas `[id]` (PR #52) | ✅ fechado | `BaseRepository.findById` devolve `null` para o id que `isUsableDocumentId` recusa (`apps/api/(shared)/repositories/base.repository.ts:145-147`), e as rotas já tratavam `null` como 404. O limite do id é 1 500 bytes UTF-8 (`apps/api/(shared)/lib/pagination.ts:3`, `:18-27`). O `/test` mediu 24/24 ids inválidos com 404 `ENTITY_NOT_FOUND`/`USERS_NOT_FOUND` |
-| omissão do `docs/SECURITY.md` sobre o `413` (Contradições) | ✅ fechada | `docs/SECURITY.md:176-178` descreve o `connection: close` e o custo medido para o `fetch` do Node (10 de 240 escritas com `ECONNRESET` ou `EPIPE`) |
-| três âncoras de documento deslocadas pela PR #52 | ✅ fechadas | `docs/SECURITY.md:17-31` (45 arquivos de rota, 30 com guard), `docs/SUBPROCESSORS.md:35` (`route.ts:216` e `account-erasure.ts:89`) e `docs/PRE-PRODUCTION.md:552` (`account-erasure.ts:99`), conferidas contra o código nesta auditoria |
-| regra no `AGENTS.md` | ✅ honesta | `AGENTS.md:46` descreve o `null` do `findById` para id inutilizável, como o código faz |
+**Desvios da recomendação:** os dois testes precisaram de um stub de `matchMedia`, que o `jsdom` não tem e o `ThemeProvider`
+chama no render. O roteiro de prova também mudou: no build Turbopack o HTML da resposta 500 não traz
+`<link rel="stylesheet">`, e o CSS chega pelo payload RSC; o `/develop` corrigiu o roteiro, e o `/test` mediu nos dois
+lugares. O risco que a recomendação apontava (o CSS não chegar ao bundle da tela) não se confirmou.
 
-**Veredito:** entregue. O `/test` fechou com 12 ✅, 0 ❌ e 1 🔒 (o comportamento na Vercel). Testes novos: 47 casos em
-`baseRepository.test.ts` (8 da guarda), 13 em `paginationQuery.test.ts` e 16 em `parseRequestJson.test.ts`, contando os
-que já existiam; a suíte da `api` foi de 1438 para 1455.
+**Lacunas herdadas, com veredito desta passada:**
 
-### `notifications-bell-freshness` (PR #53, tarefa direta)
-
-| item | veredito | o que o código de `main` mostra |
-|------|----------|----------------------------------|
-| 🟢 a lista do sino atrás do badge por até 60 s | ✅ fechado | o `queryFn` da contagem compara a resposta com o número guardado e, se discordam, marca a lista como velha sem relê-la (`useUnreadNotificationsCount.ts:29-40`, marca em `:36-38`); a reabertura relê. Quem escreve na lista devolve a marca (`useListNotifications.ts:20-32`, `:60-67`; `useNotificationActions.ts:57-69`). O `/test` mediu 1 `GET /notifications` na reabertura depois de a contagem mudar e 0 sem notificação nova |
-| 🟢 o badge conservava o número depois de uma falha da contagem | ✅ fechado | `useUnreadNotificationsCount.ts:63` devolve 0 com `isError`, e "marcar como lida" não grava na contagem em erro (`useNotificationActions.ts:76-90`). Medido: o badge some na falha e volta com o número do servidor |
-| 🟢 o popover encostado na borda a 375 px | ✅ fechado | `collisionPadding={POPOVER_EDGE_GAP_PX}` (12) em `NotificationsBell.tsx:66`, constante em `:17`. Medido: 12 px de cada lado a 375 px nos três idiomas, claro e escuro, vazio e sob personificação |
-
-**Veredito:** entregue, 6 de 6 critérios aprovados, nenhum defeito. O `/develop` acrescentou 10 testes de hook
-(`useNotifications.test.tsx`), e a suíte da `app` foi de 958 para 968. Desvio registrado no handoff: toda escrita na
-lista apaga a marca de velha no React Query 5.90.20, então os escritores passaram a devolvê-la. O `/review` conferiu a
-leitura na fonte do `query-core` e aceitou cinco 🟢; os que sobram viraram linhas em
-[Achados da tarefa `notifications-bell-freshness`](#-achados-da-tarefa-notifications-bell-freshness-pr-53).
-
-**Contra a recomendação da passada incremental:** ela pedia reler a lista ao abrir "só quando a contagem mudou", com
-uma página. O `/analyze` escolheu invalidar, o que relê as páginas já carregadas (R3 do plano). O item 2 ganhou uma
-parte que a recomendação não previa: "marcar como lida" deixou de gravar na contagem em erro, porque o `setQueryData`
-limpa o erro e traria o número de volta. O `99+` sobre o ícone ficou de fora, como a recomendação pedia.
+| lacuna | veredito 2026-10-21 | motivo |
+|--------|---------------------|--------|
+| O clique em "Tentar novamente" sem teste de unidade (na app, a lacuna do T3 herdada da PR #54) | **fechada por medição** no working tree, fora do corte como teste | o `/test` clicou duas vezes seguidas nas duas apps; clicar em jsdom exige montar `<html>` no cliente |
+| O quadro claro antes do escuro | **continua aberta**, virou linha | ver [Achados da tarefa `global-error-theme`](#-achados-da-tarefa-global-error-theme-2026-10-21-working-tree) |
+| R4 do plano: cookie `x-theme` sem `localStorage.theme` | **fora de escopo**, sem linha | aceito no plano (D3). O cookie só é gravado junto de uma escolha no `localStorage` (`apps/app/shared/lib/themePreference.ts:28-34`, `:53-62`, citado pelo plano), então o caso pede alguém limpar o `localStorage` e manter o cookie. Não medido; volta como achado se aparecer outra causa para a divergência |
 
 ## Gates medidos nesta auditoria
 
-Executados em 2026-10-21, entre 10:04 e 10:06 BRT, com `--force`, neste workspace, com o `HEAD` em `d19e6fd` (igual a
+> **Terceira passada incremental da noite: não remedidos.** `main` segue em `af763bb`. O working tree com `web-auth-forms`
+> e `global-error-theme` foi medido pelo `/test` da segunda: `app` 979, `web` 207, `pnpm test` da raiz 15/15 tasks,
+> `pnpm check` com 971 arquivos. Esses números não valem para `main`.
+>
+> **Passada incremental anterior da noite: não remedidos.** `main` segue em `af763bb`, o mesmo SHA medido abaixo, e a
+> [`cycle-policy` §4](../.claude/cycle-policy.md) manda citar o número em vez de remedir gate que ninguém mexeu. O working
+> tree de `web-auth-forms` foi medido pelo `/test` da tarefa (ver
+> [Executada no working tree](#executada-no-working-tree-sem-commit-web-auth-forms)) e não vale para `main`.
+
+Executados em 2026-10-21, entre 20:40 e 20:41 BRT, com `--force`, neste workspace, com o `HEAD` em `af763bb` (igual a
 `origin/main`) e o working tree limpo. Não copiados do `/test` nem da rodada anterior.
 
 | comando | resultado |
 |---------|-----------|
-| `pnpm check` (a task `//#lint` da linha abaixo) | ✅ **965 arquivos · 0 erros** (`No fixes applied`). Mesmo número da rodada anterior: a PR #53 não criou arquivo de código |
-| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH` (21.0.12.1) | ✅ **30/30 tasks · 0 em cache · 1 min 30 s**; `api#test:emulator` **207 testes em 5 arquivos**; zero `error TS` no log. Ao fim, nenhuma das portas de emulador (8080, 9099, 9199, 4000, 4400, 4500, 9150, 8085) ficou ouvindo |
+| `pnpm check` (a task `//#lint` da linha abaixo) | ✅ **969 arquivos · 0 erros** (`No fixes applied`). Eram 965: a PR #54 criou quatro arquivos de código (três testes e a folha `globalError.ts`) e moveu um |
+| `pnpm turbo run lint typecheck test test:emulator --force`, com o JDK 21 de `/opt/homebrew/opt/openjdk@21` e o `pnpm` arm64 de `/opt/homebrew/bin` no `PATH` | ✅ **30/30 tasks · 0 em cache · 1 min 19 s**; `api#test:emulator` **207 testes em 5 arquivos**; zero `error TS` no log. Ao fim, nenhuma das portas de emulador (8080, 9099, 9199, 4000, 4400, 4500, 9150, 8085) ficou ouvindo |
 
-**Ambiente, registrado porque mudou o primeiro resultado.** A primeira tentativa falhou em 8 s: o `pnpm` do `PATH` deste
-workspace era o binário x86_64 de `~/.local/bin`, e o `node_modules` só tinha os binários nativos `darwin-x64` (Biome,
-Rollup, turbo), enquanto o `node` é arm64 (`Cannot find module @rollup/rollup-darwin-arm64`). Um `pnpm install
---frozen-lockfile` com o `pnpm` de `/opt/homebrew/bin` acrescentou os 14 pacotes nativos `darwin-arm64`, sem mexer no
-lockfile nem em arquivo rastreado (`git status` limpo), e a segunda tentativa, com esse `pnpm` no `PATH`, é a da tabela.
-Não é defeito do repositório; quem montar o workspace com o `pnpm` x86_64 num Mac arm64 vai bater no mesmo erro. O load
-average foi de 6,5 no início a 26,0 no fim.
+A primeira tentativa já usou o `pnpm` de `/opt/homebrew/bin` à frente do `PATH`, pela nota de ambiente da rodada
+anterior (o binário x86_64 de `~/.local/bin` segue instalado), e passou de primeira.
 
 O log do `@repo/design-system` segue trazendo uma ocorrência do aviso `In HTML, <button> cannot be a descendant of
 <button>`, do caso do `DialogFooter` com `showCloseButton` (achado aberto em
 [Achados da PR #43](#-achados-da-pr-43-2026-10-09)).
 
-**Nenhum dos testes instáveis apareceu.** `useListAuditEvents` passou (suíte da `apps/app`, 968 testes), e o acumulado
-fica em 2 falhas em 53. O arquivo `actionMenu.test.tsx` passou inteiro; o acumulado local do caso de Escape fica em 1
-falha em 8.
+**Nenhum dos testes instáveis apareceu.** `useListAuditEvents` passou (suíte da `apps/app`, 975 testes), e o acumulado
+fica em 2 falhas em 54. O arquivo `actionMenu.test.tsx` passou inteiro; o acumulado local do caso de Escape fica em 1
+falha em 9.
 
-| workspace | arquivos | testes | Δ vs. 2026-10-20 pós-PR #52 |
+| workspace | arquivos | testes | Δ vs. 2026-10-21 pós-PR #53 |
 |-----------|---------:|-------:|-----------------------------|
-| `api` | 112 | 1455 | **+17** testes, nenhum arquivo novo (`baseRepository`, `paginationQuery` e `parseRequestJson`) |
-| `app` | 115 | 968 | **+10** testes, nenhum arquivo novo (`useNotifications`) |
+| `api` | 112 | 1455 | — |
+| `app` | 116 | 975 | **+7** testes, **+1** arquivo (`globalErrorLocale`, 4 casos; a entrada nova em `passwordPolicyCopy` roda nos três idiomas, +3, e o arquivo vai a 30) |
 | `@repo/email` | 7 | 205 | — |
+| `web` | 24 | 189 | **+20** testes, **+2** arquivos (`signInSchema`, 15 casos, e `globalErrorLocale`, 5) |
 | `@repo/design-system` | 14 | 171 | — |
-| `web` | 22 | 169 | — |
 | `@repo/auth` | 11 | 132 | — |
-| `@repo/internationalization` | 7 | 67 | — |
+| `@repo/internationalization` | 7 | 67 | — (a paridade cobre as duas chaves novas sem caso novo) |
 | `@repo/shared` | 5 | 56 | — |
 | `@repo/security` | 3 | 45 | — |
 | `@repo/analytics` | 2 | 34 | — |
@@ -282,26 +380,27 @@ falha em 8.
 | `@repo/payments` | 4 | 22 | — |
 | `e2e` | 2 | 16 | — (testes unitários da suíte; os de navegador rodam no `pnpm e2e`) |
 | `@repo/sdk` | 3 | 11 | — (as quatro ações de notificação do SDK seguem sem teste no pacote) |
-| **total** | **308** | **3383** | **+27** testes, todos da PR #53 |
+| **total** | **311** | **3410** | **+27** testes e **+3** arquivos, todos da PR #54 |
 | `api#test:emulator` (fora da linha acima) | 5 | 207 | — |
 
-Os números batem com os dois `/test` da PR (`api` 1455 no da borda da API, `app` 968 no do sino, emulador 207 nos dois).
+Os números batem com os dois `/test` da PR (`web` 189 e `app` 975 no de `web-global-error`, emulador 207 nos dois).
 
 O `docs/PRE-PRODUCTION.md` §9 (`:664`) segue com a medição de 2026-09-30 (29/29 tasks, 806 arquivos, 2485 testes em 227,
 170 contra emulador). O parágrafo data os números e manda remedir antes de citar, então está honesto; só ficou para trás.
 
-CI: a execução de merge da PR **#53** (`gh run 39604516025`, SHA `d19e6fd`) terminou em **`success`** nos quatro jobs.
+CI: a execução de merge da PR **#54** (`gh run 39661769265`, SHA `af763bb`) terminou em **`success`** nos quatro jobs.
 As 30 últimas execuções do CI na `main` (`gh run list --branch main --limit 30`) estão verdes. O job `verify` rodou na
-imagem `ubuntu-24.04` (versão 20261018.339.1), pelo rótulo `ubuntu-latest`; a migração para o Ubuntu 26 ainda não chegou
-a ele (achado aberto em [Achados da PR #48](#-achados-da-pr-48-2026-10-19)).
+imagem `ubuntu-24.04` (versão 20261012.334.1, mais antiga que a 20261018.339.1 da execução da PR #53), pelo rótulo
+`ubuntu-latest`; a migração para o Ubuntu 26 ainda não chegou a ele (achado aberto em
+[Achados da PR #48](#-achados-da-pr-48-2026-10-19)).
 
-Branch protection segue **não ligado**, remedido hoje depois do merge da PR #53:
+Branch protection segue **não ligado**, remedido hoje depois do merge da PR #54:
 `gh api repos/:owner/:repo/branches/main/protection` → **404** ("Branch not protected"), `rulesets` → **`[]`**. O
-repositório tem **53** PRs, nenhuma aberta.
+repositório tem **54** PRs, nenhuma aberta.
 
 ## Ordem recomendada
 
-Respeita `depends_on` (lido do frontmatter em 2026-10-21, pós-PR #53) e prioriza valor × esforço × custo de
+Respeita `depends_on` (lido do frontmatter em 2026-10-21, pós-PR #54) e prioriza valor × esforço × custo de
 adiar. Nenhuma spec está bloqueada por dependência. **Nenhuma está `approved`:** a primeira da tabela precisa da sua
 aprovação antes de o `/cycle` levá-la ao `/analyze`. `one-time-purchase` e `social-sign-in-providers` ficaram
 `deferred` na triagem de 2026-10-16, e as três specs antigas seguem paradas por decisão sua.
@@ -319,66 +418,73 @@ aprovação antes de o `/cycle` levá-la ao `/analyze`. `one-time-purchase` e `s
 | 5 | [`observability-logging`](observability-logging.md) | alto · M | `in-progress`, 5 dos 6 itens. O que falta é o coletor, que exige conta num provedor. Estacionada (E1) |
 | 6 | [`teams-organizations`](teams-organizations.md) | alto · G | `deferred` desde 2026-08-22. Estacionada (E2) |
 
-### A próxima: tarefa direta na tela de erro global da landing
+### A próxima: tarefa direta na copy do cadastro da app
 
-**Recomendação decidida para este `/cycle` (passada incremental de 2026-10-21):** sem spec `approved`, o ciclo segue com
-uma tarefa direta que faz a landing usar a tela de erro global que ela já tem. Corte P, só `apps/web`, sem variável, sem
-dependência, sem `error.code` e sem chave de tradução nova. **Nenhum arquivo em comum com o diff sem commit de
-`leftover-ui-strings`**, então os commits das duas ficam separáveis. **Em andamento** no working tree como
-[`web-global-error`](../docs/features/web-global-error/STATE.md): `analyze: done` às 14:47; as etapas seguintes não
-estavam registradas no `STATE.md` quando esta passada foi escrita. Sem commit.
+**Recomendação decidida para este `/cycle` (terceira passada incremental da noite de 2026-10-21):** sem spec `approved`, o
+ciclo segue com uma tarefa direta na copy do cadastro da `apps/app`, que é a metade da linha 🟡 da copy do cadastro sem
+arquivo em comum com o diff sem commit. As duas recomendadas antes dela, os formulários da landing e o estilo e o tema
+das telas de erro, foram executadas no working tree ([`web-auth-forms`](#executada-no-working-tree-sem-commit-web-auth-forms)
+e [`global-error-theme`](#executada-no-working-tree-sem-commit-global-error-theme)). Corte P, uma app e o dicionário, sem
+variável, sem dependência, sem `error.code` e sem rota. Slug sugerido: `app-sign-up-copy`.
 
-**O defeito, medido no build.** A web guarda a tela de erro em `apps/web/app/[locale]/global-error.tsx:1-32`, e a raiz
-`apps/web/app/` só tem `[locale]`, `api`, `page.tsx`, `robots.ts` e `sitemap.ts`. O Next 16.0.0
-builda com Turbopack (`next/dist/lib/bundler.js:73-76`; o log abre com `Next.js 16.0.0 (Turbopack)`), então o
-`next-app-loader` do webpack, que a primeira versão deste parágrafo citava, não roda. O `/analyze` de `web-global-error`
-mediu no `.next` de `pnpm --filter web build` (`docs/features/web-global-error/analyze/plan.md` §1.2): hoje o arquivo de
-`[locale]` entra no bundle só como chave do segmento, e o `GlobalError` da entrada é o embutido (`E=a.i(41224)`). Em produção ele nunca é renderizado. Com o
-arquivo em `app/global-error.tsx`, numa sonda temporária, o build passa, gera `/_global-error` sem exigir
-`app/layout.tsx`, e o `GlobalError` passa a ser o da web (`E=a.i(66039)`). Quem visita a landing quando o root layout quebra vê o
-`builtin/global-error.js:52-58` do Next: "Application error: a server-side exception has occurred while loading" seguido do
-nome do host (ou "client-side", conforme o caso), em inglês nos três idiomas, sem `lang`, sem marca e sem botão de tentar de novo. O texto traduzido já
-existe (`dictionary.apps.web.pages.error`), e o proxy da web grava o cookie `x-locale` em toda página
-(`apps/web/proxy.ts:111`, `:115`), que é de onde o `getDictionary()` do cliente lê o idioma quando não há
-`LocaleProvider` montado.
-
-- **Escopo.** Levar o arquivo para `apps/web/app/global-error.tsx` (com `git mv`, para manter o histórico) e alinhá-lo à
-  versão que a app ganhou no working tree: `lang={locale}` sem o fallback `|| "pt-br"`, que é inútil porque o
-  `getDictionary()` sempre devolve um dos três idiomas. O `/analyze` decidiu tirar o `console.error` de desenvolvimento, como na app.
-  Um teste de componente novo, `apps/web/__tests__/globalErrorLocale.test.tsx`, no molde do T3 da app (render por cookie
-  nos três idiomas e sem cookie).
-- **Arquivos tocados.** `apps/web/app/[locale]/global-error.tsx` → `apps/web/app/global-error.tsx` e o teste novo. Nenhum
-  dos nove do diff sem commit. O dicionário não muda.
+- **O defeito.** No cadastro da `apps/app`, a frase antes do link para o login é a chave `signUp.noAccount`, com "Não tem
+  uma conta? ", "Don't have an account? " e "¿No tienes una cuenta? " (`translations/apps/app/pages/signUp/index.ts:25`,
+  `:50`, `:75`), lida em `SignUpFormClient.tsx:228`, ao lado de "Entrar" (`:234`). O subtítulo é
+  `signUp.enterWithYourAccount`, com "Entre com sua conta para continuar", "Enter with your account to continue" e
+  "Regístrate en tu cuenta para continuar" (`:21`, `:46`, `:71`), lido em `SignUpFormClient.tsx:149`. As duas chaves
+  foram copiadas do login, onde o nome e o texto combinam.
+- **A correção certa troca o nome das chaves.** Corrigir só o valor deixaria `noAccount` guardando "Já tem uma conta?" e
+  `enterWithYourAccount` guardando um convite para criar conta: o nome diria o contrário do texto, contra a regra 9 do
+  `CLAUDE.md` (nome descritivo), e quem reaproveitasse a chave cairia no erro de novo. A escada da `cycle-policy` (§3,
+  corrigir na raiz) descarta isso. Com a troca do nome, o componente da app muda junto, e ele não está no diff.
+- **Por que só a app agora.** A landing tem o mesmo par de chaves num namespace próprio
+  (`translations/apps/web/pages/signUp/index.ts`), lido por `sign-up-form-client.tsx:98` e `:179`. Esse formulário está no
+  diff sem commit de `web-auth-forms`. Trocar o nome da chave lá obrigaria a mexer no arquivo, e separar as duas tarefas no
+  commit pediria `git add -p`, que o ambiente não roda. Como cada app tem namespace e componente próprios, a metade da app é
+  a correção completa para a app, não um remendo. A metade da landing repete a mesma troca, com os mesmos nomes de chave,
+  depois do merge.
+- **Entra junto, porque não toca arquivo do diff:** o "¿" que falta em `signIn.noAccount` em es, nas duas apps
+  (`translations/apps/app/pages/signIn/index.ts:71` e `translations/apps/web/pages/signIn/index.ts:69`). Ali a chave está
+  certa e só o valor muda, e o formulário de login da landing não é tocado. O `/analyze` decide se o `meta.description` do
+  cadastro da app em en e es ("Sign up to your account", "Regístrate en tu cuenta", `:30` e `:55`), na mesma folha, entra
+  no corte.
+- **Arquivos tocados.** `packages/internationalization/translations/apps/app/pages/signUp/index.ts`,
+  `packages/internationalization/translations/apps/app/pages/signIn/index.ts`,
+  `packages/internationalization/translations/apps/web/pages/signIn/index.ts` e
+  `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx`, mais o teste que o `/analyze`
+  escolher. `git grep` fora das traduções acha as duas chaves do cadastro da app só em `SignUpFormClient.tsx:149` e
+  `:228`, e nenhum teste nem spec E2E usa o texto atual. Nenhum dos quatro arquivos está no `git status --short`.
+- **Colisão com spec viva:** `SignUpFormClient.tsx` está no `contends_on` de `social-sign-in-providers`, que está
+  `deferred` e fora dos lotes. `magic-link-sign-in` declara o `SignInForm.tsx` da app, que a tarefa não toca.
 - **Pré-requisitos de infra:** nenhum.
-- **Como provar.** O teste de componente cobre o idioma. O caminho real repete a receita que o `/test` de
-  `leftover-ui-strings` usou na app: um `throw` temporário em `apps/web/app/[locale]/layout.tsx`, `pnpm --filter web build
-  && start`, visitas a `/pt-br`, `/en` e `/es`, conferindo `<h1>`, botão e `lang`, e o `throw` removido antes de
-  terminar. Vale medir antes da mudança também, para registrar a tela embutida como linha de base. O build com o
-  arquivo na raiz já foi medido pelo `/analyze` (passa e gera `/_global-error`); o `/test` repete a medida na versão final.
-- **O que não entra.** O estilo e o tema da tela de erro (o achado novo da app vale igual para a web): corrigir nas duas
-  de uma vez toca `apps/app/app/global-error.tsx`, que está no diff sem commit, então fica para depois do merge. O
-  `not-found` e o `error` de segmento da web também ficam fora; pedem decisão sobre o root layout, que é M.
-- **Por que venceu.** É o único candidato sem arquivo em comum com o diff que corrige algo que a pessoa vê, e a prova
-  local completa já foi montada uma vez hoje. O achado está aberto desde 2026-09-26 como "não medido", e a tarefa da
-  manhã o mediu por leitura da fonte.
+- **Como provar.** O teste de paridade do pacote (`packages/internationalization/__tests__/parity.test.ts`) cobre as
+  chaves novas nos três idiomas. No `/test`, abrir `/pt-br/sign-up`, `/en/sign-up` e `/es/sign-up` da app e ler a frase,
+  o subtítulo e o link, em claro, escuro e 375 px; abrir o login das duas apps em es e ler o "¿". Não precisa de conta,
+  de API nem de emulador para renderizar as telas.
+- **O que não entra.** A metade da landing (espera o merge de `web-auth-forms`), os dois `AuthProvider` da web e
+  qualquer mudança de comportamento do formulário.
+- **Por que venceu.** É a candidata de maior valor visível da fila: a frase errada aparece em toda tela de cadastro da app,
+  em todo fork, nos três idiomas. Tem prova inteira local e nenhum arquivo em comum com o diff.
 
-**Alternativas descartadas nesta rodada:**
+**Alternativas descartadas nesta passada:**
 
 | candidata | por que não é a #1 |
 |-----------|--------------------|
-| 🟢 `markRead` que acha o documento apagado e responde 500 (`notification.repository.ts:63-68`, âncora remedida, era `:63-67`; `notifications/[id]/read/route.ts:24-30`) | P, só `apps/api`, sem arquivo em comum, prova por unitário. A janela é de milissegundos entre o `findById` e o `update`. Valor baixo; segunda da fila |
-| 🟡 `radix-ui: latest` no design system (`packages/design-system/package.json:25`; o lockfile resolve `1.6.7`, `pnpm-lock.yaml:538-540`) | P, sem arquivo em comum, com risco medido (a próxima resolução sobe para 1.8.1). Não muda nada para quem usa o produto e mexe no lockfile. Terceira |
-| 🟡 tela de erro global da app sem estilo nem tema (achado novo) | toca `apps/app/app/global-error.tsx`, que está no diff sem commit. Volta depois do merge, junto da web |
-| 🟢 cartão do login da landing colado na borda a 375 px e login sem `noValidate` (achados novos) | os dois tocam `sign-in-form-client.tsx`, que está no diff sem commit. Voltam depois do merge, como uma tarefa só |
-| 🟢 dois eventos concorrentes da Stripe gerando dois avisos (`webhooks/payments/route.ts:92-111`) | mexe no núcleo de cobrança e só se prova com corrida simulada. Corte M para um efeito raro |
+| 🟡 copy do cadastro nas duas apps de uma vez | toca `apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:98` e `:179`, no diff sem commit. Separar os assuntos no commit pediria `git add -p` ou um patch montado à mão para o índice, e o histórico deste arquivo já registra um commit que levou o que estava no índice sem querer. A metade da app entrega o mesmo resultado na app sem esse risco |
+| 🟡 copy do cadastro trocando só os valores, sem renomear as chaves | é a forma de não tocar o formulário da landing, mas deixa duas chaves com nome que diz o contrário do texto (acima). Descartada como remendo |
+| 🟡 `radix-ui: latest` no design system (`packages/design-system/package.json:25`) | P, sem colisão, e a segunda da fila. Não muda nada para quem usa o produto. Nota para quem pegar: com `^1.6.7` a troca de specifier pode fazer o pnpm resolver de novo e subir para 1.8.1; a versão exata, como o `react: 19.2.0` do mesmo arquivo, é a que preserva o lockfile. Não medido |
+| 🟢 `start` com porta fixa na `web` e na `api` | a correção que a linha propunha passaria por cima da variável `PORT` (ver o achado reescrito em [Achados da tarefa `global-error-theme`](#-achados-da-tarefa-global-error-theme-2026-10-21-working-tree)). Precisa de uma forma que respeite `PORT`, e o ganho é só de quem roda o build local |
+| 🟢 tela de erro global da `apps/api` com texto fixo em pt-br (achado novo) | a API não tem página, então a tela só aparece se o root layout de quatro linhas quebrar. Valor quase nulo |
+| 🟢 dois `AuthProvider` aninhados na web | P a M, e depende do observer do provider interno, que o cadastro da landing usa no diff sem commit (R3 do plano de `web-auth-forms`). Espera o merge |
+| 🟢 `markRead` que acha o documento apagado e responde 500 (`notification.repository.ts:63-68`) | P, só `apps/api`, janela de milissegundos. Valor baixo |
 | ⚠️ gate do `CORS_ORIGIN` que não derruba o processo (`apps/api/instrumentation.ts:47-57`, `:63-67`) | decisão sua entre ajustar o comentário e encerrar o processo |
-| 🟢 `99+` sobre o ícone (`NotificationsBell.tsx:52-60`) | escolha visual |
 
-**Registro das recomendações anteriores:** a auditoria pós-PR #53, na manhã de 2026-10-21, recomendou as strings de UI
-soltas que sobravam (o login da landing e a tela de erro global da app), executada no working tree e sem commit
-([Executada no working tree](#executada-no-working-tree-sem-commit-leftover-ui-strings)). A passada incremental de
-2026-10-20 recomendou o frescor e a borda do sino, e a auditoria pós-PR #52, a borda da API; as duas entraram pela PR #53
-([Entregas desta rodada](#entregas-desta-rodada-pr-53)).
+**Registro das recomendações anteriores:** a passada incremental anterior da noite recomendou o estilo e o tema das
+telas de erro global, executados no working tree como `global-error-theme`. A auditoria pós-PR #54 recomendou os
+formulários de login e cadastro da landing, executados no working tree como `web-auth-forms`. A passada incremental da tarde de 2026-10-21 recomendou a tela
+de erro global da landing, e a auditoria pós-PR #53, as strings de UI soltas; as duas entraram pela PR #54
+([Entregas desta rodada](#entregas-desta-rodada-pr-54)). A passada incremental de 2026-10-20 recomendou o frescor e a borda
+do sino, e a auditoria pós-PR #52, a borda da API; as duas entraram pela PR #53.
 
 ### Se você aprovar `magic-link-sign-in`
 
@@ -403,18 +509,20 @@ pedido, a conclusão no cliente, duas telas e o texto `confirmAccess`, que já e
 
 Na ordem em que a auditoria as pegaria quando não houver spec aprovada.
 
-- **Tela de erro global efetiva na landing** (`apps/web/app/[locale]/global-error.tsx`, que o Next nunca renderiza): a
-  recomendada. P, só `apps/web`, com o `throw` temporário em build de produção no `/test`.
+- **Copy do cadastro da `apps/app`, com o "¿" do login em es nas duas apps** (`translations/apps/app/pages/signUp/index.ts`,
+  os dois `signIn/index.ts` e `SignUpFormClient.tsx`): a recomendada. P.
+- **Copy do cadastro da landing** (`translations/apps/web/pages/signUp/index.ts` e `sign-up-form-client.tsx`): P, a
+  mesma troca de chaves da app. Espera o merge de `web-auth-forms`, porque o formulário está no diff sem commit.
+- **Dois `AuthProvider` aninhados na web e a tela vazia do `signInStartedHereRef`** (`apps/web/app/[locale]/layout.tsx:36-37`,
+  `packages/design-system/index.tsx:27-33`, `sign-in-form-client.tsx`): P a M. Espera o mesmo merge.
 - **`markRead` contra documento apagado** (`notification.repository.ts:63-68`): P, só `apps/api`, prova por unitário.
   Valor baixo.
 - **`radix-ui: latest` no design system** (`packages/design-system/package.json:25`): P, fixar a versão que o lockfile
   tem hoje (`1.6.7`).
-- **Depois do merge de `leftover-ui-strings`: estilo e tema das duas telas de erro global** (`apps/app/app/global-error.tsx`
-  e o arquivo da web, já na raiz): P a M, porque cada app guarda o `styles.css` num lugar (`apps/app/app/layout.tsx:2`,
-  `apps/web/app/[locale]/layout.tsx:1`) e, na app, o tema vem do root layout que a tela de erro substitui (a classe no
-  `<html>`, `apps/app/app/layout.tsx:66-72`, e o `AppDesignProvider`, `:86`). Hoje toca um arquivo do diff sem commit.
-- **Depois do merge de `leftover-ui-strings`: o login e o cadastro da landing a 375 px e sem `noValidate`**
-  (`sign-in-form-client.tsx`, `sign-up-form-client.tsx`): P, só `apps/web`. Hoje toca um arquivo do diff sem commit.
+- **`start` com porta fixa na `web` e na `api`** (`apps/web/package.json:7`, `apps/api/package.json:9`): P, mas não
+  "como o `dev`": o `-p` passa por cima de `PORT`. Precisa de uma forma que respeite a variável.
+- **Tela de erro global da `apps/api` com texto fixo** (`apps/api/app/global-error.tsx:19-22`): P, valor quase nulo,
+  porque a API não tem página.
 - **Laço de redirecionamento da conta arquivada antes da correção** (`user-merge.ts:61-67`, `apps/app/proxy.ts:251-266`,
   `authSession.ts:34-39`): P a M, `apps/app`, e pede uma medição que o `/test` não conseguiu montar. Achado da PR #50.
 - **A `apps/web` com `RESEND_*` e `@repo/email` sem envio** (`apps/web/env.ts:1`, `.env.example:2-3`,
@@ -424,21 +532,24 @@ Na ordem em que a auditoria as pegaria quando não houver spec aprovada.
   `turbo.json:11-14`): P e medido, mas é ferramenta de quem mantém o repositório, mexe no lockfile (o
   `@types/node`) e no `turbo.json`, que toda tarefa usa.
 - **CI em `ubuntu-latest` durante a migração para o Ubuntu 26** (`.github/workflows/ci.yml:21`, `:60`, `:84`,
-  `:142`): P, fixar `ubuntu-24.04` ou aceitar a migração. A execução de merge da PR #53 ainda rodou em `ubuntu-24.04`.
+  `:142`): P, fixar `ubuntu-24.04` ou aceitar a migração. A execução de merge da PR #54 ainda rodou em `ubuntu-24.04`.
 - **Guard de redirect: decodificação dupla e teste fora do pacote** (`packages/auth/redirect.ts:27`,
   `apps/app/__tests__/postAuthRedirectTarget.test.ts`): P, só `packages/auth` e um teste movido.
 - **A `apps/web` sem `not-found`, `error` e `favicon.ico`** (raiz de `apps/web/app/` sem layout): M, e criar um root
-  layout na web mexe no mesmo lugar que o idioma do servidor usa (PR #41). O `global-error` saiu deste item: não precisa
-  de root layout e virou a recomendada.
+  layout na web mexe no mesmo lugar que o idioma do servidor usa (PR #41). O `global-error` saiu deste item com a PR #54.
 - **Aparelho encerrado com a tela aberta não sai sozinho** e **sessão expirada que perde a query**
   (`packages/auth/provider.tsx`): M. Nenhuma spec da fila declara o arquivo.
 - **Nome de marca longo no header a 1024 px**: decisão de produto (a marca sai do centro).
 - **Fatia 3 de `account-security-mfa` e coletor de `observability-logging`**: dependem de ativar recurso ou abrir
   conta num provedor (E12 e E1).
 
-Nesta passada saíram da lista as strings soltas, executadas no working tree, e entraram a tela de erro global da landing
-(recomendada) e os dois pares de achados novos que esperam o merge de `leftover-ui-strings`. Na auditoria pós-PR #53 da
-manhã tinha saído o frescor e a borda do sino, e o `radix-ui: latest` tinha subido para o terceiro lugar.
+Na terceira passada da noite saiu da lista o estilo e o tema das telas de erro, executados no working tree como
+`global-error-theme`. A copy do cadastro foi dividida em duas linhas, a da app (recomendada) e a da landing (espera o
+merge), o `start` sem porta perdeu a correção "como o `dev`", e entrou a tela de erro da `apps/api`. Na passada
+anterior tinham saído os formulários de login e cadastro da landing, executados no working tree como
+`web-auth-forms`. O estilo e o tema das telas de erro subiram para recomendada, e entraram dois itens novos, os dois
+esperando o merge daquela tarefa: a copy do cadastro e os dois `AuthProvider` aninhados. Na auditoria pós-PR #54 tinha
+saído a tela de erro global da landing, entregue pela PR #54, e entrado o `start` sem porta.
 
 **Os demais candidatos não mudaram de motivo desde 2026-10-07 e não são mais reapresentados** (§5.1): o contraste
 do seletor de tamanho da paginação, o `CommandDialog` em inglês, o 404 de arquivo inexistente (O1 da PR #41), as
@@ -449,12 +560,14 @@ linha do achado, em [Achados](#achados-correções-pontuais-não-specs).
 ## Lotes paralelos
 
 Para rodar o ciclo completo em 2 ou 3 workspaces do Conductor ao mesmo tempo. Recalculado em **2026-10-21**, na
-auditoria pós-PR #53, e conferido sem mudança na passada incremental da tarde, a partir do `contends_on` de cada spec, lido do disco, pelo algoritmo de
+auditoria pós-PR #54, a partir do `contends_on` de cada spec, lido do disco, pelo algoritmo de
 [`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por
-disjunção → teto de 3. Os 24 caminhos declarados pelas seis specs (22 distintos) existem no disco. **O lote não muda:**
-nenhum status mudou, e nenhum dos 15 arquivos que a PR #53 alterou fora de `docs/features` e `specs` aparece no
-`contends_on` de alguma spec (`git diff --name-only 3a118c6 d19e6fd` contra os seis frontmatters: 0). A PR #53 mudou
-`base.repository.ts`, que o `specs/README.md` usa como exemplo de arquivo de convergência; nenhuma spec viva o declara.
+disjunção → teto de 3. Os 24 caminhos declarados pelas seis specs (22 distintos) existem no disco. **As duas passadas
+incrementais da noite não mudaram o lote:** nenhum status mudou, e nem `web-auth-forms` nem `global-error-theme`, no
+working tree, tocam arquivo de `contends_on`.
+**Na auditoria pós-PR #54, o lote também não mudou:**
+nenhum status mudou, e nenhum dos 11 arquivos que a PR #54 alterou fora de `docs/features` e `specs` aparece no
+`contends_on` de alguma spec (`git diff --name-only d19e6fd af763bb` contra os seis frontmatters: 0).
 
 **A ordem recomendada acima e estes lotes respondem perguntas diferentes.** A ordem diz *o que vale mais a
 pena fazer*; o lote diz *o que pode ser feito junto sem uma spec pisar na outra*. Se você só vai rodar uma
@@ -470,11 +583,17 @@ lá, o `/cycle` não tem spec para pegar e roda a tarefa direta recomendada.
 Por que cada spec ficou fora do lote 1, nominalmente:
 
 - **Nenhuma elegível ficou de fora.** O lote tem uma, porque só uma é elegível; não é o teto nem colisão que limita.
-- A tarefa direta recomendada (a tela de erro global da landing) não entra em lote, porque não é spec. Ela move
-  `apps/web/app/[locale]/global-error.tsx` para a raiz de `apps/web/app/` e cria um teste na `apps/web`. Nenhum dos dois
-  está no `contends_on` de `magic-link-sign-in`, que deixa a `apps/web` fora do corte (`magic-link-sign-in.md:89`): rodaria
-  em paralelo ao lote 1 sem colisão prevista. Também não divide arquivo com `leftover-ui-strings`, executada no working
-  tree e sem commit, que toca o login da landing, o `global-error.tsx` da app e o dicionário.
+- A tarefa direta recomendada (a copy do cadastro da app) não entra em lote, porque não é spec. Ela toca duas folhas
+  de tradução da app, a folha do login da web e o `SignUpFormClient.tsx` da app. O último está no `contends_on` de
+  `social-sign-in-providers`, que está `deferred` e fora dos lotes; nenhum está no de `magic-link-sign-in`, então rodaria
+  em paralelo ao lote 1 sem colisão prevista. Também não divide arquivo com `web-auth-forms` nem com
+  `global-error-theme`, que seguem no working tree sem commit.
+- `global-error-theme`, a segunda tarefa executada no working tree, tocou os quatro arquivos que a recomendação previa e
+  nada mais.
+- `web-auth-forms`, a tarefa executada no working tree, tocou só os arquivos que a recomendação previa (os dois
+  formulários) e testes na mesma app, nenhum no `contends_on` de spec viva. `magic-link-sign-in` deixa a `apps/web` fora
+  do corte (`magic-link-sign-in.md:89`), e `social-sign-in-providers` declara os formulários da `apps/app`, não os da
+  landing.
 - **`social-sign-in-providers`** (`deferred`, fora dos lotes) colide com `magic-link-sign-in` em `client.ts` e
   `SignInForm.tsx`.
 - **`one-time-purchase`** (`deferred`, fora dos lotes) não colide com `magic-link-sign-in`.
@@ -485,7 +604,9 @@ Contra as specs antigas: nenhum arquivo de `magic-link-sign-in` está no `conten
 (`server.ts`, `session.ts` e `session-routes.ts` em `packages/auth`, e `resolve-api-actor.ts`) nem no de
 `observability-logging` (`requestErrorReporter.ts`).
 
-**Lição da PR #53 para o campo:** as duas tarefas diretas não declararam `contends_on`. A da API ficou na
+**Lição da PR #54 para o campo:** as duas tarefas diretas não declararam `contends_on`, e a recomendação da tela de
+erro da landing previa dois arquivos; a entrega tocou os dois, mais nada. A de `leftover-ui-strings` tocou os nove que a
+passada anterior listou. **Lição da PR #53:** as duas tarefas diretas não declararam `contends_on`. A da API ficou na
 `apps/api` e em documentos, e a do sino tocou os três hooks e o componente que o plano listava; o desvio do handoff
 mudou onde os helpers moram, não quais arquivos mudam. **Lição da PR #52:** a spec declarou cinco arquivos e a entrega tocou os cinco, mais cerca de 55 fora da
 lista. Os de convergência que ela não previu: `user-merge.ts` (toda spec que reage à criação de conta), a folha de
@@ -498,7 +619,9 @@ auditoria.
 
 ### Registro das rodadas anteriores
 
-Pós-PR #52 e na passada incremental, o lote 1 era `magic-link-sign-in` sozinha e não rodou, por falta de aprovação;
+Pós-PR #53 e na passada incremental da tarde, o lote 1 era `magic-link-sign-in` sozinha e não rodou, por falta de
+aprovação; rodaram as duas tarefas diretas da PR #54, que tocaram 11 arquivos fora de `docs/features` e `specs`, nenhum
+no `contends_on` de spec viva. Pós-PR #52 e na passada incremental de 2026-10-20, o mesmo lote também não rodou;
 rodaram as duas tarefas diretas da PR #53, que tocaram 15 arquivos fora de `docs/features` e `specs`, nenhum no
 `contends_on` de spec viva. Pós-PR #51, o lote 1 tinha `in-app-notifications` e `magic-link-sign-in`; rodou só a primeira, sozinha, por instrução
 sua, ainda `proposed`, e virou a PR #52. Pós-PR #50, o lote 1 tinha as mesmas duas specs, com `magic-link-sign-in` em
@@ -543,7 +666,7 @@ no código: ver as âncoras deslocadas em [Contradições](#contradições-doc--
 `--no-audit`. Sem essa disciplina, 3 agents regravam o `BACKLOG.md` ao mesmo tempo. É também por isso que
 `specs/BACKLOG.md` **não** aparece em nenhum `contends_on`: esse conflito se resolve por processo, não por
 dado (ver [`README.md`](README.md#depends_on--contends_on)). As PRs #38 e #39 seguiram a nota: nenhuma das duas
-tocou o `BACKLOG.md`. As PRs #40 a #53 tocaram, mas só para levar a auditoria anterior (na #53, duas: a pós-PR #52 e a passada
+tocou o `BACKLOG.md`. As PRs #40 a #54 tocaram, mas só para levar a auditoria anterior (na #53, duas: a pós-PR #52 e a passada
 incremental), feita num workspace só.
 
 ### A ressalva honesta
@@ -565,7 +688,7 @@ não declarou `contends_on`, e o plano dizia "nenhum arquivo" em `apps/app`; a P
 As três da PR #51 também não declararam, e a PR ficou dentro do que os planos diziam: 11 arquivos, todos na
 `apps/api` ou em documento, sem `apps/app`, `apps/web` nem `packages/*`. A spec da PR #52 declarou cinco arquivos e tocou
 os cinco, mais cerca de 55 fora da lista (`user-merge.ts`, a `Navbar`, o layout comum, a folha de `apiErrors`, `log.ts`,
-o seed e seis documentos). As duas tarefas da PR #53 não declararam e ficaram onde os planos diziam. Nenhuma rodada
+o seed e seis documentos). As duas tarefas da PR #53 não declararam e ficaram onde os planos diziam, e as duas da PR #54 também. Nenhuma rodada
 registrou conflito de merge causado por esses erros.
 
 ## Precisam de decisão
@@ -584,30 +707,51 @@ Respondidas por você na triagem de 2026-10-16, todas pela recomendação. Cada 
 central de notificações, com o corte da spec, cumprida pela PR #52), D7 (o contato entrega em
 `NEXT_PUBLIC_APP_SUPPORT_EMAIL`) e D8 (o link mágico não cadastra no MVP). D1 e D2 fecharam com a PR #46.
 
-Resolvidos sem pergunta na auditoria pós-PR #53, por medição:
+Resolvidos sem pergunta na terceira passada incremental da noite de 2026-10-21:
 
-- **O CI no SHA de merge da PR #53**: verde nos quatro jobs (`gh run 39604516025`, concluída às 13:06 UTC), e as 30 últimas
-  execuções na `main` também, conferido com `gh run view` e `gh run list` por esta auditoria.
-- **Se a tarefa do sino entrou em `main` junto com a da API**: sim. A PR #53 tem dez commits, os quatro últimos do sino
-  (`gh pr view 53 --json commits`), e o código está em `d19e6fd` (ver [Entregas desta rodada](#entregas-desta-rodada-pr-53)).
-  O `STATE.md` do sino registra `review: done` e `test: done`, e o da API, também.
-- **Se a PR #53 mudou a superfície da API**: não. Seguem 45 arquivos de rota e 15 sem guard (`find` e `grep -LE`), como o
-  `docs/SECURITY.md:17-31`, agora em `main`, diz.
-- **Se os índices do projeto de referência mudaram**: não. O `ListIndexes` do Firestore Admin em `next-boilerplate-576d0`,
-  pelo MCP do Firebase, devolve o mesmo índice composto único (`user`: `reference_id` + `deletedAt`, `READY`).
-- **Se a branch da PR #53 foi apagada no remoto**: não; `guilhermebittelbrunn/cycle-command-v6` segue em
+- **Se `main` mudou**: não. `git rev-parse HEAD origin/main` deu `af763bb` nos dois.
+- **Se `global-error-theme` conta como entregue**: não. Chegou a `test: done`, mas não tem commit, e a branch
+  `fix/auth-forms-and-global-error-theme` não tem upstream.
+- **Se a recomendação nova divide arquivo com o diff sem commit**: não. Os quatro arquivos da copy do cadastro da app estão
+  fora do `git status --short`. A metade da landing dividiria (`sign-up-form-client.tsx`) e por isso ficou para depois do
+  merge.
+- **Se dá para corrigir a copy sem tocar o formulário da landing, trocando só os valores**: dá, mas é remendo. As chaves
+  ficariam com nome contrário ao texto. Ver [A próxima](#a-próxima-tarefa-direta-na-copy-do-cadastro-da-app).
+- **Se o R4 de `global-error-theme` vira achado**: não. Foi aceito no plano, depende de um estado que o próprio app não
+  produz e não foi medido.
+
+Resolvidos sem pergunta na passada incremental anterior da noite de 2026-10-21:
+
+- **Se `main` mudou desde a auditoria pós-PR #54**: não. `git rev-parse HEAD origin/main` deu `af763bb` nos dois, sem PR
+  nova.
+- **Se `web-auth-forms` conta como entregue**: não. Chegou a `test: done`, mas `git log af763bb..HEAD` está vazio e a
+  branch `web/fix/auth-forms` não tem upstream.
+- **Se a recomendação nova divide arquivo com o diff sem commit**: não. Os dois `global-error.tsx` e os dois
+  `globalErrorLocale.test.tsx` estão fora do `git status --short`, que lista os dois formulários da landing, quatro
+  testes de formulário, três arquivos de `specs/` e `docs/features/web-auth-forms/`.
+- **A decisão de desenho do tema da tela de erro da app**: tomada pela escada (padrão do repo, menor raio), com o
+  `ThemeProvider` do design system e sem ler o cookie `x-theme`. Executada na mesma noite: ver
+  [Executada no working tree (`global-error-theme`)](#executada-no-working-tree-sem-commit-global-error-theme).
+
+Resolvidos sem pergunta na auditoria pós-PR #54, por medição:
+
+- **O CI no SHA de merge da PR #54**: verde nos quatro jobs (`gh run 39661769265`, concluída às 19:32 UTC), e as 30
+  últimas execuções na `main` também, conferido com `gh run view` e `gh run list` por esta auditoria.
+- **Se as duas tarefas entraram em `main`**: sim. A PR #54 tem oito commits, com um de artefatos para cada feature
+  (`gh pr view 54 --json commits`), e o código está em `af763bb` (ver [Entregas desta rodada](#entregas-desta-rodada-pr-54)).
+  Os dois `STATE.md` registram `review: done` e `test: done`.
+- **Se a PR #54 mudou a superfície da API ou algum documento fora de `docs/features` e `specs`**: não. O diff não toca
+  `apps/api`, `docs/*.md` na raiz nem `AGENTS.md`.
+- **Se a branch da PR #54 foi apagada no remoto**: não; `guilhermebittelbrunn/cycle-command-v7` segue em
   `git ls-remote` (pendência 16).
+- **Se a recomendação nova divide arquivo com spec viva**: não, conferido contra os 24 caminhos de `contends_on`.
 - **Se os testes instáveis reapareceram**: não, numa execução (ver [Gates](#gates-medidos-nesta-auditoria)).
 
-Resolvidos sem pergunta na passada incremental de 2026-10-21 (segundo `/cycle`), por medição: se algo entrou em `main`
-desde a manhã (não, `origin/main` segue em `d19e6fd`), se o `global-error` da web é renderizado (não, medido no build
-Turbopack pelo `/analyze` de `web-global-error`) e se a tarefa recomendada divide arquivo com o diff sem commit (não, conferido contra
-`git status --short`).
-
-Resolvidos sem pergunta na passada incremental de 2026-10-20 (PR #53 aberta): se a PR estava pronta para merge (sim,
-quatro checks verdes), se algo tinha entrado em `main` (não), se o `docs/SECURITY.md` ainda dizia 41 e 26 rotas (só em
-`main`, até o merge) e se a tarefa do sino colidia com a PR ou com spec (não). A lista da auditoria pós-PR #52 está na versão deste
-arquivo em `d19e6fd`.
+Resolvidos sem pergunta na auditoria pós-PR #53 e na passada incremental da tarde de 2026-10-21: o CI da PR #53, a
+tarefa do sino em `main`, a superfície da API, os índices do projeto de referência, a branch viva, os testes instáveis,
+se o `global-error` da web era renderizado e se a tarefa recomendada dividia arquivo com o diff sem commit. A lista
+está na versão deste arquivo em `af763bb`. A da passada incremental de 2026-10-20 e a da auditoria pós-PR #52 estão na
+versão em `d19e6fd`.
 
 ## Decisões estacionadas (§5.1)
 
@@ -619,7 +763,7 @@ Cada uma tem dono e endereço.
 |---|---------|------|---------------------|-------------------------|
 | E1 | `observability-logging` fecha como entregue, com o coletor virando spec P própria? (14 rodadas) | você | `docs/PRE-PRODUCTION.md` §11 (o coletor) | fechar e abrir spec P do coletor. A E12 pede a mesma coisa para `account-security-mfa` |
 | E2 | `teams-organizations` continua `deferred`? (16 rodadas sem as contrapartidas P) | você | este arquivo, [Achados](#-repositório-rotas-e-proxy) (predicado de posse) | status de sua escolha; as contrapartidas já são achados com arquivo e linha |
-| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-10-21, pós-PR #53: 404, `[]`, 53 PRs |
+| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify` e `e2e`; não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md), arquivada com esse ⚠️. Remedido em 2026-10-21, pós-PR #54: 404, `[]`, 54 PRs |
 | E4 | O gate `approved` não é usado. Em 2026-09-26 você aprovou cinco specs de uma vez, e as cinco foram entregues depois de passar por ele (PRs #30 a #34). `plan-entitlements` foi a nona entregue sem passar por `approved`: você a manteve `proposed` em 2026-09-26, e o `/analyze` de uma rodada do `/cycle` a levou direto a `in-progress`. `in-app-notifications` foi a décima: entrou no `/cycle` pós-PR #51 ainda `proposed`, por instrução direta sua, e foi entregue pela PR #52 | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
 | E5 | Prazo de retenção da coleção `auditEvent` | você | `docs/PRE-PRODUCTION.md` §1.3 | decidir um prazo padrão sem invocar o art. 15 do Marco Civil |
 | E6 | Teto absoluto da sessão ultrapassável por até meia vida de cookie | — | `docs/PRE-PRODUCTION.md`, seção "Declaração — por quanto tempo uma sessão pode ser renovada" | manter o comportamento; o número está escrito onde o fork lê |
@@ -627,10 +771,10 @@ Cada uma tem dono e endereço.
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
 | E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral (3 rodadas) | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`), por isso precisa da sua palavra. O `PlanGate` da PR #38 leva a `/account?tab=billing` e funciona porque a aba é lida ao montar |
 | E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | este arquivo, achado A1 em [Achados](#-achados-abertos-reconferidos-ou-herdados) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer; a nota de medição do `docs/AUTH-SSO.md` fica como está |
-| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Passada incremental de 2026-10-21:** `leftover-ui-strings` está sem commit na `guilhermebittelbrunn/cycle-command-v7`, que o `/review` reprovou no regex, propondo `fix/leftover-ui-strings` (o diff cruza `apps/web`, `apps/app` e um pacote); a decisão do renome segue com você. **Atualizado em 2026-10-21, pós-PR #53:** a PR #53 saiu da branch `guilhermebittelbrunn/cycle-command-v6`, fora do padrão, que o `/review` das duas tarefas reprovou no regex e manteve por pedido do usuário (o da API propôs `api/fix/edge-413-close-and-route-id`). É a décima quinta PR (#37, #40 a #53) cujo squash leva a auditoria anterior junto, e a primeira a levar duas tarefas em sequência na mesma branch, com o título só da primeira. Os dois `STATE.md` registram `review: done` e `test: done`; o do sino diz que o `review: done` foi marcado antes dos commits, a pedido do orquestrador. A contagem de `STATE.md` com `review: in-progress` depois do merge fica em **22**, agora entre 56 (recontada nesta rodada). **Registro anterior, pós-PR #52:** a PR #52 saiu da branch `feat/in-app-notifications`, sem `<project>`, porque o diff cruza `apps/api`, `apps/app` e três pacotes; o `/review` a criou e registrou o motivo no `review/review.md`. É a décima quarta PR (#37, #40 a #52) cujo squash leva a auditoria anterior junto. O `STATE.md` registra `review: done`, `test: done` e o nome da branch que subiu, então a contagem de `STATE.md` com `review: in-progress` depois do merge fica em **22**, agora entre 54 (recontada nesta rodada, lendo a coluna de status da linha `review` de cada um). **Registro anterior, pós-PR #51:** a PR #51 saiu da branch `guilhermebittelbrunn/cycle-command-v5`, que os três `STATE.md` chamam de fora do padrão, com o nome `api/fix/google-sign-in-unlink-restore-body-cap` proposto pelo `/review` (passa no regex) e "renomear só com aprovação do usuário"; a renomeação não aconteceu. É a décima terceira PR (#37, #40 a #51) cujo squash leva a auditoria anterior junto. Os três `STATE.md` ficaram com `review: in-progress`, e o de `request-body-size-limit` também com `test: blocked`, embora a PR tenha sido mergeada; a contagem de `STATE.md` com `review: in-progress` depois do merge sobe para **22**, agora entre 53 (recontada nesta rodada, lendo a coluna de status da linha `review` de cada um). **Registro anterior, pós-PR #50:** a PR #50 saiu da branch `guilhermebittelbrunn/cycle-v3`, que o próprio `STATE.md` chama de inválida, propondo `fix/admin-archive-access-revocation`; a renomeação não aconteceu. É a décima segunda PR (#37, #40 a #50) cujo squash leva a auditoria anterior junto, de novo com um arquivamento (`contact-support-channel`). O `STATE.md` ficou com `review: in-progress`, então a contagem de `STATE.md` com `review: in-progress` depois do merge sobe para **19**, agora entre 50 (recontada nesta rodada, lendo a coluna de status da linha `review` de cada um). **Registro anterior, pós-PR #49:** branch `feat/contact-support-channel`, sem `<project>`; `STATE.md` com `review: in-progress`; 18 entre 49. **Registro anterior, pós-PR #48:** a PR #48 saiu da branch `feat/linked-sign-in-methods`, sem `<project>`, porque o diff cruza `apps/api`, `apps/app` e três pacotes; o `/review` a criou a partir de `guilhermebittelbrunn/cycle-v2` e validou o nome no regex do comando. É a décima PR (#37, #40 a #48) cujo squash leva a auditoria anterior junto, e desta vez também o arquivamento de `pricing-page-catalog`. O `STATE.md` registra `review: done`, `test: done` e o nome da branch que subiu, então a contagem de `STATE.md` com `review: in-progress` depois do merge fica em **17**, agora entre 48. **Registro anterior, pós-PR #47:** a PR #47 saiu da branch `feat/pricing-page-catalog`, sem `<project>`, porque o diff cruza `apps/api`, `apps/web`, `apps/app` e quatro pacotes. É a nona PR (#37, #40 a #47) cujo squash leva a auditoria anterior junto, e desta vez também as sete specs da descoberta. Ponto positivo: o `STATE.md` registra `review: done`, `test: done` e o nome da branch que de fato subiu. A contagem de `STATE.md` com `review: in-progress` depois do merge fica em **17**, agora entre 47. **Registro anterior, pós-PR #46:** a PR #46 saiu da branch `guilhermebittelbrunn/cycle-2-features-implement`, que o `/review` das duas tarefas reprovou na regex e recomendou renomear para `fix/web-docs-link-and-api-error-codes`; a renomeação não aconteceu. É a oitava PR (#37, #40 a #46) cujo squash leva a auditoria anterior junto. Os dois `STATE.md` da PR (`web-docs-link-and-mobile-menu` e `api-auth-webhook-error-codes`) ficaram com `review: in-progress`, então a contagem subiu de 15 para **17**, entre 46 (recontada nesta rodada, lendo a linha `review` de cada um). **Registro anterior, pós-PR #45:** a PR #45 saiu como `fix/date-pickers-form-fields-and-header`, sem `<project>`, porque o diff cruza `packages/design-system`, `apps/app`, `apps/web` e `packages/internationalization`. É a sétima PR (#37, #40 a #45) cujo squash leva a auditoria anterior junto. Ponto positivo: os três `STATE.md` da PR (`date-input-navigation`, `form-field-focus-and-names` e `web-header-reflow-and-menu-name`) registram `review: done` e o nome da branch que de fato subiu; a contagem de `STATE.md` com `review: in-progress` depois do merge segue em 15, agora entre 44. **Registro anterior, pós-PR #44:** a PR #44 saiu como `fix/date-input-locale`, sem `<project>`, porque o diff cruza `packages/internationalization`, `packages/design-system` e `apps/web` (o `/review` dela citou esta linha como precedente). É a sexta PR (#37, #40, #41, #42, #43 e #44) cujo squash leva a auditoria anterior junto; na branch, a auditoria tinha commit `docs(specs)` próprio, como a regra pede. Das PRs #29 a #44, só a #36, a #40 e a #42 seguiram o padrão de branch; as três tocam código de um pacote só. **Contagem corrigida nesta rodada:** a auditoria anterior dizia que seis `STATE.md` seguiam com `review: in-progress` depois do merge. Lendo a linha `review` de todos os 41 `STATE.md` em `fa7041b`, são **15**: `api-hardening`, `cursor-pagination`, `audit-log`, `user-activity-tracking`, `onboarding-flow`, `accessibility-conformance`, `account-security-mfa`, `observability-logging`, `plan-entitlements`, `account-active-sessions`, `server-locale-from-url`, `antd-theme-seed-colors`, `account-deletion-dialog-focus`, `ui-strings-and-password-focus` e `date-input-locale`, todas com PR mergeada e CI verde (`observability-logging` com a parte entregue). As outras rodadas contavam só as features recentes. Os 26 restantes têm `review: done`; `e2e-testing` tem `test: blocked`, por decisão sua. A auditoria não os edita, porque a `spec-audit` só a autoriza a acrescentar `spec:` ao arquivar. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
-| E12 | O destino da fatia 3 de `account-security-mfa` (segundo fator com códigos de recuperação, itens 5 e 6). Era a D10, aberta em 2026-10-04; estacionada em 2026-10-07, na segunda aparição. Opções: **(a)** arquivar a spec como entregue em 4/6, em `docs/features/account-security-mfa/spec.md`, e abrir uma spec `proposed` só do segundo fator; **(b)** voltar a spec para `proposed`, com as fatias entregues registradas nela, para que entre nos lotes; **(c)** manter `in-progress`; **(d)** marcar a fatia 3 como `deferred` dentro da spec | você | a spec [`account-security-mfa`](account-security-mfa.md) | **(a)**. Com `in-progress` e nenhuma feature ativa, a spec fica fora dos lotes para sempre, e o status afirma um trabalho que ninguém está fazendo. (a) segue o padrão recomendado na E1, deixa a evidência das fatias 1 e 2 junto da feature e abre uma spec pequena sobre o que falta: prevalência de 3/10, preço no GCIP não confirmado, ativação do recurso no projeto Firebase. A pasta de destino tem o mesmo nome do `id` e ainda não tem `spec.md` (reconferido em 2026-10-21, pós-PR #53), então não há colisão. (b) é a saída de menor esforço se você quiser manter o histórico num arquivo só |
+| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Atualizado em 2026-10-21, pós-PR #54:** a PR #54 saiu da branch `guilhermebittelbrunn/cycle-command-v7`, fora do padrão, que o `/review` das duas tarefas reprovou no regex, propondo `fix/leftover-ui-strings`; a renomeação não aconteceu. É a décima sexta PR (#37, #40 a #54) cujo squash leva a auditoria anterior junto, e a segunda seguida a levar duas tarefas na mesma branch. Os dois `STATE.md` registram `review: done` (marcado antes dos commits, a pedido do orquestrador) e `test: done`, e o campo `branch` dos dois ainda diz "proposta `fix/leftover-ui-strings`". A contagem de `STATE.md` com `review: in-progress` depois do merge fica em **22**, agora entre 58 (recontada nesta rodada, lendo a coluna de status da linha `review` de cada um). **Registro anterior, passada incremental de 2026-10-21:** `leftover-ui-strings` estava sem commit na `guilhermebittelbrunn/cycle-command-v7`, que o `/review` reprovou no regex, propondo `fix/leftover-ui-strings` (o diff cruza `apps/web`, `apps/app` e um pacote). **Atualizado em 2026-10-21, pós-PR #53:** a PR #53 saiu da branch `guilhermebittelbrunn/cycle-command-v6`, fora do padrão, que o `/review` das duas tarefas reprovou no regex e manteve por pedido do usuário (o da API propôs `api/fix/edge-413-close-and-route-id`). É a décima quinta PR (#37, #40 a #53) cujo squash leva a auditoria anterior junto, e a primeira a levar duas tarefas em sequência na mesma branch, com o título só da primeira. Os dois `STATE.md` registram `review: done` e `test: done`; o do sino diz que o `review: done` foi marcado antes dos commits, a pedido do orquestrador. A contagem de `STATE.md` com `review: in-progress` depois do merge fica em **22**, agora entre 56 (recontada nesta rodada). **Registro anterior, pós-PR #52:** a PR #52 saiu da branch `feat/in-app-notifications`, sem `<project>`, porque o diff cruza `apps/api`, `apps/app` e três pacotes; o `/review` a criou e registrou o motivo no `review/review.md`. É a décima quarta PR (#37, #40 a #52) cujo squash leva a auditoria anterior junto. O `STATE.md` registra `review: done`, `test: done` e o nome da branch que subiu, então a contagem de `STATE.md` com `review: in-progress` depois do merge fica em **22**, agora entre 54 (recontada nesta rodada, lendo a coluna de status da linha `review` de cada um). **Registro anterior, pós-PR #51:** a PR #51 saiu da branch `guilhermebittelbrunn/cycle-command-v5`, que os três `STATE.md` chamam de fora do padrão, com o nome `api/fix/google-sign-in-unlink-restore-body-cap` proposto pelo `/review` (passa no regex) e "renomear só com aprovação do usuário"; a renomeação não aconteceu. É a décima terceira PR (#37, #40 a #51) cujo squash leva a auditoria anterior junto. Os três `STATE.md` ficaram com `review: in-progress`, e o de `request-body-size-limit` também com `test: blocked`, embora a PR tenha sido mergeada; a contagem de `STATE.md` com `review: in-progress` depois do merge sobe para **22**, agora entre 53 (recontada nesta rodada, lendo a coluna de status da linha `review` de cada um). **Registro anterior, pós-PR #50:** a PR #50 saiu da branch `guilhermebittelbrunn/cycle-v3`, que o próprio `STATE.md` chama de inválida, propondo `fix/admin-archive-access-revocation`; a renomeação não aconteceu. É a décima segunda PR (#37, #40 a #50) cujo squash leva a auditoria anterior junto, de novo com um arquivamento (`contact-support-channel`). O `STATE.md` ficou com `review: in-progress`, então a contagem de `STATE.md` com `review: in-progress` depois do merge sobe para **19**, agora entre 50 (recontada nesta rodada, lendo a coluna de status da linha `review` de cada um). **Registro anterior, pós-PR #49:** branch `feat/contact-support-channel`, sem `<project>`; `STATE.md` com `review: in-progress`; 18 entre 49. **Registro anterior, pós-PR #48:** a PR #48 saiu da branch `feat/linked-sign-in-methods`, sem `<project>`, porque o diff cruza `apps/api`, `apps/app` e três pacotes; o `/review` a criou a partir de `guilhermebittelbrunn/cycle-v2` e validou o nome no regex do comando. É a décima PR (#37, #40 a #48) cujo squash leva a auditoria anterior junto, e desta vez também o arquivamento de `pricing-page-catalog`. O `STATE.md` registra `review: done`, `test: done` e o nome da branch que subiu, então a contagem de `STATE.md` com `review: in-progress` depois do merge fica em **17**, agora entre 48. **Registro anterior, pós-PR #47:** a PR #47 saiu da branch `feat/pricing-page-catalog`, sem `<project>`, porque o diff cruza `apps/api`, `apps/web`, `apps/app` e quatro pacotes. É a nona PR (#37, #40 a #47) cujo squash leva a auditoria anterior junto, e desta vez também as sete specs da descoberta. Ponto positivo: o `STATE.md` registra `review: done`, `test: done` e o nome da branch que de fato subiu. A contagem de `STATE.md` com `review: in-progress` depois do merge fica em **17**, agora entre 47. **Registro anterior, pós-PR #46:** a PR #46 saiu da branch `guilhermebittelbrunn/cycle-2-features-implement`, que o `/review` das duas tarefas reprovou na regex e recomendou renomear para `fix/web-docs-link-and-api-error-codes`; a renomeação não aconteceu. É a oitava PR (#37, #40 a #46) cujo squash leva a auditoria anterior junto. Os dois `STATE.md` da PR (`web-docs-link-and-mobile-menu` e `api-auth-webhook-error-codes`) ficaram com `review: in-progress`, então a contagem subiu de 15 para **17**, entre 46 (recontada nesta rodada, lendo a linha `review` de cada um). **Registro anterior, pós-PR #45:** a PR #45 saiu como `fix/date-pickers-form-fields-and-header`, sem `<project>`, porque o diff cruza `packages/design-system`, `apps/app`, `apps/web` e `packages/internationalization`. É a sétima PR (#37, #40 a #45) cujo squash leva a auditoria anterior junto. Ponto positivo: os três `STATE.md` da PR (`date-input-navigation`, `form-field-focus-and-names` e `web-header-reflow-and-menu-name`) registram `review: done` e o nome da branch que de fato subiu; a contagem de `STATE.md` com `review: in-progress` depois do merge segue em 15, agora entre 44. **Registro anterior, pós-PR #44:** a PR #44 saiu como `fix/date-input-locale`, sem `<project>`, porque o diff cruza `packages/internationalization`, `packages/design-system` e `apps/web` (o `/review` dela citou esta linha como precedente). É a sexta PR (#37, #40, #41, #42, #43 e #44) cujo squash leva a auditoria anterior junto; na branch, a auditoria tinha commit `docs(specs)` próprio, como a regra pede. Das PRs #29 a #44, só a #36, a #40 e a #42 seguiram o padrão de branch; as três tocam código de um pacote só. **Contagem corrigida nesta rodada:** a auditoria anterior dizia que seis `STATE.md` seguiam com `review: in-progress` depois do merge. Lendo a linha `review` de todos os 41 `STATE.md` em `fa7041b`, são **15**: `api-hardening`, `cursor-pagination`, `audit-log`, `user-activity-tracking`, `onboarding-flow`, `accessibility-conformance`, `account-security-mfa`, `observability-logging`, `plan-entitlements`, `account-active-sessions`, `server-locale-from-url`, `antd-theme-seed-colors`, `account-deletion-dialog-focus`, `ui-strings-and-password-focus` e `date-input-locale`, todas com PR mergeada e CI verde (`observability-logging` com a parte entregue). As outras rodadas contavam só as features recentes. Os 26 restantes têm `review: done`; `e2e-testing` tem `test: blocked`, por decisão sua. A auditoria não os edita, porque a `spec-audit` só a autoriza a acrescentar `spec:` ao arquivar. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
+| E12 | O destino da fatia 3 de `account-security-mfa` (segundo fator com códigos de recuperação, itens 5 e 6). Era a D10, aberta em 2026-10-04; estacionada em 2026-10-07, na segunda aparição. Opções: **(a)** arquivar a spec como entregue em 4/6, em `docs/features/account-security-mfa/spec.md`, e abrir uma spec `proposed` só do segundo fator; **(b)** voltar a spec para `proposed`, com as fatias entregues registradas nela, para que entre nos lotes; **(c)** manter `in-progress`; **(d)** marcar a fatia 3 como `deferred` dentro da spec | você | a spec [`account-security-mfa`](account-security-mfa.md) | **(a)**. Com `in-progress` e nenhuma feature ativa, a spec fica fora dos lotes para sempre, e o status afirma um trabalho que ninguém está fazendo. (a) segue o padrão recomendado na E1, deixa a evidência das fatias 1 e 2 junto da feature e abre uma spec pequena sobre o que falta: prevalência de 3/10, preço no GCIP não confirmado, ativação do recurso no projeto Firebase. A pasta de destino tem o mesmo nome do `id` e ainda não tem `spec.md` (reconferido em 2026-10-21, pós-PR #54), então não há colisão. (b) é a saída de menor esforço se você quiser manter o histórico num arquivo só |
 | E13 | Ligar o bloqueio de bot da landing? Hoje ele nunca roda, nem com chave válida (achado do `skipValidation` da `apps/web`). Era a D8, aberta em 2026-09-30; estacionada em 2026-10-07, na quarta aparição | você | este arquivo, [Achados](#-repositório-rotas-e-proxy), linha do `skipValidation` | não ligar agora e declarar a decisão. Ligar é pôr `detectBot` e `shield` em modo `LIVE` para visitante anônimo em todo fork que já tem a chave; pede teste próprio (falso positivo de crawler, preview de link) e não cabe numa correção de configuração. Os documentos em `main` já descrevem o comportamento atual (`docs/SUBPROCESSORS.md:40` e `docs/FORKING.md:327-328`, no §7.3; a frase do `docs/ROPA.md:108` saiu com a PR #49, porque o envio do contato deixou de passar pela landing). Tirar o `skipValidation` sem esta decisão liga o bloqueio por tabela |
-| E14 | Qual spec aprovar, já que nenhuma está `approved`? Era a D10, aberta em 2026-10-19 pós-PR #49; estacionada na segunda aparição, pós-PR #50. **Recomendação mudada em 2026-10-20, pós-PR #52**, e por isso reapresentada: a spec que ela recomendava, `in-app-notifications`, foi entregue | você | este arquivo, [A próxima](#a-próxima-tarefa-direta-na-tela-de-erro-global-da-landing) | a única elegível é `magic-link-sign-in` (5/10, sem custo, caminho principal 🔒 sem a Resend). Aprovar depois da medição do `providerData` no emulador, que o `/analyze` faz antes de desenhar e que pode puxar a aba Segurança para o corte. Enquanto não houver aprovação, o `/cycle` roda tarefa direta: a borda da API e o sino entraram pela PR #53, a das strings soltas foi executada no working tree em 2026-10-21, e a recomendada agora é a tela de erro global da landing. Sem recomendação nova, não é reapresentada (§5.1), nem nas passadas incrementais de 2026-10-20 e de 2026-10-21. Se nenhuma das specs `deferred` voltar, a fila de specs fica com uma só, e a próxima descoberta (`/spec` sem argumento) é o caminho para repor |
+| E14 | Qual spec aprovar, já que nenhuma está `approved`? Era a D10, aberta em 2026-10-19 pós-PR #49; estacionada na segunda aparição, pós-PR #50. **Recomendação mudada em 2026-10-20, pós-PR #52**, e por isso reapresentada: a spec que ela recomendava, `in-app-notifications`, foi entregue | você | este arquivo, [A próxima](#a-próxima-tarefa-direta-na-copy-do-cadastro-da-app) | a única elegível é `magic-link-sign-in` (5/10, sem custo, caminho principal 🔒 sem a Resend). Aprovar depois da medição do `providerData` no emulador, que o `/analyze` faz antes de desenhar e que pode puxar a aba Segurança para o corte. Enquanto não houver aprovação, o `/cycle` roda tarefa direta: a borda da API e o sino entraram pela PR #53, as strings soltas e a tela de erro global da landing pela PR #54, os formulários de login e cadastro da landing e o estilo e o tema das telas de erro global foram executados no working tree (`web-auth-forms` e `global-error-theme`), e a recomendada agora é a copy do cadastro da app. Sem recomendação nova, não é reapresentada (§5.1), nem nas passadas incrementais de 2026-10-20 e de 2026-10-21 (três), nem na auditoria pós-PR #54. Se nenhuma das specs `deferred` voltar, a fila de specs fica com uma só, e a próxima descoberta (`/spec` sem argumento) é o caminho para repor |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
@@ -652,7 +796,7 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 
 ## Dependências e bloqueios
 
-| spec | `depends_on` | situação em 2026-10-21, pós-PR #53 |
+| spec | `depends_on` | situação em 2026-10-21, pós-PR #54 |
 |------|--------------|------------------------|
 | [`magic-link-sign-in`](magic-link-sign-in.md) | — | ✅ sem dependência |
 | [`social-sign-in-providers`](social-sign-in-providers.md) | `linked-sign-in-methods` | ✅ satisfeita (PR #48, `44b2b04`), arquivada em [`docs/features/linked-sign-in-methods/spec.md`](../docs/features/linked-sign-in-methods/spec.md). A spec segue `deferred` |
@@ -709,11 +853,11 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `contact-support-channel` | 2026-10-19 | [`docs/features/contact-support-channel/spec.md`](../docs/features/contact-support-channel/spec.md) — **5/5 do corte** (PR #49, `4eeb07b`), 16 ✅, 0 ❌ e 4 🔒 no `/test` (entrega real pela Resend, confirmação vista no navegador, `429` com `ARCJET_KEY` e e-mail preenchido num domínio real). Oitava spec entregue depois de passar por `approved`. ⚠️ Quatro derivas sem efeito no que o corte pedia: sem Resend o aviso só aparece no envio, o ROPA já tinha a atividade, o item do menu depende de `NEXT_PUBLIC_WEB_URL` e só aparece no painel comum, e cerca de vinte arquivos fora do `contends_on`. Definir `NEXT_PUBLIC_APP_SUPPORT_EMAIL` na `api` e na `web` é passo manual por fork; sem ela o canal fica indisponível (`PRE-PRODUCTION.md` §13, `:786-789`, era `:736-739` até a PR #52) |
 | `in-app-notifications` | 2026-10-20 | [`docs/features/in-app-notifications/spec.md`](../docs/features/in-app-notifications/spec.md) — **6/6 do corte** (PR #52, `3a118c6`), 17 ✅, 0 ❌ e 3 🔒 no `/test` (evento real da Stripe, índice ausente num projeto real e a TTL apagando o documento). Entregue sem passar por `approved` (E4). ⚠️ Três derivas sem efeito no que o corte pedia: dois índices compostos em vez de um, boas-vindas só para perfil comum, e contagem com teto de 100 lida a cada 120 s. Publicar os dois índices de `notification` e ligar a TTL em `expiresAt` são passo manual por fork (`PRE-PRODUCTION.md` §1.9, `:251`); medido em 2026-10-20, os índices não estão publicados no projeto de referência |
 
-**Verificado na auditoria de 2026-10-21 (pós-PR #53):** `docs/features/` tem **56** pastas e **30** `spec.md`
-arquivados, todos com `status: done`. Nenhum arquivamento nesta rodada. As 26 pastas sem `spec.md` são
+**Verificado na auditoria de 2026-10-21 (pós-PR #54):** `docs/features/` tem **58** pastas e **30** `spec.md`
+arquivados, todos com `status: done`. Nenhum arquivamento nesta rodada. As 28 pastas sem `spec.md` são
 `account-security-mfa` e `account-active-sessions` (fatias 1 e 2 da spec `in-progress` em `specs/`),
 `observability-logging` (spec `in-progress`), `auth-panel-context` e `impersonation-read-only` (as duas anteriores à
-semeadura) e as vinte e uma tarefas diretas listadas em [Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec).
+semeadura) e as vinte e três tarefas diretas listadas em [Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec).
 Os dois links de entrada de `in-app-notifications` que morreram com o arquivamento da rodada pós-PR #52
 (`analyze/plan.md:3` e `review/review.md:6`) seguem mortos em `main`; ver o achado dos links mortos.
 
@@ -733,17 +877,16 @@ Os dois links de entrada de `in-app-notifications` que morreram com o arquivamen
 ## Contradições doc × código, medidas nesta rodada
 
 Nenhum gate lê prosa. Pela [`cycle-policy` §4](../.claude/cycle-policy.md), afirmação barata de medir num
-doc é medida ao passar por ela. A PR #53 alterou quatro documentos fora de `docs/features/` e `specs/`
-(`docs/SECURITY.md`, `docs/PRE-PRODUCTION.md`, `docs/SUBPROCESSORS.md` e `AGENTS.md`). Esta auditoria releu as linhas
-alteradas contra o código de `main`: o inventário de guards (45 e 15, recontados), as âncoras do webhook e do expurgo
-(`route.ts:216`, `account-erasure.ts:89` e `:99`), os dois parágrafos novos do `413` e a regra do `findById` no
-`AGENTS.md:46`. O `PRE-PRODUCTION.md` e o `SUBPROCESSORS.md` trocaram uma linha cada, sem mudar a contagem; o
-`SECURITY.md` ganhou quatro linhas depois da `:175`, e as âncoras deste arquivo para ele foram remedidas. A auditoria não
-edita `docs/`; o que está defasado fica registrado aqui. A conferência dos documentos da PR #52 está na versão deste
-arquivo em `d19e6fd`.
+doc é medida ao passar por ela. A PR #54 não alterou nenhum documento fora de `docs/features/` e `specs/`
+(`git diff --name-only d19e6fd af763bb`), e nenhum documento do repositório cita os arquivos que ela mudou
+(`git grep` por `global-error` e `signInSchema` em `*.md` fora dessas pastas: só o `docs/RESEARCH-tanstack-vs-next.md`,
+que fala do `global-error.tsx` da `apps/api`, intocado). A única linha nova é a dos dois `STATE.md` da PR. A
+conferência dos documentos da PR #53 está na versão deste arquivo em `af763bb`, e a da PR #52, na versão em `d19e6fd`.
+A auditoria não edita `docs/`; o que está defasado fica registrado aqui.
 
 | documento | afirma | realidade medida | veredito |
 |-----------|--------|------------------|----------|
+| `docs/features/leftover-ui-strings/STATE.md` e `docs/features/web-global-error/STATE.md` (novos pela PR #54) | o campo `branch` registra `guilhermebittelbrunn/cycle-command-v7` com a "proposta `fix/leftover-ui-strings`"; as notas citam `specs/BACKLOG.md:257-287`, `:1311` e `:321-358`; a de `leftover-ui-strings` diz que o `global-error` da web "fica fora desta tarefa" | a PR #54 subiu da `guilhermebittelbrunn/cycle-command-v7`, sem renome; as linhas são das versões pós-PR #53 e incremental deste arquivo, que esta rodada reescreveu; o `global-error` da web entrou na mesma PR, pela outra tarefa | ⚠️ **defasados**, estacionados em E11 |
 | `AGENTS.md:46` (mudado pela PR #53) | `findById` devolve `null` para id com `/`, reservado (`__x__`), `.`/`..` ou acima de 1 500 bytes UTF-8, e a rota responde o seu 404 | `base.repository.ts:145-147`; `pagination.ts:3`, `:18-27` | ✅ **honesto** |
 | `docs/features/notifications-bell-freshness/STATE.md:23` e `analyze/plan.md:4`, `:34`, `:182`; `docs/features/api-edge-413-close-and-route-id/STATE.md` e `analyze/plan.md:4-6` | citam `specs/BACKLOG.md:284-316`, `:315`, `:233`, `:230-249`, `:1698` e `:1721` | as linhas são das versões pós-PR #52 e incremental deste arquivo, que esta rodada reescreveu; o `branch` dos dois `STATE.md` registra `guilhermebittelbrunn/cycle-command-v6`, que de fato subiu (o da API ainda como "proposta" de outro nome) | ⚠️ **defasados**, estacionados em E11 |
 | `docs/SECURITY.md:17-36` (inventário de guards) | 41 arquivos de rota, 26 com guard, 15 nus, "medido em 2026-10-19" | recontado em 2026-10-20, pós-PR #52: `find "apps/api/app/(routes)" -name route.ts` dá **45**, `grep -LE "require(CommonPanel\|Admin\|Plan)Api"` dá os mesmos **15**; as quatro rotas novas de `notifications/` usam `requireCommonPanelApi` | ✅ **corrigido pela PR #53**, em `main` desde `d19e6fd` (45 arquivos, 30 com guard, `notifications/*` ×4 na lista das guardadas); recontado em 2026-10-21: 45 e 15. A PR #52 tinha mexido em seis documentos e não neste |
@@ -827,6 +970,14 @@ arquivo em `d19e6fd`.
 | `in-app-notifications` (item 4) | boas-vindas "na criação da conta" | só para perfil comum (`user-merge.ts:90`); o admin criado pela mesma rotina não recebe | **a spec não tratava o caso**: o sino só existe no painel comum |
 | `in-app-notifications` (item 1) | contador "em intervalo curto" | 120 s, só com a aba visível, e teto de 100 na contagem (`99+` no badge) | **escolha que a spec delegou** ao `/analyze`, para limitar as leituras do Firestore |
 | `in-app-notifications` (`contends_on`) | os cinco arquivos | os cinco e cerca de 55 fora da lista, entre eles `user-merge.ts`, `log.ts` (fora da área declarada) e seis documentos | **previsão certa no que declarou e curta no resto**, como nas rodadas anteriores. Ver [Lotes paralelos](#lotes-paralelos) |
+
+**Rodada pós-PR #54 (2026-10-21):** nenhuma linha nova na tabela. A PR #54 não mexeu no corte de nenhuma spec viva.
+Duas specs citavam arquivo da PR e ganharam nota: `account-security-mfa` registrava como "achado lateral" a mensagem em
+pt-br cravada em `apps/web/.../signInSchema.ts:10`, que a PR #54 tirou (o schema é `buildSignInSchema(dictionary)`,
+`:7-16`); a nota diz isso, e a tabela histórica das cópias de `MIN_PASSWORD_LENGTH` fica como está. Em
+`observability-logging`, a PR tirou o `console.error` de desenvolvimento do `global-error` antigo da web
+(`apps/web/app/[locale]/global-error.tsx:17` em `d19e6fd`) e não acrescentou `logEvent(` (segue 43); a nota foi
+acrescentada à recontagem. Nenhuma nota de `research/` cita arquivo da PR.
 
 **Rodada pós-PR #53 (2026-10-21):** nenhuma linha nova na tabela. A PR #53 não mexeu no corte de nenhuma spec viva nem
 deslocou âncora que elas citem com número de linha (`grep` pelos 15 arquivos nos seis arquivos de spec e nas quatro
@@ -970,6 +1121,16 @@ operações e a UI, e acrescentou duas coisas: o `DELETE` recusa também um segu
 uid de quem chama (decisão D2 do plano da tarefa, fixada em teste), e o `HookFormSelect` ganhou a prop
 `description`.
 
+**Deriva de pipeline da PR #54:** oito commits na branch, um por assunto, juntados num só pelo squash, com a
+auditoria pós-PR #53 como o primeiro. Duas tarefas diretas na mesma branch, sem arquivo de código compartilhado (a tela
+de erro da web num arquivo só, as strings no login da landing, na tela de erro da app e no dicionário), e o título da PR
+cita as duas. A branch `guilhermebittelbrunn/cycle-command-v7` não segue `<project>/<type>/<title>`; o `/review` propôs
+`fix/leftover-ui-strings`, e a renomeação não aconteceu (E11). Ela ficou viva no remoto depois do merge (pendência 16).
+Os dois `STATE.md` registram `review: done`, marcado antes dos commits a pedido do orquestrador, e `test: done`. O
+`test/report.md` de `leftover-ui-strings` foi gravado pelo orquestrador com o texto do `analista-qa`, porque o harness
+bloqueou a escrita do subagent, como nas PRs #46, #52 e #53. O `/test` de `web-global-error` subiu a web por engano na
+porta 3000 com `pnpm --filter web start` e a derrubou na hora; é o achado novo do `start` sem porta.
+
 **Deriva de pipeline da PR #53:** dez commits na branch, um por assunto, juntados num só pelo squash. Duas tarefas
 diretas em sequência na mesma branch, sem arquivo de código compartilhado (a da API na `apps/api`, a do sino na
 `apps/app`), e o título da PR fala só da primeira; quem lê o histórico de `main` não vê o sino na linha do commit, só no
@@ -1072,6 +1233,16 @@ segue o padrão e ficou viva no remoto depois do merge (pendência 16).
 vivas no remoto depois do merge (pendência 16) e nenhuma segue `<project>/<type>/<title>` (E11).
 
 ### Âncoras relidas
+
+**Em 2026-10-21, pós-PR #54:** uma spec viva citava arquivo alterado pela PR #54 com número de linha:
+`account-security-mfa` (`apps/web/.../signInSchema.ts:10`, a mensagem em pt-br que saiu; nota acrescentada, porque a
+linha deixou de existir, e não remedida). `observability-logging` cita o `global-error.tsx` da `apps/api`, que a PR não
+tocou, e ganhou a nota do `console.error` da web. Neste arquivo, as âncoras de arquivos que a PR deslocou foram remedidas
+contra `git show d19e6fd:<arquivo>`: `sign-in-form-client.tsx` (+3 linhas, o import do `useMemo` e o schema montado: o
+`return null` `:44-46` → `:47-49`, o contêiner `:49-50` → `:52-53`, o `<form>` `:61-68` → `:64-72`, o `type="email"`
+`:77` → `:80`), `apps/app/app/global-error.tsx` (`:13-16` → `:13-27`) e o `global-error.tsx` da web, que mudou de
+caminho (`apps/web/app/[locale]/global-error.tsx:1-32` → `apps/web/app/global-error.tsx:1-29`). As linhas que citavam
+as duas versões, a de `main` e a do working tree, passaram a citar só a de `main`.
 
 **Em 2026-10-21, pós-PR #53:** nenhuma spec viva nem nota de `research/` cita arquivo alterado pela PR #53 com número
 de linha, então nenhuma âncora de spec mudou. Neste arquivo, as âncoras de arquivos que a PR deslocou foram remedidas
@@ -1225,17 +1396,17 @@ alterado foi relida no `d92d21b` e corrigida na spec, com a data:
 
 ### O que a auditoria **não** encontrou
 
-Nenhuma spec `done` perdeu código. A PR #53 mexeu em peças de duas specs arquivadas, e as duas seguem inteiras:
-`cursor-pagination` (o `isUsableDocumentId` ganhou o limite de 1 500 bytes UTF-8 e segue recusando o cursor forjado,
-`pagination.ts:18-27`, com +2 casos de `decodeCursor` em `paginationQuery.test.ts`) e `in-app-notifications` (o sino
-segue com o polling de 120 s só com a aba visível, `useUnreadNotificationsCount.ts:41-44`, o teto de 100 e o `99+`, que o
-critério 6 do `/test` do sino mediu de novo; a lista, a marcação e a personificação seguem nos testes de hook). O
-`findById` do repositório base, que todo recurso usa, só recusa antes id que o Firestore não aceitaria como caminho. A
-suíte inteira (3383 testes) e o job `e2e` da execução de merge passaram. `git grep` por `multiFactor`, `TOTP`,
-`passkey`, `organizationId`, `membership` e pelos SDKs de coletor (`@sentry`, `@logtail`, `@axiomhq`, `betterstack`) em
-`apps/` e `packages/`, em 2026-10-21 pós-PR #53: 0 (fora o `inputOTPContext` do `input-otp.tsx`). `logEvent(` fora de
-testes: 43. O `input-otp.tsx` segue sem uso fora do barril e do `playground`. Os 24 caminhos de `contends_on` das seis
-specs existem no disco.
+Nenhuma spec `done` perdeu código. A PR #54 não mexeu em peça de spec arquivada; mexeu numa da fatia 1 de
+`account-security-mfa`, que segue inteira: o login da landing continua com `EXISTING_PASSWORD_MIN_LENGTH`
+(`signInSchema.ts:2`, `:14`), e o `passwordPolicyCopy.test.ts` passou a vigiar também a mensagem da web. A suíte inteira
+(3410 testes) e o job `e2e` da execução de merge passaram. `git grep` por `multiFactor`, `TOTP`, `passkey`,
+`organizationId`, `membership` e pelos SDKs de coletor (`@sentry`, `@logtail`, `@axiomhq`, `betterstack`) em `apps/` e
+`packages/`, em 2026-10-21 pós-PR #54: 0 (fora o `inputOTPContext` do `input-otp.tsx`). `logEvent(` fora de testes: 43.
+O `input-otp.tsx` segue sem uso fora do barril e do `playground`. Os 24 caminhos de `contends_on` das seis specs existem
+no disco.
+
+**Registro da rodada pós-PR #53.** A PR #53 mexeu em peças de duas specs arquivadas (`cursor-pagination` e
+`in-app-notifications`), e as duas seguiam inteiras; o detalhe está na versão deste arquivo em `af763bb`.
 
 **Registro da rodada pós-PR #52.** A PR #52 mexeu em peças de quatro specs arquivadas (`data-rights-lgpd`,
 `billing-subscription`, `plan-entitlements` e `onboarding-flow`), e todas seguiam inteiras; o detalhe está na versão
@@ -1277,43 +1448,53 @@ do barril e do `playground`. Os dez arquivos de `contends_on` das três specs ex
 
 Coisas que não merecem spec própria, mas que são correções pontuais. Viram tarefa direta no `/analyze`.
 
-> **Passada incremental de 2026-10-21 (segundo `/cycle`).** `main` não mudou, então nenhuma linha fecha. A tarefa
-> `leftover-ui-strings`, sem commit, corrige duas linhas, marcadas "corrigido no working tree, aguardando merge" e ainda
-> contadas como abertas. O `/test` e o plano dela deixaram quatro registros: três viraram linhas novas, em
-> [Achados da tarefa `leftover-ui-strings`](#-achados-da-tarefa-leftover-ui-strings-2026-10-21-working-tree), e o quarto
-> reescreveu a linha do `global-error` da web, que deixou de ser "não medido". Cada âncora foi relida no working tree.
-> **Placar: 0 fechados · 2 corrigidos no working tree, aguardando merge · 3 novos · 1 reescrito · 139 abertos (136 + 3).**
+> **Terceira passada incremental da noite de 2026-10-21 (sem PR nova, `web-auth-forms` e `global-error-theme` no working
+> tree).** `main` não mudou. A tarefa `global-error-theme`, sem commit, corrige o 🟢 das telas de erro global sem estilo e
+> sem tema, marcado "corrigido no working tree, aguardando merge" e ainda contado como aberto. O `/review` e o `/test` dela
+> levantaram dois achados novos, em
+> [Achados da tarefa `global-error-theme`](#-achados-da-tarefa-global-error-theme-2026-10-21-working-tree). A linha do
+> `start` sem porta foi reescrita, porque a correção que ela propunha passaria por cima de `PORT`, e a da copy do cadastro
+> foi dividida entre a app e a landing. Cada âncora nova foi relida no working tree. **Placar: 0 fechados · 1 corrigido no
+> working tree, aguardando merge (somado aos 2 corrigidos e 1 reduzido de `web-auth-forms`) · 2 novos · 1 reescrito · 144
+> abertos (142 + 2).**
 >
-> **Auditoria de 2026-10-21 (pós-PR #53).** A passada incremental de 2026-10-20 fechou com 138 linhas abertas. A PR #53
-> alterou 15 arquivos fora de `docs/features` e `specs` (`git diff --stat 3a118c6 d19e6fd`); toda linha que cita um deles
-> foi relida em `main`, com a âncora comparada contra `git show 3a118c6:<arquivo>`. As demais seguem iguais, porque o
-> arquivo citado é o mesmo byte a byte (a PR não tocou `apps/web`, `packages/*`, `turbo.json`, `firestore.rules` nem
-> `.github/workflows`). O `/review` e o `/test` do sino pediram registros; viraram três linhas novas, em
-> [Achados da tarefa `notifications-bell-freshness`](#-achados-da-tarefa-notifications-bell-freshness-pr-53). O aviso de
-> hidratação que o `/test` do sino viu uma vez, numa sessão com emulação de iPhone e tema trocado à mão, não foi
-> investigado nem reproduzido e não virou linha, como o caso parecido da PR #52. **Placar: 5 fechados (os dois 🟡 da
-> borda da API e os três 🟢 do sino) · 3 novos (a marca de lista velha que depende de quem escreve, o "marcar todas" com a
-> contagem em erro e o popover sobre a scrollbar clássica) · 1 reduzido (as âncoras de documento deslocadas, com duas
-> corrigidas pela PR) · 136 abertos, pela soma (138, menos 5, mais 3).** A tabela de fechados da PR #52 (nenhum) e o
-> placar da passada incremental ficaram na versão deste arquivo em `d19e6fd`; a da PR #51, em `3a118c6`; a da PR #50, em
-> `9b37e02`; a da PR #49, em `4b0be90`; a da PR #48, em `4eeb07b`; a da PR #47, em `44b2b04`; a da PR #46, em `dd31a95`;
-> a da PR #45, em `c8577b7`; a da PR #44, em `eb47e80`; a da PR #43, em `fa7041b`; a da PR #42, em `7fb2fe9`; a da PR
-> #41, em `dbcac2a`; a da PR #40, em `0a49a3b`; a de 2026-10-04, em `5f4a8e9`; as de 2026-09-26 a 2026-10-03, em
-> `02c31b5`.
+> **Passada incremental anterior da noite de 2026-10-21 (sem PR nova, `web-auth-forms` no working tree).** `main` não mudou, então
+> as linhas abertas valem como a auditoria pós-PR #54 deixou. A tarefa `web-auth-forms`, sem commit, corrige duas linhas e
+> reduz uma, marcadas "corrigido no working tree, aguardando merge" e ainda contadas como abertas: os 🟢 do cartão colado
+> na borda a 375 px e da falta de `noValidate`, e o 🟡 do login e do cadastro da landing, que fica com o link de "esqueci
+> a senha". O `/review` e o `/test` da tarefa levantaram quatro achados novos, em
+> [Achados da tarefa `web-auth-forms`](#-achados-da-tarefa-web-auth-forms-2026-10-21-working-tree). A linha do estilo e do
+> tema das telas de erro foi atualizada com a decisão de desenho. Cada âncora nova foi relida no working tree. **Placar: 0
+> fechados · 2 corrigidos no working tree, aguardando merge · 1 reduzido no working tree, aguardando merge · 4 novos ·
+> 142 abertos (138 + 4).**
+>
+> **Auditoria de 2026-10-21 (pós-PR #54).** A passada incremental da tarde fechou com 139 linhas abertas, duas delas
+> marcadas "corrigido no working tree, aguardando merge". A PR #54 alterou 11 arquivos fora de `docs/features` e `specs`
+> (`git diff --stat d19e6fd af763bb`), todos em `apps/web`, `apps/app` e no dicionário; toda linha que cita um deles foi
+> relida em `main`, com a âncora comparada contra `git show d19e6fd:<arquivo>`. As demais seguem iguais, porque o
+> arquivo citado é o mesmo byte a byte (a PR não tocou `apps/api`, `packages/*` fora das traduções, `turbo.json`,
+> `firestore.rules`, `.github/workflows` nem documento). O `/test` de `web-global-error` pediu um registro, que virou a
+> linha nova em [Achados da PR #54](#-achados-da-pr-54-2026-10-21). **Placar: 2 fechados (a validação do login da
+> landing em pt-br e a tela de erro global da app em inglês) · 1 reduzido (a `apps/web` sem `not-found` e `error`, com o
+> `global-error` fechado) · 1 ampliado (a tela de erro sem estilo nem tema, que passou a valer para as duas apps) · 1 novo
+> (o `start` da `web` e da `api` sem porta) · 138 abertos, pela soma (139, menos 2, mais 1).** A tabela de fechados da
+> PR #53 e o placar da passada incremental da tarde ficaram na versão deste arquivo em `af763bb`; a da PR #52 (nenhum),
+> em `d19e6fd`; a da PR #51, em `3a118c6`; a da PR #50, em `9b37e02`; a da PR #49, em `4b0be90`; a da PR #48, em
+> `4eeb07b`; a da PR #47, em `44b2b04`; a da PR #46, em `dd31a95`; a da PR #45, em `c8577b7`; a da PR #44, em `eb47e80`;
+> a da PR #43, em `fa7041b`; a da PR #42, em `7fb2fe9`; a da PR #41, em `dbcac2a`; a da PR #40, em `0a49a3b`; a de
+> 2026-10-04, em `5f4a8e9`; as de 2026-09-26 a 2026-10-03, em `02c31b5`.
 
-### ✅ Fechado na auditoria de 2026-10-21 (PR #53)
+### ✅ Fechado na auditoria de 2026-10-21 (PR #54)
 
-| achado | aberto em | fechado por | evidência em `main` (`d19e6fd`) |
+| achado | aberto em | fechado por | evidência em `main` (`af763bb`) |
 |--------|-----------|-------------|----------------------------------|
-| 🟡 depois do `413` do teto de corpo, a conexão ficava aberta até o `requestTimeout` do Node | PR #51 (D2 de `request-body-size-limit`) | `api-edge-413-close-and-route-id` | `parse-request-json.ts:21-22`, `:57`, `:66`; medido em `next start` pelo `/test`: 0 conexões abertas aos 60 s, contra 40 sem o header |
-| 🟡 um id com `%2F` chegava ao `findById` de `entities/[id]` e `users/[id]`, e a resposta seria 500 | PR #52 | `api-edge-413-close-and-route-id` | `base.repository.ts:145-147`; `pagination.ts:3`, `:18-27`; medido: 24/24 ids inválidos com 404 |
-| 🟢 a lista do sino herdava 60 s de `staleTime` e ficava atrás do badge | PR #52 | `notifications-bell-freshness` | `useUnreadNotificationsCount.ts:36-38`; `useListNotifications.ts:20-32`, `:60-67`; medido: 1 `GET /notifications` na reabertura depois de a contagem mudar |
-| 🟢 a 375 px, o popover do sino encostava na borda esquerda | PR #52 | `notifications-bell-freshness` | `NotificationsBell.tsx:17`, `:66`; medido: 12 px de cada lado nos três idiomas |
-| 🟢 depois de uma falha da contagem, o badge conservava o último número | PR #52 | `notifications-bell-freshness` | `useUnreadNotificationsCount.ts:63`; `useNotificationActions.ts:76-90`; medido: o badge some na falha e volta com o número do servidor |
+| 🟡 `signInSchema.ts` da `apps/web` cravava as mensagens em pt-br (`"Email inválido"` e a do mínimo de senha) | descoberta de 2026-09-26 (remedido pela PR #29) | `leftover-ui-strings` | `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:7-16`; `sign-in-form-client.tsx:29`; chaves em `translations/apps/web/pages/signIn/index.ts:14-17`, `:37-40`, `:60-63`; medido nos três idiomas pelo `/test` |
+| 🟡 a tela de erro global da app era fixa em inglês, com `lang="en"` | descoberta de 2026-10-16 | `leftover-ui-strings` | `apps/app/app/global-error.tsx:13-27`; `translations/apps/app/pages/common/globalError.ts:1-14`; medido em `next build && start` com `throw` no root layout, nos três idiomas |
+| 🟡 (parte) o `global-error` da `apps/web` era inerte, e a landing mostrava a tela embutida do Next | descoberta de 2026-09-26 (reescrito em 2026-10-21) | `web-global-error` | `apps/web/app/global-error.tsx:1-29`, na raiz de `app/`; nenhum `global-error.tsx` em `apps/web/app/[locale]/`; medido em build de produção com `throw` no layout, contra a linha de base. A linha segue aberta para `not-found` e `error` |
 
 ### ⚠️ Achados abertos, reconferidos ou herdados
 
-Reconferidos em 2026-10-04, pós-PR #39, de novo em 2026-10-07, pós-PR #40, pós-PR #41 e pós-PR #42, em 2026-10-13, pós-PR #43, em 2026-10-14, pós-PR #44 e pós-PR #45, em 2026-10-16, pós-PR #46 e pós-PR #47, em 2026-10-19, pós-PR #48, pós-PR #49, pós-PR #50 e pós-PR #51, em 2026-10-20, pós-PR #52, e em 2026-10-21, pós-PR #53, nas linhas de maior severidade (ver o placar acima). A PR #53 não tocou nenhum arquivo desta tabela.
+Reconferidos em 2026-10-04, pós-PR #39, de novo em 2026-10-07, pós-PR #40, pós-PR #41 e pós-PR #42, em 2026-10-13, pós-PR #43, em 2026-10-14, pós-PR #44 e pós-PR #45, em 2026-10-16, pós-PR #46 e pós-PR #47, em 2026-10-19, pós-PR #48, pós-PR #49, pós-PR #50 e pós-PR #51, em 2026-10-20, pós-PR #52, e em 2026-10-21, pós-PR #53 e pós-PR #54, nas linhas de maior severidade (ver o placar acima). As PRs #53 e #54 não tocaram nenhum arquivo desta tabela.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
@@ -1357,7 +1538,7 @@ entrega; os três ficaram fora dela por decisão registrada.
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🟡 **Dependência importada sem ser declarada**: `apps/app/env.ts:1` importa `@repo/email/keys` sem `@repo/email` no `package.json`; `apps/web` importa `@repo/auth` em **8 arquivos** sem declará-lo | `apps/app/package.json` · `apps/web/package.json` | Reconferido, os dois `grep` no `package.json` devolvem 0. Funciona por hoisting; o turbo não invalida `web#*` quando `@repo/auth` muda |
-| 🟡 `packages/auth/package.json:13` exporta `./client-ui` para arquivo **inexistente** | `packages/auth/package.json:13` | Reconferido: `client-ui.tsx` não existe. **Vigésima sétima auditoria consecutiva** (2026-10-21, pós-PR #53) |
+| 🟡 `packages/auth/package.json:13` exporta `./client-ui` para arquivo **inexistente** | `packages/auth/package.json:13` | Reconferido: `client-ui.tsx` não existe. **Vigésima oitava auditoria consecutiva** (2026-10-21, pós-PR #54) |
 | 🟡 **`@repo/auth` declara `next: 15.1.3`** contra `16.0.0` do resto | `packages/auth/package.json:24` | Reconferido em 2026-09-27; a âncora subiu uma linha porque a PR #29 tirou o export `./components/sign-up` |
 | 🟡 **`packages/email/package.json` não tem `main` nem `exports`** | `packages/email/package.json` | Reconferido: 0 |
 | 🟡 **`input-otp.tsx` é código morto** | `packages/design-system/components/ui/input-otp.tsx` | Reconferido: só ele, o barril, o `package.json` do pacote e o `playground`. `account-security-mfa` (fatia 3, segundo fator) é quem o usaria |
@@ -1368,7 +1549,7 @@ entrega; os três ficaram fora dela por decisão registrada.
 | 🟡 **`reloadCurrentUser` sem teste próprio** | `packages/auth/client.ts:244` (era `:214` até a PR #48) | Reconferido em 2026-10-19: só testes que a mockam (`useEmailVerification.test.tsx` e, desde a PR #48, `accountSignInMethodsPanel.test.tsx` e `useSignInMethodMutations.test.tsx`, que conferem que ela **não** é chamada). O único chamador de produção segue sendo `useEmailVerification.ts:34` |
 | 🟡 **`packages/shared` tem `test` e não tem `typecheck`** | `packages/shared/package.json:11` (só `test`) | Metade fechada pela PR #32: o `@repo/design-system` ganhou a task de `test` (`packages/design-system/package.json:7`, 45 testes). Falta o `typecheck` do `packages/shared`, adiado desde a primeira auditoria. **Medido em 2026-10-14:** `tsc --noEmit` sobre os 21 arquivos do pacote, com um `tsconfig` temporário fora do repositório, dá 0 erros neles e 2 `TS2580` em `packages/internationalization/utils.ts:22-23` (`process` sem `@types/node`, que o pacote não declara). A correção é o script, um `tsconfig.json` e o `@types/node` que os outros workspaces já usam. P. **Ampliado em 2026-10-16, pós-PR #47:** o pacote passou a guardar o formatador de preço (`formatPlanPrice.ts`), que a landing e a aba de cobrança usam; ele continua checado só pelo `typecheck` da `app` e da `web`, que o importam |
 | 🟡 **`welcomeEmail` sem chamador de produção** (reduzido em 2026-10-19, pós-PR #49) | `packages/email/templates/welcome.tsx:50` | Reconferido em 2026-10-20, pós-PR #52: `git grep welcomeEmail` fora de testes acha só a definição. A PR #52 criou as boas-vindas como notificação no sino (`user-merge.ts:91-96`), sem o e-mail; mandar ou não o e-mail de boas-vindas segue decisão de produto. **Reduzido:** a outra metade da linha, o formulário de contato de fachada para onde o canal de privacidade caía, fechou com a PR #49; o formulário entrega na caixa de suporte ou diz que o canal está indisponível. A spec `in-app-notifications`, entregue pela PR #52, usou as boas-vindas como produtor de notificação, não de e-mail |
-| 🟡 **`useListAuditEvents.test.tsx` deixa trabalho do React pendente depois do teardown** (novo, 2026-09-28) | `apps/app/__tests__/useListAuditEvents.test.tsx:55-70` (um `QueryClient` por teste, sem `clear()` nem `unmount` ao fim) | A suíte da `apps/app` falhou em 2 de 6 execuções locais em 2026-09-28 com `ReferenceError: window is not defined`, que o Vitest atribui a este arquivo: os testes passam e o erro não tratado reprova a task. Na auditoria pós-PR #31 passou nas 6 execuções (688 testes cada) na pós-PR #32 também (6 de 6, 702 testes cada) e na pós-PR #33 também (6 de 6, 756 testes cada), então o acumulado era 2 falhas em 24; com as execuções das rodadas pós-PR #34, #35, #36, #39, #40, #41, #42, #43, #44 (três, 841 testes cada), #45 e #46 (uma cada, 846 testes), #47 (uma, 861 testes), #48 (uma, 914 testes), #49 (uma, 919 testes), #50 (uma, 924 testes), #51 (uma, 924 testes), #52 (uma, 958 testes) e #53 (uma, 968 testes), nenhuma com falha, é 2 em 53. O arquivo não muda desde a PR #18. O CI passou nas execuções de merge das PRs #29 a #53. Correção provável, não testada: limpar o `QueryClient` e desmontar o hook no `afterEach`. Tarefa direta P |
+| 🟡 **`useListAuditEvents.test.tsx` deixa trabalho do React pendente depois do teardown** (novo, 2026-09-28) | `apps/app/__tests__/useListAuditEvents.test.tsx:55-70` (um `QueryClient` por teste, sem `clear()` nem `unmount` ao fim) | A suíte da `apps/app` falhou em 2 de 6 execuções locais em 2026-09-28 com `ReferenceError: window is not defined`, que o Vitest atribui a este arquivo: os testes passam e o erro não tratado reprova a task. Na auditoria pós-PR #31 passou nas 6 execuções (688 testes cada) na pós-PR #32 também (6 de 6, 702 testes cada) e na pós-PR #33 também (6 de 6, 756 testes cada), então o acumulado era 2 falhas em 24; com as execuções das rodadas pós-PR #34, #35, #36, #39, #40, #41, #42, #43, #44 (três, 841 testes cada), #45 e #46 (uma cada, 846 testes), #47 (uma, 861 testes), #48 (uma, 914 testes), #49 (uma, 919 testes), #50 (uma, 924 testes), #51 (uma, 924 testes), #52 (uma, 958 testes), #53 (uma, 968 testes) e #54 (uma, 975 testes), nenhuma com falha, é 2 em 54. O arquivo não muda desde a PR #18. O CI passou nas execuções de merge das PRs #29 a #54. Correção provável, não testada: limpar o `QueryClient` e desmontar o hook no `afterEach`. Tarefa direta P |
 
 ### 🟡 Repositório, rotas e proxy
 
@@ -1389,7 +1570,6 @@ entrega; os três ficaram fora dela por decisão registrada.
 |--------|------|-----------------|
 | 🟡 **O deep link das abas da conta não acompanha a navegação** | `AccountTabs.tsx:51-53` (estado lido uma vez) · `:55-62` (`history.replaceState`) | Reconferido. A barra lateral muda a URL e a aba fica onde estava. Estacionado (E9) |
 | 🟡 **A mensagem de erro padrão está cravada em pt-br num pacote** | `packages/shared/utils/helpers/handleClientError.ts:19` | Reconferido, literal |
-| 🟡 **`signInSchema.ts` da `apps/web` crava as mensagens em pt-br** | `apps/web/app/[locale]/sign-in/validations/signInSchema.ts:5`, `:10` | Remedido em 2026-09-26: a PR #29 trocou o número pela constante `EXISTING_PASSWORD_MIN_LENGTH`, mas `"Email inválido"` (`:5`) e `"A senha deve ter pelo menos 6 caracteres"` (`:10`) seguem literais. O cadastro da web foi traduzido na mesma PR; o login não. **Corrigido no working tree, aguardando merge** (`leftover-ui-strings`, 2026-10-21): `buildSignInSchema(dictionary)` em `signInSchema.ts:7-16`, medido nos três idiomas pelo `/test` |
 | 🟡 **O filtro por usuário da trilha não alcança evento de usuário excluído** | `admin/(pages)/audit/(components)/AuditFilters.tsx:40` | Reconferido. A exclusão de conta apaga o perfil e anonimiza os rótulos, então esses eventos ficam sem entrada no `select` |
 | 🟡 **`resolveUserAuditLabel` engole a falha sem log** | `apps/api/(shared)/lib/audit-label.ts:14-16` | Reconferido |
 | 🟡 **`images.domains` deprecado com `www.google.com` sem uso** | `apps/app/next.config.ts:19` | Reconferido, literal |
@@ -1405,7 +1585,7 @@ Vistos pelos quatro inventários paralelos desta rodada. Nenhum vira spec.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **A `apps/web` não tem `not-found` nem `error`, e o `global-error` é inerte** (reescrito em 2026-10-21) | `apps/web/app/[locale]/global-error.tsx:1-32` · `apps/web/app/` (sem `layout.tsx`, `not-found.tsx`, `error.tsx` nem `global-error.tsx`) · `next/dist/lib/bundler.js:73-76` (Turbopack por padrão no Next 16.0.0) · `docs/features/web-global-error/analyze/plan.md` §1.2 | Rota inexistente na landing cai no 404 padrão do Next, sem tradução nem marca. **Medido no build de produção.** O plano de `leftover-ui-strings` (§1.4) concluiu pela leitura do `next-app-loader` do webpack, mas o Next 16.0.0 builda com Turbopack e esse loader não roda. O `/analyze` de `web-global-error` mediu no `.next` de `pnpm --filter web build`: o arquivo de `[locale]` entra no bundle só como chave do segmento, e o `GlobalError` da entrada é o embutido (`E=a.i(41224)`); com o arquivo em `app/global-error.tsx`, o build passa, gera `/_global-error` sem exigir `app/layout.tsx`, e o `GlobalError` passa a ser o da web (`E=a.i(66039)`). O arquivo em `[locale]` nunca é renderizado, e a landing mostra o `builtin/global-error.js:52-58`, em inglês, sem `lang` e sem botão de tentar de novo. Não medido em navegador. A parte do `global-error` não precisa de root layout e é a tarefa recomendada, em andamento como `web-global-error` ([A próxima](#a-próxima-tarefa-direta-na-tela-de-erro-global-da-landing)); `not-found` e `error` seguem M. A `apps/app` tem `not-found.tsx` e `global-error.tsx` na raiz, mas nenhum `error.tsx` de segmento |
+| 🟡 **A `apps/web` não tem `not-found` nem `error`** (reescrito em 2026-10-21; **reduzido** em 2026-10-21, pós-PR #54) | `apps/web/app/` (sem `layout.tsx`, `not-found.tsx` nem `error.tsx`; o `global-error.tsx` está lá desde a PR #54) · `apps/web/app/[locale]/` (sem `error.tsx`) | Rota inexistente na landing cai no 404 padrão do Next, sem tradução nem marca, e um erro dentro de um segmento sobe direto para a tela de erro global. **Reduzido:** a parte do `global-error` fechou com a PR #54 (`web-global-error`, na lista de fechados): o arquivo foi para `apps/web/app/global-error.tsx:1-29`, o build passou a usá-lo sem exigir `app/layout.tsx`, e o `/test` mediu a tela da web em build de produção nos três idiomas. `not-found` e `error` seguem M, porque pedem decisão sobre o root layout da web (PR #41). A `apps/app` tem `not-found.tsx` e `global-error.tsx` na raiz, mas nenhum `error.tsx` de segmento |
 | 🟡 **O `package.json` da raiz ainda é o do next-forge** | `package.json:2-5` · `:42` | Reconferido em 2026-09-28: a PR #30 não tocou no arquivo; o `FORKING.md` ("Resíduos do projeto de origem") descreve a limpeza que cada fork faz à mão. `"name": "next-forge"` e um `bin` para `dist/index.js`, gerado de `scripts/index.ts`, que não existe. `engines.node` diz `>=18` e o `.nvmrc`, `22.12.0`. Todo fork herda os três |
 | 🟢 **Link do `FORKING.md` para o CRUD de referência está morto** (novo, 2026-09-28; medido em 2026-09-30) | `docs/FORKING.md:447` (era `:437`; deslocada pelas PRs #47 e #48) · `README.md:306` | O link usa `#crud-de-referência`; o título é `### 🧬 CRUD de referência`. Medido no README renderizado pelo GitHub (`gh api repos/:owner/:repo/readme` com `Accept: application/vnd.github.html`): o id publicado é `user-content--crud-de-referência`, e o próprio título aponta para `#-crud-de-referência`. Correção: trocar a âncora ou tirar o emoji do título |
 
@@ -1762,15 +1942,15 @@ linha própria. O da API viu o `console.error` com stack ao verificar o token de
 Vindos do inventário da descoberta de 2026-10-16, lidos no código de `c8577b7` (pós-PR #46) e **não medidos**: a
 rodada não subiu app nem rodou teste. Três tinham spec que os resolve (o da aba Segurança fechou com a PR #48, o do formulário
 de contato com a PR #49, e os dois saíram da tabela); dos outros cinco, tarefa direta, o do arquivamento pelo admin
-fechou com a PR #50 e o da rota do Google, com a PR #51, e os dois saíram também. Na
+fechou com a PR #50, o da rota do Google, com a PR #51, e o da tela de erro global da app em inglês, com a PR #54, e os
+três saíram também. Na
 auditoria do mesmo dia, as âncoras dos oito foram conferidas (todas batem), o mecanismo do 500 do
-`/auth/sign-in/google` foi medido, e o arquivamento pelo admin ganhou o fato da confirmação da tela. Os quatro que
+`/auth/sign-in/google` foi medido, e o arquivamento pelo admin ganhou o fato da confirmação da tela. Os três que
 restam na tabela seguem só lidos: medir exigiria subir app.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **O login da landing não leva a lugar nenhum depois de entrar, e o cadastro da landing não envia verificação** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:44-46` (com usuário, o componente devolve `null`) · o mesmo arquivo não tem link de "esqueci a senha" · `apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:34-40` (não chama `sendEmailVerification`; a app chama em `SignUpFormClient.tsx:113`, que era `:106` até a PR #47) | Quem entra pela landing vê a área do formulário sumir sem destino. A conta criada pela landing nasce sem o e-mail de verificação que a conta criada pela app recebe. Não bloqueou [`pricing-page-catalog`](../docs/features/pricing-page-catalog/spec.md), entregue pela PR #47: pela D4, o CTA de preços leva ao cadastro da app |
-| 🟡 **A tela de erro global da app é fixa em inglês** | `apps/app/app/global-error.tsx:13-16` em `main` (`lang="en"`, "Oops, something went wrong", "Try again") | Regra de ouro 2. A web tem a linha equivalente em [Achados do inventário de 2026-09-26](#-achados-do-inventário-da-descoberta-2026-09-26). **Corrigido no working tree, aguardando merge** (`leftover-ui-strings`, 2026-10-21): `getDictionary()` e `lang={locale}` em `global-error.tsx:13-27`, medido pelo `/test` em build de produção nos três idiomas |
+| 🟡 **O login da landing não leva a lugar nenhum depois de entrar, e o cadastro da landing não envia verificação** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:47-49` (com usuário, o componente devolve `null`; era `:44-46` até a PR #54; o cadastro, ao lado, navega para `/${locale}` em `sign-up-form-client.tsx:53-57`) · o mesmo arquivo não tem link de "esqueci a senha" · `apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:34-40` (não chama `sendEmailVerification`; a app chama em `SignUpFormClient.tsx:113`, que era `:106` até a PR #47) | Quem entra pela landing vê a área do formulário sumir sem destino. A conta criada pela landing nasce sem o e-mail de verificação que a conta criada pela app recebe. Não bloqueou [`pricing-page-catalog`](../docs/features/pricing-page-catalog/spec.md), entregue pela PR #47: pela D4, o CTA de preços leva ao cadastro da app. As duas metades foram a tarefa recomendada pela auditoria pós-PR #54, com os dois 🟢 dos mesmos arquivos. **Duas das três partes corrigidas no working tree, aguardando merge** (`web-auth-forms`, 2026-10-21): o login navega quem chega autenticado (`sign-in-form-client.tsx:52-56`) e o cadastro pede a verificação (`sign-up-form-client.tsx:35-48`), medidos pelo `/test` nos três idiomas ([Executada no working tree](#executada-no-working-tree-sem-commit-web-auth-forms)). Com o merge, a linha fica só com o link de "esqueci a senha", que ficou fora da tarefa |
 | 🟢 **O `playground` de componentes aparece no menu lateral do usuário final** | `apps/app/app/[locale]/(authenticated)/(common)/routes.tsx:21-27` | É vitrine de quem desenvolve; num fork em produção, o usuário vê uma página de componentes de exemplo. Esconder fora do desenvolvimento, ou tirar do menu, é decisão rápida |
 | 🟢 **Os menus laterais não levam às homes** | `(common)/routes.tsx:20-65` (sem item "Início") · `admin/routes.tsx:18-33` (só usuários e auditoria, sem `/admin`) | A home do usuário e o painel do admin, entregues por `dashboard-home` e `admin-analytics-dashboard`, só se alcançam pelo breadcrumb ou pelo logo |
 
@@ -1864,7 +2044,7 @@ desativada ampliou a linha da rota, que fechou com a PR #51 e está na lista de 
 |--------|------|-----------------|
 | 🟡 **Conta arquivada antes da correção entra em laço de redirecionamento se a desativação no primeiro contato falhar sempre** | `apps/api/(shared)/lib/user-merge.ts:61-67` (a falha do `revokeAccountAccess` só vai para o log; era `:60-66` até a PR #52) · `apps/app/proxy.ts:251-266` (sessão válida numa rota pública volta para a home) · `apps/app/lib/server/authSession.ts:34-39` (o 401 do `/auth/me` manda para o login) | Com a conta ainda habilitada no Auth, o proxy aceita o cookie, o layout recebe 401 e manda para `/sign-in`, e o proxy devolve para a home. Falha transitória se resolve na volta seguinte, que tenta desativar de novo; a persistente (o Admin SDK recusando o `updateUser`) prende a pessoa até o navegador cortar os redirecionamentos. Antes da tarefa esse caminho criava um perfil novo e não tinha laço. Saída provável: a app limpar o cookie quando o `/auth/me` responder 401 com sessão válida, o que fecha também o laço equivalente para qualquer outra falha do `/auth/me`. Não medido; o `/test` não tem como forçar a recusa persistente. P a M, `apps/app` |
 | 🟢 **A primeira entrada por e-mail e senha de uma conta arquivada antes da correção volta ao formulário sem mensagem** | `packages/auth/provider.tsx:346-352` (`onAuthSuccess` grava o cookie e navega antes de o perfil ser consultado) · `apps/api/(shared)/lib/user-merge.ts:61-67` (a conta é desativada no `/auth/me` do layout) · `apps/app/lib/server/authSession.ts:34-39` | Medido pelo `/test`: a pessoa volta ao login sem aviso, porque o redirecionamento do servidor descarta o toast. A segunda tentativa mostra "Esta conta foi desativada.". Acontece uma vez por conta arquivada antes da correção, e é o comportamento que o plano da tarefa previu. P se alguém quiser a mensagem já na primeira vez |
-| 🟢 **`actionMenu.test.tsx` "closes the open menu on Escape and returns focus to the trigger" falhou uma vez sob carga** | `packages/design-system/__tests__/actionMenu.test.tsx:419` | No `pnpm test` da raiz, durante o `/test` desta tarefa, o caso levou 3711 ms e falhou com dois `next dev`, o Chrome do `agent-browser` e o build da app disputando a máquina. Passou nas três execuções seguintes do `/test`, na da auditoria pós-PR #50 (346 ms, com o arquivo inteiro em 14,3 s sob load 15,8), na da auditoria pós-PR #51, na da auditoria pós-PR #52 (arquivo inteiro em 21,8 s, sob load 24) e na da pós-PR #53: 1 falha em 8. É o terceiro caso de teste instável registrado, de causa provavelmente diferente do `useListAuditEvents` (tempo, não teardown); não apareceu no CI. Ver [Detector de teste instável no CI](#lacunas-avaliadas-e-não-especificadas). P |
+| 🟢 **`actionMenu.test.tsx` "closes the open menu on Escape and returns focus to the trigger" falhou uma vez sob carga** | `packages/design-system/__tests__/actionMenu.test.tsx:419` | No `pnpm test` da raiz, durante o `/test` desta tarefa, o caso levou 3711 ms e falhou com dois `next dev`, o Chrome do `agent-browser` e o build da app disputando a máquina. Passou nas três execuções seguintes do `/test`, na da auditoria pós-PR #50 (346 ms, com o arquivo inteiro em 14,3 s sob load 15,8), na da auditoria pós-PR #51, na da auditoria pós-PR #52 (arquivo inteiro em 21,8 s, sob load 24), na da pós-PR #53 e na da pós-PR #54: 1 falha em 9. É o terceiro caso de teste instável registrado, de causa provavelmente diferente do `useListAuditEvents` (tempo, não teardown); não apareceu no CI. Ver [Detector de teste instável no CI](#lacunas-avaliadas-e-não-especificadas). P |
 | 🟢 **`getMergedUserFromIdToken` não tem chamador** (novo, auditoria pós-PR #50) | `apps/api/(shared)/lib/user-merge.ts:32-48` (era `:31-47` até a PR #52; `git grep getMergedUserFromIdToken` fora de testes acha só a definição; o teste é `userMergeArchivedProfile.test.ts:170-180`) | O plano da PR #50 já registrava que a função não tinha chamador (§1.1) e mesmo assim a corrigiu e cobriu com teste, para os dois caminhos seguirem a mesma regra. É código morto mantido em par com `getMergedUserByUid`, com teste próprio que custa manutenção sem proteger caminho de produção. Apagar a função e o caso de teste, P, `apps/api` |
 
 ### 🆕 Achados da PR #51 (2026-10-19)
@@ -1965,48 +2145,88 @@ oculta e a porta 3000 ocupada) mudam como o próximo `/test` repete os fluxos e 
 | Releitura extra depois de "marcar como lida" com a contagem em erro | **fechada por medição** | o `/test` mediu 1 leitura a mais na reabertura seguinte, o custo que o `/review` aceitou |
 | `collisionPadding` sem teste automatizado | **fechada por medição** | o jsdom não tem layout; o `/test` mediu a posição em oito arranjos, a 375 e a 393 px |
 
-### 🆕 Achados da tarefa `leftover-ui-strings` (2026-10-21, working tree)
+### 🆕 Achados da PR #54 (2026-10-21)
 
-Vindos do plano (§1.4 e §1.5), do `/review` e do `/test` da tarefa, que está sem commit. Os três abaixo são anteriores
-ao diff: nenhum foi aberto por ele. As âncoras citam `main` (`d19e6fd`) e, quando o arquivo está no diff, também a linha
-no working tree. O quarto registro reescreveu a linha do `global-error` da web, em
-[Achados do inventário de 2026-09-26](#-achados-do-inventário-da-descoberta-2026-09-26).
+Vindos do plano (§1.4 e §1.5), do `/review` e do `/test` de `leftover-ui-strings`, registrados pela passada incremental
+da tarde, e do `/test` de `web-global-error`, conferidos no código de `main` (`af763bb`) nesta auditoria. Nenhum foi aberto
+pelo diff: os quatro existiam antes dele. O registro do `global-error` inerte da web fechou com a PR e está na lista de
+fechados; a linha da `apps/web` sem `not-found` e `error` foi reduzida.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟢 **A tela de erro global da app sai sem estilo e sem tema** | `apps/app/app/global-error.tsx:1-6` (não importa `styles.css`) · `apps/app/app/layout.tsx:2` (quem importa) · `:66-72` e `:86` (classe de tema no `<html>` e `AppDesignProvider`, que a tela de erro substitui) | **Medido** pelo `/test` de `leftover-ui-strings` em `next build && start`, com `throw` temporário no root layout: fonte serifada padrão, botão nativo, fundo transparente e texto preto mesmo com `prefers-color-scheme: dark`. A web tem o mesmo arquivo sem `styles.css` (`apps/web/app/[locale]/global-error.tsx:1-6`), hoje inerte. Corrigir nas duas depois do merge da tarefa, porque o arquivo da app está no diff sem commit |
-| 🟢 **No login da landing a 375 px, o cartão encosta na borda da tela** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:49-50` em `main` (`:52-53` no working tree): o contêiner tem `py-20` e nenhum padding horizontal, e o cartão é `w-full max-w-md ... border p-8` | **Medido** pelo `/test`: a 375 px, cartão de x 0 a 360 (viewport menos a barra de rolagem), com as mensagens dentro dele, de x 33 a 327, e sem rolagem lateral. O cadastro da landing usa as mesmas classes (`sign-up-form-client.tsx:74-75`); lá não foi medido. Anterior à tarefa |
-| 🟢 **O login da landing não tem `noValidate`, e o balão nativo aparece antes do Zod** | `sign-in-form-client.tsx:61-68` em `main` (`:64-72` no working tree), sem `noValidate` · `:77` (`:80` no working tree), `type="email"` · mesmo caso no cadastro, `sign-up-form-client.tsx:86`, `:97` · o contato já usa `noValidate` (`contact-form-client.tsx:103`) | Com um valor sem `@`, o navegador mostra a própria mensagem, no idioma do navegador e não no da URL, e a mensagem traduzida do Zod não chega a aparecer. Lido no código, é o comportamento padrão do HTML para `type="email"`; o `/test` evitou esse valor de propósito e não o mediu. Pôr `noValidate` muda comportamento além da tradução, por isso ficou fora da tarefa |
+| 🟢 **As telas de erro global das duas apps saem sem estilo e sem tema** (ampliado em 2026-10-21, pós-PR #54) | `apps/app/app/global-error.tsx:1-6` e `apps/web/app/global-error.tsx:1-6` (nenhum dos dois importa `styles.css`) · `apps/app/app/layout.tsx:2` e `apps/web/app/[locale]/layout.tsx:1` (quem importa) · `apps/app/app/layout.tsx:66-72` e `:86` (classe de tema no `<html>` e `AppDesignProvider`, que a tela de erro substitui) | **Medido** pelo `/test` de `leftover-ui-strings` na app, em `next build && start`, com `throw` temporário no root layout: fonte serifada padrão, botão nativo, fundo transparente e texto preto mesmo com `prefers-color-scheme: dark`. **Ampliado:** desde a PR #54 a tela da web também é renderizada, e o `/test` de `web-global-error` mediu o mesmo no escuro (fundo `rgba(0, 0, 0, 0)` sobre branco, título em `Times`, botão `rgb(239, 239, 239)`), sem rolagem horizontal a 375 px. A tela é legível nos dois casos. Corrigir nas duas de uma vez. A decisão de desenho que a app pedia foi tomada pela escada da `cycle-policy` na passada incremental da noite (o `ThemeProvider` do design system e o `styles.css` de cada app). P. **Corrigido no working tree, aguardando merge** (`global-error-theme`, 2026-10-21): `styles.css`, `ThemeProvider` e `suppressHydrationWarning` em `apps/app/app/global-error.tsx:3`, `:11`, `:28-49` e `apps/web/app/global-error.tsx:3`, `:11`, `:28-49`, medido pelo `/test` em build de produção das duas apps, nos quatro estados de tema, a 375 px e nos três idiomas. Sobra o quadro claro antes do escuro, em linha própria ([Achados da tarefa `global-error-theme`](#-achados-da-tarefa-global-error-theme-2026-10-21-working-tree)) |
+| 🟢 **No login e no cadastro da landing a 375 px, o cartão encosta na borda da tela** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:52-53` (era `:49-50` até a PR #54): o contêiner tem `py-20` e nenhum padding horizontal, e o cartão é `w-full max-w-md ... border p-8` · `sign-up-form-client.tsx:74-75`, as mesmas classes | **Medido** pelo `/test` de `leftover-ui-strings` no login: a 375 px, cartão de x 0 a 360 (viewport menos a barra de rolagem), com as mensagens dentro dele, de x 33 a 327, e sem rolagem lateral. No cadastro não foi medido. **Corrigido no working tree, aguardando merge** (`web-auth-forms`, 2026-10-21): `px-4 md:px-2` em `sign-in-form-client.tsx:63` e `sign-up-form-client.tsx:91`, medido pelo `/test` com 16 px de cada lado a 375 px, nos dois cartões, claro e escuro |
+| 🟢 **O login e o cadastro da landing não têm `noValidate`, e o balão nativo aparece antes do Zod** | `sign-in-form-client.tsx:64-72` (era `:61-68` até a PR #54), sem `noValidate` · `:80` (era `:77`), `type="email"` · mesmo caso no cadastro, `sign-up-form-client.tsx:86`, `:97` · o contato já usa `noValidate` (`contact-form-client.tsx:103`) | Com um valor sem `@`, o navegador mostra a própria mensagem, no idioma do navegador e não no da URL, e a mensagem traduzida do Zod não chega a aparecer. Lido no código, é o comportamento padrão do HTML para `type="email"`; o `/test` evitou esse valor de propósito e não o mediu. **Corrigido no working tree, aguardando merge** (`web-auth-forms`, 2026-10-21): `noValidate` em `sign-in-form-client.tsx:77` e `sign-up-form-client.tsx:105`, medido em 18 combinações e coberto por `signUpFormValidation.test.tsx` |
+| 🟢 **O `start` da `web` e da `api` não fixa a porta, e as duas sobem na 3000 da `app`** (novo, 2026-10-21, pós-PR #54) | `apps/web/package.json:7` e `apps/api/package.json:9` (`"start": "next start"`) · o `dev` fixa as portas (`apps/web/package.json:5`, `-p 3001`; `apps/api/package.json:5`, `-p 3002`) | **Medido** pelo `/test` de `web-global-error`: `pnpm --filter web start` subiu na porta 3000, e o repro do `review/review.md` e do plano dizia 3001. Quem segue a receita de build de produção ao pé da letra põe a web no lugar da `app`, e o `/test` contornou com `pnpm exec next start -p 3001`. A `api` tem o mesmo script, lido no código. Não afeta a Vercel, que define a porta. **Reescrito em 2026-10-21 (terceira passada da noite):** a correção que esta linha propunha, `-p` no `start` como no `dev`, quebraria quem hospeda fora da Vercel. No CLI do Next 16, a opção é `-p, --port` com `.default(3000).env('PORT')` (`node_modules/next/dist/bin/next:108`, lido nesta passada), e pelo commander o valor passado na linha de comando vence a variável. Com `-p 3001` fixo, uma plataforma que injeta `PORT` (o Cloud Run, por exemplo) ficaria com o processo na porta errada. A correção precisa respeitar `PORT` quando ela existe e só cair em 3001 e 3002 sem ela. P, com essa decisão de forma |
 
-**Lacunas de teste herdadas de `leftover-ui-strings`, com veredito desta passada:** ver a tabela em
-[Executada no working tree](#executada-no-working-tree-sem-commit-leftover-ui-strings). Uma fechada pelo `/test` e uma
-aberta (o T3 não clica no botão para conferir o `reset()`, P).
+**Lacunas de teste herdadas da PR #54, com veredito desta auditoria:**
+
+| lacuna | veredito 2026-10-21 | motivo |
+|--------|---------------------|--------|
+| Sem teste de componente do `sign-in-form-client.tsx` | **fechada** pelo `/test` de `leftover-ui-strings` | a passada de navegador nos três idiomas mediu a ligação entre schema, formulário e mensagem |
+| O T3 da app não clica no botão para conferir o `reset()` | **continua aberta**, P | o `/test` de `web-global-error` clicou no botão da web (o mesmo componente com outra chave) e viu o `reset()` refazer a árvore; o da app viu o handler ligado. Teste só para isso não se paga |
+| O `reset()` não pede de novo ao servidor | **fora de escopo** | é o comportamento do Next: se a causa sumir no servidor, a pessoa precisa recarregar. Registrado no relatório de `web-global-error` |
+
+### 🆕 Achados da tarefa `web-auth-forms` (2026-10-21, working tree)
+
+Vindos do `/review` (os três 🟢) e da seção "Achados adjacentes" do `/test` de `web-auth-forms`, registrados pela passada
+incremental da noite e conferidos no código do working tree. Nenhum foi aberto pelo diff: os quatro existiam antes dele,
+e o do `signInStartedHereRef` tem o mesmo resultado visível que o código de `main`. A copy do cadastro foi medida pelo
+`/test` só na landing; a passada conferiu por leitura que a `apps/app` tem as mesmas chaves e o mesmo texto. Antes de
+registrar, a passada procurou cada um neste arquivo (`AuthProvider`, `noAccount`, `Regístrate`, `mockRestore`,
+`signInStartedHere`): nenhum estava registrado.
+
+| achado | onde | por que importa |
+|--------|------|-----------------|
+| 🟡 **O cadastro das duas apps pergunta "Não tem uma conta?" ao lado de "Entrar", e o subtítulo é o do login** | landing: `translations/apps/web/pages/signUp/index.ts:20`, `:45`, `:70` (`noAccount`), lido em `apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:179`, ao lado do link `signUp.signIn` (`:185`) · app: `translations/apps/app/pages/signUp/index.ts:25`, `:50`, `:75`, lido em `SignUpFormClient.tsx:228`, ao lado de `:234` · subtítulo `enterWithYourAccount`: `web/pages/signUp/index.ts:16`, `:41`, `:66` e `app/pages/signUp/index.ts:21`, `:46`, `:71` · o login em es sem o "¿" de abertura: `web/pages/signIn/index.ts:69` e `app/pages/signIn/index.ts:71` | Quem está no cadastro lê "Não tem uma conta? Entrar" / "Don't have an account? Sign In" / "¿No tienes una cuenta? Iniciar sesión", quando a pergunta da página é "Já tem uma conta?". O subtítulo do cadastro diz "Entre com sua conta para continuar" e "Enter with your account to continue", igual ao login; em es, "Regístrate en tu cuenta para continuar", que soa errado. O texto está no dicionário, então a regra de ouro 2 é cumprida; o defeito é a copy. **Medido** pelo `/test` de `web-auth-forms` na landing, nos três idiomas; na app, lido nesta passada. Corrigir pede trocar o nome da chave (`noAccount` passaria a guardar o contrário do nome) e, com isso, os dois formulários de cadastro; o da landing está no diff sem commit. P. **Dividido em 2026-10-21 (terceira passada da noite):** a metade da app (folha `app/pages/signUp`, `SignUpFormClient.tsx:149` e `:228`) e o "¿" do login em es nas duas apps não tocam arquivo do diff e são a [recomendada](#a-próxima-tarefa-direta-na-copy-do-cadastro-da-app). A metade da landing espera o merge de `web-auth-forms` |
+| 🟢 **A web monta dois `AuthProvider` aninhados, e o login com Google faz dois `POST /api/auth/session`** | `apps/web/app/[locale]/layout.tsx:36-37` (o `DesignSystemProvider` e, dentro dele, outro `AuthProvider`) · `packages/design-system/index.tsx:17-35`, `:44-49` (o `DesignSystemProvider` já monta um, com `errorAlert` e `getRedirectPath`) · cada um assina o token em `packages/auth/provider.tsx:323-339` e grava o cookie em `:154-180` | **Medido** pelo `/test` de `web-auth-forms`: dois `POST /api/auth/session` por login com Google na landing, um por provider. Pela leitura, cada provider também tenta o bootstrap de SSO por conta própria e pede a renovação do cookie a cada troca de token (`refreshSessionCookie`, `provider.tsx:213`), então essas chamadas também dobram. A `apps/app` monta um só (`AppDesignProvider` → `DesignSystemProvider`). Os formulários da landing leem o provider mais interno, e o pedido de verificação do cadastro depende do observer dele, que não desmonta na navegação (R3 do plano da tarefa). Tirar um dos dois pede medir sessão, SSO e o fim de sessão de novo. P a M |
+| 🟢 **No login da landing, `signInStartedHereRef` não volta a `false`, e a tela fica vazia se o Firebase aceita a credencial e o cookie de sessão é recusado** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:28` (o ref), `:79` e `:133` (vira `true` no envio e no Google), `:52-56` (o efeito não navega com o ref em `true`), `:58-60` (com `user`, devolve `null`) · `packages/auth/provider.tsx:346-362` (`onAuthSuccess`: o `catch` em `:353` mostra o toast e não navega) | A pessoa vê o toast de erro e a área do formulário vazia, sem botão para tentar de novo, até recarregar. Em `main` o resultado é o mesmo, porque o componente devolve `null` com usuário em qualquer caso. Não medido: o caminho exige forçar a recusa do `POST /api/auth/session`. A correção natural mora no provider (deslogar quando o cookie falha) e vai junto da linha anterior. P |
+| 🟢 **`consoleErrorSpy.mockRestore()` só roda quando as asserções passam** | `apps/web/__tests__/signUpFormApi.test.tsx:189` (o `spyOn`) e `:204` (o `mockRestore`, depois do `expect` de `:203`) | Se o `expect` falhar, o espião fica ligado para os testes seguintes do arquivo. Só afeta a suíte depois de um teste já vermelho. O arquivo está no diff sem commit de `web-auth-forms`; o `/review` registrou e não corrigiu. P (um `afterEach` ou `try/finally`) |
+
+**Lacunas de teste herdadas de `web-auth-forms`:** os vereditos estão em
+[Executada no working tree](#executada-no-working-tree-sem-commit-web-auth-forms).
+
+### 🆕 Achados da tarefa `global-error-theme` (2026-10-21, working tree)
+
+Vindos do `/review` e do `/test` de `global-error-theme`, registrados pela terceira passada incremental da noite e
+conferidos no código do working tree. Nenhum foi aberto pelo diff. O quadro claro é efeito da correção, mas o estado
+anterior era pior (a tela inteira sem tema). Antes de registrar, a passada procurou cada um neste arquivo (`quadro claro`,
+`apps/api/app/global-error`, `Oops`, `algo deu errado`): nenhum estava registrado. O `console.error` da mesma tela da API
+já aparece em [`observability-logging`](observability-logging.md) (`:151`) e não ganhou linha aqui. O R4 do plano (cookie
+`x-theme` sem `localStorage.theme`) ficou sem linha, com o motivo em
+[Executada no working tree (`global-error-theme`)](#executada-no-working-tree-sem-commit-global-error-theme).
+
+| achado | onde | por que importa |
+|--------|------|-----------------|
+| 🟢 **Na tela de erro global, com tema escuro, aparecem 1 ou 2 quadros claros antes do escuro** | `apps/app/app/global-error.tsx:30` e `apps/web/app/global-error.tsx:30` (o `ThemeProvider` aplica a classe `dark` num efeito, depois do primeiro commit) · `docs/features/global-error-theme/test/report.md`, seção 6 | **Medido** pelo `/test`, com um script que grava, a cada `requestAnimationFrame`, a classe do `<html>` e o fundo do `<body>`, em 5 recargas por estado. No escuro pelo sistema, o quadro claro apareceu em 5 de 5 recargas nas duas apps; com a escolha salva escura, em 4 de 5 na app e 5 de 5 na web. A classe `dark` chegou entre 10 e 32 ms. O CSS já estava carregado, e o estado final estava certo em todas. Observação, não defeito: a tela só aparece quando o root layout quebra. A hipótese do relatório para eliminar o quadro, aplicar a classe no `<html>` durante o render com a mesma regra do `next-themes`, não foi testada. P |
+| 🟢 **A tela de erro global da `apps/api` tem o texto fixo em pt-br** | `apps/api/app/global-error.tsx:19` (`lang="pt-BR"`), `:21` ("Oops, algo deu errado") e `:22` ("Tentar novamente"), sem passar pelo dicionário · `apps/api/app/layout.tsx:7-11`, o root layout de quatro linhas que ela substitui · nenhuma `page.tsx` em `apps/api/app` | Contraria a regra de ouro 2 na letra. Na prática, a API não tem página, e a tela só aparece se aquele layout quebrar, então ninguém a vê. Registrado pelo `/review` de `global-error-theme`, fora do diff. P: ou passar pelo dicionário, ou apagar a tela, se o build da API provar que ela é dispensável. Valor quase nulo |
 
 ## Pendências vivas sem dono
 
 > A maior parte destas tem **casa versionada** em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md).
-> Na auditoria pós-PR #53 (2026-10-21) foram remedidas as linhas 1 a 4, 6, 8, 15, 16 e 28. As outras mantêm o
-> veredito anterior, com motivo: exigem console de provedor, ou dependem de arquivos que a PR #53 não tocou. A PR #53
-> não criou pendência: nenhuma variável, índice, regra ou passo manual novo.
+> Na auditoria pós-PR #54 (2026-10-21, noite) foram remedidas as linhas 1 a 4, 6, 8, 15, 16 e 28. As outras mantêm o
+> veredito anterior, com motivo: exigem console de provedor, ou dependem de arquivos que a PR #54 não tocou. A PR #54
+> não criou pendência: nenhuma variável, índice, regra ou passo manual novo. A tarefa `web-auth-forms`, sem commit, também
+> não cria; ela só soma um caso à pendência 13.
 
-| # | pendência | onde vive | veredito (2026-10-21, pós-PR #53, nas linhas remedidas; datas anteriores nas demais) |
+| # | pendência | onde vive | veredito (2026-10-21, pós-PR #54, nas linhas remedidas; datas anteriores nas demais) |
 |---|-----------|-----------|---------------------|
-| 1 | 🔴 Publicar os três índices dos resumos da home (`GET /entities/summary` e `/users/summary` respondem 503 sem eles) | `PRE-PRODUCTION.md` §1.5 | **continua aberto, medido em 2026-10-21**: o `ListIndexes` do Firestore Admin em `next-boilerplate-576d0` (pelo MCP do Firebase) devolve um único índice composto, o de `user` `reference_id` + `deletedAt`, `READY`; os três dos resumos não estão lá. Mesmo resultado de 2026-10-20 |
+| 1 | 🔴 Publicar os três índices dos resumos da home (`GET /entities/summary` e `/users/summary` respondem 503 sem eles) | `PRE-PRODUCTION.md` §1.5 | **continua aberto, medido de novo em 2026-10-21, pós-PR #54**: o `ListIndexes` do Firestore Admin em `next-boilerplate-576d0` (pelo MCP do Firebase, grupo `-`) devolve um único índice composto, o de `user` `reference_id` + `deletedAt`, `READY`; os três dos resumos não estão lá. Mesmo resultado da manhã e de 2026-10-20 |
 | 2 | 🔴 Publicar o índice das faixas de recência (`user`: `deletedAt` + `lastAccessAt`) | `PRE-PRODUCTION.md` §1.7 | **continua aberto, medido em 2026-10-21**; idem |
 | 3 | 🔴 Publicar o índice da trilha de auditoria (filtro por usuário responde 503) | `PRE-PRODUCTION.md` §1.2 | **continua aberto, medido em 2026-10-21**; idem |
 | 4 | 🔴 Publicar o índice da listagem paginada de `entity` | `PRE-PRODUCTION.md` §1.1 | **continua aberto, medido**: o `/test` da PR #35 recebeu `503 PAGINATION_INDEX_MISSING` em `GET /entities` contra o projeto de desenvolvimento (`test/report.md:85`), então o índice não está publicado nem lá; a medição de 2026-10-21 confirma. Com os dois de `notification` (§1.9, PR #52), são **oito** índices sem publicação; o comando é um só |
 | 5 | Retenção da coleção `auditEvent` | `PRE-PRODUCTION.md` §1.3 | **continua aberto**, estacionado (E5) |
-| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-10-21 pós-PR #53 (404, `[]`, 53 PRs, nenhuma aberta); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
+| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 | **continua aberto**, remedido em 2026-10-21 pós-PR #54 (404, `[]`, 54 PRs, nenhuma aberta); estacionado (E3). É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
 | 7 | Backfill de instantes em base que já tem dado | `PRE-PRODUCTION.md` §1.4 | **continua aberto**; não é mensurável daqui |
-| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-10-21 pós-PR #53: `git grep` por `@sentry`, `@logtail`, `@axiomhq` e `betterstack` em `apps/` e `packages/` devolve 0; estacionado (E1). A PR #53 não somou caso novo. A PR #52 somou mais um caso: a notificação que não se grava sai só como `[notifications] emit-failed` no log (`(shared)/lib/notifications.ts:46`), e o produtor segue sem ela. A PR #51 trocou um caso por outro: o desvínculo da senha que falha no meio agora registra o `uid` no log (`password-unlink-email-restore-failed`, `account/sign-in-methods/[id]/route.ts:125`), mas a conta pode seguir sem e-mail, e só um coletor faz alguém ver a linha. A PR #50 acrescentou mais um caso que só um coletor alcança: a falha persistente da desativação no primeiro contato vai só para o log (`archived-account-lockout-failed`, `user-merge.ts:62`). A PR #48 tinha deixado o desvínculo da senha sem registro nenhum do `uid` (achado fechado pela PR #51) |
+| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-10-21 pós-PR #54: `git grep` por `@sentry`, `@logtail`, `@axiomhq` e `betterstack` em `apps/` e `packages/` devolve 0; estacionado (E1). As PRs #53 e #54 não somaram caso novo. A PR #52 somou mais um caso: a notificação que não se grava sai só como `[notifications] emit-failed` no log (`(shared)/lib/notifications.ts:46`), e o produtor segue sem ela. A PR #51 trocou um caso por outro: o desvínculo da senha que falha no meio agora registra o `uid` no log (`password-unlink-email-restore-failed`, `account/sign-in-methods/[id]/route.ts:125`), mas a conta pode seguir sem e-mail, e só um coletor faz alguém ver a linha. A PR #50 acrescentou mais um caso que só um coletor alcança: a falha persistente da desativação no primeiro contato vai só para o log (`archived-account-lockout-failed`, `user-merge.ts:62`). A PR #48 tinha deixado o desvínculo da senha sem registro nenhum do `uid` (achado fechado pela PR #51) |
 | 9 | Health check da plataforma não aponta para `/health/ready` | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: configuração de plataforma |
 | 10 | `SESSION_COOKIE_DOMAIN` em subdomínios distintos | `PRE-PRODUCTION.md` §7 | **continua aberto** (configuração de deploy). Desde a PR #49 o e-mail preenchido em "Ajuda e contato" depende dele: a landing lê a sessão compartilhada, e o `/test` só mediu em `localhost` (🔒) |
 | 11 | Cloud Storage não ativado (plano Blaze) | `PRE-PRODUCTION.md` §6 | **continua aberto** em produção. Desde a PR #31, upload, avatar e o passo `storage` do expurgo rodam e têm teste sob o emulador; contra bucket real seguem sem prova o objeto que não abre sem assinatura e a expiração da URL V4 |
 | 12 | Revogação de sessão nunca provada ponta a ponta | *(só neste arquivo)* | **metade fechada**, reconhecido na auditoria pós-PR #34: o `/test` de `compliance-docs-kit` mediu em 2026-09-30, contra o projeto Firebase de desenvolvimento, que depois de `revokeRefreshTokens` o cookie emitido antes volta `null`, o bearer volta `null` em `resolveApiActor` e `createSessionCookie` com o token anterior lança `auth/id-token-expired` (`docs/features/compliance-docs-kit/test/report.md`, tabela "Resultado bruto"). É a prova que a ressalva de `session-refresh` pedia para a camada de verificação. **Continua aberto** só o percurso de navegador: sair numa app e ver a outra perder a sessão. O `/test` da PR #35 somou a medição da conta desativada (bearer recusado com e sem revogação, e depois da reativação) e também não subiu navegador |
-| 13 | Envio real de e-mail nunca provado | `PRE-PRODUCTION.md` §3 | **continua aberto** (exige domínio com SPF/DKIM). O `/test` da PR #24 viu o envio do e-mail de verificação falhar sob o emulador, com `RESEND_TOKEN` vazio, como esperado. O `/test` da PR #29 deixou 🔒 o e-mail de verificação depois do cadastro pela API (critério 20). O `/test` de `brand-config` deixou 🔒 o nome da marca com acento na caixa de entrada. O `/test` da PR #33 deixou 🔒 a entrega do aviso ao endereço antigo e do link ao novo; sem Resend o pedido responde `503 EMAIL_NOT_CONFIGURED`, medido nos 3 idiomas. O `/test` da PR #49 deixou 🔒 a entrega do formulário de contato na caixa de suporte; sem Resend a rota responde `503 CONTACT_UNAVAILABLE`, e com token falso, `503 EMAIL_SEND_FAILED`, medidos nos 3 idiomas |
+| 13 | Envio real de e-mail nunca provado | `PRE-PRODUCTION.md` §3 | **continua aberto** (exige domínio com SPF/DKIM). O `/test` da PR #24 viu o envio do e-mail de verificação falhar sob o emulador, com `RESEND_TOKEN` vazio, como esperado. O `/test` da PR #29 deixou 🔒 o e-mail de verificação depois do cadastro pela API (critério 20). O `/test` de `brand-config` deixou 🔒 o nome da marca com acento na caixa de entrada. O `/test` da PR #33 deixou 🔒 a entrega do aviso ao endereço antigo e do link ao novo; sem Resend o pedido responde `503 EMAIL_NOT_CONFIGURED`, medido nos 3 idiomas. O `/test` da PR #49 deixou 🔒 a entrega do formulário de contato na caixa de suporte; sem Resend a rota responde `503 CONTACT_UNAVAILABLE`, e com token falso, `503 EMAIL_SEND_FAILED`, medidos nos 3 idiomas. O `/test` de `web-auth-forms` (working tree, 2026-10-21) deixou 🔒 o e-mail de verificação pedido pelo cadastro da landing; sem Resend, `503 EMAIL_NOT_CONFIGURED` nos 3 idiomas |
 | 14 | CSP Report-Only na `apps/web` | `PRE-PRODUCTION.md` §10 | **continua aberto**, deliberado |
-| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:1028`, era `:969` até a PR #49 e `:976` até a PR #52). Pelos relatórios, os `/test` das PRs #37 a #39 e #41 a #44 rodaram sob o emulador (os da #43 criaram contas `@example.com`, entre elas nove `qa-ui-strings-NN@example.com`, que existiram só no emulador; o da #44 não criou conta, usou as duas do seed e criou a entidade `qa-date-input-locale-01`, também só no emulador; os três da #45 rodaram sob o emulador, com as contas do seed e a conta que o `signUp.spec.ts` do `pnpm e2e` cria e descarta); o `/test` da PR #46 também rodou sob o emulador, com as contas do seed e uma conta `qa-api-error-codes@example.com` criada, desativada e apagada lá; o da PR #47 também, com as contas do seed e `qa-pricing-catalog@example.com`, que morreu com o processo do emulador; os dois do `/test` da PR #48 também, com contas `qa-linked-*@example.com` e `qa-api-google@example.com` e identidades Google falsas do IdP do emulador, todas mortas com o processo; o da PR #49 também, só com as contas do seed e nenhuma conta nova; os dois do `/test` da PR #50 também, com dezessete contas `qa-archive-*@example.com`, sete delas Google do IdP falso, todas mortas com o processo; os três da PR #51 também: os do Google e do desvínculo mediram as premissas do Firebase no emulador de Auth, e o do teto de corpo não chegou ao Firebase; o da PR #52 também, com as contas do seed, `qa-in-app-notifications-google@example.com` no emulador de Auth e `qa-in-app-notifications@example.com`, cadastrada pela tela e apagada pela exclusão de conta; os dois da PR #53 também: o da borda da API mediu em `next start` contra o emulador, e o do sino usou as contas do seed e sete notificações `qa_bell_1` a `qa_bell_7`, todas mortas com o processo); o console não foi aberto |
-| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-10-21 pós-PR #53: `git ls-remote --heads origin` devolve 52, ou seja, 51 além de `main` (eram 50; `guilhermebittelbrunn/cycle-command-v6` ficou viva depois do merge, como as das PRs #37 a #52) |
+| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:1028`, era `:969` até a PR #49 e `:976` até a PR #52). Pelos relatórios, os `/test` das PRs #37 a #39 e #41 a #44 rodaram sob o emulador (os da #43 criaram contas `@example.com`, entre elas nove `qa-ui-strings-NN@example.com`, que existiram só no emulador; o da #44 não criou conta, usou as duas do seed e criou a entidade `qa-date-input-locale-01`, também só no emulador; os três da #45 rodaram sob o emulador, com as contas do seed e a conta que o `signUp.spec.ts` do `pnpm e2e` cria e descarta); o `/test` da PR #46 também rodou sob o emulador, com as contas do seed e uma conta `qa-api-error-codes@example.com` criada, desativada e apagada lá; o da PR #47 também, com as contas do seed e `qa-pricing-catalog@example.com`, que morreu com o processo do emulador; os dois do `/test` da PR #48 também, com contas `qa-linked-*@example.com` e `qa-api-google@example.com` e identidades Google falsas do IdP do emulador, todas mortas com o processo; o da PR #49 também, só com as contas do seed e nenhuma conta nova; os dois do `/test` da PR #50 também, com dezessete contas `qa-archive-*@example.com`, sete delas Google do IdP falso, todas mortas com o processo; os três da PR #51 também: os do Google e do desvínculo mediram as premissas do Firebase no emulador de Auth, e o do teto de corpo não chegou ao Firebase; o da PR #52 também, com as contas do seed, `qa-in-app-notifications-google@example.com` no emulador de Auth e `qa-in-app-notifications@example.com`, cadastrada pela tela e apagada pela exclusão de conta; os dois da PR #53 também: o da borda da API mediu em `next start` contra o emulador, e o do sino usou as contas do seed e sete notificações `qa_bell_1` a `qa_bell_7`, todas mortas com o processo; os dois da PR #54 não criaram conta nem documento: o de `leftover-ui-strings` mediu o login da landing com valores inválidos, e o de `web-global-error` só a tela de erro em build); o console não foi aberto |
+| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto**, remedido em 2026-10-21 pós-PR #54: `git ls-remote --heads origin` devolve 53, ou seja, 52 além de `main` (eram 51; `guilhermebittelbrunn/cycle-command-v7` ficou viva depois do merge, como as das PRs #37 a #53) |
 | 17 | Login com Google sem passe manual com conta real; desde a PR #48, também vincular e confirmar o Google num projeto real | *(só neste arquivo)*; o "User account linking" e os domínios autorizados estão no `FORKING.md` §4, passos 3 e 4 | **continua aberto, ampliado em 2026-10-19.** O `/test` da PR #24 não percorreu o Google no emulador; o da PR #48 percorreu, mas com o IdP falso do emulador. Ficaram 🔒 o popup real do Google, a escolha de "User account linking" do projeto (que muda o primeiro login com Google de uma conta com senha) e a mensagem de `auth/unauthorized-domain` num domínio fora da lista |
 | 18 | `storage.rules` nunca publicado (o teste veio com a PR #31) | `PRE-PRODUCTION.md` §6 e `:54-58` | **metade fechada** pela PR #31: `storage.rules` e `firestore.rules` têm teste contra emulador no `verify` (20 e 145 testes; entrega em [`storage-emulator-rules-tests`](../docs/features/storage-emulator-rules-tests/spec.md)). **Continua aberto** publicar no projeto real, que depende da 11 |
 | 19 | Conferir a retenção de log da plataforma | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: painel do provedor |
@@ -2018,9 +2238,9 @@ aberta (o T3 não clica no botão para conferir o `reset()`, P).
 | 25 | 🆕 Fechar o cadastro pelo REST do Identity Toolkit com a chave pública, que ainda aceita senha de 6 ou 7 (Identity Platform: password policy em `ENFORCE` ou cadastro pelo cliente desligado) | `PRE-PRODUCTION.md`, "Declaração — o que a política de senha não alcança" | **opcional, declarado**: o upgrade tem custo ou teto (3.000 DAU no Spark). Critério 18 do `/test` da fatia 1 🔒 |
 | 26 | 🆕 Marca por fork: `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e `NEXT_PUBLIC_APP_SUPPORT_EMAIL` nos projetos `app`, `web` e `api`, logo numa URL `https` pública, ícones do produto no lugar dos padrões | `PRE-PRODUCTION.md` §13 (`:777-790`, era `:723-734` até a PR #49 e `:727-740` até a PR #52) | **aberto**, entrou com a PR #30. Sem ela, o produto sobe com o nome `next-boilerplate`; não bloqueia nada. Desde a PR #33, sem `NEXT_PUBLIC_APP_SUPPORT_EMAIL` o aviso de troca de e-mail sai sem a linha de suporte, que é o canal para contestar (`PRE-PRODUCTION.md` §3). Desde a PR #49, sem ela o formulário de contato fica indisponível, e a variável precisa estar na `api` (o destino) e na `web` (decide se o formulário aparece) (`:786-789`) |
 | 27 | 🆕 Custo e latência da leitura de sessão em cada requisição autenticada | *(só neste arquivo)*; a declaração de sessões do `PRE-PRODUCTION.md` (`:890`, era `:831` até a PR #49 e `:838` até a PR #52) fala da recusa, não do custo | **aberto**, entrou com a PR #39. Toda requisição autenticada lê o documento da sessão antes do guard (`session-tracker.ts:106-134`), além da leitura do perfil. No emulador, `GET /auth/session` p50 9,3 ms; em produção, latência e consumo da cota de leituras do Firestore não foram medidos (🔒 no `/test`) |
-| 28 | 🆕 Política de TTL em `notification.expiresAt` (90 dias), e os dois índices compostos de `notification` | `PRE-PRODUCTION.md` §1.9 (`:251-296`) | **aberto**, entrou com a PR #52. Os índices foram medidos em 2026-10-20 e de novo em 2026-10-21 e não estão publicados no projeto de referência (somam às linhas 1 a 4). A TTL exige faturamento ativo no projeto; sem ela nada quebra, as notificações ficam até a exclusão da conta e o prazo de 90 dias do `ROPA.md` §10 deixa de valer. A auditoria não tem leitura da TTL pelas ferramentas que usa; conferir com `gcloud firestore fields ttls list`. Os critérios 18 e 19 do `/test` ficaram 🔒 |
+| 28 | 🆕 Política de TTL em `notification.expiresAt` (90 dias), e os dois índices compostos de `notification` | `PRE-PRODUCTION.md` §1.9 (`:251-296`) | **aberto**, entrou com a PR #52. Os índices foram medidos em 2026-10-20 e duas vezes em 2026-10-21 e não estão publicados no projeto de referência (somam às linhas 1 a 4). A TTL exige faturamento ativo no projeto; sem ela nada quebra, as notificações ficam até a exclusão da conta e o prazo de 90 dias do `ROPA.md` §10 deixa de valer. A auditoria não tem leitura da TTL pelas ferramentas que usa; conferir com `gcloud firestore fields ttls list`. Os critérios 18 e 19 do `/test` ficaram 🔒 |
 
-A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. A 4 foi medida no projeto de desenvolvimento em 2026-09-30. A 23 cresceu com as PRs #27, #28, #32, #33, #38 e #47; a 24 e a 25 vieram da PR #29; a 26, da PR #30, e ganhou peso com a #33. A 13 ganhou um 🔒 com a #33, e a 24, um com a #36. A 27 veio da PR #39. A 17 cresceu com a PR #48. A 22 diminuiu com a PR #49, e a 10, a 13, a 24 e a 26 ganharam um caso cada. A 8 e a 23 ganharam um caso cada com a PR #50. Com a PR #51, a 8 trocou um caso por outro e a 24 ganhou um. Com a PR #52, as linhas 1 a 4 passaram a oito índices, a 8 e a 23 ganharam um caso cada, e entrou a 28. A PR #53 não mudou nenhuma.
+A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. A 4 foi medida no projeto de desenvolvimento em 2026-09-30. A 23 cresceu com as PRs #27, #28, #32, #33, #38 e #47; a 24 e a 25 vieram da PR #29; a 26, da PR #30, e ganhou peso com a #33. A 13 ganhou um 🔒 com a #33, e a 24, um com a #36. A 27 veio da PR #39. A 17 cresceu com a PR #48. A 22 diminuiu com a PR #49, e a 10, a 13, a 24 e a 26 ganharam um caso cada. A 8 e a 23 ganharam um caso cada com a PR #50. Com a PR #51, a 8 trocou um caso por outro e a 24 ganhou um. Com a PR #52, as linhas 1 a 4 passaram a oito índices, a 8 e a 23 ganharam um caso cada, e entrou a 28. As PRs #53 e #54 não mudaram nenhuma.
 
 ## Lacunas avaliadas e **não** especificadas
 
@@ -2094,14 +2314,14 @@ Descartadas de propósito, com o motivo. Reabrir exige argumento novo.
 | Firebase App Check | — | Exige configuração de projeto por fork. |
 | Waitlist / captura de lead | 2/10 | Decisão do fork. |
 | **Migrar a listagem de usuários para o cursor** | — | O N+1 de `userRepository.list()` vem primeiro. |
-| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 53 execuções locais até 2026-10-21, pós-PR #53; ver achados), e o CI passou. Em 2026-10-19 apareceu um terceiro, também só local e sob carga (`actionMenu.test.tsx:419`, 1 falha em 8 execuções até a auditoria pós-PR #53; ver achados da tarefa `admin-archive-access-revocation`). O critério de reabertura era um segundo *flake* **no CI**; este ainda não conta. Consertar o teste é tarefa direta P. |
+| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 54 execuções locais até 2026-10-21, pós-PR #54; ver achados), e o CI passou. Em 2026-10-19 apareceu um terceiro, também só local e sob carga (`actionMenu.test.tsx:419`, 1 falha em 9 execuções até a auditoria pós-PR #54; ver achados da tarefa `admin-archive-access-revocation`). O critério de reabertura era um segundo *flake* **no CI**; este ainda não conta. Consertar o teste é tarefa direta P. |
 | Provedor de e-mail plugável · rastreio de abertura/clique | — | Fora do corte de `transactional-emails`. |
 | Múltiplos arquivos, galeria, thumbnails, antivírus, PDF | — | Fora do corte de `file-upload-storage`. |
 | Tracing distribuído (OpenTelemetry) · session replay · monitoramento sintético | prática 6 | Fora do corte de `observability-logging`. |
 | API keys do usuário · webhooks de saída | 1/10 cada | Só valem se o produto é uma API. |
 | Widget de feedback · referral/afiliados | 1/10 e 0/10 | Terceirizar é mais racional. |
 | SSO enterprise · SCIM | 0/10 | Só entra com o primeiro contrato enterprise. |
-| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | O pré-requisito (CI verde e estável) vale nas 30 últimas execuções do CI na `main`, até `d19e6fd` (`gh run list --branch main --limit 30`, todas `success`, remedido em 2026-10-21 pós-PR #53). Reavaliar junto com o branch protection (E3). |
+| Renovate/Dependabot · preview deploy por PR · orçamento de performance | práticas 13, 14 e 18 | O pré-requisito (CI verde e estável) vale nas 30 últimas execuções do CI na `main`, até `af763bb` (`gh run list --branch main --limit 30`, todas `success`, remedido em 2026-10-21 pós-PR #54). Reavaliar junto com o branch protection (E3). |
 | Remote Cache do Turbo | prática 1 | Arrasta conta e env; entra quando doer, como opt-in. |
 | Limiar de cobertura que bloqueia merge | prática 5 | A cobertura já é medida e consolidada (`pnpm coverage`, job `coverage` do CI), pela PR #26. O limiar ficou fora do corte de [`e2e-testing`](../docs/features/e2e-testing/spec.md); reavaliar depois de algumas medições. |
 | Changesets / versionamento · Storybook | — | Pacotes `private: true`; o `playground` serve de catálogo. |
