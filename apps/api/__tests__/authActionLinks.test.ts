@@ -5,12 +5,14 @@ const {
     generatePasswordResetLinkMock,
     generateEmailVerificationLinkMock,
     generateVerifyAndChangeEmailLinkMock,
+    generateSignInWithEmailLinkMock,
     isEmailEnabledMock,
 } = vi.hoisted(() => ({
     getUserByEmailMock: vi.fn(),
     generatePasswordResetLinkMock: vi.fn(),
     generateEmailVerificationLinkMock: vi.fn(),
     generateVerifyAndChangeEmailLinkMock: vi.fn(),
+    generateSignInWithEmailLinkMock: vi.fn(),
     isEmailEnabledMock: vi.fn(),
 }));
 
@@ -23,6 +25,8 @@ vi.mock("@repo/auth/server", () => ({
             generateEmailVerificationLinkMock(...args),
         generateVerifyAndChangeEmailLink: (...args: unknown[]) =>
             generateVerifyAndChangeEmailLinkMock(...args),
+        generateSignInWithEmailLink: (...args: unknown[]) =>
+            generateSignInWithEmailLinkMock(...args),
     }),
 }));
 
@@ -176,6 +180,168 @@ describe("buildAuthActionLink", () => {
         await expect(
             buildAuthActionLink("reset-password", EMAIL, "en")
         ).rejects.toThrow("firestore down");
+    });
+});
+
+describe("buildAuthActionLink for sign-in", () => {
+    const SIGN_IN_LINK =
+        "https://project.firebaseapp.com/__/auth/action?mode=signIn&oobCode=CODE-123&apiKey=key&continueUrl=x";
+
+    function accountWith(
+        providerIds: string[],
+        overrides: Record<string, unknown> = {}
+    ) {
+        return {
+            uid: "uid-1",
+            email: EMAIL,
+            emailVerified: true,
+            disabled: false,
+            providerData: providerIds.map((providerId) => ({ providerId })),
+            ...overrides,
+        };
+    }
+
+    async function signInLink(locale: "pt-br" | "en" | "es" = "pt-br") {
+        const { buildAuthActionLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+        return buildAuthActionLink("sign-in", EMAIL, locale);
+    }
+
+    function silenceWarnings() {
+        return vi.spyOn(console, "warn").mockImplementation(() => {
+            // silence the expected report
+        });
+    }
+
+    beforeEach(() => {
+        generateSignInWithEmailLinkMock.mockResolvedValue(SIGN_IN_LINK);
+        getUserByEmailMock.mockResolvedValue(accountWith(["password"]));
+    });
+
+    it("asks for a code handled in the app and rebuilds the link against the sign-in page", async () => {
+        const link = await signInLink("pt-br");
+
+        expect(link).toBe(
+            "https://app.example.com/pt-br/sign-in/email-link?oobCode=CODE-123"
+        );
+        expect(generateSignInWithEmailLinkMock).toHaveBeenCalledWith(EMAIL, {
+            url: "https://app.example.com/pt-br/sign-in/email-link",
+            handleCodeInApp: true,
+        });
+        expect(generatePasswordResetLinkMock).not.toHaveBeenCalled();
+        expect(generateEmailVerificationLinkMock).not.toHaveBeenCalled();
+    });
+
+    it("keeps the language of the request in both the continue url and the link", async () => {
+        const link = await signInLink("es");
+
+        expect(link).toBe(
+            "https://app.example.com/es/sign-in/email-link?oobCode=CODE-123"
+        );
+        expect(generateSignInWithEmailLinkMock).toHaveBeenCalledWith(
+            EMAIL,
+            expect.objectContaining({
+                url: "https://app.example.com/es/sign-in/email-link",
+            })
+        );
+    });
+
+    it.each([
+        [
+            "an account that only signs in with Google",
+            accountWith(["google.com"]),
+        ],
+        [
+            "an account whose address was never confirmed",
+            accountWith(["password"], { emailVerified: false }),
+        ],
+        ["an account with no provider at all", accountWith([])],
+    ])(
+        "mints nothing for %s and logs the refusal without the address",
+        async (_label, account) => {
+            getUserByEmailMock.mockResolvedValue(account);
+            const warnSpy = silenceWarnings();
+
+            await expect(signInLink()).resolves.toBeNull();
+
+            expect(generateSignInWithEmailLinkMock).not.toHaveBeenCalled();
+            expect(warnSpy).toHaveBeenCalledWith(
+                "[auth-action-link] refused kind=sign-in code=not-eligible"
+            );
+            for (const [line] of warnSpy.mock.calls) {
+                expect(String(line)).not.toContain(EMAIL);
+            }
+            warnSpy.mockRestore();
+        }
+    );
+
+    it("still mints a link for a password account that also has Google", async () => {
+        getUserByEmailMock.mockResolvedValue(
+            accountWith(["google.com", "password"])
+        );
+
+        await expect(signInLink()).resolves.toBe(
+            "https://app.example.com/pt-br/sign-in/email-link?oobCode=CODE-123"
+        );
+    });
+
+    it("mints a link for a disabled account, which Firebase refuses on completion", async () => {
+        getUserByEmailMock.mockResolvedValue(
+            accountWith(["password"], { disabled: true })
+        );
+
+        await expect(signInLink()).resolves.toBe(
+            "https://app.example.com/pt-br/sign-in/email-link?oobCode=CODE-123"
+        );
+    });
+
+    it("answers null for an address with no account", async () => {
+        getUserByEmailMock.mockRejectedValue(
+            firebaseError("auth/user-not-found")
+        );
+
+        await expect(signInLink()).resolves.toBeNull();
+        expect(generateSignInWithEmailLinkMock).not.toHaveBeenCalled();
+    });
+
+    it.each(["auth/operation-not-allowed", "auth/unauthorized-continue-uri"])(
+        "answers null, without throwing, when the provider refuses with %s",
+        async (code) => {
+            generateSignInWithEmailLinkMock.mockRejectedValue(
+                firebaseError(code)
+            );
+            const warnSpy = silenceWarnings();
+
+            await expect(signInLink()).resolves.toBeNull();
+            expect(warnSpy).toHaveBeenCalledWith(
+                `[auth-action-link] refused kind=sign-in code=${code}`
+            );
+            warnSpy.mockRestore();
+        }
+    );
+
+    it("leaves the other kinds untouched by the eligibility rule", async () => {
+        getUserByEmailMock.mockResolvedValue(
+            accountWith(["google.com"], { emailVerified: false })
+        );
+        generatePasswordResetLinkMock.mockResolvedValue(FIREBASE_LINK);
+        generateEmailVerificationLinkMock.mockResolvedValue(FIREBASE_LINK);
+        const { buildAuthActionLink } = await import(
+            "@/(shared)/lib/auth-action-links"
+        );
+
+        await expect(
+            buildAuthActionLink("reset-password", EMAIL, "en")
+        ).resolves.toBe(
+            "https://app.example.com/en/reset-password?oobCode=CODE-123"
+        );
+        await expect(
+            buildAuthActionLink("verify-email", EMAIL, "en")
+        ).resolves.toBe(
+            "https://app.example.com/en/verify-email?oobCode=CODE-123"
+        );
+        expect(generateSignInWithEmailLinkMock).not.toHaveBeenCalled();
     });
 });
 

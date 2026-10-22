@@ -2,14 +2,21 @@ import { getAuthInstance } from "@repo/auth/server";
 import { isEmailEnabled } from "@repo/email";
 import type { Locale } from "@repo/internationalization/utils";
 import { logEvent } from "@repo/shared/utils/helpers/log";
+import type { Auth, UserRecord } from "firebase-admin/auth";
+import { hasPasswordProvider } from "@/(shared)/lib/auth-providers";
 import { env } from "@/env";
 
-export type AuthActionKind = "reset-password" | "verify-email" | "change-email";
+export type AuthActionKind =
+    | "reset-password"
+    | "verify-email"
+    | "change-email"
+    | "sign-in";
 
 const APP_PATH_BY_KIND: Record<AuthActionKind, string> = {
     "reset-password": "reset-password",
     "verify-email": "verify-email",
     "change-email": "verify-email",
+    "sign-in": "sign-in/email-link",
 };
 
 /** The page behind `verify-email` serves two actions and tells them apart by `mode`. */
@@ -33,6 +40,36 @@ function logRefusedLink(kind: AuthActionKind, code: string): void {
 }
 
 /**
+ * Completing a link sign-in strips the password of an account whose address was never
+ * confirmed, and adds a passwordless "password" provider to an account that had none —
+ * either would then claim a password it does not have. Only the account the link leaves
+ * untouched gets one.
+ */
+function canSignInByLink(user: UserRecord): boolean {
+    return hasPasswordProvider(user) && user.emailVerified;
+}
+
+function generateFirebaseLink(
+    auth: Auth,
+    kind: AuthActionKind,
+    email: string,
+    locale: Locale
+): Promise<string> {
+    if (kind === "reset-password") {
+        return auth.generatePasswordResetLink(email);
+    }
+    if (kind === "sign-in") {
+        // Firebase demands a continue URL on an authorized domain even though the email
+        // carries only the code and nobody follows this one.
+        return auth.generateSignInWithEmailLink(email, {
+            url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/${APP_PATH_BY_KIND["sign-in"]}`,
+            handleCodeInApp: true,
+        });
+    }
+    return auth.generateEmailVerificationLink(email);
+}
+
+/**
  * The Admin SDK hands back a URL pointing at Firebase's own hosted handler, which
  * neither translates nor carries the brand. Only the single-use code inside it is
  * kept, and the link is rebuilt against this project's own page — so a fork gets a
@@ -51,8 +88,9 @@ export async function buildAuthActionLink(
     // Resolved up front because the link generators below report an unknown address
     // as an internal assertion rather than as a missing account, while this lookup
     // answers with the documented `auth/user-not-found`.
+    let user: UserRecord;
     try {
-        await auth.getUserByEmail(email);
+        user = await auth.getUserByEmail(email);
     } catch (error) {
         const code = firebaseErrorCode(error);
         if (code === "auth/user-not-found" || code === "auth/invalid-email") {
@@ -61,12 +99,14 @@ export async function buildAuthActionLink(
         throw error;
     }
 
+    if (kind === "sign-in" && !canSignInByLink(user)) {
+        logRefusedLink(kind, "not-eligible");
+        return null;
+    }
+
     let firebaseLink: string;
     try {
-        firebaseLink =
-            kind === "reset-password"
-                ? await auth.generatePasswordResetLink(email)
-                : await auth.generateEmailVerificationLink(email);
+        firebaseLink = await generateFirebaseLink(auth, kind, email, locale);
     } catch (error) {
         const code = firebaseErrorCode(error);
         // Anything the generator refuses is answered as "no link", never as a fault:
