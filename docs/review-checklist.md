@@ -59,14 +59,18 @@ responsabilidade da revisão e do deploy da Vercel.
 ## 1. `apps/api`
 
 - [ ] Handler é `export const GET = guard(async (req, ctx) => …)` — **nunca** `export async function GET`.
-- [ ] Protegido por guard: `requireCommonPanelApi` (comum, expõe `ctx.subjectProfile`) ou
+- [ ] Protegido por guard: `requireOrganizationApi` (comum, dado da organização; expõe também
+      `ctx.organization`), `requireCommonPanelApi` (comum, expõe `ctx.subjectProfile`) ou
       `requireAdminApi` (admin, **sem** `subjectProfile`). Autorização repetida no servidor — UI oculta
       não é proteção.
-- [ ] Rota `[id]`: genérico no guard (`requireCommonPanelApi<RouteIdParamsContext>`) +
-      `resolveIdFromContext(ctx)`.
-- [ ] **Ownership**: recurso de usuário comum verifica
-      `if (!row || row.userId !== ctx.subjectProfile.id) → 404` em **todos** os handlers que recebem id
-      (404, não 403 — não vaze existência). Nenhum id do body é confiado sem checar o vínculo.
+- [ ] Rota `[id]`: genérico no guard (`requireOrganizationApi<RouteIdParamsContext>`, ou o do painel
+      comum) + `resolveIdFromContext(ctx)`.
+- [ ] **Ownership**: recurso **da organização** (como `entity`) passa por `requireOrganizationApi` e
+      só é lido pelo predicado do repositório (`findInOrganization(id, ctx.organization.organizationId)`
+      → `null` → 404; listas e contagens pelo helper privado `inOrganization`), nunca por
+      `ctx.subjectProfile.id`. Recurso **da pessoa** (como `notification`) verifica
+      `if (!row || row.userId !== ctx.subjectProfile.id) → 404`. Vale em **todos** os handlers que
+      recebem id (404, não 403 — não vaze existência). Nenhum id do body é confiado sem checar o vínculo.
 - [ ] Input validado na borda com Zod: `parseCreateX`/`parseUpdateX` retornando
       `{ ok: true; value } | { ok: false; response }`; body via `parseRequestJson`; patch via
       `omitUndefined`; `updateXSchema` tem `.refine` que rejeita objeto vazio.

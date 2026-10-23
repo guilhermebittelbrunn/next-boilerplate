@@ -74,8 +74,10 @@ Mudança de forma de documento é retrocompatível por natureza — o risco est�
 - [ ] Coleção nova ou existente? Nome no **singular** (`"entity"`, `"user"`), embora a rota seja plural.
 - [ ] Para cada campo novo: nome (dê **≥2 opções** quando não for óbvio), tipo, valor default,
       `null` permitido? e a justificativa.
-- [ ] **Escopo/ownership**: o documento carrega `userId` (ou equivalente) para o filtro por dono?
-      Toda leitura de recurso do usuário comum filtra por `ctx.subjectProfile.id`.
+- [ ] **Escopo/ownership**: o recurso é **da organização** (dado de negócio, como `entity`: grava
+      `organizationId` como escopo e `userId` como autor, e toda leitura filtra por
+      `ctx.organization.organizationId`) ou **da pessoa** (notificação, preferência: filtra por
+      `ctx.subjectProfile.id`)? Ver "Escopo de dados: organização" em `docs/ARCHITECTURE.md`.
 - [ ] Campos herdados do `BaseRepository`: `createdAt`, `updatedAt`, `deletedAt` são estampados
       automaticamente no `create` — **não** os declare no `CreateRequest`.
 - [ ] **Soft delete** é o padrão (`deletedAt`); `delete()` do `BaseRepository` nunca remove de fato.
@@ -83,11 +85,11 @@ Mudança de forma de documento é retrocompatível por natureza — o risco est�
 ### 2.2 Consultas
 
 - [ ] Que consultas a feature exige (filtro, ordenação, busca, paginação)?
-- [ ] ⚠️ O `BaseRepository` **não tem paginação, `orderBy` nem filtros compostos**. Filtro/ordenação
-      hoje é feito **em memória** no método do repositório (ex.: `entityRepository.listByUserId` filtra
-      `deletedAt` e ordena por `createdAt` em memória). Se o volume esperado torna isso inviável,
-      isso é uma **decisão de arquitetura a registrar** (índice composto + `query`/`limit`/`startAfter`),
-      não algo a improvisar no handler.
+- [ ] ⚠️ A paginação do `BaseRepository` (`paginate`) ordena sempre por `createdAt` desc e pelo id, com
+      cursor. O filtro fica no método do repositório (ex.: `entityRepository.listByOrganization` filtra
+      `organizationId` e `deletedAt`), e cada combinação de filtro com essa ordenação exige um índice
+      composto. Ordenação ou busca diferente disso é **decisão de arquitetura a registrar**, não algo a
+      improvisar no handler.
 - [ ] Consulta nova precisa de **índice composto** no Firestore? (`where` + `orderBy` em campos
       diferentes exige.) Registre o índice a criar.
 - [ ] Regras de segurança do Firestore precisam mudar? Ver [`SECURITY.md`](SECURITY.md).
@@ -128,13 +130,15 @@ Uma rota = um arquivo `app/(routes)/<recurso>/route.ts` (e `[id]/route.ts`). Han
 ### 4.1 Rota e guard
 
 - [ ] Método(s) e path (sem prefixo `/api` — os grupos `(routes)`/`(guards)` não entram na URL).
-- [ ] **Guard**: `requireCommonPanelApi` (usuário comum; expõe `ctx.subjectProfile`, ciente de
+- [ ] **Guard**: `requireOrganizationApi` (usuário comum, dado da organização; expõe também
+      `ctx.organization`), `requireCommonPanelApi` (usuário comum; expõe `ctx.subjectProfile`, ciente de
       impersonação) ou `requireAdminApi` (só admin; **não** tem `subjectProfile`).
-- [ ] Rota `[id]`: genérico do guard (`requireCommonPanelApi<RouteIdParamsContext>`) +
-      `resolveIdFromContext(ctx)`.
-- [ ] **Ownership**: recurso do usuário comum precisa de
-      `if (!row || row.userId !== ctx.subjectProfile.id) → 404` **em todos** os handlers que tocam o id
-      (404, não 403 — não vaze existência).
+- [ ] Rota `[id]`: genérico do guard (`requireOrganizationApi<RouteIdParamsContext>`, ou o do painel
+      comum) + `resolveIdFromContext(ctx)`.
+- [ ] **Ownership**: recurso da organização usa `requireOrganizationApi` e o predicado do repositório
+      (`findInOrganization(id, ctx.organization.organizationId)` → `null` → 404); recurso da pessoa usa
+      `if (!row || row.userId !== ctx.subjectProfile.id) → 404`. Vale **em todos** os handlers que tocam
+      o id (404, não 403 — não vaze existência).
 - [ ] Header customizado novo? Então adicione em `allowHeaders` do CORS em `apps/api/proxy.ts`.
 
 ### 4.2 Validação na borda (Zod)
