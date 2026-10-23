@@ -1,11 +1,13 @@
 import type { Client } from "../../client/index";
 import type { Response } from "../../client/type";
-import type { UploadedFileDTO } from "../../types";
+import type { UploadedFileDTO, UploadScope } from "../../types";
 
 const PERCENT = 100;
 
 export type UploadFileOptions = {
     onProgress?: (percent: number) => void;
+    /** Absent stores the file under the person, which is what the avatar needs. */
+    scope?: UploadScope;
 };
 
 export default class FileActions {
@@ -25,6 +27,7 @@ export default class FileActions {
         const { data } = await this.client.request<Response<UploadedFileDTO>>({
             url: "/files",
             method: "POST",
+            params: options?.scope ? { scope: options.scope } : undefined,
             data: form,
             onUploadProgress: (event) => {
                 if (!(options?.onProgress && event.total)) {

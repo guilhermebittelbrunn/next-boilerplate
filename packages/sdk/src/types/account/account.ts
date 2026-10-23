@@ -1,5 +1,6 @@
 import type { EntityDTO } from "../entity/entity";
 import type { NotificationDTO } from "../notification/notification";
+import type { OrganizationMembershipDTO } from "../organization/organization";
 import type { SubscriptionStateDTO } from "../payments/payments";
 import type {
     EntitlementsStateDTO,
@@ -105,6 +106,8 @@ export type AccountDataExportDTO = {
     storageObjects: { path: string }[];
     sessions: { items: AccountDataExportSession[]; truncated: boolean };
     notifications: { items: NotificationDTO[]; truncated: boolean };
+    /** The organization the subject belongs to now, and their role in it. */
+    membership: OrganizationMembershipDTO | null;
 };
 
 export type DeleteAccountRequest = {
