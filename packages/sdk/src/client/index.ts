@@ -9,6 +9,7 @@ import ContactActions from "../actions/contact/action";
 import EntityActions from "../actions/entity/action";
 import FileActions from "../actions/file/action";
 import NotificationActions from "../actions/notification/action";
+import OrganizationActions from "../actions/organization/action";
 import PaymentsActions from "../actions/payments/action";
 import UserActions from "../actions/user/user/action";
 import BaseClient, { type Config } from "./base";
@@ -24,6 +25,7 @@ export class Client extends BaseClient {
     payments!: PaymentsActions;
     contact!: ContactActions;
     notification!: NotificationActions;
+    organization!: OrganizationActions;
 
     constructor(config: Config) {
         super(config);
@@ -37,6 +39,7 @@ export class Client extends BaseClient {
         this.payments = new PaymentsActions(this);
         this.contact = new ContactActions(this);
         this.notification = new NotificationActions(this);
+        this.organization = new OrganizationActions(this);
     }
 
     get isAdminContext(): boolean {
