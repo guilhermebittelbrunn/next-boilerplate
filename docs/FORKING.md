@@ -385,6 +385,7 @@ Legenda da coluna "Prod": **obrigatória** (sem ela o app não sobe ou uma funç
 | `NEXT_PUBLIC_PRODUCT_MODE` | api, app, web | opcional | `subscription`: o usuário opera no painel. `simple`: opera na web e o painel é só do admin. Mesmo valor nos três. Ver [`AUTH-SSO.md`](AUTH-SSO.md) | `subscription` |
 | `ONBOARDING_ENABLED` | app | opcional | `"false"` manda o usuário novo direto ao painel, sem o passo de nome e idioma | Onboarding ligado |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | app, web | opcional | Idioma quando a URL não traz prefixo | `pt-br` |
+| `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED` | api, app | opcional | `"true"` liga membros e convites: a página "Equipe" e o aceite em `/invite`. Mesmo valor nas duas. Ver "Ligar membros e convites" abaixo | Produto B2C: nenhuma tela nova, rotas de membros em 404 |
 | `NEXT_PUBLIC_PRIVACY_CONTACT` | web | recomendada | Endereço publicado como canal de privacidade nas páginas legais | As páginas apontam para o formulário de `/contact` |
 
 ### Marca e SEO
@@ -439,12 +440,37 @@ admin".
   (`auth`, `email`, `payments`).
 - **Recurso novo segue o CRUD `entity`**: SDK, rota na API com guard e Zod, repositório e mapper do
   Firestore, hooks e telas no app, chaves nos três idiomas. A skill `/new-crud` gera a estrutura.
+- **Dado de negócio pertence à organização.** Como `entity`, o recurso novo grava `organizationId` e `userId`
+  (quem criou), passa por `requireOrganizationApi` e decide o escopo num helper privado do repositório. Assim um
+  fork que um dia ligar membros e convites não precisa migrar nada. O que descreve a pessoa (preferência,
+  notificação) continua escopado pelo perfil. Ver "Escopo de dados: organização" em
+  [`ARCHITECTURE.md`](ARCHITECTURE.md).
 - **Coleção nova com consulta composta** precisa de entrada em `firestore.indexes.json` e de um novo
   `deploy --only firestore:indexes`.
 - **Origem externa nova** (uma API de terceiro, um CDN de imagem) precisa entrar na CSP do proxy do app
   correspondente (`apps/app/proxy.ts`, `apps/web/proxy.ts`), ou o browser bloqueia.
 - **O `entity` de exemplo** pode ficar como referência ou ser removido. Se remover, apague as quatro camadas
   juntas (as pastas estão no [README](../README.md#crud-de-referência)).
+
+### Ligar membros e convites
+
+Toda conta comum já pertence a uma organização em que é a dona, e o `entity` já é escopado por ela. Um fork B2C
+não precisa fazer nada: a organização tem uma pessoa só e não aparece na interface. Para um produto B2B:
+
+1. Defina `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"` na `apps/api` e na `apps/app` e refaça o deploy das
+   duas. O menu ganha "Equipe", onde o dono convida por e-mail, lista e remove membros, e o membro pode sair.
+2. Configure a Resend e `NEXT_PUBLIC_APP_URL` na `apps/api` (seção 7.1). Sem isso, convidar responde
+   `503 EMAIL_NOT_CONFIGURED`.
+3. Troque a cópia se "Equipe" não for o nome certo para o produto: as chaves estão em
+   `apps.app.pages.common.organization`, `apps.app.pages.invitation` e `routes.platform.organization`
+   (`packages/internationalization`). Código e URL continuam `organization`.
+4. A validade do convite (7 dias), o teto de 20 pendentes e o intervalo de 60 s entre reenvios são constantes em
+   `apps/api/(shared)/lib/organization-invitation.ts`. Se mudar a validade, mude também o "7 dias" da cópia do
+   e-mail (`email.actionLink.actions.organizationInvitation`) e da página da equipe.
+
+O dono não sai, não é removido e não exclui a conta enquanto houver membros: não há transferência de propriedade.
+Desligar a variável depois de ter membros não desfaz a equipe; remova os membros antes. Pendências de
+infraestrutura em [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 16.
 
 ### Avisar o usuário: um tipo de notificação novo
 

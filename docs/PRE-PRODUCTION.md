@@ -63,8 +63,9 @@ permissivas sem reverter reexpõe a base inteira, o que não é rollback, é o i
 - [ ] índice de `entity` publicado no projeto de referência
 - [ ] índice de `entity` publicado **no projeto do seu fork**
 
-`GET /entities` consulta `userId` + `deletedAt` com ordenação por `createdAt`, e o Firestore recusa essa
-combinação enquanto o índice composto não existir. A declaração está em
+`GET /entities` consulta `organizationId` + `deletedAt` com ordenação por `createdAt`, e o Firestore recusa
+essa combinação enquanto o índice composto não existir. Num fork que já está em produção, publique este índice
+e os dois de §1.5 **antes** de subir a API que escopa `entity` por organização (§1.10). A declaração está em
 [`firestore.indexes.json`](../firestore.indexes.json); publicar é o mesmo comando de sempre:
 
 ```bash
@@ -150,8 +151,8 @@ composto por isso — agregação não escapa da regra. São três entradas nova
 
 | coleção | campos | serve |
 |---------|--------|-------|
-| `entity` | `userId` + `deletedAt` + `enabled` | cartão "ativas" da home comum |
-| `entity` | `userId` + `deletedAt` + `type` | as três barras do gráfico por tipo |
+| `entity` | `organizationId` + `deletedAt` + `enabled` | cartão "ativas" da home comum |
+| `entity` | `organizationId` + `deletedAt` + `type` | as três barras do gráfico por tipo |
 | `user` | `deletedAt` + `type` | cartão de administradores da home admin |
 
 ```bash
@@ -222,14 +223,15 @@ Medido em **2026-09-23** neste workspace, com `npx -y firebase-tools@latest fire
 next-boilerplate-576d0`, contra as **7** entradas que
 [`firestore.indexes.json`](../firestore.indexes.json) declarava naquela data. Desde 2026-10-20 o arquivo
 declara **9**: as duas de `notification` (§1.9) entraram depois da medição e ninguém conferiu se estão
-publicadas. Contam como pendentes até alguém rodar o comando de novo.
+publicadas. Em 2026-10-22 as três de `entity` trocaram `userId` por `organizationId` (§1.10); as novas também
+nunca foram medidas. Contam como pendentes até alguém rodar o comando de novo.
 
 | coleção | campos | publicado no projeto de referência |
 |---------|--------|-----------------------------------|
 | `user` | `reference_id` + `deletedAt` | **sim** |
-| `entity` | `userId` + `deletedAt` + `createdAt` | não |
-| `entity` | `userId` + `deletedAt` + `enabled` | não |
-| `entity` | `userId` + `deletedAt` + `type` | não |
+| `entity` | `organizationId` + `deletedAt` + `createdAt` | não medido (substituiu `userId`, que não estava publicado) |
+| `entity` | `organizationId` + `deletedAt` + `enabled` | não medido (substituiu `userId`, que não estava publicado) |
+| `entity` | `organizationId` + `deletedAt` + `type` | não medido (substituiu `userId`, que não estava publicado) |
 | `user` | `deletedAt` + `type` | não |
 | `user` | `deletedAt` + `lastAccessAt` | não |
 | `auditEvent` | `involvedUserIds` + `createdAt` | não |
@@ -293,6 +295,40 @@ apaga num passo próprio (`notifications` no log `erasure-step`). A lista é pag
 Para conferir depois de publicar: `npx -y firebase-tools@latest firestore:indexes` lista as duas entradas
 de `notification`, e `gcloud firestore fields ttls list --project=<project-id>` mostra `expiresAt` ativo em
 `notification`.
+
+#### 1.10 `entity` escopado por organização: índices antes do deploy
+
+- [ ] os três índices de `entity` por `organizationId` publicados e prontos **antes** do deploy da API
+- [ ] (opcional, depois do deploy) os três índices antigos de `entity` por `userId` removidos do projeto
+
+A listagem e os resumos de `entity` filtram por `organizationId` desde 2026-10-22. As três entradas estão em
+[`firestore.indexes.json`](../firestore.indexes.json) (§1.1 e §1.5) e cobertas por
+`apps/api/__tests__/firestoreIndexes.test.ts`, que também falha se alguma entrada de `entity` voltar a usar
+`userId`.
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:indexes
+```
+
+**A ordem importa num fork em produção.** Se a API nova subir antes de o índice ficar pronto, a lista responde
+`503 PAGINATION_INDEX_MISSING` e a home responde `503 SUMMARY_INDEX_MISSING` até a construção terminar. Nada
+responde 500 e nenhum dado se perde, mas o painel fica sem registros nesse intervalo.
+
+**Os registros antigos migram sozinhos.** O primeiro pedido de cada pessoa à API nova cria a organização dela e
+carimba com `organizationId` os `entity` que ela criou antes, sem mexer em `updatedAt`. Não há script nem janela
+de manutenção. A consulta dessa migração usa só `userId ==`, que o índice automático de campo único atende. Quem
+nunca volta ao produto fica com registros sem carimbo: nenhuma consulta escopada os alcança, e a exclusão da conta
+dessa pessoa os apaga mesmo assim. Falha na migração aparece no log como `[organization] legacy-claim-failed`, e o
+pedido seguinte tenta de novo.
+
+**Os índices antigos.** O arquivo não declara mais os três índices de `entity` por `userId`. Um `firebase deploy`
+pergunta antes de apagar índice publicado que não está no arquivo, e a resposta padrão é não. Mantenha-os até ter
+certeza de que não vai reverter o deploy: o código anterior consulta por `userId` e precisa deles. Sem removê-los,
+nada quebra; o projeto só paga a gravação de entradas de índice que ninguém lê.
+
+Para conferir: `npx -y firebase-tools@latest firestore:indexes` lista as três entradas de `entity` com
+`organizationId`. Na tela, a lista e a home de um usuário existente mostram os registros dele depois do primeiro
+acesso. O emulador serve as consultas com ou sem índice, então `pnpm emulators` não prova a publicação.
 
 ### 2. Service account do Firebase Admin
 
@@ -462,7 +498,7 @@ pelo próprio repositório**, mais dois do Google:
 | `bp:panel-request-role` | `apps/app/shared/lib/panelState.ts:18` | estritamente necessário (estado de painel) |
 | `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
 | `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
-| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:230,234` · `apps/web/proxy.ts:111,115` | preferência |
+| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:235,239` · `apps/web/proxy.ts:111,115` | preferência |
 | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:21` | preferência |
 | `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:29` | preferência |
 | `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
@@ -549,7 +585,7 @@ quando o perfil já tem uma assinatura viva gravada (`apps/api/app/(routes)/paym
 Se a pessoa abrir o checkout em duas abas e pagar nas duas antes de o primeiro webhook chegar, a Stripe cria
 duas assinaturas. O perfil fica com a mais recente (`decideSubscriptionWrite`,
 `apps/api/(shared)/lib/billing-state.ts:207-214`) e tanto a exclusão de conta quanto o arquivamento pelo admin cancelam só essa
-(`apps/api/(shared)/lib/account-erasure.ts:99`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
+(`apps/api/(shared)/lib/account-erasure.ts:182`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
 a sobrescrita foi aceita. Quem precisar fechar o caso antes do release:
 
 1. Em `POST /payments/checkout`, quando o perfil já tem `stripeCustomerId`, chamar
@@ -669,6 +705,50 @@ desligue "Link de e-mail" no console.
 ⛔ **Nunca foi provado de ponta a ponta fora do emulador.** Rode o ciclo uma vez depois de configurar: pedir o
 link na tela de login → receber → abrir no mesmo navegador → cair no painel. O prazo de validade do link é do
 Firebase e não está documentado.
+
+### 16. Membros e convites da organização — só se o fork liga
+
+Numerado depois dos demais pelo mesmo motivo do item 12. Só é bloqueador para o fork B2B que define
+`NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"`. Com a variável vazia, que é como o `.env.example` vem, nenhuma
+tela nova aparece e as rotas `/organization/*` e `/invitations/*` respondem `404 ORGANIZATION_MEMBERS_DISABLED`.
+A organização implícita de cada conta existe nos dois casos (§1.10).
+
+- [ ] `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"` na `apps/api` **e** na `apps/app` (os dois projetos da
+      Vercel), seguido de um deploy novo de cada um: a variável é `NEXT_PUBLIC_*` e entra no build. Só `"true"`
+      liga (maiúsculas e espaços não importam). Ligada só na `app`, a página da equipe abre e mostra o erro
+      traduzido de `ORGANIZATION_MEMBERS_DISABLED`; ligada só na `api`, as rotas respondem e nenhuma tela as chama.
+- [ ] Itens 3 (Resend com domínio verificado) e 4 (`NEXT_PUBLIC_APP_URL` na `apps/api`) resolvidos. Sem eles,
+      convidar responde `503 EMAIL_NOT_CONFIGURED` e nada é gravado. Com a Resend recusando o envio, o convite é
+      gravado, a resposta é `201` com `delivery: "failed"`, a tela avisa e o dono pode reenviar; o log registra
+      `[organization] invitation-delivery-failed` com o `requestId`, sem endereço.
+- [ ] Item 8 (`ARCJET_KEY`). Sem ele, `/organization/invitations`, `/invitations/preview` e `/invitations/accept`
+      ficam sem limite por IP. O teto de 20 convites pendentes por organização e o intervalo de 60 s entre reenvios
+      para o mesmo endereço continuam valendo.
+- [ ] (opcional) Política de TTL em `organizationInvitation.expiresAt`, que exige faturamento ativo como a de
+      `notification` (§1.9):
+
+```bash
+gcloud firestore fields ttls update expiresAt \
+  --collection-group=organizationInvitation --enable-ttl --project=<project-id>
+```
+
+Sem a TTL nada quebra: o convite vencido continua inútil, porque a validade é conferida no código, e fica no
+banco até ser revogado, reenviado (o documento é reaproveitado) ou apagado na exclusão da conta do dono. Há no
+máximo um documento por organização e endereço.
+
+**O que o convite guarda.** O endereço convidado, o e-mail de quem convidou e o hash `sha256` do token. O token
+só existe no link do e-mail; um vazamento do banco não entrega links que funcionam. A validade de 7 dias é a
+constante `ORGANIZATION_INVITATION_TTL_DAYS` em `apps/api/(shared)/lib/organization-invitation.ts`, e a cópia do
+e-mail diz "7 dias" nos três idiomas: mudar uma exige mudar a outra.
+
+**Desligar depois de ter membros não desfaz a equipe.** Os vínculos continuam, os membros seguem vendo os
+registros da organização e ninguém consegue gerenciar: as rotas de membros e convites passam a responder 404.
+Para separar as pessoas, remova os membros antes de desligar.
+
+**Para conferir depois de ligar**, num ambiente com Resend: entre como dono, abra "Equipe", convide um endereço
+seu, abra o link recebido deslogado, crie a conta com esse endereço e aceite. A equipe passa a listar duas
+pessoas, e um registro criado por uma aparece para a outra. ⛔ Esse ciclo com e-mail real ainda não rodou em
+nenhum ambiente: a validação feita até aqui usou o emulador, sem caixa de entrada.
 
 ---
 
@@ -846,17 +926,25 @@ Enterprise, e no plano Spark do Firebase o Firestore não tem backup de nenhum t
 Não é pendência de configuração: é o que o fork precisa saber antes de prometer ao titular que a conta
 some inteira.
 
-`runAccountErasure` (`apps/api/(shared)/lib/account-erasure.ts`) roda oito passos nomeados e devolve o
-estado de cada um (contados no `STEPS_AFTER_BILLING` do arquivo, mais o `billing`, em 2026-10-20). Seis
-apagam de verdade no boilerplate como ele vem: os registros de `entity` do titular (`entities`), os rótulos
-pessoais na trilha de auditoria (`auditTrail`), os registros de sessão (`sessions`), as notificações do
-sino (`notifications`), o documento de perfil (`profile`) e a conta no Firebase Auth (`authAccount`), que é
-o que libera o e-mail para um novo cadastro. Os outros dois dependem de infra do fork:
+`runAccountErasure` (`apps/api/(shared)/lib/account-erasure.ts`) roda nove passos nomeados e devolve o
+estado de cada um (contados no `STEPS_AFTER_BILLING` do arquivo, mais o `billing`, em 2026-10-22). Sete
+apagam de verdade no boilerplate como ele vem: os registros de `entity` da organização de casa do titular e
+os dele ainda sem carimbo de organização (`entities`), o vínculo dele, os vínculos, os convites e o documento da
+organização de casa e os convites enviados ao e-mail dele (`organization`), os rótulos pessoais na trilha de auditoria (`auditTrail`), os registros de
+sessão (`sessions`), as notificações do sino (`notifications`), o documento de perfil (`profile`) e a conta no
+Firebase Auth (`authAccount`), que é o que libera o e-mail para um novo cadastro. Os outros dois dependem de
+infra do fork:
 
 | Passo | Estado no boilerplate | O que destrava |
 |---|---|---|
 | `billing` | Roda **primeiro**. `skipped: no-subscription` para quem não tem assinatura viva; com assinatura viva, cancela na Stripe (imediato, sem reembolso proporcional) e reporta `done`. | Configurar a Stripe (item 12). Se o cancelamento falhar, ou se a Stripe estiver desligada e o perfil tiver assinatura viva gravada, o expurgo **para antes de apagar qualquer coisa**: os outros passos saem como `skipped: billing-failed` e a rota responde 503 `ACCOUNT_DELETION_BILLING_FAILED`. Apagar o perfil com a assinatura ativa deixaria a pessoa sendo cobrada sem vínculo para descobrir de quem é a assinatura. O cliente Stripe (e-mail e histórico de faturas) **continua** na Stripe: apagá-lo é decisão fiscal e jurídica de cada fork. As coleções `paidInvoice` e `subscriptionActivation` também ficam: guardam só ids da Stripe, valor, moeda e datas, sem perfil, nome ou e-mail. Depois do expurgo, a contratação aparece na home do admin como "Usuário removido" e o valor pago continua na receita. |
-| `storage` | `skipped: storage-not-configured` | Ativar o Cloud Storage (item 6). Sem bucket não existe objeto para apagar. |
+| `storage` | `skipped: storage-not-configured` | Ativar o Cloud Storage (item 6). Sem bucket não existe objeto para apagar. Com bucket, varre o prefixo pessoal (`uploads/<profileId>/`) e o da organização de casa (`uploads/org-<organizationId>/`). |
+
+**O que fica com a organização.** Os registros que o titular criou como membro da organização de outra pessoa
+ficam lá, com as fotos: são dados daquela organização, e o `userId` deles passa a apontar para um perfil que não
+existe mais. O dono de uma organização que ainda tem outros membros não exclui a conta: a rota recusa com
+`409 ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS` antes de pedir a senha, e ele precisa remover os membros
+primeiro, porque não há transferência de propriedade.
 
 O relatório inteiro vai para o log estruturado como `[account] erasure-step`, uma linha por passo,
 correlacionada por `requestId`, com nome do passo, estado e contagem — nunca valores. Ele não volta na

@@ -41,7 +41,7 @@ Monorepo **boilerplate full-stack** (fork customizado do [next-forge](https://gi
 
 1. O front **nunca** chama a API direto. Usa o `apiClient` (`apps/app/shared/lib/client.ts`), instância de `Client` do `@repo/sdk`.
 2. O `Client` (axios) tem uma **action por recurso** (`apiClient.entity.list()`, `.create(body)`, …) e injeta headers de contexto de auth (`BaseClient.setAuthRequestContext`): `userId`, `requestUserId`, `userRole`, `x-role`.
-3. Na `apps/api`, o handler é embrulhado por um **guard** (`requireCommonPanelApi` / `requireAdminApi`) que:
+3. Na `apps/api`, o handler é embrulhado por um **guard** (`requireCommonPanelApi` / `requireOrganizationApi` / `requireAdminApi`) que:
    - valida o `Authorization: Bearer <token>` via `@repo/auth/server` (`getCurrentUser` → Firebase Admin `verifyIdToken`),
    - resolve o perfil Firestore do ator e o **subject** (titular ou usuário personificado),
    - injeta `ctx.subjectProfile`, `ctx.authRequest` no handler.
@@ -54,8 +54,43 @@ Monorepo **boilerplate full-stack** (fork customizado do [next-forge](https://gi
 ## Autenticação e impersonação (admin)
 
 - **Provider**: Firebase. No servidor, `@repo/auth/server` inicializa o Admin SDK (`FIREBASE_ADMIN_*`) e expõe uma API estilo Clerk (`auth()`, `currentUser()`, `getCurrentUser(token)`). O token vem do cookie `access-token`.
-- **Admin impersona usuário comum**: o SDK carrega `requestUserId`/`x-role` e o guard `requireCommonPanelApi` resolve o `subjectProfile` como o usuário personificado. Ao trocar o usuário em `PanelNavbarControls`, o app faz `window.location.reload()` para que todos os pedidos em curso passem a usar o novo contexto.
+- **Admin impersona usuário comum**: o SDK carrega `requestUserId`/`x-role` e o guard `requireCommonPanelApi` resolve o `subjectProfile` como o usuário personificado. Ao trocar o usuário em `PanelNavbarControls`, o `setImpersonatedUser` grava os cookies e chama `router.refresh()`: os Server Components rodam de novo com o novo sujeito, sem recarregar a página.
 - **Regra**: autorização é **sempre** repetida no servidor (guards). UI oculta nunca é a única proteção.
+
+## Escopo de dados: organização
+
+O core é B2C na interface e B2B no modelo de dados. Toda conta comum pertence a uma organização, criada no
+cadastro (`createDefaultUserProfile`) ou, para quem já existia, no primeiro pedido a uma rota escopada. Um fork B2C
+nunca vê essa organização: ela tem um dono só, a própria pessoa, e nenhuma tela fala dela enquanto
+`NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED` estiver vazia.
+
+- **Coleções.** `organization` guarda o dono (`ownerUserId`). `organizationMember/{profileId}` é o vínculo: o id do
+  documento é o id do perfil, então cada pessoa está em uma organização por vez e o guard lê o vínculo por id. Os dois
+  documentos nascem num lote com `create()`, e pedidos simultâneos terminam com uma organização só.
+- **Recurso da organização × recurso da pessoa.** Dado de negócio pertence à organização: o documento grava
+  `organizationId` (o escopo) e `userId` (quem criou, sem efeito sobre acesso). É o caso de `entity` e das fotos dele,
+  guardadas em `uploads/org-<organizationId>/`. Notificações, sessões, avatar e preferências continuam da pessoa,
+  filtrados pelo id do perfil, com o avatar em `uploads/<profileId>/`.
+- **Onde o escopo é decidido.** No guard `requireOrganizationApi` (`apps/api/app/(guards)/organization.ts`), que
+  resolve a organização do sujeito e a entrega em `ctx.organization`, e no repositório, num helper privado
+  (`inOrganization`, `findInOrganization`). Um handler repassa `ctx.organization.organizationId` e responde 404 ao
+  `null`; ele nunca compara ids por conta própria.
+- **Dois eixos de papel.** `UserType` (`admin`/`common`) é papel de plataforma. `organizationMember.role`
+  (`owner`/`member`) é papel dentro da organização. O `requireAdminApi` olha só o perfil e o `requireOrganizationApi`
+  olha só o vínculo. O vínculo de um admin de plataforma nunca é lido, porque ele só alcança o painel comum
+  personificando alguém, e aí vale a organização do personificado. Quem é promovido a admin guarda o vínculo antigo,
+  sem efeito.
+- **Registros de antes das organizações.** O primeiro pedido de cada pessoa carimba com a organização de casa os
+  `entity` dela que ainda não têm `organizationId`, sem mexer em `updatedAt`. A migração é idempotente e não precisa de
+  script nem de janela de manutenção.
+- **Membros e convites (B2B).** Com `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"` na `api` e na `app`, o dono
+  convida por e-mail (`organizationInvitation`, um documento por organização e endereço, só o hash do token,
+  7 dias, uso único), o convidado aceita em `/invite` com uma conta do mesmo e-mail e passa a membro. O dono
+  remove membros e o membro sai, voltando à organização de casa. Sem a variável, as rotas `/organization/*` e
+  `/invitations/*` respondem `404 ORGANIZATION_MEMBERS_DISABLED` antes de autenticar.
+
+Recurso novo de negócio nasce escopado por organização, como `entity`. Recurso que descreve a pessoa, como
+`notification`, continua escopado pelo perfil.
 
 ## Internacionalização
 
