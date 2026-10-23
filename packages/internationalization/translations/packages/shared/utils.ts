@@ -73,6 +73,9 @@ export const sharedUtilsTranslations = {
                 "Não foi possível concluir a exclusão da conta. Tente de novo.",
             ACCOUNT_DELETION_BILLING_FAILED:
                 "Não conseguimos cancelar a sua assinatura, então a conta não foi excluída. Tente de novo em instantes.",
+            ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS:
+                "A sua equipe ainda tem membros. Remova-os antes de excluir a conta.",
+            ORGANIZATION_FORBIDDEN: "Só o dono da equipe pode fazer isso.",
             PAYMENTS_NOT_CONFIGURED:
                 "A cobrança não está disponível neste ambiente.",
             PAYMENTS_PLAN_NOT_FOUND: "Este plano não está mais disponível.",
@@ -148,6 +151,27 @@ export const sharedUtilsTranslations = {
             NOTIFICATION_NOT_FOUND: "Notificação não encontrada.",
             NOTIFICATIONS_INDEX_MISSING:
                 "As notificações estão indisponíveis no momento. Tente de novo em instantes.",
+            ORGANIZATION_MEMBERS_DISABLED:
+                "Equipes não estão disponíveis neste ambiente.",
+            ORGANIZATION_MEMBER_NOT_FOUND:
+                "Esta pessoa não faz parte da equipe.",
+            ORGANIZATION_OWNER_CANNOT_LEAVE:
+                "O dono não pode sair nem ser removido da equipe.",
+            ORGANIZATION_INVITATION_NOT_FOUND: "Convite não encontrado.",
+            ORGANIZATION_INVITATION_ALREADY_MEMBER:
+                "Esta pessoa já faz parte da equipe.",
+            ORGANIZATION_INVITATION_LIMIT_REACHED:
+                "A equipe chegou ao limite de convites pendentes. Revogue algum antes de convidar outra pessoa.",
+            ORGANIZATION_INVITATION_RECENTLY_SENT:
+                "Um convite acabou de ser enviado para este e-mail. Aguarde um minuto para reenviar.",
+            ORGANIZATION_INVITATION_INVALID:
+                "Este convite não vale mais. Peça um novo a quem convidou você.",
+            ORGANIZATION_INVITATION_EXPIRED:
+                "Este convite expirou. Peça um novo a quem convidou você.",
+            ORGANIZATION_INVITATION_EMAIL_MISMATCH:
+                "Este convite foi enviado para outro e-mail. Entre com a conta desse e-mail para aceitar.",
+            ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
+                "Você é dono de uma equipe com membros. Remova-os antes de entrar em outra equipe.",
         },
     },
     en: {
@@ -223,6 +247,9 @@ export const sharedUtilsTranslations = {
                 "The account deletion could not be completed. Try again.",
             ACCOUNT_DELETION_BILLING_FAILED:
                 "We couldn't cancel your subscription, so the account was not deleted. Try again in a moment.",
+            ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS:
+                "Your team still has members. Remove them before deleting your account.",
+            ORGANIZATION_FORBIDDEN: "Only the team owner can do this.",
             PAYMENTS_NOT_CONFIGURED:
                 "Billing is not available in this environment.",
             PAYMENTS_PLAN_NOT_FOUND: "This plan is no longer available.",
@@ -297,6 +324,27 @@ export const sharedUtilsTranslations = {
             NOTIFICATION_NOT_FOUND: "Notification not found.",
             NOTIFICATIONS_INDEX_MISSING:
                 "Notifications are unavailable right now. Try again shortly.",
+            ORGANIZATION_MEMBERS_DISABLED:
+                "Teams are not available in this environment.",
+            ORGANIZATION_MEMBER_NOT_FOUND:
+                "This person is not part of the team.",
+            ORGANIZATION_OWNER_CANNOT_LEAVE:
+                "The owner cannot leave or be removed from the team.",
+            ORGANIZATION_INVITATION_NOT_FOUND: "Invitation not found.",
+            ORGANIZATION_INVITATION_ALREADY_MEMBER:
+                "This person is already part of the team.",
+            ORGANIZATION_INVITATION_LIMIT_REACHED:
+                "The team reached the limit of pending invitations. Revoke one before inviting someone else.",
+            ORGANIZATION_INVITATION_RECENTLY_SENT:
+                "An invitation was just sent to this email. Wait a minute to resend it.",
+            ORGANIZATION_INVITATION_INVALID:
+                "This invitation is no longer valid. Ask whoever invited you for a new one.",
+            ORGANIZATION_INVITATION_EXPIRED:
+                "This invitation has expired. Ask whoever invited you for a new one.",
+            ORGANIZATION_INVITATION_EMAIL_MISMATCH:
+                "This invitation was sent to another email. Sign in with that account to accept it.",
+            ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
+                "You own a team that has members. Remove them before joining another team.",
         },
     },
     es: {
@@ -375,6 +423,10 @@ export const sharedUtilsTranslations = {
                 "No se pudo completar la eliminación de la cuenta. Inténtalo de nuevo.",
             ACCOUNT_DELETION_BILLING_FAILED:
                 "No pudimos cancelar tu suscripción, así que la cuenta no se eliminó. Inténtalo de nuevo en unos instantes.",
+            ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS:
+                "Tu equipo todavía tiene miembros. Quítalos antes de eliminar tu cuenta.",
+            ORGANIZATION_FORBIDDEN:
+                "Solo el dueño del equipo puede hacer esto.",
             PAYMENTS_NOT_CONFIGURED:
                 "La facturación no está disponible en este entorno.",
             PAYMENTS_PLAN_NOT_FOUND: "Este plan ya no está disponible.",
@@ -454,6 +506,27 @@ export const sharedUtilsTranslations = {
             NOTIFICATION_NOT_FOUND: "Notificación no encontrada.",
             NOTIFICATIONS_INDEX_MISSING:
                 "Las notificaciones no están disponibles ahora. Inténtalo de nuevo en unos instantes.",
+            ORGANIZATION_MEMBERS_DISABLED:
+                "Los equipos no están disponibles en este entorno.",
+            ORGANIZATION_MEMBER_NOT_FOUND:
+                "Esta persona no forma parte del equipo.",
+            ORGANIZATION_OWNER_CANNOT_LEAVE:
+                "El dueño no puede salir ni ser quitado del equipo.",
+            ORGANIZATION_INVITATION_NOT_FOUND: "Invitación no encontrada.",
+            ORGANIZATION_INVITATION_ALREADY_MEMBER:
+                "Esta persona ya forma parte del equipo.",
+            ORGANIZATION_INVITATION_LIMIT_REACHED:
+                "El equipo llegó al límite de invitaciones pendientes. Revoca alguna antes de invitar a otra persona.",
+            ORGANIZATION_INVITATION_RECENTLY_SENT:
+                "Se acaba de enviar una invitación a este correo. Espera un minuto para reenviarla.",
+            ORGANIZATION_INVITATION_INVALID:
+                "Esta invitación ya no es válida. Pide una nueva a quien te invitó.",
+            ORGANIZATION_INVITATION_EXPIRED:
+                "Esta invitación venció. Pide una nueva a quien te invitó.",
+            ORGANIZATION_INVITATION_EMAIL_MISMATCH:
+                "Esta invitación se envió a otro correo. Inicia sesión con esa cuenta para aceptarla.",
+            ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
+                "Eres dueño de un equipo con miembros. Quítalos antes de unirte a otro equipo.",
         },
     },
 };
