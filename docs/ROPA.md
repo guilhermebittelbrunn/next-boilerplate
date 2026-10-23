@@ -66,7 +66,7 @@ O registro é também uma resposta pronta: a ANPD pode pedi-lo durante a apuraç
 | Medidas de segurança | Cookie de sessão `httpOnly` conferido com revogação; o titular vê as sessões ativas na área de conta e encerra uma, todas as outras ou todas. A API recusa a credencial de uma sessão encerrada. |
 | Período de armazenamento | Cookie de sessão: 5 dias por padrão (`SESSION_COOKIE_MAX_AGE_DAYS`, até 14), com teto absoluto de 30 dias desde o login (`SESSION_ABSOLUTE_MAX_AGE_DAYS`, até 90), em `packages/auth/session.ts:23-29`. Registros da coleção `session`: até a exclusão da conta, encerrados inclusive, que entram na exportação e são apagados num passo próprio da exclusão (`sessions`). Registro de acesso: 6 meses para provedor de aplicação constituído como pessoa jurídica com fins econômicos (Marco Civil, art. 15); o prazo real é o da retenção de log da plataforma ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §11). `[FORK]` confirmar a retenção configurada. |
 | Processo, finalidade e hipótese legal | Processo: manter a sessão e guardar o registro de acesso. Finalidade: autenticar as requisições e cumprir a guarda do registro de acesso. Hipóteses sugeridas: execução de contrato (art. 7º, V) para a sessão; cumprimento de obrigação legal (art. 7º, II) para o registro de acesso do Marco Civil. `[FORK]` confirmar. |
-| Observações | Onde está no código: `packages/auth/session.ts`, `packages/auth/server.ts:296-309`, `packages/sdk/src/types/user/user.ts:54-59`, `apps/api/(shared)/repositories/session.repository.ts`, `apps/api/(shared)/lib/user-agent.ts`. O log estruturado da API não grava IP (`apps/api/proxy.ts:84-96`); o IP que existe está no log de requisição da plataforma. |
+| Observações | Onde está no código: `packages/auth/session.ts`, `packages/auth/server.ts:296-309`, `packages/sdk/src/types/user/user.ts:54-59`, `apps/api/(shared)/repositories/session.repository.ts`, `apps/api/(shared)/lib/user-agent.ts`. O log estruturado da API não grava IP (`apps/api/proxy.ts:94-106`); o IP que existe está no log de requisição da plataforma. |
 
 ### 3. Cobrança de assinatura (opcional)
 
@@ -148,7 +148,7 @@ Existe só com `ARCJET_KEY` definida e com o prefixo `ajkey_`. Um valor sem o pr
 | Categorias de titulares | Titulares em geral (qualquer pessoa que faz requisição). |
 | Dados pessoais | Outros: IP e cabeçalhos da requisição. |
 | Compartilhamento | Arcjet. |
-| Medidas de segurança | O log de bloqueio da API não grava endereço, cabeçalho nem corpo (`apps/api/proxy.ts:84-96`). |
+| Medidas de segurança | O log de bloqueio da API não grava endereço, cabeçalho nem corpo (`apps/api/proxy.ts:94-106`). |
 | Período de armazenamento | 30 dias na Arcjet, e dado agregado por mais tempo ([privacidade da Arcjet](https://docs.arcjet.com/privacy)). |
 | Processo, finalidade e hipótese legal | Processo: limite de requisições e bloqueio de bot. Finalidade: segurança do serviço. Hipótese sugerida: legítimo interesse (art. 7º, IX). `[FORK]` confirmar. |
 | Observações | Onde está no código: `packages/security/index.ts:37-47`, `packages/security/index.ts:80`. Transferência: várias regiões sem garantia; DPA da Arcjet não encontrado ([`SUBPROCESSORS.md`](SUBPROCESSORS.md)). |

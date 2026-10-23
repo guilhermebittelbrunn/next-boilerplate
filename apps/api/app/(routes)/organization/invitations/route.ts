@@ -16,6 +16,7 @@ import {
 } from "@/(shared)/lib/organization-invitation";
 import { whenOrganizationMembersEnabled } from "@/(shared)/lib/organization-members";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
+import { adminAuthErrorReason } from "@/(shared)/lib/toolkit-error-codes";
 import { toOrganizationInvitationDTO } from "@/(shared)/mappers/organization-invitation.mapper";
 import { organizationInvitationRepository } from "@/(shared)/repositories/organization-invitation.repository";
 import { parseCreateInvitation } from "@/(shared)/validation/organization.schema";
@@ -69,7 +70,24 @@ export const POST = whenOrganizationMembersEnabled(
             const { organizationId } = ctx.organization;
             const email = normalizeInvitationEmail(parsed.value.email);
 
-            if (await isMemberOfOrganization(email, organizationId)) {
+            let alreadyMember: boolean;
+            try {
+                alreadyMember = await isMemberOfOrganization(
+                    email,
+                    organizationId
+                );
+            } catch (error) {
+                logEvent("organization", "invitation-member-check-failed", {
+                    requestId: requestIdFrom(req),
+                    reason: adminAuthErrorReason(error),
+                });
+                return Response.json(
+                    { error: { code: "ORGANIZATION_INVITATION_FAILED" } },
+                    { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
+                );
+            }
+
+            if (alreadyMember) {
                 return Response.json(
                     {
                         error: {

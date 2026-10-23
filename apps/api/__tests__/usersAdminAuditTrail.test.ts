@@ -29,6 +29,10 @@ const {
     revokeUserSessionsMock: vi.fn(),
 }));
 
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    ownsOrganizationWithMembers: () => Promise.resolve(false),
+}));
+
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
     recordAuditEvent: (...args: unknown[]) => recordAuditEventMock(...args),
     recordImpersonationSession: vi.fn(),

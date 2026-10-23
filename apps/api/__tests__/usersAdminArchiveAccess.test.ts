@@ -16,6 +16,7 @@ const {
     updateUserMock,
     revokeUserSessionsMock,
     logEventMock,
+    ownsOrganizationWithMembersMock,
     calls,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
@@ -28,7 +29,13 @@ const {
     updateUserMock: vi.fn(),
     revokeUserSessionsMock: vi.fn(),
     logEventMock: vi.fn(),
+    ownsOrganizationWithMembersMock: vi.fn(),
     calls: [] as string[],
+}));
+
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    ownsOrganizationWithMembers: (...args: unknown[]) =>
+        ownsOrganizationWithMembersMock(...args),
 }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
@@ -153,6 +160,7 @@ beforeEach(() => {
         updateUserMock,
         revokeUserSessionsMock,
         logEventMock,
+        ownsOrganizationWithMembersMock,
     ]) {
         mock.mockReset();
     }
@@ -173,6 +181,7 @@ beforeEach(() => {
         return Promise.resolve({ id: SUBSCRIPTION_ID, status: "canceled" });
     });
     getStripeMock.mockReturnValue({ subscriptions: { cancel: cancelMock } });
+    ownsOrganizationWithMembersMock.mockResolvedValue(false);
 });
 
 describe("DELETE /users/[id] takes the account's access away", () => {
@@ -277,5 +286,61 @@ describe("DELETE /users/[id] takes the account's access away", () => {
         });
         expect(updateUserMock).not.toHaveBeenCalled();
         expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("DELETE /users/[id] keeps an organization with members managed", () => {
+    it("refuses to archive the owner of an organization with members and touches nothing", async () => {
+        findByIdMock.mockResolvedValue(targetWith("active"));
+        ownsOrganizationWithMembersMock.mockResolvedValue(true);
+
+        const response = await archive();
+
+        expect(response.status).toBe(HTTP_STATUS.CONFLICT);
+        expect(await response.json()).toEqual({
+            error: { code: "USERS_DELETE_ORGANIZATION_HAS_MEMBERS" },
+        });
+        expect(ownsOrganizationWithMembersMock).toHaveBeenCalledWith(
+            TARGET_DOC_ID
+        );
+        expect(getStripeMock).not.toHaveBeenCalled();
+        expect(cancelMock).not.toHaveBeenCalled();
+        expect(updateUserMock).not.toHaveBeenCalled();
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+        expect(deleteMock).not.toHaveBeenCalled();
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
+        expect(calls).toEqual([]);
+    });
+
+    it("archives an owner who is alone or a profile without an organization", async () => {
+        const response = await archive();
+
+        expect(response.status).toBe(STATUS_NO_CONTENT);
+        expect(ownsOrganizationWithMembersMock).toHaveBeenCalledWith(
+            TARGET_DOC_ID
+        );
+        expect(ownsOrganizationWithMembersMock).not.toHaveBeenCalledWith(
+            TARGET_UID
+        );
+        expect(calls).toEqual(["disable", "revoke", "delete"]);
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("refuses the caller's own account before looking at the organization", async () => {
+        findByIdMock.mockResolvedValue(ADMIN_PROFILE);
+
+        const response = await archive();
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(ownsOrganizationWithMembersMock).not.toHaveBeenCalled();
+    });
+
+    it("answers 404 for a missing profile before looking at the organization", async () => {
+        findByIdMock.mockResolvedValue(null);
+
+        const response = await archive();
+
+        expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+        expect(ownsOrganizationWithMembersMock).not.toHaveBeenCalled();
     });
 });

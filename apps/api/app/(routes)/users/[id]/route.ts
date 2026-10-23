@@ -14,6 +14,7 @@ import { resolveUserAuditLabel } from "@/(shared)/lib/audit-label";
 import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import { cancelSubscriptionForErasure } from "@/(shared)/lib/billing";
 import { isLiveSubscription } from "@/(shared)/lib/billing-state";
+import { ownsOrganizationWithMembers } from "@/(shared)/lib/organization-membership";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import {
     type RouteIdParamsContext,
@@ -185,6 +186,13 @@ export const DELETE = requireAdminApi<RouteIdParamsContext>(
 
         if (isOwnAccount(profile, ctx)) {
             return selfLockoutRefusal();
+        }
+
+        if (await ownsOrganizationWithMembers(profile.id)) {
+            return Response.json(
+                { error: { code: "USERS_DELETE_ORGANIZATION_HAS_MEMBERS" } },
+                { status: HTTP_STATUS.CONFLICT }
+            );
         }
 
         // Read while the account is still there: the record that has to outlive the

@@ -1,3 +1,4 @@
+import { UserType } from "@repo/sdk/src/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -8,6 +9,7 @@ const {
     findOwnedByMock,
     claimUnscopedMock,
     logEventMock,
+    findProfileByIdMock,
 } = vi.hoisted(() => ({
     findByUserIdMock: vi.fn(),
     createOwnerMembershipMock: vi.fn(),
@@ -16,6 +18,7 @@ const {
     findOwnedByMock: vi.fn(),
     claimUnscopedMock: vi.fn(),
     logEventMock: vi.fn(),
+    findProfileByIdMock: vi.fn(),
 }));
 
 vi.mock("@/(shared)/repositories/organization-member.repository", () => ({
@@ -39,6 +42,12 @@ vi.mock("@/(shared)/repositories/entity.repository", () => ({
     entityRepository: {
         claimUnscopedByUserId: (...args: unknown[]) =>
             claimUnscopedMock(...args),
+    },
+}));
+
+vi.mock("@/(shared)/repositories/user.repository", () => ({
+    userRepository: {
+        findById: (...args: unknown[]) => findProfileByIdMock(...args),
     },
 }));
 
@@ -78,9 +87,17 @@ beforeEach(() => {
         findOwnedByMock,
         claimUnscopedMock,
         logEventMock,
+        findProfileByIdMock,
     ]) {
         mock.mockReset();
     }
+    findProfileByIdMock.mockImplementation((id: string) =>
+        Promise.resolve({
+            id,
+            reference_id: `${id}-uid`,
+            type: UserType.COMMON,
+        })
+    );
     findByUserIdMock.mockResolvedValue(null);
     findOwnedByMock.mockResolvedValue(null);
     createOwnerMembershipMock.mockImplementation(
@@ -248,6 +265,7 @@ describe("ownsOrganizationWithMembers", () => {
         listByOrganizationMock.mockResolvedValue([membership()]);
 
         expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(false);
+        expect(findProfileByIdMock).not.toHaveBeenCalled();
     });
 
     it("is true when anyone else belongs to the home organization", async () => {
@@ -266,5 +284,76 @@ describe("ownsOrganizationWithMembers", () => {
 
         expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(true);
         expect(listByOrganizationMock).toHaveBeenCalledWith("org-home");
+        expect(findProfileByIdMock).toHaveBeenCalledWith("profile-2");
+        expect(findProfileByIdMock).not.toHaveBeenCalledWith(PROFILE_ID);
+    });
+
+    it("is false when the only other member's profile was archived", async () => {
+        findOwnedByMock.mockResolvedValue({
+            id: "org-home",
+            ownerUserId: PROFILE_ID,
+        });
+        listByOrganizationMock.mockResolvedValue([
+            membership(),
+            membership({
+                id: "profile-archived",
+                userId: "profile-archived",
+                role: "member",
+            }),
+        ]);
+        findProfileByIdMock.mockResolvedValue(null);
+
+        expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(false);
+        expect(findProfileByIdMock).toHaveBeenCalledWith("profile-archived");
+    });
+
+    it("is true when a live member sits next to an archived one", async () => {
+        findOwnedByMock.mockResolvedValue({
+            id: "org-home",
+            ownerUserId: PROFILE_ID,
+        });
+        listByOrganizationMock.mockResolvedValue([
+            membership(),
+            membership({
+                id: "profile-archived",
+                userId: "profile-archived",
+                role: "member",
+            }),
+            membership({
+                id: "profile-2",
+                userId: "profile-2",
+                role: "member",
+            }),
+        ]);
+        findProfileByIdMock.mockImplementation((id: string) =>
+            Promise.resolve(
+                id === "profile-archived"
+                    ? null
+                    : { id, reference_id: `${id}-uid`, type: UserType.COMMON }
+            )
+        );
+
+        expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(true);
+    });
+
+    it("surfaces a failure to read a member's profile", async () => {
+        findOwnedByMock.mockResolvedValue({
+            id: "org-home",
+            ownerUserId: PROFILE_ID,
+        });
+        listByOrganizationMock.mockResolvedValue([
+            membership(),
+            membership({
+                id: "profile-2",
+                userId: "profile-2",
+                role: "member",
+            }),
+        ]);
+        const unavailable = new Error("unavailable");
+        findProfileByIdMock.mockRejectedValue(unavailable);
+
+        await expect(ownsOrganizationWithMembers(PROFILE_ID)).rejects.toBe(
+            unavailable
+        );
     });
 });
