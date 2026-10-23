@@ -3,6 +3,7 @@ import type { OrganizationMemberRecord } from "../mappers/organization-member.ma
 import { entityRepository } from "../repositories/entity.repository";
 import { organizationRepository } from "../repositories/organization.repository";
 import { organizationMemberRepository } from "../repositories/organization-member.repository";
+import { userRepository } from "../repositories/user.repository";
 
 /** The membership was neither there nor creatable, which only a concurrent removal explains. */
 export class OrganizationMembershipUnresolvedError extends Error {
@@ -100,7 +101,8 @@ export async function ensureOrganizationMembershipQuietly(
 
 /**
  * There is no transfer of ownership, so an owner who still has members would leave them
- * in an organization nobody can manage.
+ * in an organization nobody can manage. A member whose profile was archived, or no longer
+ * exists, is not stranded: that account is disabled and does not come back on its own.
  */
 export async function ownsOrganizationWithMembers(
     profileId: string
@@ -113,5 +115,13 @@ export async function ownsOrganizationWithMembers(
     const members = await organizationMemberRepository.listByOrganization(
         home.id
     );
-    return members.some((member) => member.userId !== profileId);
+    const others = members.filter((member) => member.userId !== profileId);
+    if (others.length === 0) {
+        return false;
+    }
+
+    const profiles = await Promise.all(
+        others.map((member) => userRepository.findById(member.userId))
+    );
+    return profiles.some((profile) => profile !== null);
 }
