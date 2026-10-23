@@ -51,9 +51,9 @@ const securityOptions = buildApiOptions();
  * is the visitor's.
  *
  * Organization invitations: `/organization/invitations` sends an email on every accepted
- * POST, `/invitations/preview` is public and answers whether a token is live, and
- * `/invitations/accept` is the step that consumes one. The pending ceiling and the resend
- * interval still hold without a budget here.
+ * POST and counts only the POST, since the owner's table reads it after every change.
+ * `/invitations/preview` is public and answers whether a token is live, `/invitations/accept`
+ * consumes one. The pending ceiling and the resend interval still hold without a budget.
  *
  * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
@@ -77,8 +77,18 @@ const RATE_LIMITED_PATHS = [
     "/invitations/accept",
 ];
 
-function isRateLimitedPath(pathname: string): boolean {
-    return RATE_LIMITED_PATHS.includes(pathname);
+/** Listed paths that count only these methods; every other listed path counts any method. */
+const RATE_LIMITED_METHODS = new Map<string, readonly string[]>([
+    ["/organization/invitations", ["POST"]],
+]);
+
+function isRateLimited(request: NextRequest): boolean {
+    const { pathname } = request.nextUrl;
+    if (!RATE_LIMITED_PATHS.includes(pathname)) {
+        return false;
+    }
+    const methods = RATE_LIMITED_METHODS.get(pathname);
+    return methods === undefined || methods.includes(request.method);
 }
 
 /** Single line, stable prefix, no address, header or body: blocking is not a reason to start retaining personal data. */
@@ -163,7 +173,7 @@ export async function proxy(request: NextRequest) {
         );
     }
 
-    if (isRateLimitedPath(request.nextUrl.pathname)) {
+    if (isRateLimited(request)) {
         const decision = await checkRateLimit(request);
 
         if (!decision.allowed) {
