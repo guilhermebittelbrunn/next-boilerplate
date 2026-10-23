@@ -1,10 +1,17 @@
 import { UserType } from "@repo/sdk/src/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createMock, emitOnceMock, logEventMock } = vi.hoisted(() => ({
-    createMock: vi.fn(),
-    emitOnceMock: vi.fn(),
-    logEventMock: vi.fn(),
+const { createMock, emitOnceMock, logEventMock, ensureMembershipMock } =
+    vi.hoisted(() => ({
+        createMock: vi.fn(),
+        emitOnceMock: vi.fn(),
+        logEventMock: vi.fn(),
+        ensureMembershipMock: vi.fn(),
+    }));
+
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    ensureOrganizationMembershipQuietly: (...args: unknown[]) =>
+        ensureMembershipMock(...args),
 }));
 
 vi.mock("@repo/auth/server", () => ({
@@ -56,6 +63,19 @@ describe("createDefaultUserProfile", () => {
         await createDefaultUserProfile("uid-1", { type: UserType.ADMIN });
 
         expect(emitOnceMock).not.toHaveBeenCalled();
+    });
+
+    it("cria a organização do perfil comum no cadastro", async () => {
+        await createDefaultUserProfile("uid-1");
+
+        expect(ensureMembershipMock).toHaveBeenCalledWith("profile-1");
+    });
+
+    /** A platform admin never belongs to an organization. */
+    it("não cria organização para um perfil admin", async () => {
+        await createDefaultUserProfile("uid-1", { type: UserType.ADMIN });
+
+        expect(ensureMembershipMock).not.toHaveBeenCalled();
     });
 
     it("devolve o perfil mesmo quando o aviso não grava, e registra só o nome do erro", async () => {

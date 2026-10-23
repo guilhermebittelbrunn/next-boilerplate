@@ -6,13 +6,24 @@ import {
 } from "@repo/shared/utils/helpers/passwordPolicy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createUserMock, createMock, deleteUserMock, emitNotificationMock } =
-    vi.hoisted(() => ({
-        createUserMock: vi.fn(),
-        createMock: vi.fn(),
-        deleteUserMock: vi.fn(),
-        emitNotificationMock: vi.fn(),
-    }));
+const {
+    createUserMock,
+    createMock,
+    deleteUserMock,
+    emitNotificationMock,
+    ensureMembershipMock,
+} = vi.hoisted(() => ({
+    createUserMock: vi.fn(),
+    createMock: vi.fn(),
+    deleteUserMock: vi.fn(),
+    emitNotificationMock: vi.fn(),
+    ensureMembershipMock: vi.fn(),
+}));
+
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    ensureOrganizationMembershipQuietly: (...args: unknown[]) =>
+        ensureMembershipMock(...args),
+}));
 
 vi.mock("@/(shared)/lib/notifications", () => ({
     emitNotificationQuietly: (...args: unknown[]) =>
@@ -95,6 +106,12 @@ describe("POST /auth/sign-up", () => {
             params: {},
             dedupeKey: "profile-1",
         });
+    });
+
+    it("gives the new profile its own organization", async () => {
+        await POST(signUpRequest());
+
+        expect(ensureMembershipMock).toHaveBeenCalledWith("profile-1");
     });
 
     it("rolls the Auth account back when the profile cannot be created", async () => {
