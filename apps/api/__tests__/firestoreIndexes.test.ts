@@ -33,7 +33,7 @@ describe("firestore.indexes.json", () => {
             collectionGroup: "entity",
             queryScope: "COLLECTION",
             fields: [
-                { fieldPath: "userId", order: "ASCENDING" },
+                { fieldPath: "organizationId", order: "ASCENDING" },
                 { fieldPath: "deletedAt", order: "ASCENDING" },
                 { fieldPath: "createdAt", order: "DESCENDING" },
             ],
@@ -45,7 +45,7 @@ describe("firestore.indexes.json", () => {
             collectionGroup: "entity",
             queryScope: "COLLECTION",
             fields: [
-                { fieldPath: "userId", order: "ASCENDING" },
+                { fieldPath: "organizationId", order: "ASCENDING" },
                 { fieldPath: "deletedAt", order: "ASCENDING" },
                 { fieldPath: "enabled", order: "ASCENDING" },
             ],
@@ -54,11 +54,25 @@ describe("firestore.indexes.json", () => {
             collectionGroup: "entity",
             queryScope: "COLLECTION",
             fields: [
-                { fieldPath: "userId", order: "ASCENDING" },
+                { fieldPath: "organizationId", order: "ASCENDING" },
                 { fieldPath: "deletedAt", order: "ASCENDING" },
                 { fieldPath: "type", order: "ASCENDING" },
             ],
         });
+    });
+
+    /**
+     * Listing and counting are scoped by organization: an index keyed by the author has
+     * no query left to serve, and keeping it would only cost writes.
+     */
+    it("no longer keys any entity index by the author", () => {
+        const byAuthor = indexes.filter(
+            (index) =>
+                index.collectionGroup === "entity" &&
+                index.fields.some((field) => field.fieldPath === "userId")
+        );
+
+        expect(byAuthor).toEqual([]);
     });
 
     it("declares the index the user summary counts need", () => {
