@@ -8,16 +8,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
     resolveApiActorMock,
     findByReferenceIdMock,
-    listByUserIdMock,
-    findByIdMock,
+    listByOrganizationMock,
+    findInOrganizationMock,
     createMock,
     updateMock,
     deleteMock,
+    resolveMembershipMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
-    listByUserIdMock: vi.fn(),
-    findByIdMock: vi.fn(),
+    listByOrganizationMock: vi.fn(),
+    findInOrganizationMock: vi.fn(),
+    resolveMembershipMock: vi.fn(),
     createMock: vi.fn(),
     updateMock: vi.fn(),
     deleteMock: vi.fn(),
@@ -45,10 +47,17 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    resolveOrganizationMembership: (...args: unknown[]) =>
+        resolveMembershipMock(...args),
+}));
+
 vi.mock("@/(shared)/repositories/entity.repository", () => ({
     entityRepository: {
-        listByUserId: (...args: unknown[]) => listByUserIdMock(...args),
-        findById: (...args: unknown[]) => findByIdMock(...args),
+        listByOrganization: (...args: unknown[]) =>
+            listByOrganizationMock(...args),
+        findInOrganization: (...args: unknown[]) =>
+            findInOrganizationMock(...args),
         create: (...args: unknown[]) => createMock(...args),
         update: (...args: unknown[]) => updateMock(...args),
         delete: (...args: unknown[]) => deleteMock(...args),
@@ -86,9 +95,11 @@ const TARGET_PROFILE = {
     type: UserType.COMMON,
 };
 
+const TARGET_ORGANIZATION_ID = "org-target";
 const ENTITY_ID = "entity-1";
 const TARGET_ENTITY = {
     id: ENTITY_ID,
+    organizationId: TARGET_ORGANIZATION_ID,
     userId: TARGET_PROFILE.id,
     name: "Acme",
     description: "A customer",
@@ -169,11 +180,12 @@ beforeEach(() => {
     for (const mock of [
         resolveApiActorMock,
         findByReferenceIdMock,
-        listByUserIdMock,
-        findByIdMock,
+        listByOrganizationMock,
+        findInOrganizationMock,
         createMock,
         updateMock,
         deleteMock,
+        resolveMembershipMock,
     ]) {
         mock.mockReset();
     }
@@ -181,11 +193,15 @@ beforeEach(() => {
     findByReferenceIdMock.mockImplementation((uid: string) =>
         Promise.resolve(uid === ADMIN_UID ? ADMIN_PROFILE : TARGET_PROFILE)
     );
-    listByUserIdMock.mockResolvedValue({
+    resolveMembershipMock.mockResolvedValue({
+        organizationId: TARGET_ORGANIZATION_ID,
+        role: "owner",
+    });
+    listByOrganizationMock.mockResolvedValue({
         items: [TARGET_ENTITY],
         nextCursorId: null,
     });
-    findByIdMock.mockResolvedValue(TARGET_ENTITY);
+    findInOrganizationMock.mockResolvedValue(TARGET_ENTITY);
     createMock.mockResolvedValue(TARGET_ENTITY);
     updateMock.mockResolvedValue(undefined);
     deleteMock.mockResolvedValue(undefined);
@@ -206,10 +222,14 @@ describe("entities routes while an admin acts as another user", () => {
                 nextCursor: null,
             },
         });
-        expect(listByUserIdMock).toHaveBeenCalledWith(TARGET_PROFILE.id, {
-            limit: 20,
-            cursorId: null,
-        });
+        expect(resolveMembershipMock).toHaveBeenCalledWith(TARGET_PROFILE.id);
+        expect(resolveMembershipMock).not.toHaveBeenCalledWith(
+            ADMIN_PROFILE.id
+        );
+        expect(listByOrganizationMock).toHaveBeenCalledWith(
+            TARGET_ORGANIZATION_ID,
+            { limit: 20, cursorId: null }
+        );
     });
 
     it("serves a single record of the impersonated user", async () => {
@@ -222,14 +242,20 @@ describe("entities routes while an admin acts as another user", () => {
         expect(await response.json()).toEqual({
             data: { ...TARGET_ENTITY, photoUrl: null },
         });
+        expect(findInOrganizationMock).toHaveBeenCalledWith(
+            ENTITY_ID,
+            TARGET_ORGANIZATION_ID
+        );
     });
 
+    /** The refusal comes from the guard, before the organization is even resolved. */
     it("refuses to create and writes nothing", async () => {
         const response = await POST(asImpersonatingAdmin("POST", VALID_BODY));
 
         expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
         expect(await response.json()).toEqual(READ_ONLY_REFUSAL);
         expect(writeCallCounts()).toEqual(NO_WRITES);
+        expect(resolveMembershipMock).not.toHaveBeenCalled();
     });
 
     it("refuses to update and writes nothing", async () => {
@@ -292,7 +318,10 @@ describe("entities routes for the owner", () => {
 
         expect(response.status).toBe(STATUS_CREATED);
         expect(createMock).toHaveBeenCalledWith(
-            expect.objectContaining({ userId: TARGET_PROFILE.id })
+            expect.objectContaining({
+                organizationId: TARGET_ORGANIZATION_ID,
+                userId: TARGET_PROFILE.id,
+            })
         );
     });
 
@@ -315,11 +344,8 @@ describe("entities routes for the owner", () => {
         expect(deleteMock).toHaveBeenCalledWith(ENTITY_ID);
     });
 
-    it("returns 404 when the record belongs to another user", async () => {
-        findByIdMock.mockResolvedValue({
-            ...TARGET_ENTITY,
-            userId: "someone-else",
-        });
+    it("returns 404 when the record belongs to another organization", async () => {
+        findInOrganizationMock.mockResolvedValue(null);
 
         const response = await PUT(
             asOwner("PUT", { name: "Renamed" }),

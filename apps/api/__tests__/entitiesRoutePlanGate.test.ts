@@ -8,14 +8,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
     resolveApiActorMock,
     findByReferenceIdMock,
-    listByUserIdMock,
+    listByOrganizationMock,
     createMock,
     isBillingEnabledMock,
+    resolveMembershipMock,
     envMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
-    listByUserIdMock: vi.fn(),
+    listByOrganizationMock: vi.fn(),
+    resolveMembershipMock: vi.fn(),
     createMock: vi.fn(),
     isBillingEnabledMock: vi.fn(),
     envMock: {
@@ -46,9 +48,15 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    resolveOrganizationMembership: (...args: unknown[]) =>
+        resolveMembershipMock(...args),
+}));
+
 vi.mock("@/(shared)/repositories/entity.repository", () => ({
     entityRepository: {
-        listByUserId: (...args: unknown[]) => listByUserIdMock(...args),
+        listByOrganization: (...args: unknown[]) =>
+            listByOrganizationMock(...args),
         create: (...args: unknown[]) => createMock(...args),
     },
 }));
@@ -104,9 +112,10 @@ beforeEach(() => {
     for (const mock of [
         resolveApiActorMock,
         findByReferenceIdMock,
-        listByUserIdMock,
+        listByOrganizationMock,
         createMock,
         isBillingEnabledMock,
+        resolveMembershipMock,
     ]) {
         mock.mockReset();
     }
@@ -114,7 +123,11 @@ beforeEach(() => {
     isBillingEnabledMock.mockReturnValue(true);
     resolveApiActorMock.mockResolvedValue({ uid: OWNER_UID });
     findByReferenceIdMock.mockResolvedValue(UNSUBSCRIBED);
-    listByUserIdMock.mockResolvedValue({ items: [], nextCursorId: null });
+    resolveMembershipMock.mockResolvedValue({
+        organizationId: "org-1",
+        role: "member",
+    });
+    listByOrganizationMock.mockResolvedValue({ items: [], nextCursorId: null });
     createMock.mockImplementation((input: Record<string, unknown>) =>
         Promise.resolve({ id: "entity-1", ...input })
     );
@@ -144,6 +157,7 @@ describe("POST /entities — optional plan gate", () => {
         expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
         expect(await codeOf(response)).toBe("PLAN_SUBSCRIPTION_REQUIRED");
         expect(createMock).not.toHaveBeenCalled();
+        expect(resolveMembershipMock).not.toHaveBeenCalled();
     });
 
     it("refuses with PLAN_FEATURE_REQUIRED when the plan lacks the feature", async () => {
@@ -165,7 +179,10 @@ describe("POST /entities — optional plan gate", () => {
 
         expect(response.status).toBe(STATUS_CREATED);
         expect(createMock).toHaveBeenCalledWith(
-            expect.objectContaining({ userId: "profile-1" })
+            expect.objectContaining({
+                organizationId: "org-1",
+                userId: "profile-1",
+            })
         );
     });
 
@@ -184,6 +201,6 @@ describe("POST /entities — optional plan gate", () => {
         const response = await GET(request("GET"));
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        expect(listByUserIdMock).toHaveBeenCalledTimes(1);
+        expect(listByOrganizationMock).toHaveBeenCalledTimes(1);
     });
 });

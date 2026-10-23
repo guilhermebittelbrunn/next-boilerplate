@@ -7,12 +7,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { encodeCursor } from "@/(shared)/lib/pagination";
 import { PaginationCursorError } from "@/(shared)/repositories/base.repository";
 
-const { resolveApiActorMock, findByReferenceIdMock, listByUserIdMock } =
-    vi.hoisted(() => ({
-        resolveApiActorMock: vi.fn(),
-        findByReferenceIdMock: vi.fn(),
-        listByUserIdMock: vi.fn(),
-    }));
+const {
+    resolveApiActorMock,
+    findByReferenceIdMock,
+    listByOrganizationMock,
+    resolveMembershipMock,
+} = vi.hoisted(() => ({
+    resolveApiActorMock: vi.fn(),
+    findByReferenceIdMock: vi.fn(),
+    listByOrganizationMock: vi.fn(),
+    resolveMembershipMock: vi.fn(),
+}));
 
 // Billing reaches Stripe through `server-only`; switched off, nothing is plan-gated,
 // which is how every environment without Stripe keys behaves.
@@ -36,10 +41,16 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    resolveOrganizationMembership: (...args: unknown[]) =>
+        resolveMembershipMock(...args),
+}));
+
 vi.mock("@/(shared)/repositories/entity.repository", () => ({
     entityRepository: {
-        listByUserId: (...args: unknown[]) => listByUserIdMock(...args),
-        findById: vi.fn(),
+        listByOrganization: (...args: unknown[]) =>
+            listByOrganizationMock(...args),
+        findInOrganization: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
@@ -64,10 +75,12 @@ const OWNER_PROFILE = {
     reference_id: OWNER_UID,
     type: UserType.COMMON,
 };
+const ORGANIZATION_ID = "org-1";
 
 function entity(id: string) {
     return {
         id,
+        organizationId: ORGANIZATION_ID,
         userId: OWNER_PROFILE.id,
         name: `Entity ${id}`,
         description: "",
@@ -112,14 +125,19 @@ beforeEach(() => {
     for (const mock of [
         resolveApiActorMock,
         findByReferenceIdMock,
-        listByUserIdMock,
+        listByOrganizationMock,
+        resolveMembershipMock,
     ]) {
         mock.mockReset();
     }
 
     resolveApiActorMock.mockResolvedValue({ uid: OWNER_UID });
     findByReferenceIdMock.mockResolvedValue(OWNER_PROFILE);
-    listByUserIdMock.mockResolvedValue({
+    resolveMembershipMock.mockResolvedValue({
+        organizationId: ORGANIZATION_ID,
+        role: "owner",
+    });
+    listByOrganizationMock.mockResolvedValue({
         items: [entity("e1")],
         nextCursorId: null,
     });
@@ -135,17 +153,18 @@ describe("GET /entities", () => {
         expect(page.nextCursor).toBeNull();
     });
 
-    it("scopes the query to the caller and uses the default page size", async () => {
+    it("scopes the query to the caller's organization and uses the default page size", async () => {
         await GET(listRequest());
 
-        expect(listByUserIdMock).toHaveBeenCalledWith(OWNER_PROFILE.id, {
+        expect(resolveMembershipMock).toHaveBeenCalledWith(OWNER_PROFILE.id);
+        expect(listByOrganizationMock).toHaveBeenCalledWith(ORGANIZATION_ID, {
             limit: 20,
             cursorId: null,
         });
     });
 
     it("hands back an opaque cursor when the repository reports another page", async () => {
-        listByUserIdMock.mockResolvedValue({
+        listByOrganizationMock.mockResolvedValue({
             items: [entity("e2"), entity("e1")],
             nextCursorId: "e1",
         });
@@ -159,7 +178,7 @@ describe("GET /entities", () => {
     it("resolves the cursor back into the anchor id for the repository", async () => {
         await GET(listRequest(`?limit=2&cursor=${encodeCursor("e1")}`));
 
-        expect(listByUserIdMock).toHaveBeenCalledWith(OWNER_PROFILE.id, {
+        expect(listByOrganizationMock).toHaveBeenCalledWith(ORGANIZATION_ID, {
             limit: 2,
             cursorId: "e1",
         });
@@ -168,7 +187,7 @@ describe("GET /entities", () => {
     it("clamps an oversized page instead of letting the response grow", async () => {
         await GET(listRequest("?limit=99999"));
 
-        expect(listByUserIdMock).toHaveBeenCalledWith(OWNER_PROFILE.id, {
+        expect(listByOrganizationMock).toHaveBeenCalledWith(ORGANIZATION_ID, {
             limit: 100,
             cursorId: null,
         });
@@ -179,7 +198,7 @@ describe("GET /entities", () => {
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         expect(await errorCode(response)).toBe("VALIDATION_FAILED");
-        expect(listByUserIdMock).not.toHaveBeenCalled();
+        expect(listByOrganizationMock).not.toHaveBeenCalled();
     });
 
     it("refuses a forged cursor before touching the repository", async () => {
@@ -187,11 +206,13 @@ describe("GET /entities", () => {
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         expect(await errorCode(response)).toBe("PAGINATION_CURSOR_INVALID");
-        expect(listByUserIdMock).not.toHaveBeenCalled();
+        expect(listByOrganizationMock).not.toHaveBeenCalled();
     });
 
     it("turns a cursor whose anchor vanished into a client error, not a crash", async () => {
-        listByUserIdMock.mockRejectedValue(new PaginationCursorError("gone"));
+        listByOrganizationMock.mockRejectedValue(
+            new PaginationCursorError("gone")
+        );
 
         const response = await GET(
             listRequest(`?cursor=${encodeCursor("gone")}`)
@@ -202,7 +223,7 @@ describe("GET /entities", () => {
     });
 
     it("degrades to 503 while the composite index is not published", async () => {
-        listByUserIdMock.mockRejectedValue(
+        listByOrganizationMock.mockRejectedValue(
             Object.assign(
                 new Error(
                     "9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/..."
@@ -218,7 +239,9 @@ describe("GET /entities", () => {
     });
 
     it("lets an unrelated failure bubble up instead of mislabelling it", async () => {
-        listByUserIdMock.mockRejectedValue(new Error("deadline exceeded"));
+        listByOrganizationMock.mockRejectedValue(
+            new Error("deadline exceeded")
+        );
 
         await expect(GET(listRequest())).rejects.toThrow("deadline exceeded");
     });

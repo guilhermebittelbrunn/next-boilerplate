@@ -12,18 +12,20 @@ import {
 const {
     resolveApiActorMock,
     findByReferenceIdMock,
-    listByUserIdMock,
-    findByIdMock,
+    listByOrganizationMock,
+    findInOrganizationMock,
     createMock,
     updateMock,
     isStorageConfiguredMock,
     signReadUrlMock,
     deleteObjectQuietlyMock,
+    resolveMembershipMock,
 } = vi.hoisted(() => ({
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
-    listByUserIdMock: vi.fn(),
-    findByIdMock: vi.fn(),
+    listByOrganizationMock: vi.fn(),
+    findInOrganizationMock: vi.fn(),
+    resolveMembershipMock: vi.fn(),
     createMock: vi.fn(),
     updateMock: vi.fn(),
     isStorageConfiguredMock: vi.fn(),
@@ -53,10 +55,17 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    resolveOrganizationMembership: (...args: unknown[]) =>
+        resolveMembershipMock(...args),
+}));
+
 vi.mock("@/(shared)/repositories/entity.repository", () => ({
     entityRepository: {
-        listByUserId: (...args: unknown[]) => listByUserIdMock(...args),
-        findById: (...args: unknown[]) => findByIdMock(...args),
+        listByOrganization: (...args: unknown[]) =>
+            listByOrganizationMock(...args),
+        findInOrganization: (...args: unknown[]) =>
+            findInOrganizationMock(...args),
         create: (...args: unknown[]) => createMock(...args),
         update: (...args: unknown[]) => updateMock(...args),
         delete: vi.fn(),
@@ -77,13 +86,17 @@ vi.mock("@/(shared)/lib/storage", () => ({
     isStorageObjectPath: (value: string) => STORAGE_OBJECT_PATH_RE.test(value),
     isOwnedBy: (path: string, ownerId: string) =>
         path.startsWith(`${UPLOAD_PREFIX}/${ownerId}/`),
+    organizationOwnerSegment: (organizationId: string) =>
+        `org-${organizationId}`,
 }));
 
 const { GET, POST } = await import("@/app/(routes)/entities/route");
 const { GET: GET_BY_ID, PUT } = await import(
     "@/app/(routes)/entities/[id]/route"
 );
-const { isUsablePhotoReference } = await import("@/(shared)/lib/entity-photo");
+const { isAttachablePhoto, isUsablePhotoReference } = await import(
+    "@/(shared)/lib/entity-photo"
+);
 
 const OWNER_UID = "common-9";
 const OWNER_PROFILE = {
@@ -92,7 +105,11 @@ const OWNER_PROFILE = {
     type: UserType.COMMON,
 };
 
-const OWN_OBJECT = `uploads/${OWNER_PROFILE.id}/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp`;
+const ORGANIZATION_ID = "org1";
+/** A photo uploaded from a record form, under the organization's prefix. */
+const OWN_OBJECT = `uploads/org-${ORGANIZATION_ID}/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp`;
+/** The caller's personal prefix, where the avatar lives. */
+const PERSONAL_OBJECT = `uploads/${OWNER_PROFILE.id}/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp`;
 const OTHER_OBJECT =
     "uploads/someone-else/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp";
 const LEGACY_URL = "https://cdn.example.com/legacy.png";
@@ -103,6 +120,7 @@ const STATUS_CREATED = 201;
 
 const baseEntity = {
     id: ENTITY_ID,
+    organizationId: ORGANIZATION_ID,
     userId: OWNER_PROFILE.id,
     name: "Acme",
     description: "A customer",
@@ -147,8 +165,9 @@ beforeEach(() => {
     for (const mock of [
         resolveApiActorMock,
         findByReferenceIdMock,
-        listByUserIdMock,
-        findByIdMock,
+        listByOrganizationMock,
+        findInOrganizationMock,
+        resolveMembershipMock,
         createMock,
         updateMock,
         isStorageConfiguredMock,
@@ -160,7 +179,11 @@ beforeEach(() => {
 
     resolveApiActorMock.mockResolvedValue({ uid: OWNER_UID });
     findByReferenceIdMock.mockResolvedValue(OWNER_PROFILE);
-    findByIdMock.mockResolvedValue(baseEntity);
+    resolveMembershipMock.mockResolvedValue({
+        organizationId: ORGANIZATION_ID,
+        role: "owner",
+    });
+    findInOrganizationMock.mockResolvedValue(baseEntity);
     createMock.mockImplementation((input: Record<string, unknown>) =>
         Promise.resolve({ ...baseEntity, ...input })
     );
@@ -203,7 +226,7 @@ describe("the photo reference schema", () => {
  * value, so the two can never drift into a gap that reaches the signing step.
  */
 describe("what counts as a usable reference", () => {
-    const usable = [LEGACY_URL, "http://example.com/a.jpg", OWN_OBJECT];
+    const usable = [LEGACY_URL, "http://example.com/a.jpg", PERSONAL_OBJECT];
     const refused = [
         OTHER_OBJECT,
         "uploads/../../etc/passwd",
@@ -219,6 +242,21 @@ describe("what counts as a usable reference", () => {
 
     it.each(refused)("refuses %s", (photo) => {
         expect(isUsablePhotoReference(photo, OWNER_PROFILE.id)).toBe(false);
+    });
+});
+
+describe("what a record's photo may point at", () => {
+    it.each([LEGACY_URL, OWN_OBJECT])("accepts %s", (photo) => {
+        expect(isAttachablePhoto(photo, ORGANIZATION_ID)).toBe(true);
+    });
+
+    it.each([
+        PERSONAL_OBJECT,
+        OTHER_OBJECT,
+        `uploads/org-${ORGANIZATION_ID}x/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp`,
+        "uploads/org-another/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp",
+    ])("refuses %s", (photo) => {
+        expect(isAttachablePhoto(photo, ORGANIZATION_ID)).toBe(false);
     });
 });
 
@@ -244,7 +282,17 @@ describe("ownership of the referenced object", () => {
         expect(updateMock).not.toHaveBeenCalled();
     });
 
-    it("accepts the caller's own object", async () => {
+    it("refuses an object from the caller's personal prefix", async () => {
+        const response = await POST(
+            request("POST", { ...VALID_BODY, photo: PERSONAL_OBJECT })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await errorCode(response)).toBe("ENTITY_PHOTO_INVALID");
+        expect(createMock).not.toHaveBeenCalled();
+    });
+
+    it("accepts an object of the caller's organization", async () => {
         const response = await POST(
             request("POST", { ...VALID_BODY, photo: OWN_OBJECT })
         );
@@ -269,7 +317,10 @@ describe("ownership of the referenced object", () => {
 
 describe("the derived photo url", () => {
     it("signs a bucket object on read and never persists the signature", async () => {
-        findByIdMock.mockResolvedValue({ ...baseEntity, photo: OWN_OBJECT });
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: OWN_OBJECT,
+        });
 
         const response = await GET_BY_ID(request("GET"), idContext);
         const body = (await response.json()) as {
@@ -283,7 +334,7 @@ describe("the derived photo url", () => {
     });
 
     it("hands back a legacy external url untouched, without signing it", async () => {
-        listByUserIdMock.mockResolvedValue({
+        listByOrganizationMock.mockResolvedValue({
             items: [{ ...baseEntity, photo: LEGACY_URL }],
             nextCursorId: null,
         });
@@ -298,7 +349,7 @@ describe("the derived photo url", () => {
     });
 
     it("answers a null url when there is no photo", async () => {
-        listByUserIdMock.mockResolvedValue({
+        listByOrganizationMock.mockResolvedValue({
             items: [baseEntity],
             nextCursorId: null,
         });
@@ -312,7 +363,7 @@ describe("the derived photo url", () => {
     });
 
     it("refuses to sign a stored value that is not a well-formed object path", async () => {
-        listByUserIdMock.mockResolvedValue({
+        listByOrganizationMock.mockResolvedValue({
             items: [
                 {
                     ...baseEntity,
@@ -333,7 +384,7 @@ describe("the derived photo url", () => {
 
     it("leaves the url null when the fork has no bucket configured", async () => {
         isStorageConfiguredMock.mockReturnValue(false);
-        listByUserIdMock.mockResolvedValue({
+        listByOrganizationMock.mockResolvedValue({
             items: [{ ...baseEntity, photo: OWN_OBJECT }],
             nextCursorId: null,
         });
@@ -349,10 +400,13 @@ describe("the derived photo url", () => {
 });
 
 describe("replacing the image", () => {
-    const REPLACEMENT = `uploads/${OWNER_PROFILE.id}/11111111-2222-4333-8444-555555555555.png`;
+    const REPLACEMENT = `uploads/org-${ORGANIZATION_ID}/11111111-2222-4333-8444-555555555555.png`;
 
     it("removes the superseded object, and only after the record is written", async () => {
-        findByIdMock.mockResolvedValue({ ...baseEntity, photo: OWN_OBJECT });
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: OWN_OBJECT,
+        });
 
         const response = await PUT(
             request("PUT", { photo: REPLACEMENT }),
@@ -368,7 +422,10 @@ describe("replacing the image", () => {
     });
 
     it("keeps the object when the reference did not change", async () => {
-        findByIdMock.mockResolvedValue({ ...baseEntity, photo: OWN_OBJECT });
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: OWN_OBJECT,
+        });
 
         await PUT(request("PUT", { photo: OWN_OBJECT }), idContext);
 
@@ -376,7 +433,10 @@ describe("replacing the image", () => {
     });
 
     it("keeps the object when the update does not touch the photo", async () => {
-        findByIdMock.mockResolvedValue({ ...baseEntity, photo: OWN_OBJECT });
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: OWN_OBJECT,
+        });
 
         await PUT(request("PUT", { name: "Renamed" }), idContext);
 
@@ -384,7 +444,10 @@ describe("replacing the image", () => {
     });
 
     it("removes the object when the photo is cleared", async () => {
-        findByIdMock.mockResolvedValue({ ...baseEntity, photo: OWN_OBJECT });
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: OWN_OBJECT,
+        });
 
         await PUT(request("PUT", { photo: "" }), idContext);
 
@@ -394,9 +457,24 @@ describe("replacing the image", () => {
         expect(deleteObjectQuietlyMock).toHaveBeenCalledWith(OWN_OBJECT);
     });
 
+    /** Photos lived in the author's prefix before they belonged to the organization. */
+    it("removes the author's own older photo from their personal prefix", async () => {
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: PERSONAL_OBJECT,
+        });
+
+        await PUT(request("PUT", { photo: REPLACEMENT }), idContext);
+
+        expect(deleteObjectQuietlyMock).toHaveBeenCalledWith(PERSONAL_OBJECT);
+    });
+
     /** A legacy external URL is not ours to delete. */
     it("never tries to delete an external url", async () => {
-        findByIdMock.mockResolvedValue({ ...baseEntity, photo: LEGACY_URL });
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: LEGACY_URL,
+        });
 
         await PUT(request("PUT", { photo: REPLACEMENT }), idContext);
 
