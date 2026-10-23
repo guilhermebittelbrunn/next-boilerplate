@@ -51,7 +51,7 @@ O registro é também uma resposta pronta: a ANPD pode pedi-lo durante a apuraç
 | Categorias de titulares | Titulares em geral. `[FORK]` marcar crianças e adolescentes ou idosos se o produto os atende. |
 | Dados pessoais | Nome, e-mail, telefone. Outros: senha (o Firebase guarda só o hash), foto de perfil, preferência de tema e idioma, estado do onboarding, uid do Firebase, IP e user agent vistos pelo Firebase no login. |
 | Compartilhamento | Google (Firebase Authentication e Cloud Firestore). Com Storage ligado, Google (Cloud Storage) para a foto. |
-| Medidas de segurança | `firestore.rules` nega todo acesso direto de cliente, e só a API lê a base, com service account. Senha nova com no mínimo 8 caracteres. Limite de requisições no login, no cadastro e na redefinição de senha, se `ARCJET_KEY` estiver definida (`apps/api/proxy.ts:53-67`). `[FORK]` acrescentar as medidas próprias. |
+| Medidas de segurança | `firestore.rules` nega todo acesso direto de cliente, e só a API lê a base, com service account. Senha nova com no mínimo 8 caracteres. Limite de requisições no login, no cadastro e na redefinição de senha, se `ARCJET_KEY` estiver definida (`apps/api/proxy.ts:60-78`). `[FORK]` acrescentar as medidas próprias. |
 | Período de armazenamento | Até a exclusão da conta, que é imediata e sem janela de arrependimento ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), "Declaração: até onde a exclusão de conta alcança"). O Google remove a conta do Authentication dos backups dele em até 180 dias e guarda o IP de login por algumas semanas ([privacidade do Firebase](https://firebase.google.com/support/privacy)). Com o backup do Firestore ligado, o perfil apagado continua nos backups até o fim da retenção deles, de até 14 semanas ([`BACKUP.md`](BACKUP.md)). `[FORK]` prazo para conta inativa, se houver. |
 | Processo, finalidade e hipótese legal | Processo: cadastro de usuários. Finalidade: dar acesso ao produto. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar. |
 | Observações | Onde está no código: `apps/api/app/(routes)/auth/sign-up/route.ts`, `packages/sdk/src/types/user/user.ts`, `apps/api/(shared)/validation/account.schema.ts`. Atendimento ao titular: exportação em `/account/export` e exclusão em `/account/deletion`. Canal do titular: `NEXT_PUBLIC_PRIVACY_CONTACT` (vazio, o canal é o formulário de `/contact`). Transferência: Firebase Authentication processa só nos Estados Unidos. `[FORK]` encarregado. |
@@ -66,7 +66,7 @@ O registro é também uma resposta pronta: a ANPD pode pedi-lo durante a apuraç
 | Medidas de segurança | Cookie de sessão `httpOnly` conferido com revogação; o titular vê as sessões ativas na área de conta e encerra uma, todas as outras ou todas. A API recusa a credencial de uma sessão encerrada. |
 | Período de armazenamento | Cookie de sessão: 5 dias por padrão (`SESSION_COOKIE_MAX_AGE_DAYS`, até 14), com teto absoluto de 30 dias desde o login (`SESSION_ABSOLUTE_MAX_AGE_DAYS`, até 90), em `packages/auth/session.ts:23-29`. Registros da coleção `session`: até a exclusão da conta, encerrados inclusive, que entram na exportação e são apagados num passo próprio da exclusão (`sessions`). Registro de acesso: 6 meses para provedor de aplicação constituído como pessoa jurídica com fins econômicos (Marco Civil, art. 15); o prazo real é o da retenção de log da plataforma ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §11). `[FORK]` confirmar a retenção configurada. |
 | Processo, finalidade e hipótese legal | Processo: manter a sessão e guardar o registro de acesso. Finalidade: autenticar as requisições e cumprir a guarda do registro de acesso. Hipóteses sugeridas: execução de contrato (art. 7º, V) para a sessão; cumprimento de obrigação legal (art. 7º, II) para o registro de acesso do Marco Civil. `[FORK]` confirmar. |
-| Observações | Onde está no código: `packages/auth/session.ts`, `packages/auth/server.ts:296-309`, `packages/sdk/src/types/user/user.ts:54-59`, `apps/api/(shared)/repositories/session.repository.ts`, `apps/api/(shared)/lib/user-agent.ts`. O log estruturado da API não grava IP (`apps/api/proxy.ts:73-85`); o IP que existe está no log de requisição da plataforma. |
+| Observações | Onde está no código: `packages/auth/session.ts`, `packages/auth/server.ts:296-309`, `packages/sdk/src/types/user/user.ts:54-59`, `apps/api/(shared)/repositories/session.repository.ts`, `apps/api/(shared)/lib/user-agent.ts`. O log estruturado da API não grava IP (`apps/api/proxy.ts:84-96`); o IP que existe está no log de requisição da plataforma. |
 
 ### 3. Cobrança de assinatura (opcional)
 
@@ -91,7 +91,7 @@ Existe só com `RESEND_TOKEN` e `RESEND_FROM` definidas.
 | Categorias de titulares | Titulares em geral. |
 | Dados pessoais | E-mail. Outros: idioma do e-mail e link de ação (verificação, redefinição de senha, troca de e-mail). |
 | Compartilhamento | Resend. |
-| Medidas de segurança | Os links de ação são códigos do Firebase conferidos pela API antes de aplicar; o aviso de troca de e-mail vai ao endereço antigo antes de o link ir ao novo. Com `ARCJET_KEY`, o pedido de redefinição e o reenvio de verificação têm limite de requisições (`apps/api/proxy.ts:53-67`). |
+| Medidas de segurança | Os links de ação são códigos do Firebase conferidos pela API antes de aplicar; o aviso de troca de e-mail vai ao endereço antigo antes de o link ir ao novo. Com `ARCJET_KEY`, o pedido de redefinição e o reenvio de verificação têm limite de requisições (`apps/api/proxy.ts:60-78`). |
 | Período de armazenamento | O core não guarda o e-mail enviado. Na Resend, não informado nas páginas lidas. `[FORK]` conferir no painel da Resend. |
 | Processo, finalidade e hipótese legal | Processo: e-mails de conta. Finalidade: verificar endereço, recuperar acesso, confirmar troca de e-mail. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar. |
 | Observações | Onde está no código: `packages/email/index.ts`, `apps/api/app/(routes)/auth/password/reset-request/route.ts`, `apps/api/app/(routes)/auth/email-verification/send/route.ts`, `apps/api/app/(routes)/account/email/route.ts`. Transferência: dados da conta Resend nos Estados Unidos. |
@@ -148,7 +148,7 @@ Existe só com `ARCJET_KEY` definida e com o prefixo `ajkey_`. Um valor sem o pr
 | Categorias de titulares | Titulares em geral (qualquer pessoa que faz requisição). |
 | Dados pessoais | Outros: IP e cabeçalhos da requisição. |
 | Compartilhamento | Arcjet. |
-| Medidas de segurança | O log de bloqueio da API não grava endereço, cabeçalho nem corpo (`apps/api/proxy.ts:73-85`). |
+| Medidas de segurança | O log de bloqueio da API não grava endereço, cabeçalho nem corpo (`apps/api/proxy.ts:84-96`). |
 | Período de armazenamento | 30 dias na Arcjet, e dado agregado por mais tempo ([privacidade da Arcjet](https://docs.arcjet.com/privacy)). |
 | Processo, finalidade e hipótese legal | Processo: limite de requisições e bloqueio de bot. Finalidade: segurança do serviço. Hipótese sugerida: legítimo interesse (art. 7º, IX). `[FORK]` confirmar. |
 | Observações | Onde está no código: `packages/security/index.ts:37-47`, `packages/security/index.ts:80`. Transferência: várias regiões sem garantia; DPA da Arcjet não encontrado ([`SUBPROCESSORS.md`](SUBPROCESSORS.md)). |
@@ -163,9 +163,9 @@ Existe só com o bucket configurado (`FIREBASE_STORAGE_BUCKET`).
 | Dados pessoais | Outros: imagens enviadas (avatar e foto de `entity`), que podem mostrar o rosto do titular ou de terceiros. |
 | Compartilhamento | Google (Cloud Storage for Firebase). |
 | Medidas de segurança | `storage.rules` nega acesso direto de cliente; leitura só por URL assinada e expirável, depois de conferir a posse. |
-| Período de armazenamento | Até a exclusão da conta: tudo o que o titular enviou fica sob `uploads/<profileId>/`, e a exclusão varre esse prefixo. `[FORK]` confirmar. |
+| Período de armazenamento | O avatar fica sob `uploads/<profileId>/` até a exclusão da conta, que varre esse prefixo. A foto de `entity` pertence à organização e fica sob `uploads/org-<organizationId>/`: sai quando o dono exclui a conta (a organização de casa é apagada com tudo dela). Fotos de `entity` enviadas antes de existirem organizações continuam no prefixo pessoal de quem enviou e saem na exclusão dessa pessoa. `[FORK]` confirmar. |
 | Processo, finalidade e hipótese legal | Processo: guarda de arquivos do usuário. Finalidade: exibir as imagens no produto. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar. |
-| Observações | Onde está no código: `apps/api/(shared)/lib/storage.ts:46-57`, `apps/api/app/(routes)/files/route.ts`, [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §6. |
+| Observações | Onde está no código: `apps/api/(shared)/lib/storage.ts` (`buildObjectPath`, `ownerPrefix`, `organizationOwnerSegment`), `apps/api/app/(routes)/files/route.ts` (`?scope=organization`), [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §6. |
 
 ### 10. Notificações no painel
 
@@ -179,10 +179,26 @@ Existe só com o bucket configurado (`FIREBASE_STORAGE_BUCKET`).
 | Processo, finalidade e hipótese legal | Processo: avisos sobre a conta dentro do produto. Finalidade: informar o titular de mudanças na conta e na assinatura. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar, e revisar se o fork criar tipos com parâmetros pessoais. |
 | Observações | Onde está no código: `packages/sdk/src/types/notification/notification.ts`, `apps/api/(shared)/lib/notifications.ts`, `apps/api/(shared)/repositories/notification.repository.ts`, `apps/api/app/(routes)/notifications/`. Atendimento ao titular: as notificações entram na exportação de `/account/export`. |
 
-### 11. `[FORK]` Dados do domínio do produto
+### 11. Organizações e membros
 
-O recurso `entity` do boilerplate é exemplo e sai quando o fork o substitui pelo domínio real. Cada
-processo novo ganha um registro no mesmo formato.
+Toda conta comum pertence a uma organização. Num fork B2C ela tem um membro só, o próprio titular, e não aparece na
+interface.
+
+| Bloco | Conteúdo |
+|---|---|
+| Categorias de titulares | Titulares em geral (usuários do painel comum). |
+| Dados pessoais | Outros: id do perfil do dono da organização (`organization.ownerUserId`); para cada membro, o id do perfil, a organização, o papel (`owner`/`member`) e a data de entrada (`organizationMember`). Com membros ligados (`NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED`), cada convite guarda o e-mail convidado, o e-mail de quem convidou, o id do perfil dele, o hash do token, a validade, o último envio e, depois do aceite, o id do perfil de quem aceitou (`organizationInvitation`). O convidado pode ainda não ter conta: é um titular cujo único dado no produto é o endereço. |
+| Compartilhamento | Google (Cloud Firestore, coleções `organization`, `organizationMember` e `organizationInvitation`). Resend, para o e-mail do convite, que leva o endereço convidado e o de quem convidou. |
+| Medidas de segurança | `firestore.rules` nega acesso direto de cliente. A API resolve a organização do sujeito no guard (`requireOrganizationApi`) e responde 404 para registro de outra organização. Sob personificação, o admin vê a organização do usuário e não grava nada nela, salvo o que o primeiro acesso do próprio usuário gravaria: a organização de quem ainda não tinha uma e o carimbo `organizationId` nos registros de `entity` criados antes das organizações. |
+| Período de armazenamento | Até a exclusão da conta. Na exclusão, sai o vínculo do titular; a organização de casa dele sai inteira (registros de `entity` de qualquer autor, fotos, vínculos, convites e o documento), e saem também os convites enviados ao e-mail dele por qualquer organização. Um convite revogado é apagado na hora. Um convite vencido ou aceito fica até ser regravado, revogado ou apagado com a organização; com a política de TTL em `organizationInvitation.expiresAt` ligada, sai sozinho depois de vencer ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §16). O dono que ainda tem membros não exclui a conta (`409 ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS`) até removê-los. Os registros que o titular criou na organização de outra pessoa ficam com essa organização, e o `userId` deles passa a apontar para um perfil que não existe mais. `[FORK]` confirmar. |
+| Processo, finalidade e hipótese legal | Processo: agrupar os dados de negócio por organização. Finalidade: permitir que mais de uma pessoa trabalhe nos mesmos registros. Hipótese sugerida: execução de contrato (art. 7º, V). `[FORK]` confirmar. |
+| Observações | Onde está no código: `apps/api/(shared)/lib/organization-membership.ts`, `apps/api/(shared)/repositories/organization.repository.ts`, `apps/api/(shared)/repositories/organization-member.repository.ts`, `apps/api/app/(guards)/organization.ts`. Atendimento ao titular: a exportação de `/account/export` traz o vínculo atual (`membership`) e os registros de `entity` que o titular criou, em qualquer organização; registros de outros autores não entram, porque são dados da organização. |
+
+### 12. `[FORK]` Dados do domínio do produto
+
+O recurso `entity` do boilerplate é exemplo e sai quando o fork o substitui pelo domínio real. Ele pertence à
+organização (`organizationId`) e guarda quem o criou (`userId`); o registro 11 descreve o que a exclusão faz com ele.
+Cada processo novo ganha um registro no mesmo formato.
 
 | Bloco | Conteúdo |
 |---|---|

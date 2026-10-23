@@ -88,8 +88,9 @@ precisam voltar ao `(default)` por um dos dois caminhos do passo 3.
    período a partir da data do backup e anote os eventos `account.delete` e `user.delete`. A trilha guarda o
    id do alvo (`targetUserId`) mesmo depois da exclusão (`packages/sdk/src/types/audit/audit.ts:29-31`).
    Guarde a lista fora do repositório. Os dois eventos são diferentes:
-   - `account.delete` é a exclusão pedida pelo titular: apaga perfil, registros de `entity`, conta no
-     Authentication, arquivos (com Storage ligado) e os rótulos pessoais na trilha
+   - `account.delete` é a exclusão pedida pelo titular: apaga perfil, a organização de casa com os registros
+     de `entity` dela, o vínculo do titular, conta no Authentication, arquivos (com Storage ligado) e os rótulos
+     pessoais na trilha. Os registros que ele criou na organização de outra pessoa continuam lá
      ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), "Declaração: até onde a exclusão de conta alcança").
    - `user.delete` é o arquivamento pelo admin: marca `deletedAt` no perfil
      (`apps/api/app/(routes)/users/[id]/route.ts:220`, que chama `apps/api/(shared)/repositories/base.repository.ts:225-226`).
