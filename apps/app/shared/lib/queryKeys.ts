@@ -45,6 +45,18 @@ export const queryKeys = {
         unreadCount: () =>
             [...queryKeys.notifications.all, "unreadCount"] as const,
     },
+    invitation: {
+        all: ["invitation"] as const,
+        preview: (token: string) =>
+            [...queryKeys.invitation.all, "preview", token] as const,
+    },
+    organization: {
+        all: ["organization"] as const,
+        detail: () => [...queryKeys.organization.all, "detail"] as const,
+        members: () => [...queryKeys.organization.all, "members"] as const,
+        invitations: () =>
+            [...queryKeys.organization.all, "invitations"] as const,
+    },
     users: {
         all: ["users"] as const,
         // `type` is part of the key because the API scopes the listing server-side —

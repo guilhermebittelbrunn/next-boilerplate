@@ -17,6 +17,15 @@ async function settingsItemUrls() {
         : [];
 }
 
+async function topLevelUrls() {
+    vi.resetModules();
+    const { useCommonNavRoutes } = await import(
+        "@/app/[locale]/(authenticated)/(common)/routes"
+    );
+    const { result } = renderHook(() => useCommonNavRoutes());
+    return result.current.map((item) => ("url" in item ? item.url : null));
+}
+
 afterEach(() => {
     vi.unstubAllEnvs();
 });
@@ -42,5 +51,27 @@ describe("useCommonNavRoutes — cobrança por modo de produto", () => {
             "/pt-br/account?tab=preferences",
             "/pt-br/account?tab=privacy",
         ]);
+    });
+});
+
+describe("useCommonNavRoutes — equipe", () => {
+    /** A B2C fork leaves the switch empty and must not see the team page anywhere. */
+    it.each(["", "false"])(
+        "esconde a equipe com a chave em %j",
+        async (value) => {
+            vi.stubEnv("NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED", value);
+
+            expect(await topLevelUrls()).not.toContain("/pt-br/organization");
+        }
+    );
+
+    it("mostra a equipe entre entidades e configurações quando ligada", async () => {
+        vi.stubEnv("NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED", "true");
+
+        const urls = await topLevelUrls();
+
+        expect(urls.indexOf("/pt-br/organization")).toBe(
+            urls.indexOf("/pt-br/entities") + 1
+        );
     });
 });

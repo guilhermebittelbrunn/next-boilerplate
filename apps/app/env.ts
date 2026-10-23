@@ -32,6 +32,9 @@ export const env = createEnv({
             .string()
             .max(STRIPE_LOOKUP_KEY_MAX_LENGTH)
             .optional(),
+        // "true" shows the team page and the invitation page. Anything else, empty
+        // included, keeps the product B2C. Must match the API's value.
+        NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED: z.string().optional(),
     },
     runtimeEnv: {
         ONBOARDING_ENABLED: process.env.ONBOARDING_ENABLED,
@@ -47,5 +50,7 @@ export const env = createEnv({
             process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
         NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE:
             process.env.NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE || undefined,
+        NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED:
+            process.env.NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED || undefined,
     },
 });
