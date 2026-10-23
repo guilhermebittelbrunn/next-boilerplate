@@ -7,10 +7,12 @@ import type {
     UserDTO,
 } from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
+import { toOrganizationMembershipDTO } from "../mappers/organization-member.mapper";
 import type { SessionRecord } from "../mappers/session.mapper";
 import { auditEventRepository } from "../repositories/audit-event.repository";
 import { entityRepository } from "../repositories/entity.repository";
 import { notificationRepository } from "../repositories/notification.repository";
+import { organizationMemberRepository } from "../repositories/organization-member.repository";
 import { sessionRepository } from "../repositories/session.repository";
 import { resolvePreferences } from "./account-avatar";
 import { isStorageConfigured, listObjectPaths, ownerPrefix } from "./storage";
@@ -131,23 +133,27 @@ export async function buildAccountDataExport(
         throw new AccountExportProfileMissingError(profile.id);
     }
 
-    const [entities, auditEvents, storageObjects, sessions, notifications] =
-        await Promise.all([
-            entityRepository.findAllByUserId(profile.id, EXPORT_MAX_RECORDS),
-            auditEventRepository.findAllByInvolvedUserId(
-                profile.id,
-                EXPORT_MAX_RECORDS
-            ),
-            readStorageObjects(profile.id),
-            sessionRepository.findAllByUid(
-                profile.reference_id,
-                EXPORT_MAX_RECORDS
-            ),
-            notificationRepository.findAllByUserId(
-                profile.id,
-                EXPORT_MAX_RECORDS
-            ),
-        ]);
+    const [
+        entities,
+        auditEvents,
+        storageObjects,
+        sessions,
+        notifications,
+        membership,
+    ] = await Promise.all([
+        entityRepository.findAllByUserId(profile.id, EXPORT_MAX_RECORDS),
+        auditEventRepository.findAllByInvolvedUserId(
+            profile.id,
+            EXPORT_MAX_RECORDS
+        ),
+        readStorageObjects(profile.id),
+        sessionRepository.findAllByUid(
+            profile.reference_id,
+            EXPORT_MAX_RECORDS
+        ),
+        notificationRepository.findAllByUserId(profile.id, EXPORT_MAX_RECORDS),
+        organizationMemberRepository.findByUserId(profile.id),
+    ]);
 
     return {
         generatedAt: new Date().toISOString(),
@@ -173,5 +179,6 @@ export async function buildAccountDataExport(
             items: notifications.items,
             truncated: notifications.truncated,
         },
+        membership: membership ? toOrganizationMembershipDTO(membership) : null,
     };
 }

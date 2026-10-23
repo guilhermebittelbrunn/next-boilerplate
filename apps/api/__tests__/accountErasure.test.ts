@@ -4,7 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
     isStorageConfiguredMock,
     deleteObjectsByPrefixMock,
-    purgeAllByUserIdMock,
+    purgeEntitiesByOrganizationMock,
+    purgeUnscopedEntitiesMock,
+    findOwnedByMock,
+    purgeOrganizationMock,
+    findMembershipMock,
+    removeMembershipMock,
+    purgeMembershipsMock,
+    purgeInvitationsByOrganizationMock,
+    purgeInvitationsByEmailMock,
     anonymizeUserLabelsMock,
     purgeSessionsMock,
     purgeNotificationsMock,
@@ -17,7 +25,15 @@ const {
 } = vi.hoisted(() => ({
     isStorageConfiguredMock: vi.fn(),
     deleteObjectsByPrefixMock: vi.fn(),
-    purgeAllByUserIdMock: vi.fn(),
+    purgeEntitiesByOrganizationMock: vi.fn(),
+    purgeUnscopedEntitiesMock: vi.fn(),
+    findOwnedByMock: vi.fn(),
+    purgeOrganizationMock: vi.fn(),
+    findMembershipMock: vi.fn(),
+    removeMembershipMock: vi.fn(),
+    purgeMembershipsMock: vi.fn(),
+    purgeInvitationsByOrganizationMock: vi.fn(),
+    purgeInvitationsByEmailMock: vi.fn(),
     anonymizeUserLabelsMock: vi.fn(),
     purgeSessionsMock: vi.fn(),
     purgeNotificationsMock: vi.fn(),
@@ -35,6 +51,8 @@ const calls: string[] = [];
 vi.mock("@/(shared)/lib/storage", () => ({
     isStorageConfigured: () => isStorageConfiguredMock(),
     ownerPrefix: (ownerId: string) => `uploads/${ownerId}/`,
+    organizationOwnerSegment: (organizationId: string) =>
+        `org-${organizationId}`,
     deleteObjectsByPrefix: (...args: unknown[]) => {
         calls.push("storage");
         return deleteObjectsByPrefixMock(...args);
@@ -43,9 +61,50 @@ vi.mock("@/(shared)/lib/storage", () => ({
 
 vi.mock("@/(shared)/repositories/entity.repository", () => ({
     entityRepository: {
-        purgeAllByUserId: (...args: unknown[]) => {
+        purgeByOrganization: (...args: unknown[]) => {
             calls.push("entities");
-            return purgeAllByUserIdMock(...args);
+            return purgeEntitiesByOrganizationMock(...args);
+        },
+        purgeUnscopedByUserId: (...args: unknown[]) => {
+            calls.push("unscopedEntities");
+            return purgeUnscopedEntitiesMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/repositories/organization.repository", () => ({
+    organizationRepository: {
+        findOwnedBy: (...args: unknown[]) => findOwnedByMock(...args),
+        purgeById: (...args: unknown[]) => {
+            calls.push("organization");
+            return purgeOrganizationMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/repositories/organization-member.repository", () => ({
+    organizationMemberRepository: {
+        findByUserId: (...args: unknown[]) => findMembershipMock(...args),
+        remove: (...args: unknown[]) => {
+            calls.push("membership");
+            return removeMembershipMock(...args);
+        },
+        purgeByOrganization: (...args: unknown[]) => {
+            calls.push("memberships");
+            return purgeMembershipsMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/repositories/organization-invitation.repository", () => ({
+    organizationInvitationRepository: {
+        purgeByOrganization: (...args: unknown[]) => {
+            calls.push("invitations");
+            return purgeInvitationsByOrganizationMock(...args);
+        },
+        purgeByEmail: (...args: unknown[]) => {
+            calls.push("invitationsToSubject");
+            return purgeInvitationsByEmailMock(...args);
         },
     },
 }));
@@ -123,7 +182,12 @@ const PROFILE = {
     deletedAt: null,
 };
 
-const INPUT = { profile: PROFILE, uid: "uid-1", requestId: "req-1" };
+const INPUT = {
+    profile: PROFILE,
+    uid: "uid-1",
+    email: "Owner@Example.com",
+    requestId: "req-1",
+};
 
 function inputWithSubscription(status: string) {
     return {
@@ -149,6 +213,11 @@ function inputWithSubscription(status: string) {
 }
 
 const PURGED_ENTITIES = 2;
+const PURGED_UNSCOPED_ENTITIES = 1;
+const PURGED_MEMBERSHIPS = 1;
+const PURGED_INVITATIONS = 2;
+const PURGED_INVITATIONS_TO_SUBJECT = 1;
+const HOME = { id: "org-home", ownerUserId: "profile-1" };
 const ANONYMIZED_EVENTS = 3;
 const PURGED_OBJECTS = 4;
 const PURGED_SESSIONS = 5;
@@ -166,7 +235,15 @@ beforeEach(() => {
     for (const mock of [
         isStorageConfiguredMock,
         deleteObjectsByPrefixMock,
-        purgeAllByUserIdMock,
+        purgeEntitiesByOrganizationMock,
+        purgeUnscopedEntitiesMock,
+        findOwnedByMock,
+        purgeOrganizationMock,
+        findMembershipMock,
+        removeMembershipMock,
+        purgeMembershipsMock,
+        purgeInvitationsByOrganizationMock,
+        purgeInvitationsByEmailMock,
         anonymizeUserLabelsMock,
         purgeSessionsMock,
         purgeNotificationsMock,
@@ -189,7 +266,20 @@ beforeEach(() => {
     });
     cancelSubscriptionMock.mockResolvedValue({ status: "canceled" });
     isStorageConfiguredMock.mockReturnValue(false);
-    purgeAllByUserIdMock.mockResolvedValue(PURGED_ENTITIES);
+    purgeEntitiesByOrganizationMock.mockResolvedValue(PURGED_ENTITIES);
+    purgeUnscopedEntitiesMock.mockResolvedValue(PURGED_UNSCOPED_ENTITIES);
+    findOwnedByMock.mockResolvedValue(HOME);
+    findMembershipMock.mockResolvedValue({
+        organizationId: HOME.id,
+        role: "owner",
+    });
+    purgeMembershipsMock.mockResolvedValue(PURGED_MEMBERSHIPS);
+    purgeInvitationsByOrganizationMock.mockResolvedValue(PURGED_INVITATIONS);
+    purgeInvitationsByEmailMock.mockResolvedValue(
+        PURGED_INVITATIONS_TO_SUBJECT
+    );
+    purgeOrganizationMock.mockResolvedValue(undefined);
+    removeMembershipMock.mockResolvedValue(true);
     anonymizeUserLabelsMock.mockResolvedValue(ANONYMIZED_EVENTS);
     purgeSessionsMock.mockResolvedValue(PURGED_SESSIONS);
     purgeNotificationsMock.mockResolvedValue(PURGED_NOTIFICATIONS);
@@ -204,6 +294,11 @@ describe("runAccountErasure", () => {
 
         expect(calls).toEqual([
             "entities",
+            "unscopedEntities",
+            "invitationsToSubject",
+            "memberships",
+            "invitations",
+            "organization",
             "auditTrail",
             "sessions",
             "notifications",
@@ -220,6 +315,7 @@ describe("runAccountErasure", () => {
             "billing",
             "storage",
             "entities",
+            "organization",
             "auditTrail",
             "sessions",
             "notifications",
@@ -277,7 +373,7 @@ describe("runAccountErasure", () => {
         expect(deleteObjectsByPrefixMock).not.toHaveBeenCalled();
     });
 
-    it("varre o bucket pelo prefixo do titular quando há storage", async () => {
+    it("varre o bucket pelo prefixo do titular e pelo da organização de casa", async () => {
         isStorageConfiguredMock.mockReturnValue(true);
         deleteObjectsByPrefixMock.mockResolvedValue(PURGED_OBJECTS);
 
@@ -286,11 +382,108 @@ describe("runAccountErasure", () => {
         expect(deleteObjectsByPrefixMock).toHaveBeenCalledWith(
             "uploads/profile-1/"
         );
+        expect(deleteObjectsByPrefixMock).toHaveBeenCalledWith(
+            "uploads/org-org-home/"
+        );
         expect(statusOf(report, "storage")).toEqual({
             step: "storage",
             status: "done",
-            count: PURGED_OBJECTS,
+            count: PURGED_OBJECTS * 2,
         });
+    });
+
+    it("leva a organização de casa inteira: registros, vínculos e o documento", async () => {
+        const report = await runAccountErasure(INPUT);
+
+        expect(purgeEntitiesByOrganizationMock).toHaveBeenCalledWith(HOME.id);
+        expect(purgeUnscopedEntitiesMock).toHaveBeenCalledWith("profile-1");
+        expect(purgeMembershipsMock).toHaveBeenCalledWith(HOME.id);
+        expect(purgeOrganizationMock).toHaveBeenCalledWith(HOME.id);
+        expect(removeMembershipMock).not.toHaveBeenCalled();
+        expect(statusOf(report, "entities")).toEqual({
+            step: "entities",
+            status: "done",
+            count: PURGED_ENTITIES + PURGED_UNSCOPED_ENTITIES,
+        });
+        expect(statusOf(report, "organization")).toEqual({
+            step: "organization",
+            status: "done",
+            count:
+                PURGED_INVITATIONS_TO_SUBJECT +
+                PURGED_MEMBERSHIPS +
+                PURGED_INVITATIONS +
+                1,
+        });
+    });
+
+    it("apaga os convites da organização de casa e os endereçados ao titular", async () => {
+        await runAccountErasure(INPUT);
+
+        expect(purgeInvitationsByOrganizationMock).toHaveBeenCalledWith(
+            HOME.id
+        );
+        expect(purgeInvitationsByEmailMock).toHaveBeenCalledWith(
+            "owner@example.com"
+        );
+    });
+
+    it("não varre convites por endereço quando a conta não tem e-mail", async () => {
+        await runAccountErasure({ ...INPUT, email: null });
+
+        expect(purgeInvitationsByEmailMock).not.toHaveBeenCalled();
+    });
+
+    /** What a member created in someone else's organization is that organization's data. */
+    it("de um membro, tira só o vínculo e deixa os registros na organização de outro", async () => {
+        findMembershipMock.mockResolvedValue({
+            organizationId: "org-someone-else",
+            role: "member",
+        });
+        isStorageConfiguredMock.mockReturnValue(true);
+        deleteObjectsByPrefixMock.mockResolvedValue(0);
+
+        await runAccountErasure(INPUT);
+
+        expect(removeMembershipMock).toHaveBeenCalledWith(
+            "profile-1",
+            "org-someone-else"
+        );
+        expect(purgeEntitiesByOrganizationMock).not.toHaveBeenCalledWith(
+            "org-someone-else"
+        );
+        expect(purgeMembershipsMock).not.toHaveBeenCalledWith(
+            "org-someone-else"
+        );
+        expect(deleteObjectsByPrefixMock).not.toHaveBeenCalledWith(
+            "uploads/org-org-someone-else/"
+        );
+    });
+
+    it("sem organização de casa, apaga só o que não foi carimbado", async () => {
+        findOwnedByMock.mockResolvedValue(null);
+        findMembershipMock.mockResolvedValue(null);
+
+        const report = await runAccountErasure({ ...INPUT, email: null });
+
+        expect(purgeEntitiesByOrganizationMock).not.toHaveBeenCalled();
+        expect(purgeOrganizationMock).not.toHaveBeenCalled();
+        expect(purgeUnscopedEntitiesMock).toHaveBeenCalledWith("profile-1");
+        expect(statusOf(report, "organization")).toEqual({
+            step: "organization",
+            status: "done",
+            count: 0,
+        });
+    });
+
+    it("segue apagando o que é da pessoa quando a organização de casa não pode ser lida", async () => {
+        findOwnedByMock.mockRejectedValue(new TypeError("firestore down"));
+
+        const report = await runAccountErasure(INPUT);
+
+        expect(statusOf(report, "entities")?.status).toBe("failed");
+        expect(statusOf(report, "organization")?.status).toBe("failed");
+        expect(purgeProfileMock).toHaveBeenCalledWith("profile-1");
+        expect(deleteUserMock).toHaveBeenCalledWith("uid-1");
     });
 
     it("pula a cobrança e diz por quê quando não há assinatura viva", async () => {
@@ -385,7 +578,9 @@ describe("runAccountErasure", () => {
     });
 
     it("segue apagando depois de um passo que falhou", async () => {
-        purgeAllByUserIdMock.mockRejectedValue(new TypeError("firestore down"));
+        purgeEntitiesByOrganizationMock.mockRejectedValue(
+            new TypeError("firestore down")
+        );
 
         const report = await runAccountErasure(INPUT);
 
@@ -429,7 +624,7 @@ describe("runAccountErasure", () => {
         expect(statusOf(report, "entities")).toEqual({
             step: "entities",
             status: "done",
-            count: PURGED_ENTITIES,
+            count: PURGED_ENTITIES + PURGED_UNSCOPED_ENTITIES,
         });
         expect(statusOf(report, "auditTrail")).toEqual({
             step: "auditTrail",

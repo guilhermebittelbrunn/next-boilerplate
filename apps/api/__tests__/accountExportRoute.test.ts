@@ -17,7 +17,9 @@ const {
     recordAuditEventMock,
     findAllSessionsByUidMock,
     findAllNotificationsMock,
+    findMembershipMock,
 } = vi.hoisted(() => ({
+    findMembershipMock: vi.fn(),
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
     mergedUserMock: vi.fn(),
@@ -70,6 +72,12 @@ vi.mock("@/(shared)/repositories/notification.repository", () => ({
     notificationRepository: {
         findAllByUserId: (...args: unknown[]) =>
             findAllNotificationsMock(...args),
+    },
+}));
+
+vi.mock("@/(shared)/repositories/organization-member.repository", () => ({
+    organizationMemberRepository: {
+        findByUserId: (...args: unknown[]) => findMembershipMock(...args),
     },
 }));
 
@@ -188,9 +196,11 @@ beforeEach(() => {
         recordAuditEventMock,
         findAllSessionsByUidMock,
         findAllNotificationsMock,
+        findMembershipMock,
     ]) {
         mock.mockReset();
     }
+    findMembershipMock.mockResolvedValue(null);
     resolveApiActorMock.mockResolvedValue({
         uid: OWNER_UID,
         email: OWNER_EMAIL,
@@ -308,6 +318,35 @@ describe("GET /account/export", () => {
             "profile-1",
             EXPORT_MAX_RECORDS
         );
+    });
+
+    it("leva a organização atual e o papel, sem o que é interno ao vínculo", async () => {
+        findMembershipMock.mockResolvedValue({
+            id: "profile-1",
+            organizationId: "org-1",
+            userId: "profile-1",
+            role: "member",
+            joinedAt: "2026-10-01T00:00:00.000Z",
+            legacyClaimPending: false,
+            createdAt: "2026-10-01T00:00:00.000Z",
+            updatedAt: "2026-10-01T00:00:00.000Z",
+            deletedAt: null,
+        });
+
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(findMembershipMock).toHaveBeenCalledWith("profile-1");
+        expect(payload.membership).toEqual({
+            organizationId: "org-1",
+            role: "member",
+            joinedAt: "2026-10-01T00:00:00.000Z",
+        });
+    });
+
+    it("escreve null no vínculo de quem ainda não tem organização", async () => {
+        const payload = await payloadOf(await exportData(request()));
+
+        expect(payload.membership).toBeNull();
     });
 
     it("avisa que truncou em vez de devolver metade em silêncio", async () => {
