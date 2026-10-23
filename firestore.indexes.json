@@ -4,7 +4,7 @@
       "collectionGroup": "entity",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "organizationId", "order": "ASCENDING" },
         { "fieldPath": "deletedAt", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
@@ -13,7 +13,7 @@
       "collectionGroup": "entity",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "organizationId", "order": "ASCENDING" },
         { "fieldPath": "deletedAt", "order": "ASCENDING" },
         { "fieldPath": "enabled", "order": "ASCENDING" }
       ]
@@ -22,7 +22,7 @@
       "collectionGroup": "entity",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "organizationId", "order": "ASCENDING" },
         { "fieldPath": "deletedAt", "order": "ASCENDING" },
         { "fieldPath": "type", "order": "ASCENDING" }
       ]
