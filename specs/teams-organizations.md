@@ -8,9 +8,9 @@ audience: produto
 area: [apps/api, apps/app, packages/sdk, packages/auth, packages/internationalization]
 mode: ambos
 depends_on: [transactional-emails]
-contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", apps/api/(shared)/repositories/entity.repository.ts, packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
-feature: -
-updated: 2026-10-04
+contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", "apps/api/app/(routes)/entities/route.ts", apps/api/(shared)/repositories/entity.repository.ts, apps/api/(shared)/lib/user-merge.ts, apps/api/(shared)/lib/account-erasure.ts, apps/api/(shared)/lib/account-export.ts, "apps/api/app/(guards)/common-panel.ts", packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
+feature: teams-organizations
+updated: 2026-10-22
 ---
 
 # Organizações, membros e convites
@@ -22,39 +22,44 @@ updated: 2026-10-04
 >
 > 1. escrever, em `docs/ARCHITECTURE.md`, se este core é **B2B ou B2C por padrão** — hoje a resposta está
 >    implícita no código e ninguém a declarou;
-> 2. concentrar o predicado de posse num ponto único de escopo. **Recontado em 2026-09-19: são 14 sítios
->    em 3 recursos** — e eram 4 em 1 recurso três rodadas atrás. Os dois últimos são da PR #19, que
->    construiu o resumo da home copiando o predicado em vez de reusá-lo.
->
->    > **Correção, segunda vez — e as duas por omissão.** As rodadas até 2026-09-16 escreveram "9"; somar as
->    > linhas da tabela abaixo dá 3 + 2 + 3 + 2 + 1 = **11**, mais os 2 que a PR #19 criou = 13. Só que a
->    > conta de 13 pulava o `where("userId", "==", userId)` de `listByUserId`
->    > (`entity.repository.ts:23`), que a spec descreve em prosa e nunca numerou. **São 14.** O número
->    > errado enfraquecia justamente o argumento que a spec usa para pedir atenção.
->
->    | recurso | sítios | o que expressa |
->    |---------|--------|----------------|
->    | `entities/[id]/route.ts` | `:24`, `:40`, `:102` | posse do **registro** (`row.userId !== ctx.subjectProfile.id`) |
->    | `entities/[id]/route.ts` | `:67`, `:86` | posse do **objeto no bucket** (`isUsablePhotoReference`, `isOwnStorageObject`) |
->    | `entities/route.ts` | `:28`, `:73`, `:81` | escopo da listagem, posse do objeto, gravação do dono. Desceram na PR #17, que paginou o `GET`, e de novo na PR #38, que pôs o gate por plano no `POST` (remedidas em 2026-10-04) |
->    | `account/route.ts` | `:49`, `:162` | posse do objeto — 🆕 **PR #12** |
->    | `files/route.ts` | `:27` | derivação do caminho pelo dono (`buildObjectPath`) |
->
->    Com o predicado num só lugar, trocar "dono = usuário" por "dono = organização" deixa de ser reescrita.
+> 2. concentrar o predicado de posse num ponto único de escopo.
 >
 > Sem essas duas, adiar é só acumular juros. Reabrir esta spec exige argumento novo — tipicamente o
 > primeiro fork B2B real.
 >
-> **Auditoria de 2026-09-17 (pós-PR #19) — as duas contrapartidas seguem sem nenhum código, pela sétima
-> rodada.** (1) `docs/ARCHITECTURE.md` existe, mas não contém "B2B", "B2C", "tenant" nem "organização": a
-> decisão continua implícita no código. (2) O predicado de posse continua espalhado pelos 11 sítios da
-> tabela acima, reabertos um a um — nenhum foi consolidado. A PR #17 mexeu em três deles e **os moveu de
-> lugar sem consolidá-los**, que é o comportamento que a spec prevê: o custo do retrofit não subiu, mas a
-> manutenção das referências virou trabalho recorrente de auditoria.
+> **Reconferido em 2026-10-22, pós-PR #56 (`9c793c6`), para alimentar o `/analyze`.** As duas contrapartidas seguem
+> sem código. (1) `git grep -i` por `B2B`, `B2C`, `tenant` e `organiza` em `docs/ARCHITECTURE.md` devolve 0; o
+> documento não muda desde a PR #41 (`0a49a3b`). (2) O predicado de posse por usuário está em **16 sítios de 6
+> arquivos, em 3 recursos** (tabela abaixo, recontada linha a linha), o mesmo piso medido em 2026-09-23: nenhum sítio
+> novo nesses recursos desde então, e nenhum consolidado. A PR #52 criou um quarto recurso escopado por pessoa, a
+> notificação, com o mesmo predicado em mais 5 pontos, contados à parte porque a notificação pertence a quem a
+> recebe e continuaria assim com organizações.
 >
-> **O gatilho que a rodada anterior definiu disparou, e agora se repetiu.** A condição escrita era "se o
-> padrão se repetir na próxima rodada". A pergunta vai ao usuário nesta auditoria: ou as contrapartidas
-> viram tarefa com dono, ou o `deferred` deveria ser lido como `rejected` até o primeiro fork B2B aparecer.
+> | arquivo | sítios | o que expressa |
+> |---------|--------|----------------|
+> | `apps/api/app/(routes)/entities/[id]/route.ts` | `:24`, `:40`, `:102` | posse do **registro** (`row.userId !== ctx.subjectProfile.id` → 404, e `existing.userId !==` no `PUT` e no `DELETE`) |
+> | `apps/api/app/(routes)/entities/[id]/route.ts` | `:67`, `:86` | posse do **objeto no bucket** (`isUsablePhotoReference`, `isOwnStorageObject` com `ctx.subjectProfile.id`) |
+> | `apps/api/app/(routes)/entities/route.ts` | `:28`, `:73`, `:81` | chave de escopo da listagem, posse do objeto, gravação do dono (`userId: ctx.subjectProfile.id`) |
+> | `apps/api/app/(routes)/entities/summary/route.ts` | `:9` | chave de escopo do resumo da home |
+> | `apps/api/(shared)/repositories/entity.repository.ts` | `:23`, `:40`, `:64`, `:72` | `where("userId", "==", userId)` em `listByUserId`, `findAllByUserId`, `purgeAllByUserId` e `summaryByUserId`, quatro cópias sem helper |
+> | `apps/api/app/(routes)/account/route.ts` | `:49`, `:162` | posse do avatar no bucket (`ownerId = ctx.subjectProfile.id`, `:127`) |
+> | `apps/api/app/(routes)/files/route.ts` | `:27` | caminho do objeto derivado do dono (`buildObjectPath(ctx.subjectProfile.id, …)`) |
+>
+> Os helpers por trás das linhas de bucket: `buildObjectPath` (`apps/api/(shared)/lib/storage.ts:46`), `isOwnedBy`
+> (`:59`), `isOwnStorageObject` e `isUsablePhotoReference` (`apps/api/(shared)/lib/entity-photo.ts:24-25`, `:32-35`).
+> Quem passa o dono para fora do request: a exportação (`account-export.ts:136`) e o expurgo (`account-erasure.ts:121`)
+> do titular. A convenção está escrita como padrão para rota nova em `apps/api/CLAUDE.md:31`, o que explica a cópia.
+>
+> **Contados à parte (pertencem à pessoa):** `notifications/[id]/read/route.ts:25` (o mesmo `row.userId !==`),
+> `notifications/route.ts:16`, `read-all/route.ts:9` e `unread-count/route.ts:9` (chave de escopo), e
+> `notification.repository.ts:38`. Este último é o contraexemplo útil: o repositório de notificações concentra o
+> filtro num helper privado (`byOwner`, `:37-39`), e o de `entity` repete o `where` quatro vezes. A coleção `session`
+> filtra por `where("uid", "==", uid)` em `session.repository.ts:69`, `:89` e `:211`, também fora da contagem. Também
+> fora: os `actorUserId`/`targetUserId` da trilha de auditoria, que identificam quem fez, não escopo.
+>
+> *(Série histórica: 3 sítios em 1 recurso até a PR #10, 4 com a PR #11, 11 em 3 recursos com a PR #12, 14 com a PR
+> #19 e 16 com a PR #23. As contagens intermediárias e as correções de omissão estão na versão deste arquivo em
+> `9c793c6`.)*
 
 ## Problema
 
@@ -70,66 +75,44 @@ recurso que existir até lá. Adiar a *implementação* é legítimo; adiar a *d
 
 ## O que já existe no repo
 
-- **Zero ocorrências** de `organizationId`, `tenant` ou `membership` em `apps/` e `packages/`, e nenhuma de
-  `workspace` ou `invite` no sentido de domínio (o `grep` literal acha `workspace:*` nos `package.json`, o passo
-  `"workspace"` em testes de onboarding e dois textos de teste). A palavra "organization" aparece em
-  `packages/seo/schema.ts`, no identificador `organizationSchema` (`:6`) e no tipo schema.org `Organization`
-  (`:1`, `:5`, `:11`, `:14`), e no único consumidor, o JSON-LD da home da web
-  (`apps/web/app/[locale]/(home)/page.tsx:4`, `:32`). É marcação da landing, nada a ver. *(Recontado em
-  2026-09-27; âncoras da home remedidas em 2026-09-28, depois da PR #30.)*
-- `packages/sdk/src/types/user/user.ts:5` (âncora remedida em 2026-10-04; o import de `EntitlementsState` da PR #38 empurrou o enum mais uma linha) — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON`.
-  O papel é **global**, não relativo a um grupo.
+Conferido em `main` (`9c793c6`) em 2026-10-22.
+
+- **Zero ocorrências** de `organizationId`, `tenant` ou `membership` em `apps/` e `packages/` (`git grep -i`), e
+  nenhuma de `workspace` ou `invite` no sentido de domínio (a palavra `workspace` aparece só em `package.json` e em
+  cinco arquivos de teste). A palavra "organization" aparece em `packages/seo/schema.ts`, no identificador
+  `organizationSchema` (`:6`) e no tipo schema.org `Organization` (`:1`, `:5`, `:11`, `:14`), e no único consumidor,
+  o JSON-LD da home da web (`apps/web/app/[locale]/(home)/page.tsx:4`, `:32`). É marcação da landing, nada a ver.
+- `packages/sdk/src/types/user/user.ts:5` — `UserType` tem exatamente dois valores: `ADMIN` e `COMMON` (`:6-7`).
+  O papel é **global**, não relativo a um grupo. A assinatura também mora no perfil da pessoa
+  (`stripeCustomerId` em `:64`, `subscription` em `:66`), então cobrança por organização, fora deste corte,
+  pressupõe migrar esse vínculo.
 - `packages/auth/types.ts:4` — `UserRoleLevel` espelha o mesmo par, e `canSwitchPanelEnvironment`
   (`:27`) trata `ADMIN` como papel de plataforma.
-- `apps/api/app/(guards)/` — dois arquivos: `admin.ts` (`requireAdminApi`, `:30`) e `common-panel.ts`
-  (`requireCommonPanelApi`, `:32`). Nenhum resolve "pertence a este grupo". ⚠️ **Âncoras reconferidas em
-  2026-09-19.** A nota anterior dizia que a PR #18 tinha empurrado as assinaturas "duas linhas para baixo" e
-  errava o número; a PR #21 acrescentou a chamada de `recordUserActivity` aos dois guards (`admin.ts:73`,
-  `common-panel.ts:87`) e empurrou mais uma vez.
-- **A posse é por usuário, repetida em cada handler**:
-  `apps/api/app/(routes)/entities/[id]/route.ts:24`, `:40` e `:102` — o mesmo
-  `row.userId !== ctx.subjectProfile.id` → 404, três vezes, num único arquivo de um único recurso.
-  ⚠️ **Remedido em 2026-09-15 — e a própria correção anterior estava errada.** A PR #11 deslocou as
-  referências antigas (`:16`, `:32`, `:65`) e a rodada passada "corrigiu" a de posse do objeto para `:65`;
-  ela está em **`:67`** (o `if` abre em `:65`), e há uma **segunda**, `isOwnStorageObject`, em **`:86`**.
-  A armadilha continua valendo: quem confere `:65` encontra código de posse, dá por boa e conclui errado.
-  **A lição de método é a interessante**: este é o terceiro ciclo em que uma referência a este arquivo
-  aparece errada — é sintoma de que o predicado não tem nome nem casa, exatamente o que a spec propõe
-  resolver.
-- `apps/api/(shared)/repositories/entity.repository.ts:16` — `listByUserId` consulta com
-  `where("userId", "==", userId)` (`:23`). A listagem é escopada por usuário na origem. ⚠️ **Âncoras
-  atualizadas em 2026-09-17:** a PR #17 trocou o corpo do método por uma chamada a `paginate`, e a PR #19
-  acrescentou um import no topo do arquivo, empurrando tudo mais uma linha.
-- `apps/api/(shared)/repositories/entity.repository.ts:68` — `summaryByUserId` repete o mesmo
-  `where("userId", "==", userId)` num segundo método, agora dentro de um closure `scoped()` reaproveitado
-  por cinco agregações. É o **décimo terceiro** sítio de posse, e nasceu literalmente copiado do décimo.
-  ⚠️ **Âncora e contagem remedidas em 2026-09-23:** a PR #23 inseriu dois métodos acima deste, empurrando-o
-  de `:33` para `:68`, e os dois repetem o predicado: `findAllByUserId` (`:40`, para exportar os registros
-  do titular) e `purgeAllByUserId` (`:64`, para apagá-los). O arquivo passou a ter **quatro** cópias de
-  `where("userId", "==", userId)` (`:23`, `:40`, `:64`, `:72`). **Os 14 sítios contados em 2026-09-19 são
-  piso, não número**: a auditoria desta rodada não recontou o resto pelo critério da tabela acima, só
-  confirmou que o total subiu em pelo menos dois.
-  *(Nota de 2026-10-04: a PR #39 criou a coleção `session`, cujo repositório filtra por `where("uid", "==", uid)`
-  em três pontos (`session.repository.ts:69`, `:89`, `:211`). Não entram na contagem: sessão pertence à
-  pessoa, não a um grupo, e continuaria assim com organizações.)*
-- `apps/api/app/(routes)/entities/summary/route.ts:9` — o handler passa `ctx.subjectProfile.id` como
-  chave de escopo para o repositório. **Décimo quarto sítio**, criado pela PR #19.
+- `apps/api/app/(guards)/` — três arquivos: `admin.ts` (`requireAdminApi`, `:30`), `common-panel.ts`
+  (`requireCommonPanelApi`, `:32`) e, desde a PR #38, `plan.ts` (`requirePlanApi`, `:21`, composto sobre o do painel
+  comum). Nenhum resolve "pertence a este grupo". Os dois primeiros registram o último acesso
+  (`admin.ts:73`, `common-panel.ts:87`).
+- **A posse é por usuário, repetida em cada handler e no repositório**: os 16 sítios da tabela do topo. O caso mais
+  visível é `apps/api/app/(routes)/entities/[id]/route.ts:24`, `:40` e `:102`, o mesmo teste três vezes num único
+  arquivo de um único recurso. Uma armadilha de conferência que já enganou três rodadas: a posse do objeto nesse
+  arquivo está em `:67` e `:86`, não na linha em que o `if` abre.
+- **O perfil nasce num ponto só.** `createDefaultUserProfile` (`apps/api/(shared)/lib/user-merge.ts:77`) cria o
+  perfil comum no cadastro (`auth/sign-up/route.ts:55`) e no primeiro contato de quem entra pelo Google
+  (`user-merge.ts:70`); a criação pelo admin grava direto (`users/route.ts:74`). É onde a organização implícita
+  nasceria.
+- **A exportação e o expurgo do titular** leem e apagam os registros pelo dono (`account-export.ts:136`,
+  `account-erasure.ts:121`). Com organização, o expurgo de um membro não pode apagar registro que pertence ao grupo:
+  é decisão de produto que o corte precisa tomar (ver "Riscos").
 - `firestore.rules:32-34` — negação total de acesso direto de cliente (`match /{document=**}` em `:32`,
-  `allow read, write: if false;` em `:33`); o comentário em `:39-43` já registra a sutileza de que
-  `entity.userId` guarda o **id do documento de perfil**, não o UID do Firebase Auth.
-- **Lacuna:** não existe grupo, não existe papel dentro de grupo, não existe convite. E o escopo por
-  usuário está espalhado por handler e repositório — **14 sítios em 3 recursos**, recontados em 2026-09-19.
-  ⚠️ **O número era 13 e estava errado desde 2026-09-17**, por omissão: a contagem pulava o
-  `where("userId", "==", userId)` de `listByUserId` (`entity.repository.ts:23`), que a própria spec descreve
-  em prosa mas nunca numerou. São 4 três rodadas atrás e 14 hoje.
-  A PR #11 passou a codificar a posse também no **prefixo do caminho no bucket**
-  (`apps/api/(shared)/lib/storage.ts`, `buildObjectPath:37`/`isOwnedBy:50`, âncora remedida em 2026-09-27), e a PR #12 replicou esse padrão
-  num terceiro recurso (`account/route.ts:49,162`, remedidas em 2026-10-04: a PR #38 acrescentou o `planAccess` à resposta da conta).
-  ⚠️ **Correção de fato, medida em 2026-09-19:** a versão anterior afirmava que esse prefixo está
-  "espelhado em `storage.rules`". Não está. O arquivo é negação total (`allow read, write: if false` em
-  `:28`) e não menciona `userId`, `uid` nem dono. A posse por prefixo existe só no código da API. Isso
-  **reduz** o custo de retrofit que a spec alegava: cada recurso novo que aceita upload acrescenta sítios
-  numa camada, não em duas — a segunda camada ainda não foi escrita.
+  `allow read, write: if false;` em `:33`); o comentário em `:39-43` registra que `entity.userId` guarda o **id do
+  documento de perfil**, não o UID do Firebase Auth. `storage.rules:27-28` também nega tudo e não menciona dono: a
+  posse por prefixo do caminho existe só no código da API, numa camada só.
+- `packages/email/templates/action-link.tsx:13` — o template de link de ação é escolhido por `ActionSlug`, chave do
+  dicionário. Convite não é template novo, é slug de dicionário nos três idiomas. A dependência
+  `transactional-emails` está satisfeita desde a PR #9.
+- `docs/ARCHITECTURE.md` não declara B2B nem B2C (ver o topo).
+- **Lacuna:** não existe grupo, não existe papel dentro de grupo, não existe convite, e o escopo por usuário está
+  espalhado em 16 sítios.
 
 ## Evidência de mercado
 
@@ -160,6 +143,24 @@ ponta a ponta, não entregar administração de times completa.
       para e-mail já cadastrado.
 - [ ] Remover membro, com a garantia de que a organização nunca fica sem dono.
 
+### Fatiamento recomendado para uma rodada autônoma (2026-10-22)
+
+O corte inteiro é G e cruza API, SDK, app, i18n e o modelo de dados. Numa rodada do `/cycle` ele tende a voltar com
+partes 🔒 ou com um diff grande demais para revisar de uma vez. A recomendação é o `/analyze` entregar em duas
+fatias, com a spec indo a `in-progress` depois da primeira, como `account-security-mfa` fez:
+
+- **Fatia 1 — a chave de escopo.** Itens 1, 2 e 3: organização implícita criada com o perfil (inclusive para quem já
+  existe, no primeiro contato), o `entity` escopado por organização num ponto único de escopo, o guard de
+  pertencimento com os papéis dono e membro, e a declaração B2B/B2C em `docs/ARCHITECTURE.md`. Tudo prova sob os
+  emuladores de Firestore e Auth: dois usuários de organizações diferentes recebem 404 no registro um do outro
+  chamando a API direto. Sem tela nova para o fork B2C.
+- **Fatia 2 — membros e convites.** Itens 4 e 5: convite expirável por e-mail, aceite, lista de membros e remoção sem
+  deixar a organização sem dono. A entrega real do e-mail fica 🔒 sem a Resend (pendência 13 do `BACKLOG.md`); o
+  aceite prova sob o emulador se o `/test` conseguir ler o convite sem a caixa de entrada, como já faz com os links de
+  ação.
+
+Isto é corte de produto, não desenho: modelo de dados, nome de coleção e forma do guard ficam com o `/analyze`.
+
 ### Fora do corte
 
 - Trocador de organização na interface e usuário em várias organizações ao mesmo tempo — só depois que
@@ -169,6 +170,7 @@ ponta a ponta, não entregar administração de times completa.
 - Transferência de propriedade, domínios verificados, SSO e SCIM — a nota registra SSO enterprise/SCIM
   em **0/10**, território de contrato enterprise.
 - Registro de quem fez o quê dentro da organização — pertence a `audit-log`.
+- Escopar por organização os recursos da pessoa: notificações, sessões, avatar e preferências continuam da pessoa.
 
 ## Impacto por camada
 
@@ -178,7 +180,7 @@ ponta a ponta, não entregar administração de times completa.
 | `apps/api` | Guard de pertencimento novo; coleções novas; **toda consulta e toda checagem de posse existente muda de chave**. Convite exige envio de e-mail. |
 | `apps/app` | Telas de membros e convites; aceite de convite (rota parcialmente pública); o painel admin ganha a dimensão "organização". |
 | `apps/web` | Página de aceite de convite para quem ainda não tem conta, se o aceite não viver no `app`. |
-| `packages/*` | `auth`: papel por organização convive com `UserRoleLevel` global. `email`: a dependência `transactional-emails` está satisfeita em `main` (PR #9, mergeada em 2026-09-10) e já entrega template genérico por descritor (`packages/email/templates/action-link.tsx:13`, `ActionSlug` como chave do dicionário) — convite não é template novo, é **slug de dicionário × 3 idiomas**. i18n nos 3 idiomas. |
+| `packages/*` | `auth`: papel por organização convive com `UserRoleLevel` global. `email`: convite é **slug de dicionário × 3 idiomas** no template de link de ação. i18n nos 3 idiomas. |
 | Infra/env | Índices compostos no Firestore (escopo + filtro) para toda consulta escopada; `firestore.rules` reescritas se algum dia expuser cliente direto. Nenhum serviço pago novo além do envio de e-mail. |
 
 ## Riscos e trade-offs
@@ -189,20 +191,21 @@ ponta a ponta, não entregar administração de times completa.
   funcionalidade. O único jeito de baratear é a organização implícita (criada sozinha, invisível na UI),
   que esconde o custo do usuário final — não do desenvolvedor.
 - **O risco simétrico é maior.** Não adotar significa que o primeiro fork B2B reescreve o escopo de todo
-  recurso já construído, mais os índices, mais as regras — em código que já está em produção. A nota de
-  pesquisa chama isso de reescrita, e a evidência local confirma com uma série temporal, não com uma
-  medição só: o predicado de posse foi de **3 sítios em 1 recurso** (até a PR #10) para **4 em 1**
-  (PR #11) e para **11 em 3** (PR #12) — ver a tabela acima. **Quase quadruplicou em dois ciclos, sem que
-  ninguém decidisse nada a respeito.** É a definição de juros compostos: o custo de adotar cresce a cada entrega
-  que não tem nada a ver com organizações.
+  recurso já construído, mais os índices, mais as regras — em código que já está em produção. A série histórica do
+  topo mostra o predicado indo de 3 sítios em 1 recurso para 16 em 3, sem que ninguém decidisse nada a respeito.
 - **Vazamento entre organizações é a falha crítica.** Uma consulta sem o filtro de escopo entrega dado de
   outro cliente, e com a autorização espalhada por handler basta um handler novo esquecer. Isso empurra
   para um ponto único de escopo no acesso a dados — decisão que precisa ser tomada junto, não depois.
+- **Exclusão de conta e direitos do titular.** Hoje o expurgo apaga os registros da pessoa
+  (`account-erasure.ts:121`) e a exportação os entrega (`account-export.ts:136`). Com organização, os registros
+  passam a ser do grupo: o corte precisa dizer o que sai com o membro que exclui a conta e o que fica com a
+  organização, e o `docs/ROPA.md` acompanha.
 - **Migração de forks existentes.** Qualquer fork já rodando precisa de retrocarga: criar a organização
   de cada usuário e reescrever o dono de cada documento. Sem plano, é indisponibilidade.
 - **Dois eixos de papel confundem.** `UserType` global (plataforma) e papel dentro da organização são
   coisas diferentes; misturá-los produz escalada de privilégio silenciosa. A distinção tem de estar no
-  guard, não na convenção.
+  guard, não na convenção. A personificação do admin (`subjectProfile` no guard do painel comum) precisa resolver a
+  organização do personificado, não a do admin.
 
 ## Sinais de pronto
 
@@ -215,22 +218,18 @@ ponta a ponta, não entregar administração de times completa.
 
 ## Perguntas em aberto
 
-- **Esta spec entra na fila agora (`approved`) ou fica `deferred` com motivo?** — **recomendação:**
-  **`deferred` para a implementação, com a decisão de modelo tomada agora**. O boilerplate tem hoje dois
-  recursos escopados; adotar organizações antes de existirem `billing-subscription`, `account-settings` e
-  o resto do backlog de produto é pagar esforço **G** para proteger uma superfície pequena. Mas o
-  `deferred` só é honesto se vier acompanhado de duas coisas baratas e imediatas: (1) decidir e escrever
-  se este core é B2B ou B2C por padrão, e (2) parar de espalhar o predicado de posse por handler,
-  concentrando-o num único ponto — que é exatamente o que torna o retrofit viável depois. Sem essas duas,
-  `deferred` é só adiar a conta com juros.
-  > **Nota da auditoria de 2026-09-24.** As duas specs citadas acima como pré-requisito do adiamento foram
-  > entregues: `account-settings` (PR #12) e `billing-subscription` (PR #25). A segunda gravou a
-  > assinatura no perfil do usuário (`packages/sdk/src/types/user/user.ts:64`, `:66`, remedidas em 2026-10-04), então a cobrança por
-  > organização, fora deste corte, agora pressupõe migrar esse vínculo. O motivo escrito do `deferred`
-  > perdeu parte da base; a decisão de status continua sendo sua (E2 no `BACKLOG.md`).
+- **Esta spec entra na fila agora (`approved`) ou fica `deferred` com motivo?** — **recomendação original
+  (2026-08-22):** `deferred` para a implementação, com a decisão de modelo tomada agora e as duas contrapartidas P
+  feitas. **Atualização de 2026-10-22:** as specs que a recomendação punha antes (`account-settings`,
+  `billing-subscription` e o resto do backlog de produto) foram entregues, e a fila não tem mais nenhuma spec
+  `proposed` nem `approved`. O motivo escrito do adiamento perdeu a base; a decisão de status segue sua (E2 no
+  `BACKLOG.md`).
 - Organização implícita (uma por usuário, invisível) ou explícita desde o início? — **recomendação:**
   implícita; é o que permite ao fork B2C ignorar o recurso e ao B2B ligá-lo sem migrar dados.
 - Um usuário pode pertencer a várias organizações no primeiro corte? — **recomendação:** não. Múltiplo
   pertencimento traz trocador de contexto, escopo de sessão e cache por organização — é outra spec.
 - O aceite de convite vive no `app` ou no `web`? — **recomendação:** no `app`, com a rota de aceite como
   caminho público autorizado pelo token do convite, para não duplicar sessão em dois domínios.
+- O que sai com o membro que exclui a conta? — **recomendação:** os dados pessoais saem; os registros da organização
+  ficam com ela, e a exportação do titular passa a listar só o que ele criou. A decidir no `/analyze` com o
+  `docs/ROPA.md` aberto.
