@@ -33,6 +33,8 @@ export const sharedUtilsTranslations = {
                 "Não foi possível cancelar a assinatura deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
             USERS_DELETE_AUTH_FAILED:
                 "Não foi possível bloquear o acesso deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
+            USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
+                "Este usuário é dono de uma equipe que ainda tem membros, então ele não foi arquivado. Os membros precisam sair ou ser removidos antes.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "Você não pode desativar, arquivar nem tirar o acesso de administrador da sua própria conta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para atualizar.",
@@ -172,6 +174,8 @@ export const sharedUtilsTranslations = {
                 "Este convite foi enviado para outro e-mail. Entre com a conta desse e-mail para aceitar.",
             ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
                 "Você é dono de uma equipe com membros. Remova-os antes de entrar em outra equipe.",
+            ORGANIZATION_INVITATION_FAILED:
+                "Não foi possível enviar o convite agora. Tente de novo em instantes.",
         },
     },
     en: {
@@ -207,6 +211,8 @@ export const sharedUtilsTranslations = {
                 "We couldn't cancel this user's subscription, so they were not archived. Try again in a moment.",
             USERS_DELETE_AUTH_FAILED:
                 "We couldn't block this user's access, so they were not archived. Try again in a moment.",
+            USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
+                "This user owns a team that still has members, so they were not archived. The members must leave or be removed first.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "You can't disable, archive or remove admin access from your own account.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nothing to update.",
@@ -345,6 +351,8 @@ export const sharedUtilsTranslations = {
                 "This invitation was sent to another email. Sign in with that account to accept it.",
             ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
                 "You own a team that has members. Remove them before joining another team.",
+            ORGANIZATION_INVITATION_FAILED:
+                "We couldn't send the invitation right now. Try again in a moment.",
         },
     },
     es: {
@@ -382,6 +390,8 @@ export const sharedUtilsTranslations = {
                 "No pudimos cancelar la suscripción de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
             USERS_DELETE_AUTH_FAILED:
                 "No pudimos bloquear el acceso de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
+            USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
+                "Este usuario es dueño de un equipo que todavía tiene miembros, así que no se archivó. Los miembros deben salir o ser quitados del equipo antes.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "No puedes desactivar, archivar ni quitar el acceso de administrador de tu propia cuenta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para actualizar.",
@@ -527,6 +537,8 @@ export const sharedUtilsTranslations = {
                 "Esta invitación se envió a otro correo. Inicia sesión con esa cuenta para aceptarla.",
             ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
                 "Eres dueño de un equipo con miembros. Quítalos antes de unirte a otro equipo.",
+            ORGANIZATION_INVITATION_FAILED:
+                "No pudimos enviar la invitación ahora. Inténtalo de nuevo en unos instantes.",
         },
     },
 };
