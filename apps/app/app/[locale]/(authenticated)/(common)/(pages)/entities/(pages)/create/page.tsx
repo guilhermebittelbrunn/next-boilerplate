@@ -33,7 +33,9 @@ export default function CreateEntityPage() {
     const routes = COMMON_ROUTES(dictionary, locale);
     const entitiesForm = dictionary.apps.app.pages.common.entities.form;
     const { createEntityMutation } = useEntityCrud();
-    const { uploadFile, isUploading } = useFileUpload();
+    const { uploadFile, isUploading } = useFileUpload({
+        scope: "organization",
+    });
 
     const schema = useMemo(
         () => buildEntityFormSchema(dictionary),
