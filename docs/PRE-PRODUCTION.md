@@ -240,10 +240,10 @@ nunca foram medidas. Contam como pendentes até alguém rodar o comando de novo.
 
 **Uma de sete.** As subseções acima marcam cada índice como pendente uma a uma, o que estava certo em
 substância e escondia que a de `reference_id` já tinha subido — provavelmente junto com a publicação das
-rules. Publicar as seis restantes é o mesmo comando único, e ele é idempotente para a que já existe.
+rules. Publicar as oito restantes é o mesmo comando único, e ele é idempotente para a que já existe.
 
 ⛔ **Não leia esta tabela como estado do seu fork.** Ela descreve o projeto de referência
-(`next-boilerplate-576d0`). Um fork roda em outro projeto Firebase, onde **nenhuma** das sete existe.
+(`next-boilerplate-576d0`). Um fork roda em outro projeto Firebase, onde **nenhuma** das nove existe.
 
 Uma consulta que esta entrega acrescentou **não** entrou nessa fila, de propósito: o expurgo da trilha
 ordena por `FieldPath.documentId()` sobre um `array-contains`, e todo índice de campo único termina em
@@ -393,13 +393,13 @@ deploy por bem-sucedido. Ou o health check distingue 5xx, ou vale trocar o `thro
 - [ ] `roles/storage.objectAdmin` concedido à service account
 - [ ] `storage.rules` publicado
 - [ ] Verificado que o objeto **não** abre sem assinatura
-- [ ] Verificado que a exclusão de conta apaga os objetos sob `uploads/<profileId>/`
+- [ ] Verificado que a exclusão de conta apaga os objetos sob `uploads/<profileId>/` e `uploads/org-<organizationId>/`
 
 **Este item é pulável, e pular é uma escolha legítima.** A capacidade é opt-in por env: sem as variáveis o
 app sobe, o build passa e o fork **continua no plano Spark, sem cartão**. Só siga adiante se o produto
 precisa de upload.
 
-**São dois os consumidores hoje** — pulando o item, os dois degradam e nada quebra:
+**São três os consumidores hoje** — pulando o item, os três degradam e nada quebra:
 
 | Consumidor | Sem Storage |
 |---|---|
@@ -499,7 +499,7 @@ pelo próprio repositório**, mais dois do Google:
 | `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
 | `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
 | `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:235,239` · `apps/web/proxy.ts:111,115` | preferência |
-| `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:21` | preferência |
+| `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:25` | preferência |
 | `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:29` | preferência |
 | `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
 
@@ -585,7 +585,7 @@ quando o perfil já tem uma assinatura viva gravada (`apps/api/app/(routes)/paym
 Se a pessoa abrir o checkout em duas abas e pagar nas duas antes de o primeiro webhook chegar, a Stripe cria
 duas assinaturas. O perfil fica com a mais recente (`decideSubscriptionWrite`,
 `apps/api/(shared)/lib/billing-state.ts:207-214`) e tanto a exclusão de conta quanto o arquivamento pelo admin cancelam só essa
-(`apps/api/(shared)/lib/account-erasure.ts:182`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
+(`apps/api/(shared)/lib/account-erasure.ts:188`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
 a sobrescrita foi aceita. Quem precisar fechar o caso antes do release:
 
 1. Em `POST /payments/checkout`, quando o perfil já tem `stripeCustomerId`, chamar
@@ -961,7 +961,7 @@ mexer no modo `simple` por ora. Reabra se o modo passar a restringir o painel co
 
 > ⚠️ **Correção medida em 2026-09-25: a premissa desta seção não confere com o código.** O texto abaixo parte
 > de que o modo `simple` restringe o painel comum a administradores. Nada no `apps/app` faz isso: o layout
-> `(common)` não lê o modo de produto, e os únicos arquivos do app que leem são `(common)/routes.tsx:52` e
+> `(common)` não lê o modo de produto, e os únicos arquivos do app que leem são `(common)/routes.tsx:69` e
 > `AccountTabs.tsx:33`, os dois só para esconder a cobrança. `commonUserUsesPanel()` não existe em
 > `packages/next-config/product-mode.ts`, e a `apps/web` não tem área autenticada. Hoje, num fork `simple`, o
 > usuário comum entra no painel e alcança a aba de privacidade. A pendência real é outra: o modo `simple`

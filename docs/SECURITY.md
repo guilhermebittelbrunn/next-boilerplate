@@ -104,7 +104,8 @@ Mesma postura do Firestore — **a API é a única autoridade** — com uma dife
 **duas** camadas de acesso, e publicar as rules fecha só uma.
 
 - O upload atravessa a API (`POST /files`, sob guard de painel comum), que valida **tipo real** (magic
-  bytes) e tamanho. O caminho do objeto é derivado no servidor: dono + UUID + extensão do tipo sniffado —
+  bytes) e tamanho. O caminho do objeto é derivado no servidor: dono (o perfil, ou `org-<organizationId>` com
+  `?scope=organization`) + UUID + extensão do tipo sniffado —
   nada que o cliente envia entra no path.
 - A leitura sai por **URL assinada V4, expirável (15 min)**, emitida só depois do check de posse do
   recurso. O documento no Firestore guarda o **caminho**, nunca uma URL assinada.
@@ -175,7 +176,7 @@ Refletir a origem **após** conferir a allowlist é a implementação canônica 
 
 ### Tamanho do corpo
 
-O `parseRequestJson` (`apps/api/(shared)/lib/parse-request-json.ts`) lê o corpo de todas as rotas que recebem JSON (22 handlers, contados em 2026-10-19) e recusa acima de **100 KiB** com `413 VALIDATION_FAILED`, antes do `JSON.parse` e do Zod. Um `content-length` declarado acima do teto é recusado sem ler o corpo. Sem o header, ou com um valor menor que o real, o helper soma os bytes enquanto lê e para de ler ao passar do teto, soltando o stream sem cancelá-lo: no corpo que o Next monta sobre o `Readable` do Node, o cancelamento deixa um `unhandledRejection` (`AbortError`) no log a cada recusa. O maior corpo legítimo de hoje é o da criação de entidade: cerca de 74 KB no pior caso, com todo caractere escapado como `\uXXXX`.
+O `parseRequestJson` (`apps/api/(shared)/lib/parse-request-json.ts`) lê o corpo de todas as rotas que recebem JSON (26 handlers, contados em 2026-10-23) e recusa acima de **100 KiB** com `413 VALIDATION_FAILED`, antes do `JSON.parse` e do Zod. Um `content-length` declarado acima do teto é recusado sem ler o corpo. Sem o header, ou com um valor menor que o real, o helper soma os bytes enquanto lê e para de ler ao passar do teto, soltando o stream sem cancelá-lo: no corpo que o Next monta sobre o `Readable` do Node, o cancelamento deixa um `unhandledRejection` (`AbortError`) no log a cada recusa. O maior corpo legítimo de hoje é o da criação de entidade: cerca de 74 KB no pior caso, com todo caractere escapado como `\uXXXX`.
 
 A resposta 413 sai com `connection: close`. O helper não lê o resto do corpo, e sem esse header o Node mantém o socket aberto esperando por ele até o `requestTimeout` (300 s por padrão). Medido em `next start` no dia 2026-10-20, com 50 envios simultâneos de 5 MiB para `/auth/sign-in`: sem o header, 40 das 50 conexões com corpo em `chunked` continuavam ESTABLISHED 2 s e 60 s depois; com ele, nenhuma ficou aberta aos 60 s, em três rajadas. Com `content-length` declarado, com ou sem `Expect: 100-continue`, o `curl` encerra a conexão por conta própria ao receber o 413, e nenhuma ficou aberta antes nem depois da mudança.
 
@@ -200,7 +201,7 @@ O teto limita o que o handler acumula e parseia, e não o que a plataforma receb
 
 ## Checklist ao revisar mudanças sensíveis
 
-- [ ] Rota nova tem guard (`requireCommonPanelApi`/`requireAdminApi`) e checa posse.
+- [ ] Rota nova tem guard (`requireCommonPanelApi`/`requireOrganizationApi`/`requireAdminApi`) e checa posse ou escopo da organização.
 - [ ] Nenhum header de auth do cliente é confiado sem validação server-side.
 - [ ] Erros expõem só `error.code` (sem stack trace/PII).
 - [ ] Acesso a dados via API; cliente não toca Firestore direto.

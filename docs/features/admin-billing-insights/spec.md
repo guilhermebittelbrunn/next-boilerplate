@@ -299,7 +299,7 @@ falta. Os cinco itens acima continuam valendo; o que muda é **de onde** cada n�
   2026-09-24:** coleção própria de faturas pagas, alimentada pelo webhook e sem TTL. Ver o reescopo acima.
 - **Quem vê a seção: qualquer admin ou um papel separado?** — **recomendação:** qualquer admin no primeiro
   corte. Papel de finanças é problema de RBAC, que vive em
-  [`teams-organizations`](../../../specs/teams-organizations.md), hoje `deferred`.
+  [`teams-organizations`](../teams-organizations/spec.md), hoje `deferred`.
 - **Quantas contratações recentes mostrar, e a partir de qual evento uma assinatura conta como "recente"?**
   — **recomendação:** as 5 últimas ativações, pelo instante em que a assinatura passou a ativa. Cinco cabe
   na home sem competir com o resto; a lista completa é assunto de uma tela própria, fora deste corte.

@@ -172,7 +172,7 @@ mínima que torna o corte planejável. Os cinco itens acima continuam valendo; o
   produto, e cada fork tem o seu.
 - Coleta de dados de domínio (empresa, cargo, segmento) — não é genérico; é código do fork, que apenas
   encaixa um passo a mais no fluxo.
-- Convite de colegas ([`teams-organizations`](../../../specs/teams-organizations.md)), upload de avatar
+- Convite de colegas ([`teams-organizations`](../teams-organizations/spec.md)), upload de avatar
   ([`file-upload-storage`](../file-upload-storage/spec.md) — **entregue**, PR #11) e
   e-mail de boas-vindas (`transactional-emails`).
 

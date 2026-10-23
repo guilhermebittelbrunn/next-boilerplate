@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [linked-sign-in-methods]
 contends_on: [packages/auth/client.ts, apps/api/(shared)/lib/firebase-identity-toolkit.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: -
-updated: 2026-10-22
+updated: 2026-10-23
 ---
 
 # Login com GitHub e Microsoft, ligados por configuração
@@ -61,7 +61,8 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   acima, e a âncora anterior, `:187-197`, já estava uma linha adiantada) e `sign-up/components/SignUpFormClient.tsx` —
   um botão do Google em cada tela. Desde a PR #56 o login também tem o link "Receber link de acesso por e-mail"
   (`:209-218`), condicionado à disponibilidade que a API informa.
-- `apps/api/proxy.ts:55-70` — `/auth/sign-in/google` está no rate limit (`:58`; a lista era `:53-67` até a PR #56,
+- `apps/api/proxy.ts:60-78` — `/auth/sign-in/google` está no rate limit (`:63`; a lista era `:55-70`, com a rota em
+  `:58`, até a PR #57, que acrescentou um parágrafo de comentário acima e três rotas de convite ao fim, `:53-67` até a PR #56,
   que acrescentou `/auth/sign-in/email-link/request`, `:49-62` até a PR #49 e `:45-58` até a PR #47).
 - `docs/FORKING.md:175` — o roteiro do fork descreve "e-mail/senha e Google".
 - **Lacuna:** não há forma de ligar outro provedor sem escrever um fluxo novo inteiro.
