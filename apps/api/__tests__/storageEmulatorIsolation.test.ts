@@ -33,6 +33,14 @@ const {
 
 vi.mock("@/env", () => ({ env: envMock }));
 
+// Billing reaches Stripe through `server-only`; switched off, nothing is plan-gated.
+vi.mock("@/(shared)/lib/billing", () => ({ isBillingEnabled: () => false }));
+
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    resolveOrganizationMembership: () =>
+        Promise.resolve({ organizationId: "org1", role: "owner" }),
+}));
+
 vi.mock("@repo/auth/server", () => ({
     getStorageAdmin: () => ({ bucket: bucketMock }),
 }));
@@ -54,7 +62,10 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     },
 }));
 
-vi.mock("@/(shared)/validation/file.schema", () => ({
+vi.mock("@/(shared)/validation/file.schema", async (importOriginal) => ({
+    ...(await importOriginal<
+        typeof import("@/(shared)/validation/file.schema")
+    >()),
     parseUploadedImage: (...args: unknown[]) => parseUploadedImageMock(...args),
 }));
 

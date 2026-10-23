@@ -80,7 +80,7 @@ trata nenhum dos casos.
   pelo fluxo de senha que já existe, sem generalizar esse contrato.
 - **Mesclar duas contas** quando o Google já pertence a outra conta: a doc do Firebase sugere mesclar e apagar a
   antiga; isso mexe em posse de registros e fica para quando houver caso.
-- **Link por e-mail como método vinculado**: entra com [`magic-link-sign-in`](../../../specs/magic-link-sign-in.md).
+- **Link por e-mail como método vinculado**: entra com [`magic-link-sign-in`](../magic-link-sign-in/spec.md).
 
 ## Impacto por camada
 

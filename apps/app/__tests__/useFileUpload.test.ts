@@ -72,6 +72,25 @@ describe("useFileUpload", () => {
 
         expect(received).toEqual(uploadedFile);
         expect(uploadMock).toHaveBeenCalledWith(file, { onProgress });
+        expect(uploadMock.mock.calls[0]?.[1]?.scope).toBeUndefined();
+    });
+
+    /** A record's photo stays with the organization when its uploader leaves. */
+    it("forwards the scope it was given to the sdk", async () => {
+        uploadMock.mockResolvedValue(uploadedFile);
+        const file = jpegFile();
+        const { result } = renderHook(() =>
+            useFileUpload({ scope: "organization" })
+        );
+
+        await act(async () => {
+            await result.current.uploadFile(file);
+        });
+
+        expect(uploadMock).toHaveBeenCalledWith(
+            file,
+            expect.objectContaining({ scope: "organization" })
+        );
     });
 
     it("reports the upload as in flight only until it settles", async () => {

@@ -373,6 +373,42 @@ describe("api proxy rate limit", () => {
         expect(checkRateLimitMock).toHaveBeenCalledTimes(1);
     });
 
+    it("counts the organization invitation endpoints", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+        const invitationPaths = [
+            "/organization/invitations",
+            "/invitations/preview",
+            "/invitations/accept",
+        ];
+
+        for (const path of invitationPaths) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "POST", path })
+            );
+        }
+
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(
+            invitationPaths.length
+        );
+    });
+
+    it("leaves the rest of the organization area unlimited", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        for (const path of [
+            "/organization",
+            "/organization/members",
+            "/organization/leave",
+            "/organization/invitations/abc",
+        ]) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "POST", path })
+            );
+        }
+
+        expect(checkRateLimitMock).not.toHaveBeenCalled();
+    });
+
     it("matches the contact endpoint exactly, not by prefix", async () => {
         const proxy = await loadProxy(WEB_ORIGIN);
 

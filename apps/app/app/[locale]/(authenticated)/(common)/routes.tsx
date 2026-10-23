@@ -2,10 +2,16 @@
 
 import { getDictionaryForLocale } from "@repo/internationalization/client";
 import { isSubscriptionMode } from "@repo/next-config/product-mode";
-import { LayersIcon, Settings2Icon, SquareTerminalIcon } from "lucide-react";
+import {
+    LayersIcon,
+    Settings2Icon,
+    SquareTerminalIcon,
+    UsersIcon,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import type { NavItem } from "@/shared/components/ui/Sidebar";
+import { isOrganizationMembersEnabled } from "@/shared/lib/organizationMembersEnabled";
 import { COMMON_ROUTES } from "./paths";
 
 export function useCommonNavRoutes(): NavItem[] {
@@ -32,6 +38,17 @@ export function useCommonNavRoutes(): NavItem[] {
                 icon: LayersIcon,
                 isActive: true,
             },
+            ...(isOrganizationMembersEnabled()
+                ? [
+                      {
+                          title: dictionary.apps.app.pages.common.routes
+                              .platform.organization,
+                          url: routes.organization.url,
+                          icon: UsersIcon,
+                          isActive: true,
+                      },
+                  ]
+                : []),
             {
                 title: dictionary.apps.app.pages.common.routes.platform
                     .settings,

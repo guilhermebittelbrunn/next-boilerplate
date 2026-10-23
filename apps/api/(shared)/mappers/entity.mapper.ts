@@ -12,6 +12,9 @@ class BaseEntityMapper extends Mapper<EntityFirestoreRow, EntityDTO> {
         const record = raw as Record<string, unknown>;
         return {
             id,
+            // Absent on a record from before organizations until it is stamped. An empty
+            // id never equals a real scope, so such a record is out of everyone's reach.
+            organizationId: String(record.organizationId ?? ""),
             userId: String(record.userId ?? ""),
             name: String(record.name ?? ""),
             description: String(record.description ?? ""),
@@ -34,6 +37,7 @@ class BaseEntityMapper extends Mapper<EntityFirestoreRow, EntityDTO> {
     ): AllOptional<Record<string, unknown>> {
         const out: Record<string, unknown> = {};
         const keys: (keyof EntityDTO)[] = [
+            "organizationId",
             "userId",
             "name",
             "description",

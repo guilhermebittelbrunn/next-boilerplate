@@ -33,6 +33,11 @@ export const COMMON_ROUTES = (
                 url: buildPath(`/entities/edit/${id}`),
             }),
         },
+        organization: {
+            label: dictionary?.apps.app.pages.common.routes.platform
+                .organization,
+            url: buildPath("/organization"),
+        },
         account: {
             root: {
                 label: dictionary?.apps.app.pages.common.account.title,

@@ -24,6 +24,12 @@ const {
     FakeIdentityToolkitError: class extends Error {},
 }));
 
+// The organization resolver reaches Firestore through the repositories; it is not what
+// this file is about.
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    ensureOrganizationMembershipQuietly: vi.fn(),
+}));
+
 vi.mock("@/(shared)/lib/resolve-api-actor", () => ({
     resolveApiActor: (...args: unknown[]) => resolveApiActorMock(...args),
 }));

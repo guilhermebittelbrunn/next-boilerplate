@@ -1,7 +1,7 @@
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import {
-    isOwnStorageObject,
-    isUsablePhotoReference,
+    isAttachablePhoto,
+    isReplaceablePhoto,
     normalizePhotoReference,
     withPhotoUrl,
 } from "@/(shared)/lib/entity-photo";
@@ -14,34 +14,40 @@ import {
 import { deleteObjectQuietly } from "@/(shared)/lib/storage";
 import { entityRepository } from "@/(shared)/repositories/entity.repository";
 import { parseUpdateEntity } from "@/(shared)/validation/entity.schema";
-import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
+import { requireOrganizationApi } from "@/app/(guards)/organization";
 
-export const GET = requireCommonPanelApi<RouteIdParamsContext>(
+const notFound = () =>
+    Response.json(
+        { error: { code: "ENTITY_NOT_FOUND" } },
+        { status: HTTP_STATUS.NOT_FOUND }
+    );
+
+export const GET = requireOrganizationApi<RouteIdParamsContext>(
     async (_req, ctx) => {
         const id = await resolveIdFromContext(ctx);
-        const row = await entityRepository.findById(id);
+        const row = await entityRepository.findInOrganization(
+            id,
+            ctx.organization.organizationId
+        );
 
-        if (!row || row.userId !== ctx.subjectProfile.id) {
-            return Response.json(
-                { error: { code: "ENTITY_NOT_FOUND" } },
-                { status: 404 }
-            );
+        if (!row) {
+            return notFound();
         }
 
         return Response.json({ data: await withPhotoUrl(row) });
     }
 );
 
-export const PUT = requireCommonPanelApi<RouteIdParamsContext>(
+export const PUT = requireOrganizationApi<RouteIdParamsContext>(
     async (req, ctx) => {
         const id = await resolveIdFromContext(ctx);
-        const existing = await entityRepository.findById(id);
+        const existing = await entityRepository.findInOrganization(
+            id,
+            ctx.organization.organizationId
+        );
 
-        if (!existing || existing.userId !== ctx.subjectProfile.id) {
-            return Response.json(
-                { error: { code: "ENTITY_NOT_FOUND" } },
-                { status: 404 }
-            );
+        if (!existing) {
+            return notFound();
         }
 
         const parsedBody = await parseRequestJson(req);
@@ -59,12 +65,14 @@ export const PUT = requireCommonPanelApi<RouteIdParamsContext>(
         if (patch.photo !== undefined) {
             patch.photo = normalizePhotoReference(patch.photo);
 
-            // Ownership here is about the file, not the record: pointing a record you
-            // own at someone else's object would have the API sign and hand back their
-            // image.
+            // The edit form sends the current photo back on every save, so the value
+            // already on the record is accepted as it is: a member editing someone
+            // else's record must not be refused over a photo they never touched. Any
+            // other value has to be an object of the organization, or an external URL.
             if (
                 patch.photo &&
-                !isUsablePhotoReference(patch.photo, ctx.subjectProfile.id)
+                patch.photo !== existing.photo &&
+                !isAttachablePhoto(patch.photo, ctx.organization.organizationId)
             ) {
                 return Response.json(
                     { error: { code: "ENTITY_PHOTO_INVALID" } },
@@ -83,7 +91,11 @@ export const PUT = requireCommonPanelApi<RouteIdParamsContext>(
             patch.photo !== undefined &&
             previousPhoto &&
             previousPhoto !== patch.photo &&
-            isOwnStorageObject(previousPhoto, ctx.subjectProfile.id)
+            isReplaceablePhoto(previousPhoto, {
+                organizationId: ctx.organization.organizationId,
+                actorId: ctx.subjectProfile.id,
+                authorId: existing.userId,
+            })
         ) {
             // Deleted only after the write lands: while it fails, the old object is
             // still the valid one.
@@ -94,16 +106,16 @@ export const PUT = requireCommonPanelApi<RouteIdParamsContext>(
     }
 );
 
-export const DELETE = requireCommonPanelApi<RouteIdParamsContext>(
+export const DELETE = requireOrganizationApi<RouteIdParamsContext>(
     async (_req, ctx) => {
         const id = await resolveIdFromContext(ctx);
-        const existing = await entityRepository.findById(id);
+        const existing = await entityRepository.findInOrganization(
+            id,
+            ctx.organization.organizationId
+        );
 
-        if (!existing || existing.userId !== ctx.subjectProfile.id) {
-            return Response.json(
-                { error: { code: "ENTITY_NOT_FOUND" } },
-                { status: 404 }
-            );
+        if (!existing) {
+            return notFound();
         }
 
         await entityRepository.delete(id);

@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # MFA, sessões ativas e política de senha
@@ -181,7 +181,7 @@ eficácia.
 > 2026-10-04), o que está correto e é fácil de inverter sem ninguém perceber.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
-> (`packages/auth/client.ts:244-255`, remedido em 2026-10-19 depois da PR #48), que força `reload(user)` + `getIdToken(true)`. É o primeiro
+> (`packages/auth/client.ts:261-272`, remedido em 2026-10-22 depois da PR #56, que acrescentou `signInWithEmailLinkCode` acima; era `:244-255` desde a PR #48), que força `reload(user)` + `getIdToken(true)`. É o primeiro
 > precedente no repo de **forçar refresh de token no cliente** — metade do mecanismo que o item 1 precisa
 > do lado do browser. A suíte de `packages/auth` deixou de ser o ponto cego que esta nota apontava: passou
 > de 2 arquivos / 29 testes para **8 arquivos / 101 testes** (recontado em 2026-09-17, rodando o gate sem
@@ -239,9 +239,9 @@ eficácia.
       8`, `PASSWORD_MAX_LENGTH = 1024`, `EXISTING_PASSWORD_MIN_LENGTH = 6` para login e senha atual). Na borda
       da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
-      e na redefinição (`auth.schema.ts:27`, `:32`, `:101-102`, remedidas em 2026-10-19 depois da PR #51, que acrescentou o schema do login com Google; eram `:24`, `:29` e `:89-90`), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
+      e na redefinição (`auth.schema.ts:32`, `:37`, `:109-110`, remedidas em 2026-10-22 depois da PR #56, que acrescentou o schema do pedido de link por e-mail; eram `:27`, `:32` e `:101-102` desde a PR #51 e `:24`, `:29` e `:89-90` antes), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:98`, `:248`, `:399`, remedidas em 2026-10-20 depois da PR #52, que acrescentou os dois códigos de notificação nos três idiomas; eram `:245` e `:393`, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:98`, `:249`, `:401`, remedidas em 2026-10-22 depois da PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED` nos três idiomas; eram `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
@@ -304,6 +304,13 @@ e **não** é arquivada.
 | 1 — política de senha | item 4 | ✅ **entregue** pela PR #29 (`597f641`), mergeada em 2026-09-26 com CI verde no SHA de merge. Evidência no item 4 acima |
 | 2 — sessões | item 2 e o resíduo do item 3 (logout local, encerramento seletivo) | ✅ **entregue** pela PR #39 (`d92d21b`), mergeada em 2026-10-04 com CI verde no SHA de merge (`gh run 37239437558`). Feature em `docs/features/account-active-sessions/`. Evidência nos itens 2 e 3 acima |
 | 3 — segundo fator | item 5, com códigos de recuperação, e o item 6 (opt-in) | ⏳ não iniciada, e **nenhuma feature ativa**. Preço do MFA no Identity Platform segue **não confirmado**. Enquanto a spec estiver `in-progress`, ela fica fora dos lotes paralelos; o destino da fatia é a decisão estacionada E12 do `BACKLOG.md` (era a D10 até 2026-10-07) |
+
+**Nota para a fatia 3 (2026-10-22, pós-PR #56):** o login agora tem três entradas, senha, Google e link por e-mail
+([`magic-link-sign-in`](../docs/features/magic-link-sign-in/spec.md), entregue pela PR #56). As três terminam no
+mesmo `onAuthSuccess` (`packages/auth/provider.tsx:353-370`), e a página do link conclui no cliente
+(`apps/app/app/[locale]/(unauthenticated)/sign-in/email-link/components/EmailLinkCompletion.tsx`). Com o segundo
+fator ligado, essa página precisa tratar `auth/multi-factor-auth-required`, que hoje cai no cartão de falha
+genérico (`EmailLinkCompletion.tsx:152-163`); o link não pode dispensar o segundo fator.
 
 A spec passou a `in-progress` com `feature: account-security-mfa` e **não** foi arquivada depois da fatia 1.
 *(Auditoria de 2026-10-04: com a fatia 2 entregue, seguem abertos só os itens 5 e 6. O `feature:` do

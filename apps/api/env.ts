@@ -41,6 +41,9 @@ export const env = createEnv({
             .string()
             .max(STRIPE_LOOKUP_KEY_MAX_LENGTH)
             .optional(),
+        // "true" turns on organization members and invitations. Anything else, empty
+        // included, keeps the routes answering 404. Must match the app's value.
+        NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED: z.string().optional(),
     },
     runtimeEnv: {
         FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
@@ -56,6 +59,8 @@ export const env = createEnv({
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
         NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE:
             process.env.NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE || undefined,
+        NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED:
+            process.env.NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED || undefined,
     },
     skipValidation: process.env.NODE_ENV === "development",
 });

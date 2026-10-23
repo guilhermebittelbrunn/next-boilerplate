@@ -37,7 +37,9 @@ export function EditEntityClient() {
 
     const { data: entity, isLoading, isError } = useFindEntityById(id);
     const { updateEntityMutation } = useEntityCrud();
-    const { uploadFile, isUploading } = useFileUpload();
+    const { uploadFile, isUploading } = useFileUpload({
+        scope: "organization",
+    });
 
     const schema = useMemo(
         () => buildEntityFormSchema(dictionary),

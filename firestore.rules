@@ -36,11 +36,13 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     // ALTERNATIVA (NÃO ativa) — só se um dia expor coleções direto ao cliente.
     //
-    // ATENÇÃO ao modelo de dados: `entity.userId` guarda o ID do documento de
-    // perfil do usuário (coleção `user`), NÃO o UID do Firebase Auth. A ponte
-    // UID → perfil é resolvida na API (userRepository.findByReferenceId(uid)),
-    // então regras "por dono" no cliente exigiriam ler o perfil aqui (custoso)
-    // ou trocar o modelo. Por isso o acesso direto de cliente NÃO é recomendado.
+    // ATENÇÃO ao modelo de dados: o escopo de `entity` é `entity.organizationId`
+    // (a organização a que o registro pertence); `entity.userId` só diz quem
+    // criou e guarda o ID do documento de perfil (coleção `user`), NÃO o UID do
+    // Firebase Auth. Quem pertence a qual organização está em
+    // `organizationMember/{profileId}`, e a ponte UID → perfil → organização é
+    // resolvida na API. Regras no cliente exigiriam ler o perfil e o vínculo
+    // aqui (custoso). Por isso o acesso direto de cliente NÃO é recomendado.
     //
     // Exemplo ilustrativo (assumindo entity.userId == request.auth.uid):
     //   function isSignedIn() { return request.auth != null; }

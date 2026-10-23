@@ -239,7 +239,9 @@ segundos, até o evento de recursos chegar.
   `requireCommonPanelApi`. `requirement` é `{}` (só assinatura viva), `{ feature: "<lookup_key>" }`, `null`
   (sem gate) ou uma função que devolve um desses, avaliada a cada requisição. A escrita personificada continua
   recusada como `AUTH_REQUEST_IMPERSONATION_READ_ONLY` antes de o plano ser olhado. Para uma checagem no meio
-  do handler, `refusePlanAccess(profile, requirement)` devolve a `Response` 403 ou `null`.
+  do handler, `refusePlanAccess(profile, requirement)` devolve a `Response` 403 ou `null`. Rota de dado da
+  organização passa o mesmo requisito pelo guard dela, `requireOrganizationApi(handler, { plan })`, que faz a
+  checagem na mesma ordem; é assim que o `POST /entities` usa.
 - **Conta:** `GET /account` e `PUT /account` devolvem `planAccess` (`enforced`, `subscribed`, `features`),
   calculado a cada requisição sem chamar a Stripe. `enforced` é `isBillingEnabled()`.
 - **App:** `<PlanGate requirement={...} loadingFallback={...}>` em `apps/app/shared/components/ui/PlanGate.tsx`

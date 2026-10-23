@@ -59,6 +59,14 @@ export const ownerPrefix = (ownerId: string): string =>
 export const isOwnedBy = (path: string, ownerId: string): boolean =>
     path.startsWith(ownerPrefix(ownerId));
 
+/**
+ * Owner segment of the objects that belong to an organization rather than to a person.
+ * Profile ids are Firestore auto-ids, letters and digits only, so the hyphen keeps the two
+ * namespaces from ever colliding.
+ */
+export const organizationOwnerSegment = (organizationId: string): string =>
+    `org-${organizationId}`;
+
 export async function putObject(
     path: string,
     body: Buffer,

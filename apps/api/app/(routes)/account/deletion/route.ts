@@ -8,6 +8,7 @@ import {
     IdentityToolkitError,
     identitySignInWithPassword,
 } from "@/(shared)/lib/firebase-identity-toolkit";
+import { ownsOrganizationWithMembers } from "@/(shared)/lib/organization-membership";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import {
     mapPasswordCheckMessageToCode,
@@ -35,6 +36,15 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
     const parsed = parseDeleteAccount(parsedBody.value);
     if (!parsed.ok) {
         return parsed.response;
+    }
+
+    // Refused before the password is even checked: nothing can be erased until the owner
+    // removes the members, since ownership cannot be handed over to one of them.
+    if (await ownsOrganizationWithMembers(ctx.subjectProfile.id)) {
+        return Response.json(
+            { error: { code: "ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS" } },
+            { status: HTTP_STATUS.CONFLICT }
+        );
     }
 
     const email = ctx.user.email;
@@ -75,6 +85,7 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
     const report = await runAccountErasure({
         profile: ctx.subjectProfile,
         uid: ctx.user.uid,
+        email,
         requestId,
     });
 

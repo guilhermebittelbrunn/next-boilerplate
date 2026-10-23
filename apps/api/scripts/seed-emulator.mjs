@@ -68,8 +68,8 @@ const ENTITIES_BY_OWNER = {
             enabled: false,
         },
     ],
-    // A second owner exists so that ownership (a 404 on someone else's record) can be
-    // exercised without creating an account by hand.
+    // A second owner exists so that the organization scope (a 404 on another
+    // organization's record) can be exercised without creating an account by hand.
     "user2@example.com": [
         {
             name: "Other Owner Shop",
@@ -158,8 +158,10 @@ async function createEntities(db, profileId, entities) {
     for (const entity of entities) {
         await db.collection(ENTITIES_COLLECTION).add({
             ...entity,
-            // The owner is the profile document id, not the Auth uid. Seeding the uid
-            // here makes the panel list come back empty with no error at all.
+            // The author is the profile document id, not the Auth uid. There is no
+            // `organizationId` on purpose: the first request of the owner stamps it with
+            // their organization, the same path a fork in production takes for records
+            // that predate organizations.
             userId: profileId,
             photo: null,
             createdAt: now,

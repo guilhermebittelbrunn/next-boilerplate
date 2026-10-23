@@ -31,17 +31,17 @@ Só se precisar normalizar (datas `Timestamp`→ISO, opcionais). Estenda `Mapper
 Recursos sem normalização podem dispensar mapper (ver `user.repository`).
 
 ### 4. Repositório (`apps/api/(shared)/repositories/<recurso>.repository.ts`)
-Estenda `BaseRepository<XDTO>` e, **se houver mapper**, passe-o no `super`: `super(db, "<coleção>", xMapper)`. `BaseRepository` já dá `findById`/`create`/`update`/`delete` (soft delete via `deletedAt`). Adicione queries específicas (ex.: `listByUserId`) seguindo `entity.repository.ts`. Exporte instância única (`xRepository`).
+Estenda `BaseRepository<XDTO>` e, **se houver mapper**, passe-o no `super`: `super(db, "<coleção>", xMapper)`. `BaseRepository` já dá `findById`/`create`/`update`/`delete` (soft delete via `deletedAt`). Adicione queries específicas (ex.: `listByOrganization`, sobre o helper privado `inOrganization`) seguindo `entity.repository.ts`. Exporte instância única (`xRepository`).
 
 ### 5. Handlers
 - **Coleção** — `apps/api/app/(routes)/<plural>/route.ts`: `GET` (list) + `POST` (create).
 - **Item** — `apps/api/app/(routes)/<plural>/[id]/route.ts`: `GET`/`PUT`/`DELETE`.
 
 Padrões obrigatórios (ver os dois arquivos de `entities`):
-- Envolva cada handler no guard: `export const GET = requireCommonPanelApi(async (req, ctx) => {...})`. Para rota `[id]`, parametrize: `requireCommonPanelApi<RouteIdParamsContext>(...)` e `const id = await resolveIdFromContext(ctx)`.
+- Envolva cada handler no guard do escopo (ver **Escopo** abaixo): `export const GET = requireOrganizationApi(async (req, ctx) => {...})`, ou `requireCommonPanelApi` para recurso da pessoa. Para rota `[id]`, parametrize o guard (`requireOrganizationApi<RouteIdParamsContext>(...)`) e use `const id = await resolveIdFromContext(ctx)`.
 - Body de POST/PUT via `parseRequestJson(req)` → cheque `.ok`; depois `parseCreateX`/`parseUpdateX`.
 - PATCH parcial: `const patch = omitUndefined(parsed.value)` antes do `update`.
-- **Posse**: quando o recurso pertence a um usuário, cheque `row.userId !== ctx.subjectProfile.id` → `{ error: { code: "X_NOT_FOUND" } }`, 404.
+- **Escopo**: decida de quem é o recurso. **Da organização** (o padrão para dado de negócio, como `entity`): guard `requireOrganizationApi`, o documento grava `organizationId` (escopo) e `userId` (quem criou), e o predicado fica num helper privado do repositório (`inOrganization`, `findInOrganization(id, ctx.organization.organizationId)`); a rota responde `{ error: { code: "X_NOT_FOUND" } }`, 404, ao `null`. **Da pessoa** (notificação, preferência, sessão): `requireCommonPanelApi` e `row.userId !== ctx.subjectProfile.id` → 404. Nunca escope recurso da organização pelo id do perfil.
 - Respostas: create → `Response.json({ data: created }, { status: 201 })`; get → `{ data: row }`; PUT fire-and-forget → `{ data: { id } }`; delete → `new Response(null, { status: 204 })`.
 - Erros sempre como `{ error: { code: "X_..." } }` com status correto — nunca stack trace.
 

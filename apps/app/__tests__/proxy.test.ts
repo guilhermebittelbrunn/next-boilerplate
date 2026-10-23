@@ -210,6 +210,7 @@ describe("proxy default deny", () => {
             "/pt-br/forgot-password",
             "/pt-br/reset-password",
             "/pt-br/verify-email",
+            "/pt-br/invite",
         ]) {
             const response = await proxy(anonymous(path));
 
@@ -275,6 +276,19 @@ describe("proxy bounce off the public paths", () => {
 
             expect(locationOf(response)).toBeNull();
         }
+    });
+
+    /** Bouncing home would drop the token, and with it the only way to accept. */
+    it("leaves a signed-in visitor on an invitation link, token intact", async () => {
+        const response = await proxy(signedIn("/pt-br/invite?token=abc123"));
+
+        expect(locationOf(response)).toBeNull();
+    });
+
+    it("lets an anonymous visitor open an invitation link", async () => {
+        const response = await proxy(anonymous("/en/invite?token=abc123"));
+
+        expect(locationOf(response)).toBeNull();
     });
 
     it("lets an anonymous visitor open an email sign-in link", async () => {

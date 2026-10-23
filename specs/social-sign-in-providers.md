@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [linked-sign-in-methods]
 contends_on: [packages/auth/client.ts, apps/api/(shared)/lib/firebase-identity-toolkit.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: -
-updated: 2026-10-19
+updated: 2026-10-22
 ---
 
 # Login com GitHub e Microsoft, ligados por configuração
@@ -37,24 +37,32 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
 
 ## O que já existe no repo
 
-- `packages/auth/client.ts:152-157` (era `:150-155` até a PR #48) — `signInWithGoogle` abre o popup com
-  `GoogleAuthProvider`; não há outro provedor no repositório (grep por `GithubAuthProvider`, `OAuthProvider` e
-  `microsoft` vazio fora de testes). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:170`, `:178`)
-  também usam só o Google.
+- `packages/auth/client.ts:169-174` (era `:152-157` até a PR #56, que acrescentou `signInWithEmailLinkCode` acima, e
+  `:150-155` até a PR #48) — `signInWithGoogle` abre o popup com `GoogleAuthProvider`; não há outro provedor no
+  repositório (grep por `GithubAuthProvider`, `OAuthProvider` e `microsoft` vazio fora de testes, reconferido em
+  2026-10-22). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:187`, `:195`; eram `:170`, `:178` até a
+  PR #56) também usam só o Google.
+- `packages/auth/provider.tsx:376`, `:383`, `:386-389` — desde a PR #56 o `AuthProvider` tem três mutations de login
+  (senha, Google e link por e-mail), todas terminando no mesmo `onAuthSuccess` (`:353-370`). Um provedor novo entra
+  como a quarta, no mesmo molde.
 - `apps/app/shared/lib/googleSignInApi.ts:21-79` (era `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
   `providerId=google.com` fixo.
 - `apps/api/app/(routes)/auth/sign-in/google/route.ts:16-64` (era `:10-40` até a PR #51 e `:9-30` até a PR #50) —
   desde a PR #51 a rota valida o corpo com `parseRequestJson` e `parseGoogleSignIn` (`:17-25`; o schema é
-  `googleSignInSchema`, `(shared)/validation/auth.schema.ts:40-46`, com `requestUri` restrito a `http` e `https`) e
+  `googleSignInSchema`, `(shared)/validation/auth.schema.ts:45-51`, era `:40-46` até a PR #56, com `requestUri`
+  restrito a `http` e `https`) e
   responde a recusa do provedor com `{ error: { code } }`, `400 AUTH_INVALID_CREDENTIALS` ou
   `429 USERS_AUTH_RATE_LIMITED` (`:33-45`). Antes ela lia o corpo sem validação e devolvia a mensagem crua do
   provedor em 401. A parte "a rota do Google entra no mesmo contrato" do impacto na `apps/api` já está paga; falta
   generalizar a rota para outros provedores.
-- `apps/app/.../sign-in/components/SignInForm.tsx:187-197` (era `:181-191` até a PR #47) e `sign-up/components/SignUpFormClient.tsx` — um botão
-  do Google em cada tela.
-- `apps/api/proxy.ts:53-67` — `/auth/sign-in/google` está no rate limit (era `:49-62` até a PR #49 e `:45-58` até a PR #47).
+- `apps/app/.../sign-in/components/SignInForm.tsx:188-198` (remedida em 2026-10-22: a PR #56 acrescentou duas linhas
+  acima, e a âncora anterior, `:187-197`, já estava uma linha adiantada) e `sign-up/components/SignUpFormClient.tsx` —
+  um botão do Google em cada tela. Desde a PR #56 o login também tem o link "Receber link de acesso por e-mail"
+  (`:209-218`), condicionado à disponibilidade que a API informa.
+- `apps/api/proxy.ts:55-70` — `/auth/sign-in/google` está no rate limit (`:58`; a lista era `:53-67` até a PR #56,
+  que acrescentou `/auth/sign-in/email-link/request`, `:49-62` até a PR #49 e `:45-58` até a PR #47).
 - `docs/FORKING.md:175` — o roteiro do fork descreve "e-mail/senha e Google".
 - **Lacuna:** não há forma de ligar outro provedor sem escrever um fluxo novo inteiro.
 
@@ -91,7 +99,9 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
 - **Facebook e X**: devolvem access token, que o emulador não aceita por credencial; sem prova automatizada.
 - **SAML e OIDC empresarial**: a lacuna "SSO enterprise · SCIM" segue descartada.
 - **Botões na landing**: o login da `apps/web` tem achados abertos (não redireciona depois de entrar); fica para
-  depois deles.
+  depois deles. *(Nota de 2026-10-22: o redirecionamento foi corrigido pela PR #55, `web-auth-forms`. Seguem abertos
+  na landing o link de "esqueci a senha" e os dois `AuthProvider` aninhados, que dobram o `POST /api/auth/session`
+  de cada login social; o segundo pesa para quem acrescentar botões ali.)*
 
 ## Impacto por camada
 

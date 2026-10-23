@@ -11,7 +11,9 @@ const {
     signInWithPasswordMock,
     runAccountErasureMock,
     recordAuditEventMock,
+    ownsOrganizationWithMembersMock,
 } = vi.hoisted(() => ({
+    ownsOrganizationWithMembersMock: vi.fn(),
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
     signInWithPasswordMock: vi.fn(),
@@ -42,6 +44,11 @@ vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
     IdentityToolkitError: FakeIdentityToolkitError,
     identitySignInWithPassword: (...args: unknown[]) =>
         signInWithPasswordMock(...args),
+}));
+
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    ownsOrganizationWithMembers: (...args: unknown[]) =>
+        ownsOrganizationWithMembersMock(...args),
 }));
 
 vi.mock("@/(shared)/lib/account-erasure", () => ({
@@ -112,9 +119,11 @@ beforeEach(() => {
         signInWithPasswordMock,
         runAccountErasureMock,
         recordAuditEventMock,
+        ownsOrganizationWithMembersMock,
     ]) {
         mock.mockReset();
     }
+    ownsOrganizationWithMembersMock.mockResolvedValue(false);
     resolveApiActorMock.mockResolvedValue({
         uid: OWNER_UID,
         email: OWNER_EMAIL,
@@ -145,8 +154,37 @@ describe("POST /account/deletion", () => {
             expect.objectContaining({
                 profile: OWNER_PROFILE,
                 uid: OWNER_UID,
+                email: OWNER_EMAIL,
             })
         );
+    });
+
+    /** Ownership cannot be handed over, so members would be left in an orphan organization. */
+    it("recusa o dono que ainda tem membros antes de conferir a senha", async () => {
+        ownsOrganizationWithMembersMock.mockResolvedValue(true);
+
+        const response = await deleteAccount(request(VALID_BODY));
+
+        expect(response.status).toBe(HTTP_STATUS.CONFLICT);
+        expect(await codeOf(response)).toBe(
+            "ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS"
+        );
+        expect(ownsOrganizationWithMembersMock).toHaveBeenCalledWith(
+            OWNER_PROFILE.id
+        );
+        expect(signInWithPasswordMock).not.toHaveBeenCalled();
+        expect(runAccountErasureMock).not.toHaveBeenCalled();
+    });
+
+    it("valida o corpo antes de olhar a organização", async () => {
+        ownsOrganizationWithMembersMock.mockResolvedValue(true);
+
+        const response = await deleteAccount(request({}));
+
+        expect(await codeOf(response)).toBe(
+            "ACCOUNT_DELETION_CONFIRMATION_INVALID"
+        );
+        expect(ownsOrganizationWithMembersMock).not.toHaveBeenCalled();
     });
 
     it("não apaga nada quando a senha não confere", async () => {

@@ -4,6 +4,7 @@ import {
     isOwnedBy,
     isStorageConfigured,
     isStorageObjectPath,
+    organizationOwnerSegment,
     signReadUrl,
 } from "./storage";
 
@@ -33,6 +34,36 @@ export const isUsablePhotoReference = (
     value: string,
     ownerId: string
 ): boolean => isAbsoluteHttpUrl(value) || isOwnStorageObject(value, ownerId);
+
+/**
+ * A record's photo is the organization's, so any member can attach what another member
+ * uploaded, and nobody can attach an object from someone's personal prefix.
+ */
+export const isAttachablePhoto = (
+    value: string,
+    organizationId: string
+): boolean =>
+    isUsablePhotoReference(value, organizationOwnerSegment(organizationId));
+
+export type PhotoReplacementScope = {
+    organizationId: string;
+    actorId: string;
+    authorId: string;
+};
+
+/**
+ * Whether a superseded photo is ours to delete. An organization object always is. An
+ * object in a personal prefix predates photos belonging to the organization, and only its
+ * uploader may remove it, which is the author editing their own record; anyone else's
+ * stays until that person's account is erased.
+ */
+export const isReplaceablePhoto = (
+    value: string,
+    scope: PhotoReplacementScope
+): boolean =>
+    isOwnStorageObject(value, organizationOwnerSegment(scope.organizationId)) ||
+    (scope.actorId === scope.authorId &&
+        isOwnStorageObject(value, scope.actorId));
 
 /**
  * `photoUrl` only ever exists on the way out. The document keeps the reference, so an

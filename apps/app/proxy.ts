@@ -93,14 +93,19 @@ export const PUBLIC_PATHS = [
     "/forgot-password",
     "/reset-password",
     "/verify-email",
+    "/invite",
 ] as const;
 
 /**
- * These carry a single-use action code in the query string, so the bounce below must
- * skip them: sending an authenticated visitor home would discard the code — and with
- * it the only way to finish the reset or the verification.
+ * These carry a single-use code in the query string, so the bounce below must skip them:
+ * sending an authenticated visitor home would discard the code, and with it the only way
+ * to finish the reset, the verification or the invitation.
  */
-const OOB_ACTION_PATHS = ["/reset-password", "/verify-email"] as const;
+const OOB_ACTION_PATHS = [
+    "/reset-password",
+    "/verify-email",
+    "/invite",
+] as const;
 
 function matchesPathPrefix(path: string, prefixes: readonly string[]): boolean {
     return prefixes.some(

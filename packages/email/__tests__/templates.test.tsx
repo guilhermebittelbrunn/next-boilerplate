@@ -179,8 +179,15 @@ describe("action-link template", () => {
     });
 
     it.each(
-        (["resetPassword", "verifyEmail", "changeEmail"] as const).flatMap(
-            (action) => locales.map((locale) => [action, locale] as const)
+        (
+            [
+                "resetPassword",
+                "verifyEmail",
+                "changeEmail",
+                "organizationInvitation",
+            ] as const
+        ).flatMap((action) =>
+            locales.map((locale) => [action, locale] as const)
         )
     )("renders the %s action in %s", async (action, locale) => {
         const data = { ...actionLinkPreviewData, action };

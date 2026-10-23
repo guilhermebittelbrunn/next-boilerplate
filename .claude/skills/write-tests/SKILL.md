@@ -44,26 +44,36 @@ Handlers puros (sem guard) chamam-se direto, como `apps/api/__tests__/health.tes
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/(shared)/repositories/entity.repository", () => ({
-  entityRepository: { listByUserId: vi.fn().mockResolvedValue([]) },
+  entityRepository: {
+    listByOrganization: vi
+      .fn()
+      .mockResolvedValue({ items: [], nextCursorId: null }),
+  },
 }));
 // Mocke o guard para injetar um ctx falso e apenas executar o handler:
-vi.mock("@/app/(guards)/common-panel", () => ({
-  requireCommonPanelApi: (h: any) => (req: any) =>
-    h(req, { subjectProfile: { id: "u1" } }),
+vi.mock("@/app/(guards)/organization", () => ({
+  requireOrganizationApi: (h: any) => (req: any) =>
+    h(req, {
+      subjectProfile: { id: "u1" },
+      organization: { organizationId: "org-1", role: "owner" },
+    }),
 }));
 
 const { GET } = await import("@/app/(routes)/entities/route");
 
 describe("GET /entities", () => {
-  it("retorna { data } do usuário em contexto", async () => {
+  it("retorna { data } da organização em contexto", async () => {
     const res = await GET(new Request("http://t/entities") as any, {} as any);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ data: [] });
+    expect(await res.json()).toEqual({ data: { items: [], nextCursor: null } });
   });
 });
 ```
 
-> Teste também os 404 de posse (`row.userId !== ctx.subjectProfile.id`) e o 400 de validação.
+> Teste também os 404 de escopo e o 400 de validação. Recurso da organização (`entity`): o repositório
+> devolve `null` para registro de outra organização (`findInOrganization`) e a rota responde 404, com o
+> `resolveOrganizationMembership` mockado. Recurso da pessoa (`notification`): `row.userId !==
+> ctx.subjectProfile.id` → 404.
 
 ## 3. Hook de dados (React Query)
 

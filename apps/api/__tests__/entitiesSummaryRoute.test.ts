@@ -5,12 +5,27 @@ import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { resolveApiActorMock, findByReferenceIdMock, summaryByUserIdMock } =
-    vi.hoisted(() => ({
-        resolveApiActorMock: vi.fn(),
-        findByReferenceIdMock: vi.fn(),
-        summaryByUserIdMock: vi.fn(),
-    }));
+const {
+    resolveApiActorMock,
+    findByReferenceIdMock,
+    summaryByOrganizationMock,
+    resolveMembershipMock,
+} = vi.hoisted(() => ({
+    resolveApiActorMock: vi.fn(),
+    findByReferenceIdMock: vi.fn(),
+    summaryByOrganizationMock: vi.fn(),
+    resolveMembershipMock: vi.fn(),
+}));
+
+// Billing reaches Stripe through `server-only`; switched off, nothing is plan-gated,
+// which is how every environment without Stripe keys behaves.
+vi.mock("@/(shared)/lib/billing", () => ({ isBillingEnabled: () => false }));
+vi.mock("@/env", () => ({ env: {} }));
+
+vi.mock("@/(shared)/lib/organization-membership", () => ({
+    resolveOrganizationMembership: (...args: unknown[]) =>
+        resolveMembershipMock(...args),
+}));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
     recordAuditEvent: vi.fn(),
@@ -31,7 +46,8 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
 
 vi.mock("@/(shared)/repositories/entity.repository", () => ({
     entityRepository: {
-        summaryByUserId: (...args: unknown[]) => summaryByUserIdMock(...args),
+        summaryByOrganization: (...args: unknown[]) =>
+            summaryByOrganizationMock(...args),
     },
 }));
 
@@ -90,14 +106,19 @@ beforeEach(() => {
     for (const mock of [
         resolveApiActorMock,
         findByReferenceIdMock,
-        summaryByUserIdMock,
+        summaryByOrganizationMock,
+        resolveMembershipMock,
     ]) {
         mock.mockReset();
     }
 
     resolveApiActorMock.mockResolvedValue({ uid: OWNER_UID });
     findByReferenceIdMock.mockResolvedValue(OWNER_PROFILE);
-    summaryByUserIdMock.mockResolvedValue(SUMMARY);
+    resolveMembershipMock.mockResolvedValue({
+        organizationId: "org-1",
+        role: "owner",
+    });
+    summaryByOrganizationMock.mockResolvedValue(SUMMARY);
 });
 
 describe("GET /entities/summary", () => {
@@ -108,14 +129,15 @@ describe("GET /entities/summary", () => {
         await expect(response.json()).resolves.toEqual({ data: SUMMARY });
     });
 
-    it("counts the subject profile, never an id taken from the request", async () => {
+    it("counts the subject's organization, never an id taken from the request", async () => {
         await GET(summaryRequest());
 
-        expect(summaryByUserIdMock).toHaveBeenCalledWith(OWNER_PROFILE.id);
+        expect(resolveMembershipMock).toHaveBeenCalledWith(OWNER_PROFILE.id);
+        expect(summaryByOrganizationMock).toHaveBeenCalledWith("org-1");
     });
 
     it("degrades to 503 while the composite index is not published", async () => {
-        summaryByUserIdMock.mockRejectedValue(missingIndexFailure());
+        summaryByOrganizationMock.mockRejectedValue(missingIndexFailure());
 
         const response = await GET(summaryRequest());
 
@@ -124,7 +146,9 @@ describe("GET /entities/summary", () => {
     });
 
     it("lets an unrelated failure bubble up instead of mislabelling it", async () => {
-        summaryByUserIdMock.mockRejectedValue(new Error("deadline exceeded"));
+        summaryByOrganizationMock.mockRejectedValue(
+            new Error("deadline exceeded")
+        );
 
         await expect(GET(summaryRequest())).rejects.toThrow(
             "deadline exceeded"
@@ -140,7 +164,7 @@ describe("GET /entities/summary authorization", () => {
 
         expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
         expect(await errorCode(response)).toBe("AUTH_INVALID_TOKEN");
-        expect(summaryByUserIdMock).not.toHaveBeenCalled();
+        expect(summaryByOrganizationMock).not.toHaveBeenCalled();
     });
 
     it("refuses an admin who asks for the common panel without a subject", async () => {
@@ -153,7 +177,7 @@ describe("GET /entities/summary authorization", () => {
         expect(await errorCode(response)).toBe(
             "AUTH_REQUEST_IMPERSONATION_REQUIRED"
         );
-        expect(summaryByUserIdMock).not.toHaveBeenCalled();
+        expect(summaryByOrganizationMock).not.toHaveBeenCalled();
     });
 });
 

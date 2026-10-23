@@ -10,7 +10,7 @@ Orquestra um recurso de ponta a ponta seguindo o **CRUD de referência `entity`*
 ## 0. Alinhe o recurso com o usuário
 - Nome singular/plural (ex.: `product`/`products`) e coleção Firestore.
 - Campos + tipos (refletem o DTO).
-- Contexto: comum (`requireCommonPanelApi`) ou admin (`requireAdminApi`)? Tem posse por `userId`?
+- Contexto: comum ou admin (`requireAdminApi`)? No comum, de quem é o recurso: da organização (padrão para dado de negócio, como `entity`: `requireOrganizationApi`, campos `organizationId` + `userId` de autor) ou da pessoa (como `notification`: `requireCommonPanelApi` e posse por `userId`)?
 - Operações necessárias (list/create/get/update/delete) e se há coluna `enabled` (toggle).
 
 > Antes de criar arquivos, **abra o recurso `entity`** e use como template em cada camada (caminhos abaixo). Replique a estrutura, troque nomes/campos.

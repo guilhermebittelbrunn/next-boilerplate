@@ -74,8 +74,11 @@ Detalhe completo em [`docs/review-checklist.md`](../../docs/review-checklist.md)
 exatamente isso. O essencial:
 
 - **API**: handler é `export const GET = guard(async (req, ctx) => …)`; guard sempre
-  (`requireCommonPanelApi`/`requireAdminApi`); ownership de recurso comum é
-  `if (!row || row.userId !== ctx.subjectProfile.id) → 404`; body via `parseRequestJson`, patch via
+  (`requireOrganizationApi`/`requireCommonPanelApi`/`requireAdminApi`); recurso **da organização**
+  (como `entity`) usa `requireOrganizationApi` e o predicado mora no repositório
+  (`findInOrganization(id, ctx.organization.organizationId)` → `null` → 404); recurso **da pessoa**
+  (como `notification`) usa `if (!row || row.userId !== ctx.subjectProfile.id) → 404`; body via
+  `parseRequestJson`, patch via
   `omitUndefined`, id via `resolveIdFromContext` + `RouteIdParamsContext`; erro é
   `{ error: { code } }` + `HTTP_STATUS`, nunca stack trace; normalização de data/string opcional vive **no
   mapper**. Não copie `app/(routes)/auth/*` — é legado.

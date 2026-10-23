@@ -5,6 +5,12 @@ import { logEvent } from "@repo/shared/utils/helpers/log";
 import { auditEventRepository } from "../repositories/audit-event.repository";
 import { entityRepository } from "../repositories/entity.repository";
 import { notificationRepository } from "../repositories/notification.repository";
+import {
+    type OrganizationRecord,
+    organizationRepository,
+} from "../repositories/organization.repository";
+import { organizationInvitationRepository } from "../repositories/organization-invitation.repository";
+import { organizationMemberRepository } from "../repositories/organization-member.repository";
 import { sessionRepository } from "../repositories/session.repository";
 import { userRepository } from "../repositories/user.repository";
 import { cancelSubscriptionForErasure } from "./billing";
@@ -12,6 +18,7 @@ import { isLiveSubscription } from "./billing-state";
 import {
     deleteObjectsByPrefix,
     isStorageConfigured,
+    organizationOwnerSegment,
     ownerPrefix,
 } from "./storage";
 
@@ -19,6 +26,7 @@ export type ErasureStepName =
     | "storage"
     | "billing"
     | "entities"
+    | "organization"
     | "auditTrail"
     | "sessions"
     | "notifications"
@@ -33,6 +41,8 @@ export type ErasureStepResult =
 export type AccountErasureInput = {
     profile: UserDTO;
     uid: string;
+    /** The address invitations to the subject were sent to; `null` skips that sweep. */
+    email: string | null;
     requestId: string | null;
 };
 
@@ -57,7 +67,25 @@ async function runStep(
     }
 }
 
-function eraseStorage(profileId: string): Promise<ErasureStepResult> {
+/**
+ * The home organization dies with its owner: the deletion route refuses an owner who still
+ * has members, so whatever is left in it belongs to nobody else. An organization the
+ * subject only joined is not theirs and is not touched.
+ */
+type HomeOrganization = () => Promise<OrganizationRecord | null>;
+
+function memoizedHome(profileId: string): HomeOrganization {
+    let lookup: Promise<OrganizationRecord | null> | null = null;
+    return () => {
+        lookup ??= organizationRepository.findOwnedBy(profileId);
+        return lookup;
+    };
+}
+
+function eraseStorage(
+    profileId: string,
+    home: HomeOrganization
+): Promise<ErasureStepResult> {
     if (!isStorageConfigured()) {
         return Promise.resolve({
             step: "storage",
@@ -66,9 +94,70 @@ function eraseStorage(profileId: string): Promise<ErasureStepResult> {
         });
     }
 
-    return runStep("storage", () =>
-        deleteObjectsByPrefix(ownerPrefix(profileId))
+    return runStep("storage", async () => {
+        const personal = await deleteObjectsByPrefix(ownerPrefix(profileId));
+        const organization = await home();
+        const shared = organization
+            ? await deleteObjectsByPrefix(
+                  ownerPrefix(organizationOwnerSegment(organization.id))
+              )
+            : 0;
+        return personal + shared;
+    });
+}
+
+/**
+ * Records the subject created in someone else's organization stay there: they are that
+ * organization's data. What predates organizations and was never stamped is theirs alone.
+ */
+async function eraseEntities(
+    profileId: string,
+    home: HomeOrganization
+): Promise<number> {
+    const organization = await home();
+    const scoped = organization
+        ? await entityRepository.purgeByOrganization(organization.id)
+        : 0;
+    const unscoped = await entityRepository.purgeUnscopedByUserId(profileId);
+    return scoped + unscoped;
+}
+
+async function eraseOrganization(
+    profileId: string,
+    email: string | null,
+    home: HomeOrganization
+): Promise<number> {
+    const organization = await home();
+    const membership =
+        await organizationMemberRepository.findByUserId(profileId);
+
+    let removed = email
+        ? await organizationInvitationRepository.purgeByEmail(
+              email.trim().toLowerCase()
+          )
+        : 0;
+    if (
+        membership &&
+        membership.organizationId !== organization?.id &&
+        (await organizationMemberRepository.remove(
+            profileId,
+            membership.organizationId
+        ))
+    ) {
+        removed += 1;
+    }
+    if (!organization) {
+        return removed;
+    }
+
+    removed += await organizationMemberRepository.purgeByOrganization(
+        organization.id
     );
+    removed += await organizationInvitationRepository.purgeByOrganization(
+        organization.id
+    );
+    await organizationRepository.purgeById(organization.id);
+    return removed + 1;
 }
 
 /**
@@ -103,6 +192,7 @@ function cancelBilling(profile: UserDTO): Promise<ErasureStepResult> {
 const STEPS_AFTER_BILLING: ErasureStepName[] = [
     "storage",
     "entities",
+    "organization",
     "auditTrail",
     "sessions",
     "notifications",
@@ -114,11 +204,13 @@ async function eraseData(
     input: AccountErasureInput
 ): Promise<ErasureStepResult[]> {
     const profileId = input.profile.id;
+    const home = memoizedHome(profileId);
 
     return [
-        await eraseStorage(profileId),
-        await runStep("entities", () =>
-            entityRepository.purgeAllByUserId(profileId)
+        await eraseStorage(profileId, home),
+        await runStep("entities", () => eraseEntities(profileId, home)),
+        await runStep("organization", () =>
+            eraseOrganization(profileId, input.email, home)
         ),
         await runStep("auditTrail", () =>
             auditEventRepository.anonymizeUserLabels(profileId)

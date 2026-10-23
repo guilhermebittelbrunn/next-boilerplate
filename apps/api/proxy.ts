@@ -50,6 +50,11 @@ const securityOptions = buildApiOptions();
  * inbox, billed by the provider. The visitor's browser calls it, so the address counted
  * is the visitor's.
  *
+ * Organization invitations: `/organization/invitations` sends an email on every accepted
+ * POST, `/invitations/preview` is public and answers whether a token is live, and
+ * `/invitations/accept` is the step that consumes one. The pending ceiling and the resend
+ * interval still hold without a budget here.
+ *
  * Matched exactly, so a new endpoint is unlimited until it is listed here.
  */
 const RATE_LIMITED_PATHS = [
@@ -67,6 +72,9 @@ const RATE_LIMITED_PATHS = [
     "/account/deletion",
     "/account/email",
     "/contact",
+    "/organization/invitations",
+    "/invitations/preview",
+    "/invitations/accept",
 ];
 
 function isRateLimitedPath(pathname: string): boolean {
