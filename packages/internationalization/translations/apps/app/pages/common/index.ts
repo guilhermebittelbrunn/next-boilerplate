@@ -3,6 +3,7 @@ import { commonEntitiesPageTranslations } from "./entities";
 import { globalErrorPageTranslations } from "./globalError";
 import { commonHomePageTranslations } from "./home";
 import { notFoundPageTranslations } from "./notFound";
+import { commonOrganizationPageTranslations } from "./organization";
 import { commonRoutesTranslations } from "./routes";
 
 export const commonTranslations = {
@@ -13,6 +14,7 @@ export const commonTranslations = {
         home: commonHomePageTranslations["pt-br"],
         entities: commonEntitiesPageTranslations["pt-br"],
         account: commonAccountPageTranslations["pt-br"],
+        organization: commonOrganizationPageTranslations["pt-br"],
     },
     en: {
         routes: commonRoutesTranslations.en,
@@ -21,6 +23,7 @@ export const commonTranslations = {
         home: commonHomePageTranslations.en,
         entities: commonEntitiesPageTranslations.en,
         account: commonAccountPageTranslations.en,
+        organization: commonOrganizationPageTranslations.en,
     },
     es: {
         routes: commonRoutesTranslations.es,
@@ -29,5 +32,6 @@ export const commonTranslations = {
         home: commonHomePageTranslations.es,
         entities: commonEntitiesPageTranslations.es,
         account: commonAccountPageTranslations.es,
+        organization: commonOrganizationPageTranslations.es,
     },
 };

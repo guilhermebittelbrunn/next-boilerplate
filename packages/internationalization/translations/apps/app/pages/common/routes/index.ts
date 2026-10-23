@@ -9,6 +9,7 @@ export const commonRoutesTranslations = {
                 create: "Nova entidade",
                 update: "Editar entidade",
             },
+            organization: "Equipe",
             documentation: "Documentação",
             settings: "Configurações",
             settingsItems: {
@@ -30,6 +31,7 @@ export const commonRoutesTranslations = {
                 create: "New entity",
                 update: "Edit entity",
             },
+            organization: "Team",
             documentation: "Documentation",
             settings: "Settings",
             settingsItems: {
@@ -51,6 +53,7 @@ export const commonRoutesTranslations = {
                 create: "Nueva entidad",
                 update: "Editar entidad",
             },
+            organization: "Equipo",
             documentation: "Documentación",
             settings: "Configuración",
             settingsItems: {
