@@ -47,6 +47,14 @@ export const emailTranslations = {
                     body: "Recebemos um pedido para usar este endereço na sua conta. O e-mail da conta só muda quando você usar o botão abaixo. O link é pessoal e tem prazo de validade.",
                     cta: "Confirmar novo e-mail",
                 },
+                organizationInvitation: {
+                    subject: "Você foi convidado para uma equipe em {brand}",
+                    preview:
+                        "Aceite o convite para entrar na equipe em {brand}",
+                    title: "{name} convidou você para a equipe",
+                    body: "Use o botão abaixo para ver o convite e entrar na equipe. Se ainda não tem conta, crie uma com este mesmo e-mail. O convite vale por 7 dias e só pode ser usado uma vez.",
+                    cta: "Ver convite",
+                },
             },
         },
         emailChangeNotice: {
@@ -115,6 +123,14 @@ export const emailTranslations = {
                     body: "We received a request to use this address for your account. The account email only changes when you use the button below. This link is personal and expires.",
                     cta: "Confirm new email",
                 },
+                organizationInvitation: {
+                    subject: "You have been invited to a team at {brand}",
+                    preview:
+                        "Accept the invitation to join the team at {brand}",
+                    title: "{name} invited you to their team",
+                    body: "Use the button below to see the invitation and join the team. If you do not have an account yet, create one with this same email. The invitation is valid for 7 days and can only be used once.",
+                    cta: "View invitation",
+                },
             },
         },
         emailChangeNotice: {
@@ -182,6 +198,14 @@ export const emailTranslations = {
                     title: "Confirma tu nuevo correo",
                     body: "Recibimos una solicitud para usar esta dirección en tu cuenta. El correo de la cuenta solo cambia cuando uses el botón de abajo. El enlace es personal y tiene fecha de vencimiento.",
                     cta: "Confirmar nuevo correo",
+                },
+                organizationInvitation: {
+                    subject: "Te invitaron a un equipo en {brand}",
+                    preview:
+                        "Acepta la invitación para unirte al equipo en {brand}",
+                    title: "{name} te invitó a su equipo",
+                    body: "Usa el botón de abajo para ver la invitación y unirte al equipo. Si todavía no tienes cuenta, créala con este mismo correo. La invitación es válida por 7 días y solo se puede usar una vez.",
+                    cta: "Ver invitación",
                 },
             },
         },
