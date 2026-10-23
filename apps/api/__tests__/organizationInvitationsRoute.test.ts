@@ -126,6 +126,7 @@ const OWNER_PROFILE = {
 const ADMIN_UID = "admin-uid";
 const ORGANIZATION_ID = "org-1";
 const INVITEE = "qa-teams-organizations@example.com";
+const REQUEST_ID = "req-invite";
 const STATUS_CREATED = 201;
 const STATUS_NO_CONTENT = 204;
 const NOW_ISO = "2026-10-22T12:00:00.000Z";
@@ -170,6 +171,7 @@ function request(
                 : UserRoleLevel.COMMON,
             [AUTH_REQUEST_HEADER.REQUEST_ROLE]: UserRoleLevel.COMMON,
             [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: OWNER_UID,
+            "x-request-id": REQUEST_ID,
         }),
         json: () => Promise.resolve(body ?? {}),
     } as unknown as NextRequest;
@@ -328,18 +330,49 @@ describe("POST /organization/invitations", () => {
         expect(issueMock).not.toHaveBeenCalled();
     });
 
-    it("stores and sends nothing when Auth fails for a reason other than a missing account", async () => {
+    it("answers 503 and stores and sends nothing when Auth fails for a reason other than a missing account", async () => {
         getUserByEmailMock.mockRejectedValue(
-            Object.assign(new Error("unavailable"), {
+            Object.assign(new Error(`unavailable for ${INVITEE}`), {
                 code: "auth/internal-error",
             })
         );
 
-        await expect(POST(request("POST", { email: INVITEE }))).rejects.toThrow(
-            "unavailable"
-        );
+        const response = await POST(request("POST", { email: INVITEE }));
+
+        expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
+        expect(await codeOf(response)).toBe("ORGANIZATION_INVITATION_FAILED");
         expect(issueMock).not.toHaveBeenCalled();
         expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(logEventMock).toHaveBeenCalledWith(
+            "organization",
+            "invitation-member-check-failed",
+            { requestId: REQUEST_ID, reason: "auth/internal-error" }
+        );
+        const logged = JSON.stringify(logEventMock.mock.calls);
+        expect(logged).not.toContain(INVITEE);
+        expect(logged).not.toContain(OWNER_EMAIL);
+        expect(logged).not.toContain("unavailable");
+    });
+
+    it("answers 503 and stores nothing when the membership read fails", async () => {
+        getUserByEmailMock.mockResolvedValue({ uid: "member-uid" });
+        findInOrganizationMock.mockRejectedValue(
+            Object.assign(new Error("firestore down"), {
+                name: "FirebaseError",
+            })
+        );
+
+        const response = await POST(request("POST", { email: INVITEE }));
+
+        expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
+        expect(await codeOf(response)).toBe("ORGANIZATION_INVITATION_FAILED");
+        expect(issueMock).not.toHaveBeenCalled();
+        expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(logEventMock).toHaveBeenCalledWith(
+            "organization",
+            "invitation-member-check-failed",
+            { requestId: REQUEST_ID, reason: "FirebaseError" }
+        );
     });
 
     it("answers 429 to a resend inside the interval", async () => {
