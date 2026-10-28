@@ -1,7 +1,7 @@
 ---
 id: teams-organizations
 title: Organizações, membros e convites
-status: deferred
+status: done
 value: alto
 effort: G
 audience: produto
@@ -10,10 +10,32 @@ mode: ambos
 depends_on: [transactional-emails]
 contends_on: ["apps/api/app/(routes)/entities/[id]/route.ts", "apps/api/app/(routes)/entities/route.ts", apps/api/(shared)/repositories/entity.repository.ts, apps/api/(shared)/lib/user-merge.ts, apps/api/(shared)/lib/account-erasure.ts, apps/api/(shared)/lib/account-export.ts, "apps/api/app/(guards)/common-panel.ts", packages/sdk/src/client/index.ts, packages/auth/types.ts, firestore.indexes.json]
 feature: teams-organizations
-updated: 2026-10-22
+updated: 2026-10-23
 ---
 
 # Organizações, membros e convites
+
+> **Entregue e arquivada em 2026-10-23 (auditoria pós-PR #57).** A PR #57 (`feat: organizations with members and
+> email invitations`) entrou em `main` em 2026-10-23 às 19:19 UTC, no SHA `61a781e`, com as duas fatias juntas. A
+> execução de merge do CI (`gh run 40010571950`) passou nos quatro jobs. Os cinco itens do corte foram conferidos no
+> código de `61a781e`:
+>
+> | item do corte | veredito | o que o código mostra |
+> |---------------|----------|------------------------|
+> | 1. Organização implícita, invisível no fork B2C | ✅ | criada no cadastro (`user-merge.ts:92-93`, chamando `ensureOrganizationMembershipQuietly`) e no primeiro pedido a rota escopada (`organization-membership.ts:71-83`); página da equipe responde 404 com a variável vazia (`organization/page.tsx:14-16`) e o item do menu só aparece com ela (`(common)/routes.tsx:41`); declaração B2B/B2C em `docs/ARCHITECTURE.md:60-64` |
+> | 2. `entity` escopado por organização, isolamento no servidor | ✅ | as três rotas de `entities` usam `requireOrganizationApi` e leem por `findInOrganization` (`entities/[id]/route.ts:25-39`, `:41-51`, `:109-119`; `entities/route.ts:19-29`, `:83-84`; `entities/summary/route.ts:6-10`); o filtro vive num helper só, `inOrganization` (`entity.repository.ts:40-44`), e o id vazio é recusado (`:51-60`). Provado sob o emulador em `organizationScope.emulator.test.ts` |
+> | 3. Papéis dono e membro, por guard próprio | ✅ | `requireOrganizationApi` (`(guards)/organization.ts:44-78`), com recusa `403 ORGANIZATION_FORBIDDEN` para quem não é dono (`:63-68`); o guard de admin segue lendo só o `UserType` (`(guards)/admin.ts:30`) |
+> | 4. Convidar, aceitar, listar, com expiração e e-mail já cadastrado | ✅ | `POST /organization/invitations` (`organization/invitations/route.ts:47-149`), validade de 7 dias (`organization-invitation.ts:14`, `:42-43`), recusa por expiração dentro da transação (`organization-invitation.repository.ts:94-96`), aceite só pela conta com o mesmo e-mail (`invitations/accept/route.ts:47-82`), lista em `organization/members/route.ts:6-17`. Quem já tem conta entra pelo login a partir de `/invite`, sem criar outra |
+> | 5. Remover membro sem deixar a organização sem dono | ✅ com ressalva | o dono não é removido nem sai (`organization/members/[id]/route.ts:39-44`, `organization/leave/route.ts:11-16`) e não exclui a própria conta enquanto houver membros (`account/deletion/route.ts:43`). O admin ainda consegue arquivar um dono com membros (D3 do `review.md`), registrado como achado no `BACKLOG.md` |
+>
+> **Deriva, com a spec imprecisa:** membros e convites ficaram atrás de `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED`,
+> desligada por padrão na `api` e na `app`; com ela vazia as rotas respondem `404 ORGANIZATION_MEMBERS_DISABLED` antes
+> de autenticar (`organization-members.ts:21-28`). A spec pedia só que o fork B2C não visse a palavra "organização". A
+> entrega também moveu as fotos de `entity` para `uploads/org-<id>/` e separou, na exportação e no expurgo, o que é da
+> pessoa e o que é da organização, decisões do `/analyze` que a spec deixava em aberto. Detalhe em
+> `analyze/plan.md` e `review/review.md`, nesta pasta.
+>
+> O bloco abaixo, do adiamento e da contagem de sítios de posse, é o estado anterior à entrega e fica como histórico.
 
 > **`deferred` em 2026-08-22 — motivo.** A **implementação** fica adiada: esforço G, e nenhum fork atual
 > pediu escopo por organização. O que **não** fica adiado é a decisão, porque ela encarece a cada recurso
@@ -116,7 +138,7 @@ Conferido em `main` (`9c793c6`) em 2026-10-22.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
 - Prevalência: **6 de 10** starters entregam times/organizações; **5 de 10** entregam convites + RBAC.
   Valor **alto (B2B)**, esforço **G** nos dois casos.
 - A nota é categórica: organizações são "o eixo que separa B2B de B2C e a decisão **mais cara de
@@ -132,16 +154,16 @@ Conferido em `main` (`9c793c6`) em 2026-10-22.
 Corte deliberadamente mínimo: o objetivo é **fixar a chave de escopo** e provar o isolamento
 ponta a ponta, não entregar administração de times completa.
 
-- [ ] Todo usuário passa a pertencer a uma organização — criada automaticamente no cadastro, de modo que
+- [x] Todo usuário passa a pertencer a uma organização — criada automaticamente no cadastro, de modo que
       o fork B2C nunca precise ver a palavra "organização" na interface.
-- [ ] O escopo dos recursos deixa de ser o usuário e passa a ser a organização: no slice `entity`, a
+- [x] O escopo dos recursos deixa de ser o usuário e passa a ser a organização: no slice `entity`, a
       listagem e a checagem de posse (`entities/[id]/route.ts:24`) passam a decidir por grupo, com o
       isolamento verificado **no servidor**.
-- [ ] Dois papéis dentro da organização (dono e membro), independentes do `UserType` global, resolvidos
+- [x] Dois papéis dentro da organização (dono e membro), independentes do `UserType` global, resolvidos
       por um guard próprio — o `admin`/`common` atual continua sendo papel de **plataforma**.
-- [ ] Convidar por e-mail, aceitar e listar membros, com convite **expirável** e tratamento de convite
+- [x] Convidar por e-mail, aceitar e listar membros, com convite **expirável** e tratamento de convite
       para e-mail já cadastrado.
-- [ ] Remover membro, com a garantia de que a organização nunca fica sem dono.
+- [x] Remover membro, com a garantia de que a organização nunca fica sem dono.
 
 ### Fatiamento recomendado para uma rodada autônoma (2026-10-22)
 

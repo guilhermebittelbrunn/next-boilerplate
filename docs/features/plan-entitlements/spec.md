@@ -121,7 +121,7 @@ registrada em outras entregas; a auditoria não edita o `STATE.md` além do camp
   reconciliação com a Stripe, e aparece em 2/10.
 - **Bloqueio em `past_due`**, trial, cupom e reembolso. Decisão de produto de cada fork; o Customer Portal
   cobre o lado de cobrança.
-- **Assento por membro.** Depende de [`teams-organizations`](../../../specs/teams-organizations.md), que está `deferred`.
+- **Assento por membro.** Depende de [`teams-organizations`](../teams-organizations/spec.md), que está `deferred`.
 - Tela de administração dos recursos por plano. O catálogo mora na Stripe.
 
 ## Impacto por camada

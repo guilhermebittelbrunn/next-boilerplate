@@ -194,4 +194,4 @@ Auditoria de 2026-09-17, com o `HEAD` em `bfc4d8f`. Cada item do corte foi reabe
   na listagem. O total do cartão pode passar do número de linhas da tabela, de propósito.
 - **O predicado de posse foi copiado, não reusado** — `summaryByUserId` repete o
   `where("userId", "==", userId)` que `listByUserId` já fazia. Isso engorda o argumento de
-  [`teams-organizations`](../../../specs/teams-organizations.md), que conta os sítios de escopo por usuário.
+  [`teams-organizations`](../teams-organizations/spec.md), que conta os sítios de escopo por usuário.
