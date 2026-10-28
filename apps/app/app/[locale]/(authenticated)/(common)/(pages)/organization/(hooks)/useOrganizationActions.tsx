@@ -1,6 +1,9 @@
 import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
-import type { CreateOrganizationInvitationRequest } from "@repo/sdk/src/types";
+import type {
+    CreateOrganizationInvitationRequest,
+    OrganizationMemberDTO,
+} from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -64,6 +67,34 @@ export const useOrganizationActions = () => {
         onError: (error) => errorAlert(formatClientError(error)),
     });
 
+    const memberNameOf = (member: OrganizationMemberDTO) =>
+        member.displayName ?? member.email ?? organizationCopy.members.unnamed;
+
+    const transferOwnershipMutation = useMutation({
+        mutationFn: (member: OrganizationMemberDTO) =>
+            apiClient.organization.transferOwnership(member.userId),
+        onSuccess: async (_result, member) => {
+            // The role decides which sections render: refetching it first unmounts the
+            // owner-only invitations table before anything asks the API for it as a member.
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.organization.detail(),
+            });
+            queryClient.removeQueries({
+                queryKey: queryKeys.organization.invitations(),
+            });
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.organization.members(),
+            });
+            successAlert(
+                organizationCopy.transfer.done.replace(
+                    "{name}",
+                    memberNameOf(member)
+                )
+            );
+        },
+        onError: (error) => errorAlert(formatClientError(error)),
+    });
+
     // Leaving changes the organization every other query was scoped to, so the whole
     // cache goes, as when the subject changes: `resetQueries` refetches what is on screen.
     const leaveMutation = useMutation({
@@ -79,6 +110,7 @@ export const useOrganizationActions = () => {
         inviteMutation,
         revokeInvitationMutation,
         removeMemberMutation,
+        transferOwnershipMutation,
         leaveMutation,
     };
 };
