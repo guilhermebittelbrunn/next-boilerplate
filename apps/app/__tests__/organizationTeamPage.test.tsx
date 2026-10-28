@@ -1,4 +1,5 @@
 import { globalTranslations } from "@repo/internationalization/translations/global";
+import type { OrganizationMemberDTO } from "@repo/sdk/src/types";
 import {
     act,
     cleanup,
@@ -11,6 +12,8 @@ import {
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const transferPending = { current: false };
+
 const {
     panelMock,
     organizationMock,
@@ -20,6 +23,7 @@ const {
     revokeMutateMock,
     removeMutateMock,
     leaveMutateMock,
+    transferMutateMock,
 } = vi.hoisted(() => ({
     panelMock: vi.fn(),
     organizationMock: vi.fn(),
@@ -29,6 +33,7 @@ const {
     revokeMutateMock: vi.fn(),
     removeMutateMock: vi.fn(),
     leaveMutateMock: vi.fn(),
+    transferMutateMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -67,6 +72,10 @@ vi.mock(
             inviteMutation: { mutate: inviteMutateMock, isPending: false },
             revokeInvitationMutation: { mutate: revokeMutateMock },
             removeMemberMutation: { mutate: removeMutateMock },
+            transferOwnershipMutation: {
+                mutate: transferMutateMock,
+                isPending: transferPending.current,
+            },
             leaveMutation: { mutate: leaveMutateMock, isPending: false },
         }),
     })
@@ -155,6 +164,7 @@ const OWNER = {
     email: "owner@example.com",
     displayName: "Owner",
     joinedAt: "2026-10-01T00:00:00.000Z",
+    archived: false,
 };
 const MEMBER = {
     userId: "member-profile",
@@ -162,6 +172,7 @@ const MEMBER = {
     email: "qa-teams-organizations@example.com",
     displayName: "QA Member",
     joinedAt: "2026-10-02T00:00:00.000Z",
+    archived: false,
 };
 const ARCHIVED = {
     userId: "archived-profile",
@@ -169,6 +180,7 @@ const ARCHIVED = {
     email: null,
     displayName: null,
     joinedAt: "2026-10-03T00:00:00.000Z",
+    archived: true,
 };
 const PENDING = {
     id: "inv-1",
@@ -200,7 +212,7 @@ function listResult<TRow>(data: TRow[], error: unknown = null) {
 function given(options: {
     viewerRole: "owner" | "member";
     isImpersonating?: boolean;
-    members?: (typeof OWNER | typeof MEMBER | typeof ARCHIVED)[];
+    members?: OrganizationMemberDTO[];
 }) {
     panelMock.mockReturnValue({
         isImpersonating: options.isImpersonating ?? false,
@@ -240,9 +252,11 @@ beforeEach(() => {
         revokeMutateMock,
         removeMutateMock,
         leaveMutateMock,
+        transferMutateMock,
     ]) {
         mock.mockReset();
     }
+    transferPending.current = false;
     invitationsMock.mockReturnValue(listResult([PENDING, EXPIRED]));
 });
 
@@ -361,6 +375,133 @@ describe("team page for the owner", () => {
     });
 });
 
+describe("ownership transfer from the team table", () => {
+    it("offers it on a live member's row only, never on the owner's or an archived one's", () => {
+        given({ viewerRole: "owner", members: [OWNER, MEMBER, ARCHIVED] });
+
+        render(<OrganizationClient />);
+
+        expect(
+            within(rowOf(MEMBER.email)).getByRole("button", {
+                name: organizationCopy.transfer.action,
+            })
+        ).toBeTruthy();
+        expect(
+            within(rowOf(OWNER.email)).queryByRole("button", {
+                name: organizationCopy.transfer.action,
+            })
+        ).toBeNull();
+        const archivedRow = rowOf(organizationCopy.members.unnamed);
+        expect(
+            within(archivedRow).queryByRole("button", {
+                name: organizationCopy.transfer.action,
+            })
+        ).toBeNull();
+        expect(
+            within(archivedRow).getByRole("button", {
+                name: organizationCopy.members.remove,
+            })
+        ).toBeTruthy();
+    });
+
+    it("asks for confirmation naming the member, then transfers once", async () => {
+        given({ viewerRole: "owner" });
+        render(<OrganizationClient />);
+
+        fireEvent.click(
+            within(rowOf(MEMBER.email)).getByRole("button", {
+                name: organizationCopy.transfer.action,
+            })
+        );
+        expect(transferMutateMock).not.toHaveBeenCalled();
+        const dialog = await screen.findByRole("alertdialog");
+        expect(
+            within(dialog).getByText(organizationCopy.transfer.confirmTitle)
+        ).toBeTruthy();
+        expect(
+            within(dialog).getByText(
+                organizationCopy.transfer.confirmDescription.replaceAll(
+                    "{name}",
+                    MEMBER.displayName
+                )
+            )
+        ).toBeTruthy();
+
+        fireEvent.click(
+            within(dialog).getByRole("button", {
+                name: organizationCopy.transfer.confirm,
+            })
+        );
+
+        expect(transferMutateMock).toHaveBeenCalledTimes(1);
+        expect(transferMutateMock).toHaveBeenCalledWith(MEMBER);
+        await waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+    });
+
+    it("transfers nothing when the owner cancels", async () => {
+        given({ viewerRole: "owner" });
+        render(<OrganizationClient />);
+
+        fireEvent.click(
+            within(rowOf(MEMBER.email)).getByRole("button", {
+                name: organizationCopy.transfer.action,
+            })
+        );
+        fireEvent.click(
+            await screen.findByRole("button", {
+                name: organizationCopy.transfer.cancel,
+            })
+        );
+
+        await waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+        expect(transferMutateMock).not.toHaveBeenCalled();
+    });
+
+    it("names an unnamed member by their address in the confirmation", async () => {
+        const nameless = { ...MEMBER, displayName: null };
+        given({ viewerRole: "owner", members: [OWNER, nameless] });
+        render(<OrganizationClient />);
+
+        fireEvent.click(
+            within(rowOf(MEMBER.email)).getByRole("button", {
+                name: organizationCopy.transfer.action,
+            })
+        );
+
+        const dialog = await screen.findByRole("alertdialog");
+        expect(
+            within(dialog).getByText(
+                organizationCopy.transfer.confirmDescription.replaceAll(
+                    "{name}",
+                    MEMBER.email
+                )
+            )
+        ).toBeTruthy();
+    });
+
+    it("hides every row action while a transfer is running", () => {
+        transferPending.current = true;
+        given({ viewerRole: "owner" });
+
+        render(<OrganizationClient />);
+
+        expect(
+            screen.queryByRole("button", {
+                name: organizationCopy.transfer.action,
+            })
+        ).toBeNull();
+        expect(
+            screen.queryByRole("button", {
+                name: organizationCopy.members.remove,
+            })
+        ).toBeNull();
+    });
+});
+
 describe("team page for a member", () => {
     it("shows members without actions and offers to leave, behind a confirmation", async () => {
         given({ viewerRole: "member" });
@@ -377,6 +518,11 @@ describe("team page for a member", () => {
         expect(
             screen.queryByRole("button", {
                 name: organizationCopy.members.remove,
+            })
+        ).toBeNull();
+        expect(
+            screen.queryByRole("button", {
+                name: organizationCopy.transfer.action,
             })
         ).toBeNull();
         expect(invitationsMock).not.toHaveBeenCalled();
@@ -439,6 +585,11 @@ describe("team page while an admin impersonates", () => {
         expect(
             screen.queryByRole("button", {
                 name: organizationCopy.invitations.revoke,
+            })
+        ).toBeNull();
+        expect(
+            screen.queryByRole("button", {
+                name: organizationCopy.transfer.action,
             })
         ).toBeNull();
     });
