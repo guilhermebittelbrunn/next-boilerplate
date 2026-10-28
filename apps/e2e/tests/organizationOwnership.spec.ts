@@ -96,12 +96,18 @@ test("a member joins by invitation, receives ownership and the previous owner le
         ).toBeVisible();
 
         await ownerPage.reload();
-        await memberRow(ownerPage, inviteeEmail)
-            .getByRole("button", { name: actionMenuCopy.trigger })
-            .click();
-        await ownerPage
-            .getByRole("menuitem", { name: organizationCopy.transfer.action })
-            .click();
+        const transferItem = ownerPage.getByRole("menuitem", {
+            name: organizationCopy.transfer.action,
+        });
+        // Under a cold `next dev`, a click that lands right after the reload can
+        // reach the trigger before the dropdown hydrates and is lost.
+        await expect(async () => {
+            await memberRow(ownerPage, inviteeEmail)
+                .getByRole("button", { name: actionMenuCopy.trigger })
+                .click();
+            await expect(transferItem).toBeVisible({ timeout: 2000 });
+        }).toPass();
+        await transferItem.click();
         const dialog = ownerPage.getByRole("alertdialog");
         await expect(
             dialog.getByText(organizationCopy.transfer.confirmTitle)
