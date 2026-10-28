@@ -18,7 +18,7 @@ export const invitationTranslations = {
             "Este convite foi enviado para {email}. Entre com essa conta para aceitar.",
         switchAccount: "Entrar com outra conta",
         previousOrganizationNotice:
-            "Ao aceitar, você passa a ver os registros desta equipe. Os registros que você tinha ficam guardados e voltam se você sair da equipe.",
+            "Ao aceitar, você passa a ver os registros desta equipe, e os registros da equipe em que você está hoje ficam com ela. Se sair desta equipe, você volta para a sua conta, com os registros que ela tinha. Se você já passou a propriedade da sua equipe a outra pessoa, volta para uma conta nova, vazia.",
         accept: "Aceitar convite",
         accepted: "Você entrou na equipe.",
         invalidTitle: "Este convite não vale mais",
@@ -47,7 +47,7 @@ export const invitationTranslations = {
             "This invitation was sent to {email}. Sign in with that account to accept it.",
         switchAccount: "Sign in with another account",
         previousOrganizationNotice:
-            "Once you accept, you will see this team's records. The records you had are kept and come back if you leave the team.",
+            "Once you accept, you will see this team's records, and the records of the team you are in today stay with it. If you leave this team, you go back to your own account, with the records it had. If you already handed ownership of your team to someone else, you go back to a new, empty account.",
         accept: "Accept invitation",
         accepted: "You joined the team.",
         invalidTitle: "This invitation is no longer valid",
@@ -76,7 +76,7 @@ export const invitationTranslations = {
             "Esta invitación se envió a {email}. Inicia sesión con esa cuenta para aceptarla.",
         switchAccount: "Iniciar sesión con otra cuenta",
         previousOrganizationNotice:
-            "Al aceptar, pasarás a ver los registros de este equipo. Los registros que tenías se guardan y vuelven si sales del equipo.",
+            "Al aceptar, pasarás a ver los registros de este equipo, y los registros del equipo en el que estás hoy se quedan con él. Si sales de este equipo, vuelves a tu propia cuenta, con los registros que tenía. Si ya pasaste la propiedad de tu equipo a otra persona, vuelves a una cuenta nueva, vacía.",
         accept: "Aceptar invitación",
         accepted: "Te uniste al equipo.",
         invalidTitle: "Esta invitación ya no es válida",
