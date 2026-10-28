@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/shared/utils/helpers/requestErrorReporter.ts]
 feature: observability-logging
-updated: 2026-10-23
+updated: 2026-10-27
 ---
 
 # Observabilidade: erros, tracing e logs estruturados
@@ -46,7 +46,7 @@ segue invisível até alguém conferir a fatura.
   *(Âncoras e contagem remedidas em 2026-09-17: a PR #18 acrescentou o escopo `audit` à união, deslocando o
   restante do arquivo em uma linha.)*
 - **As variações de formato acabaram.** Os **16** pontos de log deliberado passam todos pelo helper, entre
-  eles `apps/api/proxy.ts:90` (era `:82` até a PR #57, `:79` até a PR #56 e `:74` até a PR #49), `webhooks/payments/route.ts:296,308` (eram `:279,291` até a PR #52), `users/route.ts:80`,
+  eles `apps/api/proxy.ts:100` (era `:90` até a PR #58, `:82` até a PR #57, `:79` até a PR #56 e `:74` até a PR #49), `webhooks/payments/route.ts:296,308` (eram `:279,291` até a PR #52), `users/route.ts:80`,
   `auth/sign-up/route.ts:58`, `auth/password/reset/route.ts:53`, `auth/password/reset-request/route.ts:47`,
   `(shared)/lib/storage.ts:117` (era `:109` até a PR #57), `account-avatar.ts:45`, `entity-photo.ts:93` (era `:62` até a PR #57) e os dois que a PR #18 trouxe
   em `(shared)/lib/audit-recorder.ts:112` e `:163` (o caminho fail-open da trilha). *(Âncoras de `proxy.ts` e `storage.ts` remedidas em 2026-09-23: a PR #23 deslocou as duas; a de `storage.ts` desceu de novo para `:109` com a PR #31, remedida em 2026-09-29. A PR #23 também
@@ -62,7 +62,7 @@ segue invisível até alguém conferir a fatura.
   duas novas do escopo `payments` (`webhook-invoice-recorded` no webhook e `plan-label-unresolved` em
   `(shared)/lib/plan-label.ts:49`). As duas âncoras de falha do webhook desceram para `:223` e `:235`.
   Remedido em 2026-09-26, depois da PR #28: **29** linhas. A nova é `admin-user-delete-billing-failed`,
-  escopo `payments`, em `users/[id]/route.ts:196` (era `:194` até a PR #50), emitida quando o arquivamento pelo admin não consegue
+  escopo `payments`, em `users/[id]/route.ts:204` (era `:196` até a PR #58 e `:194` até a PR #50), emitida quando o arquivamento pelo admin não consegue
   cancelar a assinatura. As âncoras do webhook conferem. Remedido em 2026-09-27, depois da PR #29: **31**
   linhas. As duas novas são do escopo `auth`, na rota de cadastro: `sign-up-failed` (`auth/sign-up/route.ts:44`)
   e `sign-up-rollback-failed` (`:62`). A chamada antiga da mesma rota, `profile-create-failed`, desceu para
@@ -78,7 +78,7 @@ segue invisível até alguém conferir a fatura.
   depois da PR #47: **39**. As duas novas são do escopo `payments`, para o catálogo público: `catalog-failed` na API
   (`payments/catalog/route.ts:24`) e `catalog-unavailable` na landing (`apps/web/shared/lib/planCatalog.ts:32`). A PR
   #47 não acrescentou `console` cru. Recontado em 2026-10-19, depois da PR #50: **41**. As duas novas são do escopo
-  `auth`, no arquivamento pelo admin: `admin-user-delete-auth-failed` (`users/[id]/route.ts:210`) e
+  `auth`, no arquivamento pelo admin: `admin-user-delete-auth-failed` (`users/[id]/route.ts:218`, era `:210` até a PR #58) e
   `archived-account-lockout-failed` (`(shared)/lib/user-merge.ts:64`, era `:63` até a PR #57 e `:62` até a PR #52). A PR #50 não acrescentou `console` cru.
   Recontado em 2026-10-19, depois da PR #51: **42**. A nova é do escopo `account`:
   `password-unlink-email-restore-failed` (`account/sign-in-methods/[id]/route.ts:125`), com `uid`, `requestId`,
@@ -90,10 +90,10 @@ segue invisível até alguém conferir a fatura.
   tipo da notificação e só o **nome** do erro, emitida quando a emissão falha e o produtor (cadastro ou webhook) segue
   sem ela. A PR #52 não acrescentou `console` cru. Recontado em 2026-10-21, depois das PRs #53 e #54: **43**. A PR #54
   tirou um `console` cru, o `console.error` de desenvolvimento do `global-error` antigo da web
-  (`apps/web/app/[locale]/global-error.tsx:17` em `d19e6fd`); o arquivo novo, `apps/web/app/global-error.tsx`, não loga. Recontado em 2026-10-22, depois da PR #56: **44**. A nova é do escopo `auth`: `email-link-delivery-failed` (`auth/sign-in/email-link/request/route.ts:40`), só com o `requestId`, emitida quando a entrega do link falha depois da resposta. A recusa do gerador para o login por link reaproveita o helper que já existia (`logRefusedLink`, `(shared)/lib/auth-action-links.ts:38-40`, escopo `auth-action-link`, sem endereço). A PR #56 não acrescentou `console` cru. Recontado em 2026-10-23, depois da PR #57, com `git grep -n "logEvent(" -- apps packages ':!**/__tests__/**' ':!**/*.test.*'` (a definição incluída; o mesmo comando dá 44 em `9c793c6`): **48**. As quatro novas são do escopo `organization`, que a PR acrescentou à união: `legacy-claim-unfinished`, `legacy-claim-failed` e `membership-create-failed` (`(shared)/lib/organization-membership.ts:36`, `:40` e `:95`) e `invitation-delivery-failed` (`organization/invitations/route.ts:129`). A PR #57 não acrescentou `console` cru.)* Os dois clones que esta spec
+  (`apps/web/app/[locale]/global-error.tsx:17` em `d19e6fd`); o arquivo novo, `apps/web/app/global-error.tsx`, não loga. Recontado em 2026-10-22, depois da PR #56: **44**. A nova é do escopo `auth`: `email-link-delivery-failed` (`auth/sign-in/email-link/request/route.ts:40`), só com o `requestId`, emitida quando a entrega do link falha depois da resposta. A recusa do gerador para o login por link reaproveita o helper que já existia (`logRefusedLink`, `(shared)/lib/auth-action-links.ts:38-40`, escopo `auth-action-link`, sem endereço). A PR #56 não acrescentou `console` cru. Recontado em 2026-10-23, depois da PR #57, com `git grep -n "logEvent(" -- apps packages ':!**/__tests__/**' ':!**/*.test.*'` (a definição incluída; o mesmo comando dá 44 em `9c793c6`): **48**. As quatro novas são do escopo `organization`, que a PR acrescentou à união: `legacy-claim-unfinished`, `legacy-claim-failed` e `membership-create-failed` (`(shared)/lib/organization-membership.ts:37`, `:41` e `:96`, remedidas em 2026-10-27; eram `:36`, `:40` e `:95` até a PR #58) e `invitation-delivery-failed` (`organization/invitations/route.ts:147`, era `:129` até a PR #58). A PR #57 não acrescentou `console` cru. Recontado em 2026-10-27, depois da PR #58, com o mesmo comando: **49**. A nova é `invitation-member-check-failed`, do escopo `organization` (`organization/invitations/route.ts:80`), emitida quando a conferência do convidado no Auth falha e a rota responde `503 ORGANIZATION_INVITATION_FAILED`. A PR #58 não acrescentou `console` cru.)* Os dois clones que esta spec
   usava como evidência — `entity-photo.ts` e `account-avatar.ts`, que antes tinham só o prefixo — hoje
   emitem `sign-url-failed resource=…`, e a diferença entre eles é um campo, não um formato.
-- **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:145` gera o UUID, `:184` o
+- **Identificador por requisição, do proxy até a tela.** `apps/api/proxy.ts:155` gera o UUID, `:194` o
   repassa ao handler pelo header de entrada e `:98-99` o carimba na resposta (âncoras remedidas em
   2026-09-30, quando a PR #33 acrescentou três linhas à lista de rate limit, em 2026-10-16, depois
   das quatro linhas de comentário que a PR #47 pôs acima dela, em 2026-10-19, depois das cinco da PR #49, em
@@ -185,7 +185,7 @@ continua parcial pelo mesmo motivo, e a pergunta em aberto nº 1 vai ao usuário
 | item do corte | veredito | evidência |
 |---------------|----------|-----------|
 | 1. Erro não tratado coletado nos três apps, e chega a quem opera | **parcial** | o gancho existe e emite trilha (`apps/api/instrumentation.ts:76-77`, `apps/app/instrumentation.ts:4-5`, `apps/web/instrumentation.ts:4-5` → `requestErrorReporter.ts:39-53`); **não há coletor e ninguém é notificado** |
-| 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:145,184,98-99` (remedidas em 2026-10-23, pós-PR #57; eram `:137,176,90-91`) · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
+| 2. Identificador por requisição, do log até a resposta de erro | **implementado** | `apps/api/proxy.ts:155,194,108-109` (remedidas em 2026-10-27, pós-PR #58; eram `:145,184,98-99` até ela e `:137,176,90-91` até a PR #57) · `packages/shared/utils/helpers/request-id.ts:6` · `formattedError.ts:24,117` |
 | 3. `console` cru substituído por log estruturado nos fluxos críticos | **implementado** | `webhooks/payments/route.ts:296,308` · `users/route.ts:80` · `auth/sign-up/route.ts:58`, todos com `requestId` (âncoras do webhook remedidas em 2026-10-16, depois da PR #46, e em 2026-10-20, depois da PR #52, que acrescentou o produtor de notificações acima delas; eram `:279,291`) |
 | 4. Endpoint de saúde deixa de mentir | **implementado** | `health/route.ts:3` (`force-dynamic`) · `health/ready/route.ts` · `(shared)/lib/readiness.ts:31-57`, booleano nu, teto de 2 s em `:9` |
 | 5. Camada no-op sem a variável do serviço | **implementado**, por não haver serviço | zero dependência nova, zero env nova, zero linha em `.env.example` |
@@ -225,7 +225,7 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
       e contexto do usuário — e chega a quem opera sem o cliente precisar avisar. — **parcial:** a trilha
       existe e é correlacionável; o coletor e a notificação não.
 - [x] Cada requisição da API carrega um identificador que aparece em todo log daquela requisição e volta na
-      resposta de erro, colando o que o usuário vê ao que o servidor registrou. — `apps/api/proxy.ts:145`
+      resposta de erro, colando o que o usuário vê ao que o servidor registrou. — `apps/api/proxy.ts:155`
       gera, `:184` repassa ao handler, `:98-99` carimba na resposta (eram `:137`, `:176` e `:90-91` até a PR #57); `formattedError.ts:117` lê de volta.
 - [x] Os pontos que hoje usam `console` em fluxos críticos (webhook de pagamento, criação de perfil)
       passam a emitir log estruturado com esse identificador. — `webhooks/payments/route.ts:296,308` (eram `:279,291` até a PR #52),
