@@ -139,6 +139,14 @@ export function ActionsMenu({
                                 ]
                                 : []),
                         ],
+                        // rc-menu runs an item on the Enter keydown. Left alone, the
+                        // browser then activates whatever that item focused (a
+                        // dialog's cancel button) with the same key press.
+                        onClick: ({ domEvent }) => {
+                            if (domEvent.type === "keydown") {
+                                domEvent.preventDefault();
+                            }
+                        },
                     }}
                     onOpenChange={(open) => setMenuOpen(open)}
                     placement="bottomRight"
