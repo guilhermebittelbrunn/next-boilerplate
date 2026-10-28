@@ -468,7 +468,8 @@ não precisa fazer nada: a organização tem uma pessoa só e não aparece na in
    `apps/api/(shared)/lib/organization-invitation.ts`. Se mudar a validade, mude também o "7 dias" da cópia do
    e-mail (`email.actionLink.actions.organizationInvitation`) e da página da equipe.
 
-O dono não sai, não é removido e não exclui a conta enquanto houver membros: não há transferência de propriedade.
+O dono não sai, não é removido e não exclui a conta enquanto houver membros. Para isso, ele transfere antes a
+propriedade a um membro, pelo item "Tornar dono" da tabela da equipe, e passa a membro.
 Desligar a variável depois de ter membros não desfaz a equipe; remova os membros antes. Pendências de
 infraestrutura em [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 16.
 

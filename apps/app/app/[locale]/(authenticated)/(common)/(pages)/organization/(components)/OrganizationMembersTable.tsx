@@ -6,10 +6,13 @@ import { getDictionary } from "@repo/internationalization/client";
 import type { OrganizationMemberDTO } from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
+import { CrownIcon } from "lucide-react";
+import { useRef, useState } from "react";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useListOrganizationMembers } from "../(hooks)/useListOrganizationMembers";
 import { useOrganizationActions } from "../(hooks)/useOrganizationActions";
+import { TransferOwnershipDialog } from "./TransferOwnershipDialog";
 
 type OrganizationMembersTableProps = {
     readonly isOwner: boolean;
@@ -28,13 +31,22 @@ export function OrganizationMembersTable({
         error,
         refetch,
     } = useListOrganizationMembers();
-    const { removeMemberMutation } = useOrganizationActions();
-    const membersCopy = dictionary.apps.app.pages.common.organization.members;
+    const { removeMemberMutation, transferOwnershipMutation } =
+        useOrganizationActions();
+    const [transferTarget, setTransferTarget] =
+        useState<OrganizationMemberDTO | null>(null);
+    const [isTransferOpen, setTransferOpen] = useState(false);
+    const titleRef = useRef<HTMLHeadingElement>(null);
+    const organizationCopy = dictionary.apps.app.pages.common.organization;
+    const membersCopy = organizationCopy.members;
 
     const loadError = error
         ? handleClientError(new FormattedError(error, locale))
         : null;
-    const canRemove = isOwner && !isImpersonating;
+    // The actions leave the screen while a transfer runs, so a second click cannot send
+    // another one from this table.
+    const canManage =
+        isOwner && !isImpersonating && !transferOwnershipMutation.isPending;
 
     const columns = [
         {
@@ -77,7 +89,7 @@ export function OrganizationMembersTable({
                       dataIndex: "actions",
                       align: "center" as const,
                       render: (_: unknown, record: OrganizationMemberDTO) =>
-                          record.role === "owner" || !canRemove ? null : (
+                          record.role === "owner" || !canManage ? null : (
                               <ActionsMenu
                                   deleteLabels={{
                                       action: membersCopy.remove,
@@ -86,6 +98,29 @@ export function OrganizationMembersTable({
                                       confirmDescription:
                                           membersCopy.removeConfirmDescription,
                                   }}
+                                  items={
+                                      record.archived
+                                          ? []
+                                          : [
+                                                {
+                                                    icon: (
+                                                        <CrownIcon
+                                                            aria-hidden
+                                                            className="size-4"
+                                                        />
+                                                    ),
+                                                    key: "transfer",
+                                                    label: organizationCopy
+                                                        .transfer.action,
+                                                    onClick: () => {
+                                                        setTransferTarget(
+                                                            record
+                                                        );
+                                                        setTransferOpen(true);
+                                                    },
+                                                },
+                                            ]
+                                  }
                                   onDelete={() =>
                                       removeMemberMutation.mutate(record.userId)
                                   }
@@ -98,7 +133,13 @@ export function OrganizationMembersTable({
 
     return (
         <section className="flex flex-col gap-3">
-            <h2 className="font-semibold text-lg">{membersCopy.title}</h2>
+            <h2
+                className="font-semibold text-lg outline-none"
+                ref={titleRef}
+                tabIndex={-1}
+            >
+                {membersCopy.title}
+            </h2>
             <Table<OrganizationMemberDTO>
                 columns={columns}
                 dataSource={loadError ? [] : members}
@@ -110,6 +151,13 @@ export function OrganizationMembersTable({
                 rowKey={(row) => row.userId}
                 searchFields={["displayName", "email"]}
                 searchPlaceholder={membersCopy.searchPlaceholder}
+            />
+            <TransferOwnershipDialog
+                member={transferTarget}
+                onConfirm={(member) => transferOwnershipMutation.mutate(member)}
+                onOpenChange={setTransferOpen}
+                open={isTransferOpen}
+                returnFocusRef={titleRef}
             />
         </section>
     );

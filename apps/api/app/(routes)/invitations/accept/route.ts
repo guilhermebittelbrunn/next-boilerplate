@@ -1,4 +1,7 @@
+import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import {
     hashInvitationToken,
     normalizeInvitationEmail,
@@ -63,6 +66,19 @@ export const POST = whenOrganizationMembersEnabled(
                 email: normalizeInvitationEmail(ctx.user.email ?? ""),
                 now: new Date(),
             });
+
+        if (outcome.status === "accepted") {
+            await recordAuditEvent({
+                action: AuditAction.ORGANIZATION_INVITATION_ACCEPT,
+                actorUserId: ctx.subjectProfile.id,
+                actorUid: ctx.user.uid,
+                actorLabel: ctx.user.email ?? ctx.user.displayName ?? null,
+                targetType: AuditTargetType.ORGANIZATION,
+                targetUserId: null,
+                targetLabel: null,
+                requestId: requestIdFrom(req),
+            });
+        }
 
         if (
             outcome.status === "accepted" ||

@@ -13,10 +13,11 @@ import { BaseRepository } from "./base.repository";
 
 /**
  * A transaction reads through document references, not through the other repositories,
- * so the acceptance names the two collections it has to check on its own.
+ * so the acceptance names the collections it has to check on its own.
  */
 const ORGANIZATION_COLLECTION = "organization";
 const MEMBER_COLLECTION = "organizationMember";
+const USER_COLLECTION = "user";
 
 export type IssueInvitationInput = {
     /** Derived from the organization and the address, so a second invitation reuses it. */
@@ -226,7 +227,7 @@ class OrganizationInvitationRepository extends BaseRepository<OrganizationInvita
         return this.purge(id);
     }
 
-    /** Whether the organization exists and its owner still belongs to it. */
+    /** Whether the organization exists and its owner is still active and still belongs to it. */
     private async isOrganizationOpen(
         tx: Transaction,
         organizationId: string
@@ -238,19 +239,23 @@ class OrganizationInvitationRepository extends BaseRepository<OrganizationInvita
             return false;
         }
 
-        // An organization whose owner moved to another one is dormant: nobody can
-        // manage it, so nobody new may join it.
-        const ownerMembership = await tx.get(
-            this.db
-                .collection(MEMBER_COLLECTION)
-                .doc(String(organization.get("ownerUserId")))
+        // An organization whose owner moved to another one is dormant, and one whose owner
+        // was archived has nobody left to run it: either way, nobody new may join it.
+        const ownerUserId = String(organization.get("ownerUserId"));
+        const [ownerMembership, ownerProfile] = await tx.getAll(
+            this.db.collection(MEMBER_COLLECTION).doc(ownerUserId),
+            this.db.collection(USER_COLLECTION).doc(ownerUserId)
         );
-        return ownerMembership.get("organizationId") === organizationId;
+        return (
+            isLive(ownerProfile) &&
+            ownerMembership.get("organizationId") === organizationId
+        );
     }
 
     /**
-     * There is no transfer of ownership, so an owner who still has members cannot move:
-     * they would strand the people in the organization they own.
+     * An owner with live members cannot move: they would leave those people with nobody
+     * to manage them until ownership is passed on. A member whose profile was archived
+     * does not hold the owner back, since that account does not come back on its own.
      */
     private async refuseCurrentMembership(
         tx: Transaction,
@@ -271,9 +276,17 @@ class OrganizationInvitationRepository extends BaseRepository<OrganizationInvita
                 .collection(MEMBER_COLLECTION)
                 .where("organizationId", "==", currentOrganizationId)
         );
-        return members.docs.some((docSnap) => docSnap.id !== userId)
-            ? { status: "owner-has-members" }
-            : null;
+        const others = members.docs.filter((docSnap) => docSnap.id !== userId);
+        if (others.length === 0) {
+            return null;
+        }
+
+        const profiles = await tx.getAll(
+            ...others.map((docSnap) =>
+                this.db.collection(USER_COLLECTION).doc(docSnap.id)
+            )
+        );
+        return profiles.some(isLive) ? { status: "owner-has-members" } : null;
     }
 
     /**

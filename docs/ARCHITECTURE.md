@@ -64,7 +64,9 @@ cadastro (`createDefaultUserProfile`) ou, para quem já existia, no primeiro ped
 nunca vê essa organização: ela tem um dono só, a própria pessoa, e nenhuma tela fala dela enquanto
 `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED` estiver vazia.
 
-- **Coleções.** `organization` guarda o dono (`ownerUserId`). `organizationMember/{profileId}` é o vínculo: o id do
+- **Coleções.** `organization` guarda o dono atual (`ownerUserId`), que muda quando ele transfere a propriedade. Uma
+  pessoa pode ser dona de mais de uma organização: a de casa e as que recebeu. A casa para onde ela volta ao sair de
+  uma equipe é a mais antiga delas. `organizationMember/{profileId}` é o vínculo: o id do
   documento é o id do perfil, então cada pessoa está em uma organização por vez e o guard lê o vínculo por id. Os dois
   documentos nascem num lote com `create()`, e pedidos simultâneos terminam com uma organização só.
 - **Recurso da organização × recurso da pessoa.** Dado de negócio pertence à organização: o documento grava
@@ -86,7 +88,10 @@ nunca vê essa organização: ela tem um dono só, a própria pessoa, e nenhuma 
 - **Membros e convites (B2B).** Com `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"` na `api` e na `app`, o dono
   convida por e-mail (`organizationInvitation`, um documento por organização e endereço, só o hash do token,
   7 dias, uso único), o convidado aceita em `/invite` com uma conta do mesmo e-mail e passa a membro. O dono
-  remove membros e o membro sai, voltando à organização de casa. Sem a variável, as rotas `/organization/*` e
+  remove membros e o membro sai, voltando à organização de casa. O dono também transfere a propriedade a um membro
+  com perfil vivo (`POST /organization/members/:id/ownership`): numa transação, `ownerUserId` e os dois papéis
+  trocam, e o antigo dono continua na equipe como membro. Quem transferiu fica sem organização de casa; se sair,
+  ganha uma nova e vazia. Sem a variável, as rotas `/organization/*` e
   `/invitations/*` respondem `404 ORGANIZATION_MEMBERS_DISABLED` antes de autenticar.
 
 Recurso novo de negócio nasce escopado por organização, como `entity`. Recurso que descreve a pessoa, como

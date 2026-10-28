@@ -34,7 +34,7 @@ export const sharedUtilsTranslations = {
             USERS_DELETE_AUTH_FAILED:
                 "Não foi possível bloquear o acesso deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
             USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
-                "Este usuário é dono de uma equipe que ainda tem membros, então ele não foi arquivado. Os membros precisam sair ou ser removidos antes.",
+                "Este usuário é dono de uma equipe que ainda tem membros, então ele não foi arquivado. Antes, ele precisa transferir a propriedade a um dos membros, ou os membros precisam sair ou ser removidos.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "Você não pode desativar, arquivar nem tirar o acesso de administrador da sua própria conta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para atualizar.",
@@ -76,7 +76,7 @@ export const sharedUtilsTranslations = {
             ACCOUNT_DELETION_BILLING_FAILED:
                 "Não conseguimos cancelar a sua assinatura, então a conta não foi excluída. Tente de novo em instantes.",
             ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS:
-                "A sua equipe ainda tem membros. Remova-os antes de excluir a conta.",
+                "A sua equipe ainda tem membros. Transfira a propriedade a um deles ou remova-os antes de excluir a conta.",
             ORGANIZATION_FORBIDDEN: "Só o dono da equipe pode fazer isso.",
             PAYMENTS_NOT_CONFIGURED:
                 "A cobrança não está disponível neste ambiente.",
@@ -157,8 +157,11 @@ export const sharedUtilsTranslations = {
                 "Equipes não estão disponíveis neste ambiente.",
             ORGANIZATION_MEMBER_NOT_FOUND:
                 "Esta pessoa não faz parte da equipe.",
+            ORGANIZATION_OWNERSHIP_TARGET_SELF: "Você já é o dono da equipe.",
+            ORGANIZATION_OWNERSHIP_TARGET_ARCHIVED:
+                "Esta conta foi desativada e não pode receber a propriedade da equipe.",
             ORGANIZATION_OWNER_CANNOT_LEAVE:
-                "O dono não pode sair nem ser removido da equipe.",
+                "O dono não pode sair nem ser removido da equipe. Para sair, transfira antes a propriedade a outro membro.",
             ORGANIZATION_INVITATION_NOT_FOUND: "Convite não encontrado.",
             ORGANIZATION_INVITATION_ALREADY_MEMBER:
                 "Esta pessoa já faz parte da equipe.",
@@ -173,7 +176,7 @@ export const sharedUtilsTranslations = {
             ORGANIZATION_INVITATION_EMAIL_MISMATCH:
                 "Este convite foi enviado para outro e-mail. Entre com a conta desse e-mail para aceitar.",
             ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
-                "Você é dono de uma equipe com membros. Remova-os antes de entrar em outra equipe.",
+                "Você é dono de uma equipe com membros. Transfira a propriedade a um deles ou remova-os antes de entrar em outra equipe.",
             ORGANIZATION_INVITATION_FAILED:
                 "Não foi possível enviar o convite agora. Tente de novo em instantes.",
         },
@@ -212,7 +215,7 @@ export const sharedUtilsTranslations = {
             USERS_DELETE_AUTH_FAILED:
                 "We couldn't block this user's access, so they were not archived. Try again in a moment.",
             USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
-                "This user owns a team that still has members, so they were not archived. The members must leave or be removed first.",
+                "This user owns a team that still has members, so they were not archived. First they must hand ownership to one of the members, or the members must leave or be removed.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "You can't disable, archive or remove admin access from your own account.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nothing to update.",
@@ -254,7 +257,7 @@ export const sharedUtilsTranslations = {
             ACCOUNT_DELETION_BILLING_FAILED:
                 "We couldn't cancel your subscription, so the account was not deleted. Try again in a moment.",
             ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS:
-                "Your team still has members. Remove them before deleting your account.",
+                "Your team still has members. Hand ownership to one of them or remove them before deleting your account.",
             ORGANIZATION_FORBIDDEN: "Only the team owner can do this.",
             PAYMENTS_NOT_CONFIGURED:
                 "Billing is not available in this environment.",
@@ -334,8 +337,11 @@ export const sharedUtilsTranslations = {
                 "Teams are not available in this environment.",
             ORGANIZATION_MEMBER_NOT_FOUND:
                 "This person is not part of the team.",
+            ORGANIZATION_OWNERSHIP_TARGET_SELF: "You already own the team.",
+            ORGANIZATION_OWNERSHIP_TARGET_ARCHIVED:
+                "This account was deactivated and cannot receive team ownership.",
             ORGANIZATION_OWNER_CANNOT_LEAVE:
-                "The owner cannot leave or be removed from the team.",
+                "The owner cannot leave or be removed from the team. To leave, hand ownership to another member first.",
             ORGANIZATION_INVITATION_NOT_FOUND: "Invitation not found.",
             ORGANIZATION_INVITATION_ALREADY_MEMBER:
                 "This person is already part of the team.",
@@ -350,7 +356,7 @@ export const sharedUtilsTranslations = {
             ORGANIZATION_INVITATION_EMAIL_MISMATCH:
                 "This invitation was sent to another email. Sign in with that account to accept it.",
             ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
-                "You own a team that has members. Remove them before joining another team.",
+                "You own a team that has members. Hand ownership to one of them or remove them before joining another team.",
             ORGANIZATION_INVITATION_FAILED:
                 "We couldn't send the invitation right now. Try again in a moment.",
         },
@@ -391,7 +397,7 @@ export const sharedUtilsTranslations = {
             USERS_DELETE_AUTH_FAILED:
                 "No pudimos bloquear el acceso de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
             USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
-                "Este usuario es dueño de un equipo que todavía tiene miembros, así que no se archivó. Los miembros deben salir o ser quitados del equipo antes.",
+                "Este usuario es dueño de un equipo que todavía tiene miembros, así que no se archivó. Antes, debe transferir la propiedad a uno de los miembros, o los miembros deben salir o ser quitados del equipo.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
                 "No puedes desactivar, archivar ni quitar el acceso de administrador de tu propia cuenta.",
             ACCOUNT_NOTHING_TO_UPDATE: "Nada para actualizar.",
@@ -434,7 +440,7 @@ export const sharedUtilsTranslations = {
             ACCOUNT_DELETION_BILLING_FAILED:
                 "No pudimos cancelar tu suscripción, así que la cuenta no se eliminó. Inténtalo de nuevo en unos instantes.",
             ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS:
-                "Tu equipo todavía tiene miembros. Quítalos antes de eliminar tu cuenta.",
+                "Tu equipo todavía tiene miembros. Transfiere la propiedad a uno de ellos o quítalos antes de eliminar tu cuenta.",
             ORGANIZATION_FORBIDDEN:
                 "Solo el dueño del equipo puede hacer esto.",
             PAYMENTS_NOT_CONFIGURED:
@@ -520,8 +526,11 @@ export const sharedUtilsTranslations = {
                 "Los equipos no están disponibles en este entorno.",
             ORGANIZATION_MEMBER_NOT_FOUND:
                 "Esta persona no forma parte del equipo.",
+            ORGANIZATION_OWNERSHIP_TARGET_SELF: "Ya eres el dueño del equipo.",
+            ORGANIZATION_OWNERSHIP_TARGET_ARCHIVED:
+                "Esta cuenta fue desactivada y no puede recibir la propiedad del equipo.",
             ORGANIZATION_OWNER_CANNOT_LEAVE:
-                "El dueño no puede salir ni ser quitado del equipo.",
+                "El dueño no puede salir ni ser quitado del equipo. Para salir, transfiere antes la propiedad a otro miembro.",
             ORGANIZATION_INVITATION_NOT_FOUND: "Invitación no encontrada.",
             ORGANIZATION_INVITATION_ALREADY_MEMBER:
                 "Esta persona ya forma parte del equipo.",
@@ -536,7 +545,7 @@ export const sharedUtilsTranslations = {
             ORGANIZATION_INVITATION_EMAIL_MISMATCH:
                 "Esta invitación se envió a otro correo. Inicia sesión con esa cuenta para aceptarla.",
             ORGANIZATION_INVITATION_OWNER_HAS_MEMBERS:
-                "Eres dueño de un equipo con miembros. Quítalos antes de unirte a otro equipo.",
+                "Eres dueño de un equipo con miembros. Transfiere la propiedad a uno de ellos o quítalos antes de unirte a otro equipo.",
             ORGANIZATION_INVITATION_FAILED:
                 "No pudimos enviar la invitación ahora. Inténtalo de nuevo en unos instantes.",
         },

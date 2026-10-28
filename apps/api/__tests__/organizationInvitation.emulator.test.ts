@@ -29,7 +29,29 @@ const sha256 = (value: string) =>
 
 const db = () => getFirestoreAdmin();
 
+/**
+ * The acceptance only lets in an organization whose owner has a live profile, and only
+ * counts members with one, so every person here gets a profile document first.
+ */
+async function seedLiveProfile(profileId: string): Promise<void> {
+    const now = new Date();
+    await db()
+        .collection("user")
+        .doc(profileId)
+        .set({
+            reference_id: `uid-${profileId}`,
+            type: "common",
+            createdAt: now,
+            updatedAt: now,
+            deletedAt: null,
+        });
+}
+
+const archiveProfile = (profileId: string) =>
+    db().collection("user").doc(profileId).update({ deletedAt: new Date() });
+
 async function homeOf(profileId: string): Promise<string> {
+    await seedLiveProfile(profileId);
     const membership = await resolveOrganizationMembership(profileId);
     usedOrganizationIds.push(membership.organizationId);
     return membership.organizationId;
@@ -79,7 +101,8 @@ afterAll(async () => {
     }
     for (const profileId of usedProfileIds) {
         deletions.push(
-            db().collection("organizationMember").doc(profileId).delete()
+            db().collection("organizationMember").doc(profileId).delete(),
+            db().collection("user").doc(profileId).delete()
         );
     }
     await Promise.all(deletions);
@@ -188,6 +211,58 @@ describe("organization invitations against the Firestore emulator", () => {
         expect(
             (await accept(leaving.token, busyOwner, ownerEmail)).status
         ).toBe("owner-has-members");
+    });
+
+    it("refuses an invitation of an organization whose owner was archived", async () => {
+        const archivedOwner = newProfileId("archived-owner");
+        const latecomer = newProfileId("archived-latecomer");
+        const organizationId = await homeOf(archivedOwner);
+        await homeOf(latecomer);
+        const latecomerEmail = `archived-latecomer-${RUN_ID}@example.com`;
+        const pending = await invite(
+            organizationId,
+            latecomerEmail,
+            archivedOwner
+        );
+        await archiveProfile(archivedOwner);
+
+        expect(
+            (await accept(pending.token, latecomer, latecomerEmail)).status
+        ).toBe("invalid");
+        const latecomerMembership = await db()
+            .collection("organizationMember")
+            .doc(latecomer)
+            .get();
+        expect(latecomerMembership.get("organizationId")).not.toBe(
+            organizationId
+        );
+    });
+
+    it("lets an owner whose only other member was archived join another team", async () => {
+        const owner = newProfileId("lonely-owner");
+        const archivedMember = newProfileId("lonely-archived-member");
+        const host = newProfileId("lonely-host");
+        const ownerHomeId = await homeOf(owner);
+        const hostId = await homeOf(host);
+        await homeOf(archivedMember);
+        const memberEmail = `lonely-archived-member-${RUN_ID}@example.com`;
+        const joining = await invite(ownerHomeId, memberEmail, owner);
+        expect(
+            (await accept(joining.token, archivedMember, memberEmail)).status
+        ).toBe("accepted");
+        await archiveProfile(archivedMember);
+
+        const ownerEmail = `lonely-owner-${RUN_ID}@example.com`;
+        const leaving = await invite(hostId, ownerEmail, host);
+
+        expect((await accept(leaving.token, owner, ownerEmail)).status).toBe(
+            "accepted"
+        );
+        const ownerMembership = await db()
+            .collection("organizationMember")
+            .doc(owner)
+            .get();
+        expect(ownerMembership.get("organizationId")).toBe(hostId);
     });
 
     it("refuses a token sent to another address", async () => {

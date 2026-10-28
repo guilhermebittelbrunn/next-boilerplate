@@ -20,6 +20,7 @@ const {
     findPendingMock,
     revokeMock,
     logEventMock,
+    recordAuditEventMock,
 } = vi.hoisted(() => ({
     envMock: {
         NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED: "true" as string | undefined,
@@ -37,13 +38,14 @@ const {
     findPendingMock: vi.fn(),
     revokeMock: vi.fn(),
     logEventMock: vi.fn(),
+    recordAuditEventMock: vi.fn(),
 }));
 
 vi.mock("@/env", () => ({ env: envMock }));
 vi.mock("@/(shared)/lib/billing", () => ({ isBillingEnabled: () => false }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
-    recordAuditEvent: vi.fn(),
+    recordAuditEvent: (...args: unknown[]) => recordAuditEventMock(...args),
     recordImpersonationSession: vi.fn(),
 }));
 
@@ -201,6 +203,7 @@ beforeEach(() => {
         findPendingMock,
         revokeMock,
         logEventMock,
+        recordAuditEventMock,
     ]) {
         mock.mockReset();
     }
@@ -268,6 +271,26 @@ describe("POST /organization/invitations", () => {
         });
     });
 
+    it("records the invitation in the trail without the invitee's address", async () => {
+        const response = await POST(request("POST", { email: INVITEE }));
+
+        expect(response.status).toBe(STATUS_CREATED);
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock).toHaveBeenCalledWith({
+            action: "organization.invitation.send",
+            actorUserId: OWNER_PROFILE.id,
+            actorUid: OWNER_UID,
+            actorLabel: OWNER_EMAIL,
+            targetType: "organization",
+            targetUserId: null,
+            targetLabel: null,
+            requestId: REQUEST_ID,
+        });
+        expect(JSON.stringify(recordAuditEventMock.mock.calls)).not.toContain(
+            INVITEE
+        );
+    });
+
     it("names the inviter by email in the message, in the requested language", async () => {
         await POST(request("POST", { email: INVITEE, locale: "es" }));
 
@@ -296,6 +319,7 @@ describe("POST /organization/invitations", () => {
         expect(await codeOf(response)).toBe("EMAIL_NOT_CONFIGURED");
         expect(json).not.toHaveBeenCalled();
         expect(issueMock).not.toHaveBeenCalled();
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it("keeps the invitation and says so when the provider refuses the email", async () => {
@@ -309,6 +333,7 @@ describe("POST /organization/invitations", () => {
         expect(response.status).toBe(STATUS_CREATED);
         const body = (await response.json()) as { data: { delivery: string } };
         expect(body.data.delivery).toBe("failed");
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
         expect(logEventMock).toHaveBeenCalledWith(
             "organization",
             "invitation-delivery-failed",
@@ -385,6 +410,7 @@ describe("POST /organization/invitations", () => {
             "ORGANIZATION_INVITATION_RECENTLY_SENT"
         );
         expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it("answers 409 at the pending ceiling", async () => {
@@ -396,6 +422,7 @@ describe("POST /organization/invitations", () => {
         expect(await codeOf(response)).toBe(
             "ORGANIZATION_INVITATION_LIMIT_REACHED"
         );
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it.each([

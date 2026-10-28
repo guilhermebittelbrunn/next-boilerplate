@@ -219,7 +219,12 @@ o botão de merge tem de ficar bloqueado.
 
 A suíte vive em `apps/e2e` e percorre, num Chromium de verdade e contra o emulador, os fluxos que todo fork
 herda: cadastro com onboarding, login (comum, admin, senha errada, deep link com `?redirect=`), CRUD de
-`entity`, troca de painel do admin, usuário comum barrado no `/admin` e o CTA de cadastro da landing. Nas
+`entity`, troca de painel do admin, usuário comum barrado no `/admin`, o CTA de cadastro da landing e o fluxo da
+equipe (convite, aceite, transferência de propriedade e saída do antigo dono). Membros e convites ficam ligados
+(`NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"`) na `api` e na `app` da suíte inteira; o modo B2C, com a
+variável vazia, fica com os testes de unidade. A suíte não tem provedor de e-mail, então o convite é gravado direto
+no emulador com um token conhecido (`apps/e2e/support/firestoreEmulator.ts`) e a emissão pela tela fica com os
+testes de rota. Nas
 telas percorridas ela roda o axe e falha em violação `critical` ou `serious`.
 
 É rede de regressão. Ela não julga tema, alinhamento, responsivo nem idioma (roda só em `pt-br` e desktop),

@@ -17,23 +17,28 @@ class OrganizationRepository extends BaseRepository<OrganizationRecord> {
     }
 
     /**
-     * Every common profile owns exactly one organization, its home: the one it returns to
-     * when it leaves someone else's. A single-field query, with the soft-delete filter in
-     * memory, so no composite index is needed.
+     * The home organization a person starts with, plus any whose ownership was handed to
+     * them, oldest first. A single-field query, with the soft-delete filter in memory, so
+     * no composite index is needed.
      */
-    async findOwnedBy(profileId: string): Promise<OrganizationRecord | null> {
+    async listOwnedBy(profileId: string): Promise<OrganizationRecord[]> {
         const snapshot = await this.db
             .collection(this.table)
             .where("ownerUserId", "==", profileId)
             .get();
 
-        const live = snapshot.docs.find(
-            (docSnap) => docSnap.data().deletedAt == null
-        );
+        return snapshot.docs
+            .filter((docSnap) => docSnap.data().deletedAt == null)
+            .sort((a, b) => a.createTime.toMillis() - b.createTime.toMillis())
+            .map((docSnap) => ({
+                id: docSnap.id,
+                ownerUserId: String(docSnap.data().ownerUserId),
+            }));
+    }
 
-        return live
-            ? { id: live.id, ownerUserId: String(live.data().ownerUserId) }
-            : null;
+    /** The organization a person returns to when they leave someone else's: the oldest they own. */
+    async findOwnedBy(profileId: string): Promise<OrganizationRecord | null> {
+        return (await this.listOwnedBy(profileId))[0] ?? null;
     }
 
     /**

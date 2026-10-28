@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-23
+updated: 2026-10-27
 ---
 
 # MFA, sessões ativas e política de senha
@@ -225,7 +225,7 @@ eficácia.
       `trackSession` em `session-tracker.ts:106`). O "Sair" ficou local (`session-routes.ts:174-183`). Quatro
       códigos novos nos 3 idiomas (`AUTH_SESSION_REVOKED`, `ACCOUNT_SESSION_NOT_FOUND`,
       `ACCOUNT_SESSION_IS_CURRENT`, `ACCOUNT_SESSION_UNIDENTIFIED`, a partir de
-      `translations/packages/shared/utils.ts:56`, remedida em 2026-10-19 depois da PR #50, que acrescentou `USERS_DELETE_AUTH_FAILED` acima; era `:54`).
+      `translations/packages/shared/utils.ts:58`, remedida em 2026-10-27 depois da PR #58, que acrescentou `USERS_DELETE_ORGANIZATION_HAS_MEMBERS` acima; era `:56` desde a PR #50 e `:54` antes dela).
       **Deriva, a spec estava errada sobre o que o Firebase permite:** encerrar uma sessão corta a API e o
       cookie, mas o refresh token daquele aparelho continua válido no Firebase, que só revoga a conta inteira.
       Firestore e Storage negam todo cliente, então o aparelho encerrado não alcança dado por fora da API. A
@@ -241,7 +241,7 @@ eficácia.
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
       e na redefinição (`auth.schema.ts:32`, `:37`, `:109-110`, remedidas em 2026-10-22 depois da PR #56, que acrescentou o schema do pedido de link por e-mail; eram `:27`, `:32` e `:101-102` desde a PR #51 e `:24`, `:29` e `:89-90` antes), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:101`, `:276`, `:453`, remedidas em 2026-10-23 depois da PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:103`, `:282`, `:463`, remedidas em 2026-10-27 depois da PR #58, que acrescentou dois códigos por idioma; eram `:101`, `:276` e `:453` desde a PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
@@ -330,7 +330,7 @@ mergeada pela PR #35 (`1936369`) com CI verde, em dois pontos:
   (`packages/auth/server.ts:185`, sem chamada nova ao Firebase; âncora remedida em 2026-10-04). A API responde
   `401 AUTH_INVALID_TOKEN`.
 - `PUT /users/[id]` com `disabled: true` chama `revokeUserSessions` depois do `updateUser`
-  (`apps/api/app/(routes)/users/[id]/route.ts:153-155`, era `:151-153` até a PR #50), então reativar a conta não devolve as sessões antigas.
+  (`apps/api/app/(routes)/users/[id]/route.ts:154-156`, era `:153-155` até a PR #58 e `:151-153` até a PR #50), então reativar a conta não devolve as sessões antigas.
 
 Os dois pontos são cobertos por teste de unidade com o Firebase mockado
 (`packages/auth/__tests__/serverSessionRevocation.test.ts` e `apps/api/__tests__/usersAdminAuditTrail.test.ts`).

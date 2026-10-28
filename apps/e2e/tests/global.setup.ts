@@ -59,6 +59,8 @@ setup("sign in as the common user", async ({ page }) => {
         `/${LOCALE}/entities/create`,
         `/${LOCALE}/entities/edit/route-warm-up`,
         `/${LOCALE}/onboarding`,
+        `/${LOCALE}/organization`,
+        `/${LOCALE}/invite`,
     ]);
 });
 

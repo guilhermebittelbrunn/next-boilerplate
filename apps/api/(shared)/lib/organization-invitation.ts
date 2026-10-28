@@ -92,8 +92,9 @@ export async function isMemberOfOrganization(
 }
 
 /**
- * An organization whose owner now belongs to another one is dormant: nobody manages it,
- * so its invitations no longer lead anywhere.
+ * An organization whose owner now belongs to another one is dormant, and one whose owner
+ * was archived has nobody left to run it: either way, its invitations no longer lead
+ * anywhere.
  */
 export async function isOrganizationActive(
     organizationId: string
@@ -103,10 +104,14 @@ export async function isOrganizationActive(
         return false;
     }
 
-    const ownerMembership = await organizationMemberRepository.findByUserId(
-        organization.ownerUserId
+    const [ownerMembership, ownerProfile] = await Promise.all([
+        organizationMemberRepository.findByUserId(organization.ownerUserId),
+        userRepository.findById(organization.ownerUserId),
+    ]);
+    return (
+        ownerProfile !== null &&
+        ownerMembership?.organizationId === organizationId
     );
-    return ownerMembership?.organizationId === organizationId;
 }
 
 export type InvitationDeliveryInput = {

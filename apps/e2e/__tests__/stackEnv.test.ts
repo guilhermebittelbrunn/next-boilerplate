@@ -103,6 +103,27 @@ describe("buildStackEnv", () => {
         ).toBe("");
     });
 
+    it("turns members on in the api and the app, over the empty value of .env.example, and not in the web", () => {
+        for (const app of ["api", "app", "web"]) {
+            writeEnv(app, ".env.example", [
+                'NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED=""',
+            ]);
+        }
+
+        expect(
+            buildStackEnv("api", { appsRoot, urls })
+                .NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED
+        ).toBe("true");
+        expect(
+            buildStackEnv("app", { appsRoot, urls })
+                .NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED
+        ).toBe("true");
+        expect(
+            buildStackEnv("web", { appsRoot, urls })
+                .NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED
+        ).toBe("");
+    });
+
     it("works without any local env file", () => {
         writeEnv("web", ".env.example", ['NEXT_PUBLIC_WEB_URL=""']);
 

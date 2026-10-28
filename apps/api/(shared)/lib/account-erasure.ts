@@ -68,23 +68,35 @@ async function runStep(
 }
 
 /**
- * The home organization dies with its owner: the deletion route refuses an owner who still
- * has members, so whatever is left in it belongs to nobody else. An organization the
- * subject only joined is not theirs and is not touched.
+ * The organizations the subject owns die with them: their home and any whose ownership
+ * was handed to them. The deletion route refuses an owner who still has live members in
+ * any of them, so whatever is left belongs to nobody else. An organization the subject
+ * only joined is not theirs and is not touched.
  */
-type HomeOrganization = () => Promise<OrganizationRecord | null>;
+type OwnedOrganizations = () => Promise<OrganizationRecord[]>;
 
-function memoizedHome(profileId: string): HomeOrganization {
-    let lookup: Promise<OrganizationRecord | null> | null = null;
+function memoizedOwned(profileId: string): OwnedOrganizations {
+    let lookup: Promise<OrganizationRecord[]> | null = null;
     return () => {
-        lookup ??= organizationRepository.findOwnedBy(profileId);
+        lookup ??= organizationRepository.listOwnedBy(profileId);
         return lookup;
     };
 }
 
+async function sumOver(
+    organizations: OrganizationRecord[],
+    run: (organizationId: string) => Promise<number>
+): Promise<number> {
+    let total = 0;
+    for (const organization of organizations) {
+        total += await run(organization.id);
+    }
+    return total;
+}
+
 function eraseStorage(
     profileId: string,
-    home: HomeOrganization
+    owned: OwnedOrganizations
 ): Promise<ErasureStepResult> {
     if (!isStorageConfigured()) {
         return Promise.resolve({
@@ -96,12 +108,11 @@ function eraseStorage(
 
     return runStep("storage", async () => {
         const personal = await deleteObjectsByPrefix(ownerPrefix(profileId));
-        const organization = await home();
-        const shared = organization
-            ? await deleteObjectsByPrefix(
-                  ownerPrefix(organizationOwnerSegment(organization.id))
-              )
-            : 0;
+        const shared = await sumOver(await owned(), (organizationId) =>
+            deleteObjectsByPrefix(
+                ownerPrefix(organizationOwnerSegment(organizationId))
+            )
+        );
         return personal + shared;
     });
 }
@@ -112,12 +123,11 @@ function eraseStorage(
  */
 async function eraseEntities(
     profileId: string,
-    home: HomeOrganization
+    owned: OwnedOrganizations
 ): Promise<number> {
-    const organization = await home();
-    const scoped = organization
-        ? await entityRepository.purgeByOrganization(organization.id)
-        : 0;
+    const scoped = await sumOver(await owned(), (organizationId) =>
+        entityRepository.purgeByOrganization(organizationId)
+    );
     const unscoped = await entityRepository.purgeUnscopedByUserId(profileId);
     return scoped + unscoped;
 }
@@ -125,9 +135,10 @@ async function eraseEntities(
 async function eraseOrganization(
     profileId: string,
     email: string | null,
-    home: HomeOrganization
+    owned: OwnedOrganizations
 ): Promise<number> {
-    const organization = await home();
+    const organizations = await owned();
+    const ownedIds = new Set(organizations.map(({ id }) => id));
     const membership =
         await organizationMemberRepository.findByUserId(profileId);
 
@@ -138,26 +149,26 @@ async function eraseOrganization(
         : 0;
     if (
         membership &&
-        membership.organizationId !== organization?.id &&
+        !ownedIds.has(membership.organizationId) &&
         (await organizationMemberRepository.remove(
             profileId,
             membership.organizationId
-        ))
+        )) === "removed"
     ) {
         removed += 1;
     }
-    if (!organization) {
-        return removed;
-    }
 
-    removed += await organizationMemberRepository.purgeByOrganization(
-        organization.id
-    );
-    removed += await organizationInvitationRepository.purgeByOrganization(
-        organization.id
-    );
-    await organizationRepository.purgeById(organization.id);
-    return removed + 1;
+    for (const organization of organizations) {
+        removed += await organizationMemberRepository.purgeByOrganization(
+            organization.id
+        );
+        removed += await organizationInvitationRepository.purgeByOrganization(
+            organization.id
+        );
+        await organizationRepository.purgeById(organization.id);
+        removed += 1;
+    }
+    return removed;
 }
 
 /**
@@ -204,13 +215,13 @@ async function eraseData(
     input: AccountErasureInput
 ): Promise<ErasureStepResult[]> {
     const profileId = input.profile.id;
-    const home = memoizedHome(profileId);
+    const owned = memoizedOwned(profileId);
 
     return [
-        await eraseStorage(profileId, home),
-        await runStep("entities", () => eraseEntities(profileId, home)),
+        await eraseStorage(profileId, owned),
+        await runStep("entities", () => eraseEntities(profileId, owned)),
         await runStep("organization", () =>
-            eraseOrganization(profileId, input.email, home)
+            eraseOrganization(profileId, input.email, owned)
         ),
         await runStep("auditTrail", () =>
             auditEventRepository.anonymizeUserLabels(profileId)

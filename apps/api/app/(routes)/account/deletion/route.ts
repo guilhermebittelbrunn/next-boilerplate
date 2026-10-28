@@ -38,8 +38,9 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
         return parsed.response;
     }
 
-    // Refused before the password is even checked: nothing can be erased until the owner
-    // removes the members, since ownership cannot be handed over to one of them.
+    // Refused before the password is even checked: nothing can be erased while the subject
+    // owns a team with live members. Handing ownership to one of them, or removing them,
+    // comes first.
     if (await ownsOrganizationWithMembers(ctx.subjectProfile.id)) {
         return Response.json(
             { error: { code: "ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS" } },

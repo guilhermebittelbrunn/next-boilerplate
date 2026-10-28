@@ -25,6 +25,13 @@ export const adminAuditTrailPageTranslations = {
                 "account.email.change": "E-mail alterado pelo titular",
                 "account.data.export": "Dados exportados",
                 "account.delete": "Conta excluída pelo titular",
+                "organization.ownership.transfer":
+                    "Propriedade da equipe transferida",
+                "organization.invitation.send": "Convite para a equipe enviado",
+                "organization.invitation.accept":
+                    "Convite para a equipe aceito",
+                "organization.member.remove": "Membro removido da equipe",
+                "organization.member.leave": "Saída da equipe",
             },
         },
         filters: {
@@ -67,6 +74,11 @@ export const adminAuditTrailPageTranslations = {
                 "account.email.change": "Email changed by the account holder",
                 "account.data.export": "Data exported",
                 "account.delete": "Account deleted by its owner",
+                "organization.ownership.transfer": "Team ownership transferred",
+                "organization.invitation.send": "Team invitation sent",
+                "organization.invitation.accept": "Team invitation accepted",
+                "organization.member.remove": "Member removed from the team",
+                "organization.member.leave": "Left the team",
             },
         },
         filters: {
@@ -111,6 +123,13 @@ export const adminAuditTrailPageTranslations = {
                 "account.email.change": "Correo cambiado por el titular",
                 "account.data.export": "Datos exportados",
                 "account.delete": "Cuenta eliminada por su titular",
+                "organization.ownership.transfer":
+                    "Propiedad del equipo transferida",
+                "organization.invitation.send": "Invitación al equipo enviada",
+                "organization.invitation.accept":
+                    "Invitación al equipo aceptada",
+                "organization.member.remove": "Miembro quitado del equipo",
+                "organization.member.leave": "Salida del equipo",
             },
         },
         filters: {

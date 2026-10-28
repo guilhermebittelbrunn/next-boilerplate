@@ -1,7 +1,9 @@
 import { resolveLocale } from "@repo/internationalization/utils";
+import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import { canSendAuthActionLink } from "@/(shared)/lib/auth-action-links";
 import {
     deliverInvitation,
@@ -134,6 +136,19 @@ export const POST = whenOrganizationMembersEnabled(
                     { status: HTTP_STATUS.CONFLICT }
                 );
             }
+
+            // The invitee's address stays out of the trail: they may have no profile yet,
+            // and the erasure clears labels by profile id, so it could never be removed.
+            await recordAuditEvent({
+                action: AuditAction.ORGANIZATION_INVITATION_SEND,
+                actorUserId: ctx.subjectProfile.id,
+                actorUid: ctx.user.uid,
+                actorLabel: inviterEmail ?? ctx.user.displayName ?? null,
+                targetType: AuditTargetType.ORGANIZATION,
+                targetUserId: null,
+                targetLabel: null,
+                requestId: requestIdFrom(req),
+            });
 
             // Sent after the write lands: the stored invitation is what the owner sees and
             // resends, so a refused email never leaves a link pointing at nothing.

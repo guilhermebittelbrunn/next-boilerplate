@@ -381,6 +381,34 @@ describe("ActionsMenu delete confirmation edges", () => {
         expect(onDelete).not.toHaveBeenCalled();
     });
 
+    it("cancels the Enter keydown that runs an item, so it cannot activate what the item focuses", async () => {
+        const onOpenDialog = vi.fn();
+        render(
+            <ActionsMenu
+                items={[
+                    {
+                        icon: null,
+                        key: "open-dialog",
+                        label: "Open dialog",
+                        onClick: onOpenDialog,
+                    },
+                ]}
+                onDelete={vi.fn()}
+            />
+        );
+
+        openMenu();
+        const item = await findMenuItem("Open dialog");
+        await waitFor(() =>
+            expect(
+                item.closest('[role="menu"]')?.contains(document.activeElement)
+            ).toBe(true)
+        );
+
+        expect(fireEvent.keyDown(item, ENTER)).toBe(false);
+        expect(onOpenDialog).toHaveBeenCalledTimes(1);
+    });
+
     it("closes the confirmation on a click outside without deleting", async () => {
         const onDelete = vi.fn();
         render(

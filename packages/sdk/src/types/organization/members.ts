@@ -15,7 +15,11 @@ export type OrganizationMemberDTO = {
     email: string | null;
     displayName: string | null;
     joinedAt: string;
+    /** The profile was archived or no longer exists, so it cannot receive ownership. */
+    archived: boolean;
 };
+
+export type TransferOrganizationOwnershipResponse = { ownerUserId: string };
 
 export type OrganizationInvitationStatus = "pending" | "expired";
 

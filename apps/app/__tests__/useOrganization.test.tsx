@@ -12,6 +12,7 @@ const {
     revokeInvitationMock,
     removeMemberMock,
     leaveMock,
+    transferOwnershipMock,
     successAlertMock,
     warningAlertMock,
     errorAlertMock,
@@ -23,6 +24,7 @@ const {
     revokeInvitationMock: vi.fn(),
     removeMemberMock: vi.fn(),
     leaveMock: vi.fn(),
+    transferOwnershipMock: vi.fn(),
     successAlertMock: vi.fn(),
     warningAlertMock: vi.fn(),
     errorAlertMock: vi.fn(),
@@ -40,6 +42,8 @@ vi.mock("@/shared/lib/client", () => ({
                 revokeInvitationMock(...args),
             removeMember: (...args: unknown[]) => removeMemberMock(...args),
             leave: (...args: unknown[]) => leaveMock(...args),
+            transferOwnership: (...args: unknown[]) =>
+                transferOwnershipMock(...args),
         },
     },
 }));
@@ -86,6 +90,14 @@ const { globalTranslations } = await import(
 const organizationCopy =
     globalTranslations["pt-br"].apps.app.pages.common.organization;
 const INVITEE = "qa-teams-organizations@example.com";
+const TRANSFER_TARGET = {
+    userId: "member-b",
+    role: "member" as const,
+    email: "qa-ownership-transfer@example.com",
+    displayName: "QA Member",
+    joinedAt: "2026-10-02T00:00:00.000Z",
+    archived: false,
+};
 
 let queryClient: QueryClient;
 let panelStore: ReturnType<typeof createPanelStore>;
@@ -123,6 +135,7 @@ beforeEach(() => {
     revokeInvitationMock.mockResolvedValue(undefined);
     removeMemberMock.mockResolvedValue(undefined);
     leaveMock.mockResolvedValue(undefined);
+    transferOwnershipMock.mockResolvedValue({ ownerUserId: "member-b" });
 });
 
 describe("organization queries", () => {
@@ -273,5 +286,53 @@ describe("useOrganizationActions", () => {
         );
         expect(reset).toHaveBeenCalledWith();
         expect(invalidate).not.toHaveBeenCalled();
+    });
+
+    it("refreshes the role before the members and drops the invitations after a transfer", async () => {
+        const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+        const remove = vi.spyOn(queryClient, "removeQueries");
+        const { result } = renderHook(() => useOrganizationActions(), {
+            wrapper,
+        });
+
+        result.current.transferOwnershipMutation.mutate(TRANSFER_TARGET);
+
+        await waitFor(() =>
+            expect(successAlertMock).toHaveBeenCalledWith(
+                organizationCopy.transfer.done.replace(
+                    "{name}",
+                    TRANSFER_TARGET.displayName
+                )
+            )
+        );
+        expect(transferOwnershipMock).toHaveBeenCalledWith("member-b");
+        expect(invalidate.mock.calls.map(([filters]) => filters)).toEqual([
+            { queryKey: queryKeys.organization.detail() },
+            { queryKey: queryKeys.organization.members() },
+        ]);
+        expect(remove).toHaveBeenCalledWith({
+            queryKey: queryKeys.organization.invitations(),
+        });
+        expect(remove.mock.invocationCallOrder[0]).toBeLessThan(
+            invalidate.mock.invocationCallOrder[1] as number
+        );
+    });
+
+    it("shows the translated refusal of a transfer", async () => {
+        transferOwnershipMock.mockRejectedValue({
+            code: "ORGANIZATION_OWNERSHIP_TARGET_ARCHIVED",
+        });
+        const { result } = renderHook(() => useOrganizationActions(), {
+            wrapper,
+        });
+
+        result.current.transferOwnershipMutation.mutate(TRANSFER_TARGET);
+
+        await waitFor(() =>
+            expect(errorAlertMock).toHaveBeenCalledWith(
+                "traduzido: ORGANIZATION_OWNERSHIP_TARGET_ARCHIVED"
+            )
+        );
+        expect(successAlertMock).not.toHaveBeenCalled();
     });
 });

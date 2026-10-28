@@ -14,6 +14,8 @@ const {
     acceptMock,
     findOrganizationMock,
     findMembershipMock,
+    findProfileByIdMock,
+    recordAuditEventMock,
 } = vi.hoisted(() => ({
     envMock: {
         NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED: "true" as string | undefined,
@@ -24,12 +26,14 @@ const {
     acceptMock: vi.fn(),
     findOrganizationMock: vi.fn(),
     findMembershipMock: vi.fn(),
+    findProfileByIdMock: vi.fn(),
+    recordAuditEventMock: vi.fn(),
 }));
 
 vi.mock("@/env", () => ({ env: envMock }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
-    recordAuditEvent: vi.fn(),
+    recordAuditEvent: (...args: unknown[]) => recordAuditEventMock(...args),
     recordImpersonationSession: vi.fn(),
 }));
 
@@ -41,6 +45,7 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
     userRepository: {
         findByReferenceId: (...args: unknown[]) =>
             findByReferenceIdMock(...args),
+        findById: (...args: unknown[]) => findProfileByIdMock(...args),
         touchLastAccess: vi.fn(),
     },
 }));
@@ -150,6 +155,8 @@ beforeEach(() => {
         acceptMock,
         findOrganizationMock,
         findMembershipMock,
+        findProfileByIdMock,
+        recordAuditEventMock,
     ]) {
         mock.mockReset();
     }
@@ -171,6 +178,13 @@ beforeEach(() => {
         ownerUserId: "owner-profile",
     });
     findMembershipMock.mockResolvedValue({ organizationId: ORGANIZATION_ID });
+    findProfileByIdMock.mockImplementation((id: string) =>
+        Promise.resolve({
+            id,
+            reference_id: `${id}-uid`,
+            type: UserType.COMMON,
+        })
+    );
     acceptMock.mockResolvedValue({
         status: "accepted",
         organizationId: ORGANIZATION_ID,
@@ -222,6 +236,16 @@ describe("POST /invitations/preview", () => {
         expect(await codeOf(response)).toBe("ORGANIZATION_INVITATION_INVALID");
     });
 
+    it("answers INVALID when the organization's owner was archived", async () => {
+        findProfileByIdMock.mockResolvedValue(null);
+
+        const response = await PREVIEW(publicRequest({ token: TOKEN }));
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await codeOf(response)).toBe("ORGANIZATION_INVITATION_INVALID");
+        expect(findProfileByIdMock).toHaveBeenCalledWith("owner-profile");
+    });
+
     it.each([{}, { token: "short" }, { token: `${TOKEN}=` }])(
         "refuses %j with VALIDATION_FAILED",
         async (body) => {
@@ -258,6 +282,17 @@ describe("POST /invitations/accept", () => {
                 email: INVITEE,
             })
         );
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock).toHaveBeenCalledWith({
+            action: "organization.invitation.accept",
+            actorUserId: INVITEE_PROFILE.id,
+            actorUid: INVITEE_UID,
+            actorLabel: "QA-Teams-Organizations@Example.com",
+            targetType: "organization",
+            targetUserId: null,
+            targetLabel: null,
+            requestId: null,
+        });
     });
 
     it("answers success again to the same person clicking twice", async () => {
@@ -269,6 +304,7 @@ describe("POST /invitations/accept", () => {
         const response = await ACCEPT(signedInRequest({ token: TOKEN }));
 
         expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -296,6 +332,7 @@ describe("POST /invitations/accept", () => {
 
         expect(response.status).toBe(httpStatus);
         expect(await codeOf(response)).toBe(code);
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it("refuses an admin acting as the invitee: accepting is a write", async () => {

@@ -5,7 +5,7 @@ lens: produto
 panel: [next-forge, makerkit, shipfast, supastarter, saas-ui-pro, vercel-platforms, supabase-stripe-starter, open-saas, nextacular, divjoy]
 reference: [better-auth, clerk, workos]
 collected: 2026-08-21
-amended: 2026-10-16
+amended: 2026-10-27
 revalidate_after: 2027-02-21
 confidence: média
 ---
@@ -345,3 +345,42 @@ tema não foi verificado.
 - <https://pages.nist.gov/800-63-4/sp800-63b.html> — §3.1.3.1
 - <https://clerk.com/docs/users/invitations> · <https://www.better-auth.com/docs/plugins/admin>
 - <https://nextjs.org/docs/app/guides/progressive-web-apps> (atualizada em 2026-07-30): manifest nativo do App Router e HTTPS bastam para instalar
+
+## Adendo de 2026-10-27: administração da organização depois do convite
+
+Pergunta: com organizações, papéis e convites já no core (PR #57), o que os starters e as bibliotecas de referência
+oferecem para o dono passar o controle adiante, e o que registram das ações da equipe? Lido em 2026-10-27.
+
+Painel deste adendo: Makerkit (dois kits), Supastarter, o starter de SaaS da Vercel (`nextjs/saas-starter`) e, como
+referência de biblioteca, o plugin de organização do Better Auth e as organizações do Clerk.
+
+| referência | papéis padrão | troca de papel | transferência explícita da propriedade | outra saída para o dono |
+|------------|---------------|----------------|----------------------------------------|-------------------------|
+| Makerkit (kit Supabase) | não confirmado nesta leitura | sim ("remove or update an existing member") | **sim** ("transfer ownership to another member") | o membro sai sozinho ("leave the team account (if member)"); o dono exclui a equipe |
+| Makerkit (kit Drizzle) | dono e outros | sim ("select a new role") | **sim**, exigida antes de o dono sair ("ownership must first be transferred to another member") | - |
+| Better Auth (plugin) | `owner`, `admin`, `member` | sim (`updateMemberRole`) | não descrita; o texto diz só que o `admin` não pode "changing the owner" | o `admin` gerencia tudo, menos excluir a organização e trocar o dono |
+| Clerk | `org:admin`, `org:member` | sim, pelo painel ou pelo `<OrganizationSwitcher />` | não se aplica: não há papel de dono | vários admins |
+| Vercel `nextjs/saas-starter` | `owner`, `member` | não (só `inviteTeamMember` e `removeTeamMember`) | não | o convite aceita `owner` (`z.enum(['member', 'owner'])`), então a equipe pode ter vários donos |
+| Supastarter | `owner`, `admin`, `member` | não confirmado | não confirmado | - |
+
+**Leitura.** Transferência explícita da propriedade aparece em 1 das 6 referências (Makerkit, nos dois kits). Uma
+saída para o dono que não passe por remover todo mundo aparece em 4 das 6 (Makerkit pela transferência, Better Auth
+pelo `admin`, Clerk por vários admins, Vercel por vários donos); em Supastarter não foi confirmada. Troca de papel
+aparece em 3 (Makerkit, Better Auth, Clerk). O número é pequeno e mistura bibliotecas com starters; vale como sinal de
+que nenhuma referência lida deixa o dono sem saída, não como prevalência.
+
+**Registro das ações da equipe.** O starter da Vercel grava `INVITE_TEAM_MEMBER` e `REMOVE_TEAM_MEMBER` com
+`logActivity` nas duas ações que tem. Nas outras referências o tema não foi verificado.
+
+**Ceticismo.** Não é moda: papel de dono e transferência existem em produtos de equipe há muito mais que dois anos, e a
+nota original já listava "deixar o último owner sair da organização" entre as armadilhas de convites. Não há custo
+herdado: é código e dado no Firestore que o fork já tem, atrás da mesma variável que liga membros e convites.
+
+### Fontes do adendo de 2026-10-27
+
+- <https://makerkit.dev/docs/next-supabase-turbo/installation/functional-walkthrough> (seção da conta de equipe)
+- <https://makerkit.dev/docs/nextjs-drizzle/members-management/viewing-members>
+- <https://www.better-auth.com/docs/plugins/organization>
+- <https://clerk.com/docs/organizations/roles-permissions>
+- <https://raw.githubusercontent.com/nextjs/saas-starter/main/app/(login)/actions.ts> (código)
+- <https://supastarter.dev/docs/nextjs/organizations/use-organizations> · <https://supastarter.dev/docs/nextjs/organizations/configure>
