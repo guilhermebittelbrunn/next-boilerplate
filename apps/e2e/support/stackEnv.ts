@@ -31,6 +31,12 @@ const EMULATOR_BLOCK = {
     NEXT_PUBLIC_FIREBASE_PROJECT_ID: DEMO_PROJECT_ID,
 };
 
+// Members and invitations are opt-in per fork; the suite turns them on in the two apps
+// that read the switch so the team flow can be driven end to end.
+const MEMBERS_BLOCK = {
+    NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED: "true",
+};
+
 const OFFLINE_BLOCK = {
     NEXT_TELEMETRY_DISABLED: "1",
 };
@@ -53,6 +59,9 @@ const FORCED_EMPTY = [
     "ARCJET_KEY",
     "ONBOARDING_ENABLED",
 ];
+
+const featureSwitches = (app: StackApp): Record<string, string> =>
+    app === "web" ? {} : MEMBERS_BLOCK;
 
 const crossAppUrls = (
     app: StackApp,
@@ -125,7 +134,13 @@ export const buildStackEnv = (
     for (const key of FORCED_EMPTY) {
         env[key] = "";
     }
-    Object.assign(env, EMULATOR_BLOCK, OFFLINE_BLOCK, crossAppUrls(app, urls));
+    Object.assign(
+        env,
+        EMULATOR_BLOCK,
+        OFFLINE_BLOCK,
+        featureSwitches(app),
+        crossAppUrls(app, urls)
+    );
 
     assertEmulatorTarget(app, env);
     return env;
