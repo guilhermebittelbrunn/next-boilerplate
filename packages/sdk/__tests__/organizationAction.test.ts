@@ -61,4 +61,18 @@ describe("OrganizationActions", () => {
             data: body,
         });
     });
+
+    it("posts the ownership transfer to the encoded member and answers its data", async () => {
+        requestMock.mockResolvedValue({
+            data: { data: { ownerUserId: "a/b" } },
+        });
+
+        const result = await actions.transferOwnership("a/b");
+
+        expect(result).toEqual({ ownerUserId: "a/b" });
+        expect(requestMock).toHaveBeenCalledWith({
+            url: "/organization/members/a%2Fb/ownership",
+            method: "POST",
+        });
+    });
 });

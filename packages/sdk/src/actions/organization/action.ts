@@ -8,6 +8,7 @@ import type {
     OrganizationInvitationDTO,
     OrganizationInvitationPreviewDTO,
     OrganizationMemberDTO,
+    TransferOrganizationOwnershipResponse,
 } from "../../types";
 
 export default class OrganizationActions {
@@ -41,6 +42,19 @@ export default class OrganizationActions {
             url: `/organization/members/${encodeURIComponent(userId)}`,
             method: "DELETE",
         });
+    }
+
+    async transferOwnership(
+        userId: string
+    ): Promise<TransferOrganizationOwnershipResponse> {
+        const { data } = await this.client.request<
+            Response<TransferOrganizationOwnershipResponse>
+        >({
+            url: `/organization/members/${encodeURIComponent(userId)}/ownership`,
+            method: "POST",
+        });
+
+        return data.data;
     }
 
     async leave(): Promise<void> {

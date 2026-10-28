@@ -13,12 +13,18 @@ export enum AuditAction {
     ACCOUNT_PASSWORD_SET = "account.password.set",
     ACCOUNT_SIGN_IN_METHOD_LINK = "account.signInMethod.link",
     ACCOUNT_SIGN_IN_METHOD_UNLINK = "account.signInMethod.unlink",
+    ORGANIZATION_OWNERSHIP_TRANSFER = "organization.ownership.transfer",
+    ORGANIZATION_INVITATION_SEND = "organization.invitation.send",
+    ORGANIZATION_INVITATION_ACCEPT = "organization.invitation.accept",
+    ORGANIZATION_MEMBER_REMOVE = "organization.member.remove",
+    ORGANIZATION_MEMBER_LEAVE = "organization.member.leave",
 }
 
 export enum AuditTargetType {
     USER = "user",
     ACCOUNT = "account",
     SESSION = "session",
+    ORGANIZATION = "organization",
 }
 
 export type AuditEventDTO = {
