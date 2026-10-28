@@ -100,22 +100,27 @@ export async function ensureOrganizationMembershipQuietly(
 }
 
 /**
- * There is no transfer of ownership, so an owner who still has members would leave them
- * in an organization nobody can manage. A member whose profile was archived, or no longer
- * exists, is not stranded: that account is disabled and does not come back on its own.
+ * Looks at every organization the profile owns, its home and any handed to it: an owner
+ * with live members in one of them would leave those people with nobody to manage them
+ * until ownership is passed on. A member whose profile was archived, or no longer exists,
+ * is not stranded: that account is disabled and does not come back on its own.
  */
 export async function ownsOrganizationWithMembers(
     profileId: string
 ): Promise<boolean> {
-    const home = await organizationRepository.findOwnedBy(profileId);
-    if (!home) {
+    const owned = await organizationRepository.listOwnedBy(profileId);
+    if (owned.length === 0) {
         return false;
     }
 
-    const members = await organizationMemberRepository.listByOrganization(
-        home.id
+    const memberships = await Promise.all(
+        owned.map((organization) =>
+            organizationMemberRepository.listByOrganization(organization.id)
+        )
     );
-    const others = members.filter((member) => member.userId !== profileId);
+    const others = memberships
+        .flat()
+        .filter((member) => member.userId !== profileId);
     if (others.length === 0) {
         return false;
     }

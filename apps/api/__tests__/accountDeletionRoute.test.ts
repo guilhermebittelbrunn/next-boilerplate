@@ -159,7 +159,7 @@ describe("POST /account/deletion", () => {
         );
     });
 
-    /** Ownership cannot be handed over, so members would be left in an orphan organization. */
+    /** Members would be left in an organization nobody manages until ownership is handed over. */
     it("recusa o dono que ainda tem membros antes de conferir a senha", async () => {
         ownsOrganizationWithMembersMock.mockResolvedValue(true);
 

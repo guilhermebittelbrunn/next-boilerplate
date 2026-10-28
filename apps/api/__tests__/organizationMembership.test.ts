@@ -7,6 +7,7 @@ const {
     clearLegacyClaimMock,
     listByOrganizationMock,
     findOwnedByMock,
+    listOwnedByMock,
     claimUnscopedMock,
     logEventMock,
     findProfileByIdMock,
@@ -16,6 +17,7 @@ const {
     clearLegacyClaimMock: vi.fn(),
     listByOrganizationMock: vi.fn(),
     findOwnedByMock: vi.fn(),
+    listOwnedByMock: vi.fn(),
     claimUnscopedMock: vi.fn(),
     logEventMock: vi.fn(),
     findProfileByIdMock: vi.fn(),
@@ -35,6 +37,7 @@ vi.mock("@/(shared)/repositories/organization-member.repository", () => ({
 vi.mock("@/(shared)/repositories/organization.repository", () => ({
     organizationRepository: {
         findOwnedBy: (...args: unknown[]) => findOwnedByMock(...args),
+        listOwnedBy: (...args: unknown[]) => listOwnedByMock(...args),
     },
 }));
 
@@ -85,6 +88,7 @@ beforeEach(() => {
         clearLegacyClaimMock,
         listByOrganizationMock,
         findOwnedByMock,
+        listOwnedByMock,
         claimUnscopedMock,
         logEventMock,
         findProfileByIdMock,
@@ -100,6 +104,7 @@ beforeEach(() => {
     );
     findByUserIdMock.mockResolvedValue(null);
     findOwnedByMock.mockResolvedValue(null);
+    listOwnedByMock.mockResolvedValue([]);
     createOwnerMembershipMock.mockImplementation(
         (input: { organizationId: string | null }) =>
             Promise.resolve(
@@ -253,15 +258,14 @@ describe("ensureOrganizationMembershipQuietly", () => {
 });
 
 describe("ownsOrganizationWithMembers", () => {
-    it("is false without a home organization", async () => {
+    it("is false for a profile that owns no organization", async () => {
         expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(false);
     });
 
     it("is false for an owner alone in the organization", async () => {
-        findOwnedByMock.mockResolvedValue({
-            id: "org-home",
-            ownerUserId: PROFILE_ID,
-        });
+        listOwnedByMock.mockResolvedValue([
+            { id: "org-home", ownerUserId: PROFILE_ID },
+        ]);
         listByOrganizationMock.mockResolvedValue([membership()]);
 
         expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(false);
@@ -269,10 +273,9 @@ describe("ownsOrganizationWithMembers", () => {
     });
 
     it("is true when anyone else belongs to the home organization", async () => {
-        findOwnedByMock.mockResolvedValue({
-            id: "org-home",
-            ownerUserId: PROFILE_ID,
-        });
+        listOwnedByMock.mockResolvedValue([
+            { id: "org-home", ownerUserId: PROFILE_ID },
+        ]);
         listByOrganizationMock.mockResolvedValue([
             membership(),
             membership({
@@ -289,10 +292,9 @@ describe("ownsOrganizationWithMembers", () => {
     });
 
     it("is false when the only other member's profile was archived", async () => {
-        findOwnedByMock.mockResolvedValue({
-            id: "org-home",
-            ownerUserId: PROFILE_ID,
-        });
+        listOwnedByMock.mockResolvedValue([
+            { id: "org-home", ownerUserId: PROFILE_ID },
+        ]);
         listByOrganizationMock.mockResolvedValue([
             membership(),
             membership({
@@ -308,10 +310,9 @@ describe("ownsOrganizationWithMembers", () => {
     });
 
     it("is true when a live member sits next to an archived one", async () => {
-        findOwnedByMock.mockResolvedValue({
-            id: "org-home",
-            ownerUserId: PROFILE_ID,
-        });
+        listOwnedByMock.mockResolvedValue([
+            { id: "org-home", ownerUserId: PROFILE_ID },
+        ]);
         listByOrganizationMock.mockResolvedValue([
             membership(),
             membership({
@@ -337,10 +338,9 @@ describe("ownsOrganizationWithMembers", () => {
     });
 
     it("surfaces a failure to read a member's profile", async () => {
-        findOwnedByMock.mockResolvedValue({
-            id: "org-home",
-            ownerUserId: PROFILE_ID,
-        });
+        listOwnedByMock.mockResolvedValue([
+            { id: "org-home", ownerUserId: PROFILE_ID },
+        ]);
         listByOrganizationMock.mockResolvedValue([
             membership(),
             membership({
@@ -355,5 +355,43 @@ describe("ownsOrganizationWithMembers", () => {
         await expect(ownsOrganizationWithMembers(PROFILE_ID)).rejects.toBe(
             unavailable
         );
+    });
+
+    it("is true when the live member sits in a second organization the profile was handed", async () => {
+        listOwnedByMock.mockResolvedValue([
+            { id: "org-home", ownerUserId: PROFILE_ID },
+            { id: "org-handed", ownerUserId: PROFILE_ID },
+        ]);
+        listByOrganizationMock.mockImplementation((organizationId: string) =>
+            Promise.resolve(
+                organizationId === "org-handed"
+                    ? [
+                          membership({ organizationId: "org-handed" }),
+                          membership({
+                              id: "profile-2",
+                              userId: "profile-2",
+                              organizationId: "org-handed",
+                              role: "member",
+                          }),
+                      ]
+                    : []
+            )
+        );
+
+        expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(true);
+        expect(listByOrganizationMock).toHaveBeenCalledWith("org-home");
+        expect(listByOrganizationMock).toHaveBeenCalledWith("org-handed");
+        expect(findProfileByIdMock).toHaveBeenCalledWith("profile-2");
+    });
+
+    it("is false when neither owned organization has anyone else", async () => {
+        listOwnedByMock.mockResolvedValue([
+            { id: "org-home", ownerUserId: PROFILE_ID },
+            { id: "org-handed", ownerUserId: PROFILE_ID },
+        ]);
+        listByOrganizationMock.mockResolvedValue([membership()]);
+
+        expect(await ownsOrganizationWithMembers(PROFILE_ID)).toBe(false);
+        expect(findProfileByIdMock).not.toHaveBeenCalled();
     });
 });

@@ -10,7 +10,7 @@ const {
     findByReferenceIdMock,
     findByIdMock,
     deleteMock,
-    findOwnedByMock,
+    listOwnedByMock,
     listByOrganizationMock,
     signInWithPasswordMock,
     runAccountErasureMock,
@@ -24,7 +24,7 @@ const {
     findByReferenceIdMock: vi.fn(),
     findByIdMock: vi.fn(),
     deleteMock: vi.fn(),
-    findOwnedByMock: vi.fn(),
+    listOwnedByMock: vi.fn(),
     listByOrganizationMock: vi.fn(),
     signInWithPasswordMock: vi.fn(),
     runAccountErasureMock: vi.fn(),
@@ -44,7 +44,7 @@ class FakeIdentityToolkitError extends Error {
 
 vi.mock("@/(shared)/repositories/organization.repository", () => ({
     organizationRepository: {
-        findOwnedBy: (...args: unknown[]) => findOwnedByMock(...args),
+        listOwnedBy: (...args: unknown[]) => listOwnedByMock(...args),
     },
 }));
 
@@ -182,10 +182,9 @@ function membership(userId: string, role: "owner" | "member") {
 }
 
 function homeOrganizationWith(...memberIds: string[]) {
-    findOwnedByMock.mockResolvedValue({
-        id: "org-home",
-        ownerUserId: OWNER_PROFILE_ID,
-    });
+    listOwnedByMock.mockResolvedValue([
+        { id: "org-home", ownerUserId: OWNER_PROFILE_ID },
+    ]);
     listByOrganizationMock.mockResolvedValue([
         membership(OWNER_PROFILE_ID, "owner"),
         ...memberIds.map((id) => membership(id, "member")),
@@ -246,7 +245,7 @@ beforeEach(() => {
         findByReferenceIdMock,
         findByIdMock,
         deleteMock,
-        findOwnedByMock,
+        listOwnedByMock,
         listByOrganizationMock,
         signInWithPasswordMock,
         runAccountErasureMock,
