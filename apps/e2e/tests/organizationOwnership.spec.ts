@@ -40,12 +40,25 @@ async function signUpAndOnboard(page: Page, email: string) {
         .click();
 
     await expect(page).toHaveURL(`${APP_URL}/${LOCALE}/onboarding`);
-    await page
-        .getByLabel(onboardingCopy.steps.profile.displayName)
-        .fill(INVITEE_NAME);
-    await page
-        .getByRole("button", { name: onboardingCopy.actions.next })
-        .click();
+    const preferencesStep = page.getByText(
+        onboardingCopy.progress
+            .replace("{current}", "2")
+            .replace("{total}", "2")
+    );
+    // A fill that lands before the form hydrates is wiped, and "next" then
+    // submits an empty name; repeat the step until the second one shows.
+    await expect(async () => {
+        if (await preferencesStep.isVisible()) {
+            return;
+        }
+        await page
+            .getByLabel(onboardingCopy.steps.profile.displayName)
+            .fill(INVITEE_NAME, { timeout: 2000 });
+        await page
+            .getByRole("button", { name: onboardingCopy.actions.next })
+            .click({ timeout: 2000 });
+        await expect(preferencesStep).toBeVisible({ timeout: 3000 });
+    }).toPass();
     await page
         .getByRole("button", { name: onboardingCopy.actions.skip })
         .click();
@@ -150,6 +163,15 @@ test("a member joins by invitation, receives ownership and the previous owner le
         await expect(
             inviteePage.getByText(organizationCopy.invite.title)
         ).toBeVisible();
+        // While a table refetches, its refresh button is disabled at half opacity
+        // and fades back in; axe would measure that transient contrast.
+        const refreshButtons = inviteePage.getByRole("button", {
+            name: ptBr.components.table.refresh,
+        });
+        await expect(refreshButtons).toHaveCount(2);
+        for (const refreshButton of await refreshButtons.all()) {
+            await expect(refreshButton).toHaveCSS("opacity", "1");
+        }
         await expectAccessible(inviteePage, testInfo, {
             route: organizationPath,
         });
