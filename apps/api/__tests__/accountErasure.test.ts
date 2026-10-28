@@ -6,7 +6,7 @@ const {
     deleteObjectsByPrefixMock,
     purgeEntitiesByOrganizationMock,
     purgeUnscopedEntitiesMock,
-    findOwnedByMock,
+    listOwnedByMock,
     purgeOrganizationMock,
     findMembershipMock,
     removeMembershipMock,
@@ -27,7 +27,7 @@ const {
     deleteObjectsByPrefixMock: vi.fn(),
     purgeEntitiesByOrganizationMock: vi.fn(),
     purgeUnscopedEntitiesMock: vi.fn(),
-    findOwnedByMock: vi.fn(),
+    listOwnedByMock: vi.fn(),
     purgeOrganizationMock: vi.fn(),
     findMembershipMock: vi.fn(),
     removeMembershipMock: vi.fn(),
@@ -74,7 +74,7 @@ vi.mock("@/(shared)/repositories/entity.repository", () => ({
 
 vi.mock("@/(shared)/repositories/organization.repository", () => ({
     organizationRepository: {
-        findOwnedBy: (...args: unknown[]) => findOwnedByMock(...args),
+        listOwnedBy: (...args: unknown[]) => listOwnedByMock(...args),
         purgeById: (...args: unknown[]) => {
             calls.push("organization");
             return purgeOrganizationMock(...args);
@@ -218,6 +218,9 @@ const PURGED_MEMBERSHIPS = 1;
 const PURGED_INVITATIONS = 2;
 const PURGED_INVITATIONS_TO_SUBJECT = 1;
 const HOME = { id: "org-home", ownerUserId: "profile-1" };
+const HANDED = { id: "org-handed", ownerUserId: "profile-1" };
+/** The personal prefix plus one per owned organization. */
+const PREFIXES_OF_TWO_ORGANIZATIONS = 3;
 const ANONYMIZED_EVENTS = 3;
 const PURGED_OBJECTS = 4;
 const PURGED_SESSIONS = 5;
@@ -237,7 +240,7 @@ beforeEach(() => {
         deleteObjectsByPrefixMock,
         purgeEntitiesByOrganizationMock,
         purgeUnscopedEntitiesMock,
-        findOwnedByMock,
+        listOwnedByMock,
         purgeOrganizationMock,
         findMembershipMock,
         removeMembershipMock,
@@ -268,7 +271,7 @@ beforeEach(() => {
     isStorageConfiguredMock.mockReturnValue(false);
     purgeEntitiesByOrganizationMock.mockResolvedValue(PURGED_ENTITIES);
     purgeUnscopedEntitiesMock.mockResolvedValue(PURGED_UNSCOPED_ENTITIES);
-    findOwnedByMock.mockResolvedValue(HOME);
+    listOwnedByMock.mockResolvedValue([HOME]);
     findMembershipMock.mockResolvedValue({
         organizationId: HOME.id,
         role: "owner",
@@ -279,7 +282,7 @@ beforeEach(() => {
         PURGED_INVITATIONS_TO_SUBJECT
     );
     purgeOrganizationMock.mockResolvedValue(undefined);
-    removeMembershipMock.mockResolvedValue(true);
+    removeMembershipMock.mockResolvedValue("removed");
     anonymizeUserLabelsMock.mockResolvedValue(ANONYMIZED_EVENTS);
     purgeSessionsMock.mockResolvedValue(PURGED_SESSIONS);
     purgeNotificationsMock.mockResolvedValue(PURGED_NOTIFICATIONS);
@@ -460,7 +463,7 @@ describe("runAccountErasure", () => {
     });
 
     it("sem organização de casa, apaga só o que não foi carimbado", async () => {
-        findOwnedByMock.mockResolvedValue(null);
+        listOwnedByMock.mockResolvedValue([]);
         findMembershipMock.mockResolvedValue(null);
 
         const report = await runAccountErasure({ ...INPUT, email: null });
@@ -475,8 +478,94 @@ describe("runAccountErasure", () => {
         });
     });
 
+    it("de quem é dono de duas organizações, leva as duas inteiras", async () => {
+        listOwnedByMock.mockResolvedValue([HOME, HANDED]);
+        findMembershipMock.mockResolvedValue({
+            organizationId: HANDED.id,
+            role: "owner",
+        });
+        isStorageConfiguredMock.mockReturnValue(true);
+        deleteObjectsByPrefixMock.mockResolvedValue(PURGED_OBJECTS);
+
+        const report = await runAccountErasure(INPUT);
+
+        for (const organization of [HOME, HANDED]) {
+            expect(purgeEntitiesByOrganizationMock).toHaveBeenCalledWith(
+                organization.id
+            );
+            expect(purgeMembershipsMock).toHaveBeenCalledWith(organization.id);
+            expect(purgeInvitationsByOrganizationMock).toHaveBeenCalledWith(
+                organization.id
+            );
+            expect(purgeOrganizationMock).toHaveBeenCalledWith(organization.id);
+            expect(deleteObjectsByPrefixMock).toHaveBeenCalledWith(
+                `uploads/org-${organization.id}/`
+            );
+        }
+        expect(removeMembershipMock).not.toHaveBeenCalled();
+        expect(statusOf(report, "storage")).toEqual({
+            step: "storage",
+            status: "done",
+            count: PURGED_OBJECTS * PREFIXES_OF_TWO_ORGANIZATIONS,
+        });
+        expect(statusOf(report, "entities")).toEqual({
+            step: "entities",
+            status: "done",
+            count: PURGED_ENTITIES * 2 + PURGED_UNSCOPED_ENTITIES,
+        });
+        expect(statusOf(report, "organization")).toEqual({
+            step: "organization",
+            status: "done",
+            count:
+                PURGED_INVITATIONS_TO_SUBJECT +
+                (PURGED_MEMBERSHIPS + PURGED_INVITATIONS + 1) * 2,
+        });
+    });
+
+    /** Whoever handed their team over owns nothing: only their own membership goes. */
+    it("de um antigo dono que não é dono de nada, tira só o vínculo e deixa a equipe intacta", async () => {
+        listOwnedByMock.mockResolvedValue([]);
+        findMembershipMock.mockResolvedValue({
+            organizationId: "org-team",
+            role: "member",
+        });
+
+        const report = await runAccountErasure(INPUT);
+
+        expect(removeMembershipMock).toHaveBeenCalledWith(
+            "profile-1",
+            "org-team"
+        );
+        expect(purgeEntitiesByOrganizationMock).not.toHaveBeenCalled();
+        expect(purgeMembershipsMock).not.toHaveBeenCalled();
+        expect(purgeInvitationsByOrganizationMock).not.toHaveBeenCalled();
+        expect(purgeOrganizationMock).not.toHaveBeenCalled();
+        expect(statusOf(report, "organization")).toEqual({
+            step: "organization",
+            status: "done",
+            count: PURGED_INVITATIONS_TO_SUBJECT + 1,
+        });
+    });
+
+    it("não conta o vínculo quando ele já tinha saído ou virado dono no meio", async () => {
+        listOwnedByMock.mockResolvedValue([]);
+        findMembershipMock.mockResolvedValue({
+            organizationId: "org-team",
+            role: "member",
+        });
+        removeMembershipMock.mockResolvedValue("owner");
+
+        const report = await runAccountErasure(INPUT);
+
+        expect(statusOf(report, "organization")).toEqual({
+            step: "organization",
+            status: "done",
+            count: PURGED_INVITATIONS_TO_SUBJECT,
+        });
+    });
+
     it("segue apagando o que é da pessoa quando a organização de casa não pode ser lida", async () => {
-        findOwnedByMock.mockRejectedValue(new TypeError("firestore down"));
+        listOwnedByMock.mockRejectedValue(new TypeError("firestore down"));
 
         const report = await runAccountErasure(INPUT);
 

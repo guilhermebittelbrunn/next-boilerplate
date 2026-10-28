@@ -25,7 +25,11 @@ const { HOME_ORGANIZATION_ID } = vi.hoisted(() => ({
 
 vi.mock("@/(shared)/repositories/organization.repository", () => ({
     organizationRepository: {
-        findOwnedBy: vi.fn().mockResolvedValue({ id: HOME_ORGANIZATION_ID }),
+        listOwnedBy: vi
+            .fn()
+            .mockResolvedValue([
+                { id: HOME_ORGANIZATION_ID, ownerUserId: "profile" },
+            ]),
         purgeById: vi.fn().mockResolvedValue(undefined),
     },
 }));
@@ -33,7 +37,7 @@ vi.mock("@/(shared)/repositories/organization.repository", () => ({
 vi.mock("@/(shared)/repositories/organization-member.repository", () => ({
     organizationMemberRepository: {
         findByUserId: vi.fn().mockResolvedValue(null),
-        remove: vi.fn().mockResolvedValue(true),
+        remove: vi.fn().mockResolvedValue("removed"),
         purgeByOrganization: vi.fn().mockResolvedValue(0),
     },
 }));
