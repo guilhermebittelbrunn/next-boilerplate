@@ -1,4 +1,4 @@
-import type { Query } from "firebase-admin/firestore";
+import type { DocumentSnapshot, Query } from "firebase-admin/firestore";
 import db from "../infra/database";
 import { isAlreadyExistsError } from "../infra/firestore-errors";
 import {
@@ -8,11 +8,41 @@ import {
 import { BaseRepository } from "./base.repository";
 import { organizationRepository } from "./organization.repository";
 
+/**
+ * A transaction reads through document references, not through the other repositories,
+ * so the ownership transfer names the collections it has to check on its own.
+ */
+const ORGANIZATION_COLLECTION = "organization";
+const USER_COLLECTION = "user";
+
 export type OwnerMembershipInput = {
     userId: string;
     /** The home organization to rejoin, or `null` to create one in the same batch. */
     organizationId: string | null;
 };
+
+export type RemoveMembershipOutcome = "removed" | "not-member" | "owner";
+
+export type TransferOwnershipInput = {
+    organizationId: string;
+    fromUserId: string;
+    toUserId: string;
+    now: Date;
+};
+
+export type TransferOwnershipOutcome =
+    | { status: "transferred"; targetReferenceId: string | null }
+    | { status: "forbidden" }
+    | { status: "not-member" }
+    | { status: "target-archived" };
+
+function isLive(snapshot: DocumentSnapshot): boolean {
+    return snapshot.exists && snapshot.get("deletedAt") == null;
+}
+
+function stringOrNull(value: unknown): string | null {
+    return typeof value === "string" && value.length > 0 ? value : null;
+}
 
 class OrganizationMemberRepository extends BaseRepository<OrganizationMemberRecord> {
     constructor() {
@@ -106,19 +136,93 @@ class OrganizationMemberRepository extends BaseRepository<OrganizationMemberReco
      * Removed for good rather than soft-deleted: the resolver recreates the membership with
      * `create()`, which a document left in place would refuse forever. Read and deleted in
      * one transaction, so a person who moved to another organization since the caller
-     * looked is not taken out of that one. `false` when the membership was elsewhere.
+     * looked is not taken out of that one, and a person who became the owner since then
+     * is not removed: the organization would be left with nobody to manage it.
      */
-    remove(profileId: string, organizationId: string): Promise<boolean> {
+    remove(
+        profileId: string,
+        organizationId: string
+    ): Promise<RemoveMembershipOutcome> {
         const ref = this.db.collection(this.table).doc(profileId);
 
         return this.db.runTransaction(async (tx) => {
             const current = await tx.get(ref);
             if (current.get("organizationId") !== organizationId) {
-                return false;
+                return "not-member";
+            }
+            if (current.get("role") === "owner") {
+                return "owner";
             }
             tx.delete(ref);
-            return true;
+            return "removed";
         });
+    }
+
+    /**
+     * Swaps the owner of the organization and both roles in one transaction, with every
+     * document read before the first write. Two transfers racing from the same owner end
+     * with one owner: the second rereads the first one's writes and is no longer allowed.
+     * Refusals come in order of authority, then target, so whoever stopped being the owner
+     * learns nothing about the person they named.
+     */
+    transferOwnership(
+        input: TransferOwnershipInput
+    ): Promise<TransferOwnershipOutcome> {
+        const organizationRef = this.db
+            .collection(ORGANIZATION_COLLECTION)
+            .doc(input.organizationId);
+        const fromRef = this.db.collection(this.table).doc(input.fromUserId);
+        const toRef = this.db.collection(this.table).doc(input.toUserId);
+        const targetProfileRef = this.db
+            .collection(USER_COLLECTION)
+            .doc(input.toUserId);
+
+        return this.db.runTransaction(
+            async (tx): Promise<TransferOwnershipOutcome> => {
+                const [organization, from, to, targetProfile] = await tx.getAll(
+                    organizationRef,
+                    fromRef,
+                    toRef,
+                    targetProfileRef
+                );
+
+                const stillOwner =
+                    isLive(organization) &&
+                    organization.get("ownerUserId") === input.fromUserId &&
+                    isLive(from) &&
+                    from.get("organizationId") === input.organizationId &&
+                    from.get("role") === "owner";
+                if (!stillOwner) {
+                    return { status: "forbidden" };
+                }
+
+                if (
+                    !(
+                        isLive(to) &&
+                        to.get("organizationId") === input.organizationId
+                    )
+                ) {
+                    return { status: "not-member" };
+                }
+                if (!isLive(targetProfile)) {
+                    return { status: "target-archived" };
+                }
+
+                tx.update(organizationRef, {
+                    ownerUserId: input.toUserId,
+                    updatedAt: input.now,
+                });
+                tx.update(fromRef, { role: "member", updatedAt: input.now });
+                tx.update(toRef, { role: "owner", updatedAt: input.now });
+
+                return {
+                    status: "transferred",
+                    targetReferenceId: stringOrNull(
+                        targetProfile.get("reference_id")
+                    ),
+                };
+            }
+        );
     }
 
     purgeByOrganization(organizationId: string): Promise<number> {

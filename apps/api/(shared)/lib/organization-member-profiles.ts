@@ -52,7 +52,7 @@ export async function describeOrganizationMembers(
     const authByUid = await authUsersByUid([...uidByProfile.values()]);
 
     return memberships
-        .map((membership): OrganizationMemberDTO => {
+        .map((membership, index): OrganizationMemberDTO => {
             const uid = uidByProfile.get(membership.userId);
             const auth = uid ? authByUid.get(uid) : undefined;
             return {
@@ -61,6 +61,7 @@ export async function describeOrganizationMembers(
                 email: auth?.email ?? null,
                 displayName: auth?.displayName ?? null,
                 joinedAt: membership.joinedAt,
+                archived: profiles[index] === null,
             };
         })
         .sort((a, b) => {

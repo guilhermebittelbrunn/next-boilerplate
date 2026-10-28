@@ -243,7 +243,7 @@ describe("membership removal against the Firestore emulator", () => {
                 memberId,
                 `emu-org-elsewhere-${RUN_ID}`
             )
-        ).toBe(false);
+        ).toBe("not-member");
         expect(
             (
                 await db().collection("organizationMember").doc(memberId).get()
@@ -255,7 +255,7 @@ describe("membership removal against the Firestore emulator", () => {
                 memberId,
                 owner.organizationId
             )
-        ).toBe(true);
+        ).toBe("removed");
         expect(
             (await db().collection("organizationMember").doc(memberId).get())
                 .exists

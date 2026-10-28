@@ -16,6 +16,8 @@ const {
     removeMock,
     findOrganizationMock,
     getUsersMock,
+    getUserMock,
+    recordAuditEventMock,
 } = vi.hoisted(() => ({
     envMock: {
         NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED: " TRUE " as
@@ -31,13 +33,15 @@ const {
     removeMock: vi.fn(),
     findOrganizationMock: vi.fn(),
     getUsersMock: vi.fn(),
+    getUserMock: vi.fn(),
+    recordAuditEventMock: vi.fn(),
 }));
 
 vi.mock("@/env", () => ({ env: envMock }));
 vi.mock("@/(shared)/lib/billing", () => ({ isBillingEnabled: () => false }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
-    recordAuditEvent: vi.fn(),
+    recordAuditEvent: (...args: unknown[]) => recordAuditEventMock(...args),
     recordImpersonationSession: vi.fn(),
 }));
 
@@ -62,6 +66,7 @@ vi.mock("@/(shared)/lib/organization-membership", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({
         getUsers: (...args: unknown[]) => getUsersMock(...args),
+        getUser: (...args: unknown[]) => getUserMock(...args),
     }),
 }));
 
@@ -157,6 +162,8 @@ beforeEach(() => {
         removeMock,
         findOrganizationMock,
         getUsersMock,
+        getUserMock,
+        recordAuditEventMock,
     ]) {
         mock.mockReset();
     }
@@ -164,7 +171,17 @@ beforeEach(() => {
     resolveApiActorMock.mockResolvedValue({ uid: CALLER_UID });
     findByReferenceIdMock.mockResolvedValue(CALLER_PROFILE);
     asRole("member");
-    removeMock.mockResolvedValue(true);
+    removeMock.mockResolvedValue("removed");
+    findProfileByIdMock.mockImplementation((id: string) =>
+        Promise.resolve({
+            id,
+            reference_id: `${id}-uid`,
+            type: UserType.COMMON,
+        })
+    );
+    getUserMock.mockImplementation((uid: string) =>
+        Promise.resolve({ uid, email: `${uid}@example.com` })
+    );
 });
 
 describe("GET /organization", () => {
@@ -226,10 +243,16 @@ describe("GET /organization/members", () => {
             "archived",
             "member-b",
         ]);
-        expect(data[1]).toMatchObject({ email: null, displayName: null });
+        expect(data[0]).toMatchObject({ archived: false });
+        expect(data[1]).toMatchObject({
+            email: null,
+            displayName: null,
+            archived: true,
+        });
         expect(data[2]).toMatchObject({
             email: "qa-teams-organizations@example.com",
             displayName: null,
+            archived: false,
         });
     });
 });
@@ -252,6 +275,57 @@ describe("DELETE /organization/members/:id", () => {
             ORGANIZATION_ID
         );
         expect(removeMock).toHaveBeenCalledWith("member-b", ORGANIZATION_ID);
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock).toHaveBeenCalledWith({
+            action: "organization.member.remove",
+            actorUserId: CALLER_PROFILE.id,
+            actorUid: CALLER_UID,
+            actorLabel: null,
+            targetType: "user",
+            targetUserId: "member-b",
+            targetLabel: "member-b-uid@example.com",
+            requestId: null,
+        });
+    });
+
+    it("records the removal of an archived member without a label", async () => {
+        asRole("owner");
+        findInOrganizationMock.mockResolvedValue(
+            membership("archived", "member", "2026-10-03T00:00:00.000Z")
+        );
+        findProfileByIdMock.mockResolvedValue(null);
+
+        const response = await REMOVE_MEMBER(
+            request("DELETE"),
+            contextFor("archived")
+        );
+
+        expect(response.status).toBe(STATUS_NO_CONTENT);
+        expect(getUserMock).not.toHaveBeenCalled();
+        expect(recordAuditEventMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                action: "organization.member.remove",
+                targetUserId: "archived",
+                targetLabel: null,
+            })
+        );
+    });
+
+    it("answers 409 when the member became the owner before the removal ran", async () => {
+        asRole("owner");
+        findInOrganizationMock.mockResolvedValue(
+            membership("member-b", "member", "2026-10-03T00:00:00.000Z")
+        );
+        removeMock.mockResolvedValue("owner");
+
+        const response = await REMOVE_MEMBER(
+            request("DELETE"),
+            contextFor("member-b")
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.CONFLICT);
+        expect(await codeOf(response)).toBe("ORGANIZATION_OWNER_CANNOT_LEAVE");
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it("refuses a member with 403", async () => {
@@ -299,7 +373,7 @@ describe("DELETE /organization/members/:id", () => {
         findInOrganizationMock.mockResolvedValue(
             membership("member-b", "member", "2026-10-03T00:00:00.000Z")
         );
-        removeMock.mockResolvedValue(false);
+        removeMock.mockResolvedValue("not-member");
 
         const response = await REMOVE_MEMBER(
             request("DELETE"),
@@ -309,6 +383,7 @@ describe("DELETE /organization/members/:id", () => {
         expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
         expect(await codeOf(response)).toBe("ORGANIZATION_MEMBER_NOT_FOUND");
         expect(removeMock).toHaveBeenCalledWith("member-b", ORGANIZATION_ID);
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 });
 
@@ -325,6 +400,38 @@ describe("POST /organization/leave", () => {
         expect(removeMock.mock.invocationCallOrder[0]).toBeLessThan(
             resolveMembershipMock.mock.invocationCallOrder[1] as number
         );
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock).toHaveBeenCalledWith({
+            action: "organization.member.leave",
+            actorUserId: CALLER_PROFILE.id,
+            actorUid: CALLER_UID,
+            actorLabel: null,
+            targetType: "organization",
+            targetUserId: null,
+            targetLabel: null,
+            requestId: null,
+        });
+    });
+
+    it("answers 409 when the member became the owner before the exit ran", async () => {
+        removeMock.mockResolvedValue("owner");
+
+        const response = await LEAVE(request("POST", "/organization/leave"));
+
+        expect(response.status).toBe(HTTP_STATUS.CONFLICT);
+        expect(await codeOf(response)).toBe("ORGANIZATION_OWNER_CANNOT_LEAVE");
+        expect(resolveMembershipMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
+    });
+
+    it("records nothing when the membership had already moved elsewhere", async () => {
+        removeMock.mockResolvedValue("not-member");
+
+        const response = await LEAVE(request("POST", "/organization/leave"));
+
+        expect(response.status).toBe(STATUS_NO_CONTENT);
+        expect(resolveMembershipMock).toHaveBeenCalledTimes(2);
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it("refuses the owner", async () => {
