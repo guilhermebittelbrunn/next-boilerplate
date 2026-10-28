@@ -747,8 +747,10 @@ Para separar as pessoas, remova os membros antes de desligar.
 
 **Para conferir depois de ligar**, num ambiente com Resend: entre como dono, abra "Equipe", convide um endereço
 seu, abra o link recebido deslogado, crie a conta com esse endereço e aceite. A equipe passa a listar duas
-pessoas, e um registro criado por uma aparece para a outra. ⛔ Esse ciclo com e-mail real ainda não rodou em
-nenhum ambiente: a validação feita até aqui usou o emulador, sem caixa de entrada.
+pessoas, e um registro criado por uma aparece para a outra. Depois, no menu da linha do membro, escolha "Tornar
+dono" e confirme: a linha dele passa a "Dono", a sua a "Membro", e o botão "Sair da equipe" aparece para você.
+⛔ Esse ciclo com e-mail real ainda não rodou em nenhum ambiente: a validação feita até aqui usou o emulador, sem
+caixa de entrada.
 
 ---
 
@@ -943,8 +945,9 @@ infra do fork:
 **O que fica com a organização.** Os registros que o titular criou como membro da organização de outra pessoa
 ficam lá, com as fotos: são dados daquela organização, e o `userId` deles passa a apontar para um perfil que não
 existe mais. O dono de uma organização que ainda tem outros membros não exclui a conta: a rota recusa com
-`409 ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS` antes de pedir a senha, e ele precisa remover os membros
-primeiro, porque não há transferência de propriedade.
+`409 ACCOUNT_DELETION_ORGANIZATION_HAS_MEMBERS` antes de pedir a senha. Antes, ele transfere a propriedade a um
+membro ou remove os membros. Quem é dono de mais de uma organização (a de casa e uma recebida por transferência)
+perde todas na exclusão, e a recusa vale se qualquer uma delas tiver membro vivo.
 
 O relatório inteiro vai para o log estruturado como `[account] erasure-step`, uma linha por passo,
 correlacionada por `requestId`, com nome do passo, estado e contagem — nunca valores. Ele não volta na
