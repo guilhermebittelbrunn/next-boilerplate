@@ -50,13 +50,15 @@ vi.mock("@repo/design-system/hooks/useAlert", () => ({
     }),
 }));
 
+// `packages/auth` has its own `next` entry. Depending on how pnpm resolves it, the provider's
+// `next/navigation` is either a separate copy or the very module the locale provider loads,
+// so both mocks carry the whole surface the two consumers read.
 vi.mock("next/navigation", () => ({
     useParams: () => params,
+    useRouter: () => ({ push: pushMock, refresh: vi.fn(), replace: vi.fn() }),
 }));
-
-// `packages/auth` pins its own copy of Next, so the provider's `next/navigation` is a
-// different module from the one the locale provider loads.
 vi.mock("../../../packages/auth/node_modules/next/navigation.js", () => ({
+    useParams: () => params,
     useRouter: () => ({ push: pushMock, refresh: vi.fn(), replace: vi.fn() }),
 }));
 
