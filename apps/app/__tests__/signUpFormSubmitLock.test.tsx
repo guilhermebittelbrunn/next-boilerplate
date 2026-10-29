@@ -159,6 +159,12 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("SignUpFormClient submit lock", () => {
+    it("leaves the field validation to zod instead of the browser", () => {
+        renderForm();
+
+        expect(inputNamed("email").form?.noValidate).toBe(true);
+    });
+
     it("keeps both buttons disabled from account creation until the sign-in settles, with no gap in between", async () => {
         const accountCreation = deferred<{ created: true }>();
         const signInRequest = deferred<typeof SIGNED_IN_CREDENTIAL>();
