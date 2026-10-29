@@ -6,6 +6,8 @@ export const authTranslations = {
                 expired: "Sua sessão expirou. Entre novamente para continuar.",
                 revoked:
                     "Esta sessão foi encerrada. Entre novamente para continuar.",
+                notEstablished:
+                    "Não foi possível iniciar sua sessão. Tente entrar novamente.",
             },
             firebase: {
                 error: {
@@ -44,6 +46,8 @@ export const authTranslations = {
             session: {
                 expired: "Your session has expired. Sign in again to continue.",
                 revoked: "This session was ended. Sign in again to continue.",
+                notEstablished:
+                    "Your session could not be started. Try signing in again.",
             },
             firebase: {
                 error: {
@@ -52,7 +56,7 @@ export const authTranslations = {
                     "auth/invalid-email": "Invalid email.",
                     "auth/operation-not-allowed": "Operation not allowed.",
                     "auth/weak-password": "Weak password.",
-                    "auth/user-disabled": "User disabled.",
+                    "auth/user-disabled": "This account has been disabled.",
                     "auth/user-not-found": "User not found.",
                     "auth/wrong-password": "Wrong password.",
                     "auth/invalid-credential":
@@ -85,6 +89,8 @@ export const authTranslations = {
                     "Tu sesión ha expirado. Inicia sesión de nuevo para continuar.",
                 revoked:
                     "Esta sesión fue cerrada. Inicia sesión de nuevo para continuar.",
+                notEstablished:
+                    "No se pudo iniciar tu sesión. Intenta iniciar sesión de nuevo.",
             },
             firebase: {
                 error: {
