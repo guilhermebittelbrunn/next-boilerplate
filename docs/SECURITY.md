@@ -14,9 +14,9 @@ Modelo de segurança do boilerplate e como mantê-lo. Leia junto com [`docs/ARCH
 
 ## Autorização (guards da API)
 
-São **55** arquivos de rota em `apps/api/app/(routes)/`. **Trinta e sete** exportam o handler embrulhado num
+São **56** arquivos de rota em `apps/api/app/(routes)/`. **Trinta e oito** exportam o handler embrulhado num
 guard, que roda **antes** da lógica; **dezoito** exportam handler nu, e cada grupo tem um motivo próprio
-(medido em 2026-10-22 com `find "apps/api/app/(routes)" -name route.ts` e
+(medido em 2026-10-28 com `find "apps/api/app/(routes)" -name route.ts` e
 `grep -LE "require(CommonPanel|Admin|Plan|Organization)Api"`):
 
 | grupo | quantas | por que não tem guard |
@@ -28,8 +28,8 @@ guard, que roda **antes** da lógica; **dezoito** exportam handler nu, e cada gr
 | `/contact` | 1 | o formulário de contato da landing recebe quem ainda não tem conta. O destino é fixo no servidor (a caixa de `NEXT_PUBLIC_APP_SUPPORT_EMAIL`), então quem chama não escolhe para quem o e-mail vai; o corpo é validado com Zod e a rota está na lista de rate limit. Sem caixa ou sem Resend responde `503 CONTACT_UNAVAILABLE` antes de ler o corpo |
 | `/invitations/preview` | 1 | o convidado abre o link do convite antes de entrar, muitas vezes antes de ter conta. O token (32 bytes aleatórios) vai no corpo, não na URL da API, e é procurado pelo hash: o Firestore nunca guarda o token. A resposta mostra só o e-mail convidado, o e-mail de quem convidou e a validade, o que o próprio e-mail do convite já carregava. Com `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED` diferente de `"true"` responde `404 ORGANIZATION_MEMBERS_DISABLED` antes de ler qualquer coisa. Está na lista de rate limit |
 
-As **trinta e sete** rotas de negócio restantes — `account/*` ×13, `entities` ×3, `files`, `users` ×4,
-`audit-events`, `payments/*` ×4, `notifications/*` ×4, `organization/*` ×6 e `invitations/accept` — passam
+As **trinta e oito** rotas de negócio restantes — `account/*` ×13, `entities` ×3, `files`, `users` ×4,
+`audit-events`, `payments/*` ×4, `notifications/*` ×4, `organization/*` ×7 e `invitations/accept` — passam
 por um dos quatro guards:
 
 - `requireCommonPanelApi` — exige um usuário comum válido; resolve `ctx.subjectProfile` (titular **ou** usuário personificado).

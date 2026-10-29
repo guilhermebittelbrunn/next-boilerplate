@@ -585,7 +585,7 @@ quando o perfil já tem uma assinatura viva gravada (`apps/api/app/(routes)/paym
 Se a pessoa abrir o checkout em duas abas e pagar nas duas antes de o primeiro webhook chegar, a Stripe cria
 duas assinaturas. O perfil fica com a mais recente (`decideSubscriptionWrite`,
 `apps/api/(shared)/lib/billing-state.ts:207-214`) e tanto a exclusão de conta quanto o arquivamento pelo admin cancelam só essa
-(`apps/api/(shared)/lib/account-erasure.ts:188`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
+(`apps/api/(shared)/lib/account-erasure.ts:199`, `apps/api/app/(routes)/users/[id]/route.ts`). A outra segue cobrando sem vínculo com o perfil. Para o MVP
 a sobrescrita foi aceita. Quem precisar fechar o caso antes do release:
 
 1. Em `POST /payments/checkout`, quando o perfil já tem `stripeCustomerId`, chamar
