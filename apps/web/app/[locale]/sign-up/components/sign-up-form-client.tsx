@@ -95,7 +95,7 @@ export const SignUpFormClient = () => {
                         {dictionary.apps.web.pages.signUp.meta.title}
                     </h1>
                     <p className="text-muted-foreground text-sm">
-                        {dictionary.apps.web.pages.signUp.enterWithYourAccount}
+                        {dictionary.apps.web.pages.signUp.createYourAccount}
                     </p>
                 </div>
 
@@ -176,7 +176,7 @@ export const SignUpFormClient = () => {
 
                 <div className="text-center text-sm">
                     <span className="text-muted-foreground">
-                        {dictionary.apps.web.pages.signUp.noAccount}
+                        {dictionary.apps.web.pages.signUp.alreadyHaveAccount}
                     </span>
                     <Link
                         className="text-primary hover:underline"

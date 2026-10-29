@@ -13,11 +13,11 @@ export const signUpTranslations = {
             submit: "Cadastrar",
         },
         signUp: "Cadastrar",
-        enterWithYourAccount: "Entre com sua conta para continuar",
+        createYourAccount: "Crie sua conta para começar",
         orContinueWith: "Ou continue com",
         googleSignIn: "Continuar com Google",
         signIn: "Entrar",
-        noAccount: "Não tem uma conta? ",
+        alreadyHaveAccount: "Já tem uma conta? ",
         validation: {
             emailInvalid: "Email inválido",
             passwordMin: "A senha deve ter pelo menos 8 caracteres",
@@ -27,7 +27,7 @@ export const signUpTranslations = {
     en: {
         meta: {
             title: "Sign Up",
-            description: "Sign up to your account",
+            description: "Create your account",
         },
         form: {
             email: "Email",
@@ -38,11 +38,11 @@ export const signUpTranslations = {
             submit: "Sign Up",
         },
         signUp: "Sign Up",
-        enterWithYourAccount: "Enter with your account to continue",
+        createYourAccount: "Create your account to get started",
         orContinueWith: "Or continue with",
         googleSignIn: "Continue with Google",
         signIn: "Sign In",
-        noAccount: "Don't have an account? ",
+        alreadyHaveAccount: "Already have an account? ",
         validation: {
             emailInvalid: "Invalid email",
             passwordMin: "Password must be at least 8 characters",
@@ -52,7 +52,7 @@ export const signUpTranslations = {
     es: {
         meta: {
             title: "Registrarse",
-            description: "Regístrate en tu cuenta",
+            description: "Crea tu cuenta",
         },
         form: {
             email: "Email",
@@ -63,11 +63,11 @@ export const signUpTranslations = {
             submit: "Registrarse",
         },
         signUp: "Registrarse",
-        enterWithYourAccount: "Regístrate en tu cuenta para continuar",
+        createYourAccount: "Crea tu cuenta para empezar",
         orContinueWith: "O continuar con",
         googleSignIn: "Continuar con Google",
         signIn: "Iniciar sesión",
-        noAccount: "¿No tienes una cuenta? ",
+        alreadyHaveAccount: "¿Ya tienes una cuenta? ",
         validation: {
             emailInvalid: "Email no válido",
             passwordMin: "La contraseña debe tener al menos 8 caracteres",
