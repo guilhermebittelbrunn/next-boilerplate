@@ -96,6 +96,7 @@ export function ResetPasswordForm({ oobCode }: ResetPasswordFormProps) {
             <Form {...form}>
                 <form
                     className="space-y-4"
+                    noValidate
                     onSubmit={form.handleSubmit((values) =>
                         confirmReset.mutate(values)
                     )}

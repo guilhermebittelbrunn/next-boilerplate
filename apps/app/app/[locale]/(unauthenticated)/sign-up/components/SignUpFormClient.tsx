@@ -139,7 +139,7 @@ export default function SignUpFormClient({
     }
 
     return (
-        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center py-20">
+        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center px-4 py-20 sm:px-0">
             <div className="w-full max-w-md space-y-8 rounded-xl border bg-card p-8 shadow-sm">
                 <div className="space-y-2 text-center">
                     <h1 className="font-bold text-3xl">
@@ -153,6 +153,7 @@ export default function SignUpFormClient({
                 <Form {...form}>
                     <form
                         className="space-y-4"
+                        noValidate
                         onSubmit={form.handleSubmit(onSubmit)}
                     >
                         <HookFormInput

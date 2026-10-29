@@ -181,6 +181,14 @@ describe("login da app enviado com Enter", () => {
     });
 });
 
+describe("validação do formulário de login", () => {
+    it("fica com o zod em vez do balão nativo do navegador", () => {
+        renderForm();
+
+        expect(inputNamed("email").form?.noValidate).toBe(true);
+    });
+});
+
 describe("link para o cadastro", () => {
     it("leva junto o destino que o login recebeu", () => {
         renderForm("/pt-br/account?tab=billing&plan=price_1");

@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-27
+updated: 2026-10-28
 ---
 
 # MFA, sessões ativas e política de senha
@@ -241,7 +241,7 @@ eficácia.
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
       e na redefinição (`auth.schema.ts:32`, `:37`, `:109-110`, remedidas em 2026-10-22 depois da PR #56, que acrescentou o schema do pedido de link por e-mail; eram `:27`, `:32` e `:101-102` desde a PR #51 e `:24`, `:29` e `:89-90` antes), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:103`, `:282`, `:463`, remedidas em 2026-10-27 depois da PR #58, que acrescentou dois códigos por idioma; eram `:101`, `:276` e `:453` desde a PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:103`, `:285`, `:469`, remedidas em 2026-10-28 depois da PR #59, que acrescentou três linhas ao bloco pt-br e três ao en, acima das duas últimas, quando eram `:282` e `:463`; antes da PR #58, que acrescentou dois códigos por idioma, eram `:101`, `:276` e `:453` desde a PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
@@ -346,7 +346,7 @@ no nosso código.
 - **Reautenticação para ações sensíveis** (excluir conta, trocar e-mail, cancelar assinatura) — depende
   desta spec e de `data-rights-lgpd`; vira iteração própria, com o contrato de "sessão recente" definido
   num lugar só. *(2026-09-23: a exclusão de conta já nasceu com reautenticação própria, pedindo a senha de
-  novo em vez de confiar na idade da sessão — `apps/api/app/(routes)/account/deletion/route.ts:65-82`, era `:55-72` até a PR #57. O
+  novo em vez de confiar na idade da sessão — `apps/api/app/(routes)/account/deletion/route.ts:66-83`, era `:65-82` até a PR #59 e `:55-72` até a PR #57. O
   motivo está no código: entrar pelo cookie de sessão compartilhado regrava o instante de autenticação, então
   uma sessão roubada se apresenta como recente. Quem desenhar o contrato de "sessão recente" precisa partir
   dessa restrição, e a conta sem provedor de senha fica sem caminho: a rota recusa com

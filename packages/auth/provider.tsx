@@ -359,12 +359,7 @@ export function AuthProvider({
             router.push(await resolvePostLoginPath(token));
         } catch {
             errorAlert(
-                handleClientError(
-                    new FormattedError(
-                        new Error("Could not establish session"),
-                        locale
-                    )
-                )
+                dictionary.packages.auth.provider.session.notEstablished
             );
         }
     };

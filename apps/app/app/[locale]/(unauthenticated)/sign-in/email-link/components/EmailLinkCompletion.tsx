@@ -200,6 +200,7 @@ export function EmailLinkCompletion({ oobCode }: EmailLinkCompletionProps) {
             <Form {...form}>
                 <form
                     className="space-y-4"
+                    noValidate
                     onSubmit={form.handleSubmit((values) =>
                         attemptSignIn(values.email)
                     )}

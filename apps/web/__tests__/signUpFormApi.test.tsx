@@ -148,6 +148,21 @@ beforeEach(() => {
 });
 
 describe("web SignUpFormClient", () => {
+    it("invites to create an account and asks whether the visitor already has one", () => {
+        const signUpCopy = globalTranslations.en.apps.web.pages.signUp;
+        const signInCopy = globalTranslations.en.apps.web.pages.signIn;
+
+        const html = renderToString(
+            <LocaleProvider>
+                <SignUpFormClient />
+            </LocaleProvider>
+        );
+
+        expect(html).toContain(signUpCopy.createYourAccount);
+        expect(html).toContain(signUpCopy.alreadyHaveAccount.trim());
+        expect(html).not.toContain(signInCopy.enterWithYourAccount);
+    });
+
     it("creates the account through the API", async () => {
         const createAccount = renderAndCaptureSignUp();
 

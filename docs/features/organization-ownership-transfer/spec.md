@@ -1,7 +1,7 @@
 ---
 id: organization-ownership-transfer
 title: Transferir a propriedade da organização, com a saída do dono e a trilha da equipe
-status: proposed
+status: done
 value: alto
 effort: M
 audience: produto
@@ -9,8 +9,8 @@ area: [apps/api, apps/app, apps/e2e, packages/sdk, packages/internationalization
 mode: ambos
 depends_on: [teams-organizations]
 contends_on: ["apps/api/(shared)/repositories/organization-member.repository.ts", "apps/api/(shared)/repositories/organization-invitation.repository.ts", packages/sdk/src/types/audit/audit.ts, apps/e2e/support/stackEnv.ts]
-feature: -
-updated: 2026-10-27
+feature: organization-ownership-transfer
+updated: 2026-10-28
 ---
 
 # Transferir a propriedade da organização, com a saída do dono e a trilha da equipe
@@ -20,6 +20,35 @@ updated: 2026-10-27
 > instrução de foco e foi entregue pela PR #57. Esta spec nasce `proposed`; levá-la ao ciclo sem passar por `approved`
 > repete a E4 do `BACKLOG.md`. Ela junta, como fatia do mesmo assunto, três achados abertos do subsistema de organização
 > e uma lacuna de teste da PR #57 (ver "O que já existe no repo").
+
+> **Entrega (2026-10-28, `/spec --sync` pós-PR #59).** Entrou em `main` pela PR #59 (`277da43`, 2026-10-28 17:07 UTC),
+> com os quatro jobs da execução de merge verdes (`gh run 40732626433`). A spec saiu `proposed` direto para `done`, sem
+> passar por `approved` (E4 do `BACKLOG.md`). Os cinco itens do corte foram conferidos no código de `main`:
+>
+> 1. `POST /organization/members/[id]/ownership` (`organization/members/[id]/ownership/route.ts:43-91`), com a troca
+>    numa transação de quatro leituras antes das três escritas (`organization-member.repository.ts:168-225`); recusas
+>    `403 ORGANIZATION_FORBIDDEN`, `404 ORGANIZATION_MEMBER_NOT_FOUND`, `400 ORGANIZATION_OWNERSHIP_TARGET_SELF` e
+>    `409 ORGANIZATION_OWNERSHIP_TARGET_ARCHIVED`; item "Tornar dono" na tabela da equipe
+>    (`OrganizationMembersTable.tsx:112-119`, `TransferOwnershipDialog.tsx`); a corrida de duas transferências tem
+>    teste contra o emulador (`organizationOwnershipTransfer.emulator.test.ts:181`).
+> 2. O antigo dono vira membro e sai (`organization/leave/route.ts:20-30`), é removido (`members/[id]/route.ts:50-63`),
+>    exclui a conta e aceita outro convite; a regra "dono com membros" lê todas as organizações de que a pessoa é dona
+>    (`organization-membership.ts:108-132`, `organization.repository.ts:24`). As quatro recusas que continuam valendo
+>    citam a transferência nos três idiomas (`translations/packages/shared/utils.ts:37`, `:79`, `:164`, `:179` em pt-br).
+> 3. A prévia e o aceite recusam organização de dono arquivado (`organization-invitation.ts:99-115`,
+>    `organization-invitation.repository.ts:231-252`), e o aceite conta só membro com perfil vivo (`:260-292`).
+> 4. Cinco ações novas no `AuditAction` (`packages/sdk/src/types/audit/audit.ts:16-20`), gravadas pelas rotas de
+>    transferência, convite (`organization/invitations/route.ts:142`), aceite (`invitations/accept/route.ts:71`),
+>    remoção e saída; rótulos nos três idiomas (`translations/apps/app/pages/admin/auditTrail.ts:28-34`).
+> 5. `apps/e2e/tests/organizationOwnership.spec.ts:68`, com a variável ligada na pilha da suíte (`stackEnv.ts:37`),
+>    passou no job `e2e` da execução de merge (23 de 23).
+>
+> **Onde a spec estava errada ou incompleta** (desvios D1 a D3 do `analyze/plan.md`, §1.1): a suíte E2E não lia link de
+> convite com o emulador, porque o convite não passa pelo Firebase Auth; o teste grava o convite com token conhecido
+> direto no emulador. A transferência deixa o dono novo com duas organizações, caso que a spec não tratava; a regra de
+> saída e o expurgo da conta passaram a ler a lista. O evento de convite enviado não grava o e-mail do convidado, porque
+> o expurgo limpa rótulos por id de perfil e o convidado sem perfil nunca teria o endereço apagado. Fora da área
+> declarada, a entrega corrigiu no `ActionsMenu` do design system o item que abria e fechava o diálogo no mesmo Enter.
 
 ## Problema
 
@@ -66,7 +95,7 @@ existir, cada guarda nova do subsistema (PR #58) fecha uma porta a mais sem abri
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-27, "Administração da organização depois do convite". A nota original (2026-08-21) já lista "deixar o último
   owner sair da organização" entre as armadilhas de convites e RBAC.
 - Prevalência: a transferência explícita da propriedade aparece em **1 de 6** referências lidas (Makerkit, nos dois
@@ -84,22 +113,22 @@ existir, cada guarda nova do subsistema (PR #58) fecha uma porta a mais sem abri
 
 ## Proposta — corte de MVP
 
-- [ ] **Transferir a propriedade.** Na tabela da equipe, o dono escolhe um membro com perfil vivo e, depois de
+- [x] **Transferir a propriedade.** Na tabela da equipe, o dono escolhe um membro com perfil vivo e, depois de
       confirmar, passa a ele a organização. Numa operação só, o membro vira dono e o antigo dono vira membro; quem lê a
       organização logo depois vê o dono novo. A API recusa com `error.code` traduzido quando quem pede não é o dono,
       quando o alvo não é membro da organização, quando o alvo é o próprio dono e quando o perfil do alvo está
       arquivado. Dois pedidos simultâneos não deixam a organização com dois donos nem sem nenhum.
-- [ ] **O dono antigo ganha as saídas que hoje não tem.** Depois da transferência ele sai pela saída que já existe, é
+- [x] **O dono antigo ganha as saídas que hoje não tem.** Depois da transferência ele sai pela saída que já existe, é
       removido pelo dono novo, exclui a conta e aceita convite de outra equipe, sem nenhuma recusa nova. O dono novo
       convida, revoga e remove como qualquer dono. As mensagens das quatro recusas que continuam valendo (dono com
       membros) passam a indicar a transferência como saída, nos três idiomas.
-- [ ] **Organização sem dono ativo deixa de receber gente.** A prévia e o aceite recusam convite de organização cujo
+- [x] **Organização sem dono ativo deixa de receber gente.** A prévia e o aceite recusam convite de organização cujo
       dono teve o perfil arquivado, e o aceite conta como membro só o vínculo de perfil vivo, com a mesma regra da saída
       do dono. Fecha os dois 🟢 do convite deixados pela tarefa `organization-archived-member`.
-- [ ] **A equipe aparece na trilha de auditoria.** Transferência, convite enviado, convite aceito, membro removido e
+- [x] **A equipe aparece na trilha de auditoria.** Transferência, convite enviado, convite aceito, membro removido e
       saída voluntária gravam evento na trilha que o admin já filtra por usuário, com rótulo nos três idiomas e sem
       gravar e-mail fora do campo de rótulo que a trilha já usa.
-- [ ] **O fluxo da equipe ganha rede no CI.** A suíte E2E percorre, com membros ligados, convite, aceite pela conta
+- [x] **O fluxo da equipe ganha rede no CI.** A suíte E2E percorre, com membros ligados, convite, aceite pela conta
       convidada (lendo o link sem caixa de entrada, como a suíte já faz com o emulador) e transferência, e roda no job
       `e2e` de toda PR. Fecha a lacuna 🟡 da PR #57.
 

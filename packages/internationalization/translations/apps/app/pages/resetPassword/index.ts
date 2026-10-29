@@ -14,7 +14,7 @@ export const resetPasswordTranslations = {
         },
         validation: {
             passwordMin: "A senha deve ter pelo menos 8 caracteres",
-            passwordsDoNotMatch: "As senhas não conferem",
+            passwordsDoNotMatch: "As senhas não coincidem",
         },
         invalidLink: {
             title: "Link inválido",

@@ -98,6 +98,7 @@ export function EmailLinkRequestForm() {
             <Form {...form}>
                 <form
                     className="space-y-4"
+                    noValidate
                     onSubmit={form.handleSubmit(submitRequest)}
                 >
                     <HookFormInput

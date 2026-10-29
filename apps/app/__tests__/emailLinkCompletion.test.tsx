@@ -155,6 +155,9 @@ describe("EmailLinkCompletion", () => {
             await screen.findByText(completeCopy.confirm.title)
         ).toBeTruthy();
         expect(completeMock).not.toHaveBeenCalled();
+        expect(
+            (screen.getByRole("textbox") as HTMLInputElement).form?.noValidate
+        ).toBe(true);
 
         await confirmWith(EMAIL);
 

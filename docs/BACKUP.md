@@ -86,7 +86,7 @@ precisam voltar ao `(default)` por um dos dois caminhos do passo 3.
 
 1. **Antes de qualquer troca, liste as exclusões posteriores ao backup.** Em `/admin/audit`, filtre o
    período a partir da data do backup e anote os eventos `account.delete` e `user.delete`. A trilha guarda o
-   id do alvo (`targetUserId`) mesmo depois da exclusão (`packages/sdk/src/types/audit/audit.ts:29-31`).
+   id do alvo (`targetUserId`) mesmo depois da exclusão (`packages/sdk/src/types/audit/audit.ts:40-42`).
    Guarde a lista fora do repositório. Os dois eventos são diferentes:
    - `account.delete` é a exclusão pedida pelo titular: apaga perfil, a organização de casa com os registros
      de `entity` dela, o vínculo do titular, conta no Authentication, arquivos (com Storage ligado) e os rótulos
