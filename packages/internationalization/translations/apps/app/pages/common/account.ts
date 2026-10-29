@@ -141,7 +141,7 @@ export const commonAccountPageTranslations = {
                 required: "Informe a senha.",
                 min: "A senha deve ter ao menos 6 caracteres.",
                 newPasswordMin: "A nova senha deve ter ao menos 8 caracteres.",
-                mismatch: "As senhas não conferem.",
+                mismatch: "As senhas não coincidem.",
             },
         },
         preferences: {
