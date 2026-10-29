@@ -75,6 +75,23 @@ describe("API error code to user copy", () => {
         );
     });
 
+    it("tells a disabled account it was disabled, with a full sentence in every locale", () => {
+        const firebaseError = {
+            code: "auth/user-disabled",
+            message: "Firebase: Error (auth/user-disabled).",
+        };
+
+        expect(copyFor(firebaseError, "pt-br")).toBe(
+            "Esta conta foi desativada."
+        );
+        expect(copyFor(firebaseError, "en")).toBe(
+            "This account has been disabled."
+        );
+        expect(copyFor(firebaseError, "es")).toBe(
+            "Esta cuenta ha sido desactivada."
+        );
+    });
+
     /**
      * An `AxiosError` also carries `code` + `message`, so shape-only duck typing used to
      * route it into the Firebase dictionary and answer with `undefined`.
