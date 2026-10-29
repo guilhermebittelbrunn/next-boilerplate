@@ -1,6 +1,7 @@
 "use client";
 
 import { getAuthClient } from "@repo/auth/client";
+import { getDictionary } from "@repo/internationalization/client";
 import {
     GoogleAuthProvider,
     signInWithPopup,
@@ -67,10 +68,13 @@ async function exchangeForApiSession(
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken: session.idToken }),
-    });
+    }).catch(() => null);
 
-    if (!sessionRes.ok) {
-        throw new Error("Could not persist session");
+    if (!sessionRes?.ok) {
+        throw new Error(
+            getDictionary().dictionary.packages.auth.provider.session
+                .notEstablished
+        );
     }
 
     apiClient.setAuthorizationHeader(session.idToken);

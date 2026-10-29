@@ -1,3 +1,5 @@
+import { getDictionaryForLocale } from "@repo/internationalization/client";
+import { removeCookie, setCookie } from "@repo/shared/utils/helpers/cookies";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -52,6 +54,7 @@ const SESSION = {
 };
 const STATUS_OK = 200;
 const STATUS_UNAUTHORIZED = 401;
+const ONE_HOUR_IN_SECONDS = 3600;
 
 const fetchMock = vi.fn();
 
@@ -79,6 +82,7 @@ beforeEach(() => {
 
 afterEach(() => {
     vi.unstubAllGlobals();
+    removeCookie("x-locale");
 });
 
 describe("signInWithGoogleViaApi", () => {
@@ -106,11 +110,31 @@ describe("signInWithGoogleViaApi", () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("signs the popup user out when the session cookie cannot be written", async () => {
-        fetchMock.mockResolvedValue({ ok: false, status: STATUS_UNAUTHORIZED });
+    it.each(["en", "es"])(
+        "signs the popup user out with the %s copy when the session cookie cannot be written",
+        async (locale) => {
+            setCookie("x-locale", locale, ONE_HOUR_IN_SECONDS);
+            fetchMock.mockResolvedValue({
+                ok: false,
+                status: STATUS_UNAUTHORIZED,
+            });
+
+            await expect(signInWithGoogleViaApi()).rejects.toThrow(
+                getDictionaryForLocale(locale).dictionary.packages.auth.provider
+                    .session.notEstablished
+            );
+            expect(signOutMock).toHaveBeenCalledWith(authClient);
+            expect(setAuthorizationHeaderMock).not.toHaveBeenCalled();
+        }
+    );
+
+    it("signs the popup user out with the translated copy when the session request gets no response", async () => {
+        setCookie("x-locale", "en", ONE_HOUR_IN_SECONDS);
+        fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
 
         await expect(signInWithGoogleViaApi()).rejects.toThrow(
-            "Could not persist session"
+            getDictionaryForLocale("en").dictionary.packages.auth.provider
+                .session.notEstablished
         );
         expect(signOutMock).toHaveBeenCalledWith(authClient);
         expect(setAuthorizationHeaderMock).not.toHaveBeenCalled();
