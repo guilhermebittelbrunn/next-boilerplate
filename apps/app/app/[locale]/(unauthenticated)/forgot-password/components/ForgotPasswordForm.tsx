@@ -76,6 +76,7 @@ export function ForgotPasswordForm() {
             <Form {...form}>
                 <form
                     className="space-y-4"
+                    noValidate
                     onSubmit={form.handleSubmit((values) =>
                         requestReset.mutate(values)
                     )}

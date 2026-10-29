@@ -132,6 +132,7 @@ describe("EmailLinkRequestForm", () => {
     it("refuses an invalid address without calling the API", async () => {
         renderForm();
         const input = await typeEmail("not-an-email");
+        expect(input.form?.noValidate).toBe(true);
 
         await act(() => {
             fireEvent.submit(input.form as HTMLFormElement);
