@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [linked-sign-in-methods]
 contends_on: [packages/auth/client.ts, apps/api/(shared)/lib/firebase-identity-toolkit.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: -
-updated: 2026-10-23
+updated: 2026-10-29
 ---
 
 # Login com GitHub e Microsoft, ligados por configuração
@@ -43,9 +43,10 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   2026-10-22). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:187`, `:195`; eram `:170`, `:178` até a
   PR #56) também usam só o Google.
 - `packages/auth/provider.tsx:376`, `:383`, `:386-389` — desde a PR #56 o `AuthProvider` tem três mutations de login
-  (senha, Google e link por e-mail), todas terminando no mesmo `onAuthSuccess` (`:353-370`). Um provedor novo entra
+  (senha, Google e link por e-mail), todas terminando no mesmo `onAuthSuccess` (`:353-370`). Na branch
+  `fix/app-auth-forms`, ainda sem PR, as âncoras ficam `:371`, `:378`, `:381-384` e `:353-365` (remedidas em 2026-10-29). Um provedor novo entra
   como a quarta, no mesmo molde.
-- `apps/app/shared/lib/googleSignInApi.ts:21-79` (era `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
+- `apps/app/shared/lib/googleSignInApi.ts:21-79` (`:22-83` na branch `fix/app-auth-forms`, que traduz o erro da sessão; era `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
   `providerId=google.com` fixo.
@@ -57,7 +58,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   `429 USERS_AUTH_RATE_LIMITED` (`:33-45`). Antes ela lia o corpo sem validação e devolvia a mensagem crua do
   provedor em 401. A parte "a rota do Google entra no mesmo contrato" do impacto na `apps/api` já está paga; falta
   generalizar a rota para outros provedores.
-- `apps/app/.../sign-in/components/SignInForm.tsx:188-198` (remedida em 2026-10-22: a PR #56 acrescentou duas linhas
+- `apps/app/.../sign-in/components/SignInForm.tsx:188-198` (`:189-199` na branch `fix/app-auth-forms`, que acrescentou o `noValidate`; remedida em 2026-10-22: a PR #56 acrescentou duas linhas
   acima, e a âncora anterior, `:187-197`, já estava uma linha adiantada) e `sign-up/components/SignUpFormClient.tsx` —
   um botão do Google em cada tela. Desde a PR #56 o login também tem o link "Receber link de acesso por e-mail"
   (`:209-218`), condicionado à disponibilidade que a API informa.

@@ -6,13 +6,39 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-10-28 (`/spec --sync`, pós-merge da PR #59, passo 1 de um `/cycle`; medições entre 17:50 e
-> 18:40 BRT). **Anteriores:** a auditoria pós-PR #58 (2026-10-27), a pós-PR #57 (2026-10-23), com duas rodadas delta
-> no mesmo dia, e, antes delas, mais de cinquenta rodadas desde a semeadura inicial de 2026-08-21. O detalhe de cada
-> rodada está no histórico deste arquivo (`git log -- specs/BACKLOG.md`); a última versão com o texto da auditoria
-> pós-PR #58 é a de `277da43`.
+> **Última rodada:** 2026-10-29, rodada **delta** (`/spec --sync` como passo 1 de um `/cycle` empilhado sobre a
+> branch `fix/app-auth-forms`, `HEAD` em `7348247`; leituras às 10:00 BRT). `origin/main` segue em `277da43` (#59).
+> **Anteriores:** a auditoria completa pós-PR #59 (2026-10-28), cujo texto vem logo abaixo, a pós-PR #58 (2026-10-27),
+> a pós-PR #57 (2026-10-23), com duas rodadas delta no mesmo dia, e, antes delas, mais de cinquenta rodadas desde a
+> semeadura inicial de 2026-08-21. O detalhe de cada rodada está no histórico deste arquivo
+> (`git log -- specs/BACKLOG.md`); a última versão com o texto da auditoria pós-PR #58 é a de `277da43`.
 >
-> **O que mudou nesta rodada (2026-10-28, pós-PR #59):**
+> **O que mudou na rodada delta (2026-10-29):**
+> 1. **A tarefa direta `app-auth-forms` está na branch `fix/app-auth-forms`, pushada e sem PR.** São 11 commits à frente
+>    de `main`; `git ls-remote` mostra o remoto no mesmo SHA do `HEAD` (`7348247`), `gh pr list --head
+>    fix/app-auth-forms --state all` devolve `[]`, e não há execução de CI na branch, porque o `ci.yml` só dispara em
+>    `pull_request` e em push para `main`. **Não é entrega** pelo critério deste arquivo (PR mergeada em `main` e CI verde
+>    no SHA de merge). Ver [Na branch, sem PR](#na-branch-sem-pr-app-auth-forms).
+> 2. **Nenhuma transição de spec.** A tarefa não tem spec, e nenhum arquivo do diff `origin/main..HEAD` está no
+>    `contends_on` das quatro specs vivas, exceto `SignInForm.tsx` e `SignUpFormClient.tsx`, de `social-sign-in-providers`,
+>    que segue `deferred`. As três âncoras dessa spec que a branch deslocou foram remedidas.
+> 3. **Quatro achados fechados na branch, aguardando merge**, conferidos no `HEAD`: o alerta da sessão recusada em
+>    inglês, `auth/user-disabled` em en, a falta de `noValidate` e o `AuthCard` a 375 px. Seguem contados como abertos até
+>    a PR entrar em `main`, como na rodada delta de 2026-10-23.
+> 4. **Três achados novos e um medido**, vindos do `/review` e do `/test` da tarefa, em
+>    [Achados da tarefa `app-auth-forms`](#-achados-da-tarefa-app-auth-forms-branch-fixapp-auth-forms-sem-pr): o laço de
+>    recarga com a sessão recusada, no login e no cadastro (🟡); as duas formas de "as senhas não coincidem" em pt-br; os
+>    dois textos fixos em inglês que sobram em `googleSignInApi.ts`. A tela vazia do login da landing, já registrada,
+>    ganhou a medição do `/test`.
+> 5. **Gates citados, não remedidos** (`cycle-policy` §4): o `/test` da rodada 2 mediu este conteúdo, com `pnpm test` da
+>    raiz em 15/15 e a `apps/app` em 1120 testes. Ver [Gates](#gates-medidos-nesta-auditoria).
+> 6. **A #1 desta rodada é outra tarefa direta, disjunta do diff da branch:** a copy do cadastro da landing, com a
+>    unificação de "as senhas não coincidem" em pt-br. O laço de recarga é mais grave, mas mexe nos mesmos arquivos da
+>    branch e depende dela mergeada. Ver [A próxima](#a-próxima-tarefa-direta-web-sign-up-copy).
+> 7. **Uma decisão estacionada nova (E15):** abrir a PR de `fix/app-auth-forms` antes de empilhar outra rodada. É a
+>    segunda vez que o ciclo roda sobre uma pilha sem PR (a primeira foi a rodada delta 2 de 2026-10-23).
+>
+> **O que mudou na rodada completa anterior (2026-10-28, pós-PR #59):**
 > 1. **A PR #59 entrou em `main`** em 2026-10-28 às 17:07 UTC, no SHA `277da43`, a partir da branch
 >    `guilhermebittelbrunn/cycle-value-task`, com 17 commits juntados pelo squash. A execução de merge do CI
 >    (`gh run 40732626433`) passou nos quatro jobs, e o job `e2e` rodou o fluxo novo da equipe (23 de 23).
@@ -25,7 +51,7 @@ constar na seção [Entregues](#entregues).
 >    deixaram dois 🟢 novos e cinco lacunas com veredito, em [Achados da PR #59](#-achados-da-pr-59-2026-10-28).
 > 4. **A fila ficou sem spec elegível.** As quatro que seguem em `specs/` estão `deferred` ou `in-progress` sem feature
 >    ativa, todas paradas por decisão sua (E1, E12 e o adiamento de 2026-10-16). A recomendação de #1 é uma tarefa
->    direta. Ver [A próxima](#a-próxima-tarefa-direta-app-auth-forms).
+>    direta, `app-auth-forms`, hoje na branch `fix/app-auth-forms` (ver [Na branch, sem PR](#na-branch-sem-pr-app-auth-forms)).
 > 5. **Gates remedidos com `--force` e JDK 21:** 30/30 tasks em 2 min 57 s, 1055 arquivos no `pnpm check`, **3798**
 >    testes em 339 arquivos (+39, todos da PR #59) e 274 contra o emulador (+9). Ver
 >    [Gates](#gates-medidos-nesta-auditoria).
@@ -60,6 +86,41 @@ arquivos da PR com os 15 caminhos de `contends_on` delas: nenhum coincide. **Spe
 
 > **Elegíveis: 0 de 4.** `one-time-purchase` e `social-sign-in-providers` estão `deferred`, por decisão sua;
 > `account-security-mfa` e `observability-logging` estão `in-progress` sem feature em andamento (E12 e E1).
+
+**Rodada delta de 2026-10-29: nenhuma transição.** Os contadores acima foram reconferidos no frontmatter das quatro
+specs e seguem iguais. A branch `fix/app-auth-forms` não toca spec viva além das âncoras de `social-sign-in-providers`.
+
+## Na branch, sem PR: `app-auth-forms`
+
+Tarefa direta, sem spec, recomendada como #1 pela auditoria pós-PR #59. Estado medido em 2026-10-29: branch
+`fix/app-auth-forms`, 11 commits à frente de `origin/main` (`277da43`), pushada (`git ls-remote` no mesmo SHA do
+`HEAD`, `7348247`), **sem PR** (`gh pr list --head fix/app-auth-forms --state all`: `[]`) e **sem execução de CI**, que
+só dispara em `pull_request` e em push para `main` (`.github/workflows/ci.yml:3-6`). O `STATE.md` tem `analyze`,
+`develop`, `review` e `test` em `done`, `observe` pendente e `spec: none (achado BACKLOG)`. Fica fora de
+[Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec) até a PR entrar em `main` com CI verde no SHA de merge.
+
+`git diff --stat origin/main..HEAD`: 33 arquivos, +1871 e −379. Fora de `docs/features` e `specs`: 10 de código (sete em
+`apps/app/app/[locale]/(unauthenticated)/`, o `AuthCard` e os seis formulários, `googleSignInApi.ts`, `packages/auth/provider.tsx` e a folha
+`translations/packages/auth/index.ts`), 8 de teste em `apps/app/__tests__/` e 5 documentos (`SECURITY.md`,
+`PRE-PRODUCTION.md`, `SUBPROCESSORS.md`, `INCIDENT-RESPONSE.md` e `BACKUP.md`, as âncoras que a auditoria pós-PR #59
+remediu). Nenhuma variável, rota, índice, `error.code` ou dependência nova.
+
+**Os quatro achados da recomendação, conferidos no `HEAD`:**
+
+| achado | veredito | o que o código mostra |
+|--------|----------|-----------------------|
+| 🟢 sessão recusada depois do login, com alerta em inglês fixo | ✅ fechado na branch, aguardando merge, **na metade do alerta** | `onAuthSuccess` (`packages/auth/provider.tsx:353-365`) mostra `dictionary.packages.auth.provider.session.notEstablished` no `catch` (`:360-364`); a chave existe nos três idiomas (`translations/packages/auth/index.ts:9`, `:49`, `:92`). O `/test` leu a frase traduzida no login por senha da app nos três idiomas, na landing e na conclusão do link. A outra metade, a mutação que termina em sucesso com a sessão recusada, ficou fora por decisão do plano (D1, D3) e virou o 🟡 do laço de recarga |
+| 🟢 `auth/user-disabled` em en diz "User disabled." | ✅ fechado na branch, aguardando merge | `translations/packages/auth/index.ts:59`, "This account has been disabled."; pt-br `:18` e es `:102` não mudaram. Caso novo em `apps/app/__tests__/apiErrorCopy.test.ts`, que falha com o texto antigo |
+| 🟢 os seis formulários de autenticação da app sem `noValidate` | ✅ fechado na branch, aguardando merge | `SignInForm.tsx:138`, `SignUpFormClient.tsx:156`, `ForgotPasswordForm.tsx:79`, `ResetPasswordForm.tsx:99`, `EmailLinkRequestForm.tsx:101`, `EmailLinkCompletion.tsx:203`; `grep '<form'` na pasta acha só esses seis |
+| 🟢 o `AuthCard` da app encosta nas bordas a 375 px | ✅ fechado na branch, aguardando merge | `px-4 py-20 sm:px-0` em `AuthCard.tsx:11`, `SignInForm.tsx:124` e `SignUpFormClient.tsx:142`. Medido pelo `/test` na rodada 2: 16 px de cada lado a 375 px, cartão de volta a 400 px a partir de 640 px |
+
+**De quebra, sem linha prévia neste arquivo:** o Google da app lançava "Could not persist session" fixo em inglês, e
+"Failed to fetch" quando o `POST /api/auth/session` não tinha resposta. Os dois casos passam hoje pela mesma frase
+traduzida (`apps/app/shared/lib/googleSignInApi.ts:66-78`, `fetch(...).catch(() => null)` e `!sessionRes?.ok`), com
+caso novo em `googleSignInApi.test.ts`. A rodada 1 do `/test` reprovou dois critérios (o "Failed to fetch" e o cartão
+com 384 px a partir de 768 px); o `/review` corrigiu os dois, e a rodada 2 aprovou. A auditoria procurou senha, token,
+chave e e-mail fora de `@example.com` nos seis arquivos da pasta `docs/features/app-auth-forms/` e não achou (o único
+endereço sem `.com` é `qa@example`, a entrada inválida do teste de validação).
 
 ## Entregas desta rodada (PR #59)
 
@@ -147,7 +208,22 @@ seguinte levou junto (de `02c31b5`, pós-PR #36, a `277da43`, pós-PR #58), e as
 
 ## Gates medidos nesta auditoria
 
-Executados em 2026-10-28, entre 17:53 e 17:57 BRT, com `--force`, neste workspace, com o `HEAD` em `277da43` (igual a
+**Rodada delta de 2026-10-29: citados, não remedidos.** Pela `cycle-policy` §4 ("não remeça gate que você não mexeu"),
+esta rodada não rodou a suíte. Os números são os da rodada 2 do `/test` de `app-auth-forms`, que mediu o mesmo
+conteúdo que hoje está em `7348247`: os commits da branch levam os arquivos que a rodada 2 testou, e a auditoria só
+editou `specs/`.
+
+| comando | resultado (rodada 2 do `/test`, 2026-10-28) |
+|---------|---------------------------------------------|
+| `pnpm test` (raiz, JDK 21, sem `--force`) | ✅ **15/15 tarefas**, 13 do cache, 41,8 s |
+| ↳ `app:test` (fora do cache) | ✅ **130 arquivos · 1120 testes** (+12 e +2 arquivos sobre os 1108 de `main`: `authFormsNoValidate` e `authProviderSessionNotEstablished`) |
+| ↳ do cache | `api` 1679, `api:test:emulator` 274, `web` 207, `@repo/auth` 136, `@repo/internationalization` 67; os demais iguais à tabela abaixo |
+| `pnpm check` | ✅ 1057 arquivos, sem erro (do `/review`, rodada 2) |
+| `pnpm --filter app typecheck` | ✅ sem erro (do `/review`, rodada 2) |
+
+Sem CI: a branch não tem PR, e o `ci.yml` não roda em push para outra branch que não `main`.
+
+**Auditoria completa anterior.** Executados em 2026-10-28, entre 17:53 e 17:57 BRT, com `--force`, neste workspace, com o `HEAD` em `277da43` (igual a
 `origin/main`) e o working tree limpo. Não copiados do `/test` nem da rodada anterior.
 
 | comando | resultado |
@@ -208,64 +284,84 @@ decisão sua, e as duas `in-progress` esperam provedor ou recurso pago.
 | 3 | [`account-security-mfa`](account-security-mfa.md), **fatia 3** (segundo fator) | médio · M | `in-progress`, 4 de 6 itens entregues (fatias 1 e 2, PRs #29 e #39). Nenhuma feature ativa e **fora do conjunto elegível** enquanto o status não mudar (E12). Exige ativar o Identity Platform, com preço não confirmado |
 | 4 | [`observability-logging`](observability-logging.md) | alto · M | `in-progress`, 5 dos 6 itens. O que falta é o coletor, que exige conta num provedor. Estacionada (E1) |
 
-### A próxima: tarefa direta `app-auth-forms`
+### A próxima: tarefa direta `web-sign-up-copy`
 
-**Recomendação decidida para a rodada de 2026-10-28 (pós-PR #59): a tarefa direta `app-auth-forms`** (nome sugerido;
-o `/analyze` define o slug), que junta quatro achados abertos das telas de autenticação. A fila de specs não tem
-candidata elegível, e nenhuma das quatro restantes anda sem uma decisão sua.
+**Recomendação decidida para a rodada delta de 2026-10-29, empilhada sobre `fix/app-auth-forms`: a tarefa direta
+`web-sign-up-copy`** (nome sugerido; o `/analyze` define o slug). Ela fecha o 🟡 da copy do cadastro da landing e leva
+junto o 🟢 das duas formas de "as senhas não coincidem" em pt-br. A fila de specs segue sem candidata elegível.
 
-**O que ela fecha, reconferido em `main` (`277da43`):**
+**O que ela fecha, conferido no `HEAD` (`7348247`):**
 
-1. 🟢 **Sessão recusada depois do login, com alerta em inglês fixo.** Quando a gravação do cookie falha, o
-   `onAuthSuccess` engole o erro e mostra "Could not establish session" em qualquer idioma
-   (`packages/auth/provider.tsx:353-370`, o texto em `:364`). Vale para os três logins: senha, Google e link. Fere a
-   regra de ouro 2. A correção que o `/review` da PR #56 recomendou: mensagem traduzida primeiro, depois separar o
-   corpo de `onAuthSuccess` numa função que lança.
-2. 🟢 **Os seis formulários de autenticação da app sem `noValidate`.** Com `type="email"`, o navegador mostra o balão
-   nativo, no idioma dele, antes da mensagem do Zod. Nenhum arquivo de `apps/app/app/[locale]/(unauthenticated)/` tem
-   `noValidate` hoje.
-3. 🟢 **O `AuthCard` da app encosta nas bordas a 375 px** (`apps/app/app/[locale]/(unauthenticated)/components/AuthCard.tsx:11-12`).
-4. 🟢 **`auth/user-disabled` em en diz "User disabled."** (`translations/packages/auth/index.ts:55`; pt-br e es dizem
-   "Esta conta foi desativada.").
+1. 🟡 **O cadastro da landing pergunta "Não tem uma conta?" ao lado de "Entrar", com o subtítulo do login.** O
+   formulário lê `signUp.enterWithYourAccount` (`apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:98`) e
+   `signUp.noAccount` (`:179`), e a folha da web tem "Entre com sua conta para continuar" / "Não tem uma conta? "
+   (`translations/apps/web/pages/signUp/index.ts:16`, `:20`, e as linhas equivalentes `:41`, `:45`, `:66`, `:70`). Em
+   es, o subtítulo é "Regístrate en tu cuenta para continuar". A app já tem a forma certa desde a PR #55
+   (`translations/apps/app/pages/signUp/index.ts:21`, `:25`, `createYourAccount` e `alreadyHaveAccount`).
+2. 🟢 **"As senhas não coincidem" e "As senhas não conferem" para a mesma regra, em pt-br.** "Coincidem" no cadastro da
+   app (`translations/apps/app/pages/signUp/index.ts:18`), no da landing (`translations/apps/web/pages/signUp/index.ts:24`)
+   e no formulário de usuário do admin (`translations/apps/app/pages/admin/users.ts:52`); "conferem" na redefinição
+   (`translations/apps/app/pages/resetPassword/index.ts:17`) e na troca de senha da conta
+   (`translations/apps/app/pages/common/account.ts:144`). en e es já usam uma forma só. Unificar em "coincidem" acompanha
+   a maioria e o es ("no coinciden").
 
-**Por que ela.** São as primeiras telas de todo fork. Três dos quatro defeitos foram medidos por `/test` anteriores,
-e a landing corrigiu dois deles (o `noValidate` e a margem a 375 px) na PR #55, então a receita já existe no
-repositório. A prova é inteira sob o emulador e no
-navegador local, sem 🔒 previsível. Esforço P a M, em `packages/auth`, nos formulários de
-`apps/app/app/[locale]/(unauthenticated)/` e em duas folhas de i18n; não toca a folha de `apiErrors` nem o subsistema
-de organização. Dois arquivos da tarefa (`SignInForm.tsx` e `SignUpFormClient.tsx`) estão no `contends_on` de
-`social-sign-in-providers`, que está `deferred`, então não há colisão hoje.
+**Arquivos que ela deve tocar:** `packages/internationalization/translations/apps/web/pages/signUp/index.ts`,
+`apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx`,
+`packages/internationalization/translations/apps/app/pages/resetPassword/index.ts`,
+`packages/internationalization/translations/apps/app/pages/common/account.ts` e, para a rede de teste,
+`apps/app/__tests__/authPagesCopy.test.ts`, que já compara a copy de login e cadastro (`:8-29`), mas do cadastro só
+lê o da app. **Nenhum deles está no diff `origin/main..HEAD`** (conferido com
+`git diff --name-only origin/main..HEAD`, 33 arquivos): a branch toca a folha `translations/packages/auth/index.ts`, não
+as folhas de páginas, e não toca nada em `apps/web`. `git grep` pelos textos e chaves trocados em testes e na suíte E2E
+não acha asserção que quebre.
+
+**Por que ela.** É o 🟡 de maior valor que não colide com a branch: a primeira tela de cadastro de todo fork que usa
+a landing, errada nos três idiomas e medida pelo `/test` de `web-auth-forms`. A receita já existe no repositório (a
+troca de chaves que a PR #55 fez na app). A prova é inteira no navegador local, sem 🔒 previsível. Esforço P, em
+`apps/web` e em três folhas de i18n, sem SDK, API, `error.code` nem variável.
+
+**Por que não o laço de recarga, que é mais grave.** O 🟡 do laço (login e cadastro da app com a sessão recusada,
+toast visível por uns 200 ms) mora em `SignInForm.tsx:83-117`, `SignUpFormClient.tsx:72-100` e, pela correção que o
+`/review` da PR #56 recomendou, em `packages/auth/provider.tsx:353-365`. Os três estão no diff da branch, e o conserto
+reescreve exatamente o trecho que ela mudou. Ele vira a #1 depois que `fix/app-auth-forms` entrar em `main`.
 
 **Alternativas descartadas nesta rodada:**
 
 | candidata | por que não é a #1 |
 |-----------|--------------------|
-| o resto do `docs/SECURITY.md` atrás da PR #56 | P, só documento, sem efeito para quem usa o produto. Pode rodar ao lado, sem colisão |
-| uma descoberta nova (`/spec` sem argumento) | entrega specs para triar, não uma funcionalidade. É o caminho se você quiser outra entrega grande: a última descoberta ampla foi em 2026-10-16 |
-| reabrir [`social-sign-in-providers`](social-sign-in-providers.md) | o mesmo motivo da rodada anterior: nenhum fork pediu GitHub ou Microsoft, e o GitHub não prova sob o emulador |
-| [`one-time-purchase`](one-time-purchase.md) | toda prova real depende de conta Stripe (pendência 23), e a D9 segue sem resposta |
-| o `500` sem `error.code` nas leituras de recusa | pede um padrão comum de leitura que falha, que mexe em várias rotas da API. Vale como tarefa própria, M |
-| os dois 🟢 novos da PR #59 | valor baixo: a tabela defasada depois de `ORGANIZATION_FORBIDDEN` repete o comportamento da remoção de membro, e a organização dormente foi decisão do plano |
-| o Espaço que não ativa item do menu de ações | P no design system, mas o defeito é do `rc-menu`, e a correção pede decidir se o `ActionsMenu` trata o teclado por conta própria |
+| o laço de recarga com a sessão recusada (🟡) | colide com a branch e depende dela mergeada; ver acima |
+| os dois textos fixos em inglês de `googleSignInApi.ts` (`:48`, `:62`) | colide: o arquivo está no diff. Valor baixo, só com resposta malformada |
+| a tela vazia do `signInStartedHereRef` e os dois `AuthProvider` da web | a correção natural mora em `packages/auth/provider.tsx`, que está no diff |
+| o resto do `docs/SECURITY.md` atrás da PR #56 | colide: `docs/SECURITY.md` está no diff (âncoras da auditoria pós-PR #59). Só documento |
+| o link de "esqueci a senha" no login da landing | disjunto, P, mas valor menor que um texto errado na tela; pode ir ao lado, num lote |
+| o componente `@repo/auth/components/sign-in` morto e a chave `header.noAccount` | disjunto por arquivo, mas é código que ninguém vê |
+| o `500` sem `error.code` nas leituras de recusa | disjunto, mas M e espalhado por várias rotas da API; vale como tarefa própria |
+| uma descoberta nova (`/spec` sem argumento) | não colide, mas entrega specs para triar, não uma funcionalidade. A última descoberta ampla foi em 2026-10-16 |
+| parar | há tarefa razoável disjunta. Parar é o caminho se você preferir mergear a pilha antes (E15) |
 
-**Registro das recomendações anteriores:** a pós-PR #58 recomendou `organization-ownership-transfer`, entregue pela PR
-#59. A rodada delta 2 de 2026-10-23 recomendou parar até a pilha virar PR, e a rodada delta 1 e a pós-PR #57 recomendaram
-as duas tarefas que a PR #58 levou. A pós-PR #56 recomendou `teams-organizations`, entregue pela PR #57.
+**Registro das recomendações anteriores:** a auditoria pós-PR #59 recomendou a tarefa direta `app-auth-forms`, hoje na
+branch `fix/app-auth-forms`, sem PR (ver [Na branch, sem PR](#na-branch-sem-pr-app-auth-forms)). A pós-PR #58
+recomendou `organization-ownership-transfer`, entregue pela PR #59. A rodada delta 2 de 2026-10-23 recomendou parar até
+a pilha virar PR, e a rodada delta 1 e a pós-PR #57 recomendaram as duas tarefas que a PR #58 levou. A pós-PR #56
+recomendou `teams-organizations`, entregue pela PR #57.
 
 ### Tarefas diretas candidatas
 
-Na ordem em que a auditoria as pegaria quando não houver spec para rodar. Os quatro achados das telas de
-autenticação da app (sessão recusada com alerta em inglês, `noValidate`, `AuthCard` a 375 px e `auth/user-disabled` em
-en) saíram desta lista nesta rodada: juntos, são a #1, em [A próxima](#a-próxima-tarefa-direta-app-auth-forms).
+Na ordem em que a auditoria as pegaria quando não houver spec para rodar. Os quatro achados das telas de autenticação
+da app saíram desta lista na rodada pós-PR #59 e estão na branch `fix/app-auth-forms`. A copy do cadastro da landing
+saiu nesta rodada delta: é a #1, junto com a unificação de "as senhas não coincidem". As marcadas com 🔀 colidem com o
+diff da branch e esperam o merge dela.
 
-- **O resto do `docs/SECURITY.md` atrás da PR #56** (`docs/SECURITY.md:7`, `:162`): P, só documento. A PR #57
-  corrigiu as contagens (55 rotas, 18 sem guard, 17 caminhos de rate limit); seguem de fora o login por link entre os
-  métodos de entrada, a regra de quem recebe o link e a rota de disponibilidade fora da lista de propósito.
-- **Copy do cadastro da landing** (`translations/apps/web/pages/signUp/index.ts` e `sign-up-form-client.tsx:98`,
-  `:179`): P, a mesma troca de chaves que a PR #55 fez na app.
-- **Dois `AuthProvider` aninhados na web e a tela vazia do `signInStartedHereRef`** (`apps/web/app/[locale]/layout.tsx:36-37`,
-  `packages/design-system/index.tsx:27-33`, `sign-in-form-client.tsx`): P a M. Ampliado nesta rodada: o `/test` da PR
-  #56 viu dois `POST /api/auth/session` também na app, que monta um provider só.
+- 🔀 **Laço de recarga com a sessão recusada, no login e no cadastro da app** (`SignInForm.tsx:83-117`,
+  `SignUpFormClient.tsx:72-100`, `packages/auth/provider.tsx:353-365`): P a M, 🟡. A #1 natural depois do merge. Ver
+  [Achados da tarefa `app-auth-forms`](#-achados-da-tarefa-app-auth-forms-branch-fixapp-auth-forms-sem-pr).
+- 🔀 **O resto do `docs/SECURITY.md` atrás da PR #56** (`docs/SECURITY.md:7`, `:162`): P, só documento. A PR #57
+  corrigiu as contagens; seguem de fora o login por link entre os métodos de entrada, a regra de quem recebe o link e a
+  rota de disponibilidade fora da lista de propósito.
+- 🔀 **Dois `AuthProvider` aninhados na web e a tela vazia do `signInStartedHereRef`** (`apps/web/app/[locale]/layout.tsx:36-37`,
+  `packages/design-system/index.tsx:27-33`, `sign-in-form-client.tsx`): P a M. A tela vazia foi medida pelo `/test` de
+  `app-auth-forms`. A correção natural mora no provider e pode ir junto do laço de recarga.
+- 🔀 **Os dois textos fixos em inglês de `googleSignInApi.ts`** (`:48`, `:62`): P, valor baixo.
 - **Link de "esqueci a senha" no login da landing** (`sign-in-form-client.tsx`): P.
 - **Componente `@repo/auth/components/sign-in` morto e a chave `components.header.noAccount` sem consumidor**
   (`packages/auth/components/sign-in.tsx:125`, `packages/auth/package.json:17`,
@@ -288,7 +384,7 @@ en) saíram desta lista nesta rodada: juntos, são a #1, em [A próxima](#a-pró
   `apps/app/__tests__/postAuthRedirectTarget.test.ts`): P.
 - **A `apps/web` sem `not-found`, `error` e `favicon.ico`**: M, e criar um root layout na web mexe no mesmo lugar que
   o idioma do servidor usa (PR #41).
-- **Aparelho encerrado com a tela aberta não sai sozinho** e **sessão expirada que perde a query**
+- 🔀 **Aparelho encerrado com a tela aberta não sai sozinho** e **sessão expirada que perde a query**
   (`packages/auth/provider.tsx`): M.
 - **Tela de erro global da `apps/api` com texto fixo** (`apps/api/app/global-error.tsx:19-22`): P, valor quase nulo.
 - **Nome de marca longo no header a 1024 px**: decisão de produto (a marca sai do centro).
@@ -315,12 +411,14 @@ acrescentaria rota a `apps/api/proxy.ts`.
 
 **A ordem recomendada e os lotes respondem perguntas diferentes.** A ordem diz *o que vale mais a pena fazer*; o lote
 diz *o que pode ser feito junto sem uma spec pisar na outra*. Se você só vai rodar uma coisa, rode o #1 da ordem, que
-nesta rodada é a tarefa direta de [A próxima](#a-próxima-tarefa-direta-app-auth-forms).
+nesta rodada delta é a tarefa direta de [A próxima](#a-próxima-tarefa-direta-web-sign-up-copy).
 
-**Tarefas diretas que podem ir ao lado da #1 sem colisão prevista:** o resto do `docs/SECURITY.md` (só documento), as
-da `apps/web` (copy do cadastro da landing, link de "esqueci a senha") e as da `apps/api` fora de `packages/auth`. As
-que tocam `packages/auth/provider.tsx` (a tela vazia do `signInStartedHereRef`, o aparelho encerrado) ficam para
-depois dela.
+**Tarefas diretas que podem ir ao lado da #1 sem colisão prevista (rodada delta de 2026-10-29):** o link de "esqueci
+a senha" no login da landing (`sign-in-form-client.tsx`, arquivo diferente do da #1) e as da `apps/api` fora de
+`packages/auth`. Numa rodada empilhada, a disjunção conta também contra o diff da branch de baixo: as marcadas com 🔀 em
+[Tarefas diretas candidatas](#tarefas-diretas-candidatas) (o laço de recarga, o resto do `docs/SECURITY.md`, a tela vazia
+do `signInStartedHereRef`, os textos de `googleSignInApi.ts` e o aparelho encerrado) esperam `fix/app-auth-forms`
+entrar em `main`.
 
 **Lição da PR #59 para o campo:** a spec declarou quatro arquivos; a entrega tocou os quatro e mais 49 fora da lista
 (contados fora de `docs/features` e `specs`). Desta vez todo arquivo declarado foi tocado; o erro para menos
@@ -385,7 +483,8 @@ Resolvidos sem pergunta na auditoria pós-PR #59, por medição:
 Recomendações que apareceram em duas rodadas ou mais com a mesma resposta. Pela
 [§5.1 da `cycle-policy`](../.claude/cycle-policy.md), elas **param de ser reapresentadas** até você mexer.
 Cada uma tem dono e endereço. O histórico de cada célula está na versão deste arquivo em `9c793c6`. Nenhuma saiu na
-rodada pós-PR #59; E3, E4, E11 e E14 ganharam a medição dela.
+rodada pós-PR #59; E3, E4, E11 e E14 ganharam a medição dela. A rodada delta de 2026-10-29 acrescentou a E15 e
+atualizou a E11 e a E14.
 
 | # | questão | dono | onde mora a decisão | recomendação registrada |
 |---|---------|------|---------------------|-------------------------|
@@ -398,10 +497,11 @@ rodada pós-PR #59; E3, E4, E11 e E14 ganharam a medição dela.
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
 | E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`) |
 | E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | achado A1 em [Achados](#-achados-abertos-reconferidos-ou-herdados) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer |
-| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Atualizado em 2026-10-28, pós-PR #59:** a PR #59 saiu de `guilhermebittelbrunn/cycle-value-task`, **fora do padrão**; o `/review` propôs `feat/organization-ownership-transfer`, e a PR subiu da branch do workspace por instrução sua, como a nota do `STATE.md` registra. O `STATE.md` dela traz `review: done` e a branch real, que é o que esta linha pede. É a vigésima primeira PR (#37, #40 a #59) cujo squash leva a auditoria anterior junto. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 66 pastas. **Registro de 2026-10-27, pós-PR #58:** a PR #58 saiu de `api/fix/organization-guardrails`, a branch que o `/review` propôs, **dentro do padrão** `<project>/<type>/<title>`. Os dois `STATE.md` dela seguem com a branch marcada como "proposta" e `review: done`. Ela é a vigésima PR (#37, #40 a #58) cujo squash leva a auditoria anterior junto. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 65 pastas. O registro da PR #57 está na versão deste arquivo em `277da43`. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
+| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Rodada delta de 2026-10-29:** a branch da tarefa `app-auth-forms` é `fix/app-auth-forms`, a forma `fix/<slug>` para tarefa que cruza app e pacotes que a recomendação abaixo pede que a regra aceite; o `/review` a criou porque a branch do workspace reprovava no regex. Ainda sem PR. **Atualizado em 2026-10-28, pós-PR #59:** a PR #59 saiu de `guilhermebittelbrunn/cycle-value-task`, **fora do padrão**; o `/review` propôs `feat/organization-ownership-transfer`, e a PR subiu da branch do workspace por instrução sua, como a nota do `STATE.md` registra. O `STATE.md` dela traz `review: done` e a branch real, que é o que esta linha pede. É a vigésima primeira PR (#37, #40 a #59) cujo squash leva a auditoria anterior junto. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 66 pastas. **Registro de 2026-10-27, pós-PR #58:** a PR #58 saiu de `api/fix/organization-guardrails`, a branch que o `/review` propôs, **dentro do padrão** `<project>/<type>/<title>`. Os dois `STATE.md` dela seguem com a branch marcada como "proposta" e `review: done`. Ela é a vigésima PR (#37, #40 a #58) cujo squash leva a auditoria anterior junto. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 65 pastas. O registro da PR #57 está na versão deste arquivo em `277da43`. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
 | E12 | O destino da fatia 3 de `account-security-mfa` (segundo fator com códigos de recuperação, itens 5 e 6). Opções: **(a)** arquivar a spec como entregue em 4/6 e abrir uma spec `proposed` só do segundo fator; **(b)** voltar a spec para `proposed`, com as fatias entregues registradas nela; **(c)** manter `in-progress`; **(d)** marcar a fatia 3 como `deferred` dentro da spec | você | a spec [`account-security-mfa`](account-security-mfa.md) | **(a)**. Com `in-progress` e nenhuma feature ativa, a spec fica fora dos lotes para sempre. A pasta de destino ainda não tem `spec.md` (reconferido em 2026-10-22), então não há colisão |
 | E13 | Ligar o bloqueio de bot da landing? Hoje ele nunca roda, nem com chave válida (achado do `skipValidation` da `apps/web`) | você | [Achados](#-repositório-rotas-e-proxy), linha do `skipValidation` | não ligar agora e declarar a decisão. Ligar é pôr `detectBot` e `shield` em modo `LIVE` para visitante anônimo em todo fork que já tem a chave; pede teste próprio. Os documentos em `main` já descrevem o comportamento atual (`docs/SUBPROCESSORS.md:40`, `docs/FORKING.md:327-328`) |
-| E14 | Qual spec levar ao `/cycle`, já que nenhuma está `approved`? | você | [A próxima](#a-próxima-tarefa-direta-app-auth-forms) | **Rodada pós-PR #59 (2026-10-28):** a fila ficou de novo sem spec elegível, e as quatro restantes dependem de decisão sua (E1, E12 e os dois adiamentos de 2026-10-16). A recomendação do `/cycle` é a tarefa direta `app-auth-forms`. Para voltar a ter spec na fila: uma descoberta (`/spec` sem argumento), destravar a E1 ou a E12 (cada uma abre uma spec P de provedor), ou reabrir `social-sign-in-providers`. **Rodada pós-PR #58 (2026-10-27):** a recomendação foi `organization-ownership-transfer`, escrita a pedido de foco seu e entregue pela PR #59. As rodadas anteriores estão na versão deste arquivo em `277da43` |
+| E14 | Qual spec levar ao `/cycle`, já que nenhuma está `approved`? | você | [A próxima](#a-próxima-tarefa-direta-web-sign-up-copy) | **Rodada delta de 2026-10-29:** sem mudança na fila; a recomendação empilhada é a tarefa direta `web-sign-up-copy`, disjunta da branch `fix/app-auth-forms`. **Rodada pós-PR #59 (2026-10-28):** a fila ficou de novo sem spec elegível, e as quatro restantes dependem de decisão sua (E1, E12 e os dois adiamentos de 2026-10-16). A recomendação do `/cycle` é a tarefa direta `app-auth-forms`. Para voltar a ter spec na fila: uma descoberta (`/spec` sem argumento), destravar a E1 ou a E12 (cada uma abre uma spec P de provedor), ou reabrir `social-sign-in-providers`. **Rodada pós-PR #58 (2026-10-27):** a recomendação foi `organization-ownership-transfer`, escrita a pedido de foco seu e entregue pela PR #59. As rodadas anteriores estão na versão deste arquivo em `277da43` |
+| E15 | Abrir a PR de `fix/app-auth-forms` antes de empilhar outra rodada? | você | esta linha e [Na branch, sem PR](#na-branch-sem-pr-app-auth-forms) | **abrir a PR agora** e empilhar no máximo um nível. Sem PR, a branch não tem CI (o `ci.yml` só roda em `pull_request` e em push para `main`), a entrega não conta, e os achados fechados seguem contados como abertos. Cada nível a mais estreita a lista de tarefas disjuntas: nesta rodada, cinco candidatas ficaram barradas pelo diff de baixo. Segunda aparição: a rodada delta 2 de 2026-10-23 recomendou parar até a pilha virar PR, e a pilha virou a PR #58. Pela §5.1, sai do relatório e para de ser reapresentada até você mexer |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
@@ -572,6 +672,11 @@ parênteses, contra `git show c0c06f2:<arquivo>`:
 | `social-sign-in-providers` | nada: os arquivos citados não foram tocados, e `docs/FORKING.md:175` segue certo |
 | `one-time-purchase` | nada: `docs/PRE-PRODUCTION.md:604-607` segue certo |
 
+**Rodada delta de 2026-10-29:** a branch `fix/app-auth-forms` deslocou três âncoras de `social-sign-in-providers`
+(`provider.tsx`, -5 linhas depois de `:359`; `googleSignInApi.ts`, +1 por um import; `SignInForm.tsx`, +1 depois de
+`:136`). A spec ganhou o número da branch ao lado do de `main`, que segue valendo até o merge. As outras três specs não
+citam arquivo do diff.
+
 Nenhuma nota de `research/` cita arquivo da PR com número de linha. Os 15 caminhos de `contends_on` das quatro specs
 existem; nenhum foi tocado pela PR #59.
 
@@ -592,6 +697,15 @@ parcial órfã além da fatia 3 de `account-security-mfa`, que é a E12.
 
 Coisas que não merecem spec própria, mas que são correções pontuais. Viram tarefa direta no `/analyze`.
 
+> **Rodada delta de 2026-10-29 (branch `fix/app-auth-forms`, sem PR).** Lidos o `review/review.md` e o
+> `test/report.md` da tarefa `app-auth-forms` e conferido cada achado no `HEAD` (`7348247`). **Placar: 4 fechados na
+> branch, aguardando merge · 3 novos, em [Achados da tarefa `app-auth-forms`](#-achados-da-tarefa-app-auth-forms-branch-fixapp-auth-forms-sem-pr)
+> · 1 medido (a tela vazia do login da landing) · 167 abertos** (🟡 57, 🟢 105, ⚠️ 4, ⚪ 1), pela mesma contagem
+> direta. Os quatro fechados na branch são as linhas do alerta da sessão recusada, de `auth/user-disabled`, do
+> `noValidate` e do `AuthCard`, em [Achados da PR #56](#-achados-da-pr-56-2026-10-22). Elas ficam nas tabelas, marcadas,
+> e seguem na contagem até a PR entrar em `main`, como os quatro em andamento da rodada delta 2 de 2026-10-23. A linha
+> do alerta fecha só na metade da tradução; a outra metade está no 🟡 novo do laço de recarga.
+>
 > **Auditoria de 2026-10-28 (pós-PR #59).** A PR #59 alterou 27 arquivos de código fora de testes e sete documentos,
 > fora de `docs/features` e `specs`. As linhas desta seção que citam um deles foram relidas em `main`, com a âncora
 > comparada contra `git show c0c06f2:<arquivo>` e, nos documentos, pelo conteúdo. **Placar: 3 fechados · 1 reduzido ·
@@ -1281,7 +1395,7 @@ registrar, a passada procurou cada um neste arquivo (`AuthProvider`, `noAccount`
 |--------|------|-----------------|
 | 🟡 **O cadastro da landing pergunta "Não tem uma conta?" ao lado de "Entrar", e o subtítulo é o do login** (**reduzido** em 2026-10-21, pós-PR #55) | `translations/apps/web/pages/signUp/index.ts:20`, `:45`, `:70` (`noAccount`), lido em `apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:179`, ao lado do link `signUp.signIn` · subtítulo `enterWithYourAccount`: `web/pages/signUp/index.ts:16`, `:41`, `:66`, lido em `sign-up-form-client.tsx:98` | Quem está no cadastro da landing lê "Não tem uma conta? Entrar" / "Don't have an account? Sign In" / "¿No tienes una cuenta? Iniciar sesión", e o subtítulo "Entre com sua conta para continuar", igual ao login; em es, "Regístrate en tu cuenta para continuar". Medido pelo `/test` de `web-auth-forms` nos três idiomas. **Reduzido:** a metade da app e o "¿" do login em es nas duas apps fecharam com a PR #55 (`app-sign-up-copy`, na lista de fechados), com as chaves renomeadas para `alreadyHaveAccount` e `createYourAccount`. A landing repete a mesma troca no próprio namespace; desde o merge, o formulário não está em nenhum diff pendente. P |
 | 🟢 **A web monta dois `AuthProvider` aninhados, e o login com Google faz dois `POST /api/auth/session`** | `apps/web/app/[locale]/layout.tsx:36-37` (o `DesignSystemProvider` e, dentro dele, outro `AuthProvider`) · `packages/design-system/index.tsx:17-35`, `:44-49` (o `DesignSystemProvider` já monta um, com `errorAlert` e `getRedirectPath`) · cada um assina o token em `packages/auth/provider.tsx:330-346` e grava o cookie em `:161-187` (eram `:323-339` e `:154-180` até a PR #56) | **Medido** pelo `/test` de `web-auth-forms`: dois `POST /api/auth/session` por login com Google na landing, um por provider. Pela leitura, cada provider também tenta o bootstrap de SSO por conta própria e pede a renovação do cookie a cada troca de token (`refreshSessionCookie`, `provider.tsx:220`), então essas chamadas também dobram. A `apps/app` monta um só (`AppDesignProvider` → `DesignSystemProvider`). Os formulários da landing leem o provider mais interno, e o pedido de verificação do cadastro depende do observer dele, que não desmonta na navegação (R3 do plano da tarefa). Tirar um dos dois pede medir sessão, SSO e o fim de sessão de novo. P a M. **Ampliado em 2026-10-22:** o `/test` da PR #56 viu dois `POST /api/auth/session` por conclusão do link também na `apps/app`, que monta um provider só; pela leitura, um vem do `onAuthSuccess` (`provider.tsx:357`) e o outro do observador do token (`:330-346`). Se for isso, parte da duplicação da landing tem a mesma causa e não some tirando um dos providers. Não medido para o login por senha nem pelo Google na app |
-| 🟢 **No login da landing, `signInStartedHereRef` não volta a `false`, e a tela fica vazia se o Firebase aceita a credencial e o cookie de sessão é recusado** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:28` (o ref), `:79` e `:133` (vira `true` no envio e no Google), `:52-56` (o efeito não navega com o ref em `true`), `:58-60` (com `user`, devolve `null`) · `packages/auth/provider.tsx:353-370` (era `:346-362` até a PR #56; `onAuthSuccess`: o `catch` em `:360` mostra o toast e não navega) | A pessoa vê o toast de erro e a área do formulário vazia, sem botão para tentar de novo, até recarregar. Em `main` o resultado é o mesmo, porque o componente devolve `null` com usuário em qualquer caso. Não medido: o caminho exige forçar a recusa do `POST /api/auth/session`. A correção natural mora no provider (deslogar quando o cookie falha) e vai junto da linha anterior. P |
+| 🟢 **No login da landing, `signInStartedHereRef` não volta a `false`, e a tela fica vazia se o Firebase aceita a credencial e o cookie de sessão é recusado** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:28` (o ref), `:79` e `:133` (vira `true` no envio e no Google), `:52-56` (o efeito não navega com o ref em `true`), `:58-60` (com `user`, devolve `null`) · `packages/auth/provider.tsx:353-370` em `main` (`:353-365` na branch `fix/app-auth-forms`; era `:346-362` até a PR #56; `onAuthSuccess`: o `catch` em `:360` mostra o toast e não navega) | A pessoa vê o toast de erro e a área do formulário vazia, sem botão para tentar de novo, até recarregar. Em `main` o resultado é o mesmo, porque o componente devolve `null` com usuário em qualquer caso. **Medido em 2026-10-28** pelo `/test` de `app-auth-forms` (F1b), com `:3001/api/auth/session` bloqueado: toast traduzido 250 ms depois do clique, URL parada em `/pt-br/sign-in` e `<main>` com `innerText` vazio, sem laço. As âncoras do formulário (`:28`, `:52-56`, `:58-60`, `:79`, `:133`) foram relidas no `HEAD` e não mudaram. A correção natural mora no provider (deslogar quando o cookie falha) e vai junto da linha anterior. P |
 | 🟢 **`consoleErrorSpy.mockRestore()` só roda quando as asserções passam** | `apps/web/__tests__/signUpFormApi.test.tsx:189` (o `spyOn`) e `:204` (o `mockRestore`, depois do `expect` de `:203`) | Se o `expect` falhar, o espião fica ligado para os testes seguintes do arquivo. Só afeta a suíte depois de um teste já vermelho. O arquivo entrou em `main` pela PR #55 sem a correção; o `/review` registrou e não corrigiu. P (um `afterEach` ou `try/finally`) |
 
 **Lacunas de teste herdadas de `web-auth-forms`:** os vereditos estão na versão deste arquivo em `df381f4`, seção
@@ -1328,10 +1442,10 @@ ela.
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🟡 **O `docs/SECURITY.md` não acompanhou a PR #56** (reduzido em 2026-10-23, pós-PR #57) | `docs/SECURITY.md:7` (métodos de login sem o link) · `:162` (a lista de rate limit e o que fica de fora) | **Reduzido:** a PR #57 corrigiu as contagens, que hoje batem com o código (55 rotas, 18 nus, 12 em `/auth/*`, 17 caminhos). Seguem de fora o login por link entre os métodos de entrada, a regra de quem recebe o link e a rota de disponibilidade, fora do rate limit de propósito (`apps/api/proxy.ts:34-36`, o comentário). P, só documento |
-| 🟢 **Quando a sessão não é gravada depois do login, o provider engole a falha e o alerta sai em inglês fixo** | `packages/auth/provider.tsx:353-370` (`onAuthSuccess`: o `catch` em `:360` mostra o alerta e retorna) · `:364` (`new Error("Could not establish session")`) | A mutation termina em sucesso com a sessão recusada, para os três logins (senha, Google e link). A página do link ganhou uma saída na PR #56 (`EmailLinkCompletion.tsx:165-178`); o login por senha e o Google seguem sem. O texto passa pelo `FormattedError`, que devolve a `message` de um `Error` comum, e aparece em inglês em pt-br e es (medido pelo `/test`). A correção que o `/review` recomendou: uma mensagem traduzida primeiro, depois separar o corpo de `onAuthSuccess` numa função que lança. P a M |
-| 🟢 **`auth/user-disabled` em en diz "User disabled."** | `packages/internationalization/translations/packages/auth/index.ts:55` (pt-br `:16` e es `:96` dizem "Esta conta foi desativada.") | A conta desativada que tenta o link, a senha ou o Google lê uma mensagem seca só em inglês. Copy, P |
-| 🟢 **Os seis formulários de autenticação da app não têm `noValidate`** | `apps/app/app/[locale]/(unauthenticated)/`: `sign-in/components/SignInForm.tsx:136`, `sign-up/components/SignUpFormClient.tsx:154`, `forgot-password/components/ForgotPasswordForm.tsx:77`, `reset-password/components/ResetPasswordForm.tsx:97`, `sign-in/email-link/components/EmailLinkRequestForm.tsx:99`, `EmailLinkCompletion.tsx:201` | Com `type="email"`, o navegador mostra o balão nativo, no idioma dele, antes da mensagem do Zod (medido pelo `/test` no pedido de link e no "Esqueci minha senha"). A landing corrigiu o mesmo caso na PR #55. P, só `apps/app` |
-| 🟢 **O `AuthCard` da app encosta nas bordas a 375 px** | `apps/app/app/[locale]/(unauthenticated)/components/AuthCard.tsx:11-12` (contêiner sem recuo lateral) | Medido pelo `/test` no pedido de link e no "Esqueci minha senha": o cartão vai de x = 0 a 375, enquanto o login fica com 39 px de cada lado. A landing resolveu com `px-4 md:px-2` na PR #55. P |
+| 🟢 **Quando a sessão não é gravada depois do login, o provider engole a falha e o alerta sai em inglês fixo** (✅ **metade do alerta fechada na branch `fix/app-auth-forms`, aguardando merge**: `provider.tsx:360-364` lê `session.notEstablished` nos três idiomas; a mutação que termina em sucesso continua, no 🟡 do laço de recarga em [Achados da tarefa `app-auth-forms`](#-achados-da-tarefa-app-auth-forms-branch-fixapp-auth-forms-sem-pr)) | `packages/auth/provider.tsx:353-370` (`onAuthSuccess`: o `catch` em `:360` mostra o alerta e retorna) · `:364` (`new Error("Could not establish session")`) | A mutation termina em sucesso com a sessão recusada, para os três logins (senha, Google e link). A página do link ganhou uma saída na PR #56 (`EmailLinkCompletion.tsx:165-178`); o login por senha e o Google seguem sem. O texto passa pelo `FormattedError`, que devolve a `message` de um `Error` comum, e aparece em inglês em pt-br e es (medido pelo `/test`). A correção que o `/review` recomendou: uma mensagem traduzida primeiro, depois separar o corpo de `onAuthSuccess` numa função que lança. P a M |
+| 🟢 **`auth/user-disabled` em en diz "User disabled."** (✅ **fechado na branch `fix/app-auth-forms`, aguardando merge**: `translations/packages/auth/index.ts:59`, "This account has been disabled."; o es já estava em espanhol, `:102`, e a citação abaixo errava) | `packages/internationalization/translations/packages/auth/index.ts:55` (pt-br `:16` e es `:96` dizem "Esta conta foi desativada.") | A conta desativada que tenta o link, a senha ou o Google lê uma mensagem seca só em inglês. Copy, P |
+| 🟢 **Os seis formulários de autenticação da app não têm `noValidate`** (✅ **fechado na branch `fix/app-auth-forms`, aguardando merge**: `SignInForm.tsx:138`, `SignUpFormClient.tsx:156`, `ForgotPasswordForm.tsx:79`, `ResetPasswordForm.tsx:99`, `EmailLinkRequestForm.tsx:101`, `EmailLinkCompletion.tsx:203`) | `apps/app/app/[locale]/(unauthenticated)/`: `sign-in/components/SignInForm.tsx:136`, `sign-up/components/SignUpFormClient.tsx:154`, `forgot-password/components/ForgotPasswordForm.tsx:77`, `reset-password/components/ResetPasswordForm.tsx:97`, `sign-in/email-link/components/EmailLinkRequestForm.tsx:99`, `EmailLinkCompletion.tsx:201` | Com `type="email"`, o navegador mostra o balão nativo, no idioma dele, antes da mensagem do Zod (medido pelo `/test` no pedido de link e no "Esqueci minha senha"). A landing corrigiu o mesmo caso na PR #55. P, só `apps/app` |
+| 🟢 **O `AuthCard` da app encosta nas bordas a 375 px** (✅ **fechado na branch `fix/app-auth-forms`, aguardando merge**: `px-4 py-20 sm:px-0` em `AuthCard.tsx:11`, `SignInForm.tsx:124` e `SignUpFormClient.tsx:142`; 16 px de cada lado a 375 px e cartão de 400 px a partir de 640 px, medidos pelo `/test`) | `apps/app/app/[locale]/(unauthenticated)/components/AuthCard.tsx:11-12` (contêiner sem recuo lateral) | Medido pelo `/test` no pedido de link e no "Esqueci minha senha": o cartão vai de x = 0 a 375, enquanto o login fica com 39 px de cada lado. A landing resolveu com `px-4 md:px-2` na PR #55. P |
 | 🟢 **Na conclusão do link, o texto "Entrando…" fica cerca de 280 px abaixo do spinner** | `apps/app/shared/components/ui/FullScreenLoader.tsx:13` (`min-h-[60vh]`) · `EmailLinkCompletion.tsx:168-193` | Medido pelo `/test`: a 375×812 o texto e o link de volta cabem na dobra, mas ficam longe do indicador. Cosmético. P |
 | 🟢 **O link não leva o `?redirect=` da tela de login** | decisão D8 do plano · `EmailLinkRequestForm.tsx` e `emailLinkSignIn.ts` (o e-mail guarda só o código) | Quem chegou ao login por um deep link e escolheu o link por e-mail cai no destino padrão, não na página que pedia. O plano chamou de "melhoria pequena e isolada para depois": levar o destino sanitizado por `postAuthRedirectTarget`. P |
 | 🟢 **O e-mail do pedido fica no `localStorage`, e o inventário de armazenamento do navegador só lista cookies** | `apps/app/shared/lib/emailLinkSignIn.ts:1`, `:7-13` (grava), `:24-30` (apaga só depois do sucesso) · `docs/PRE-PRODUCTION.md:495-504` e a seção "Cookies que usamos" | O endereço fica no navegador até o link ser usado, e a chave não aparece em nenhum inventário (o `bp:panel-state` do painel também não, `docs/AUTH-PANEL.md:78`). A gravação serve ao pedido que a pessoa fez; se o inventário deve cobrir armazenamento local é decisão de quem escreve a política de cada fork. Registro, P de texto |
@@ -1455,6 +1569,31 @@ reconfirmação. Os pré-requisitos de infra de membros e convites seguem no `PR
   seis das nove rotas de organização fora da lista; 18 de 56 arquivos nus.
 - **O `500` sem `error.code` nas leituras de recusa** ([Achados da tarefa `organization-guardrails`](#-achados-da-tarefa-organization-guardrails-pr-58-2026-10-23)):
   o helper passou a ler também a lista de organizações do dono antes das leituras por membro.
+
+### 🆕 Achados da tarefa `app-auth-forms` (branch `fix/app-auth-forms`, sem PR)
+
+Vindos do `/review` (os dois 🟡 e o 🟢 do `catch`), da §1.6 do plano e da seção "Achados fora do corte" do `/test` de
+`app-auth-forms`, conferidos no `HEAD` da branch (`7348247`) nesta rodada delta. Nenhum foi aberto pelo diff: o laço do
+login e o do cadastro existem em `main` igual, e os dois textos do Google e as duas formas de "não coincidem" também.
+Antes de registrar, a auditoria procurou cada um neste arquivo (`recarga`, `laço`, `não conferem`, `não coincidem`,
+`did not return an ID token`, `Invalid response from auth API`, `resolvePostLoginPath`): só a linha do alerta da sessão
+recusada, em [Achados da PR #56](#-achados-da-pr-56-2026-10-22), falava do provider que engole a falha, sem citar o laço.
+
+| achado | onde | por que importa |
+|--------|------|-----------------|
+| 🟡 **Com a sessão recusada, o login e o cadastro da app recarregam a página em laço, e o alerta fica visível por uns 200 ms** | `apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx:83-117` (com usuário no Firebase client, o efeito grava a sessão de novo e navega; o freio é só o `401` em `:102`) · `sign-up/components/SignUpFormClient.tsx:72-100` (o mesmo efeito, sem freio: navega com qualquer resposta) · `packages/auth/provider.tsx:353-365` (`onAuthSuccess` mostra o alerta e a mutação termina em sucesso, com o client ainda logado) | **Medido** pelo `/test` de `app-auth-forms`, com `--abort` em `/api/auth/session`: no login, o alerta traduzido aparece de 221 a 258 ms depois do clique, a primeira recarga chega de 398 a 454 ms depois, e foram 16 a 18 recargas em 5 s (32 em 13 s), sempre em `/<locale>/sign-in?redirect=…`; no cadastro, 20 cargas em 7 s, passando pelo login. A pessoa não consegue ler a mensagem. Tirado o bloqueio, o laço para. Fora do corte da tarefa por decisão do plano (D1 e D3): a correção é a metade "função que lança" que o `/review` da PR #56 recomendou, ou deslogar o client quando a sessão falha, como o Google da app já faz (`googleSignInApi.ts:34-39`). As duas mexem no link por e-mail, que depende do `isSuccess` com a sessão recusada (`EmailLinkCompletion.tsx:165-178`). Na mesma passada, tirar a navegação do `try` de `onAuthSuccess`: hoje o `catch` (`:360`) também pega uma falha de `resolvePostLoginPath`, que roda depois do toast de sucesso; pela leitura do `/review`, ela não lança hoje. P a M, e depende de `fix/app-auth-forms` mergeada, porque reescreve os mesmos trechos |
+| 🟢 **Duas formas de "as senhas não coincidem" em pt-br** | "coincidem": `translations/apps/app/pages/signUp/index.ts:18`, `translations/apps/web/pages/signUp/index.ts:24`, `translations/apps/app/pages/admin/users.ts:52` · "conferem": `translations/apps/app/pages/resetPassword/index.ts:17`, `translations/apps/app/pages/common/account.ts:144` | **Medido** pelo `/test` de `app-auth-forms` no cadastro e na redefinição; a auditoria achou a terceira e a quarta ocorrência por `grep`. en ("do not match") e es ("no coinciden") usam uma forma só. A mesma regra com duas frases. Copy, P. Vai junto da #1 desta rodada |
+| 🟢 **Dois textos fixos em inglês sobram no Google da app** | `apps/app/shared/lib/googleSignInApi.ts:48` ("Google sign-in did not return an ID token") · `:62` ("Invalid response from auth API") | Saem pelo `FormattedError` como `message` crua, em inglês nos três idiomas (regra de ouro 2). Só aparecem com resposta malformada do Google ou da API, então ninguém deve vê-los em uso normal. Registrado pela §1.6 do plano. P, uma chave e duas linhas, no arquivo que a branch mudou |
+
+**Lacunas de teste herdadas de `app-auth-forms`, com veredito desta rodada:**
+
+| lacuna | veredito 2026-10-29 | motivo |
+|--------|---------------------|--------|
+| Recuo lateral sem teste de unidade | **continua aberta**, por decisão do plano (§7) | o `/test` mediu no navegador a 375, 500, 639, 640, 768 e 1280 px, em claro e escuro |
+| `auth/user-disabled` en sem teste de copy | **fechada** na branch, aguardando merge | caso novo em `apps/app/__tests__/apiErrorCopy.test.ts`, que falha com "User disabled." |
+| Alerta traduzido na `apps/web` sem teste próprio | **continua aberta**, risco baixo | medido no navegador (F1b); o provider é o mesmo módulo que o teste `authProviderSessionNotEstablished` monta |
+| O teste do provider só dispara o login por senha | **continua aberta**, risco baixo | as três mutações apontam para o mesmo `onAuthSuccess` (`provider.tsx:371`, `:378`, `:383`); o link foi medido no navegador; a mutação de Google do provider, que só a landing usa, não foi exercida |
+
 
 ## Pendências vivas sem dono
 
