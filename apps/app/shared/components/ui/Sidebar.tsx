@@ -104,6 +104,7 @@ function NavBranch({
                                 <SidebarMenuSubItem key={subItem.title}>
                                     <SidebarMenuSubButton
                                         asChild
+                                        className={ACTIVE_ITEM_CLASS}
                                         isActive={subItemActive}
                                     >
                                         <Link
