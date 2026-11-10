@@ -9,7 +9,24 @@ export const commonAccountPageTranslations = {
             billing: "Cobrança",
             privacy: "Privacidade",
         },
+        sectionNav: {
+            label: "Seções da conta",
+        },
+        sections: {
+            profile: "Seus dados de exibição e o e-mail da conta.",
+            security: "Como você entra na conta e onde ela está aberta agora.",
+            preferences: "Como o painel aparece para você.",
+            billing: "Escolha um plano ou gerencie a sua assinatura.",
+            privacy:
+                "Baixe uma cópia dos seus dados ou apague a sua conta. As duas ações valem só para a sua conta.",
+        },
         profile: {
+            details: {
+                title: "Dados pessoais",
+                description: "Nome, telefone e foto que a equipe vê.",
+            },
+            emailDescription:
+                "Endereço usado para entrar e para receber os avisos da conta.",
             displayName: "Nome de exibição",
             displayNamePlaceholder: "Como você quer ser chamado",
             phone: "Telefone",
@@ -65,6 +82,7 @@ export const commonAccountPageTranslations = {
             },
         },
         security: {
+            passwordTitle: "Senha",
             description:
                 "Ao trocar a senha, todas as sessões são encerradas e você precisa entrar de novo.",
             currentPassword: "Senha atual",
@@ -145,6 +163,7 @@ export const commonAccountPageTranslations = {
             },
         },
         preferences: {
+            title: "Tema e idioma",
             description:
                 "Tema e idioma acompanham a sua conta em qualquer dispositivo.",
             theme: "Tema",
@@ -160,7 +179,6 @@ export const commonAccountPageTranslations = {
             emptyTitle: "Cobrança em breve",
             emptyDescription:
                 "Planos, assinatura e faturas aparecerão aqui quando a cobrança for ativada.",
-            description: "Escolha um plano ou gerencie a sua assinatura.",
             plansTitle: "Planos",
             noPlans: "Nenhum plano disponível no momento.",
             loadError: "Não foi possível carregar os planos.",
@@ -198,8 +216,6 @@ export const commonAccountPageTranslations = {
                 "Pagamento cancelado. Nenhuma cobrança foi feita.",
         },
         privacy: {
-            description:
-                "Baixe uma cópia dos seus dados ou apague a sua conta. As duas ações valem só para a sua conta.",
             deadline:
                 "Pedidos enviados pelo canal de privacidade são respondidos em até 15 dias.",
             policyLink: "Ver a política de privacidade",
@@ -259,7 +275,25 @@ export const commonAccountPageTranslations = {
             billing: "Billing",
             privacy: "Privacy",
         },
+        sectionNav: {
+            label: "Account sections",
+        },
+        sections: {
+            profile: "Your display details and the account email.",
+            security:
+                "How you sign in and where your account is signed in right now.",
+            preferences: "How the panel looks for you.",
+            billing: "Pick a plan or manage your subscription.",
+            privacy:
+                "Download a copy of your data or delete your account. Both actions apply to your account only.",
+        },
         profile: {
+            details: {
+                title: "Personal details",
+                description: "The name, phone and photo your team sees.",
+            },
+            emailDescription:
+                "The address you sign in with and where account notices go.",
             displayName: "Display name",
             displayNamePlaceholder: "How you want to be called",
             phone: "Phone",
@@ -317,6 +351,7 @@ export const commonAccountPageTranslations = {
             },
         },
         security: {
+            passwordTitle: "Password",
             description:
                 "Changing your password ends every session, so you will need to sign in again.",
             currentPassword: "Current password",
@@ -398,6 +433,7 @@ export const commonAccountPageTranslations = {
             },
         },
         preferences: {
+            title: "Theme and language",
             description:
                 "Theme and language follow your account on any device.",
             theme: "Theme",
@@ -413,7 +449,6 @@ export const commonAccountPageTranslations = {
             emptyTitle: "Billing coming soon",
             emptyDescription:
                 "Plans, subscription and invoices will show up here once billing is enabled.",
-            description: "Pick a plan or manage your subscription.",
             plansTitle: "Plans",
             noPlans: "No plans available right now.",
             loadError: "We couldn't load the plans.",
@@ -450,8 +485,6 @@ export const commonAccountPageTranslations = {
             checkoutCanceled: "Payment canceled. You were not charged.",
         },
         privacy: {
-            description:
-                "Download a copy of your data or delete your account. Both actions apply to your account only.",
             deadline:
                 "Requests sent through the privacy channel are answered within 15 days.",
             policyLink: "Read the privacy policy",
@@ -511,7 +544,26 @@ export const commonAccountPageTranslations = {
             billing: "Facturación",
             privacy: "Privacidad",
         },
+        sectionNav: {
+            label: "Secciones de la cuenta",
+        },
+        sections: {
+            profile: "Tus datos de perfil y el correo de la cuenta.",
+            security:
+                "Cómo inicias sesión y dónde está abierta tu cuenta ahora.",
+            preferences: "Cómo se ve el panel para ti.",
+            billing: "Elige un plan o gestiona tu suscripción.",
+            privacy:
+                "Descarga una copia de tus datos o elimina tu cuenta. Ambas acciones se aplican solo a tu cuenta.",
+        },
         profile: {
+            details: {
+                title: "Datos personales",
+                description:
+                    "El nombre, el teléfono y la foto que ve tu equipo.",
+            },
+            emailDescription:
+                "La dirección con la que inicias sesión y donde llegan los avisos de la cuenta.",
             displayName: "Nombre visible",
             displayNamePlaceholder: "Cómo quieres que te llamen",
             phone: "Teléfono",
@@ -570,6 +622,7 @@ export const commonAccountPageTranslations = {
             },
         },
         security: {
+            passwordTitle: "Contraseña",
             description:
                 "Al cambiar la contraseña se cierran todas las sesiones y deberás entrar de nuevo.",
             currentPassword: "Contraseña actual",
@@ -654,6 +707,7 @@ export const commonAccountPageTranslations = {
             },
         },
         preferences: {
+            title: "Tema e idioma",
             description:
                 "El tema y el idioma acompañan a tu cuenta en cualquier dispositivo.",
             theme: "Tema",
@@ -669,7 +723,6 @@ export const commonAccountPageTranslations = {
             emptyTitle: "Facturación próximamente",
             emptyDescription:
                 "Planes, suscripción y facturas aparecerán aquí cuando se active la facturación.",
-            description: "Elige un plan o gestiona tu suscripción.",
             plansTitle: "Planes",
             noPlans: "No hay planes disponibles por ahora.",
             loadError: "No pudimos cargar los planes.",
@@ -706,8 +759,6 @@ export const commonAccountPageTranslations = {
             checkoutCanceled: "Pago cancelado. No se realizó ningún cobro.",
         },
         privacy: {
-            description:
-                "Descarga una copia de tus datos o elimina tu cuenta. Ambas acciones se aplican solo a tu cuenta.",
             deadline:
                 "Las solicitudes enviadas por el canal de privacidad se responden en un plazo de 15 días.",
             policyLink: "Ver la política de privacidad",
