@@ -21,6 +21,8 @@ export type FooterProps = {
     isLoading?: boolean;
     disabled?: boolean;
     className?: string;
+    /** False renders the actions inline, inside the block that owns them. */
+    sticky?: boolean;
 };
 
 export function Footer({
@@ -32,6 +34,7 @@ export function Footer({
     isLoading = false,
     disabled = false,
     className,
+    sticky = true,
 }: FooterProps) {
     const router = useRouter();
     const { dictionary } = getDictionary();
@@ -44,7 +47,9 @@ export function Footer({
     return (
         <div
             className={cn(
-                "sticky bottom-0 z-10 mt-4 flex w-full flex-wrap items-center justify-end gap-3 border-border border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/80",
+                "mt-4 flex w-full flex-wrap items-center justify-end gap-3",
+                sticky &&
+                    "sticky bottom-0 z-10 border-border border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/80",
                 className
             )}
         >

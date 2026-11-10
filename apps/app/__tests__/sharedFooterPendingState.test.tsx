@@ -48,6 +48,19 @@ describe("rodapés compartilhados durante o request", () => {
         expect(submitButtonOf(container).disabled).toBe(false);
     });
 
+    it("o Footer em linha não fica preso ao rodapé e ainda bloqueia o envio", () => {
+        const { container } = render(<Footer isLoading sticky={false} />);
+
+        expect(container.firstElementChild?.className).not.toContain("sticky");
+        expect(submitButtonOf(container).disabled).toBe(true);
+    });
+
+    it("o Footer continua fixo por padrão", () => {
+        const { container } = render(<Footer />);
+
+        expect(container.firstElementChild?.className).toContain("sticky");
+    });
+
     it("o PageFormFooter bloqueia o envio enquanto carrega", () => {
         const { container } = render(
             <PageFormFooter
