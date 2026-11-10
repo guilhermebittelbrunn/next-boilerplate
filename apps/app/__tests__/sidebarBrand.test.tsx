@@ -7,6 +7,7 @@ import { GlobalSidebar } from "@/shared/components/ui/Sidebar";
 vi.mock("next/navigation", () => ({
     useParams: () => ({ locale: "pt-br" }),
     usePathname: () => "/pt-br",
+    useSearchParams: () => new URLSearchParams(""),
 }));
 
 const renderSidebar = (defaultOpen = true) =>

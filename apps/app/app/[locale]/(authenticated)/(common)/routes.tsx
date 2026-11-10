@@ -21,8 +21,6 @@ export function useCommonNavRoutes(): NavItem[] {
     return useMemo(() => {
         const { dictionary } = getDictionaryForLocale(locale);
         const routes = COMMON_ROUTES(dictionary, locale);
-        const settingsItems =
-            dictionary.apps.app.pages.common.routes.platform.settingsItems;
         return [
             {
                 title: dictionary.apps.app.pages.common.routes.platform
@@ -55,27 +53,27 @@ export function useCommonNavRoutes(): NavItem[] {
                 icon: Settings2Icon,
                 items: [
                     {
-                        title: settingsItems.general,
+                        title: routes.account.profile.label,
                         url: routes.account.profile.url,
                     },
                     {
-                        title: settingsItems.security,
+                        title: routes.account.security.label,
                         url: routes.account.security.url,
                     },
                     {
-                        title: settingsItems.preferences,
+                        title: routes.account.preferences.label,
                         url: routes.account.preferences.url,
                     },
                     ...(isSubscriptionMode()
                         ? [
                               {
-                                  title: settingsItems.billing,
+                                  title: routes.account.billing.label,
                                   url: routes.account.billing.url,
                               },
                           ]
                         : []),
                     {
-                        title: settingsItems.privacy,
+                        title: routes.account.privacy.label,
                         url: routes.account.privacy.url,
                     },
                 ],

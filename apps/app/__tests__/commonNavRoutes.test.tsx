@@ -17,6 +17,18 @@ async function settingsItemUrls() {
         : [];
 }
 
+async function settingsItemTitles() {
+    vi.resetModules();
+    const { useCommonNavRoutes } = await import(
+        "@/app/[locale]/(authenticated)/(common)/routes"
+    );
+    const { result } = renderHook(() => useCommonNavRoutes());
+    const settings = result.current.find((item) => "items" in item);
+    return settings && "items" in settings
+        ? settings.items.map((item) => item.title)
+        : [];
+}
+
 async function topLevelUrls() {
     vi.resetModules();
     const { useCommonNavRoutes } = await import(
@@ -51,6 +63,27 @@ describe("useCommonNavRoutes — cobrança por modo de produto", () => {
             "/pt-br/account?tab=preferences",
             "/pt-br/account?tab=privacy",
         ]);
+    });
+});
+
+describe("useCommonNavRoutes — rótulos de configurações", () => {
+    it("usa o mesmo rótulo das seções da conta", async () => {
+        vi.stubEnv("NEXT_PUBLIC_PRODUCT_MODE", "subscription");
+        const { getDictionaryForLocale } = await import(
+            "@repo/internationalization/client"
+        );
+        const accountTabs =
+            getDictionaryForLocale("pt-br").dictionary.apps.app.pages.common
+                .account.tabs;
+
+        expect(await settingsItemTitles()).toEqual([
+            accountTabs.profile,
+            accountTabs.security,
+            accountTabs.preferences,
+            accountTabs.billing,
+            accountTabs.privacy,
+        ]);
+        expect(accountTabs.profile).toBe("Perfil");
     });
 });
 
