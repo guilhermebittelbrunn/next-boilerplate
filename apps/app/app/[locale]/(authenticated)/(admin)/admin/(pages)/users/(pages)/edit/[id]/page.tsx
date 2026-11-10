@@ -12,6 +12,7 @@ import { Container } from "@/shared/components/ui/Container";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { Header } from "@/shared/components/ui/Header";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ADMIN_ROUTES } from "../../../../../paths";
 import { UserFormFields } from "../../../(components)/UserFormFields";
 import { useFindUserById } from "../../../(hooks)/useFindUserById";
@@ -84,8 +85,10 @@ export default function EditUserPage() {
             />
             <Container
                 contentOnly
+                header={<PageHeader title={routes.users.update(id).label} />}
                 loadError={isError ? adminUsersMessages.loadError : null}
                 loading={isLoading && !isError}
+                width="narrow"
             >
                 {user ? (
                     <Form {...form}>

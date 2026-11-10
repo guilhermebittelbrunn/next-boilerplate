@@ -11,6 +11,7 @@ import { Container } from "@/shared/components/ui/Container";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { Header } from "@/shared/components/ui/Header";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ADMIN_ROUTES } from "../../../../paths";
 import { UserFormFields } from "../../(components)/UserFormFields";
 import { useUserCrud } from "../../(hooks)/useUserCrud";
@@ -60,7 +61,11 @@ export default function CreateUserPage() {
                 ]}
                 page={routes.users.create.label}
             />
-            <Container contentOnly>
+            <Container
+                contentOnly
+                header={<PageHeader title={routes.users.create.label} />}
+                width="narrow"
+            >
                 <Form {...form}>
                     <form
                         className="flex min-h-[50vh] w-full flex-1 flex-col"
