@@ -25,6 +25,7 @@ vi.mock("@/shared/components/ui/LoadErrorState", () => ({
 
 const { PageHeader } = await import("@/shared/components/ui/PageHeader");
 const { Container } = await import("@/shared/components/ui/Container");
+const { PageSkeleton } = await import("@/shared/components/ui/PageSkeleton");
 
 afterEach(cleanup);
 
@@ -99,5 +100,51 @@ describe("Container com cabeçalho de página", () => {
         );
 
         expect(container.firstElementChild?.className).toContain("max-w-4xl");
+    });
+});
+
+describe("PageSkeleton", () => {
+    const bodyOf = (container: HTMLElement) =>
+        container.children.item(1) as HTMLElement | null;
+
+    it("reserva a barra do breadcrumb com a mesma altura do Header", () => {
+        const { container } = render(<PageSkeleton />);
+
+        expect(container.firstElementChild?.className).toContain("h-16");
+    });
+
+    it("usa a mesma classe de corpo e de largura que o Container", () => {
+        const { container: skeleton } = render(<PageSkeleton width="narrow" />);
+        const skeletonBody = bodyOf(skeleton)?.className;
+        cleanup();
+        const { container: page } = render(
+            <Container header={<PageHeader title="Conta" />} width="narrow">
+                conteúdo
+            </Container>
+        );
+
+        expect(skeletonBody).toBe(page.firstElementChild?.className);
+    });
+
+    it("só reserva descrição e ações quando a tela tem", () => {
+        const countSkeletons = (element: HTMLElement | null) =>
+            element?.querySelectorAll('[data-slot="skeleton"]').length ?? 0;
+
+        const { container, rerender } = render(<PageSkeleton />);
+        const bare = countSkeletons(bodyOf(container));
+
+        rerender(<PageSkeleton actions description />);
+
+        expect(countSkeletons(bodyOf(container))).toBe(bare + 2);
+    });
+
+    it("renderiza o corpo da carga abaixo do título", () => {
+        render(
+            <PageSkeleton>
+                <p>tabela</p>
+            </PageSkeleton>
+        );
+
+        expect(screen.getByText("tabela")).toBeTruthy();
     });
 });

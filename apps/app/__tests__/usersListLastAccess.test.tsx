@@ -321,3 +321,21 @@ describe("last access column in each language", () => {
         ).toBe("Valor aproximado, del proveedor de autenticación");
     });
 });
+
+describe("users list page header", () => {
+    it("renders the add action next to the page title and keeps the breadcrumb bar free of it", () => {
+        givenUsers([user({})]);
+
+        render(<UsersListClient />);
+
+        const title = screen.getByRole("heading", { level: 1 });
+        const addButton = screen.getByRole("button", { name: "add" });
+        const breadcrumbBar = document.querySelector("header");
+
+        expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+        expect(breadcrumbBar?.contains(addButton)).toBe(false);
+        expect(title.parentElement?.parentElement?.contains(addButton)).toBe(
+            true
+        );
+    });
+});
