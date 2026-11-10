@@ -28,6 +28,7 @@ import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
 import { MetricCard } from "@/shared/components/ui/MetricCard";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useMyAccount } from "@/shared/hooks/useMyAccount";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../paths";
@@ -165,16 +166,15 @@ export function CommonHomeClient() {
     return (
         <>
             <Header page={routes.root.label} />
-            <Container>
+            <Container
+                header={
+                    <PageHeader
+                        description={homePage.subtitle}
+                        title={greeting}
+                    />
+                }
+            >
                 <div className="mx-auto flex w-full flex-col gap-6">
-                    <div className="flex flex-col gap-1">
-                        <h1 className="font-semibold text-2xl tracking-tight">
-                            {greeting}
-                        </h1>
-                        <p className="text-muted-foreground text-sm">
-                            {homePage.subtitle}
-                        </p>
-                    </div>
                     {renderContent()}
                 </div>
             </Container>

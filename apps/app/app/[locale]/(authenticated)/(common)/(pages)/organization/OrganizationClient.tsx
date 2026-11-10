@@ -6,6 +6,7 @@ import { handleClientError } from "@repo/shared/utils/helpers/handleClientError"
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { COMMON_ROUTES } from "../../paths";
 import { InviteMemberForm } from "./(components)/InviteMemberForm";
 import { LeaveOrganizationButton } from "./(components)/LeaveOrganizationButton";
@@ -32,12 +33,18 @@ export function OrganizationClient() {
                 ]}
                 page={routes.organization.label}
             />
-            <Container loadError={loadError} loading={isLoading}>
-                <div className="mx-auto flex w-full flex-col gap-8">
+            <Container
+                header={
+                    <PageHeader
+                        description={organizationCopy.description}
+                        title={routes.organization.label}
+                    />
+                }
+                loadError={loadError}
+                loading={isLoading}
+            >
+                <div className="mx-auto flex w-full flex-col gap-6">
                     <ImpersonationReadOnlyNotice />
-                    <p className="text-muted-foreground text-sm">
-                        {organizationCopy.description}
-                    </p>
                     {isOwner ? <InviteMemberForm /> : null}
                     <OrganizationMembersTable isOwner={isOwner} />
                     {isOwner ? <OrganizationInvitationsTable /> : null}

@@ -13,6 +13,7 @@ import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { FormSkeleton } from "@/shared/components/ui/FormSkeleton";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { PlanGate } from "@/shared/components/ui/PlanGate";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { entityPlanRequirement } from "@/shared/lib/entityPlanRequirement";
@@ -101,7 +102,11 @@ export default function CreateEntityPage() {
                 ]}
                 page={routes.entities.create.label}
             />
-            <Container contentOnly>
+            <Container
+                contentOnly
+                header={<PageHeader title={routes.entities.create.label} />}
+                width="narrow"
+            >
                 {planRequirement ? (
                     <PlanGate
                         loadingFallback={<FormSkeleton />}
