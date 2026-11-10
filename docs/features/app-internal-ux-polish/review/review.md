@@ -155,3 +155,73 @@ Depois de cada commit, o `git show --stat` foi conferido contra a lista do plano
 | 12 | — | `docs(features): app-internal-ux-polish` (este artefato; o hash fica no `git log`) |
 
 Os commits foram enviados com `git push -u origin feat/app-internal-ux-polish`. Nenhuma PR foi aberta.
+
+## Rodada 2 (pós-`/test`)
+
+O escopo é o que o `/test` deixou no working tree: a correção do `ui/Sidebar.tsx`, 7 testes novos em três arquivos de `apps/app/__tests__/`, o `STATE.md` e a pasta `test/`.
+
+### Branch
+
+`feat/app-internal-ux-polish`, mantida. A regex de `.claude/rules/git-commits.md` respondeu `branch OK: feat/app-internal-ux-polish`. O upstream é `origin/feat/app-internal-ux-polish`, e `git log origin/feat/app-internal-ux-polish..HEAD` sai vazio, então os 12 commits da rodada 1 estão no remoto. `git diff --cached --stat` saiu vazio.
+
+### Achados
+
+| severidade | arquivo:linha | problema | ação |
+|------------|---------------|----------|------|
+| ✅ | `ui/Sidebar.tsx:105-108` | O `SidebarMenuSubButton` recebe o mesmo `ACTIVE_ITEM_CLASS` dos itens de primeiro nível. Toda classe nova é condicionada a `data-[active=true]`, então o sub-item inativo não muda. As cores vêm de tokens (`sidebar-accent`, `primary`) que trocam com o tema, e a barra de 3 px fica dentro da caixa (`inset-y-1.5`, `left-0`), longe dos cantos arredondados que o `overflow-hidden` do componente corta | Mantido |
+| 🟢 | `ui/Sidebar.tsx:38-39` | O JSDoc de `ACTIVE_ITEM_CLASS` promete fundo de destaque, mas em link o reset global `a { background-color: transparent }` do antd anula a utilitária. O fundo só aparece no gatilho do grupo, que é `button`. O report já registra a origem como follow-up | Mantido. Mudar o comentário esconderia o defeito de origem |
+| 🟢 | `ui/Sidebar.tsx:105-108` | A correção não tem teste. `sidebarActiveQuery.test.tsx` cobre `aria-current` e `data-active`, não a classe | Mantido. A classe é visual e o `/test` mediu peso 600 e barra no sub-item ativo |
+| 🟢 | `apps/app/__tests__/pageShell.test.tsx:110-114` | O caso se chama "mesma altura do Header", mas compara com o literal `h-16`. Se o `Header` (`ui/Header.tsx:24`) mudar de altura, o teste continua verde. O `Header` renderiza sem provider, então comparar com ele seria barato | Não alterei, porque esta etapa não roda a suíte. Lacuna leve para quem mexer no `Header` |
+| ✅ | `entitiesListReadOnly.test.tsx:231-268`, `usersListLastAccess.test.tsx:325-341` | O avô do `h1` é a raiz do `PageHeader` (`ui/PageHeader.tsx:11-12`), então a asserção prova que o `AddButton` está no cabeçalho da página e não em qualquer lugar do `Container`. Se o `<header>` do breadcrumb não existir, `breadcrumbBar?.contains(...)` dá `undefined` e o `toBe(false)` falha, ou seja, o teste exige a barra. Os dois arquivos limpam o DOM no `beforeEach` | Mantido |
+| ✅ | `test/report.md:112`, `test/criterios-aceite.md:59-60` | O ❌ do item 8 (foco atrás do `Footer` fixo, WCAG 2.2 SC 2.4.11) está registrado como não corrigido, anterior à entrega, com repro e sugestão de `scroll-padding-bottom`. Faltava dizer que ficou fora da entrega por decisão do usuário | Corrigido: uma frase no fim do parágrafo do report |
+
+Raio de impacto da correção: `SidebarMenuSubButton` só é usado em `ui/Sidebar.tsx`. O único grupo com sub-itens é Configurações, em `(common)/routes.tsx:51-79`. O `SIDEBAR_ELEMENTS` do admin só tem itens de primeiro nível, então o menu do admin não muda. Com o menu recolhido em ícones, o `SidebarMenuSub` fica oculto (`group-data-[collapsible=icon]:hidden`) e a classe não tem efeito. Nenhum arquivo de `packages/` mudou.
+
+### Correções aplicadas
+
+| arquivo | o que mudou |
+|---------|-------------|
+| `docs/features/app-internal-ux-polish/test/report.md:112` | Acrescentada a frase "O usuário decidiu deixar a correção fora desta entrega e tratá-la como tarefa própria." |
+
+### Segredos no artefato
+
+Varri `test/criterios-aceite.md`, `test/report.md` e `STATE.md` pelo valor das credenciais do seed (`apps/api/scripts/seed-emulator.mjs`: a senha e os três e-mails) e por padrões de senha, token, chave Stripe, `Bearer` e endereço de e-mail. Nenhuma ocorrência. As menções a "senha" são nome de bloco e de campo, `price_qa` é um id inventado e "Usuario QA" é o nome de exibição de teste no emulador. `git check-ignore -v` confirma que `test/e2e/` cai na regra `docs/features/**/test/e2e/` do `.gitignore` (linha 300), e `git status --untracked-files=all` lista só os dois `.md` da pasta. Os `AGENTS.md` que o `next dev` gerou em `apps/` não existem mais.
+
+### Gates estáticos
+
+Sem `--force`.
+
+| gate | resultado |
+|------|-----------|
+| `pnpm --filter app typecheck` | sem erro |
+| `pnpm check` | 1069 arquivos, nenhum erro |
+
+Não rodei a suíte. O report registra `pnpm --filter app test` com 1198 testes verdes depois da correção, e esta rodada não mexeu em código.
+
+### Verificar no `/test`
+
+Nada novo. A medida do sub-item ativo em light e dark está no report.
+
+### Decisões em aberto
+
+1. **Follow-ups do report sem dono.** O reset global de `a` do antd fora de `@layer`, a perda de texto não salvo ao trocar de seção da conta e o `agentRules: false` no `next.config` para o `next dev` parar de gerar `AGENTS.md`. Recomendação: abrir como tarefas diretas junto com a do foco atrás do rodapé, fora desta branch.
+
+### Plano de commits
+
+| # | mensagem | arquivos |
+|---|----------|----------|
+| 1 | `fix(app): highlight the active settings sub-item in the sidebar` | `apps/app/shared/components/ui/Sidebar.tsx` |
+| 2 | `test(app): cover the page header placement and the page skeleton` | `apps/app/__tests__/entitiesListReadOnly.test.tsx`, `apps/app/__tests__/pageShell.test.tsx`, `apps/app/__tests__/usersListLastAccess.test.tsx` |
+| 3 | `docs(features): app-internal-ux-polish test report` | `docs/features/app-internal-ux-polish/STATE.md`, `docs/features/app-internal-ux-polish/test/criterios-aceite.md`, `docs/features/app-internal-ux-polish/test/report.md`, `docs/features/app-internal-ux-polish/review/review.md` |
+
+Os testes ficam num commit separado do fix porque não cobrem o `Sidebar`: fecham lacunas da rodada 1 sobre `PageHeader`, `AddButton` e `PageSkeleton`, código que já está nos commits `33dfba3`, `91ea64e` e `31fa6a7`. O `review/review.md` entra no commit 3 por causa desta seção.
+
+#### Commits realizados
+
+| # | hash | mensagem |
+|---|------|----------|
+| 1 | `7fd5a72` | `fix(app): highlight the active settings sub-item in the sidebar` |
+| 2 | `5425604` | `test(app): cover the page header placement and the page skeleton` |
+| 3 | — | `docs(features): app-internal-ux-polish test report` (este artefato; o hash fica no `git log`) |
+
+O usuário aprovou o plano e o push em 2026-11-10. Os três commits foram enviados com `git push origin feat/app-internal-ux-polish`, e nenhuma PR foi aberta. Os follow-ups do `/test` continuam registrados em `test/report.md`; ninguém abriu tarefa para eles nesta rodada.
