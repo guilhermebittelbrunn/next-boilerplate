@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { lacksPasswordProvider } from "@/shared/lib/signInMethods";
 import { isStorageEnabled } from "@/shared/lib/storageEnabled";
@@ -73,95 +74,109 @@ export function AccountProfileForm({ account }: AccountProfileFormProps) {
     // stays outside the profile form or confirming it would also save the profile.
     return (
         <>
-            <Form {...form}>
-                <form
-                    className="flex w-full flex-1 flex-col"
-                    onSubmit={form.handleSubmit(onSubmit)}
-                >
-                    <FormContainer>
-                        <div className="col-span-1 md:col-span-2">
-                            <HookFormInput
-                                label={accountProfile.displayName}
-                                name="displayName"
-                                placeholder={
-                                    accountProfile.displayNamePlaceholder
-                                }
-                                required
-                                type="text"
-                            />
-                        </div>
-
-                        <div className="col-span-1 md:col-span-2">
-                            <HookFormInput
-                                label={accountProfile.phone}
-                                name="phone"
-                                placeholder={accountProfile.phonePlaceholder}
-                                type="tel"
-                            />
-                        </div>
-
-                        <div className="col-span-1 md:col-span-2">
-                            <Label htmlFor="account-email">
-                                {accountProfile.email}
-                            </Label>
-                            <Input
-                                disabled
-                                id="account-email"
-                                readOnly
-                                value={account?.email ?? ""}
-                            />
-                            {canChangeEmail ? (
-                                <Button
-                                    className="mt-2"
-                                    disabled={isImpersonating || !account}
-                                    onClick={() => setEmailChangeOpen(true)}
-                                    ref={emailChangeTriggerRef}
-                                    type="button"
-                                    variant="outline"
-                                >
-                                    {accountProfile.emailChange.action}
-                                </Button>
-                            ) : (
-                                <p className="mt-1 text-muted-foreground text-xs">
-                                    {accountProfile.emailChange.unsupported}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="col-span-1 md:col-span-2">
-                            {canUploadAvatar ? (
-                                <HookFormImageUpload
-                                    label={accountProfile.avatarUpload.label}
-                                    name="avatar"
-                                    previewSrc={account?.avatarUrl}
-                                    texts={accountProfile.avatarUpload}
-                                    upload={uploadFile}
+            <SettingsSection
+                description={accountProfile.details.description}
+                title={accountProfile.details.title}
+            >
+                <Form {...form}>
+                    <form
+                        className="flex w-full flex-1 flex-col"
+                        onSubmit={form.handleSubmit(onSubmit)}
+                    >
+                        <FormContainer>
+                            <div className="col-span-1 md:col-span-2">
+                                <HookFormInput
+                                    label={accountProfile.displayName}
+                                    name="displayName"
+                                    placeholder={
+                                        accountProfile.displayNamePlaceholder
+                                    }
+                                    required
+                                    type="text"
                                 />
-                            ) : (
-                                <>
-                                    <HookFormInput
-                                        label={accountProfile.avatar}
-                                        name="avatar"
-                                        placeholder={
-                                            accountProfile.avatarPlaceholder
+                            </div>
+
+                            <div className="col-span-1 md:col-span-2">
+                                <HookFormInput
+                                    label={accountProfile.phone}
+                                    name="phone"
+                                    placeholder={
+                                        accountProfile.phonePlaceholder
+                                    }
+                                    type="tel"
+                                />
+                            </div>
+
+                            <div className="col-span-1 md:col-span-2">
+                                {canUploadAvatar ? (
+                                    <HookFormImageUpload
+                                        label={
+                                            accountProfile.avatarUpload.label
                                         }
-                                        type="url"
+                                        name="avatar"
+                                        previewSrc={account?.avatarUrl}
+                                        texts={accountProfile.avatarUpload}
+                                        upload={uploadFile}
                                     />
-                                    <p className="mt-1 text-muted-foreground text-xs">
-                                        {accountProfile.avatarHint}
-                                    </p>
-                                </>
-                            )}
-                        </div>
-                    </FormContainer>
-                    <Footer
-                        confirmLabel={accountProfile.save}
-                        disabled={isImpersonating || isUploading}
-                        isLoading={updateProfileMutation.isPending}
-                        showBack={false}
+                                ) : (
+                                    <>
+                                        <HookFormInput
+                                            label={accountProfile.avatar}
+                                            name="avatar"
+                                            placeholder={
+                                                accountProfile.avatarPlaceholder
+                                            }
+                                            type="url"
+                                        />
+                                        <p className="mt-1 text-muted-foreground text-xs">
+                                            {accountProfile.avatarHint}
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        </FormContainer>
+                        <Footer
+                            confirmLabel={accountProfile.save}
+                            disabled={isImpersonating || isUploading}
+                            isLoading={updateProfileMutation.isPending}
+                            showBack={false}
+                            sticky={false}
+                        />
+                    </form>
+                </Form>
+            </SettingsSection>
+            <SettingsSection
+                description={accountProfile.emailDescription}
+                title={accountProfile.email}
+            >
+                <div className="flex flex-col gap-2">
+                    <Label htmlFor="account-email">
+                        {accountProfile.email}
+                    </Label>
+                    <Input
+                        disabled
+                        id="account-email"
+                        readOnly
+                        value={account?.email ?? ""}
                     />
-                </form>
-            </Form>
+                    {canChangeEmail ? (
+                        <Button
+                            className="self-start"
+                            disabled={isImpersonating || !account}
+                            onClick={() => setEmailChangeOpen(true)}
+                            ref={emailChangeTriggerRef}
+                            type="button"
+                            variant="outline"
+                        >
+                            {accountProfile.emailChange.action}
+                        </Button>
+                    ) : (
+                        <p className="text-muted-foreground text-xs">
+                            {accountProfile.emailChange.unsupported}
+                        </p>
+                    )}
+                </div>
+            </SettingsSection>
             <AccountEmailChangeDialog
                 currentEmail={account?.email ?? null}
                 onOpenChange={setEmailChangeOpen}

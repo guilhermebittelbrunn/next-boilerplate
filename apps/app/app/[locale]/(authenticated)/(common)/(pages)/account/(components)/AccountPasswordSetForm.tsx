@@ -9,6 +9,7 @@ import { useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useSignInMethodMutations } from "../(hooks)/useSignInMethodMutations";
 import {
@@ -54,36 +55,38 @@ export function AccountPasswordSetForm() {
     };
 
     return (
-        <Form {...form}>
-            <form
-                className="flex w-full flex-col"
-                onSubmit={form.handleSubmit(onSubmit)}
-            >
-                <h3 className="font-medium text-sm">{setPasswordCopy.title}</h3>
-                <p className="mb-4 text-muted-foreground text-sm">
-                    {setPasswordCopy.description}
-                </p>
-                <FormContainer>
-                    <div className="col-span-1">
-                        <HookFormInputPassword
-                            label={setPasswordCopy.newPassword}
-                            name="password"
-                        />
-                    </div>
-                    <div className="col-span-1">
-                        <HookFormInputPassword
-                            label={setPasswordCopy.confirmPassword}
-                            name="confirmPassword"
-                        />
-                    </div>
-                </FormContainer>
-                <Footer
-                    confirmLabel={setPasswordCopy.save}
-                    disabled={isImpersonating}
-                    isLoading={setPasswordMutation.isPending}
-                    showBack={false}
-                />
-            </form>
-        </Form>
+        <SettingsSection
+            description={setPasswordCopy.description}
+            title={setPasswordCopy.title}
+        >
+            <Form {...form}>
+                <form
+                    className="flex w-full flex-col"
+                    onSubmit={form.handleSubmit(onSubmit)}
+                >
+                    <FormContainer>
+                        <div className="col-span-1">
+                            <HookFormInputPassword
+                                label={setPasswordCopy.newPassword}
+                                name="password"
+                            />
+                        </div>
+                        <div className="col-span-1">
+                            <HookFormInputPassword
+                                label={setPasswordCopy.confirmPassword}
+                                name="confirmPassword"
+                            />
+                        </div>
+                    </FormContainer>
+                    <Footer
+                        confirmLabel={setPasswordCopy.save}
+                        disabled={isImpersonating}
+                        isLoading={setPasswordMutation.isPending}
+                        showBack={false}
+                        sticky={false}
+                    />
+                </form>
+            </Form>
+        </SettingsSection>
     );
 }

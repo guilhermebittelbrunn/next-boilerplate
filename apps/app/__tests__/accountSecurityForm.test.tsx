@@ -131,6 +131,20 @@ describe("AccountSecurityForm — sair de todos os dispositivos", () => {
         expect(revokeSessionsMutateMock).toHaveBeenCalledTimes(1);
     });
 
+    it("pede a confirmação com o botão destrutivo", () => {
+        render(<AccountSecurityForm account={PASSWORD_ACCOUNT} />);
+
+        openConfirmationDialog();
+
+        expect(
+            screen
+                .getByRole("button", {
+                    name: accountSecurity.signOutEverywhereAction,
+                })
+                .getAttribute("data-variant")
+        ).toBe("destructive");
+    });
+
     it("desloga o navegador atual quando o encerramento das sessões confirma", () => {
         render(<AccountSecurityForm account={PASSWORD_ACCOUNT} />);
         openConfirmationDialog();

@@ -159,6 +159,22 @@ describe("AccountPrivacyPanel — excluir conta", () => {
         expect(deleteMutateMock).not.toHaveBeenCalled();
     });
 
+    it("confirma a exclusão com o botão destrutivo e cancela com um botão que não envia", () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+        openDeleteDialog();
+
+        const confirmButton = screen.getByRole("button", {
+            name: privacyCopy.delete.confirm,
+        });
+        const cancelButton = screen.getByRole("button", {
+            name: privacyCopy.delete.cancel,
+        });
+
+        expect(confirmButton.getAttribute("data-variant")).toBe("destructive");
+        expect(confirmButton.getAttribute("type")).toBe("submit");
+        expect(cancelButton.getAttribute("type")).toBe("button");
+    });
+
     it("fecha o diálogo no cancelar, sem disparar requisição", () => {
         render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
         openDeleteDialog();
@@ -169,6 +185,39 @@ describe("AccountPrivacyPanel — excluir conta", () => {
 
         expect(deleteMutateMock).not.toHaveBeenCalled();
         expect(screen.queryByRole("alertdialog")).toBeNull();
+    });
+});
+
+describe("AccountPrivacyPanel — zona de perigo", () => {
+    it("deixa a exclusão por último, num bloco destrutivo depois da exportação", () => {
+        render(<AccountPrivacyPanel account={PASSWORD_ACCOUNT} />);
+
+        const regions = screen.getAllByRole("region");
+        const exportRegion = screen.getByRole("region", {
+            name: privacyCopy.export.title,
+        });
+        const deleteRegion = screen.getByRole("region", {
+            name: privacyCopy.delete.title,
+        });
+
+        expect(regions.at(-1)).toBe(deleteRegion);
+        expect(regions.indexOf(exportRegion)).toBeLessThan(
+            regions.indexOf(deleteRegion)
+        );
+        expect(deleteRegion.getAttribute("data-tone")).toBe("destructive");
+        expect(exportRegion.getAttribute("data-tone")).toBe("default");
+    });
+
+    it("mostra o canal de privacidade sem tom destrutivo para a conta sem senha", () => {
+        render(<AccountPrivacyPanel account={GOOGLE_ACCOUNT} />);
+
+        expect(
+            screen
+                .getByRole("region", {
+                    name: privacyCopy.delete.unsupportedTitle,
+                })
+                .getAttribute("data-tone")
+        ).toBe("default");
     });
 });
 
