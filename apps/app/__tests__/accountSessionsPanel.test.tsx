@@ -177,6 +177,26 @@ describe("AccountSessionsPanel", () => {
         expect(revokeOthersMutateMock).toHaveBeenCalledTimes(1);
     });
 
+    it("confirma o encerramento das outras com o botão destrutivo", () => {
+        render(<AccountSessionsPanel />);
+
+        fireEvent.click(revokeOthersTrigger());
+
+        expect(
+            screen
+                .getByRole("button", { name: sessionsCopy.revokeOthersAction })
+                .getAttribute("data-variant")
+        ).toBe("destructive");
+    });
+
+    it("encerra uma sessão específica sem confirmação, com o botão outline", () => {
+        render(<AccountSessionsPanel />);
+
+        expect(revokeButtons()[0]?.getAttribute("data-variant")).toBe(
+            "outline"
+        );
+    });
+
     it("desabilita 'encerrar as outras' quando só existe a atual", () => {
         givenSessions([CURRENT]);
         render(<AccountSessionsPanel />);

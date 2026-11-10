@@ -76,6 +76,15 @@ test.describe("as a common user", () => {
             url: `/${LOCALE}/entities/create`,
             ready: (page) => page.getByLabel(appCopy.common.entities.form.name),
         },
+        ...["profile", "security", "privacy"].map((tab) => ({
+            route: `/${LOCALE}/account?tab=${tab}`,
+            url: `/${LOCALE}/account?tab=${tab}`,
+            ready: (page: Page) =>
+                page.getByRole("heading", {
+                    level: 1,
+                    name: appCopy.common.account.title,
+                }),
+        })),
     ]);
 });
 

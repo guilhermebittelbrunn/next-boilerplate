@@ -4,6 +4,7 @@ import { getDictionary } from "@repo/internationalization/client";
 import { Suspense } from "react";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useMyAccount } from "@/shared/hooks/useMyAccount";
 import { COMMON_ROUTES } from "../../../../paths";
 import { AccountTabs } from "../../(components)/AccountTabs";
@@ -24,12 +25,16 @@ export function AccountClient() {
             />
             <Container
                 contentOnly
+                header={
+                    <PageHeader
+                        description={accountCopy.subtitle}
+                        title={accountCopy.title}
+                    />
+                }
                 loadError={isError ? accountCopy.messages.loadError : null}
                 loading={isLoading}
+                width="narrow"
             >
-                <p className="mb-4 text-muted-foreground text-sm">
-                    {accountCopy.subtitle}
-                </p>
                 <Suspense fallback={null}>
                     <AccountTabs account={account} />
                 </Suspense>

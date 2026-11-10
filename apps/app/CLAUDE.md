@@ -27,9 +27,20 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 - Listagens com foto: miniaturas via `ResponsiveImage` (`@repo/design-system/components/ui/responsive-image`).
 - Coluna `enabled` em listas: renderize um `Switch` controlado que dispara a mutation de toggle (não só texto Sim/Não).
 
+## Páginas
+
+- Toda tela interna tem `Header` (barra de 64 px com o breadcrumb) e, logo abaixo, o cabeçalho da página passado ao `Container` pela prop **`header`**: `<Container header={<PageHeader title=… description=… actions=… />}>`. O `PageHeader` (`shared/components/ui/PageHeader.tsx`) renderiza o único `h1` da tela, a descrição opcional e as ações à direita. O `Container` mantém esse cabeçalho visível durante `loading` e `loadError`.
+- A ação primária da tela (ex.: `AddButton`) vai em `actions` do `PageHeader`, não no `sideElement` do `Header`.
+- Formulários e configurações usam `width="narrow"` no `Container` externo (largura máxima em `shared/components/ui/pageLayout.ts`); listas e dashboards ficam com a largura cheia. `Container` aninhado com `className="p-0"` não recebe `header` nem `width`.
+- Pilhas dentro da página usam `gap-6`.
+- `loading.tsx` usa **`PageSkeleton`** (`shared/components/ui/PageSkeleton.tsx`) com as mesmas flags da tela (`description`, `actions`, `width`) e o corpo como filho (`TableSkeleton`, `FormSkeleton`…), para o título e o breadcrumb não pularem quando o conteúdo chega.
+- Blocos de configuração usam **`SettingsSection`** (`shared/components/ui/SettingsSection.tsx`): região nomeada pelo `h3` do título, descrição opcional e `tone="destructive"` para ações irreversíveis, que ficam por último na seção.
+
 ## Formulários com ações no rodapé
 
 - Evite `form="…"` em botões fora do `<form>`. Use **`Footer`** (`shared/components/ui/Footer.tsx`) **dentro** do `<form>`: `showBack` (padrão `true`, `router.back()`), `onBack`/`backLabel` opcionais; primário é `type="submit"` se `onConfirm` ausente, senão `type="button"`. Props genéricas: `isLoading`, `disabled`.
+- Por padrão o `Footer` é uma barra fixa no rodapé (`sticky`), para formulários de página inteira com uma ação só (criar/editar entidade e usuário, onboarding). Com **`sticky={false}`** ele vira uma linha de ações dentro do bloco: use em formulários que convivem com outros na mesma tela (blocos da conta, convite da equipe).
+- Em diálogo (`AlertDialog`) com formulário, não use `Footer`: use `AlertDialogFooter` com dois `Button`, cancelar `type="button" variant="outline"` e confirmar `type="submit"`. O `type="button"` do cancelar é obrigatório, senão ele envia o formulário. Confirmação de ação destrutiva usa `variant="destructive"` (no `AlertDialogAction` ou no `Button` de confirmar).
 - Layout de campos em grelha: **`FormContainer`** — 1 coluna no mobile, 2 no `md+`; filhos com `display: contents` para cada campo ocupar uma célula.
 - Páginas de formulário: `Container` com **`contentOnly`** + painel `bg-muted/50`. Erro de carga: prop **`loadError`** (string) para renderizar **`LoadErrorState`** em vez do conteúdo principal.
 

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { ADMIN_ROUTES } from "../../../../paths";
 import { AuditFilters } from "../../(components)/AuditFilters";
@@ -84,8 +85,8 @@ export function AuditListClient() {
             {/* Neither the spinner nor the error may cover the filters: a filter is what
                 starts each query, and unmounting the form would drop the chosen values
                 and leave no way back from a combination the server refuses. */}
-            <Container>
-                <div className="mx-auto flex w-full flex-col gap-4">
+            <Container header={<PageHeader title={routes.audit.list.label} />}>
+                <div className="mx-auto flex w-full flex-col gap-6">
                     <AuditFilters onApply={setFilters} />
                     {listLoadError ? (
                         <LoadErrorState message={listLoadError} />

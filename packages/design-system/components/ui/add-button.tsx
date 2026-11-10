@@ -18,7 +18,7 @@ export function AddButton({ children, ...props }: AddButtonProps) {
     <Button
       {...props}
       icon={<PlusIcon className="size-4" />}
-      variant="outline"
+      variant="default"
     >
       {children ? children : dictionary.components.button.add}
     </Button>

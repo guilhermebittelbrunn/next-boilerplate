@@ -6,6 +6,7 @@ import {
     AlertDialog,
     AlertDialogContent,
     AlertDialogDescription,
+    AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
@@ -16,8 +17,8 @@ import { getDictionary } from "@repo/internationalization/client";
 import type { AccountDTO } from "@repo/sdk/src/types";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { privacyPolicyUrl } from "@/shared/lib/privacyPolicyUrl";
 import { lacksPasswordProvider } from "@/shared/lib/signInMethods";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
@@ -60,7 +61,7 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
     };
 
     // Radix's AlertDialog sends the opening focus to an AlertDialogCancel, and this
-    // dialog has none (its buttons come from Footer), so focus would stay behind it.
+    // dialog has none (cancel is a plain button of the form), so focus would stay behind it.
     const handleOpenAutoFocus = (event: Event) => {
         event.preventDefault();
         form.setFocus("currentPassword");
@@ -79,17 +80,10 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
 
     return (
         <div className="flex w-full flex-1 flex-col gap-6">
-            <p className="text-muted-foreground text-sm">
-                {privacyCopy.description}
-            </p>
-
-            <div className="flex flex-col gap-2 rounded-lg border border-border p-4">
-                <span className="font-medium text-sm">
-                    {privacyCopy.export.title}
-                </span>
-                <p className="text-muted-foreground text-sm">
-                    {privacyCopy.export.description}
-                </p>
+            <SettingsSection
+                description={privacyCopy.export.description}
+                title={privacyCopy.export.title}
+            >
                 <Button
                     className="self-start"
                     disabled={isImpersonating || exportDataMutation.isPending}
@@ -103,84 +97,7 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
                 <p className="text-muted-foreground text-xs">
                     {privacyCopy.export.filenameHint}
                 </p>
-            </div>
-
-            <div className="flex flex-col gap-2 rounded-lg border border-border p-4">
-                {askPrivacyChannel ? (
-                    <>
-                        <span className="font-medium text-sm">
-                            {deleteCopy.unsupportedTitle}
-                        </span>
-                        <p className="text-muted-foreground text-sm">
-                            {deleteCopy.unsupportedDescription}
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        <span className="font-medium text-sm">
-                            {deleteCopy.title}
-                        </span>
-                        <p className="text-muted-foreground text-sm">
-                            {deleteCopy.description}
-                        </p>
-                        <AlertDialog
-                            onOpenChange={handleOpenChange}
-                            open={confirmOpen}
-                        >
-                            <AlertDialogTrigger asChild>
-                                <Button
-                                    className="self-start"
-                                    disabled={isImpersonating}
-                                    type="button"
-                                    variant="destructive"
-                                >
-                                    {deleteCopy.action}
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent
-                                onOpenAutoFocus={handleOpenAutoFocus}
-                            >
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                        {deleteCopy.dialogTitle}
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        {deleteCopy.dialogDescription}
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <Form {...form}>
-                                    <form
-                                        className="flex w-full flex-col"
-                                        onSubmit={form.handleSubmit(onSubmit)}
-                                    >
-                                        <FormContainer className="md:grid-cols-1">
-                                            <HookFormInputPassword
-                                                autoComplete="current-password"
-                                                label={
-                                                    deleteCopy.currentPassword
-                                                }
-                                                name="currentPassword"
-                                                required
-                                            />
-                                        </FormContainer>
-                                        <Footer
-                                            backLabel={deleteCopy.cancel}
-                                            confirmLabel={deleteCopy.confirm}
-                                            disabled={isImpersonating}
-                                            isLoading={
-                                                deleteAccountMutation.isPending
-                                            }
-                                            onBack={() =>
-                                                handleOpenChange(false)
-                                            }
-                                        />
-                                    </form>
-                                </Form>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </>
-                )}
-            </div>
+            </SettingsSection>
 
             <p className="text-muted-foreground text-sm">
                 {privacyCopy.deadline}
@@ -198,6 +115,83 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
                     </>
                 ) : null}
             </p>
+
+            {askPrivacyChannel ? (
+                <SettingsSection
+                    description={deleteCopy.unsupportedDescription}
+                    title={deleteCopy.unsupportedTitle}
+                />
+            ) : (
+                <SettingsSection
+                    description={deleteCopy.description}
+                    title={deleteCopy.title}
+                    tone="destructive"
+                >
+                    <AlertDialog
+                        onOpenChange={handleOpenChange}
+                        open={confirmOpen}
+                    >
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                className="self-start"
+                                disabled={isImpersonating}
+                                type="button"
+                                variant="destructive"
+                            >
+                                {deleteCopy.action}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent
+                            onOpenAutoFocus={handleOpenAutoFocus}
+                        >
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    {deleteCopy.dialogTitle}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    {deleteCopy.dialogDescription}
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <Form {...form}>
+                                <form
+                                    className="flex w-full flex-col"
+                                    onSubmit={form.handleSubmit(onSubmit)}
+                                >
+                                    <FormContainer className="md:grid-cols-1">
+                                        <HookFormInputPassword
+                                            autoComplete="current-password"
+                                            label={deleteCopy.currentPassword}
+                                            name="currentPassword"
+                                            required
+                                        />
+                                    </FormContainer>
+                                    <AlertDialogFooter className="mt-4">
+                                        <Button
+                                            onClick={() =>
+                                                handleOpenChange(false)
+                                            }
+                                            type="button"
+                                            variant="outline"
+                                        >
+                                            {deleteCopy.cancel}
+                                        </Button>
+                                        <Button
+                                            disabled={isImpersonating}
+                                            loading={
+                                                deleteAccountMutation.isPending
+                                            }
+                                            type="submit"
+                                            variant="destructive"
+                                        >
+                                            {deleteCopy.confirm}
+                                        </Button>
+                                    </AlertDialogFooter>
+                                </form>
+                            </Form>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </SettingsSection>
+            )}
         </div>
     );
 }

@@ -6,6 +6,12 @@ import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import { useRouter } from "next/navigation";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
+import {
+    PAGE_BODY_CLASS,
+    PAGE_HEADER_SPACING_CLASS,
+    PAGE_NARROW_CLASS,
+    type PageWidth,
+} from "@/shared/components/ui/pageLayout";
 
 type ContainerProps = {
     children?: React.ReactNode;
@@ -15,6 +21,8 @@ type ContainerProps = {
     footer?: React.ReactNode;
     showGoBack?: boolean;
     contentOnly?: boolean;
+    header?: React.ReactNode;
+    width?: PageWidth;
 };
 
 type StickyParts = {
@@ -24,7 +32,7 @@ type StickyParts = {
 
 function LoadingPanel() {
     return (
-        <div className="flex min-h-screen w-full flex-1 items-center justify-center rounded-xl bg-muted/50 p-4 md:min-h-min">
+        <div className="flex min-h-[50vh] w-full flex-1 items-center justify-center rounded-xl bg-muted/50 p-4">
             <Spinner className="size-10" />
         </div>
     );
@@ -79,6 +87,8 @@ export const Container = ({
     footer,
     showGoBack,
     contentOnly = false,
+    header,
+    width = "full",
 }: ContainerProps) => {
     const router = useRouter();
     const { dictionary } = getDictionary();
@@ -138,10 +148,14 @@ export const Container = ({
     return (
         <div
             className={cn(
-                "flex max-w-full flex-1 flex-col gap-0 p-4 pt-0",
+                PAGE_BODY_CLASS,
+                width === "narrow" && PAGE_NARROW_CLASS,
                 className
             )}
         >
+            {header ? (
+                <div className={PAGE_HEADER_SPACING_CLASS}>{header}</div>
+            ) : null}
             {renderBody()}
         </div>
     );

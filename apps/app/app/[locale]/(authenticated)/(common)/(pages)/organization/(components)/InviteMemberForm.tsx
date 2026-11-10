@@ -59,11 +59,11 @@ export function InviteMemberForm() {
                         />
                     </FormContainer>
                     <Footer
-                        className="static border-t-0 bg-transparent backdrop-blur-none supports-backdrop-filter:bg-transparent"
                         confirmLabel={inviteCopy.submit}
                         disabled={isImpersonating || inviteMutation.isPending}
                         isLoading={inviteMutation.isPending}
                         showBack={false}
+                        sticky={false}
                     />
                 </form>
             </Form>

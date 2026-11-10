@@ -269,6 +269,18 @@ describe("AccountSignInMethodsPanel — desvincular", () => {
         expect(signOutMutateMock).not.toHaveBeenCalled();
     });
 
+    it("pede a confirmação do desvínculo com o botão destrutivo", () => {
+        renderPanel(accountWith("password", "google.com"));
+
+        fireEvent.click(unlinkButton(methodsCopy.methods.google));
+
+        expect(
+            screen
+                .getByRole("button", { name: methodsCopy.unlinkDialog.confirm })
+                .getAttribute("data-variant")
+        ).toBe("destructive");
+    });
+
     it("desvincular a senha encerra a sessão", async () => {
         renderPanel(accountWith("password", "google.com"));
 

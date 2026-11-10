@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../paths";
@@ -147,15 +148,25 @@ export function EntitiesListClient() {
                     { label: routes.root.label, href: routes.root.url },
                 ]}
                 page={routes.entities.list.label}
-                sideElement={
-                    <AddButton
-                        disabled={isImpersonating}
-                        onClick={() => router.push(routes.entities.create.url)}
+            />
+            <Container
+                header={
+                    <PageHeader
+                        actions={
+                            <AddButton
+                                disabled={isImpersonating}
+                                onClick={() =>
+                                    router.push(routes.entities.create.url)
+                                }
+                            />
+                        }
+                        title={routes.entities.list.label}
                     />
                 }
-            />
-            <Container loadError={listLoadError} loading={isLoading}>
-                <div className="mx-auto flex w-full flex-col gap-4">
+                loadError={listLoadError}
+                loading={isLoading}
+            >
+                <div className="mx-auto flex w-full flex-col gap-6">
                     <ImpersonationReadOnlyNotice />
                     <Table<EntityDTO>
                         columns={columns}

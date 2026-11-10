@@ -12,6 +12,7 @@ import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../../paths";
@@ -84,6 +85,10 @@ export function EditEntityClient() {
         }
     };
 
+    const pageTitle = id
+        ? routes.entities.update(id).label
+        : routes.entities.list.label;
+
     return (
         <>
             <Header
@@ -94,16 +99,14 @@ export function EditEntityClient() {
                         href: routes.entities.list.url,
                     },
                 ]}
-                page={
-                    id
-                        ? routes.entities.update(id).label
-                        : routes.entities.list.label
-                }
+                page={pageTitle}
             />
             <Container
                 contentOnly
+                header={<PageHeader title={pageTitle} />}
                 loadError={isError ? entityMessages.loadError : null}
                 loading={isLoading && !isError}
+                width="narrow"
             >
                 {entity ? (
                     <Form {...form}>

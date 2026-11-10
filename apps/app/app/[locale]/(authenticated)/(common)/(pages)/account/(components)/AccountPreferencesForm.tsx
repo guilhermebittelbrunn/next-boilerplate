@@ -16,6 +16,7 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { withLocalePath } from "@/shared/lib/localePath";
 import {
     PREFERENCE_COOKIE_TTL_SECONDS,
@@ -103,39 +104,42 @@ export function AccountPreferencesForm({
     };
 
     return (
-        <Form {...form}>
-            <form
-                className="flex w-full flex-1 flex-col"
-                onSubmit={form.handleSubmit(onSubmit)}
-            >
-                <p className="mb-4 text-muted-foreground text-sm">
-                    {accountPreferences.description}
-                </p>
-                <FormContainer>
-                    <div className="col-span-1 md:col-span-2">
-                        <HookFormRadioGroup
-                            label={accountPreferences.theme}
-                            name="theme"
-                            options={themeOptions}
-                        />
-                    </div>
-                    <div className="col-span-1 md:col-span-2">
-                        <HookFormSelect
-                            label={accountPreferences.language}
-                            name="locale"
-                            options={languageOptions}
-                            placeholder={accountPreferences.language}
-                            searchable={false}
-                        />
-                    </div>
-                </FormContainer>
-                <Footer
-                    confirmLabel={accountPreferences.save}
-                    disabled={isImpersonating}
-                    isLoading={updatePreferencesMutation.isPending}
-                    showBack={false}
-                />
-            </form>
-        </Form>
+        <SettingsSection
+            description={accountPreferences.description}
+            title={accountPreferences.title}
+        >
+            <Form {...form}>
+                <form
+                    className="flex w-full flex-1 flex-col"
+                    onSubmit={form.handleSubmit(onSubmit)}
+                >
+                    <FormContainer>
+                        <div className="col-span-1 md:col-span-2">
+                            <HookFormRadioGroup
+                                label={accountPreferences.theme}
+                                name="theme"
+                                options={themeOptions}
+                            />
+                        </div>
+                        <div className="col-span-1 md:col-span-2">
+                            <HookFormSelect
+                                label={accountPreferences.language}
+                                name="locale"
+                                options={languageOptions}
+                                placeholder={accountPreferences.language}
+                                searchable={false}
+                            />
+                        </div>
+                    </FormContainer>
+                    <Footer
+                        confirmLabel={accountPreferences.save}
+                        disabled={isImpersonating}
+                        isLoading={updatePreferencesMutation.isPending}
+                        showBack={false}
+                        sticky={false}
+                    />
+                </form>
+            </Form>
+        </SettingsSection>
     );
 }

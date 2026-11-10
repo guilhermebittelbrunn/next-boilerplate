@@ -30,8 +30,9 @@ import { getDictionary } from "@repo/internationalization/client";
 import { getBrand } from "@repo/next-config/brand";
 import { ChevronRightIcon, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { type ReactNode, useState } from "react";
+import { isNavUrlActive } from "@/shared/lib/navActive";
 
 /** Evident "you are here" treatment: primary left bar + bold + accent bg. */
 const ACTIVE_ITEM_CLASS =
@@ -58,6 +59,75 @@ type NavMainBranch = {
 
 export type NavItem = NavMainLeaf | NavMainBranch;
 
+function NavBranch({
+    item,
+    isActive,
+}: {
+    item: NavMainBranch;
+    isActive: (url: string) => boolean;
+}) {
+    const branchActive = item.items.some((subItem) => isActive(subItem.url));
+    const [open, setOpen] = useState(branchActive);
+    const [wasActive, setWasActive] = useState(branchActive);
+
+    // The sidebar lives in the layout and survives navigation, so arriving at one of the
+    // branch's pages has to open it; closing it by hand stays possible afterwards.
+    if (branchActive !== wasActive) {
+        setWasActive(branchActive);
+        if (branchActive) {
+            setOpen(true);
+        }
+    }
+
+    return (
+        <Collapsible asChild onOpenChange={setOpen} open={open}>
+            <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                        className={cn("group/trigger", ACTIVE_ITEM_CLASS)}
+                        isActive={branchActive}
+                        tooltip={item.title}
+                    >
+                        <item.icon />
+                        <span>{item.title}</span>
+                        <ChevronRightIcon
+                            aria-hidden
+                            className="ml-auto shrink-0 transition-transform duration-200 group-data-[state=open]/trigger:rotate-90"
+                        />
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <SidebarMenuSub>
+                        {item.items.map((subItem) => {
+                            const subItemActive = isActive(subItem.url);
+                            return (
+                                <SidebarMenuSubItem key={subItem.title}>
+                                    <SidebarMenuSubButton
+                                        asChild
+                                        className={ACTIVE_ITEM_CLASS}
+                                        isActive={subItemActive}
+                                    >
+                                        <Link
+                                            aria-current={
+                                                subItemActive
+                                                    ? "page"
+                                                    : undefined
+                                            }
+                                            href={subItem.url}
+                                        >
+                                            <span>{subItem.title}</span>
+                                        </Link>
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                            );
+                        })}
+                    </SidebarMenuSub>
+                </CollapsibleContent>
+            </SidebarMenuItem>
+        </Collapsible>
+    );
+}
+
 export const GlobalSidebar = ({
     children,
     routes,
@@ -65,10 +135,11 @@ export const GlobalSidebar = ({
     const sidebar = useSidebar();
     const { dictionary } = getDictionary();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
     const brand = getBrand();
 
     const isActive = (url: string) =>
-        url !== "#" && (pathname === url || pathname.startsWith(`${url}/`));
+        isNavUrlActive(url, pathname, searchParams);
 
     return (
         <>
@@ -101,69 +172,12 @@ export const GlobalSidebar = ({
                         <SidebarMenu>
                             {routes.map((item) => {
                                 if ("items" in item) {
-                                    const branchActive = item.items.some(
-                                        (subItem) => isActive(subItem.url)
-                                    );
                                     return (
-                                        <Collapsible
-                                            asChild
-                                            defaultOpen={branchActive}
+                                        <NavBranch
+                                            isActive={isActive}
+                                            item={item}
                                             key={item.title}
-                                        >
-                                            <SidebarMenuItem>
-                                                <CollapsibleTrigger asChild>
-                                                    <SidebarMenuButton
-                                                        className={cn(
-                                                            "group/trigger",
-                                                            ACTIVE_ITEM_CLASS
-                                                        )}
-                                                        isActive={branchActive}
-                                                        tooltip={item.title}
-                                                    >
-                                                        <item.icon />
-                                                        <span>
-                                                            {item.title}
-                                                        </span>
-                                                        <ChevronRightIcon
-                                                            aria-hidden
-                                                            className="ml-auto shrink-0 transition-transform duration-200 group-data-[state=open]/trigger:rotate-90"
-                                                        />
-                                                    </SidebarMenuButton>
-                                                </CollapsibleTrigger>
-                                                <CollapsibleContent>
-                                                    <SidebarMenuSub>
-                                                        {item.items.map(
-                                                            (subItem) => (
-                                                                <SidebarMenuSubItem
-                                                                    key={
-                                                                        subItem.title
-                                                                    }
-                                                                >
-                                                                    <SidebarMenuSubButton
-                                                                        asChild
-                                                                        isActive={isActive(
-                                                                            subItem.url
-                                                                        )}
-                                                                    >
-                                                                        <Link
-                                                                            href={
-                                                                                subItem.url
-                                                                            }
-                                                                        >
-                                                                            <span>
-                                                                                {
-                                                                                    subItem.title
-                                                                                }
-                                                                            </span>
-                                                                        </Link>
-                                                                    </SidebarMenuSubButton>
-                                                                </SidebarMenuSubItem>
-                                                            )
-                                                        )}
-                                                    </SidebarMenuSub>
-                                                </CollapsibleContent>
-                                            </SidebarMenuItem>
-                                        </Collapsible>
+                                        />
                                     );
                                 }
 
@@ -175,7 +189,14 @@ export const GlobalSidebar = ({
                                             isActive={isActive(item.url)}
                                             tooltip={item.title}
                                         >
-                                            <Link href={item.url}>
+                                            <Link
+                                                aria-current={
+                                                    isActive(item.url)
+                                                        ? "page"
+                                                        : undefined
+                                                }
+                                                href={item.url}
+                                            >
                                                 <item.icon />
                                                 <span>{item.title}</span>
                                             </Link>

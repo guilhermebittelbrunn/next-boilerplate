@@ -9,14 +9,15 @@ import {
     AlertDialog,
     AlertDialogContent,
     AlertDialogDescription,
+    AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@repo/design-system/components/ui/alert-dialog";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
 import { type RefObject, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useAccountMutations } from "../(hooks)/useAccountMutations";
@@ -67,7 +68,7 @@ export function AccountEmailChangeDialog({
     };
 
     // Radix's AlertDialog sends the opening focus to an AlertDialogCancel, and this
-    // dialog has none (its buttons come from Footer), so focus would stay behind it.
+    // dialog has none (cancel is a plain button of the form), so focus would stay behind it.
     const handleOpenAutoFocus = (event: Event) => {
         event.preventDefault();
         form.setFocus("newEmail");
@@ -131,13 +132,22 @@ export function AccountEmailChangeDialog({
                                 required
                             />
                         </FormContainer>
-                        <Footer
-                            backLabel={emailChangeCopy.cancel}
-                            confirmLabel={emailChangeCopy.confirm}
-                            disabled={isImpersonating}
-                            isLoading={requestEmailChangeMutation.isPending}
-                            onBack={() => handleOpenChange(false)}
-                        />
+                        <AlertDialogFooter className="mt-4">
+                            <Button
+                                onClick={() => handleOpenChange(false)}
+                                type="button"
+                                variant="outline"
+                            >
+                                {emailChangeCopy.cancel}
+                            </Button>
+                            <Button
+                                disabled={isImpersonating}
+                                loading={requestEmailChangeMutation.isPending}
+                                type="submit"
+                            >
+                                {emailChangeCopy.confirm}
+                            </Button>
+                        </AlertDialogFooter>
                     </form>
                 </Form>
             </AlertDialogContent>

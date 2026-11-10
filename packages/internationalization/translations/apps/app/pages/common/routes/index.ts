@@ -12,13 +12,6 @@ export const commonRoutesTranslations = {
             organization: "Equipe",
             documentation: "Documentação",
             settings: "Configurações",
-            settingsItems: {
-                general: "Geral",
-                security: "Segurança",
-                preferences: "Preferências",
-                billing: "Cobrança",
-                privacy: "Privacidade",
-            },
         },
     },
     en: {
@@ -34,13 +27,6 @@ export const commonRoutesTranslations = {
             organization: "Team",
             documentation: "Documentation",
             settings: "Settings",
-            settingsItems: {
-                general: "General",
-                security: "Security",
-                preferences: "Preferences",
-                billing: "Billing",
-                privacy: "Privacy",
-            },
         },
     },
     es: {
@@ -56,13 +42,6 @@ export const commonRoutesTranslations = {
             organization: "Equipo",
             documentation: "Documentación",
             settings: "Configuración",
-            settingsItems: {
-                general: "General",
-                security: "Seguridad",
-                preferences: "Preferencias",
-                billing: "Facturación",
-                privacy: "Privacidad",
-            },
         },
     },
 };

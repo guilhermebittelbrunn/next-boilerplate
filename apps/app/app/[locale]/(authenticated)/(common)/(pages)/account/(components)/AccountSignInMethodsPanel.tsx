@@ -16,7 +16,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { getDictionary } from "@repo/internationalization/client";
 import type { AccountDTO } from "@repo/sdk/src/types";
-import { useId } from "react";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import {
     GOOGLE_PROVIDER_ID,
     PASSWORD_PROVIDER_ID,
@@ -40,7 +40,6 @@ type SignInMethodRow = {
 export function AccountSignInMethodsPanel({
     account,
 }: AccountSignInMethodsPanelProps) {
-    const titleId = useId();
     const { dictionary } = getDictionary();
     const { isImpersonating } = useAuthRequestPanel();
     const { signOut } = useAuth();
@@ -105,18 +104,10 @@ export function AccountSignInMethodsPanel({
         : [];
 
     return (
-        <section
-            aria-labelledby={titleId}
-            className="flex flex-col gap-3 rounded-lg border border-border p-4"
+        <SettingsSection
+            description={methodsCopy.description}
+            title={methodsCopy.title}
         >
-            <div className="flex flex-col gap-1">
-                <h3 className="font-medium text-sm" id={titleId}>
-                    {methodsCopy.title}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                    {methodsCopy.description}
-                </p>
-            </div>
             <ul className="flex flex-col divide-y divide-border">
                 {rows.map((row) => {
                     const isLastMethod = row.linked && linkedCount <= 1;
@@ -197,6 +188,7 @@ export function AccountSignInMethodsPanel({
                                                 onClick={() =>
                                                     unlink(row.providerId)
                                                 }
+                                                variant="destructive"
                                             >
                                                 {
                                                     methodsCopy.unlinkDialog
@@ -225,6 +217,6 @@ export function AccountSignInMethodsPanel({
                     );
                 })}
             </ul>
-        </section>
+        </SettingsSection>
     );
 }

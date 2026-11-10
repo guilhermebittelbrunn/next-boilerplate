@@ -13,6 +13,7 @@ import { UserType, type UserWithAuthDTO } from "@repo/sdk/src/types";
 import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useListUsers } from "@/shared/hooks/useListUsers";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { ADMIN_ROUTES } from "../../../../paths";
@@ -177,14 +178,23 @@ export function UsersListClient() {
                     { label: routes.root.label, href: routes.root.url },
                 ]}
                 page={routes.users.list.label}
-                sideElement={
-                    <AddButton
-                        onClick={() => router.push(routes.users.create.url)}
+            />
+            <Container
+                header={
+                    <PageHeader
+                        actions={
+                            <AddButton
+                                onClick={() =>
+                                    router.push(routes.users.create.url)
+                                }
+                            />
+                        }
+                        title={routes.users.list.label}
                     />
                 }
-            />
-            <Container loading={isLoading}>
-                <div className="mx-auto flex w-full flex-col gap-4">
+                loading={isLoading}
+            >
+                <div className="mx-auto flex w-full flex-col gap-6">
                     <Table<UserWithAuthDTO>
                         columns={columns}
                         dataSource={users ?? []}

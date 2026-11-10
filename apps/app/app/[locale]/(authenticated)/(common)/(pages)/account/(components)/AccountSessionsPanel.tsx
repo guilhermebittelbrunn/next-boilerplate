@@ -18,6 +18,7 @@ import { getDictionary } from "@repo/internationalization/client";
 import type { AccountSessionDTO } from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useAccountSessionMutations } from "../(hooks)/useAccountSessionMutations";
@@ -112,15 +113,10 @@ export function AccountSessionsPanel() {
     ];
 
     return (
-        <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
-            <div className="flex flex-col gap-1">
-                <span className="font-medium text-sm">
-                    {sessionsCopy.title}
-                </span>
-                <p className="text-muted-foreground text-sm">
-                    {sessionsCopy.description}
-                </p>
-            </div>
+        <SettingsSection
+            description={sessionsCopy.description}
+            title={sessionsCopy.title}
+        >
             <Table<AccountSessionDTO>
                 columns={columns}
                 dataSource={listLoadError ? [] : sessions}
@@ -168,6 +164,7 @@ export function AccountSessionsPanel() {
                                 onClick={() =>
                                     revokeOtherSessionsMutation.mutate()
                                 }
+                                variant="destructive"
                             >
                                 {sessionsCopy.revokeOthersAction}
                             </AlertDialogAction>
@@ -175,6 +172,6 @@ export function AccountSessionsPanel() {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </div>
+        </SettingsSection>
     );
 }

@@ -22,6 +22,7 @@ import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { lacksPasswordProvider } from "@/shared/lib/signInMethods";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useAccountMutations } from "../(hooks)/useAccountMutations";
@@ -78,53 +79,53 @@ export function AccountSecurityForm({ account }: AccountSecurityFormProps) {
             {lacksPasswordProvider(account) ? (
                 <AccountPasswordSetForm />
             ) : (
-                <Form {...form}>
-                    <form
-                        className="flex w-full flex-col"
-                        onSubmit={form.handleSubmit(onSubmit)}
-                    >
-                        <p className="mb-4 text-muted-foreground text-sm">
-                            {accountSecurity.description}
-                        </p>
-                        <FormContainer>
-                            <div className="col-span-1 md:col-span-2">
-                                <HookFormInputPassword
-                                    label={accountSecurity.currentPassword}
-                                    name="currentPassword"
-                                />
-                            </div>
-                            <div className="col-span-1">
-                                <HookFormInputPassword
-                                    label={accountSecurity.newPassword}
-                                    name="password"
-                                />
-                            </div>
-                            <div className="col-span-1">
-                                <HookFormInputPassword
-                                    label={accountSecurity.confirmPassword}
-                                    name="confirmPassword"
-                                />
-                            </div>
-                        </FormContainer>
-                        <Footer
-                            confirmLabel={accountSecurity.save}
-                            disabled={isImpersonating}
-                            isLoading={changePasswordMutation.isPending}
-                            showBack={false}
-                        />
-                    </form>
-                </Form>
+                <SettingsSection
+                    description={accountSecurity.description}
+                    title={accountSecurity.passwordTitle}
+                >
+                    <Form {...form}>
+                        <form
+                            className="flex w-full flex-col"
+                            onSubmit={form.handleSubmit(onSubmit)}
+                        >
+                            <FormContainer>
+                                <div className="col-span-1 md:col-span-2">
+                                    <HookFormInputPassword
+                                        label={accountSecurity.currentPassword}
+                                        name="currentPassword"
+                                    />
+                                </div>
+                                <div className="col-span-1">
+                                    <HookFormInputPassword
+                                        label={accountSecurity.newPassword}
+                                        name="password"
+                                    />
+                                </div>
+                                <div className="col-span-1">
+                                    <HookFormInputPassword
+                                        label={accountSecurity.confirmPassword}
+                                        name="confirmPassword"
+                                    />
+                                </div>
+                            </FormContainer>
+                            <Footer
+                                confirmLabel={accountSecurity.save}
+                                disabled={isImpersonating}
+                                isLoading={changePasswordMutation.isPending}
+                                showBack={false}
+                                sticky={false}
+                            />
+                        </form>
+                    </Form>
+                </SettingsSection>
             )}
 
             <AccountSessionsPanel />
 
-            <div className="flex flex-col gap-2 rounded-lg border border-border p-4">
-                <span className="font-medium text-sm">
-                    {accountSecurity.signOutEverywhere}
-                </span>
-                <p className="text-muted-foreground text-sm">
-                    {accountSecurity.signOutEverywhereDescription}
-                </p>
+            <SettingsSection
+                description={accountSecurity.signOutEverywhereDescription}
+                title={accountSecurity.signOutEverywhere}
+            >
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button
@@ -155,13 +156,14 @@ export function AccountSecurityForm({ account }: AccountSecurityFormProps) {
                                         onSuccess: () => signOut.mutate(),
                                     })
                                 }
+                                variant="destructive"
                             >
                                 {accountSecurity.signOutEverywhereAction}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
+            </SettingsSection>
         </div>
     );
 }

@@ -227,3 +227,42 @@ describe("EntitiesListClient while acting as another user", () => {
         expect(screen.queryByRole("alert")).toBeNull();
     });
 });
+
+describe("EntitiesListClient page header", () => {
+    it("renders the add action next to the page title and keeps the breadcrumb bar free of it", () => {
+        givenPanel({ isImpersonating: false });
+
+        render(<EntitiesListClient />);
+
+        const title = screen.getByRole("heading", { level: 1 });
+        const addButton = screen.getByTestId("add-entity");
+        const breadcrumbBar = document.querySelector("header");
+
+        expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+        expect(breadcrumbBar?.contains(addButton)).toBe(false);
+        expect(breadcrumbBar?.contains(title)).toBe(false);
+        expect(title.parentElement?.parentElement?.contains(addButton)).toBe(
+            true
+        );
+    });
+
+    it("keeps the title visible while the list is loading", () => {
+        givenPanel({ isImpersonating: false });
+        listEntitiesMock.mockReturnValue({
+            data: [],
+            isLoading: true,
+            isFetching: true,
+            refetch: vi.fn(),
+            error: null,
+            fetchNextPage: vi.fn(),
+            hasNextPage: false,
+            isFetchingNextPage: false,
+        });
+
+        render(<EntitiesListClient />);
+
+        expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
+        expect(screen.getByTestId("add-entity")).toBeTruthy();
+        expect(screen.queryByTestId("table")).toBeNull();
+    });
+});

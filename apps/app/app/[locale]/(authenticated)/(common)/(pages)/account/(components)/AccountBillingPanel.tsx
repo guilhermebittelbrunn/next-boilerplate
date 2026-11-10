@@ -127,7 +127,9 @@ function CurrentPlanCard({
         <Card>
             <CardHeader>
                 <CardDescription>{billingCopy.currentPlan}</CardDescription>
-                <CardTitle>{planName}</CardTitle>
+                <CardTitle>
+                    <h3>{planName}</h3>
+                </CardTitle>
                 <CardAction>
                     <Badge variant={badgeVariantFor(subscription.status)}>
                         {billingCopy.status[subscription.status]}
@@ -197,7 +199,7 @@ function PlanList({
             {emptyMessage ? (
                 <p className="text-muted-foreground text-sm">{emptyMessage}</p>
             ) : (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                     {plans.map((plan) => (
                         <BillingPlanCard
                             disabled={disabled}
@@ -218,7 +220,7 @@ function BillingSkeleton() {
     return (
         <div className="flex w-full flex-col gap-4">
             <Skeleton className="h-4 w-64" />
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
                 <Skeleton className="h-56 w-full" />
                 <Skeleton className="h-56 w-full" />
             </div>
@@ -277,10 +279,6 @@ export function AccountBillingPanel({ account }: AccountBillingPanelProps) {
 
     return (
         <div className="flex w-full flex-1 flex-col gap-6">
-            <p className="text-muted-foreground text-sm">
-                {billingCopy.description}
-            </p>
-
             <CheckoutNotice
                 billingCopy={billingCopy}
                 confirmed={liveSubscription !== null}
