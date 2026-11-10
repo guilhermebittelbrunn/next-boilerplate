@@ -6,7 +6,19 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-10-29, rodada **delta** (`/spec --sync` como passo 1 de um `/cycle` empilhado sobre a
+> **Última rodada:** 2026-11-10, **spec dirigida** (`/spec` com texto livre, pedido de revisão do layout das telas
+> internas depois de olhar o ambiente de produção). Uma spec nova, [`app-internal-ux-polish`](app-internal-ux-polish.md),
+> `proposed`, com a nota [`research/settings-page-patterns.md`](research/settings-page-patterns.md). Não houve auditoria:
+> nenhuma outra spec mudou de status, e as seções de gates, entregas e deriva abaixo seguem as da rodada de 2026-10-29.
+>
+> **Triagem sua no mesmo dia (2026-11-10):** `app-internal-ux-polish` passou a `approved` e é a #1 da fila, antes da
+> fatia 3 de `account-security-mfa` e nunca em paralelo com ela. Navegação da conta decidida: `Tabs` vertical com
+> `?tab=` derivado da URL a cada navegação; sub-rotas e âncoras descartadas, com o motivo na spec. O admin entra no
+> corte só com o padrão de página. A área de conta do admin saiu do corte e virou a spec
+> [`admin-own-account`](admin-own-account.md), `proposed`, que depende da primeira. A aprovação resolve o E9 e
+> absorve o 🟢 das abas sobrepostas em en.
+>
+> **Rodada anterior:** 2026-10-29, rodada **delta** (`/spec --sync` como passo 1 de um `/cycle` empilhado sobre a
 > branch `fix/app-auth-forms`, `HEAD` em `7348247`; leituras às 10:00 BRT). `origin/main` segue em `277da43` (#59).
 > **Anteriores:** a auditoria completa pós-PR #59 (2026-10-28), cujo texto vem logo abaixo, a pós-PR #58 (2026-10-27),
 > a pós-PR #57 (2026-10-23), com duas rodadas delta no mesmo dia, e, antes delas, mais de cinquenta rodadas desde a
@@ -61,21 +73,21 @@ constar na seção [Entregues](#entregues).
 
 ## Contadores
 
-Sobre as **4 specs que seguem em `specs/`**. Recontados do disco em 2026-10-28, pós-PR #59, lendo o frontmatter de
+Sobre as **6 specs que seguem em `specs/`** (4 até 2026-10-29, mais `app-internal-ux-polish` e `admin-own-account`, de 2026-11-10). Recontados do disco em 2026-10-28, pós-PR #59, lendo o frontmatter de
 cada arquivo; os 33 `spec.md` arquivados em `docs/features/` têm todos `status: done`.
 
 | status | qtd |
 |--------|-----|
-| `proposed` | 0 |
+| `proposed` | 1 |
 | `approved` | 0 |
-| `in-progress` | 2 |
+| `in-progress` | 3 |
 | `done` (arquivadas) | 33 |
 | `deferred` | 2 |
 | `rejected` | 0 |
 | `superseded` | 0 |
 
-**Por audiência:** `produto` 2 (os dois `deferred`) · `confianca` 1 (`in-progress`) · `dx` 1 (`in-progress`).
-**Por esforço:** P 0 · M 4 · G 0. **Por valor:** alto 1 · médio 3 · baixo 0.
+**Por audiência:** `produto` 4 (os dois `deferred`, `app-internal-ux-polish` em `in-progress` e `admin-own-account` em `proposed`) · `confianca` 1 (`in-progress`) · `dx` 1 (`in-progress`).
+**Por esforço:** P 0 · M 6 · G 0. **Por valor:** alto 2 · médio 4 · baixo 0.
 
 **Transições aplicadas na auditoria pós-PR #59: 1.** `organization-ownership-transfer` foi de `proposed` para `done` e
 saiu de `specs/` (conferência em [Entregas desta rodada](#entregas-desta-rodada-pr-59)). Para as quatro que seguem
@@ -86,6 +98,10 @@ arquivos da PR com os 15 caminhos de `contends_on` delas: nenhum coincide. **Spe
 
 > **Elegíveis: 0 de 4.** `one-time-purchase` e `social-sign-in-providers` estão `deferred`, por decisão sua;
 > `account-security-mfa` e `observability-logging` estão `in-progress` sem feature em andamento (E12 e E1).
+
+**Spec dirigida de 2026-11-10: duas specs novas e uma transição.** `app-internal-ux-polish` entrou como `proposed` e
+passou a `approved` na sua triagem do mesmo dia; `admin-own-account` entrou como `proposed`, saída do corte da
+primeira. **Elegíveis: 2 de 6**, as duas novas; `admin-own-account` só depois de `app-internal-ux-polish` entregue.
 
 **Rodada delta de 2026-10-29: nenhuma transição.** Os contadores acima foram reconferidos no frontmatter das quatro
 specs e seguem iguais. A branch `fix/app-auth-forms` não toca spec viva além das âncoras de `social-sign-in-providers`.
@@ -271,7 +287,7 @@ repositório tem **59** PRs, nenhuma aberta.
 
 Respeita `depends_on` (lido do frontmatter em 2026-10-28, pós-PR #59) e prioriza valor × esforço × custo de
 adiar. Nenhuma spec está bloqueada por dependência, e **nenhuma é elegível**: as duas `deferred` seguem paradas por
-decisão sua, e as duas `in-progress` esperam provedor ou recurso pago.
+decisão sua, e as duas `in-progress` esperam provedor ou recurso pago. **Desde 2026-11-10** a #1 é `app-internal-ux-polish`, `approved` na sua triagem, e a #2 é `admin-own-account`, `proposed`, que depende dela. A numeração das quatro anteriores andou duas posições.
 
 > **Critério de execução, sem exceção:** o que uma rodada autônoma consegue provar. O `/cycle` não
 > provisiona infraestrutura, então spec cujos critérios dependem de conta em provedor volta com metade dos
@@ -279,10 +295,12 @@ decisão sua, e as duas `in-progress` esperam provedor ou recurso pago.
 
 | # | id | valor · esforço | situação |
 |---|----|-----------------|----------|
-| 1 | [`social-sign-in-providers`](social-sign-in-providers.md) | médio · M | `deferred` em 2026-10-16. 5/10. A dependência foi entregue pela PR #48; resta o outro motivo do adiamento, nenhum fork pediu GitHub ou Microsoft. O GitHub não prova sob o emulador |
-| 2 | [`one-time-purchase`](one-time-purchase.md) | médio · M | `deferred` em 2026-10-16. 4/10. Toda prova real depende de conta Stripe (pendência 23) |
-| 3 | [`account-security-mfa`](account-security-mfa.md), **fatia 3** (segundo fator) | médio · M | `in-progress`, 4 de 6 itens entregues (fatias 1 e 2, PRs #29 e #39). Nenhuma feature ativa e **fora do conjunto elegível** enquanto o status não mudar (E12). Exige ativar o Identity Platform, com preço não confirmado |
-| 4 | [`observability-logging`](observability-logging.md) | alto · M | `in-progress`, 5 dos 6 itens. O que falta é o coletor, que exige conta num provedor. Estacionada (E1) |
+| 1 | [`app-internal-ux-polish`](app-internal-ux-polish.md) | alto · M | `approved` em 2026-11-10 e `in-progress` no mesmo dia, com a feature [`app-internal-ux-polish`](../docs/features/app-internal-ux-polish/STATE.md) planejada pelo `/analyze`. Só UI, sem conta em provedor, então a rodada autônoma prova tudo. Roda antes da fatia 3 de `account-security-mfa` e nunca em paralelo com ela, porque as duas alteram a seção Segurança |
+| 2 | [`admin-own-account`](admin-own-account.md) | médio · M | `proposed` em 2026-11-10. Depende de `app-internal-ux-polish` (reusa o layout de configurações). Mexe em autorização: guard de "própria conta" que aceita admin só sobre si mesmo |
+| 3 | [`social-sign-in-providers`](social-sign-in-providers.md) | médio · M | `deferred` em 2026-10-16. 5/10. A dependência foi entregue pela PR #48; resta o outro motivo do adiamento, nenhum fork pediu GitHub ou Microsoft. O GitHub não prova sob o emulador |
+| 4 | [`one-time-purchase`](one-time-purchase.md) | médio · M | `deferred` em 2026-10-16. 4/10. Toda prova real depende de conta Stripe (pendência 23) |
+| 5 | [`account-security-mfa`](account-security-mfa.md), **fatia 3** (segundo fator) | médio · M | `in-progress`, 4 de 6 itens entregues (fatias 1 e 2, PRs #29 e #39). Nenhuma feature ativa e **fora do conjunto elegível** enquanto o status não mudar (E12). Exige ativar o Identity Platform, com preço não confirmado |
+| 6 | [`observability-logging`](observability-logging.md) | alto · M | `in-progress`, 5 dos 6 itens. O que falta é o coletor, que exige conta num provedor. Estacionada (E1) |
 
 ### A próxima: tarefa direta `web-sign-up-copy`
 
@@ -403,6 +421,11 @@ disjunção → teto de 3. Os 15 caminhos declarados pelas quatro specs são dis
 
 **Elegíveis agora: 0 de 4, então não há lote.**
 
+**Atualização de 2026-11-10 (spec dirigida e triagem):** `app-internal-ux-polish` está `approved` e
+`admin-own-account` depende dela, então as duas rodam em série e o lote tem uma spec só. Os quatro caminhos do `contends_on` dela não coincidem com os 15
+das outras quatro; a contenção real com `account-security-mfa` está em `AccountSecurityForm.tsx`, que a fatia 3 vai
+alterar e que aquela spec não declara. `admin-own-account` declara três caminhos, também disjuntos dos demais.
+
 **Quem ficou de fora, nominalmente:** `social-sign-in-providers` e `one-time-purchase` por estarem `deferred`, e
 `account-security-mfa` e `observability-logging` por estarem `in-progress` sem feature ativa. Nenhuma ficou de fora por
 colisão nem pelo teto de 3. Pelo `contends_on`, as quatro são disjuntas duas a duas. Fora do campo,
@@ -484,7 +507,7 @@ Recomendações que apareceram em duas rodadas ou mais com a mesma resposta. Pel
 [§5.1 da `cycle-policy`](../.claude/cycle-policy.md), elas **param de ser reapresentadas** até você mexer.
 Cada uma tem dono e endereço. O histórico de cada célula está na versão deste arquivo em `9c793c6`. Nenhuma saiu na
 rodada pós-PR #59; E3, E4, E11 e E14 ganharam a medição dela. A rodada delta de 2026-10-29 acrescentou a E15 e
-atualizou a E11 e a E14.
+atualizou a E11 e a E14. Em 2026-11-10 você resolveu a E9, ao aprovar `app-internal-ux-polish`; a linha fica até a entrega.
 
 | # | questão | dono | onde mora a decisão | recomendação registrada |
 |---|---------|------|---------------------|-------------------------|
@@ -495,7 +518,7 @@ atualizou a E11 e a E14.
 | E6 | Teto absoluto da sessão ultrapassável por até meia vida de cookie | — | `docs/PRE-PRODUCTION.md`, seção "Declaração — por quanto tempo uma sessão pode ser renovada" | manter o comportamento; o número está escrito onde o fork lê |
 | E7 | Busca da tabela enxerga só as páginas carregadas | quem sentir a dor | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | abrir spec quando houver caso de uso |
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
-| E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`) |
+| E9 | O deep link das abas da conta (`?tab=`) não acompanha a barra lateral | você | [Achados](#-ui-i18n-e-front-end), linha de `AccountTabs.tsx` | derivar a aba do `?tab=` a cada navegação, aceitando um `router.replace`; a escolha contrária está comentada no código (`AccountTabs.tsx:55-57`). **Resolvido em 2026-11-10** pela aprovação de [`app-internal-ux-polish`](app-internal-ux-polish.md): a aba passa a ser derivada do `?tab=` a cada navegação, e a entrega fecha o achado |
 | E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | achado A1 em [Achados](#-achados-abertos-reconferidos-ou-herdados) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer |
 | E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Rodada delta de 2026-10-29:** a branch da tarefa `app-auth-forms` é `fix/app-auth-forms`, a forma `fix/<slug>` para tarefa que cruza app e pacotes que a recomendação abaixo pede que a regra aceite; o `/review` a criou porque a branch do workspace reprovava no regex. Ainda sem PR. **Atualizado em 2026-10-28, pós-PR #59:** a PR #59 saiu de `guilhermebittelbrunn/cycle-value-task`, **fora do padrão**; o `/review` propôs `feat/organization-ownership-transfer`, e a PR subiu da branch do workspace por instrução sua, como a nota do `STATE.md` registra. O `STATE.md` dela traz `review: done` e a branch real, que é o que esta linha pede. É a vigésima primeira PR (#37, #40 a #59) cujo squash leva a auditoria anterior junto. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 66 pastas. **Registro de 2026-10-27, pós-PR #58:** a PR #58 saiu de `api/fix/organization-guardrails`, a branch que o `/review` propôs, **dentro do padrão** `<project>/<type>/<title>`. Os dois `STATE.md` dela seguem com a branch marcada como "proposta" e `review: done`. Ela é a vigésima PR (#37, #40 a #58) cujo squash leva a auditoria anterior junto. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 65 pastas. O registro da PR #57 está na versão deste arquivo em `277da43`. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
 | E12 | O destino da fatia 3 de `account-security-mfa` (segundo fator com códigos de recuperação, itens 5 e 6). Opções: **(a)** arquivar a spec como entregue em 4/6 e abrir uma spec `proposed` só do segundo fator; **(b)** voltar a spec para `proposed`, com as fatias entregues registradas nela; **(c)** manter `in-progress`; **(d)** marcar a fatia 3 como `deferred` dentro da spec | você | a spec [`account-security-mfa`](account-security-mfa.md) | **(a)**. Com `in-progress` e nenhuma feature ativa, a spec fica fora dos lotes para sempre. A pasta de destino ainda não tem `spec.md` (reconferido em 2026-10-22), então não há colisão |
@@ -525,6 +548,8 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 |------|--------------|------------------------|
 | [`social-sign-in-providers`](social-sign-in-providers.md) | `linked-sign-in-methods` | ✅ satisfeita (PR #48, `44b2b04`), arquivada em [`docs/features/linked-sign-in-methods/spec.md`](../docs/features/linked-sign-in-methods/spec.md). A spec segue `deferred` |
 | [`one-time-purchase`](one-time-purchase.md) | — | ✅ sem dependência |
+| [`app-internal-ux-polish`](app-internal-ux-polish.md) | — | ✅ sem dependência. Contenção com `account-security-mfa` (fatia 3) e `one-time-purchase` na tela de conta, escrita nos riscos da spec |
+| [`admin-own-account`](admin-own-account.md) | `app-internal-ux-polish` | ⏳ aguarda a entrega da primeira, `approved` em 2026-11-10 |
 | [`account-security-mfa`](account-security-mfa.md) | `account-settings` | ✅ satisfeita (PR #12, `a4df5ed`). A spec está `in-progress`, com as fatias 1 e 2 em `main` |
 | [`observability-logging`](observability-logging.md) | — | ✅ sem dependência |
 
@@ -536,6 +561,8 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 | [`one-time-purchase`](one-time-purchase.md) | Compra avulsa com acesso vitalício | produto | médio | M | `deferred` | — |
 | [`account-security-mfa`](account-security-mfa.md) | MFA, sessões ativas e política de senha | confianca | médio | M | `in-progress` (fatias 1 e 2 entregues, PRs #29 e #39) | ✅ `account-settings` |
 | [`observability-logging`](observability-logging.md) | Observabilidade: erros, tracing e logs estruturados | dx | alto | M | `in-progress` | — |
+| [`app-internal-ux-polish`](app-internal-ux-polish.md) | Conta como página de configurações e padrão único de página nas telas internas | produto | alto | M | `in-progress` | `app-internal-ux-polish` |
+| [`admin-own-account`](admin-own-account.md) | Área de conta para o admin (perfil, senha e preferências) | produto | médio | M | `proposed` | ⏳ `app-internal-ux-polish` |
 
 ## Entregues
 
@@ -830,7 +857,7 @@ entrega; os três ficaram fora dela por decisão registrada.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **O deep link das abas da conta não acompanha a navegação** | `AccountTabs.tsx:51-53` (estado lido uma vez) · `:55-62` (`history.replaceState`) | Reconferido. A barra lateral muda a URL e a aba fica onde estava. Estacionado (E9) |
+| 🟡 **O deep link das abas da conta não acompanha a navegação** | `AccountTabs.tsx:51-53` (estado lido uma vez) · `:55-62` (`history.replaceState`) | Reconferido. A barra lateral muda a URL e a aba fica onde estava. E9 resolvido em 2026-11-10: está no corte de [`app-internal-ux-polish`](app-internal-ux-polish.md), `approved`; fecha com a entrega |
 | 🟡 **A mensagem de erro padrão está cravada em pt-br num pacote** | `packages/shared/utils/helpers/handleClientError.ts:19` | Reconferido, literal |
 | 🟡 **O filtro por usuário da trilha não alcança evento de usuário excluído** | `admin/(pages)/audit/(components)/AuditFilters.tsx:40` | Reconferido. A exclusão de conta apaga o perfil e anonimiza os rótulos, então esses eventos ficam sem entrada no `select` |
 | 🟡 **`resolveUserAuditLabel` engole a falha sem log** | `apps/api/(shared)/lib/audit-label.ts:14-16` | Reconferido |
@@ -1194,7 +1221,7 @@ decisão registrada; nenhum bloqueou a entrega.
 | 🟢 **`postAuthRedirectTarget` decodifica o destino duas vezes** | `packages/auth/redirect.ts:27` (`decodeURIComponent` sobre um valor que o `searchParams.get` já decodificou) | Valores de query com `%26`, `%3D` ou `%25` perdem a codificação ao passar pelo guard, e um `%` malformado faz o destino cair no fallback. Os `priceId` da Stripe (`price_` e alfanuméricos) não são afetados. Do plano da PR #47; o `/test` o deixou fora de escopo. P |
 | 🟢 **A sessão expirada leva ao login só com o caminho, sem a query** | `packages/auth/provider.tsx:87-97` (era `:80-90` até a PR #56; `expiredSessionOrigin` usa `window.location.pathname` quando não há `redirect`) | Quem estava numa listagem filtrada ou na aba de cobrança com `?plan=` volta para a página sem os filtros depois de entrar de novo. Fora do caminho do CTA de preços. Do plano da PR #47. P. Encostava em `provider.tsx`, que `linked-sign-in-methods` declarava no `contends_on`; a PR #48 não tocou o arquivo, e nenhuma spec da fila o declara mais |
 | 🟢 **O guard de redirect é testado fora do próprio pacote** | `apps/app/__tests__/postAuthRedirectTarget.test.ts` testa `packages/auth/redirect.ts` | `pnpm --filter @repo/auth test` não exercita o guard que acabou de ganhar a checagem contra open redirect; só a suíte da `apps/app` pega uma regressão nele. Mover o arquivo para `packages/auth/__tests__/` resolve. Do `/review` da PR #47 (D8). P |
-| 🟢 **As abas da conta se sobrepõem em en a 1280 px, e a lista rola de lado a 375 px** | `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountTabs.tsx:71-77` (`TabsList`) | Medido pelo `/test` da PR #47: "Security" e "Preferences" ficam colados e "Preferences" passa por baixo de "Billing". O arquivo não estava no diff. Não medido em pt-br e es nem em outras larguras. P, e pede medição antes de correção |
+| 🟢 **As abas da conta se sobrepõem em en a 1280 px, e a lista rola de lado a 375 px** | `apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountTabs.tsx:71-77` (`TabsList`) | Medido pelo `/test` da PR #47: "Security" e "Preferences" ficam colados e "Preferences" passa por baixo de "Billing". O arquivo não estava no diff. Não medido em pt-br e es nem em outras larguras. P, e pede medição antes de correção. No corte de [`app-internal-ux-polish`](app-internal-ux-polish.md), `approved` em 2026-11-10; fecha com a entrega |
 | 🟢 **As seções da home da web colam na borda lateral no celular** (ampliado em 2026-10-19, pós-PR #49) | `apps/web/app/[locale]/(home)/components/` (`hero.tsx`, `features.tsx`, `stats.tsx`, `cases-client.tsx`, `testimonials-client.tsx`, `faq.tsx` e `cta.tsx`, com `container mx-auto` sem padding) · `apps/web/app/[locale]/contact/components/contact-form-client.tsx:144` | Medido pelo `/test` da PR #47: sete containers começam em x = 0 a 375 px. A correção na raiz seria um padding no `container`, mas o header e o footer já compensam por fora e teriam de mudar junto; a `/pricing` resolveu com o recuo no wrapper (`px-4 md:px-2`). Do `/review` da PR #47. P a M. **Ampliado em 2026-10-19:** o `/test` da PR #49 mediu o cartão do formulário de contato encostado nas bordas a 375 px, sem rolagem horizontal; a página usa o mesmo `container mx-auto` sem padding |
 
 **Lacunas de teste e 🔒 herdados da entrega, com veredito desta auditoria:**
