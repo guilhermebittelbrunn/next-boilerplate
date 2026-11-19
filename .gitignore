@@ -298,6 +298,11 @@ skills-lock.json
 # validado, que vive no markdown da etapa.
 docs/features/**/screenshots/
 docs/features/**/test/e2e/
+# Mesma regra para a etapa de entrega: o relatório é versionado, os prints não.
+docs/delivery/reports/**/screenshots/
+# Saída da skill brag-slim (roteiro, quadros, trilha). Os entregáveis finais são copiados
+# para apps/web/public/showcase/ e versionados lá.
+brag-output*/
 # Logs das execuções agendadas do /cycle
 .claude/cycle-logs/
 
@@ -314,3 +319,4 @@ apps/e2e/playwright-report/
 apps/e2e/test-results/
 apps/e2e/blob-report/
 apps/e2e/.auth/
+apps/e2e/showcase-results/
