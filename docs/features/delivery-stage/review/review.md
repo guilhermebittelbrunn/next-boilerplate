@@ -222,4 +222,5 @@ Branch `feat/delivery-stage`, a partir de `main` em `583194b`. Cada commit confe
 | 10 | `1f374b9` | `docs(specs): add the delivery security, infra and quality specs` |
 | 11 | este | `docs(features): delivery-stage` |
 
-Envio ao remoto: pendente da resposta do usuário.
+Envio ao remoto: feito em 2026-11-19 com `git push -u origin feat/delivery-stage`, com o "sim" do usuário. O
+`HEAD` remoto era o commit 11 (`1978997`). A PR para `main` foi aberta depois, a pedido do usuário.
