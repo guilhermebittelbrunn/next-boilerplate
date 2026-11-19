@@ -58,7 +58,7 @@ export const config = {
     // matcher tells Next.js which routes to run the proxy on. This runs on all
     // routes except for static assets and API routes. Proxy always runs on Node.
     matcher: [
-        "/((?!_next/static|_next/image|favicon.ico|api|robots.txt|sitemap.xml).*)",
+        "/((?!_next/static|_next/image|favicon.ico|api|robots.txt|sitemap.xml|showcase/).*)",
     ],
 };
 

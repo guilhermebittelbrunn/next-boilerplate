@@ -17,7 +17,7 @@ vi.mock("@/env", () => ({
     },
 }));
 
-const proxy = (await import("@/proxy")).default;
+const { default: proxy, config } = await import("@/proxy");
 
 const ORIGIN = "http://localhost:3001";
 const FORWARDED_LOCALE = `x-middleware-request-${LOCALE_REQUEST_HEADER}`;
@@ -78,5 +78,20 @@ describe("web proxy locale forwarding", () => {
 
         expect(response.headers.get("location")).toContain("/pt-br/pricing");
         expect(response.headers.get(FORWARDED_LOCALE)).toBeNull();
+    });
+});
+
+describe("web proxy matcher", () => {
+    const matches = (path: string) =>
+        new RegExp(`^${config.matcher[0]}$`).test(path);
+
+    it("serves the showcase video straight from public, without a locale redirect", () => {
+        expect(matches("/showcase/showcase.mp4")).toBe(false);
+        expect(matches("/showcase/showcase.gif")).toBe(false);
+    });
+
+    it("still runs on localized pages", () => {
+        expect(matches("/pt-br")).toBe(true);
+        expect(matches("/en/pricing")).toBe(true);
     });
 });
