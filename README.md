@@ -18,9 +18,10 @@ admin, assinaturas, e-mails, i18n e LGPD funcionando.
 </p>
 
 [🚀 Criar um projeto](docs/FORKING.md) ·
+[🎬 Demonstração](#-demonstração) ·
 [✨ Funcionalidades](#-o-que-um-fork-herda) ·
 [⚡ Começando](#-começando) ·
-[📐 Padrões](#-padrões-do-repositório) ·
+[✅ Entrega](#-etapa-de-entrega) ·
 [📚 Documentação](#-documentação)
 
 </div>
@@ -30,15 +31,32 @@ admin, assinaturas, e-mails, i18n e LGPD funcionando.
 > [!TIP]
 > **Vai criar um produto novo?** Siga o **[guia de criação e lançamento de projeto](docs/FORKING.md)**. Ele
 > lista, em ordem, os arquivos que o fork altera, cada variável de ambiente e o que ela muda, os serviços que
-> precisam ser configurados e como publicar em produção.
+> precisam ser configurados e como publicar em produção. O README do produto nasce do
+> **[modelo da casa](docs/templates/README.template.md)**, e nenhum produto é entregue sem passar pela
+> **[etapa de entrega](docs/delivery/README.md)**.
+
+## 🎬 Demonstração
+
+<p align="center">
+  <a href="apps/web/public/showcase/showcase.mp4">
+    <img src="apps/web/public/showcase/showcase.gif" alt="Vídeo de 21 segundos do next-boilerplate: a landing, o login, a conta, o painel com o CRUD de exemplo, a área admin em tema escuro, a landing em três idiomas e o painel no celular" width="720">
+  </a>
+</p>
+
+O vídeo completo, com trilha, está em [`apps/web/public/showcase/showcase.mp4`](apps/web/public/showcase/showcase.mp4)
+e é servido pela landing em `/showcase/showcase.mp4`. Ele foi feito com a skill `brag-slim` a partir de telas
+capturadas contra os emuladores, só com os dados do seed. Como refazer: parte 4 da
+[etapa de entrega](docs/delivery/04-documentation.md).
 
 ## 📑 Sumário
 
+- [🎬 Demonstração](#-demonstração)
 - [✨ O que um fork herda](#-o-que-um-fork-herda)
 - [🗂️ Estrutura](#️-estrutura)
 - [🧰 Tecnologias](#-tecnologias)
 - [⚡ Começando](#-começando)
 - [⌨️ Comandos](#️-comandos)
+- [✅ Etapa de entrega](#-etapa-de-entrega)
 - [📐 Padrões do repositório](#-padrões-do-repositório)
 - [🌿 Branches e commits](#-branches-e-commits)
 - [🤖 Desenvolvimento com IA](#-desenvolvimento-com-ia)
@@ -61,32 +79,39 @@ eles.
 
 - Cadastro e login com e-mail e senha
 - Login com Google
+- Entrar com link por e-mail, sem senha 🔌
 - Política de senha na API (mínimo de 8 caracteres)
 - Verificação de e-mail e recuperação de senha por link
 - Onboarding pós-cadastro (nome e idioma), desligável
 - Sessão compartilhada com a landing, com renovação deslizante e teto absoluto
+- Conta desativada ou arquivada perde o acesso à API na hora
 
-**👤 Área de conta** (`/account`, em abas)
+**👤 Configurações da conta** (`/account`, com navegação lateral)
 
 - **Perfil:** nome, telefone e foto 🔌
-- **Segurança:** troca de senha e encerramento das outras sessões
+- **Segurança:** troca de senha, troca de e-mail confirmada por link, métodos de login (vincular e
+  desvincular o Google, definir a primeira senha) e sessões ativas com encerramento por sessão
 - **Preferências:** idioma e tema
-- **Privacidade (LGPD):** exportar os próprios dados e excluir a conta
 - **Cobrança:** planos, checkout e portal da Stripe 🔌
+- **Privacidade (LGPD):** exportar os próprios dados e excluir a conta
 
 </td><td valign="top" width="50%">
 
 **🏠 Painel comum**
 
 - Home com widgets de resumo
-- CRUD de exemplo `entity` (lista paginada, busca, criar, editar, ativar/desativar, upload de foto 🔌)
+- CRUD de exemplo `entity` (lista paginada, busca, criar, editar, ativar/desativar, upload de foto 🔌),
+  com a criação liberada por plano 🔌
+- Central de notificações no sino, com contador de não lidas
+- Equipe: organização com membros, convite por e-mail e transferência de propriedade 🔌
 - `playground` com o catálogo do design system
 
 **🛡️ Área admin** (`/admin`)
 
 - Home com métricas de usuários e faixas de último acesso
 - Seção de cobrança: receita do mês, assinaturas por plano e contratações recentes 🔌
-- Gestão de usuários: listar, criar, editar, promover a admin e arquivar (cancelando a assinatura)
+- Gestão de usuários: listar, criar, editar, promover a admin e arquivar (cancelando a assinatura e o
+  acesso); o admin não consegue se trancar fora do painel
 - Impersonação em modo leitura: o admin vê o painel como o usuário
 - Trilha de auditoria das ações sensíveis, com filtros
 
@@ -96,27 +121,36 @@ eles.
 ### 🌐 `apps/web` · landing e captação
 
 - Home com hero, números, funcionalidades, cases, depoimentos, FAQ e chamada para ação
-- Página de preços, formulário de contato (entrega por e-mail) e login/cadastro na própria landing
+- Página de preços montada a partir do catálogo da Stripe 🔌
+- Formulário de contato que entrega na caixa de suporte da marca, pela API
+- Login e cadastro na própria landing
 - Política de privacidade e termos de uso como modelo, nos 3 idiomas
 - SEO: metadata por idioma com `hreflang`, Open Graph, JSON-LD, `sitemap.xml` e `robots.txt`
 - Banner de consentimento de cookies com Google Consent Mode v2 🔌
 - Seletor de idioma e de tema, header que reconhece a sessão e leva ao painel
+- Tela de erro global no tema e no idioma do visitante
 
 ### ⚙️ `apps/api` · API HTTP
 
 | Grupo | Rotas |
 |-------|-------|
-| 🔑 Autenticação | `auth/sign-up`, `auth/sign-in`, `auth/sign-in/google`, `auth/me`, `auth/password/*`, `auth/email-verification/*` |
-| 👤 Conta | `account` (perfil), `account/password`, `account/sessions/revoke`, `account/onboarding`, `account/export`, `account/deletion` |
+| 🔑 Autenticação | `auth/sign-up`, `auth/sign-in`, `auth/sign-in/google`, `auth/sign-in/email-link/*` 🔌, `auth/me`, `auth/session`, `auth/password/*`, `auth/email-verification/*`, `auth/email-change/confirm` |
+| 👤 Conta | `account` (perfil), `account/password`, `account/password/set`, `account/email`, `account/sessions/*`, `account/sign-in-methods/*`, `account/onboarding`, `account/export`, `account/deletion` |
 | 📦 Recurso de exemplo | `entities` (CRUD com paginação por cursor), `entities/summary` |
+| 🔔 Notificações | `notifications`, `notifications/unread-count`, `notifications/read-all`, `notifications/:id/read` |
+| 👥 Organização 🔌 | `organization`, `organization/members/*` (inclui transferência de propriedade), `organization/invitations/*`, `organization/leave`, `invitations/preview`, `invitations/accept` |
 | 🛡️ Admin | `users` (CRUD), `users/summary`, `users/activity-summary`, `audit-events` |
-| 💳 Pagamentos 🔌 | `payments/plans`, `payments/checkout`, `payments/portal`, `payments/summary`, `webhooks/payments` |
+| 💳 Pagamentos 🔌 | `payments/catalog`, `payments/plans`, `payments/checkout`, `payments/portal`, `payments/summary`, `webhooks/payments` |
 | 📁 Arquivos 🔌 | `files` (upload com URL assinada) |
+| ✉️ Contato | `contact` |
 | ❤️ Saúde | `health`, `health/ready` |
 
-Todas passam por guard de autorização (`requireCommonPanelApi` / `requireAdminApi`), validação Zod na
-borda e erro por código (`{ error: { code } }`). Na borda HTTP: CSP e cabeçalhos de segurança, CORS por
-allowlist e limite de requisições com Arcjet 🔌.
+As rotas de negócio passam por guard de autorização (`requireCommonPanelApi`, `requireOrganizationApi`,
+`requirePlanApi`, `requireAdminApi`); as públicas, cada uma com o motivo, estão em
+[`docs/SECURITY.md`](docs/SECURITY.md). Toda rota que recebe JSON valida a entrada com Zod na borda e
+recusa corpo acima de 100 KiB (o upload tem teto próprio de 4 MiB), e toda rota responde erro por código
+(`{ error: { code } }`). Na borda HTTP: CSP e cabeçalhos de segurança, CORS por allowlist e limite de
+requisições com Arcjet 🔌.
 
 ### ✉️ `apps/email` · e-mails transacionais
 
@@ -126,8 +160,10 @@ suporte da marca.
 
 ### 🧪 `apps/e2e` · testes de ponta a ponta
 
-Suíte Playwright dos fluxos críticos com verificação de acessibilidade (axe). Sobe emulador e apps sozinha
-e roda no CI em toda PR que mexe em produto.
+Suíte Playwright dos fluxos críticos com verificação de acessibilidade (axe), em tema claro e escuro.
+Sobe emulador e apps sozinha e roda no CI em toda PR que mexe em produto. O mesmo boot serve à captura
+das telas do vídeo de demonstração (`pnpm --filter e2e showcase`), que nunca toca um projeto Firebase
+real.
 
 ### 🧩 Transversal
 
@@ -137,9 +173,12 @@ e roda no CI em toda PR que mexe em produto.
 | 🎨 | Tema light, dark e system; layout responsivo mobile-first |
 | 🏷️ | Marca configurável por variável de ambiente: nome, logo e e-mail de suporte |
 | 🔀 | Dois modos de produto: `subscription` (o usuário opera no painel) e `simple` (opera na web) |
-| 🔒 | Firestore acessado só pela API, com rules em `deny-all` |
+| 🔒 | Firestore e Cloud Storage acessados só pela API, com rules em `deny-all` testadas no emulador |
 | 🧯 | Emuladores do Firebase e seed: o stack inteiro roda offline, sem conta |
+| 🪵 | Log estruturado com request id e sonda de prontidão (`/health/ready`) |
+| ⚖️ | Modelos de conformidade: registro de operações (RoPA), suboperadores, resposta a incidente e backup |
 | ✅ | CI no GitHub Actions: lint, typecheck, testes, E2E e cobertura |
+| 🚚 | Etapa de entrega com quatro partes e relatório versionado, e modelo de README para os forks |
 
 ---
 
@@ -273,12 +312,33 @@ pnpm coverage               # cobertura em coverage/
 ```bash
 pnpm build                  # build de produção (depende de test)
 pnpm bump-ui                # ressincroniza os componentes shadcn do design system
+pnpm --filter e2e showcase  # captura as telas do vídeo de demonstração contra os emuladores (JDK 21)
 ```
 
 > [!TIP]
 > `lint`, `typecheck` e `test` são tasks cacheadas do Turbo e não leem variável de ambiente. `test:emulator`
 > roda contra os emuladores do Firebase, não usa cache e precisa de JDK 21. O job `verify` do CI roda
 > exatamente `pnpm turbo run lint typecheck test test:emulator`: se passa no seu terminal, passa no GitHub.
+
+---
+
+## ✅ Etapa de entrega
+
+Antes da entrega final, todo produto passa por quatro partes, cada uma com a sua especificação em
+[`docs/delivery/`](docs/delivery/README.md):
+
+| | Parte | O que mede |
+|---|-------|------------|
+| 🔒 | [Validação de segurança](docs/delivery/01-security-review.md) | 19 itens no código do produto: env exposta, validação, IDOR, CSRF, upload, tokens, rate limit, CORS e o resto da lista |
+| 🛡️ | [Infra e hardening](docs/delivery/02-infra-hardening.md) | 20 controles ligados em produção: chaves restritas, segredos fora do Git, rules, cabeçalhos, HTTPS, varredura de dependências. Os passos de console têm [prompt pronto para o Claude Cowork](docs/delivery/cowork-infra-prompt.md) |
+| 📈 | [Qualidade do produto](docs/delivery/03-product-quality.md) | Celular, formulários, 404, PageSpeed, imagens, `og:image`, sitemap, Analytics, `robots.txt`, títulos e descrições |
+| 📚 | [Documentação](docs/delivery/04-documentation.md) | README no [modelo da casa](docs/templates/README.template.md), vídeo e GIF do produto, documentos em dia |
+
+No Claude Code, `/deliver` roda as quatro partes em ordem e grava o relatório em
+`docs/delivery/reports/<data>/report.md`. A entrega só é aprovada sem nenhuma falha 🔴 aberta. O que o
+próprio core ainda não passa está nas specs [`delivery-security-review`](specs/delivery-security-review.md),
+[`delivery-infra-hardening`](specs/delivery-infra-hardening.md) e
+[`delivery-product-quality`](specs/delivery-product-quality.md).
 
 ---
 
@@ -348,10 +408,13 @@ auditando o próprio backlog contra o código:
 ```
 /spec  →  /analyze  →  /develop  →  /review  →  /test        (/spec --sync fecha o ciclo)
  🗺️         🧠           🛠️           🔍          🧪
+                                                             /deliver antes de cada entrega 🚚
 ```
 
 Cada etapa tem um subagent e deixa um artefato em `docs/features/<slug>/`. O `/cycle` roda a linha inteira
-sem parar para perguntar, mas nunca commita. Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e
+sem parar para perguntar, mas nunca commita. O `/deliver` roda a [etapa de entrega](docs/delivery/README.md)
+e a skill `brag-slim` (baixada de [latent-spaces/brag](https://github.com/latent-spaces/brag), licença MIT)
+gera o vídeo de demonstração. Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e
 [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md). O que ainda falta no core está em
 [`specs/BACKLOG.md`](specs/BACKLOG.md).
 
@@ -362,6 +425,8 @@ sem parar para perguntar, mas nunca commita. Comece por [`docs/AI-WORKFLOW.md`](
 | | Documento | Assunto |
 |---|-----------|---------|
 | 🚀 | [`docs/FORKING.md`](docs/FORKING.md) | Criar um produto a partir do boilerplate e publicar em produção |
+| 🚚 | [`docs/delivery/README.md`](docs/delivery/README.md) | Etapa de entrega: as quatro especificações, o relatório e o prompt do Cowork |
+| 📝 | [`docs/templates/README.template.md`](docs/templates/README.template.md) | Modelo de README que todo fork segue |
 | ✅ | [`docs/PRE-PRODUCTION.md`](docs/PRE-PRODUCTION.md) | Checklist dos passos de console, DNS e painel que nenhum teste cobra |
 | ⚙️ | [`docs/SETUP.md`](docs/SETUP.md) | Ambiente local, variáveis por serviço, emuladores, CI |
 | 📐 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Visão da arquitetura |
@@ -369,6 +434,7 @@ sem parar para perguntar, mas nunca commita. Comece por [`docs/AI-WORKFLOW.md`](
 | 🔑 | [`docs/AUTH-SSO.md`](docs/AUTH-SSO.md) | Sessão compartilhada entre `web` e `app`, modo de produto |
 | 👤 | [`docs/AUTH-PANEL.md`](docs/AUTH-PANEL.md) | Painéis comum e admin, impersonação |
 | 💳 | [`docs/PAYMENTS.md`](docs/PAYMENTS.md) | Assinaturas Stripe |
+| ⚖️ | [`docs/ROPA.md`](docs/ROPA.md) · [`SUBPROCESSORS.md`](docs/SUBPROCESSORS.md) · [`INCIDENT-RESPONSE.md`](docs/INCIDENT-RESPONSE.md) · [`BACKUP.md`](docs/BACKUP.md) | Modelos de conformidade (LGPD) |
 | 📖 | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | Vocabulário do projeto |
 | 🧭 | [`AGENTS.md`](AGENTS.md) | Convenções detalhadas, incluindo design system e formulários |
 
