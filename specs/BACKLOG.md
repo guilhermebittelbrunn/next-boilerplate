@@ -6,7 +6,18 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-11-10, **spec dirigida** (`/spec` com texto livre, pedido de revisão do layout das telas
+> **Última rodada:** 2026-11-19, **spec dirigida** (pedido de uma etapa final de entrega para todo fork). Três specs
+> novas, `approved` na sua triagem do mesmo dia, uma por parte da [etapa de entrega](../docs/delivery/README.md) que o core ainda não passa:
+> [`delivery-security-review`](delivery-security-review.md), [`delivery-infra-hardening`](delivery-infra-hardening.md)
+> e [`delivery-product-quality`](delivery-product-quality.md). A parte 4 (documentação) foi entregue direto na mesma
+> branch, sem spec: modelo de README, `/deliver`, skill `brag-slim` e o vídeo em `apps/web/public/showcase/`. As
+> evidências vieram de três auditorias só de leitura e de 23 fontes abertas no mesmo dia. Não houve auditoria do
+> backlog: nenhuma outra spec mudou de status, e as seções de gates, entregas e deriva abaixo seguem as da rodada de
+> 2026-10-29. ⚠️ Achado fora de spec, que pede ação sua: o repositório é público e o alerta #1 de secret scanning
+> (`google_api_key`, commit `1e94b7c8`, em `origin/main`) segue aberto desde 2026-04-04; ver as perguntas em aberto de
+> `delivery-infra-hardening`.
+>
+> **Rodada anterior:** 2026-11-10, **spec dirigida** (`/spec` com texto livre, pedido de revisão do layout das telas
 > internas depois de olhar o ambiente de produção). Uma spec nova, [`app-internal-ux-polish`](app-internal-ux-polish.md),
 > `proposed`, com a nota [`research/settings-page-patterns.md`](research/settings-page-patterns.md). Não houve auditoria:
 > nenhuma outra spec mudou de status, e as seções de gates, entregas e deriva abaixo seguem as da rodada de 2026-10-29.
@@ -73,13 +84,13 @@ constar na seção [Entregues](#entregues).
 
 ## Contadores
 
-Sobre as **6 specs que seguem em `specs/`** (4 até 2026-10-29, mais `app-internal-ux-polish` e `admin-own-account`, de 2026-11-10). Recontados do disco em 2026-10-28, pós-PR #59, lendo o frontmatter de
+Sobre as **9 specs que seguem em `specs/`** (4 até 2026-10-29, mais `app-internal-ux-polish` e `admin-own-account`, de 2026-11-10, e as três `delivery-*`, de 2026-11-19). Recontados do disco em 2026-10-28, pós-PR #59, lendo o frontmatter de
 cada arquivo; os 33 `spec.md` arquivados em `docs/features/` têm todos `status: done`.
 
 | status | qtd |
 |--------|-----|
 | `proposed` | 1 |
-| `approved` | 0 |
+| `approved` | 3 |
 | `in-progress` | 3 |
 | `done` (arquivadas) | 33 |
 | `deferred` | 2 |
@@ -288,6 +299,14 @@ repositório tem **59** PRs, nenhuma aberta.
 Respeita `depends_on` (lido do frontmatter em 2026-10-28, pós-PR #59) e prioriza valor × esforço × custo de
 adiar. Nenhuma spec está bloqueada por dependência, e **nenhuma é elegível**: as duas `deferred` seguem paradas por
 decisão sua, e as duas `in-progress` esperam provedor ou recurso pago. **Desde 2026-11-10** a #1 é `app-internal-ux-polish`, `approved` na sua triagem, e a #2 é `admin-own-account`, `proposed`, que depende dela. A numeração das quatro anteriores andou duas posições.
+
+**Aprovado por você em 2026-11-19:** antes de começar forks, as três `delivery-*`
+entram logo depois de `app-internal-ux-polish`, nesta ordem: a fatia 1 de `delivery-security-review` (dependências
+com vulnerabilidade crítica no runtime da API), `delivery-infra-hardening` e `delivery-product-quality` (a
+`og:image` com a arte do next-forge vai para todo fork). Não rodam em paralelo sem combinar a contenção:
+`delivery-security-review` e `delivery-infra-hardening` mexem em `apps/web/proxy.ts` e `apps/app/proxy.ts`, e
+`delivery-infra-hardening` e `delivery-product-quality` mexem em `packages/security/middleware.ts`. O
+`poweredByHeader` fica só com a fatia 1 de `delivery-security-review`.
 
 > **Critério de execução, sem exceção:** o que uma rodada autônoma consegue provar. O `/cycle` não
 > provisiona infraestrutura, então spec cujos critérios dependem de conta em provedor volta com metade dos
@@ -563,6 +582,9 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 | [`observability-logging`](observability-logging.md) | Observabilidade: erros, tracing e logs estruturados | dx | alto | M | `in-progress` | — |
 | [`app-internal-ux-polish`](app-internal-ux-polish.md) | Conta como página de configurações e padrão único de página nas telas internas | produto | alto | M | `in-progress` | `app-internal-ux-polish` |
 | [`admin-own-account`](admin-own-account.md) | Área de conta para o admin (perfil, senha e preferências) | produto | médio | M | `proposed` | ⏳ `app-internal-ux-polish` |
+| [`delivery-security-review`](delivery-security-review.md) | Core aprovado na parte 1 da entrega (validação de segurança) | confianca | alto | G | `approved` | — |
+| [`delivery-infra-hardening`](delivery-infra-hardening.md) | Core aprovado na parte 2 da entrega (infra e hardening) | confianca | alto | M | `approved` | — |
+| [`delivery-product-quality`](delivery-product-quality.md) | Core aprovado na parte 3 da entrega (celular, 404, desempenho e SEO) | produto | alto | G | `approved` | — |
 
 ## Entregues
 
