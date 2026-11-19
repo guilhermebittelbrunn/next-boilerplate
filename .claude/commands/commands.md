@@ -38,6 +38,7 @@ abaixo de forma resumida. O fluxo completo está em
 | `/observe` | [`observe.md`](observe.md) | `observador-tarefa` | *(opcional)* Resumo de 2–3 parágrafos em linguagem de negócio → `observacao.md`. |
 | `/mediate` | [`mediate.md`](mediate.md) | `mediador-pr` | *(avulso)* Triagem dos comentários de uma PR → markdown de replies. Independente do pipeline. |
 | `/cycle` | [`cycle.md`](cycle.md) | todos | Roda o ciclo inteiro **sem parar para perguntar**. Para quando você não vai acompanhar. |
+| `/deliver` | [`deliver.md`](deliver.md) | `code-reviewer`, `analista-qa` | **Etapa de entrega** de um fork, obrigatória antes da entrega final: segurança, infra, qualidade e documentação, conforme [`docs/delivery/`](../../docs/delivery/README.md) → `docs/delivery/reports/<data>/report.md`. Audita e registra. |
 
 ## Quem pode fazer o quê
 
@@ -48,6 +49,7 @@ Três permissões que separam os papéis, e que **nenhum** comando pode contorna
 | `/spec` · `/analyze` · `/develop` · `/test` · `/observe` · `/mediate` | ❌ | ❌ | ❌ |
 | `/review` | ✅ **é o dono da branch** | ❌ *propõe o plano* | ❌ |
 | `/cycle` | ❌ | ❌ | ❌ |
+| `/deliver` | ❌ | ❌ | ❌ |
 | **você** | — | ✅ | ✅ |
 
 **Commit exige a sua aprovação explícita** ([`../rules/git-commits.md`](../rules/git-commits.md)) — e
