@@ -95,6 +95,7 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 | Revisar um diff | [`docs/review-checklist.md`](docs/review-checklist.md) (fonte única das invariantes) |
 | Planejar/analisar uma tarefa | [`docs/feature-analysis-guide.md`](docs/feature-analysis-guide.md) |
 | Decidir **o que** construir | [`specs/README.md`](specs/README.md) + [`specs/BACKLOG.md`](specs/BACKLOG.md) (backlog de funcionalidades) |
+| Entregar um produto (fork) | [`docs/delivery/README.md`](docs/delivery/README.md) (etapa obrigatória, `/deliver`) + [`docs/templates/README.template.md`](docs/templates/README.template.md) (README de todo fork segue este modelo) |
 | Qualquer coisa | este `CLAUDE.md` (sempre carregado) + `.claude/rules/*` |
 
 ## Trabalhando com IA neste repo
@@ -128,6 +129,12 @@ da spec → padrão do repo → menor raio de impacto, e junta tudo num relatór
 descartou. Pendências que exigem infra externa vão para [`docs/PRE-PRODUCTION.md`](docs/PRE-PRODUCTION.md).
 ⛔ Ele **não commita nem cria branch** — rodar o `/cycle` não é aprovação de commit.
 
+**`/deliver`** é a **etapa de entrega**, obrigatória antes da entrega final de todo fork: segurança, infra e
+hardening, qualidade do produto e documentação, cada parte com a sua especificação em
+[`docs/delivery/`](docs/delivery/README.md), e um relatório versionado em `docs/delivery/reports/<data>/`.
+Ele audita e registra; não corrige código nem commita. O README de todo fork segue
+[`docs/templates/README.template.md`](docs/templates/README.template.md), sempre.
+
 Apoio: [`docs/feature-analysis-guide.md`](docs/feature-analysis-guide.md) (roteiro de análise + formato dos
 critérios de aceite) · [`docs/review-checklist.md`](docs/review-checklist.md) (**fonte única** do que a
 revisão cobra) · [`docs/GLOSSARY.md`](docs/GLOSSARY.md) (vocabulário do boilerplate).
@@ -150,6 +157,7 @@ os artefatos do fluxo no código) e
 - **`/write-tests`** — testes Vitest (schema, mapper, rota, hook, componente) no setup do repo. Sempre no **nível mais barato que prova o comportamento**: teste que exige emulador ou app de pé só quando a infra for o objeto do teste.
 - **`caveman`** — modo comprimido para a **conversa** (retorno de subagent, mensagem de comando). Nunca em arquivo, código ou commit; o par dela é a `humanizer` (global), obrigatória antes de salvar prosa. Regra em [`.claude/rules/writing-skills.md`](.claude/rules/writing-skills.md).
 - **`agent-browser`** — automação de browser para **validar layouts e fluxos** (QA/dogfooding). Dono exclusivo é o `analista-qa`, no `/test` (ver regra de ouro 11).
+- **`brag-slim`** — vídeo de demonstração do produto (20 s, trilha própria, `ffmpeg`), baixado de [latent-spaces/brag](https://github.com/latent-spaces/brag) (MIT). Usado na parte 4 do `/deliver`, a partir das telas de `pnpm --filter e2e showcase` (só emulador). Saída em `brag-output/` (ignorado); entregáveis em `apps/web/public/showcase/`.
 - **`vercel-react-best-practices`** — guia de performance React/Next (auto-aciona ao escrever/refatorar componentes, data fetching, bundle).
 - **`frontend-design`** — direção de design visual ao criar/reformular UI (útil principalmente na `apps/web`).
 - **`web-design-guidelines`** — revisão de UI contra guidelines de interface/acessibilidade.

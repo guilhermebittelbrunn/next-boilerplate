@@ -44,6 +44,7 @@ deixou, sem depender da conversa.
 | `/observe [slug?]` | Observador *(opcional)* | Observação final de 2–3 parágrafos em linguagem de negócio, pronta para colar num card. Exige só o `/review`. |
 | `/mediate [PR?]` | Mediador de PR *(avulso)* | Triagem dos comentários de uma PR aberta → markdown de replies com status por item. **Independente** do pipeline. |
 | `/cycle [id? / --audit-only / --max-rounds N]` | Orquestrador do ciclo | Roda a linha inteira — `/spec --sync` → `/analyze` → `/develop` → `/review` → `/test` — **sem parar para perguntar**, acumulando as decisões para um relatório final. Para quando você **não vai acompanhar**. Detalhes em [`AI-WORKFLOW.md`](AI-WORKFLOW.md#cycle--o-ciclo-inteiro-numa-tacada). |
+| `/deliver [partes?]` | Orquestrador da entrega | **Etapa de entrega** de um fork, obrigatória antes da entrega final: segurança, infra e hardening, qualidade do produto e documentação, conforme [`docs/delivery/`](delivery/README.md). Grava `docs/delivery/reports/<data>/report.md`; não corrige código nem commita. |
 
 > ⚠️ **Colisão de nome**: existe um `/review` global (revisão de PR do GitHub); o deste projeto tem
 > precedência. Para a revisão genérica de diff, use `/code-review`.

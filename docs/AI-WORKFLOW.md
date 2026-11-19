@@ -21,7 +21,7 @@ assistido por IA.
 | Roteiro de análise | [`feature-analysis-guide.md`](feature-analysis-guide.md) | Checklist de tech lead + formato dos critérios de aceite (§9.1). |
 | Checklist de revisão | [`review-checklist.md`](review-checklist.md) | **Fonte única** das invariantes que uma revisão cobra. |
 | Glossário | [`GLOSSARY.md`](GLOSSARY.md) | Vocabulário do boilerplate (guard, subject, DTO/mapper, slice, modo de produto…). |
-| Slash commands | `.claude/commands/*` | `/spec`, `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate` + `/cycle` (o ciclo inteiro de uma vez). |
+| Slash commands | `.claude/commands/*` | `/spec`, `/analyze`, `/develop`, `/review`, `/test`, `/observe`, `/mediate` + `/cycle` (o ciclo inteiro de uma vez) + `/deliver` (etapa de entrega de um fork). |
 | Subagents | `.claude/agents/*` | Os motores do pipeline + o `code-reviewer` read-only. |
 | Skills do projeto | `.claude/skills/*` | Procedimentos invocáveis com `/`. |
 | Harness | `.claude/settings.json` + `.claude/hooks/` | Permissões, auto-format ao editar, bloqueio de commit em branch protegida. |
@@ -105,6 +105,13 @@ auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude
   o estilo dela no retorno ao orquestrador e na mensagem ao usuário. Nunca em arquivo — a fronteira está em
   [`writing-skills.md`](../.claude/rules/writing-skills.md). Par dela é a `humanizer` (global), obrigatória
   antes de salvar qualquer prosa do fluxo.
+- **`brag-slim`** — transforma o projeto num vídeo de lançamento de uns 20 segundos, com roteiro, telas
+  reais, trilha composta pelo próprio modelo e `ffmpeg`. Copiada de
+  [latent-spaces/brag](https://github.com/latent-spaces/brag) (MIT, commit `0637943`, 2026-11-15) com o
+  `LICENSE` ao lado. É a variante que o `/brag` original usa nos modelos Opus 5.5, Sonnet 5.5 e Fable 5.2; o
+  `/brag` completo (Hyperframes e 16 MB de música) fica fora do repositório e pode ser instalado por pessoa
+  com `/plugin marketplace add latent-spaces/brag`. Usada na parte 4 da etapa de entrega (`/deliver`), a
+  partir das telas de `pnpm --filter e2e showcase`.
 
 > Para baixar mais skills da comunidade: rode `npx skills add <repo> --skill <nome>` e **mova a pasta
 > resultante de `.agents/skills/<nome>` para `.claude/skills/<nome>`** (é lá que o Claude Code descobre

@@ -38,6 +38,8 @@ e-mails de verdade são renderizados e enviados pela `api` (e pela `web`, no for
 8. [Criar o primeiro admin](#9-primeiro-admin-em-produção).
 9. [Conferir tudo](#11-conferência-antes-de-abrir-para-usuários) e percorrer o
    [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md).
+10. Passar pela [etapa de entrega](delivery/README.md) (`/deliver`) antes da entrega final. Ela é
+    obrigatória para todo produto.
 
 ## 1. Criar o repositório do produto
 
@@ -68,6 +70,22 @@ deles afeta build ou teste, mas todos confundem quem abre o fork:
 | `CHANGELOG.md` | Histórico de versões do projeto de origem | Apagar ou recomeçar |
 | `license.md` | MIT com o copyright original | A MIT exige manter o aviso original nas cópias; acrescente a sua linha de copyright ou troque a licença do seu código, se for o caso |
 | `.firebaserc` | `default` apontando para o projeto Firebase do boilerplate | Ver [seção 4](#4-projeto-firebase) |
+
+### README do produto
+
+O `README.md` do boilerplate descreve o boilerplate. No fork, ele é substituído pelo
+[modelo da casa](templates/README.template.md), copiado para a raiz e preenchido:
+
+```bash
+cp docs/templates/README.template.md README.md
+```
+
+O modelo vale para sempre, não só no primeiro dia: toda atualização do README mantém a ordem das seções,
+os títulos e os emojis. As instruções de preenchimento estão no comentário do topo do próprio modelo, e a
+parte 4 da [etapa de entrega](delivery/04-documentation.md) confere se o README seguiu o padrão.
+
+O vídeo e o GIF do boilerplate em `apps/web/public/showcase/` também são substituídos pelos do produto,
+na mesma parte 4.
 
 ### Backlog e histórico do core
 
@@ -450,7 +468,7 @@ admin".
 - **Origem externa nova** (uma API de terceiro, um CDN de imagem) precisa entrar na CSP do proxy do app
   correspondente (`apps/app/proxy.ts`, `apps/web/proxy.ts`), ou o browser bloqueia.
 - **O `entity` de exemplo** pode ficar como referência ou ser removido. Se remover, apague as quatro camadas
-  juntas (as pastas estão no [README](../README.md#crud-de-referência)).
+  juntas (as pastas estão no [README](../README.md#-crud-de-referência)).
 
 ### Ligar membros e convites
 
@@ -519,11 +537,16 @@ Com os três apps no ar:
 Depois, percorra o [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) inteiro. Ele traz os passos de console, DNS e
 painel que nenhum teste cobra, com o comando de verificação de cada um.
 
+Por último, a [etapa de entrega](delivery/README.md): segurança, infra, qualidade e documentação, com
+relatório versionado. Sem ela o produto não é entregue.
+
 ## 12. Mapa dos arquivos que o fork altera
 
 | Arquivo | Por quê | Seção |
 |---------|---------|-------|
 | `package.json` (raiz) | Nome, `engines` e resíduos do CLI de origem | [1](#1-criar-o-repositório-do-produto) |
+| `README.md` | Substituído pelo [modelo da casa](templates/README.template.md) | [1](#readme-do-produto) |
+| `apps/web/public/showcase/*`, `apps/e2e/showcase/shots.ts` | Vídeo e GIF do produto, e a lista de telas capturadas para eles | [Etapa de entrega, parte 4](delivery/04-documentation.md) |
 | `tsup.config.ts`, `.autorc`, `CHANGELOG.md` | Resíduos do projeto de origem | [1](#1-criar-o-repositório-do-produto) |
 | `license.md` | Copyright do produto | [1](#1-criar-o-repositório-do-produto) |
 | `.firebaserc` | Projeto Firebase padrão (ou use `--project`) | [4](#4-projeto-firebase) |
