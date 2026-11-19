@@ -5,9 +5,10 @@
   "scripts": {
     "e2e": "playwright test",
     "e2e:report": "playwright show-report",
+    "showcase": "playwright test -c showcase/playwright.config.ts",
     "test": "NODE_ENV=test vitest run",
     "typecheck": "tsc --noEmit",
-    "clean": "git clean -xdf .turbo node_modules playwright-report test-results blob-report .auth"
+    "clean": "git clean -xdf .turbo node_modules playwright-report test-results blob-report .auth showcase-results"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
