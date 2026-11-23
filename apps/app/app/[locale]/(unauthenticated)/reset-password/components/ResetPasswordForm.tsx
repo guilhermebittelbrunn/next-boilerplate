@@ -12,12 +12,15 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { apiClient } from "@/shared/lib/client";
 import { AuthCard } from "../../components/AuthCard";
 import {
     buildResetPasswordSchema,
     type ResetPasswordFormValues,
 } from "../validations/resetPasswordSchema";
+
+const SESSIONS_NOT_REVOKED = "AUTH_SESSIONS_NOT_REVOKED";
 
 type ResetPasswordFormProps = {
     readonly oobCode: string | null;
@@ -44,8 +47,12 @@ export function ResetPasswordForm({ oobCode }: ResetPasswordFormProps) {
                 oobCode: oobCode ?? "",
                 password: values.password,
             }),
-        onError: (error) =>
-            errorAlert(handleClientError(new FormattedError(error, locale))),
+        onError: (error) => {
+            if (apiErrorCodeOf(error) === SESSIONS_NOT_REVOKED) {
+                return;
+            }
+            errorAlert(handleClientError(new FormattedError(error, locale)));
+        },
     });
 
     const signInLink = (
@@ -73,6 +80,24 @@ export function ResetPasswordForm({ oobCode }: ResetPasswordFormProps) {
                         {dictionary.apps.app.pages.signIn.forgotPassword}
                     </Link>
                 </div>
+            </AuthCard>
+        );
+    }
+
+    // The new password is already saved and the link is spent; only ending the older
+    // sessions failed, so the form must not invite a second submit.
+    if (
+        confirmReset.isError &&
+        apiErrorCodeOf(confirmReset.error) === SESSIONS_NOT_REVOKED
+    ) {
+        return (
+            <AuthCard
+                description={handleClientError(
+                    new FormattedError(confirmReset.error, locale)
+                )}
+                title={resetPasswordCopy.success.title}
+            >
+                {signInLink}
             </AuthCard>
         );
     }
