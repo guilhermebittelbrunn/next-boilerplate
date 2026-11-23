@@ -9,6 +9,7 @@ import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
 import { ToastContainer } from "react-toastify";
+import { ensureSupportedLocale } from "@/shared/lib/localeSegment";
 import { QueryProvider } from "../../../app/shared/providers/QueryProvider";
 import ClientLayout from "./clientLayout";
 import { Footer } from "./components/footer";
@@ -16,9 +17,12 @@ import { Header } from "./components/header";
 
 type RootLayoutProperties = {
     readonly children: ReactNode;
+    readonly params: Promise<{ locale: string }>;
 };
 
-const RootLayout = async ({ children }: RootLayoutProperties) => {
+const RootLayout = async ({ children, params }: RootLayoutProperties) => {
+    ensureSupportedLocale((await params).locale);
+
     const [{ locale }, consent] = await Promise.all([
         getDictionary(),
         resolveConsentBootstrap(),
