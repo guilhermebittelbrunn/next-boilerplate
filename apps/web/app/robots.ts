@@ -7,8 +7,6 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: "*",
             allow: "/",
-            // Auth pages have no SEO value across locales.
-            disallow: ["/*/sign-in", "/*/sign-up"],
         },
         sitemap: `${baseUrl}/sitemap.xml`,
     };

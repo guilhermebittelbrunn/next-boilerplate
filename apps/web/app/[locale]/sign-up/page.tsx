@@ -9,6 +9,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
         meta: dictionary.apps.web.pages.signUp.meta,
         locale,
         path: "/sign-up",
+        indexable: false,
     });
 };
 
