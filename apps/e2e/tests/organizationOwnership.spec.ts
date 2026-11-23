@@ -88,8 +88,14 @@ test("a member joins by invitation, receives ownership and the previous owner le
             inviterEmail: OWNER.email,
         });
         await ownerPage.reload();
+        // By role, not by text: while a reload streams, React keeps the incoming copy in a
+        // hidden container, so a text match can resolve to two elements and fail strict
+        // mode at once. The role query skips hidden nodes and waits for the visible one.
         await expect(
-            ownerPage.getByText(organizationCopy.invitations.title)
+            ownerPage.getByRole("heading", {
+                name: organizationCopy.invitations.title,
+                exact: true,
+            })
         ).toBeVisible();
         await expect(memberRow(ownerPage, inviteeEmail)).toBeVisible();
 
