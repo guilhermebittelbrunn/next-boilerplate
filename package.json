@@ -25,6 +25,7 @@
     "test": "turbo test test:emulator",
     "coverage": "NODE_ENV=test vitest run --coverage",
     "e2e": "pnpm --filter e2e e2e",
+    "lighthouse": "pnpm --filter e2e lighthouse",
     "analyze": "turbo analyze",
     "bump-deps": "npx npm-check-updates --deep -u -x recharts && pnpm install",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",

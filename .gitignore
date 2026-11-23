@@ -322,3 +322,4 @@ apps/e2e/test-results/
 apps/e2e/blob-report/
 apps/e2e/.auth/
 apps/e2e/showcase-results/
+apps/e2e/lighthouse-results/
