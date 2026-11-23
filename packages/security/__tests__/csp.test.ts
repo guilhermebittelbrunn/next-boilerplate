@@ -4,6 +4,7 @@ import {
     buildApiOptions,
     buildBrowserAppOptions,
     PERMISSIONS_POLICY,
+    ROBOTS_NOINDEX,
 } from "../middleware";
 
 const DIRECTIVE_SEPARATOR = /\s+/;
@@ -17,10 +18,10 @@ const API_URL = "https://api.example.com";
 
 function headersFor(
     options: Parameters<typeof applySecurityHeaders>[1],
-    reportOnly = false
+    flags: Parameters<typeof applySecurityHeaders>[2] = {}
 ): Headers {
     const response = new Response(null);
-    applySecurityHeaders(response, options, reportOnly);
+    applySecurityHeaders(response, options, flags);
     return response.headers;
 }
 
@@ -191,7 +192,9 @@ describe("api policy", () => {
 
 describe("report-only mode", () => {
     it("reports instead of blocking when the app asks for it", () => {
-        const headers = headersFor(buildBrowserAppOptions(), true);
+        const headers = headersFor(buildBrowserAppOptions(), {
+            reportOnly: true,
+        });
 
         expect(headers.get(CSP_REPORT_ONLY_HEADER)).toContain("default-src");
         expect(headers.get(CSP_HEADER)).toBeNull();
@@ -205,7 +208,9 @@ describe("report-only mode", () => {
     });
 
     it("still sends the non-CSP headers while only reporting", () => {
-        const headers = headersFor(buildBrowserAppOptions(), true);
+        const headers = headersFor(buildBrowserAppOptions(), {
+            reportOnly: true,
+        });
 
         expect(headers.get("x-content-type-options")).toBe("nosniff");
         expect(headers.get("referrer-policy")).toBe("no-referrer");
@@ -225,7 +230,7 @@ describe("permissions policy", () => {
         ["the api policy", () => headersFor(buildApiOptions())],
         [
             "the landing while it only reports CSP violations",
-            () => headersFor(buildBrowserAppOptions(), true),
+            () => headersFor(buildBrowserAppOptions(), { reportOnly: true }),
         ],
     ])("is sent with %s", (_label, resolveHeaders) => {
         expect(resolveHeaders().get("permissions-policy")).toBe(
@@ -243,5 +248,41 @@ describe("permissions policy", () => {
         expect(response.headers.get("permissions-policy")).toBe(
             EXPECTED_POLICY
         );
+    });
+});
+
+describe("robots header", () => {
+    const ROBOTS_HEADER = "x-robots-tag";
+
+    it("keeps responses indexable unless a surface opts out", () => {
+        expect(
+            headersFor(buildBrowserAppOptions()).get(ROBOTS_HEADER)
+        ).toBeNull();
+        expect(headersFor(buildApiOptions()).get(ROBOTS_HEADER)).toBeNull();
+    });
+
+    it("stays off when only the CSP mode changes", () => {
+        const headers = headersFor(buildBrowserAppOptions(), {
+            reportOnly: true,
+        });
+
+        expect(headers.get(ROBOTS_HEADER)).toBeNull();
+    });
+
+    it("asks crawlers not to index a surface that opts out", () => {
+        const headers = headersFor(buildApiOptions(), { noIndex: true });
+
+        expect(headers.get(ROBOTS_HEADER)).toBe(ROBOTS_NOINDEX);
+        expect(ROBOTS_NOINDEX).toBe("noindex");
+    });
+
+    it("combines with report-only CSP", () => {
+        const headers = headersFor(buildBrowserAppOptions(), {
+            reportOnly: true,
+            noIndex: true,
+        });
+
+        expect(headers.get(ROBOTS_HEADER)).toBe("noindex");
+        expect(headers.get(CSP_REPORT_ONLY_HEADER)).toContain("default-src");
     });
 });

@@ -17,6 +17,10 @@ const GOOGLE_APIS_ORIGIN = "https://apis.google.com";
 const CSP_HEADER = "content-security-policy";
 const CSP_REPORT_ONLY_HEADER = "content-security-policy-report-only";
 const PERMISSIONS_POLICY_HEADER = "permissions-policy";
+const ROBOTS_HEADER = "x-robots-tag";
+
+/** Keeps a response out of search results while still letting crawlers read it. */
+export const ROBOTS_NOINDEX = "noindex";
 
 /**
  * Browser features none of the apps use. A fork that needs one (camera capture, Stripe's
@@ -146,6 +150,13 @@ export function buildApiOptions(): Options {
     };
 }
 
+export type ApplySecurityHeadersFlags = {
+    /** Sends CSP as report-only, for a surface where a wrong policy must not blank the page. */
+    reportOnly?: boolean;
+    /** Only for surfaces that must never be indexed: on a public site it takes every page off search. */
+    noIndex?: boolean;
+};
+
 /**
  * Merges the computed headers into a response the caller already owns, instead of
  * `createMiddleware`, which produces the whole response and cannot coexist with
@@ -154,7 +165,7 @@ export function buildApiOptions(): Options {
 export function applySecurityHeaders<T extends Response>(
     response: T,
     options: Options,
-    reportOnly = false
+    { reportOnly = false, noIndex = false }: ApplySecurityHeadersFlags = {}
 ): T {
     const headers = nosecone(options);
 
@@ -165,6 +176,10 @@ export function applySecurityHeaders<T extends Response>(
     }
 
     response.headers.set(PERMISSIONS_POLICY_HEADER, PERMISSIONS_POLICY);
+
+    if (noIndex) {
+        response.headers.set(ROBOTS_HEADER, ROBOTS_NOINDEX);
+    }
 
     return response;
 }
