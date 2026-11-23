@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { expectAccessible } from "../support/a11y";
 import { LOCALE, ptBr } from "../support/dictionary";
+import { expectPanelNavLink } from "../support/panelNavigation";
 import { SEED_ACCOUNTS } from "../support/seedAccounts";
 import {
     fillSignInForm,
@@ -24,6 +25,7 @@ const wrongPasswordMessage = new RegExp(
 
 test("a common user signs in and lands on the common panel", async ({
     page,
+    isMobile,
 }, testInfo) => {
     await page.goto(signInPath);
     await expectAccessible(page, testInfo, { route: signInPath });
@@ -31,11 +33,11 @@ test("a common user signs in and lands on the common panel", async ({
     await fillSignInForm(page, SEED_ACCOUNTS.common);
 
     await expect(page).toHaveURL(`${APP_URL}/${LOCALE}`);
-    await expect(
-        page.getByRole("link", {
-            name: commonRoutesCopy.platform.entities.list,
-        })
-    ).toBeVisible();
+    await expectPanelNavLink(
+        page,
+        commonRoutesCopy.platform.entities.list,
+        isMobile
+    );
 });
 
 test("an admin signs in and lands on the admin home", async ({ page }) => {

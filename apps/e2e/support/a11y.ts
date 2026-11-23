@@ -100,4 +100,20 @@ export async function expectAccessible(
     }
 
     expect.soft(failing, formatViolations(failing)).toEqual([]);
+
+    if (testInfo.project.use.isMobile) {
+        await expectNoHorizontalScroll(page, route);
+    }
+}
+
+// WCAG 1.4.10 (Reflow). Compared against clientWidth, not innerWidth: with mobile
+// emulation Chromium zooms out to fit overflowing content, and innerWidth grows with it.
+async function expectNoHorizontalScroll(page: Page, route: string) {
+    const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+    }));
+    expect
+        .soft(scrollWidth, `${route} scrolls horizontally`)
+        .toBeLessThanOrEqual(clientWidth);
 }

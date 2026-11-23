@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { expectAccessible } from "../support/a11y";
 import { LOCALE, ptBr } from "../support/dictionary";
+import { expectPanelNavLink } from "../support/panelNavigation";
 import { SEED_PASSWORD } from "../support/seedAccounts";
 import { passwordInput } from "../support/signIn";
 import { APP_URL } from "../support/urls";
@@ -15,6 +16,7 @@ const progressLabel = (current: number) =>
 
 test("a new account goes through onboarding and reaches the panel", async ({
     page,
+    isMobile,
 }, testInfo) => {
     const signUpPath = `/${LOCALE}/sign-up`;
     const onboardingPath = `/${LOCALE}/onboarding`;
@@ -56,10 +58,10 @@ test("a new account goes through onboarding and reaches the panel", async ({
         .click();
 
     await expect(page).toHaveURL(`${APP_URL}/${LOCALE}`);
-    await expect(
-        page.getByRole("link", {
-            name: ptBr.apps.app.pages.common.routes.platform.entities.list,
-        })
-    ).toBeVisible();
+    await expectPanelNavLink(
+        page,
+        ptBr.apps.app.pages.common.routes.platform.entities.list,
+        isMobile
+    );
     await expectAccessible(page, testInfo, { route: `/${LOCALE}` });
 });

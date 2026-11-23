@@ -14,6 +14,11 @@ import {
 const isCi = Boolean(process.env.CI);
 const SERVER_START_TIMEOUT = 300_000;
 
+// The flows a visitor must be able to finish on a phone: the landing, sign-in, sign-up
+// with onboarding, and the central CRUD.
+const CRITICAL_FLOWS = /(landing|signIn|signUp|entityCrud)\.spec\.ts$/;
+const PHONE_VIEWPORT = { width: 390, height: 844 };
+
 // Building these throws before any server starts when one of them could reach a real
 // Firebase project.
 const stackEnv = {
@@ -51,6 +56,12 @@ export default defineConfig({
         {
             name: "chromium",
             use: { ...devices["Desktop Chrome"] },
+            dependencies: ["setup"],
+        },
+        {
+            name: "mobile",
+            testMatch: CRITICAL_FLOWS,
+            use: { ...devices["Pixel 7"], viewport: PHONE_VIEWPORT },
             dependencies: ["setup"],
         },
     ],
