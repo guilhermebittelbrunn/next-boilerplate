@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-11-19
+updated: 2026-11-23
 ---
 
 # MFA, sessões ativas e política de senha
@@ -28,10 +28,13 @@ eficácia.
 
 ## O que já existe no repo
 
-- `packages/auth/server.ts:330`: `revokeUserSessions` revoga todas as sessões da conta no Firebase. Desde a
-  PR #39 ela é chamada só por "Sair de todos os dispositivos" (`apps/api/app/(routes)/account/sessions/revoke/route.ts:8`,
+- `packages/auth/server.ts:331-342` (era `:330` até a PR #64): `revokeUserSessionsOrThrow` revoga todas as sessões da
+  conta no Firebase e deixa a falha subir; `revokeUserSessions` é a variante que registra e engole o erro. Desde a
+  PR #39 a revogação é chamada só por "Sair de todos os dispositivos" (`apps/api/app/(routes)/account/sessions/revoke/route.ts:9-20`, era `:8` até a PR #64,
   acionado pela aba Segurança em `AccountSecurityForm.tsx:154`, conferida em 2026-11-19 depois da PR #62; era `:140` até a PR #48), pela troca de senha e pela desativação pelo
-  admin. O botão "Sair" deixou de ser um "sair de todos": `sessionDELETE`
+  admin. Desde a PR #64, a troca de senha, a definição, a redefinição, a troca de e-mail e "Sair de todos" usam a
+  variante que falha e respondem `500` com `error.code` quando a revogação não acontece; a desativação pelo admin segue
+  na que engole. O botão "Sair" deixou de ser um "sair de todos": `sessionDELETE`
   (`packages/auth/session-routes.ts:174-183`) apaga o cookie e pede à API que marque só a sessão atual como
   encerrada. *(Até a PR #39 este bloco descrevia o logout global, com âncoras em `server.ts:323` e
   `session-routes.ts:126`, `:132`.)*
@@ -153,8 +156,8 @@ eficácia.
 > Até a PR #10, `revokeUserSessions` só era chamada pelo logout global
 > (`packages/auth/session-routes.ts:132`, dentro de `sessionDELETE:126`) — gesto deliberado de quem já está
 > com a conta na mão. A PR #10 a
-> pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:51`; o
-> comentário que explica o porquê é `:46-48` — a versão anterior desta spec dizia que `:49` era comentário
+> pôs também na **redefinição de senha** (`apps/api/app/(routes)/auth/password/reset/route.ts:51`, hoje `:52`; o
+> comentário que explica o porquê é `:46-48`, hoje `:47-49` — a versão anterior desta spec dizia que `:49` era comentário
 > e errava, `:49` já é o `try`), o
 > fluxo canônico de "minha conta foi comprometida", e com isso o furo saiu da dívida teórica e entrou num
 > caminho de segurança real: **a vítima redefinia a senha e o ID token do atacante continuava passando no
@@ -225,7 +228,7 @@ eficácia.
       `trackSession` em `session-tracker.ts:106`). O "Sair" ficou local (`session-routes.ts:174-183`). Quatro
       códigos novos nos 3 idiomas (`AUTH_SESSION_REVOKED`, `ACCOUNT_SESSION_NOT_FOUND`,
       `ACCOUNT_SESSION_IS_CURRENT`, `ACCOUNT_SESSION_UNIDENTIFIED`, a partir de
-      `translations/packages/shared/utils.ts:58`, remedida em 2026-10-27 depois da PR #58, que acrescentou `USERS_DELETE_ORGANIZATION_HAS_MEMBERS` acima; era `:56` desde a PR #50 e `:54` antes dela).
+      `translations/packages/shared/utils.ts:60`, remedida em 2026-11-23 depois da PR #64, que acrescentou dois códigos acima; era `:58`, remedida em 2026-10-27 depois da PR #58, que acrescentou `USERS_DELETE_ORGANIZATION_HAS_MEMBERS` acima; era `:56` desde a PR #50 e `:54` antes dela).
       **Deriva, a spec estava errada sobre o que o Firebase permite:** encerrar uma sessão corta a API e o
       cookie, mas o refresh token daquele aparelho continua válido no Firebase, que só revoga a conta inteira.
       Firestore e Storage negam todo cliente, então o aparelho encerrado não alcança dado por fora da API. A
@@ -241,7 +244,7 @@ eficácia.
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
       e na redefinição (`auth.schema.ts:32`, `:37`, `:109-110`, remedidas em 2026-10-22 depois da PR #56, que acrescentou o schema do pedido de link por e-mail; eram `:27`, `:32` e `:101-102` desde a PR #51 e `:24`, `:29` e `:89-90` antes), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
       e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
-      (`translations/packages/shared/utils.ts:103`, `:285`, `:469`, remedidas em 2026-10-28 depois da PR #59, que acrescentou três linhas ao bloco pt-br e três ao en, acima das duas últimas, quando eram `:282` e `:463`; antes da PR #58, que acrescentou dois códigos por idioma, eram `:101`, `:276` e `:453` desde a PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
+      (`translations/packages/shared/utils.ts:105`, `:289`, `:475`, remedidas em 2026-11-23 depois da PR #64, que acrescentou dois códigos por idioma; eram `:103`, `:285` e `:469`, remedidas em 2026-10-28 depois da PR #59, que acrescentou três linhas ao bloco pt-br e três ao en, acima das duas últimas, quando eram `:282` e `:463`; antes da PR #58, que acrescentou dois códigos por idioma, eram `:101`, `:276` e `:453` desde a PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
@@ -334,7 +337,7 @@ mergeada pela PR #35 (`1936369`) com CI verde, em dois pontos:
 
 Os dois pontos são cobertos por teste de unidade com o Firebase mockado
 (`packages/auth/__tests__/serverSessionRevocation.test.ts` e `apps/api/__tests__/usersAdminAuditTrail.test.ts`).
-Teste de sessão da fatia 2 precisa seguir o mesmo caminho: no `firebase-admin@13.6.0`, `lib/auth/base-auth.js:119`
+Teste de sessão da fatia 2 precisa seguir o mesmo caminho: no `firebase-admin@13.6.0` (e na 13.10.0, que a PR #64 instalou), `lib/auth/base-auth.js:119`
 confere revogação e `disabled` sozinho sob o emulador, e um teste de emulador passaria mesmo sem a checagem
 no nosso código.
 
@@ -374,7 +377,7 @@ no nosso código.
 
 - **Custo herdado por todo fork:** se o segundo fator exigir habilitar um serviço pago no provedor, todo
   fork que não o usa não pode pagar por ele nem falhar no build. O padrão tem de ser **NO-OP quando falta
-  a configuração**, como `packages/security/index.ts:40-43` faz com `ARCJET_KEY`.
+  a configuração**, como `packages/security/index.ts:94-97` faz com `ARCJET_KEY` (era `:40-43` até a PR #64).
 - **Endurecer a verificação de credencial custa latência em toda requisição autenticada.** Checar
   revogação a cada chamada é mais seguro e mais caro; não checar é a falha atual. O meio-termo (checar
   onde importa) só funciona se "onde importa" estiver definido no core, e não a critério de cada fork.

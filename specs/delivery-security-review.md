@@ -8,9 +8,9 @@ audience: confianca
 area: [apps/api, apps/app, apps/web, packages/auth, packages/security, packages/shared, packages/sdk]
 mode: ambos
 depends_on: []
-contends_on: [apps/api/proxy.ts, apps/web/proxy.ts, apps/app/proxy.ts, packages/auth/session.ts, packages/shared/utils/helpers/cookies.ts, packages/next-config/index.ts, apps/api/(shared)/mappers/user.mapper.ts]
-feature: -
-updated: 2026-11-19
+contends_on: [apps/api/proxy.ts, apps/web/proxy.ts, apps/app/proxy.ts, packages/auth/session.ts, packages/auth/session-routes.ts, packages/auth/server.ts, packages/shared/utils/helpers/cookies.ts, apps/api/instrumentation.ts]
+feature: delivery-security-review
+updated: 2026-11-23
 ---
 
 # Core aprovado na parte 1 da entrega (validação de segurança)
@@ -46,7 +46,10 @@ Medido em 2026-11-19 sobre `583194b`, só leitura.
   principais (`packages/design-system/components/ui/button.tsx:72`).
 - Nenhuma variável secreta com prefixo `NEXT_PUBLIC_`.
 
-**Lacunas**, por item da parte 1:
+**Lacunas**, por item da parte 1. As cinco primeiras (1.13, 1.15, 1.8, 1.14 e 1.12) foram fechadas pela fatia 1, na
+PR #64; o texto delas descreve o código de `583194b` e as âncoras são daquela versão. As outras seguem abertas e
+foram reconferidas em `388a453`.
+
 
 - **1.13 Dependências vulneráveis** — `pnpm audit --prod`: 8 críticas, 120 altas, 115 moderadas. `axios`
   1.13.5 direto no SDK (`packages/sdk/package.json:10`), 12 altas, corrigido a partir de 1.20.0;
@@ -61,19 +64,24 @@ Medido em 2026-11-19 sobre `583194b`, só leitura.
   `packages/payments/ai.ts`, que nenhum app nem pacote importa fora dos testes. O `@react-email/preview-server` está
   em `dependencies` de `apps/email/package.json:13`, e é por isso que o `--prod` conta as críticas dele. Versões
   publicadas no mesmo dia: `next` 16.4.6, `axios` 1.21.1, `firebase-admin` 14.5.1; o lockfile tem 13.6.0.)*
+  ✅ **Fechada pela PR #64.** Em `388a453`, `pnpm audit --prod --audit-level=high` sai 0. Sem `--prod`, as
+  dependências de desenvolvimento ainda somam 12 críticas e 98 altas (medido em 2026-11-23); o corte não as cobre.
 - **1.15 Rate limit** — a lista é fechada e casa por igualdade (`apps/api/proxy.ts:60-78`): rota nova nasce
   sem limite. Fora dela: 10 das 13 rotas de `/account` (inclusive `/account/password` e
   `/account/password/set`), `payments/checkout`, `payments/portal`, `POST /entities` e a transferência de
-  propriedade.
+  propriedade. ✅ **Fechada pela PR #64** (`apps/api/proxy.ts:70-116`).
 - **1.8 Força bruta** — a troca de senha confere a senha atual pelo servidor, então o limite por IP do
-  Firebase enxerga um IP só (o da API), e a rota não está no rate limit.
+  Firebase enxerga um IP só (o da API), e a rota não está no rate limit. ✅ **Fechada pela PR #64**: as duas
+  rotas de senha estão no orçamento estrito (`apps/api/proxy.ts:84-85`).
 - **1.14 Tokens** — `revokeUserSessions` engole o erro (`packages/auth/server.ts:330-336`): a troca de
   senha responde sucesso mesmo quando as outras sessões continuam vivas
-  (`apps/api/app/(routes)/account/password/route.ts:66`).
+  (`apps/api/app/(routes)/account/password/route.ts:66`). ✅ **Fechada pela PR #64** para as rotas do corte;
+  quatro chamadores fora dele seguem com a variante que engole o erro (ver a deriva da fatia 1).
 - **1.12 Informação sensível / respostas enxutas** — `GET /auth/me` e `POST /auth/sign-in` devolvem o
   documento do Firestore inteiro por spread (`apps/api/(shared)/mappers/user.mapper.ts:67`):
   `stripeCustomerId`, `subscription`, `entitlements`, `customClaims` e `tokensValidAfterTime`. Campo interno
-  novo vaza sozinho. `X-Powered-By: Next.js` sai nos três apps.
+  novo vaza sozinho. `X-Powered-By: Next.js` sai nos três apps. ✅ **Fechada pela PR #64**
+  (`user.mapper.ts:80-89`, `packages/next-config/index.ts:5`).
 - **1.10 CSRF** — a API aceita o cookie como credencial (`apps/api/(shared)/lib/resolve-api-actor.ts:45-48`)
   e requisição sem `Origin` passa (`apps/api/(shared)/lib/cors.ts:48-53`); `isSameOriginRequest` aceita
   ausência de `Origin` (`packages/auth/session.ts:78-82`); `customTokenPOST` não confere origem
@@ -83,7 +91,8 @@ Medido em 2026-11-19 sobre `583194b`, só leitura.
   `apps/web/proxy.ts:111,115`); `bp:*` sem `Secure` (`apps/app/shared/lib/panelState.ts:142`). O cookie de
   sessão em si está correto (`packages/auth/session.ts:60-71`).
 - **1.16 Dados sensíveis em log** — `console.error(error)` com o objeto inteiro em
-  `packages/auth/server.ts:194,211,260,286,315` e no reporter de erro de requisição.
+  `packages/auth/server.ts:194,211,227,260,286,315,340` (sete; até a auditoria de 2026-11-23 a lista citava cinco e
+  a última, a de `revokeUserSessions`, estava em `:334`) e no reporter de erro de requisição.
 - **1.19 CORS em produção** — sem `CORS_ORIGIN`, o boot lança erro mas o processo não cai: toda rota
   responde 500 em texto (`apps/api/instrumentation.ts:63-67`; medido na PR #53, registrado no BACKLOG).
 - **1.11 Upload** — sem `content-length`, `req.formData()` carrega o corpo inteiro na memória antes de
@@ -112,18 +121,48 @@ Medido em 2026-11-19 sobre `583194b`, só leitura.
 
 ## Proposta — corte de MVP
 
-**Fatia 1: o que expõe hoje**
+**Fatia 1: o que expõe hoje** (✅ entregue pela PR #64, `388a453`, em 2026-11-23, e conferida no código de `main`)
 
-- [ ] **Dependências de produção sem vulnerabilidade crítica ou alta**: `axios`, `next` (16.4.5 ou
+- [x] **Dependências de produção sem vulnerabilidade crítica ou alta**: `axios`, `next` (16.4.5 ou
       posterior) e `firebase-admin` atualizados, e `pnpm.overrides` para as transitivas que o pai ainda não
       corrigiu, com a justificativa no `package.json`.
-- [ ] **Rate limit por padrão**: todo método mutável da API passa por um orçamento padrão, e as rotas
+- [x] **Rate limit por padrão**: todo método mutável da API passa por um orçamento padrão, e as rotas
       sensíveis (autenticação, troca e definição de senha, cobrança, convite, contato) ficam no orçamento
       estrito de hoje.
-- [ ] **Encerrar sessões falha de forma visível**: se a revogação falhar, a troca de senha, a redefinição e
+- [x] **Encerrar sessões falha de forma visível**: se a revogação falhar, a troca de senha, a redefinição e
       a troca de e-mail respondem erro com `error.code`, não sucesso.
-- [ ] **`/auth/me` e `/auth/sign-in` com allowlist de campos**: a resposta leva só o que o front usa.
-- [ ] **Sem `X-Powered-By`** nos três apps.
+- [x] **`/auth/me` e `/auth/sign-in` com allowlist de campos**: a resposta leva só o que o front usa.
+- [x] **Sem `X-Powered-By`** nos três apps.
+
+**Conferência da fatia 1 no código de `388a453`** (auditoria de 2026-11-23):
+
+| item | evidência |
+|------|-----------|
+| Dependências | `next` 16.4.6 nos nove `package.json` que o declaram; `firebase-admin` `^13.10.0` (`apps/api/package.json:30`, `packages/auth/package.json:23`; o lockfile resolve 13.10.0); `axios` `^1.21.1` (`packages/sdk/package.json:10`); `@arcjet/next` 1.16.0; `@react-email/preview-server` em `devDependencies` (`apps/email/package.json:17`); `packages/payments/ai.ts` e o `@stripe/agent-toolkit` removidos. Overrides e a exceção do `@grpc/grpc-js` justificados no campo `"//"` (`package.json:2-7`), com `pnpm.auditConfig.ignoreGhsas` (`:55-66`). Medido nesta auditoria: `pnpm audit --prod --audit-level=high` sai 0 (0 críticas, 1 alta ignorada pela exceção, 7 moderadas, 4 baixas) |
+| Rate limit por padrão | `apps/api/proxy.ts:70-116`: 21 caminhos no orçamento estrito, todo `POST`/`PUT`/`PATCH`/`DELETE` restante no `standard`, `/webhooks/payments` isento; 60/min por IP e sujeito (`packages/security/index.ts:17-22`, `:52-83`), sujeito em `apps/api/(shared)/lib/rate-limit-subject.ts:61` |
+| Revogação que falha visível | `apps/api/(shared)/lib/session-revocation.ts:7-31` (`500 AUTH_SESSIONS_NOT_REVOKED`), usado em `account/password/route.ts:70,84`, `account/password/set/route.ts:78,92` e `auth/email-change/confirm/route.ts:82-86`; a redefinição responde o mesmo código em `auth/password/reset/route.ts:50-58`; "Sair de todos" responde `500 ACCOUNT_SESSIONS_REVOKE_FAILED` (`account/sessions/revoke/route.ts:10-20`). Traduzido nos três idiomas (`translations/packages/shared/utils.ts:58`, `:241`, `:426`) |
+| Allowlist | `toSessionUser` com cinco campos (`apps/api/(shared)/mappers/user.mapper.ts:80-89`), usado em `auth/me/route.ts:26`, `auth/sign-in/route.ts:61` e `auth/sign-in/google/route.ts:63` |
+| `X-Powered-By` | `poweredByHeader: false` em `packages/next-config/index.ts:5`, com teste em `packages/next-config/__tests__/config.test.ts:11` |
+
+O CI da execução de merge passou nos quatro jobs (`gh run 45105651062`). O `/test` fechou 15 ✅, 0 ❌ e 1 🔒: o
+`429` real depende de `ARCJET_KEY`, que não existe em dev. Por isso o sinal de pronto "uma rota mutável nova devolve
+429 quando abusada" está provado só por teste de unidade (`packages/security/__tests__/rateLimit.test.ts`,
+`apps/api/__tests__/corsOrigin.test.ts`), não contra a API de decisão do Arcjet.
+
+**Deriva da fatia 1, sem efeito no corte:**
+
+- A redefinição de senha responde `500 AUTH_SESSIONS_NOT_REVOKED`, como o corte pede, mas a tela da `apps/app`
+  mostra o cartão de "senha alterada" com a explicação, em vez de um erro: a senha nova já vale e o link já foi
+  gasto (`ResetPasswordForm.tsx:51-53`, `:89-91`). A spec não dizia o que a interface faria; a escolha é do `/review`.
+- Quatro chamadores seguem com a revogação que engole o erro (`revokeUserSessions`, `packages/auth/server.ts:336-342`):
+  a desativação pelo admin (`users/[id]/route.ts:155`), desvincular um método de login
+  (`account/sign-in-methods/[id]/route.ts:122`), o expurgo da conta (`account-erasure.ts:237`) e o bloqueio de
+  conta arquivada (`account-access.ts:20`). Estão fora da lista do corte (troca e definição de senha, redefinição,
+  troca de e-mail); desvincular a senha encerra todas as sessões e é o mais próximo dela. Fica para o `/analyze` da
+  fatia 2 decidir se entra.
+- O `contends_on` foi revisto nesta auditoria para as fatias que faltam: saíram `user.mapper.ts` e
+  `packages/next-config/index.ts`, entregues na fatia 1; entraram `session-routes.ts`, `server.ts` e
+  `apps/api/instrumentation.ts`, que as lacunas da fatia 2 citam.
 
 **Fatia 2: defesa em profundidade**
 
@@ -188,6 +227,8 @@ Medido em 2026-11-19 sobre `583194b`, só leitura.
 
 - **Orçamento padrão de rate limit: quanto?** — **recomendação:** 60 requisições por minuto por usuário
   autenticado (ou por IP sem sessão) para métodos mutáveis, mantendo as 20 por minuto das rotas sensíveis.
+  *Aplicada pela fatia 1 (PR #64): 60 por minuto por IP e sujeito no `standard`, 20 por minuto por IP no
+  estrito.*
 - **O cookie de sessão ganha prefixo `__Secure-`?** — **recomendação:** não nesta spec; muda o nome do
   cookie e derruba todas as sessões ativas dos forks já em produção.
 - **As fatias 2 e 3 bloqueiam a entrega de forks?** — **recomendação:** não; só a fatia 1 é pré-requisito

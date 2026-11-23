@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [.github/workflows/ci.yml, apps/web/env.ts, apps/web/proxy.ts, apps/app/proxy.ts, packages/security/middleware.ts, packages/next-config/brand.ts, apps/app/next.config.ts]
 feature: -
-updated: 2026-11-19
+updated: 2026-11-23
 ---
 
 # Core aprovado na parte 2 da entrega (infra e hardening)
@@ -33,7 +33,8 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   `Referrer-Policy: no-referrer`, `frame-ancestors 'none'`, COOP e CORP
   (`packages/security/middleware.ts:54-139`); CSP bloqueante no painel e na API, `Report-Only` na landing.
   **Lacuna:** sem `Permissions-Policy`; `X-Powered-By: Next.js` nos três apps (nenhum `poweredByHeader`, item
-  que fica com a fatia 1 de [`delivery-security-review`](delivery-security-review.md));
+  que fica com a fatia 1 de [`delivery-security-review`](delivery-security-review.md), entregue pela PR #64:
+  `packages/next-config/index.ts:5`);
   a CSP `Report-Only` da landing não tem destino de relatório; o matcher dos proxies exclui `/api/*`
   (`apps/app/proxy.ts:127`, `apps/web/proxy.ts:61`), então as rotas de sessão das front-ends saem sem
   cabeçalho.
@@ -43,7 +44,7 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
 - **Bot protection** — **lacuna:** na landing, `secure()` do Arcjet nunca roda: `skipValidation: true`
   (`apps/web/env.ts:36`) faz o `createEnv` devolver o `runtimeEnv` antes de juntar o `extends`, e
   `env.ARCJET_KEY` chega `undefined` em `apps/web/proxy.ts:67` mesmo com a chave preenchida. Na API, só
-  `slidingWindow`, sem `shield` nem `detectBot` (`packages/security/index.ts:45-55`). Sem App Check.
+  `slidingWindow`, sem `shield` nem `detectBot` (`packages/security/index.ts:52-83`, era `:45-55` até a PR #64, que separou os orçamentos `strict` e `standard`). Sem App Check.
 - **Segredos no Git** — `.gitignore:64,144-148` cobre `.env` e `.env.local`. **Lacuna:** `.env.production`,
   `.env.development` e JSON de service account (`*-firebase-adminsdk-*.json`) não estão ignorados; nenhum
   `gitleaks`/`trufflehog` no CI nem em hook.
@@ -52,7 +53,10 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   Push protection ligado; non-provider patterns e validity checks desligados.
 - **Dependências** — sem `.github/dependabot.yml`, sem Renovate, sem `pnpm audit` nem CodeQL no CI; os
   alertas do Dependabot estão desligados no repositório. `pnpm.overrides` (`package.json:49-54`) não trata
-  CVE.
+  CVE. *(Desde a PR #64, `package.json:55-66`: o override do `zod` corrige um aviso, e `pnpm.auditConfig.ignoreGhsas`
+  registra a exceção do `@grpc/grpc-js`, justificada no campo `"//"` (`:2-7`). Medido em 2026-11-23, sobre `388a453`:
+  `pnpm audit --prod --audit-level=high` sai 0, então o job do item 2 pode usar `high` em vez de `critical` sem
+  reprovar a primeira PR. A escolha é do `/analyze`. O CI segue sem `pnpm audit`, sem Dependabot e sem CodeQL.)*
 - **CI** — `permissions: contents: read`, gatilho `pull_request` e nenhum segredo
   (`.github/workflows/ci.yml:11-12`). **Lacuna:** actions referenciadas por tag, não por SHA (inclusive a de
   terceiro `pnpm/action-setup`); `main` sem proteção (`gh api …/branches/main/protection` responde 404,
@@ -76,7 +80,11 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   <https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates>).
 - Gitleaks varre o histórico, não só o estado atual (<https://github.com/gitleaks/gitleaks>). O README
   dele diz que o projeto está "feature complete" e que o foco migrou para o Betterleaks; continua
-  utilizável, mas a escolha da ferramenta fica para o `/analyze`.
+  utilizável, mas a escolha da ferramenta fica para o `/analyze`. A action oficial
+  (<https://github.com/gitleaks/gitleaks-action>, aberta em 2026-11-23) exige a variável `GITLEAKS_LICENSE` em
+  repositório de organização, com uma chave gratuita cadastrada no site do projeto; em conta pessoal, não. O
+  repositório de referência é de conta pessoal (`gh api users/<dono>` → `User`), mas um fork criado numa
+  organização herdaria esse cadastro. Rodar o binário de linha de comando direto no job não pede chave.
 - HSTS preload exige `max-age` ≥ 31536000, `includeSubDomains` e `preload` (<https://hstspreload.org/>).
 - Arcjet bloqueia bots desnecessários e quem finge ser bot bom
   (<https://docs.arcjet.com/bot-protection/concepts>).
@@ -97,8 +105,8 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
       `skipValidation` deixa de engolir o `extends`), com um teste que prova que `secure()` roda quando a chave
       existe.
 - [ ] **Cabeçalhos completos**: `Permissions-Policy` restritiva no `@repo/security`, e cabeçalhos também
-      nas rotas `/api/auth/*` das front-ends. Tirar o `X-Powered-By` é da fatia 1 de
-      [`delivery-security-review`](delivery-security-review.md), que vem antes na ordem.
+      nas rotas `/api/auth/*` das front-ends. Tirar o `X-Powered-By` era da fatia 1 de
+      [`delivery-security-review`](delivery-security-review.md), entregue pela PR #64.
 - [ ] **Logo da marca só em `https:`** e `images.remotePatterns` do painel restrito ao bucket do produto.
 - [ ] **Guia das chaves do Firebase** em `docs/FORKING.md`: chave do navegador com referenciador e API,
       chave do servidor só com API; e a correção da seção da Resend.
@@ -154,3 +162,6 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   de uma semana em `DRY_RUN` num fork em produção.
 - **Dependabot ou Renovate?** — **recomendação:** Dependabot, porque não precisa de app externo e o fork
   herda só um arquivo.
+- **Varredura de segredo pela action do Gitleaks ou pelo binário?** — **recomendação:** pelo binário (ou
+  equivalente sem cadastro), chamado direto no job. A action pede uma chave de licença, gratuita, em todo
+  repositório de organização, e isso viraria um segredo a mais para cada fork configurar.

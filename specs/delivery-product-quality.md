@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [packages/security/middleware.ts, packages/seo/metadata.ts, "apps/web/app/[locale]/layout.tsx", apps/e2e/playwright.config.ts]
 feature: -
-updated: 2026-11-19
+updated: 2026-11-23
 ---
 
 # Core aprovado na parte 3 da entrega (celular, 404, desempenho e SEO)
@@ -39,14 +39,14 @@ Medido em 2026-11-19 sobre `583194b`.
   **Lacuna:** a `apps/web` não tem `not-found.tsx` e mostra o 404 padrão do Next em inglês; a `apps/api` não
   tem rota coringa e responde 404 em HTML, fora do contrato `{ error: { code } }`; nenhum `error.tsx` de
   segmento.
-- **Desempenho** — bundle analyzer (`packages/next-config/index.ts:10`), fontes self-host
+- **Desempenho** — bundle analyzer (`packages/next-config/index.ts:11`, era `:10` até a PR #64), fontes self-host
   (`packages/design-system/lib/fonts.ts`), nenhum `<img>` cru, GA carregado só depois do consentimento.
   **Lacuna:** nenhum Lighthouse no repo nem no CI; a landing monta o `DesignSystemProvider` (antd + um
   `AuthProvider`) e um segundo `AuthProvider` (`apps/web/app/[locale]/layout.tsx:36-37`,
   `packages/design-system/index.tsx:42-44`), então todo visitante anônimo baixa antd e o SDK do Firebase
   Auth.
 - **Imagens** — nenhuma acima de 100 KB; `images.formats` com AVIF e WebP
-  (`packages/next-config/index.ts:6`). Sem lacuna.
+  (`packages/next-config/index.ts:7`, era `:6` até a PR #64). Sem lacuna.
 - **`og:image`** — `apps/web/app/[locale]/opengraph-image.png`, 1200 × 630, estática e global. **Lacuna:** o
   conteúdo é a arte do next-forge (cita Prisma e PlanetScale, que a stack não usa), não muda com a marca
   (`getBrand()`), e nenhuma página passa imagem própria a `createMetadata`

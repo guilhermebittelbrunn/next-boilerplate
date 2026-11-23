@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/(shared)/lib/billing.ts, apps/api/(shared)/lib/billing-state.ts, apps/api/(shared)/lib/plan-access.ts, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/(shared)/lib/account-export.ts, "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountBillingPanel.tsx"]
 feature: -
-updated: 2026-10-23
+updated: 2026-11-23
 ---
 
 # Compra avulsa com acesso vitalício
@@ -34,7 +34,7 @@ e só então liberar o acesso no servidor.
 - `apps/api/(shared)/lib/billing.ts:52-68` — o catálogo lê só `type: "recurring"`; `billing.ts:130-140` abre o
   checkout só com `mode: "subscription"`.
 - `apps/api/(shared)/lib/billing-state.ts:63-73` — `toPlanDTO` devolve `null` para preço avulso.
-- `docs/PAYMENTS.md:208-209` — preço avulso pedido no checkout responde 404 `PAYMENTS_PLAN_NOT_FOUND`;
+- `docs/PAYMENTS.md:207-208` (era `:208-209` até a PR #64, que tirou uma linha acima) — preço avulso pedido no checkout responde 404 `PAYMENTS_PLAN_NOT_FOUND`;
   `docs/PRE-PRODUCTION.md:604-607` avisa o fork de que preço avulso não aparece. *(Âncoras remedidas em 2026-10-16:
   a PR #47 acrescentou texto aos dois documentos; eram `:165-166` e `:513-516`. A do `PRE-PRODUCTION.md` desceu uma
   linha com a PR #49, remedida em 2026-10-19. A PR #52 acrescentou texto antes das duas, e elas desceram de `:199-200`

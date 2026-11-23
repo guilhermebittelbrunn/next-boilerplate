@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [app-internal-ux-polish]
 contends_on: [apps/api/app/(guards)/common-panel.ts, apps/app/shared/components/ui/ProfileDropdown.tsx, "apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx"]
 feature: -
-updated: 2026-11-19
+updated: 2026-11-23
 ---
 
 # Área de conta para o admin (perfil, senha e preferências)
@@ -32,7 +32,7 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
 - `apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx:19-33` — o menu do admin tem só Usuários e
   Auditoria; não há entrada de conta.
 - `apps/api/app/(guards)/common-panel.ts:77` — todas as rotas de `/account` (`account/route.ts:105`, `:115`,
-  `account/password/route.ts:18` e as demais em `apps/api/app/(routes)/account/`) passam por
+  `account/password/route.ts:22`, era `:18` até a PR #64 e as demais em `apps/api/app/(routes)/account/`) passam por
   `requireCommonPanelApi`, que recusa com `403 COMMON_PANEL_FORBIDDEN` quando o sujeito não é `COMMON`. Mesmo
   com uma tela, o admin não conseguiria salvar nada pela API de hoje.
 - `apps/app/app/[locale]/(authenticated)/(admin)/admin/(pages)/users/(components)/UserFormFields.tsx:45-64`
