@@ -113,6 +113,7 @@ export const sharedUtilsTranslations = {
             COMMON_PANEL_FORBIDDEN:
                 "Esta ação não está disponível para o seu perfil.",
             ENTITY_NOT_FOUND: "Entidade não encontrada.",
+            ROUTE_NOT_FOUND: "Este endereço não existe na API.",
             ENTITY_CREATE_FAILED:
                 "Não foi possível concluir o cadastro da entidade.",
             AUTH_RATE_LIMITED:
@@ -295,6 +296,7 @@ export const sharedUtilsTranslations = {
             COMMON_PANEL_FORBIDDEN:
                 "This action is not available for your account.",
             ENTITY_NOT_FOUND: "Entity not found.",
+            ROUTE_NOT_FOUND: "This API route does not exist.",
             ENTITY_CREATE_FAILED: "Could not finish creating the entity.",
             AUTH_RATE_LIMITED:
                 "Too many attempts in a short time. Wait a moment and try again.",
@@ -483,6 +485,7 @@ export const sharedUtilsTranslations = {
             COMMON_PANEL_FORBIDDEN:
                 "Esta acción no está disponible para tu cuenta.",
             ENTITY_NOT_FOUND: "Entidad no encontrada.",
+            ROUTE_NOT_FOUND: "Esta ruta de la API no existe.",
             ENTITY_CREATE_FAILED:
                 "No se pudo completar el registro de la entidad.",
             AUTH_RATE_LIMITED:

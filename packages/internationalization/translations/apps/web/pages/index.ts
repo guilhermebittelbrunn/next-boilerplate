@@ -6,6 +6,7 @@ import { featuresTranslations } from "./features";
 import { heroTranslations } from "./hero";
 import { homeTranslations } from "./home/home";
 import { legalTranslations } from "./legal";
+import { notFoundTranslations } from "./notFound";
 import { pricingTranslations } from "./pricing";
 import { signInTranslations } from "./signIn";
 import { signUpTranslations } from "./signUp";
@@ -25,6 +26,7 @@ export const pagesTranslations = {
         pricing: pricingTranslations["pt-br"],
         legal: legalTranslations["pt-br"],
         error: errorTranslations["pt-br"],
+        notFound: notFoundTranslations["pt-br"],
     },
     en: {
         contact: contactTranslations.en,
@@ -39,6 +41,7 @@ export const pagesTranslations = {
         pricing: pricingTranslations.en,
         legal: legalTranslations.en,
         error: errorTranslations.en,
+        notFound: notFoundTranslations.en,
     },
     es: {
         contact: contactTranslations.es,
@@ -53,5 +56,6 @@ export const pagesTranslations = {
         pricing: pricingTranslations.es,
         legal: legalTranslations.es,
         error: errorTranslations.es,
+        notFound: notFoundTranslations.es,
     },
 };
