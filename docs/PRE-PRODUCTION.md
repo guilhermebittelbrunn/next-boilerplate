@@ -964,8 +964,8 @@ mexer no modo `simple` por ora. Reabra se o modo passar a restringir o painel co
 
 > ⚠️ **Correção medida em 2026-09-25: a premissa desta seção não confere com o código.** O texto abaixo parte
 > de que o modo `simple` restringe o painel comum a administradores. Nada no `apps/app` faz isso: o layout
-> `(common)` não lê o modo de produto, e os únicos arquivos do app que leem são `(common)/routes.tsx:69` e
-> `AccountTabs.tsx:33`, os dois só para esconder a cobrança. `commonUserUsesPanel()` não existe em
+> `(common)` não lê o modo; no painel comum, só `(common)/routes.tsx:67` e `accountTabRouting.ts:15` o leem, os dois
+> para esconder a cobrança (a home do admin o lê para a cobrança também). `commonUserUsesPanel()` não existe em
 > `packages/next-config/product-mode.ts`, e a `apps/web` não tem área autenticada. Hoje, num fork `simple`, o
 > usuário comum entra no painel e alcança a aba de privacidade. A pendência real é outra: o modo `simple`
 > não faz o que `docs/AUTH-SSO.md` descreve. Ela está registrada nos achados do `specs/BACKLOG.md`. O texto

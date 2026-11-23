@@ -1,7 +1,7 @@
 ---
 id: app-internal-ux-polish
 title: Conta como página de configurações e padrão único de página nas telas internas
-status: in-progress
+status: done
 value: alto
 effort: M
 audience: produto
@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/app/shared/components/ui/Header.tsx, apps/app/shared/components/ui/Container.tsx, "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountTabs.tsx", "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountSecurityForm.tsx"]
 feature: app-internal-ux-polish
-updated: 2026-11-10
+updated: 2026-11-19
 ---
 
 # Conta como página de configurações e padrão único de página nas telas internas
@@ -98,7 +98,7 @@ Caminhos encurtados: `account/` é `apps/app/app/[locale]/(authenticated)/(commo
 
 ## Evidência de mercado
 
-- Nota: [`research/settings-page-patterns.md`](research/settings-page-patterns.md) (painel de 11, 10 com
+- Nota: [`research/settings-page-patterns.md`](../../../specs/research/settings-page-patterns.md) (painel de 11, 10 com
   fonte primária lida, coletada em 2026-11-10).
 - **Navegação:** nenhuma das 10 usa abas horizontais entre as seções das configurações. Navegação lateral com
   uma página por seção aparece em 4 de 10 (shadcn/ui, Makerkit, Vercel, GitHub); página única em 2; hub
@@ -126,21 +126,21 @@ Caminhos encurtados: `account/` é `apps/app/app/[locale]/(authenticated)/(commo
 
 ## Proposta — corte de MVP
 
-- [ ] **Conta como página de configurações com navegação por seção.** As seções são as de hoje (perfil,
+- [x] **Conta como página de configurações com navegação por seção.** As seções são as de hoje (perfil,
       segurança, preferências, cobrança no modo assinatura, privacidade). No desktop, a navegação é uma lista
       vertical de abas numa coluna ao lado do conteúdo; no celular, vira um controle que cabe a 375 px sem
       rolagem lateral nem sobreposição, em pt-br, en e es.
-- [ ] **A seção ativa vem do `?tab=` da URL a cada navegação, não só na primeira carga.** Clicar num item de Configurações do menu lateral
+- [x] **A seção ativa vem do `?tab=` da URL a cada navegação, não só na primeira carga.** Clicar num item de Configurações do menu lateral
       troca de seção mesmo com a conta aberta, o item fica marcado como ativo, e os links existentes com
       `?tab=<seção>` (retorno da Stripe, CTA da landing) continuam caindo na seção certa sem perder
       `?checkout=` e `?plan=`. O rótulo do menu e o da seção passam a ser o mesmo. Fecha o E9.
-- [ ] **Cada seção é uma pilha de blocos com título, descrição e ação própria.** Um formato só para todos os
+- [x] **Cada seção é uma pilha de blocos com título, descrição e ação própria.** Um formato só para todos os
       blocos da conta, com título em heading real; quem salva é o bloco, e o botão fica junto do bloco que
       ele salva, não numa barra fixa da página. Diálogos usam o rodapé do próprio diálogo.
-- [ ] **Zona de perigo separada.** "Excluir conta" sai da moldura comum e fica num bloco destrutivo no fim
+- [x] **Zona de perigo separada.** "Excluir conta" sai da moldura comum e fica num bloco destrutivo no fim
       da seção, visualmente distinto. Ações que encerram acesso (desvincular método, encerrar sessões, sair
       de todos) usam estilo destrutivo no botão de confirmação.
-- [ ] **Padrão único de página nas telas internas.** Título visível (`h1`), descrição opcional e ação
+- [x] **Padrão único de página nas telas internas.** Título visível (`h1`), descrição opcional e ação
       primária no mesmo lugar, largura máxima de leitura para formulários e configurações, e um espaçamento
       vertical só. Aplicado à conta, à home comum, a entidades (lista, criar, editar), à organização e às
       telas do admin (home, usuários, criar/editar usuário, auditoria). Breadcrumb continua, abaixo do título
@@ -163,7 +163,7 @@ Caminhos encurtados: `account/` é `apps/app/app/[locale]/(authenticated)/(commo
   resolvido como tarefa direta.
 - **Configurações da conta para o admin.** Hoje "Minha conta" leva o admin a `/account`, que o layout comum
   devolve para `/admin` (`ui/ProfileDropdown.tsx:65`, `(common)/layout.tsx:47-52`). É funcionalidade nova,
-  com guard e rota, e tem spec própria: [`admin-own-account`](admin-own-account.md).
+  com guard e rota, e tem spec própria: [`admin-own-account`](../../../specs/admin-own-account.md).
 
 ## Impacto por camada
 
@@ -226,7 +226,7 @@ Tomadas por você na triagem de 2026-11-10, quando a spec passou a `approved`.
     item ativo do menu lateral.
 - **O admin entra no corte só com o padrão de página**: home, usuários, criar e editar usuário, auditoria.
   Nenhuma funcionalidade nova do admin entra.
-- **Área de conta para o admin fica fora** e virou a spec [`admin-own-account`](admin-own-account.md),
+- **Área de conta para o admin fica fora** e virou a spec [`admin-own-account`](../../../specs/admin-own-account.md),
   `proposed`.
 - **Prioridade: #1 do backlog.** Roda antes da fatia 3 de `account-security-mfa` e nunca em paralelo com
   ela, porque as duas alteram a seção Segurança.
@@ -238,3 +238,28 @@ Tomadas por você na triagem de 2026-11-10, quando a spec passou a `approved`.
 
 - Nenhuma de produto. Os detalhes de implementação (se o cabeçalho de página vira componente do design
   system ou do `apps/app`, qual controle substitui as abas no celular) são do `/analyze`.
+
+## Entrega conferida em 2026-11-19
+
+Entregue pela PR #62 (`583194b`, mergeada em 2026-11-19 às 13:45 UTC, a partir de `feat/app-internal-ux-polish`). A
+execução de merge do CI (`gh run 44536692983`) passou nos quatro jobs: `changes`, `verify`, `coverage` e `e2e`. A
+auditoria conferiu os cinco itens do corte no código de `main`; os caminhos abaixo são relativos a
+`apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/` quando começam pelo nome do arquivo.
+
+| item | veredito | o que o código mostra |
+|------|----------|-----------------------|
+| 1. Navegação por seção | implementado | `Tabs` com `orientation="vertical"` numa coluna de 192 px a partir de `lg` (`AccountTabs.tsx:90-92`, `:115`) e um `NativeSelect` com rótulo abaixo dela (`:95-110`). O `/test` mediu `scrollWidth <= innerWidth` a 375 px e a 1280 px nos três idiomas |
+| 2. Seção derivada do `?tab=` | implementado | `AccountTabs.tsx:53-78` lê `useSearchParams()` a cada render; `accountTabHref` preserva os outros parâmetros (`accountTabRouting.ts:26-33`), e `?checkout=` e `?plan=` sobrevivem à troca de seção. O item ativo do menu compara também a query (`apps/app/shared/lib/navActive.ts:7`, usado em `ui/Sidebar.tsx:142`). O rótulo do menu é o da seção (`(common)/routes.tsx:56-77`) |
+| 3. Blocos com título e salvar próprio | implementado | `ui/SettingsSection.tsx` publica `section` com `aria-labelledby` e `h3`, usado pelos sete painéis da conta; os formulários usam `Footer` com `sticky={false}` (`AccountProfileForm.tsx:138-143`, `AccountSecurityForm.tsx:111-116`, `AccountPreferencesForm.tsx:134-139`, `AccountPasswordSetForm.tsx:81-86`), e os diálogos usam `AlertDialogFooter` |
+| 4. Zona de perigo | implementado | "Excluir conta" num `SettingsSection` com `tone="destructive"` no fim da privacidade (`AccountPrivacyPanel.tsx:125-139`); confirmação destrutiva em desvincular (`AccountSignInMethodsPanel.tsx:191`), encerrar sessão (`AccountSessionsPanel.tsx:167`) e sair de todos (`AccountSecurityForm.tsx:159`) |
+| 5. Padrão único de página | implementado | `ui/PageHeader.tsx` (`h1` em `:13`), `ui/PageSkeleton.tsx` e `ui/pageLayout.ts` (largura `full` ou `narrow`), usados nas onze telas do corte (conta, home comum, lista/criar/editar entidade, organização, home do admin, usuários, criar/editar usuário, auditoria). O `AddButton` passou a `variant="default"` (`packages/design-system/components/ui/add-button.tsx:21`) |
+
+Os sinais de pronto da suíte de axe também valem: `apps/e2e/tests/a11yDark.spec.ts:80-85` percorre
+`account?tab=<seção>`, e `apps/e2e/tests/accountSettings.spec.ts` é novo. O `/test` fechou 11 de 13 itens da lista
+"Verificar no `/test`"; o aviso do checkout ficou 🔒 sem Stripe, e o foco escondido pelo rodapé fixo nos formulários
+de página inteira, que já existia antes, virou achado no `BACKLOG.md`.
+
+**Deriva:** nenhuma no comportamento. O `contends_on` listava quatro arquivos; a PR alterou 73, dos quais 63 fora de
+`docs/features` e `specs`, entre eles `Sidebar.tsx`, `Footer.tsx`, `navActive.ts` e o `AddButton` do design system.
+O `Header.tsx` não ganhou slot de título: o título mora no `PageHeader`, abaixo do breadcrumb, como a spec permitia.
+

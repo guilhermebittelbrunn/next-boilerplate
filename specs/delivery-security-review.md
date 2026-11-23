@@ -54,6 +54,13 @@ Medido em 2026-11-19 sobre `583194b`, só leitura.
   `node-forge` e `jws`; `next` 16.4.3 tem 2 moderadas corrigidas em 16.4.5 (o próprio `next dev` avisa no
   boot); `@arcjet/next` traz `undici` (5 altas). O `next` 15 do preview de e-mail (`apps/email`) soma 4
   críticas, mas só roda localmente.
+  *(Remedido na auditoria de 2026-11-19, sobre `c9b4d9c`: os números batem, e as 8 críticas são 4 do `next` 15 do
+  preview, 1 de `protobufjs` e 1 de `fast-xml-parser`, as duas pelo `firebase-admin`, e mais duas que este item não
+  citava: `websocket-driver`, pelo `firebase-admin` (`@firebase/database-compat` → `faye-websocket`), e
+  `proxy-addr`, pelo `@stripe/agent-toolkit` de `packages/payments/package.json:11`. Esse pacote só é importado por
+  `packages/payments/ai.ts`, que nenhum app nem pacote importa fora dos testes. O `@react-email/preview-server` está
+  em `dependencies` de `apps/email/package.json:13`, e é por isso que o `--prod` conta as críticas dele. Versões
+  publicadas no mesmo dia: `next` 16.4.6, `axios` 1.21.1, `firebase-admin` 14.5.1; o lockfile tem 13.6.0.)*
 - **1.15 Rate limit** — a lista é fechada e casa por igualdade (`apps/api/proxy.ts:60-78`): rota nova nasce
   sem limite. Fora dela: 10 das 13 rotas de `/account` (inclusive `/account/password` e
   `/account/password/set`), `payments/checkout`, `payments/portal`, `POST /entities` e a transferência de

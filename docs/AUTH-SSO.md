@@ -101,7 +101,7 @@ Enforcement server-side: o layout `(common)` do app redireciona comum→web no `
 > `commonUserUsesPanel()` não é exportado por `packages/next-config/product-mode.ts` (só `getProductMode()` e
 > `isSubscriptionMode()`), e `apps/web/app/[locale]/(authenticated)/layout.tsx` não existe. O que o modo
 > `simple` faz hoje é esconder a cobrança: a aba e o item da barra lateral no app
-> (`(common)/routes.tsx:52`, `AccountTabs.tsx:33`), o `/pricing` da web e as rotas `payments/*` da API.
+> (`(common)/routes.tsx:67`, `account/(components)/accountTabRouting.ts:15`), o `/pricing` da web e as rotas `payments/*` da API.
 > Também tira o link "Ir para o painel" do header da web (`apps/web/app/[locale]/components/header/index.tsx:38`).
 > O usuário comum que chega ao painel por URL continua entrando. Registrado como achado em `specs/BACKLOG.md`.
 

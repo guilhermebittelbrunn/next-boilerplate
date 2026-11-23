@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-10-28
+updated: 2026-11-19
 ---
 
 # MFA, sessões ativas e política de senha
@@ -30,7 +30,7 @@ eficácia.
 
 - `packages/auth/server.ts:330`: `revokeUserSessions` revoga todas as sessões da conta no Firebase. Desde a
   PR #39 ela é chamada só por "Sair de todos os dispositivos" (`apps/api/app/(routes)/account/sessions/revoke/route.ts:8`,
-  acionado pela aba Segurança em `AccountSecurityForm.tsx:154`, era `:140` até a PR #48), pela troca de senha e pela desativação pelo
+  acionado pela aba Segurança em `AccountSecurityForm.tsx:154`, conferida em 2026-11-19 depois da PR #62; era `:140` até a PR #48), pela troca de senha e pela desativação pelo
   admin. O botão "Sair" deixou de ser um "sair de todos": `sessionDELETE`
   (`packages/auth/session-routes.ts:174-183`) apaga o cookie e pede à API que marque só a sessão atual como
   encerrada. *(Até a PR #39 este bloco descrevia o logout global, com âncoras em `server.ts:323` e
@@ -206,7 +206,7 @@ eficácia.
       `GET /account/sessions` (`apps/api/app/(routes)/account/sessions/route.ts:11-27`) devolve as sessões
       vivas do titular, com a atual marcada e as encerradas ou anteriores à revogação geral fora da lista
       (`selectActiveSessions`, `apps/api/(shared)/lib/session-tracker.ts:156`). O painel "Sessões ativas" fica
-      na aba Segurança (`AccountSecurityForm.tsx:119`, era `:105` até a PR #48, e `AccountSessionsPanel.tsx`), com navegador e sistema,
+      na aba Segurança (`AccountSecurityForm.tsx:123`, era `:119` até a PR #62 e `:105` até a PR #48, e `AccountSessionsPanel.tsx`), com navegador e sistema,
       instante do login e último uso. SDK: `listSessions`, `revokeSession` e `revokeOtherSessions`
       (`packages/sdk/src/actions/account/action.ts:163`, `:174`, `:182`; eram `:127`, `:138` e `:146` até a PR #48).
       **Deriva de letra, a spec estava imprecisa:** "origem" virou navegador, sistema e tipo de aparelho,
@@ -307,7 +307,7 @@ e **não** é arquivada.
 
 **Nota para a fatia 3 (2026-10-22, pós-PR #56):** o login agora tem três entradas, senha, Google e link por e-mail
 ([`magic-link-sign-in`](../docs/features/magic-link-sign-in/spec.md), entregue pela PR #56). As três terminam no
-mesmo `onAuthSuccess` (`packages/auth/provider.tsx:353-370`), e a página do link conclui no cliente
+mesmo `onAuthSuccess` (`packages/auth/provider.tsx:353-365`, era `:353-370` até a PR #60), e a página do link conclui no cliente
 (`apps/app/app/[locale]/(unauthenticated)/sign-in/email-link/components/EmailLinkCompletion.tsx`). Com o segundo
 fator ligado, essa página precisa tratar `auth/multi-factor-auth-required`, que hoje cai no cartão de falha
 genérico (`EmailLinkCompletion.tsx:152-163`); o link não pode dispensar o segundo fator.

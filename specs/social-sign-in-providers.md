@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [linked-sign-in-methods]
 contends_on: [packages/auth/client.ts, apps/api/(shared)/lib/firebase-identity-toolkit.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: -
-updated: 2026-10-29
+updated: 2026-11-19
 ---
 
 # Login com GitHub e Microsoft, ligados por configuração
@@ -25,8 +25,9 @@ updated: 2026-10-29
 > `deferred` até você decidir. Duas coisas da entrega encurtam o corte desta spec: o `DELETE
 > /account/sign-in-methods/[id]` aceita qualquer provedor que a conta liste (`[id]/route.ts:64-70`; era `:36-42` até
 > a PR #51, que acrescentou a nova tentativa de devolução do e-mail), e a lista da
-> aba Segurança já mostra um provedor desconhecido com o id cru (`AccountSignInMethodsPanel.tsx:85-91`). Falta o
-> botão de vincular, que hoje só existe para o Google (`:210-223`).
+> aba Segurança já mostra um provedor desconhecido com o id cru (`AccountSignInMethodsPanel.tsx:84-90`). Falta o
+> botão de vincular, que hoje só existe para o Google (`:202-215`; as duas âncoras eram `:85-91` e `:210-223` até a
+> PR #62, que pôs o painel num `SettingsSection`).
 
 ## Problema
 
@@ -42,11 +43,11 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   repositório (grep por `GithubAuthProvider`, `OAuthProvider` e `microsoft` vazio fora de testes, reconferido em
   2026-10-22). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:187`, `:195`; eram `:170`, `:178` até a
   PR #56) também usam só o Google.
-- `packages/auth/provider.tsx:376`, `:383`, `:386-389` — desde a PR #56 o `AuthProvider` tem três mutations de login
-  (senha, Google e link por e-mail), todas terminando no mesmo `onAuthSuccess` (`:353-370`). Na branch
-  `fix/app-auth-forms`, ainda sem PR, as âncoras ficam `:371`, `:378`, `:381-384` e `:353-365` (remedidas em 2026-10-29). Um provedor novo entra
-  como a quarta, no mesmo molde.
-- `apps/app/shared/lib/googleSignInApi.ts:21-79` (`:22-83` na branch `fix/app-auth-forms`, que traduz o erro da sessão; era `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
+- `packages/auth/provider.tsx:371`, `:378`, `:381-384` — desde a PR #56 o `AuthProvider` tem três mutations de login
+  (senha, Google e link por e-mail), todas terminando no mesmo `onAuthSuccess` (`:353-365`). As âncoras são as de
+  `main` desde a PR #60 (eram `:376`, `:383`, `:386-389` e `:353-370`). Um provedor novo entra como a quarta, no
+  mesmo molde.
+- `apps/app/shared/lib/googleSignInApi.ts:22-83` (era `:21-79` até a PR #60, que traduziu o erro da sessão, e `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
   `providerId=google.com` fixo.
@@ -58,14 +59,14 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   `429 USERS_AUTH_RATE_LIMITED` (`:33-45`). Antes ela lia o corpo sem validação e devolvia a mensagem crua do
   provedor em 401. A parte "a rota do Google entra no mesmo contrato" do impacto na `apps/api` já está paga; falta
   generalizar a rota para outros provedores.
-- `apps/app/.../sign-in/components/SignInForm.tsx:188-198` (`:189-199` na branch `fix/app-auth-forms`, que acrescentou o `noValidate`; remedida em 2026-10-22: a PR #56 acrescentou duas linhas
+- `apps/app/.../sign-in/components/SignInForm.tsx:189-199` (era `:188-198` até a PR #60, que acrescentou o `noValidate`; remedida em 2026-10-22: a PR #56 acrescentou duas linhas
   acima, e a âncora anterior, `:187-197`, já estava uma linha adiantada) e `sign-up/components/SignUpFormClient.tsx` —
   um botão do Google em cada tela. Desde a PR #56 o login também tem o link "Receber link de acesso por e-mail"
-  (`:209-218`), condicionado à disponibilidade que a API informa.
+  (`:210-219`, era `:209-218` até a PR #60), condicionado à disponibilidade que a API informa.
 - `apps/api/proxy.ts:60-78` — `/auth/sign-in/google` está no rate limit (`:63`; a lista era `:55-70`, com a rota em
   `:58`, até a PR #57, que acrescentou um parágrafo de comentário acima e três rotas de convite ao fim, `:53-67` até a PR #56,
   que acrescentou `/auth/sign-in/email-link/request`, `:49-62` até a PR #49 e `:45-58` até a PR #47).
-- `docs/FORKING.md:175` — o roteiro do fork descreve "e-mail/senha e Google".
+- `docs/FORKING.md:193` (era `:175` até a PR #63, que acrescentou dezoito linhas acima) — o roteiro do fork descreve "e-mail/senha e Google".
 - **Lacuna:** não há forma de ligar outro provedor sem escrever um fluxo novo inteiro.
 
 ## Evidência de mercado

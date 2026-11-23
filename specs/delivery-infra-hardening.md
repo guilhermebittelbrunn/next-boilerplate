@@ -63,7 +63,7 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   `www.google.com` sem uso; `storage.googleapis.com` sem `pathname` (`:27`) deixa o otimizador servir objeto
   público de qualquer bucket.
 - **Chave web do Firebase** — nenhum documento manda restringir a chave do navegador por referenciador nem
-  separar a chave do servidor. `docs/FORKING.md:287` manda pôr as chaves da Resend na `web`, que não as usa
+  separar a chave do servidor. `docs/FORKING.md:305` (era `:287` antes da PR #63) manda pôr as chaves da Resend na `web`, que não as usa
   desde que o contato passou pela API.
 
 ## Evidência de mercado

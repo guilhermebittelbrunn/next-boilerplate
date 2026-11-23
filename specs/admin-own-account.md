@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [app-internal-ux-polish]
 contends_on: [apps/api/app/(guards)/common-panel.ts, apps/app/shared/components/ui/ProfileDropdown.tsx, "apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx"]
 feature: -
-updated: 2026-11-10
+updated: 2026-11-19
 ---
 
 # Área de conta para o admin (perfil, senha e preferências)
@@ -40,8 +40,12 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
   de edição (`hidden={mode === "update"}`). Desativar, rebaixar e arquivar a si mesmo são recusados com
   `403 USERS_SELF_LOCKOUT_FORBIDDEN` (tarefa `admin-self-lockout-guard`).
 - Peças reaproveitáveis: os formulários de perfil, senha e preferências da conta comum
-  (`apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/`), que a spec
-  `app-internal-ux-polish` reorganiza em layout de configurações com navegação por seção.
+  (`apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/`), já no layout de
+  configurações que [`app-internal-ux-polish`](../docs/features/app-internal-ux-polish/spec.md) entregou pela
+  PR #62: navegação por seção derivada do `?tab=` (`AccountTabs.tsx`, `accountTabRouting.ts`), blocos em
+  `apps/app/shared/components/ui/SettingsSection.tsx` e cabeçalho de página em `ui/PageHeader.tsx`. A lista de
+  seções é fixa no módulo (`accountTabRouting.ts:3-9`), então a área do admin precisa de uma lista própria, sem
+  cobrança nem privacidade.
 - **Lacuna:** uma área de conta dentro do painel admin e rotas da API que deixem o admin editar o próprio
   perfil, senha e preferências, e só os dele.
 
@@ -92,8 +96,8 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
   rotas do painel comum ao admin sem personificação. O corte pede o contrário: uma permissão estreita, só para
   as rotas da própria conta, espelhada na API. A regra de painel está em `docs/AUTH-PANEL.md` e precisa ser
   atualizada junto.
-- **Depende de `app-internal-ux-polish`.** Sem o layout de configurações, a área do admin nasceria com as
-  abas de hoje e seria refeita logo depois.
+- **Dependia de `app-internal-ux-polish`**, entregue pela PR #62 em 2026-11-19. A dependência está satisfeita, e
+  a área do admin nasce no layout novo.
 - **Conflito com `account-security-mfa`.** As duas tocam a seção Segurança e a autorização da conta. Rodam em
   série.
 - **Custo herdado pelo fork:** zero em serviço, env e dependência.
