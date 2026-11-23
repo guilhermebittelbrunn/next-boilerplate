@@ -17,12 +17,10 @@ const routes: {
 
 const sitemap = (): MetadataRoute.Sitemap => {
     const baseUrl = getWebBaseUrl();
-    const lastModified = new Date();
 
     return routes.flatMap((route) =>
         locales.map((locale) => ({
             url: `${baseUrl}/${locale}${route.path}`,
-            lastModified,
             changeFrequency: route.changeFrequency,
             priority: route.priority,
             alternates: {
