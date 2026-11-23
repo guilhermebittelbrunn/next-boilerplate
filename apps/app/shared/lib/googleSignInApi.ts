@@ -2,6 +2,7 @@
 
 import { getAuthClient } from "@repo/auth/client";
 import { getDictionary } from "@repo/internationalization/client";
+import type { AuthMePayload } from "@repo/sdk/src/actions/auth/action";
 import {
     GoogleAuthProvider,
     signInWithPopup,
@@ -16,7 +17,7 @@ export type GoogleApiSignInResult = {
         refreshToken: string;
         expiresIn: string;
     };
-    user: Record<string, unknown> | null;
+    user: AuthMePayload | null;
 };
 
 /**

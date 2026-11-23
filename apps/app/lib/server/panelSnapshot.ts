@@ -31,7 +31,9 @@ export const resolvePanelSnapshot = cache(async (): Promise<PanelSnapshot> => {
         // not explicitly admin counts as common, so a profile with a missing or unknown
         // `type` still gets its auth-request headers instead of silently resolving as
         // anonymous and sending none.
-        profileKind: user ? mapMeTypeToProfileKind(user.type) : null,
+        profileKind: user
+            ? mapMeTypeToProfileKind(user.type ?? undefined)
+            : null,
         panelRole: cookieStore.get(PANEL_ROLE_COOKIE)?.value,
         impersonatedUid: cookieStore.get(IMPERSONATE_UID_COOKIE)?.value,
     });

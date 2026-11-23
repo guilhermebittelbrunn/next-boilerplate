@@ -1,11 +1,9 @@
+import type { AuthMePayload } from "@repo/sdk/src/actions/auth/action";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getServerApiClient } from "./apiServerClient";
 
-export type AppSessionUser = Record<string, unknown> & {
-    uid: string;
-    type?: "admin" | "common";
-};
+export type AppSessionUser = AuthMePayload;
 
 /**
  * Current user from the API `/auth/me` using the httpOnly Firebase ID token cookie,
@@ -24,7 +22,7 @@ export const getAppSessionUser = cache(
             if (typeof me.uid !== "string") {
                 return null;
             }
-            return me as AppSessionUser;
+            return me;
         } catch {
             return null;
         }

@@ -69,7 +69,7 @@ export async function applyAccountPreferences(
         const me = await apiClient.authApi.me();
         projectThemePreference(me.preferences);
         return {
-            type: me.type,
+            type: me.type ?? undefined,
             preferredLocale: readPreferredLocale(me.preferences),
         };
     } catch {
