@@ -55,6 +55,8 @@ export const sharedUtilsTranslations = {
                 "Não foi possível salvar a sua conta. Tente de novo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "Não foi possível encerrar as sessões. Tente de novo.",
+            AUTH_SESSIONS_NOT_REVOKED:
+                'A alteração foi salva, mas não conseguimos encerrar as outras sessões desta conta. Entre de novo e use "Sair de todos os dispositivos" em Segurança.',
             AUTH_SESSION_REVOKED:
                 "Esta sessão foi encerrada. Entre novamente para continuar.",
             ACCOUNT_SESSION_NOT_FOUND:
@@ -236,6 +238,8 @@ export const sharedUtilsTranslations = {
                 "Your account could not be saved. Try again.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "The sessions could not be ended. Try again.",
+            AUTH_SESSIONS_NOT_REVOKED:
+                'Your change was saved, but we could not end the other sessions of this account. Sign in again and use "Sign out everywhere" under Security.',
             AUTH_SESSION_REVOKED:
                 "This session was ended. Sign in again to continue.",
             ACCOUNT_SESSION_NOT_FOUND:
@@ -419,6 +423,8 @@ export const sharedUtilsTranslations = {
                 "No se pudo guardar tu cuenta. Inténtalo de nuevo.",
             ACCOUNT_SESSIONS_REVOKE_FAILED:
                 "No se pudieron cerrar las sesiones. Inténtalo de nuevo.",
+            AUTH_SESSIONS_NOT_REVOKED:
+                'El cambio se guardó, pero no pudimos cerrar las otras sesiones de esta cuenta. Vuelve a entrar y usa "Cerrar sesión en todos los dispositivos" en Seguridad.',
             AUTH_SESSION_REVOKED:
                 "Esta sesión fue cerrada. Inicia sesión de nuevo para continuar.",
             ACCOUNT_SESSION_NOT_FOUND:
