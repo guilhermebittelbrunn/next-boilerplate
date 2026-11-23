@@ -18,7 +18,31 @@ vi.mock("@/(shared)/lib/user-merge", () => ({
 const { GET } = await import("@/app/(routes)/auth/me/route");
 
 const UID = "uid-me-1";
-const USER = { uid: UID, email: "qa-api-error-codes@example.com" };
+const USER = {
+    uid: UID,
+    email: "qa-api-error-codes@example.com",
+    id: "profile-1",
+    reference_id: UID,
+    type: "common",
+    createdAt: "2024-03-01T10:00:00.000Z",
+    stripeCustomerId: "cus_internal",
+    subscription: { status: "active" },
+    entitlements: { plan: "pro" },
+    customClaims: { role: "admin" },
+    tokensValidAfterTime: "Mon, 01 Jan 2024 00:00:00 GMT",
+    providerData: [{ providerId: "password" }],
+    metadata: { creationTime: "Mon, 01 Jan 2024 00:00:00 GMT" },
+    preferences: { theme: "dark", locale: "pt-br" },
+    onboarding: { step: "profile", completedAt: null },
+    someFieldAddedLater: "private",
+};
+const SESSION_USER = {
+    uid: UID,
+    type: "common",
+    email: USER.email,
+    preferences: { theme: "dark", locale: "pt-br" },
+    onboarding: { step: "profile", completedAt: null },
+};
 
 function request(): NextRequest {
     return { headers: new Headers() } as unknown as NextRequest;
@@ -55,13 +79,13 @@ describe("GET /auth/me", () => {
         expect(getMergedUserByUidMock).toHaveBeenCalledWith(UID);
     });
 
-    it("devolve o usuário mesclado em data", async () => {
+    it("devolve em data só os campos da allowlist do usuário mesclado", async () => {
         resolveApiActorMock.mockResolvedValue({ uid: UID });
         getMergedUserByUidMock.mockResolvedValue(USER);
 
         const response = await GET(request());
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        await expect(response.json()).resolves.toEqual({ data: USER });
+        await expect(response.json()).resolves.toEqual({ data: SESSION_USER });
     });
 });

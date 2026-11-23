@@ -2,6 +2,7 @@ import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import type { NextRequest } from "next/server";
 import { resolveApiActor } from "@/(shared)/lib/resolve-api-actor";
 import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
+import { toSessionUser } from "@/(shared)/mappers/user.mapper";
 
 const invalidToken = () =>
     Response.json(
@@ -22,5 +23,5 @@ export async function GET(req: NextRequest) {
         return invalidToken();
     }
 
-    return Response.json({ data: user });
+    return Response.json({ data: toSessionUser(user) });
 }

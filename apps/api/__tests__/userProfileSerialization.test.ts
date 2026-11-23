@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
     mergeAuthAndFirestore,
     serializeFirestoreData,
+    toSessionUser,
 } from "@/(shared)/mappers/user.mapper";
 
 const CREATED_AT_ISO = "2024-03-01T10:00:00.000Z";
@@ -179,5 +180,74 @@ describe("mergeAuthAndFirestore", () => {
         );
         expect(mergeAuthAndFirestore(authRecord(), {}).uid).toBe("auth-uid-1");
         expect(mergeAuthAndFirestore(authRecord(), {}).type).toBeUndefined();
+    });
+});
+
+describe("toSessionUser", () => {
+    const SESSION_KEYS = ["email", "onboarding", "preferences", "type", "uid"];
+
+    it("keeps exactly the five session fields and drops the internal ones", () => {
+        const merged = mergeAuthAndFirestore(
+            authRecord({
+                customClaims: { role: "admin" },
+                tokensValidAfterTime: "Mon, 01 Jan 2024 00:00:00 GMT",
+                providerData: [{ providerId: "password", uid: "x" }],
+            }),
+            {
+                id: "profile-1",
+                reference_id: "auth-uid-1",
+                type: "common",
+                createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+                stripeCustomerId: "cus_internal",
+                subscription: { status: "active" },
+                entitlements: { plan: "pro" },
+                preferences: { theme: "dark", locale: "en" },
+                onboarding: { step: "preferences", completedAt: null },
+                someFieldAddedLater: "private",
+            }
+        );
+
+        const sessionUser = overTheWire(toSessionUser(merged));
+
+        expect(Object.keys(sessionUser).sort()).toEqual(SESSION_KEYS);
+        expect(sessionUser).toEqual({
+            uid: "auth-uid-1",
+            type: "common",
+            email: "qa-common@example.com",
+            preferences: { theme: "dark", locale: "en" },
+            onboarding: { step: "preferences", completedAt: null },
+        });
+    });
+
+    it("answers null for every field the profile does not carry", () => {
+        const sessionUser = toSessionUser(
+            mergeAuthAndFirestore(authRecord({ email: undefined }), null)
+        );
+
+        expect(sessionUser).toEqual({
+            uid: "auth-uid-1",
+            type: null,
+            email: null,
+            preferences: null,
+            onboarding: null,
+        });
+    });
+
+    it("refuses a type outside the known roles and non-object nested fields", () => {
+        const sessionUser = toSessionUser({
+            uid: "auth-uid-1",
+            type: "superuser",
+            email: 42,
+            preferences: ["dark"],
+            onboarding: "done",
+        });
+
+        expect(sessionUser).toEqual({
+            uid: "auth-uid-1",
+            type: null,
+            email: null,
+            preferences: null,
+            onboarding: null,
+        });
     });
 });

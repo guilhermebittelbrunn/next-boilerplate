@@ -1,3 +1,5 @@
+import type { AuthMePayload } from "@repo/sdk/src/actions/auth/action";
+import { UserType } from "@repo/sdk/src/types";
 import type { UserRecord } from "firebase-admin/auth";
 import { type DocumentData, Timestamp } from "firebase-admin/firestore";
 
@@ -65,4 +67,23 @@ export function mergeAuthAndFirestore(
         return auth;
     }
     return { ...serializeFirestoreData(firestoreData), ...auth };
+}
+
+const plainObjectOrNull = <T>(value: unknown): T | null =>
+    value && typeof value === "object" && !Array.isArray(value)
+        ? (value as T)
+        : null;
+
+const userTypeOrNull = (value: unknown): UserType | null =>
+    value === UserType.ADMIN || value === UserType.COMMON ? value : null;
+
+/** The session payload is an allow-list, so a field added to the profile stays private until it is listed. */
+export function toSessionUser(merged: Record<string, unknown>): AuthMePayload {
+    return {
+        uid: String(merged.uid),
+        type: userTypeOrNull(merged.type),
+        email: typeof merged.email === "string" ? merged.email : null,
+        preferences: plainObjectOrNull(merged.preferences),
+        onboarding: plainObjectOrNull(merged.onboarding),
+    };
 }

@@ -9,6 +9,7 @@ import {
     statusForAuthErrorCode,
 } from "@/(shared)/lib/toolkit-error-codes";
 import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
+import { toSessionUser } from "@/(shared)/mappers/user.mapper";
 import { parseSignIn } from "@/(shared)/validation/auth.schema";
 
 export async function POST(req: Request) {
@@ -57,6 +58,6 @@ export async function POST(req: Request) {
             refreshToken: session.refreshToken,
             expiresIn: session.expiresIn,
         },
-        user,
+        user: toSessionUser(user),
     });
 }

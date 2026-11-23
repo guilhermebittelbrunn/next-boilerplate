@@ -37,7 +37,31 @@ const SESSION = {
     refreshToken: "refresh-token",
     expiresIn: "3600",
 };
-const USER = { uid: SESSION.localId, email: EMAIL };
+const USER = {
+    uid: SESSION.localId,
+    email: EMAIL,
+    id: "profile-1",
+    reference_id: SESSION.localId,
+    type: "common",
+    createdAt: "2024-03-01T10:00:00.000Z",
+    stripeCustomerId: "cus_internal",
+    subscription: { status: "active" },
+    entitlements: { plan: "pro" },
+    customClaims: { role: "admin" },
+    tokensValidAfterTime: "Mon, 01 Jan 2024 00:00:00 GMT",
+    providerData: [{ providerId: "password" }],
+    metadata: { creationTime: "Mon, 01 Jan 2024 00:00:00 GMT" },
+    preferences: { theme: "dark", locale: "pt-br" },
+    onboarding: { step: "profile", completedAt: null },
+    someFieldAddedLater: "private",
+};
+const SESSION_USER = {
+    uid: SESSION.localId,
+    type: "common",
+    email: EMAIL,
+    preferences: { theme: "dark", locale: "pt-br" },
+    onboarding: { step: "profile", completedAt: null },
+};
 
 function request(body?: string): Request {
     return new Request("http://localhost:3002/auth/sign-in", {
@@ -183,7 +207,7 @@ describe("POST /auth/sign-in — usuário", () => {
         expect(getMergedUserByUidMock).toHaveBeenCalledWith(SESSION.localId);
     });
 
-    it("mantém o formato de sucesso { session, user }", async () => {
+    it("mantém o formato de sucesso { session, user }, com user na allowlist", async () => {
         const response = await POST(
             jsonRequest({ email: EMAIL, password: PASSWORD })
         );
@@ -195,7 +219,7 @@ describe("POST /auth/sign-in — usuário", () => {
                 refreshToken: SESSION.refreshToken,
                 expiresIn: SESSION.expiresIn,
             },
-            user: USER,
+            user: SESSION_USER,
         });
     });
 });

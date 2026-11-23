@@ -9,6 +9,7 @@ import {
     statusForAuthErrorCode,
 } from "@/(shared)/lib/toolkit-error-codes";
 import { getMergedUserByUid } from "@/(shared)/lib/user-merge";
+import { toSessionUser } from "@/(shared)/mappers/user.mapper";
 import { parseGoogleSignIn } from "@/(shared)/validation/auth.schema";
 
 const DEFAULT_REQUEST_URI = "http://localhost:3000";
@@ -59,6 +60,6 @@ export async function POST(req: Request) {
             refreshToken: session.refreshToken,
             expiresIn: session.expiresIn,
         },
-        user,
+        user: toSessionUser(user),
     });
 }

@@ -136,15 +136,25 @@ beforeEach(() => {
 });
 
 describe("GET /auth/me", () => {
-    it("answers with the profile timestamps as ISO strings", async () => {
+    it("answers with exactly the session allow-list of the merged profile", async () => {
         const response = await getMe(request("GET", UserRoleLevel.ADMIN));
         const body = await response.json();
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        expect(body.data.createdAt).toBe(CREATED_AT_ISO);
-        expect(body.data.updatedAt).toBe(UPDATED_AT_ISO);
-        expect(body.data.deletedAt).toBeNull();
-        expect(body.data.uid).toBe(ADMIN_UID);
+        expect(Object.keys(body.data).sort()).toEqual([
+            "email",
+            "onboarding",
+            "preferences",
+            "type",
+            "uid",
+        ]);
+        expect(body.data).toEqual({
+            uid: ADMIN_UID,
+            type: UserType.ADMIN,
+            email: `${ADMIN_UID}@example.com`,
+            preferences: null,
+            onboarding: null,
+        });
     });
 
     it("never leaks the raw Firestore Timestamp shape", async () => {
