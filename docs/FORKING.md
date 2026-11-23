@@ -95,10 +95,12 @@ backlog com `/spec`. O ciclo de IA (`/spec → /analyze → /develop → /review
 
 ### CI
 
-O workflow `.github/workflows/ci.yml` roda no fork sem ajuste: `verify` (lint, typecheck, test), `changes`,
-`e2e` e `coverage`. Ele não precisa de segredo. Ligue a proteção da `main` exigindo `verify` e `e2e`:
-[`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 9, e [`SETUP.md`](SETUP.md), seção "Runbook — branch
-protection".
+O workflow `.github/workflows/ci.yml` roda no fork sem ajuste: `verify` (lint, typecheck, test), `secrets`
+(Gitleaks nos commits novos), `audit` (`pnpm audit` das dependências de produção), `changes`, `e2e` e
+`coverage`. Ele não precisa de segredo. Ligue a proteção da `main` exigindo `verify`, `e2e`, `secrets` e
+`audit`: [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 9, e [`SETUP.md`](SETUP.md), seção "Runbook — branch
+protection". O `.github/dependabot.yml` abre PRs semanais de dependências e de actions, mas os alertas de
+segurança do Dependabot são ligados no painel do GitHub (mesmo item 9).
 
 ## 2. Rodar localmente
 
@@ -189,7 +191,7 @@ prefixo. Defina o mesmo valor em `app` e `web`.
    `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`,
    `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID` e
    `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`, em `app` e `web`. São públicas por desenho; a proteção está nas
-   rules e na API.
+   rules, na API e na restrição da chave (passo 8).
 3. **Ligue os métodos de login** (Authentication → Sign-in method): **E-mail/senha** e **Google**. O painel
    oferece login com Google.
 
@@ -208,10 +210,19 @@ prefixo. Defina o mesmo valor em `app` e `web`.
    `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL` e `FIREBASE_ADMIN_PRIVATE_KEY`, nos **três**
    apps: a `api` usa para acessar o Firestore; `app` e `web` usam para criar e verificar o cookie de sessão.
    Mantenha os `\n` da chave privada escapados. O conjunto é tudo ou nada: preencher só parte dele derruba
-   o boot com erro de env.
+   o boot com erro de env. O arquivo baixado (`<projeto>-firebase-adminsdk-<id>.json`) já é ignorado pelo
+   `.gitignore`; guarde-o fora do repositório e apague depois de copiar os valores.
 7. **Copie a Web API key** (Project settings → General) para `FIREBASE_WEB_API_KEY` na `api`. Ela confirma a
    redefinição de senha e a verificação de e-mail.
-8. **Publique rules e índices** no projeto do fork, sem tocar no `.firebaserc` versionado:
+8. **Restrinja as chaves** (Google Cloud Console → APIs e serviços → Credenciais). A chave que vai para o
+   navegador (`NEXT_PUBLIC_FIREBASE_API_KEY`) recebe restrição por referenciador HTTP
+   (`https://<landing>/*`, `https://<painel>/*`, `https://<projeto>.firebaseapp.com/*`) e restrição de API
+   (Identity Toolkit API e Token Service API, mais o que o produto usar no cliente). Crie uma chave
+   separada para `FIREBASE_WEB_API_KEY`, só com restrição de API: a chamada sai do servidor sem `Referer`
+   e seria recusada por uma restrição de referenciador. Sem restrição, qualquer pessoa usa a chave pública
+   contra qualquer API ligada no projeto. Como conferir: [etapa de entrega](delivery/02-infra-hardening.md),
+   item 2.3, e [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 17.
+9. **Publique rules e índices** no projeto do fork, sem tocar no `.firebaserc` versionado:
 
    ```bash
    npx -y firebase-tools@latest login
@@ -302,9 +313,9 @@ produção de cada app.
 Sem e-mail, quem esquece a senha perde a conta: o pedido de redefinição responde `EMAIL_NOT_CONFIGURED`.
 
 1. Crie a conta, adicione o domínio de envio e publique os registros SPF e DKIM no DNS.
-2. `RESEND_TOKEN` (`re_…`) e `RESEND_FROM` na `api` (e-mails de conta) e na `web` (formulário de contato). O
-   formulário de contato entrega no próprio `RESEND_FROM`. O `app` também valida as duas se estiverem
-   preenchidas, mas não envia nada.
+2. `RESEND_TOKEN` (`re_…`) e `RESEND_FROM` **só na `api`**. Ela envia os e-mails de conta e também os do
+   formulário de contato da landing, que chama `POST /contact` da API e entrega no próprio `RESEND_FROM`.
+   `app` e `web` validam as duas se estiverem preenchidas, mas não enviam nada.
 3. `NEXT_PUBLIC_APP_URL` na `api`, apontando para o painel: é a base dos links de redefinição de senha e de
    verificação de e-mail.
 
@@ -342,8 +353,14 @@ requisições sem limite, incluindo cadastro, redefinição de senha e reenvio d
 e-mail cobrado na sua conta Resend. [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 8.
 
 Um valor sem o prefixo `ajkey_` é tratado como ausente na `api`, que registra um erro no boot, e faz o build
-de `app` e `web` falhar. Na `web` a chave hoje só serve para essa validação: o `skipValidation` de
-`apps/web/env.ts` deixa `env.ARCJET_KEY` sempre vazio, e o bloqueio de bot de `apps/web/proxy.ts` não roda.
+de `app` e `web` falhar. Em `app` e `web`, a chave liga também o bloqueio de bot do proxy: cliente
+automatizado recebe 403, e buscadores, previews de link e monitores de disponibilidade passam. Na `web`
+isso consulta o Arcjet em toda página, então confira a cota do plano contra o tráfego da landing. Na `api`,
+o Shield do Arcjet roda em modo de observação (`DRY_RUN`) nas rotas com limite: registra no painel e não
+recusa nada. [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 8, explica quando trocar para `LIVE`.
+
+Localmente, `next start` não tem o IP do cliente e o Arcjet libera a requisição sem decidir. Para ver o
+bloqueio funcionando fora da Vercel, suba com `ARCJET_ENV=development`.
 
 ### 7.4 Google Analytics
 
@@ -420,9 +437,9 @@ Legenda da coluna "Prod": **obrigatória** (sem ela o app não sobe ou uma funç
 
 | Var | Apps | Prod | O que muda | Vazia |
 |-----|------|------|------------|-------|
-| `RESEND_TOKEN` · `RESEND_FROM` | api, web (app só valida) | obrigatória | Envio de e-mail. `RESEND_FROM` é o remetente e a caixa que recebe o formulário de contato | Sem recuperação de senha, sem verificação de e-mail, sem formulário de contato |
+| `RESEND_TOKEN` · `RESEND_FROM` | api (app e web só validam) | obrigatória | Envio de e-mail. `RESEND_FROM` é o remetente e a caixa que recebe o formulário de contato | Sem recuperação de senha, sem verificação de e-mail, sem formulário de contato |
 | `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` | api | opcional | Liga a cobrança. Preencha as duas ou nenhuma; prefixo errado derruba o build | Cobrança desligada |
-| `ARCJET_KEY` | api, app, web | recomendada | Limite de requisições nas rotas públicas; prefixo errado derruba o build de app e web e desliga o limite na api (erro no boot) | Sem limite; a API avisa no boot |
+| `ARCJET_KEY` | api, app, web | recomendada | Limite de requisições nas rotas públicas e bloqueio de bot no proxy de app e web; prefixo errado derruba o build de app e web e desliga o limite na api (erro no boot) | Sem limite nem bloqueio de bot; a API avisa no boot |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | app, web | opcional | Google Analytics com banner de consentimento | Sem analytics nem tag do Google |
 
 ### Só de desenvolvimento

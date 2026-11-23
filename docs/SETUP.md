@@ -92,7 +92,7 @@ Todas opcionais. Vazias ou ausentes, valem os padrões neutros, e valor malforma
 | Var | App | Para quê |
 |-----|-----|----------|
 | `NEXT_PUBLIC_APP_NAME` | `app`, `web`, `api` | Nome do produto na barra lateral, no painel de entrada, no header/footer da web, no `<title>`/Open Graph, no JSON-LD, nos e-mails e no nome do remetente. Padrão `next-boilerplate`. |
-| `NEXT_PUBLIC_APP_LOGO_URL` | `app`, `web`, `api` | URL absoluta `http(s)` e pública do logo, usada no app, na web e nos e-mails. A origem entra no `img-src` da CSP. Vazia: cada superfície mostra seu ícone genérico. |
+| `NEXT_PUBLIC_APP_LOGO_URL` | `app`, `web`, `api` | URL absoluta `https` e pública do logo (`http` só em `localhost`, `127.0.0.1` ou `[::1]`; qualquer outro `http` é descartado), usada no app, na web e nos e-mails. A origem entra no `img-src` da CSP. Vazia: cada superfície mostra seu ícone genérico. |
 | `NEXT_PUBLIC_APP_SUPPORT_EMAIL` | `api` e `web`; `app` por simetria | Na `api`, destino do formulário de contato e linha de suporte no rodapé dos e-mails para usuários. Na `web`, decide se o formulário de `/contact` aparece. Vazia: o formulário mostra o canal como indisponível, a API responde `CONTACT_UNAVAILABLE` e os e-mails saem sem a linha. |
 | `NEXT_PUBLIC_APP_AUTHOR` | `app`, `web` | Autor e `publisher` na metadata. Vazio: o nome da marca. |
 | `NEXT_PUBLIC_APP_AUTHOR_URL` | `app`, `web` | URL do autor na metadata. |
@@ -150,11 +150,13 @@ configuráveis pelo `firebase.json` e entram na conta de "porta ocupada derruba 
 
 ## CI — GitHub Actions
 
-O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). São quatro jobs:
+O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). São seis jobs:
 
 | Job | Quando roda | Executa | Teto |
 |-----|-------------|---------|------|
 | `verify` | toda PR e todo push em `main` | `pnpm turbo run lint typecheck test test:emulator` | 15 min |
+| `secrets` | toda PR e todo push em `main` | Gitleaks `8.30.1` sobre os commits novos (ver [Varredura de segredo](#varredura-de-segredo)) | 5 min |
+| `audit` | toda PR e todo push em `main` | `pnpm audit --prod --audit-level=high` (ver [Auditoria de dependências](#auditoria-de-dependências)) | 5 min |
 | `changes` | toda PR e todo push em `main` | decide se o diff alcança o produto (ver abaixo) | 5 min |
 | `e2e` | quando `changes` diz que sim | `pnpm e2e` (ver [Testes E2E](#testes-e2e-playwright)) | 25 min |
 | `coverage` | quando `changes` diz que sim | `pnpm coverage` e o resumo por workspace no sumário do job | 15 min |
@@ -166,13 +168,14 @@ O pipeline vive em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). S�
 | Cache | store do pnpm, via `actions/setup-node` com chave no `pnpm-lock.yaml`; no `verify` e no `e2e`, os JARs do emulador (chave no `pnpm-lock.yaml` e no `firebase.json`); no `e2e`, também o Chromium do Playwright |
 | Secrets | **nenhum** |
 | Concorrência | execuções concorrentes na mesma ref são canceladas |
+| Actions | pinadas pelo SHA do commit, com a versão em comentário (`@<sha> # v7.0.1`). O Dependabot (`.github/dependabot.yml`) atualiza SHA e comentário juntos, uma vez por semana |
 
 O `changes` pula `e2e` e `coverage` numa PR que só mexe em `docs/`, `specs/`, `.claude/` ou arquivos `.md`.
 Qualquer outro arquivo liga os dois, inclusive `packages/auth`, o `pnpm-lock.yaml` ou o `firebase.json`, que
 quebram o login sem tocar `apps/`. Push em `main` roda sempre. Job pulado por `if` conta como sucesso para
 check obrigatório, então exigir `e2e` não trava PR de documentação.
 
-Três consequências que valem entender antes de mexer:
+Consequências que valem entender antes de mexer:
 
 - **O comando é o mesmo dos dois lados.** `pnpm turbo run lint typecheck test test:emulator` roda igual no
   seu terminal e no runner. Nada de lint só do diff no CI: isso reintroduz o "passa aqui, quebra lá".
@@ -188,6 +191,39 @@ Três consequências que valem entender antes de mexer:
   Storage para o `test:emulator`, e o primeiro run baixa o JAR de rules do Storage. Repositório público não
   paga.
 
+### Varredura de segredo
+
+O job `secrets` baixa o binário do Gitleaks do release oficial e confere o SHA-256 contra o valor fixado no
+próprio workflow, sem action de terceiro e sem chave de licença. Ele varre só os commits que a PR traz (ou
+o push, na `main`), não o histórico inteiro: o histórico do repositório de referência já tem uma chave
+apontada pelo secret scanning do GitHub, e uma varredura completa reprovaria o primeiro push de todo fork.
+Para subir de versão, troque `GITLEAKS_VERSION` e `GITLEAKS_SHA256` juntos, com o valor do arquivo
+`gitleaks_<versão>_checksums.txt` do release. O Dependabot não enxerga esse download.
+
+Para rodar localmente antes de abrir a PR, com o binário numa pasta temporária fora do repositório:
+
+```bash
+gitleaks git --redact --no-banner --log-opts="origin/main..HEAD" .   # commits da branch
+git diff origin/main | gitleaks stdin --redact --no-banner           # o que ainda não foi commitado
+```
+
+Não há allowlist (`.gitleaks.toml`): com a configuração padrão, nenhum fixture do repositório dispara. Se
+aparecer um falso positivo, marque a linha com o comentário `gitleaks:allow` ou ponha a impressão digital
+do achado (o campo `Fingerprint` da saída com `--verbose`) num `.gitleaksignore` na raiz. Os dois são lidos pelo binário
+sem configuração. Um segredo de verdade não se resolve assim: revogue a chave no provedor e reescreva a
+branch antes do merge.
+
+### Auditoria de dependências
+
+O job `audit` roda `pnpm audit --prod --audit-level=high`, que lê o `pnpm-lock.yaml` e não instala nada.
+Reprova a PR com vulnerabilidade alta ou crítica numa dependência de produção. Como o comando consulta o
+registro na hora, uma CVE publicada hoje pode deixar vermelha uma PR que não mexeu em dependência.
+
+O caminho é atualizar a dependência. Quando não há versão corrigida, ou o alerta não se aplica ao uso que o
+produto faz, registre a exceção em `pnpm.auditConfig.ignoreGhsas` no `package.json` da raiz, com uma chave
+`audit-exception.<pacote>` no bloco `"//"` dizendo por que não se aplica e a data de revisão. O exemplo que
+já está lá (`@grpc/grpc-js`) mostra o formato.
+
 ### Runbook — branch protection (ação manual no GitHub)
 
 Workflow é arquivo versionado; **required check não é**. Um fork clona `.github/workflows/` mas nasce sem
@@ -199,9 +235,9 @@ bloqueie o merge, alguém precisa ligar isto **uma vez por repositório**:
 2. `Settings` → `Branches` → `Add branch ruleset` (ou `Add rule` no modelo clássico), alvo `main`.
 3. Marque:
    - **Require a pull request before merging** — é o que fecha o push direto em `main`.
-   - **Require status checks to pass before merging** e, na busca, selecione **`verify`** e **`e2e`** (o
-     `name:` de cada job). O `e2e` só aparece na busca depois de ter rodado numa PR (passo 1). Não exija
-     `changes` nem `coverage`: o primeiro só decide, o segundo é informativo. Se aparecerem checks com nome
+   - **Require status checks to pass before merging** e, na busca, selecione **`verify`**, **`e2e`**,
+     **`secrets`** e **`audit`** (o `name:` de cada job). Um check só aparece na busca depois de ter rodado
+     numa PR (passo 1). Não exija `changes` nem `coverage`: o primeiro só decide, o segundo é informativo. Se aparecerem checks com nome
      parecido, confira que vieram do workflow `CI`.
    - **Require branches to be up to date before merging** — evita o merge que passa isolado e quebra a
      `main` combinado com outro PR.

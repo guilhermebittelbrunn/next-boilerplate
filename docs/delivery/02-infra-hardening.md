@@ -155,7 +155,7 @@ demais casos.
 
 | Serviço | Regra |
 |---------|-------|
-| GitHub | Branch `main` protegida (PR obrigatório, checks `verify` e `e2e`, sem force-push); colaboradores com o menor papel que resolve; 2FA obrigatório na organização |
+| GitHub | Branch `main` protegida (PR obrigatório, checks `verify`, `e2e`, `secrets` e `audit`, sem force-push); colaboradores com o menor papel que resolve; 2FA obrigatório na organização |
 | Vercel | Membros do time com o menor papel; previews protegidas por Vercel Authentication |
 | Firebase / GCP | IAM só com quem opera o produto; a service account da API sem papel de dono |
 | Stripe | Chave restrita (`rk_`) com só as permissões que a API usa, no lugar da chave secreta completa; 2FA no time |
@@ -238,6 +238,9 @@ protection do Firewall da Vercel.
 curl -s -o /dev/null -w '%{http_code}\n' -A 'python-requests/2.31' "$WEB/pt-br"     # esperado: 403
 curl -s -o /dev/null -w '%{http_code}\n' -A 'python-requests/2.31' "$APP/pt-br/sign-in"
 ```
+
+Fora da Vercel, num `next start` local, o Arcjet não recebe o IP do cliente e libera a requisição sem
+decidir. Para conferir localmente, suba com `ARCJET_ENV=development`.
 
 **Aprovado quando** os dois devolvem 403 e um navegador comum continua entrando. Gravidade: 🟡.
 
@@ -338,8 +341,8 @@ parte garante que alguém fica sabendo da próxima.
 
 - Dependabot alerts e Dependabot security updates ligados.
 - Secret scanning e push protection ligados.
-- Varredura no CI: `pnpm audit --prod --audit-level=critical` (ou o que a spec do core entregar) num job
-  que reprova a PR.
+- Varredura no CI: o core entrega o job `audit`, que roda `pnpm audit --prod --audit-level=high` e reprova
+  a PR. Confira que o fork não o tirou nem afrouxou o nível.
 - Opcional: CodeQL em "default setup".
 
 **Como verificar.**

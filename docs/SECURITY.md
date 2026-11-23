@@ -136,6 +136,19 @@ Os três controles vivem no `proxy.ts` de cada app e na política genérica de `
 | `apps/api` | `Content-Security-Policy` **bloqueante**, `default-src 'none'` | Responde JSON; o único HTML é a página de erro do Next |
 | `apps/web` | `Content-Security-Policy-Report-Only` | Só relata no console — rede de segurança para o que a landing venha a carregar |
 
+Os três apps mandam também `Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(),
+magnetometer=(), microphone=(), payment=(), usb=()`, que desliga no navegador APIs que nenhum deles usa. O
+nosecone não tem essa opção, então `applySecurityHeaders` põe o cabeçalho à mão, com o valor da constante
+`PERMISSIONS_POLICY` de `packages/security/middleware.ts`. Na landing, com a CSP só relatando, o
+`Permissions-Policy` continua valendo. Um fork que precise de uma dessas APIs edita a constante e libera só a
+origem necessária, sem tirar o cabeçalho: o botão Payment Request da Stripe, por exemplo, pede
+`payment=(self "https://js.stripe.com")`.
+
+As rotas de sessão das front-ends (`/api/auth/session`, `/api/auth/session/refresh` e
+`/api/auth/custom-token`, em `apps/app` e `apps/web`) passam pelo proxy e saem com a mesma política das
+páginas. O proxy responde cedo nesses caminhos: aplica os cabeçalhos e não resolve idioma, não grava o
+cookie `x-locale`, não confere sessão e não consulta o Arcjet.
+
 Três defaults do nosecone são **deliberadamente afrouxados** nos front-ends, porque derrubam o login:
 
 - `Cross-Origin-Opener-Policy` vai para `same-origin-allow-popups` — `same-origin` corta `window.opener` e o popup do Google nunca devolve a credencial (falha silenciosa: o popup fecha e nada acontece).
@@ -183,6 +196,13 @@ Para mudar o comportamento, o fork edita as listas em `apps/api/proxy.ts`: endpo
 
 - **Sem `ARCJET_KEY` o limite é um no-op explícito**, nos dois orçamentos: nada é contado, nenhuma chamada de rede é feita, e a API avisa **uma vez, no boot** que as rotas mutáveis aceitam requisições sem limite. Nunca há contador em memória — em serverless ele não limita nada.
 - **Chave sem o prefixo `ajkey_` conta como ausente na API.** O pacote lê a chave a cada chamada com `readArcjetKey()` (`packages/security/keys.ts:23-26`), que não lança: o limite vira no-op e as requisições seguem. O boot registra `console.error` dizendo que a chave não começa com `ajkey_`, sem imprimir o valor (`apps/api/instrumentation.ts:30-45`). Em `apps/app` e `apps/web` a mesma chave faz o build falhar, porque o `env.ts` das duas estende o schema estrito de `keys()` (`packages/security/keys.ts:35-41`); na Vercel, o deploy anterior continua no ar.
+- **Shield do Arcjet em observação.** Os dois orçamentos levam também a regra `shield` em `DRY_RUN`
+  (`API_SHIELD_MODE`, `packages/security/index.ts:28`): o Arcjet registra no painel as requisições com
+  padrão de ataque e nenhuma resposta muda. Um falso positivo aqui recusaria uma escrita legítima, então o
+  fork observa uma semana de tráfego real antes de trocar a constante para `LIVE`
+  ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 8). Em `LIVE`, a recusa sai como `429 AUTH_RATE_LIMITED`,
+  pelo mesmo caminho de "recusado" que já existe. O shield só avalia o que passa por `checkRateLimit`
+  (escritas e a lista estrita), não os `GET` comuns.
 - ⚠️ **Isto não protege o formulário de login.** O login por e-mail/senha das duas front-ends vai do browser direto para `identitytoolkit.googleapis.com` e **nunca toca a `apps/api`**; quem limita esse caminho é a proteção nativa do Firebase (`USERS_AUTH_RATE_LIMITED`). O limite aqui cobre a **superfície da API**.
 - ⚠️ **O cadastro depende deste limite.** O formulário de cadastro chama `/auth/sign-up`, e a rota cria a conta pelo Admin SDK, que não passa pelo limite do Firebase para criação de conta pelo cliente (100 contas por hora por IP, `firebase.google.com/docs/auth/limits`). Sem `ARCJET_KEY`, nada limita a criação de contas em massa por essa rota.
 - Bloqueio é registrado pelo helper de log compartilhado, numa linha só (`logEvent("security", "blocked", …)` em `apps/api/proxy.ts:124`, saindo como `[security] blocked reason=… path=… method=… requestId=…`), **sem IP, e-mail, body ou token** — IP é dado pessoal sob LGPD. A assinatura do helper não aceita objeto (`packages/shared/utils/helpers/log.ts:23`), então não há como passar o erro inteiro por descuido.

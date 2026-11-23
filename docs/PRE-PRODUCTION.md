@@ -783,15 +783,31 @@ limite, não só as rotas de autenticação, e o aviso do boot diz isso.
 - [ ] Conferir o plano do Arcjet contra o volume novo
 
 Com a chave, o orçamento padrão consulta o Arcjet em toda requisição mutável da API, além das 21 rotas da
-lista estrita. A cota do plano gratuito não foi medida; confira no painel do Arcjet se o volume esperado de
-escritas do fork cabe nela antes de ligar a chave em produção.
+lista estrita. A landing também passa a consultar o Arcjet em toda página que serve, para o bloqueio de bot
+do proxy. A cota do plano gratuito não foi medida; confira no painel do Arcjet se as escritas do fork **e o
+tráfego da landing** cabem nela antes de ligar a chave em produção.
+
+- [ ] Depois de uma semana em produção, decidir o modo do Shield da API
+
+Os dois orçamentos da API levam a regra `shield` do Arcjet em `DRY_RUN` (`API_SHIELD_MODE` em
+`packages/security/index.ts`): ela registra no painel as requisições com padrão de ataque e não recusa nada.
+Leia as decisões dessa semana no painel. Sem falso positivo em escrita legítima, troque a constante para
+`"LIVE"` e faça o deploy; a recusa sai como `429 AUTH_RATE_LIMITED`. Com falso positivo, deixe em `DRY_RUN` e
+registre o motivo aqui.
 
 ### 9. Branch protection na `main`
 
-- [ ] Exigir os checks `verify` e `e2e` do CI antes do merge
+- [ ] Exigir os checks `verify`, `e2e`, `secrets` e `audit` do CI antes do merge
+- [ ] Ligar, em Settings → Code security, Dependabot alerts, Dependabot security updates, secret scanning e
+      push protection
+
+O `.github/dependabot.yml` só cobre as atualizações de versão semanais. Os alertas e as atualizações de
+segurança são configuração do repositório, e um fork nasce sem eles. `secrets` (Gitleaks sobre os commits
+novos) e `audit` (`pnpm audit --prod --audit-level=high`) só aparecem na busca do ruleset depois de rodar
+numa PR, como o `e2e`.
 
 O CI **sinaliza e não bloqueia**: uma PR vermelha pode ser mergeada hoje (`gh api …/branches/main/protection`
-→ **404**, rulesets → `[]`, remedido em 2026-09-24). Ligar exigindo os checks `verify` e `e2e` fecha isto.
+→ **404**, rulesets → `[]`, remedido em 2026-09-24). Ligar exigindo os quatro checks acima fecha isto.
 O `e2e` é o job da suíte Playwright; ele só aparece na busca do ruleset depois de ter rodado numa PR, e é
 pulado (o que conta como sucesso) em PR que só mexe em documentação. `coverage` é informativo e não entra.
 Passo a passo no runbook de [`docs/SETUP.md`](SETUP.md#runbook--branch-protection-ação-manual-no-github).
@@ -927,6 +943,31 @@ decisão jurídica são do fork. `grep -n "\[FORK\]" docs/*.md` lista o que falt
 
 Dois achados dos modelos pedem atenção antes do primeiro cliente: o DPA da Vercel só vale nos planos Pro e
 Enterprise, e no plano Spark do Firebase o Firestore não tem backup de nenhum tipo.
+
+### 17. Restringir as chaves do Firebase
+
+- [ ] Chave do navegador (`NEXT_PUBLIC_FIREBASE_API_KEY`) com restrição por referenciador HTTP
+      (`https://<landing>/*`, `https://<painel>/*`, `https://<projeto>.firebaseapp.com/*`) e restrição de API
+      (Identity Toolkit API, Token Service API e o que mais o produto usar no cliente)
+- [ ] Chave separada para `FIREBASE_WEB_API_KEY`, só com restrição de API
+
+A chave do navegador é pública por desenho, e o Firebase só a trata como "não secreta" quando está
+restrita. Sem restrição, qualquer pessoa a usa de qualquer lugar contra qualquer API ligada no projeto. A
+chave do servidor não pode ter restrição de referenciador, porque a API chama o Identity Toolkit sem o
+cabeçalho `Referer`: com a mesma chave das duas formas, a redefinição de senha e a verificação de e-mail
+quebram. Onde clicar: Google Cloud Console → APIs e serviços → Credenciais
+([`FORKING.md`](FORKING.md), §4, passo 8).
+
+Como verificar, sem `Referer`:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/json' -d '{}' \
+  "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=<CHAVE_DO_NAVEGADOR>"
+```
+
+A chave restrita responde **403**. Uma resposta **400** quer dizer que ela aceita chamada de qualquer origem.
+Depois, confira que o login continua funcionando no domínio de produção. Detalhe na
+[etapa de entrega](delivery/02-infra-hardening.md), item 2.3.
 
 ---
 
