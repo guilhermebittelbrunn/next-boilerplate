@@ -71,6 +71,8 @@ describe("brand logo", () => {
     it.each([
         "https://cdn.example.com/logo.png",
         "http://localhost:3001/icon.png",
+        "http://127.0.0.1:3001/icon.png",
+        "http://[::1]:3001/icon.png",
     ])("accepts the absolute url %s", (value) => {
         stubBrand({ NEXT_PUBLIC_APP_LOGO_URL: value });
 
@@ -91,6 +93,9 @@ describe("brand logo", () => {
         "javascript:alert(1)",
         "data:image/png;base64,AAAA",
         "ftp://cdn.example.com/logo.png",
+        "http://cdn.example.com/logo.png",
+        "http://localhost.example.com/logo.png",
+        "http://127.0.0.2/logo.png",
         "not a url",
         "https://x;sandbox/logo.png",
         "https://a;b.com/logo.png",

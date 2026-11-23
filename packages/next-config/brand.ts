@@ -20,16 +20,26 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // verbatim into the CSP header, where a `;` would open a directive of its own.
 const PLAIN_HOST_RE = /^(?:[a-z0-9-]+\.)*[a-z0-9-]+$|^\[[0-9a-f:.]+\]$/;
 
-/** Absolute http(s) only: email clients cannot resolve a relative path, and any other scheme is not an image. */
-const toHttpUrl = (value: string | undefined): string | null => {
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * Absolute https only: email clients cannot resolve a relative path, and a page served
+ * over https must not pull its logo over plain http. Plain http stays allowed on
+ * loopback, which browsers treat as a secure context, so a local logo keeps working.
+ */
+const toHttpsUrl = (value: string | undefined): string | null => {
     const trimmed = value?.trim();
     if (!trimmed) {
         return null;
     }
     try {
         const url = new URL(trimmed);
-        const isHttp = url.protocol === "https:" || url.protocol === "http:";
-        return isHttp && PLAIN_HOST_RE.test(url.hostname) ? url.href : null;
+        const isAllowedScheme =
+            url.protocol === "https:" ||
+            (url.protocol === "http:" && LOOPBACK_HOSTS.has(url.hostname));
+        return isAllowedScheme && PLAIN_HOST_RE.test(url.hostname)
+            ? url.href
+            : null;
     } catch {
         return null;
     }
@@ -53,7 +63,7 @@ export function getBrand(): Brand {
     return {
         name: configuredName || DEFAULT_BRAND_NAME,
         isDefaultName: !configuredName,
-        logoUrl: toHttpUrl(process.env.NEXT_PUBLIC_APP_LOGO_URL),
+        logoUrl: toHttpsUrl(process.env.NEXT_PUBLIC_APP_LOGO_URL),
         supportEmail: toEmail(process.env.NEXT_PUBLIC_APP_SUPPORT_EMAIL),
         siteUrl: toOrigin(process.env.NEXT_PUBLIC_WEB_URL),
     };
