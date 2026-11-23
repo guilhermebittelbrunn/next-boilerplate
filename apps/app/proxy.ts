@@ -123,9 +123,13 @@ function isOobActionPath(path: string): boolean {
 
 export const config = {
     // matcher tells Next.js which routes to run the proxy on. This runs on all
-    // routes except for static assets and API routes. Proxy always runs on Node.
-    matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+    // routes except for static assets. Proxy always runs on Node.
+    matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
+
+function isApiPath(pathname: string): boolean {
+    return pathname === "/api" || pathname.startsWith("/api/");
+}
 
 const FILE_EXTENSION = /\.[a-zA-Z0-9]+$/;
 
@@ -190,6 +194,12 @@ function passStaticAsset(request: NextRequest) {
 }
 
 export default async function proxy(request: NextRequest) {
+    // Route handlers answer JSON on their own: no locale to resolve, no page session to
+    // enforce and no bot check, only the headers every response carries.
+    if (isApiPath(request.nextUrl.pathname)) {
+        return applySecurityHeaders(NextResponse.next(), securityOptions);
+    }
+
     return applySecurityHeaders(await route(request), securityOptions);
 }
 

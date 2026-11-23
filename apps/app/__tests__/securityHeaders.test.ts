@@ -1,16 +1,22 @@
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getUserFromSessionCookieMock } = vi.hoisted(() => ({
-    getUserFromSessionCookieMock: vi.fn(),
-}));
+const { getUserFromSessionCookieMock, secureMock, cookieSetMock } = vi.hoisted(
+    () => ({
+        getUserFromSessionCookieMock: vi.fn(),
+        secureMock: vi.fn(),
+        cookieSetMock: vi.fn(),
+    })
+);
 
 vi.mock("@repo/auth/server", () => ({
     getUserFromSessionCookie: (...args: unknown[]) =>
         getUserFromSessionCookieMock(...args),
 }));
 
-vi.mock("@repo/security", () => ({ secure: vi.fn() }));
+vi.mock("@repo/security", () => ({
+    secure: (...args: unknown[]) => secureMock(...args),
+}));
 
 vi.mock("@repo/auth/session", () => ({ clearSessionCookie: vi.fn() }));
 
@@ -19,7 +25,7 @@ vi.mock("@/lib/server/sessionAuthority", () => ({
 }));
 
 vi.mock("next/headers", () => ({
-    cookies: () => Promise.resolve({ set: vi.fn() }),
+    cookies: () => Promise.resolve({ set: cookieSetMock }),
 }));
 
 const DIRECTIVE_SEPARATOR = /\s+/;
@@ -36,17 +42,20 @@ vi.mock("@/env", () => ({
     },
 }));
 
-const proxy = (await import("@/proxy")).default;
+const { default: proxy, config } = await import("@/proxy");
 
 const ORIGIN = "http://localhost:3000";
 
-function makeRequest(path: string) {
+const PERMISSIONS_POLICY =
+    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+
+function makeRequest(path: string, method = "GET") {
     const href = `${ORIGIN}${path}`;
     const url = new URL(href) as URL & { clone: () => URL };
     url.clone = () => new URL(href) as URL & { clone: () => URL };
 
     return {
-        method: "GET",
+        method,
         url: href,
         nextUrl: url,
         headers: new Headers(),
@@ -71,6 +80,8 @@ async function policyFor(path: string): Promise<Map<string, string[]>> {
 }
 
 beforeEach(() => {
+    secureMock.mockReset();
+    cookieSetMock.mockReset();
     getUserFromSessionCookieMock.mockReset();
     getUserFromSessionCookieMock.mockResolvedValue({ uid: "uid-1" });
 });
@@ -132,4 +143,68 @@ describe("app security headers", () => {
         );
         expect(response.headers.get("cross-origin-embedder-policy")).toBeNull();
     });
+
+    it("turns off the browser features the panel does not use", async () => {
+        const response = await proxy(makeRequest("/pt-br/entities"));
+
+        expect(response.headers.get("permissions-policy")).toBe(
+            PERMISSIONS_POLICY
+        );
+    });
+});
+
+describe("app security headers on the session routes", () => {
+    it.each([
+        ["POST", "/api/auth/session"],
+        ["DELETE", "/api/auth/session"],
+        ["POST", "/api/auth/session/refresh"],
+        ["POST", "/api/auth/custom-token"],
+    ])("sends the page headers on %s %s", async (method, path) => {
+        const response = await proxy(makeRequest(path, method));
+
+        expect(response.headers.get("strict-transport-security")).toContain(
+            "max-age="
+        );
+        expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+        expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+        expect(response.headers.get("permissions-policy")).toBe(
+            PERMISSIONS_POLICY
+        );
+        expect(response.headers.get("content-security-policy")).toContain(
+            "frame-ancestors 'none'"
+        );
+    });
+
+    it("hands the request to the route without a redirect, a cookie or a session lookup", async () => {
+        getUserFromSessionCookieMock.mockResolvedValue(null);
+
+        const response = await proxy(makeRequest("/api/auth/session", "POST"));
+
+        expect(response.headers.get("location")).toBeNull();
+        expect(response.headers.get("x-middleware-next")).toBe("1");
+        expect(cookieSetMock).not.toHaveBeenCalled();
+        expect(getUserFromSessionCookieMock).not.toHaveBeenCalled();
+        expect(secureMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("app proxy matcher", () => {
+    const matches = (path: string) =>
+        new RegExp(`^${config.matcher[0]}$`).test(path);
+
+    it.each([
+        "/api/auth/session",
+        "/api/auth/session/refresh",
+        "/api/auth/custom-token",
+        "/pt-br/entities",
+    ])("runs on %s", (path) => {
+        expect(matches(path)).toBe(true);
+    });
+
+    it.each(["/_next/static/chunks/main.js", "/_next/image", "/favicon.ico"])(
+        "still skips %s",
+        (path) => {
+            expect(matches(path)).toBe(false);
+        }
+    );
 });
