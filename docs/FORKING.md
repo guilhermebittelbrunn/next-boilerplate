@@ -154,7 +154,8 @@ Metadados de autoria, opcionais e declarados em `packages/next-config/keys.ts`: 
 | Arquivo | O que é |
 |---------|---------|
 | `apps/app/app/favicon.ico`, `icon.png` (32×32), `apple-icon.png` (192×192) | Ícones do painel. Se o `favicon.ico` levar um PNG embutido, ele tem de ser RGBA: o Next recusa outro formato ao compilar e toda rota do app responde 500. O teste `apps/app/__tests__/appIcons.test.ts` confere isso. |
-| `apps/web/app/[locale]/icon.png`, `apple-icon.png`, `opengraph-image.png` | Ícones e imagem de compartilhamento da landing. |
+| `apps/web/app/[locale]/icon.png`, `apple-icon.png` | Ícones da landing. |
+| `apps/web/app/[locale]/opengraph-image.tsx` | Imagem de compartilhamento da landing (1200 × 630, uma por idioma). É gerada no build a partir de `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e da frase `apps.web.pages.home.meta.description` de cada idioma; sem logo, ou com o logo fora do ar, sai a inicial da marca num quadrado. O fork troca a marca e a frase, não a imagem. Depois de publicar com a marca nova, peça nova coleta nos validadores de Open Graph, porque a URL da imagem não muda. |
 | `packages/email/brand.ts` | Paleta dos e-mails, em hex literal, porque cliente de e-mail não entende `oklch()` nem `var()`. |
 | `packages/design-system/styles/globals.css` | Tokens do tema (light e dark). A cor principal é `--primary`. |
 
@@ -568,7 +569,8 @@ relatório versionado. Sem ela o produto não é entregue.
 | `license.md` | Copyright do produto | [1](#1-criar-o-repositório-do-produto) |
 | `.firebaserc` | Projeto Firebase padrão (ou use `--project`) | [4](#4-projeto-firebase) |
 | `apps/app/app/favicon.ico`, `icon.png`, `apple-icon.png` | Ícones do painel | [3.2](#32-ícones-imagens-e-cores) |
-| `apps/web/app/[locale]/icon.png`, `apple-icon.png`, `opengraph-image.png` | Ícones e imagem social da landing | [3.2](#32-ícones-imagens-e-cores) |
+| `apps/web/app/[locale]/icon.png`, `apple-icon.png` | Ícones da landing | [3.2](#32-ícones-imagens-e-cores) |
+| `apps.web.pages.home.meta.description` (3 idiomas) | Frase da imagem social da landing, gerada por `opengraph-image.tsx` | [3.2](#32-ícones-imagens-e-cores) |
 | `packages/email/brand.ts` | Cores dos e-mails | [3.2](#32-ícones-imagens-e-cores) |
 | `packages/design-system/styles/globals.css` | Cores do tema | [3.2](#32-ícones-imagens-e-cores) |
 | `packages/internationalization/translations/apps/web/pages/*` | Textos da landing, preços e contato | [3.3](#33-textos) |

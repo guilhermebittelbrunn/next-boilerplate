@@ -969,6 +969,31 @@ A chave restrita responde **403**. Uma resposta **400** quer dizer que ela aceit
 Depois, confira que o login continua funcionando no domínio de produção. Detalhe na
 [etapa de entrega](delivery/02-infra-hardening.md), item 2.3.
 
+### 18. Imagem de compartilhamento e indexação
+
+- [ ] `NEXT_PUBLIC_WEB_URL` definida no projeto `web` da Vercel com o domínio público da landing
+- [ ] A landing publicada conferida num validador de Open Graph (opengraph.xyz, Sharing Debugger da Meta,
+      Post Inspector do LinkedIn)
+- [ ] O cabeçalho `x-robots-tag: noindex` conferido numa preview da landing
+- [ ] Se o fork já esteve no ar antes, remoção das URLs do painel e da API pedida no Google Search Console
+
+A imagem que aparece quando alguém cola o link da landing é gerada no build a partir da marca (nome, logo ou
+monograma e a frase da home, em cada idioma). A `og:image` é uma URL absoluta montada com
+`NEXT_PUBLIC_WEB_URL`. Sem a variável, ela aponta para `localhost` e o cartão sai sem imagem em toda rede
+social. O validador é o único jeito de ver o cartão como as redes veem, e exige o domínio público. Ao trocar
+a marca depois, peça uma nova coleta no validador, porque a URL da imagem não muda e as redes guardam a
+versão antiga em cache.
+
+O painel (`app`) e a API mandam `x-robots-tag: noindex` em toda resposta. A landing não manda, de propósito,
+para continuar indexável em produção. Por isso a preview da landing depende da Vercel para ficar fora do
+índice. Confira com `curl -sI <URL da preview> | grep -i x-robots-tag`; se não vier nada, proteja as
+previews no projeto da Vercel (Deployment Protection). O `noindex` só tira do índice o que o Google voltar a
+visitar, então URLs do painel indexadas antes desta mudança podem levar semanas para sair sem o pedido de
+remoção no Search Console.
+
+Como verificar: `curl -s https://<landing>/pt-br | grep -o '<meta property="og:image"[^>]*>'` mostra a URL
+no domínio de produção, e abri-la responde um PNG de 1200 × 630.
+
 ---
 
 ## 🧹 Higiene

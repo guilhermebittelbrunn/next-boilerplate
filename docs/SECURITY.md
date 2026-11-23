@@ -149,6 +149,15 @@ As rotas de sessão das front-ends (`/api/auth/session`, `/api/auth/session/refr
 páginas. O proxy responde cedo nesses caminhos: aplica os cabeçalhos e não resolve idioma, não grava o
 cookie `x-locale`, não confere sessão e não consulta o Arcjet.
 
+O painel e a API mandam `X-Robots-Tag: noindex` em toda resposta que passa pelo proxy, inclusive redirect
+para o login, `/api/auth/*`, recusa de origem, 429 e preflight. Quem liga é a opção `noIndex` de
+`applySecurityHeaders`, passada só em `apps/app/proxy.ts` e `apps/api/proxy.ts`; o padrão é não mandar. A
+landing não recebe o cabeçalho de propósito, porque nela ele tira o site inteiro da busca, e o teste
+`apps/web/__tests__/securityHeaders.test.ts` afirma essa ausência. Login e cadastro da landing saem do índice
+por `<meta name="robots" content="noindex, follow">` e não por `Disallow` no `robots.txt`: o rastreador precisa
+ler a página para ver o `noindex`. Nas previews da Vercel, qualquer `noindex` da landing vem da plataforma e
+não deste código; confira com `curl -sI <URL da preview>`.
+
 Três defaults do nosecone são **deliberadamente afrouxados** nos front-ends, porque derrubam o login:
 
 - `Cross-Origin-Opener-Policy` vai para `same-origin-allow-popups` — `same-origin` corta `window.opener` e o popup do Google nunca devolve a credencial (falha silenciosa: o popup fecha e nada acontece).
