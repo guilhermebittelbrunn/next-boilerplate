@@ -1,9 +1,18 @@
 import type BaseClient from "../../client/base";
 import type { Response } from "../../client/type";
+import type {
+    OnboardingStateDTO,
+    UserPreferences,
+    UserType,
+} from "../../types";
 
-export type AuthMePayload = Record<string, unknown> & {
+/** Only what the front-ends read. A field the API adds to the profile stays out until it is listed here. */
+export type AuthMePayload = {
     uid: string;
-    type?: string;
+    type: UserType | null;
+    email: string | null;
+    preferences: UserPreferences | null;
+    onboarding: OnboardingStateDTO | null;
 };
 
 export type SignUpRequest = {
@@ -27,7 +36,7 @@ export type GoogleSignInSession = {
 
 export type GoogleSignInResponse = {
     session: GoogleSignInSession;
-    user: Record<string, unknown> | null;
+    user: AuthMePayload | null;
 };
 
 export type PasswordResetRequestBody = {
@@ -90,7 +99,7 @@ export default class AuthActions {
             method: "GET",
         });
 
-        return data.data as AuthMePayload;
+        return data.data;
     }
 
     async signUp(body: SignUpRequest): Promise<AuthAccountCreated> {
