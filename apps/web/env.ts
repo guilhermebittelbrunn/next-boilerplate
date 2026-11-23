@@ -8,8 +8,7 @@ export const env = createEnv({
     extends: [core(), email(), security()],
     server: {},
     // Public settings the proxy needs to name the exact origins the browser may
-    // reach. Declared here rather than taken from the extended envs: with
-    // `skipValidation` those are not merged into the resolved object.
+    // reach.
     client: {
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().optional(),
         // Filled in, the browser talks to the Auth emulator and its origin is added to
@@ -18,8 +17,8 @@ export const env = createEnv({
         NEXT_PUBLIC_API_URL: z.string().optional(),
         NEXT_PUBLIC_PRIVACY_CONTACT: z.string().optional(),
         // Where every call to action sends a visitor, and the docs link of the header
-        // and footer. Same reason as above: the values `core()` declares would not
-        // reach the resolved object.
+        // and footer. Redeclared because `core()` skips its own validation and would
+        // hand an empty string through instead of reading it as absent.
         NEXT_PUBLIC_APP_URL: z.string().optional(),
         NEXT_PUBLIC_DOCS_URL: z.string().optional(),
     },
@@ -33,5 +32,4 @@ export const env = createEnv({
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || undefined,
         NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL || undefined,
     },
-    skipValidation: true,
 });
