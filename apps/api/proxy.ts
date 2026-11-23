@@ -135,7 +135,7 @@ function withRequestId<T extends Response>(response: T, requestId: string): T {
 }
 
 function withSecurityHeaders<T extends Response>(response: T): T {
-    return applySecurityHeaders(response, securityOptions);
+    return applySecurityHeaders(response, securityOptions, { noIndex: true });
 }
 
 function withCors<T extends Response>(response: T, origin: string | null): T {

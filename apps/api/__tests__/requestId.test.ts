@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { HTTP_STATUS } from "@repo/shared/utils";
 import type { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildCorsHeaders } from "@/(shared)/lib/cors";
@@ -125,6 +126,56 @@ describe("request id on every answer", () => {
         expect(first.headers.get(REQUEST_ID_HEADER)).not.toBe(
             second.headers.get(REQUEST_ID_HEADER)
         );
+    });
+});
+
+describe("api responses stay out of search indexes", () => {
+    const ROBOTS_HEADER = "x-robots-tag";
+
+    it("marks a request it lets through as noindex", async () => {
+        const proxy = await loadProxy();
+
+        const response = await proxy(makeRequest({ origin: APP_ORIGIN }));
+
+        expect(response.headers.get(ROBOTS_HEADER)).toBe("noindex");
+    });
+
+    it("marks a refused origin as noindex", async () => {
+        const proxy = await loadProxy();
+
+        const response = await proxy(makeRequest({ origin: FOREIGN_ORIGIN }));
+
+        expect(response.headers.get(ROBOTS_HEADER)).toBe("noindex");
+    });
+
+    it("marks a preflight as noindex", async () => {
+        const proxy = await loadProxy();
+
+        const response = await proxy(
+            makeRequest({ origin: APP_ORIGIN, method: "OPTIONS" })
+        );
+
+        expect(response.headers.get(ROBOTS_HEADER)).toBe("noindex");
+    });
+
+    it("marks a refusal for a spent budget as noindex", async () => {
+        const proxy = await loadProxy();
+        checkRateLimitMock.mockResolvedValue({
+            allowed: false,
+            reason: "rate-limit",
+            retryAfterSeconds: RETRY_AFTER_SECONDS,
+        });
+
+        const response = await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "POST",
+                path: "/auth/sign-in",
+            })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.TOO_MANY_REQUESTS);
+        expect(response.headers.get(ROBOTS_HEADER)).toBe("noindex");
     });
 });
 
