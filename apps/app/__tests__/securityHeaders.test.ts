@@ -188,6 +188,29 @@ describe("app security headers on the session routes", () => {
     });
 });
 
+describe("app responses stay out of search indexes", () => {
+    it("marks a panel page as noindex", async () => {
+        const response = await proxy(makeRequest("/pt-br/entities"));
+
+        expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    });
+
+    it("marks the redirect to sign-in as noindex", async () => {
+        getUserFromSessionCookieMock.mockResolvedValue(null);
+
+        const response = await proxy(makeRequest("/pt-br/entities"));
+
+        expect(response.headers.get("location")).toContain("/pt-br/sign-in");
+        expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    });
+
+    it("marks the session routes as noindex", async () => {
+        const response = await proxy(makeRequest("/api/auth/session", "POST"));
+
+        expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    });
+});
+
 describe("app proxy matcher", () => {
     const matches = (path: string) =>
         new RegExp(`^${config.matcher[0]}$`).test(path);
