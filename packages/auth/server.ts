@@ -326,10 +326,16 @@ export const getUserFromSessionCookie = async (
 /**
  * Revoke all refresh tokens for a user (sign-out propagation across origins:
  * other front-ends' next ID-token refresh fails and the session cookie is rejected).
+ * Throws when the provider refuses, so the caller decides what an open session means.
  */
+export const revokeUserSessionsOrThrow = async (uid: string): Promise<void> => {
+    await getAuthInstance().revokeRefreshTokens(uid);
+};
+
+/** Best-effort variant of `revokeUserSessionsOrThrow`: a failure is logged and swallowed. */
 export const revokeUserSessions = async (uid: string): Promise<void> => {
     try {
-        await getAuthInstance().revokeRefreshTokens(uid);
+        await revokeUserSessionsOrThrow(uid);
     } catch (error) {
         console.error("Error revoking user sessions:", error);
     }

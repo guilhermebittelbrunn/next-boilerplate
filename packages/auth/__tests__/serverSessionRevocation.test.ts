@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { verifyIdTokenMock, getUserMock, verifySessionCookieMock } = vi.hoisted(
-    () => ({
-        verifyIdTokenMock: vi.fn(),
-        getUserMock: vi.fn(),
-        verifySessionCookieMock: vi.fn(),
-    })
-);
+const {
+    verifyIdTokenMock,
+    getUserMock,
+    verifySessionCookieMock,
+    revokeRefreshTokensMock,
+} = vi.hoisted(() => ({
+    verifyIdTokenMock: vi.fn(),
+    getUserMock: vi.fn(),
+    verifySessionCookieMock: vi.fn(),
+    revokeRefreshTokensMock: vi.fn(),
+}));
 
 vi.mock("server-only", () => ({}));
 
@@ -30,6 +34,8 @@ vi.mock("firebase-admin/auth", () => ({
         getUser: (...args: unknown[]) => getUserMock(...args),
         verifySessionCookie: (...args: unknown[]) =>
             verifySessionCookieMock(...args),
+        revokeRefreshTokens: (...args: unknown[]) =>
+            revokeRefreshTokensMock(...args),
     }),
 }));
 
@@ -38,8 +44,13 @@ vi.mock("firebase-admin/storage", () => ({ getStorage: vi.fn() }));
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
-const { getCurrentUser, getIdTokenSession, getUserFromSessionCookie } =
-    await import("../server");
+const {
+    getCurrentUser,
+    getIdTokenSession,
+    getUserFromSessionCookie,
+    revokeUserSessions,
+    revokeUserSessionsOrThrow,
+} = await import("../server");
 
 const UID = "uid-1";
 const REVOKED_AT = "Mon, 01 Jan 2024 12:00:00 GMT";
@@ -249,5 +260,35 @@ describe("getUserFromSessionCookie", () => {
             getUserFromSessionCookie("session-cookie")
         ).resolves.toBeNull();
         expect(console.error).not.toHaveBeenCalled();
+    });
+});
+
+describe("revogação de sessões", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.spyOn(console, "error").mockImplementation(vi.fn());
+    });
+
+    it("revokeUserSessionsOrThrow revoga os refresh tokens do uid", async () => {
+        revokeRefreshTokensMock.mockResolvedValue(undefined);
+
+        await expect(revokeUserSessionsOrThrow(UID)).resolves.toBeUndefined();
+        expect(revokeRefreshTokensMock).toHaveBeenCalledWith(UID);
+    });
+
+    it("revokeUserSessionsOrThrow propaga a recusa do Firebase", async () => {
+        const failure = firebaseError("auth/internal-error");
+        revokeRefreshTokensMock.mockRejectedValue(failure);
+
+        await expect(revokeUserSessionsOrThrow(UID)).rejects.toBe(failure);
+    });
+
+    it("revokeUserSessions continua engolindo a recusa e registrando o erro", async () => {
+        revokeRefreshTokensMock.mockRejectedValue(
+            firebaseError("auth/internal-error")
+        );
+
+        await expect(revokeUserSessions(UID)).resolves.toBeUndefined();
+        expect(console.error).toHaveBeenCalledTimes(1);
     });
 });
