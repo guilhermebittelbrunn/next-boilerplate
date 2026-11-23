@@ -263,8 +263,13 @@ no emulador com um token conhecido (`apps/e2e/support/firestoreEmulator.ts`) e a
 testes de rota. Nas
 telas percorridas ela roda o axe e falha em violação `critical` ou `serious`.
 
-É rede de regressão. Ela não julga tema, alinhamento, responsivo nem idioma (roda só em `pt-br` e desktop),
-então não substitui a passada com `agent-browser` numa entrega de front-end.
+A suíte tem dois projetos. O `chromium` roda tudo em desktop. O `mobile` (Chromium com o perfil do Pixel 7 e
+viewport de 390 × 844) roda só os fluxos que um visitante precisa completar no celular: landing, login,
+cadastro com onboarding e CRUD de `entity`. No celular, cada `expectAccessible` também reprova a rota que rola
+na horizontal (`scrollWidth` do documento maior que o `clientWidth`, critério 1.4.10 da WCAG).
+
+É rede de regressão. Ela não julga tema, alinhamento nem idioma (roda só em `pt-br`, no tema claro, e o celular
+só a 390 px), então não substitui a passada com `agent-browser` numa entrega de front-end.
 
 ### Rodar local
 
@@ -273,6 +278,7 @@ Precisa do JDK 21 no `PATH` (ver [Pré-requisitos](#pré-requisitos)) e, na prim
 ```bash
 pnpm --filter e2e exec playwright install chromium
 pnpm e2e                          # sobe emulador + api/app/web, roda o seed e a suíte
+pnpm --filter e2e e2e --project=mobile   # só os fluxos críticos a 390 px (mais o setup)
 pnpm --filter e2e e2e:report      # abre o relatório HTML da última execução
 ```
 
@@ -326,6 +332,24 @@ elemento daquela rota, então um campo novo sem rótulo na mesma tela continua r
 Entrada que não casa mais nada aparece como anotação `a11y-stale-exception` no relatório, sem reprovar;
 remova-a. Corrigiu o componente? Tire a exceção no mesmo PR. Violação `minor` e `moderate` não reprova e fica
 no anexo JSON de cada teste.
+
+### Lighthouse da landing
+
+```bash
+pnpm --filter web build           # o comando mede só build de produção
+pnpm lighthouse                   # sobe next start na 3001, mede e derruba
+pnpm lighthouse --url "$WEB"      # mede um servidor já de pé (preview da Vercel, por exemplo)
+```
+
+O `pnpm lighthouse` mede home, preços e contato em `pt-br` (`--locale en` ou `es` troca o idioma) com o
+Lighthouse 12.8.2 em perfil mobile, baixado pelo `npx` na primeira execução. Ele usa o Chromium do Playwright,
+o mesmo do `pnpm e2e`, a menos que `CHROME_PATH` aponte para outro navegador. A tabela com o veredito de cada
+métrica, nos limiares da [parte 3 da entrega](delivery/03-product-quality.md#34-desempenho-pagespeed),
+sai no terminal e em `apps/e2e/lighthouse-results/summary.md`, junto dos JSON brutos (pasta fora do Git).
+
+É medição, não gate: pontuação abaixo da meta termina com código 0. O código 1 fica para erro de execução,
+como página que o Lighthouse não conseguiu medir, build ausente ou porta ocupada (use `--port`). O Lighthouse
+13 exige Node 22.19 ou mais novo, e o repositório fixa `22.12.0` no `.nvmrc`; por isso a versão fica em 12.8.2.
 
 ## Cobertura
 

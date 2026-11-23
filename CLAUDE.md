@@ -45,6 +45,7 @@ pnpm --filter app typecheck   # tsc --noEmit de um workspace
 pnpm bump-ui        # re-sincroniza componentes shadcn no design-system
 pnpm e2e            # suíte Playwright (apps/e2e): sobe emulador + api/app/web e roda os fluxos críticos
 pnpm coverage       # cobertura Vitest consolidada do repo em coverage/ (sem limiar)
+pnpm lighthouse     # Lighthouse mobile do build de produção da landing (medição, não gate)
 
 pnpm turbo run lint typecheck test test:emulator   # os gates do job verify do CI, na mesma linha
 ```

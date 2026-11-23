@@ -10,9 +10,9 @@ Visão geral da etapa e regras de status em [`README.md`](README.md).
 
 - **Desempenho e SEO** se medem numa URL pública: a preview da Vercel do commit que vai ser entregue, ou a
   produção. O PageSpeed Insights não alcança `localhost`.
-- Sem URL pública, use build de produção local (`pnpm build`, depois `pnpm --filter web start`) e o
-  `lighthouse` pela linha de comando. **Nunca meça desempenho em `next dev`**: ele compila sob demanda e
-  não minifica, então o número não diz nada sobre produção.
+- Sem URL pública, use o build de produção local (`pnpm --filter web build`) e o `pnpm lighthouse`, que sobe
+  o `next start` sozinho. **Nunca meça desempenho em `next dev`**: ele compila sob demanda e não minifica,
+  então o número não diz nada sobre produção.
 - Celular, formulários e 404 podem ser medidos local, contra os emuladores e o seed
   ([`docs/SETUP.md`](../SETUP.md)). É o mesmo ambiente do `/test`.
 
@@ -24,9 +24,16 @@ idiomas (`pt-br`, `en`, `es`).
 **Por quê.** Muita gente abre o produto pela primeira vez no celular, a partir de um link. Layout que vaza
 para o lado, menu que não fecha e botão pequeno demais aparecem ali e não no desktop.
 
-**Como medir.** Com o `agent-browser` (skill do repo), percorra as rotas públicas da `web` e as telas
-principais do `app` com viewport de **390 × 844** (iPhone 12 a 15) e depois de **360 × 800** (Android
-comum), em tema claro e escuro, nos três idiomas:
+**Como medir.** Comece pelo projeto `mobile` da suíte E2E. Ele percorre landing, login, cadastro com
+onboarding e CRUD de `entity` a 390 × 844, roda o axe em cada tela e reprova rota com rolagem horizontal:
+
+```bash
+pnpm --filter e2e e2e --project=mobile
+```
+
+Ele cobre os fluxos principais em `pt-br` e no tema claro. O resto fica com o `agent-browser` (skill do
+repo): percorra as rotas públicas da `web` e as telas principais do `app` com viewport de **390 × 844**
+(iPhone 12 a 15) e depois de **360 × 800** (Android comum), em tema claro e escuro, nos três idiomas:
 
 ```bash
 agent-browser set viewport 390 844
@@ -106,10 +113,14 @@ curl -s "https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=$WEB/$LO
 Sem URL pública, contra o build de produção local:
 
 ```bash
-npx -y lighthouse "$WEB/$LOCALE" --form-factor=mobile --screenEmulation.mobile \
-  --only-categories=performance,accessibility,best-practices,seo --quiet \
-  --chrome-flags="--headless=new" --output=json --output-path=./lighthouse-home.json
+pnpm --filter web build
+pnpm lighthouse                    # ou: pnpm lighthouse --url "$WEB" --locale "$LOCALE"
 ```
+
+O comando mede home, preços e contato com o Lighthouse 12.8.2 em perfil mobile e escreve a tabela desta seção,
+com o veredito de cada métrica, em `apps/e2e/lighthouse-results/summary.md`. Copie essa tabela para o
+relatório: o cabeçalho dela já traz versão, data, commit e URL medida. Página que o Lighthouse não mediu
+aparece como `not measured`, nunca como aprovada. Detalhes em [`docs/SETUP.md`](../SETUP.md#lighthouse-da-landing).
 
 Para varrer o site inteiro a partir do sitemap: `npx -y unlighthouse --site "$WEB"`.
 
@@ -181,6 +192,11 @@ curl -s "$WEB/sitemap.xml" | grep -o '<loc>[^<]*' | sed 's/<loc>//' | while read
   printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' "$url")" "$url"
 done
 ```
+
+A lista de páginas tem teste no repositório (`apps/web/__tests__/sitemap.test.ts`): ele quebra quando uma
+página pública de `apps/web/app/[locale]` fica fora do sitemap ou quando o sitemap cita uma rota que não
+existe. Páginas criadas pelo fork entram na mesma conferência. O sitemap não emite `<lastmod>`, porque a hora
+do build declararia todas as páginas alteradas a cada implantação.
 
 **Aprovado quando** toda URL usa o domínio de produção, responde 200 sem redirecionar, cada página pública
 aparece nos três idiomas com `hreflang`, nenhuma URL é do painel, de autenticação ou da API, e o sitemap foi
