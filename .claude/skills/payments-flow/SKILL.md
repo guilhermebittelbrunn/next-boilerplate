@@ -21,7 +21,6 @@ Compõe [`/new-api-route`](../new-api-route/SKILL.md) (rotas) e [`/i18n-sync`](.
 | Peça | Arquivo |
 |------|---------|
 | Chaves e cliente | `packages/payments/keys.ts`, `index.ts` (`getStripe`, `getWebhookSecret`, `isPaymentsConfigured`) |
-| Toolkit para semear catálogo | `packages/payments/ai.ts` (`getPaymentsAgentToolkit()`, `null` sem chave) |
 | Contrato | `packages/sdk/src/types/payments/payments.ts`, `actions/payments/action.ts` |
 | Lógica Stripe | `apps/api/(shared)/lib/billing.ts` (catálogo, cliente, sessões, `isBillingEnabled`) |
 | Lógica pura | `apps/api/(shared)/lib/billing-state.ts` (`toSubscriptionState`, `toPlanDTO`, `decideSubscriptionWrite`) |
