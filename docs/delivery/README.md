@@ -91,7 +91,8 @@ O core ainda não passa em todos os itens. As lacunas medidas em 2026-11-19 est�
 criado antes da entrega delas herda a lacuna e precisa tratá-la na própria etapa de entrega:
 
 - [`specs/delivery-security-review.md`](../../specs/delivery-security-review.md): itens da parte 1.
-- [`specs/delivery-infra-hardening.md`](../../specs/delivery-infra-hardening.md): itens da parte 2.
+- [`delivery-infra-hardening`](../features/delivery-infra-hardening/spec.md): itens da parte 2, entregues no
+  core pela PR #65 (`afb5b35`). Um fork criado antes disso ainda precisa tratá-los.
 - [`specs/delivery-product-quality.md`](../../specs/delivery-product-quality.md): itens da parte 3.
 
 Quando uma dessas specs for entregue, o `/spec --sync` a move para `docs/features/<slug>/spec.md` e atualiza
