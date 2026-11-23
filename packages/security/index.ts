@@ -21,6 +21,11 @@ const STRICT_RATE_LIMIT_MAX = 20;
  */
 const STANDARD_RATE_LIMIT_MAX = 60;
 const ANONYMOUS_SUBJECT = "anonymous";
+/**
+ * Logged on the Arcjet dashboard, never enforced: a false positive here refuses a
+ * legitimate write, so a fork watches real traffic for a week before switching to LIVE.
+ */
+const API_SHIELD_MODE = "DRY_RUN";
 
 /**
  * `strict` guards the endpoints that spend provider quota, send mail or charge money;
@@ -60,6 +65,7 @@ const protectWithBudget = async (
             key: arcjetKey,
             characteristics: ["ip.src", "subject"],
             rules: [
+                shield({ mode: API_SHIELD_MODE }),
                 slidingWindow({
                     mode: "LIVE",
                     interval: RATE_LIMIT_INTERVAL,
@@ -73,6 +79,7 @@ const protectWithBudget = async (
         key: arcjetKey,
         characteristics: ["ip.src"],
         rules: [
+            shield({ mode: API_SHIELD_MODE }),
             slidingWindow({
                 mode: "LIVE",
                 interval: RATE_LIMIT_INTERVAL,

@@ -1,18 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { arcjetMock, protectMock, slidingWindowMock, requestMock } = vi.hoisted(
-    () => ({
+const { arcjetMock, protectMock, shieldMock, slidingWindowMock, requestMock } =
+    vi.hoisted(() => ({
         arcjetMock: vi.fn(),
         protectMock: vi.fn(),
+        shieldMock: vi.fn(),
         slidingWindowMock: vi.fn(),
         requestMock: vi.fn(),
-    })
-);
+    }));
 
 vi.mock("@arcjet/next", () => ({
     default: (...args: unknown[]) => arcjetMock(...args),
     detectBot: vi.fn(),
-    shield: vi.fn(),
+    shield: (...args: unknown[]) => shieldMock(...args),
     slidingWindow: (...args: unknown[]) => slidingWindowMock(...args),
     request: (...args: unknown[]) => requestMock(...args),
 }));
@@ -58,6 +58,7 @@ const originalKey = process.env.ARCJET_KEY;
 beforeEach(() => {
     arcjetMock.mockReset();
     protectMock.mockReset();
+    shieldMock.mockReset();
     slidingWindowMock.mockReset();
     requestMock.mockReset();
     arcjetMock.mockReturnValue({
@@ -314,5 +315,39 @@ describe("rate limit budgets", () => {
         expect(arcjetMock).not.toHaveBeenCalled();
         expect(protectMock).not.toHaveBeenCalled();
         expect(requestMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("rate limit shield", () => {
+    const SHIELD_RULE = { rule: "shield" };
+    const WINDOW_RULE = { rule: "sliding-window" };
+
+    it.each(["strict", "standard"] as const)(
+        "only logs attack patterns on the %s budget, never refusing on them",
+        async (budget) => {
+            const { checkRateLimit } = await loadLimiter(ARCJET_KEY);
+            protectMock.mockResolvedValue(allowedDecision());
+            shieldMock.mockReturnValue(SHIELD_RULE);
+            slidingWindowMock.mockReturnValue(WINDOW_RULE);
+
+            await checkRateLimit(new Request("http://api.test/entities"), {
+                budget,
+                subject: "hashed-subject",
+            });
+
+            expect(shieldMock).toHaveBeenCalledTimes(1);
+            expect(shieldMock).toHaveBeenCalledWith({ mode: "DRY_RUN" });
+            expect(arcjetMock).toHaveBeenCalledWith(
+                expect.objectContaining({ rules: [SHIELD_RULE, WINDOW_RULE] })
+            );
+        }
+    );
+
+    it("is not built at all without a key", async () => {
+        const { checkRateLimit } = await loadLimiter(undefined);
+
+        await checkRateLimit(new Request("http://api.test/entities"));
+
+        expect(shieldMock).not.toHaveBeenCalled();
     });
 });
