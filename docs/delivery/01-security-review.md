@@ -171,10 +171,12 @@ git grep -niE "(password|senha|secret|token|otp|pin|apiKey)[A-Za-z]*\s*:" -- "ap
 **Risco.** Tentativas em massa de senha, de código de verificação ou de token de convite.
 
 **O core já faz.** O login por e-mail e senha vai direto ao Firebase, que tem limite próprio; as rotas
-públicas de autenticação da API estão no rate limit do Arcjet (item 1.15).
+públicas de autenticação da API, a troca e a definição de senha estão no orçamento estrito do Arcjet
+(item 1.15).
 
-**Como verificar.** Todo endpoint novo que confere um segredo (senha, código, token) está na lista de rate
-limit de `apps/api/proxy.ts`. Com `ARCJET_KEY` preenchida:
+**Como verificar.** Todo endpoint novo que confere um segredo (senha, código, token) está na lista estrita
+(`STRICT_RATE_LIMITED_PATHS` em `apps/api/proxy.ts`). Fora dela, um `POST` cai no orçamento padrão, de 60
+por minuto, folgado demais para conter tentativa de senha. Com `ARCJET_KEY` preenchida:
 
 ```bash
 for i in $(seq 1 25); do curl -s -o /dev/null -w '%{http_code}\n' -X POST "$API/<rota>" -H 'content-type: application/json' -d '{}'; done | sort | uniq -c
@@ -246,7 +248,11 @@ mesmo caminho (`POST /files` ou o helper dele). Gravidade: 🔴.
 quem ataca.
 
 **O core já faz.** A API responde só `{ error: { code } }`; mensagens do Identity Toolkit são mapeadas para
-códigos próprios.
+códigos próprios. `GET /auth/me`, `POST /auth/sign-in` e `POST /auth/sign-in/google` devolvem o usuário por
+allowlist de cinco campos (`uid`, `type`, `email`, `preferences`, `onboarding`, em `toSessionUser`,
+`apps/api/(shared)/mappers/user.mapper.ts`), então campo novo no perfil não sai por elas até alguém
+listá-lo. Nenhum dos três apps manda `X-Powered-By` (`poweredByHeader: false` em
+`packages/next-config/index.ts`).
 
 **Como verificar.**
 
@@ -285,7 +291,10 @@ justificativa escrita (o caminho vulnerável não é usado) e prazo de atualiza�
 consegue ler.
 
 **O core já faz.** Cookie de sessão `httpOnly` de 5 dias, renovado na metade, com teto absoluto de 30
-dias; revogação ao trocar senha ou e-mail; o ID token vai no header `Authorization`, nunca na URL.
+dias; revogação ao trocar, definir ou redefinir a senha e ao trocar o e-mail; o ID token vai no header
+`Authorization`, nunca na URL. Se o Firebase recusar a revogação, essas quatro rotas respondem
+`500 AUTH_SESSIONS_NOT_REVOKED` em vez de sucesso, e o "Sair de todos os dispositivos" responde
+`500 ACCOUNT_SESSIONS_REVOKE_FAILED` (`revokeUserSessionsOrThrow`, `packages/auth/server.ts`).
 
 **Como verificar.**
 
@@ -302,12 +311,15 @@ sessões; 🟡 nos demais casos.
 **Risco.** Sem limite, um script cria contas em massa, dispara e-mails pela sua conta da Resend e esgota a
 cota dos provedores.
 
-**O core já faz.** Arcjet com janela deslizante de 20 requisições por minuto por IP numa lista fechada de
-rotas (`apps/api/proxy.ts`). Sem `ARCJET_KEY`, o limite não roda e a API avisa no boot.
+**O core já faz.** Dois orçamentos do Arcjet, em janela deslizante de um minuto, no proxy da API
+(`apps/api/proxy.ts`). Todo `POST`, `PUT`, `PATCH` e `DELETE` conta no padrão, de 60 por minuto por IP e
+pessoa, então rota mutável nova já nasce limitada. Uma lista estrita de caminhos conta no de 20 por minuto
+por IP. O webhook da Stripe fica isento. Sem `ARCJET_KEY`, nenhum dos dois roda e a API avisa no boot.
+Detalhe em [`docs/SECURITY.md`](../SECURITY.md), "Limite de requisições".
 
-**Como verificar.** A lista de `apps/api/proxy.ts` inclui toda rota nova do fork que é pública, que manda
-e-mail, que confere segredo ou que custa dinheiro. Em produção, `ARCJET_KEY` está preenchida (parte 2, item
-2.11), e o comando do item 1.8 devolve 429.
+**Como verificar.** A lista estrita de `apps/api/proxy.ts` inclui toda rota nova do fork que é pública, que
+manda e-mail, que confere segredo ou que custa dinheiro; rota chamada por provedor com retry está na isenção.
+Em produção, `ARCJET_KEY` está preenchida (parte 2, item 2.11), e o comando do item 1.8 devolve 429.
 
 **Aprovado quando** as duas conferências passam. Gravidade: 🔴.
 

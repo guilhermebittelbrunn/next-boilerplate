@@ -18,7 +18,6 @@ tudo lido de coleções que o webhook alimenta.
 |--------|------|-----------|
 | Config | `packages/payments/keys.ts` | `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET`, string vazia lida como ausência. Chave com prefixo errado (`pk_` no lugar de `sk_`) falha a validação: o `next build` da API sai com erro e, em runtime, toda requisição responde 500 com `Invalid environment variables` no log. |
 | Cliente | `packages/payments/index.ts` | `getStripe()` (devolve `null` sem chave), `getWebhookSecret()` e `isPaymentsConfigured()` (as duas chaves ou nada). |
-| Toolkit | `packages/payments/ai.ts` | `getPaymentsAgentToolkit()`, construído sob demanda; devolve `null` sem chave. Serve para semear produtos e preços. |
 | Contrato | `packages/sdk/src/types/payments/`, `actions/payments/action.ts` | `PlanDTO`, `SubscriptionState`, `LIVE_SUBSCRIPTION_STATUSES`, `BillingSummaryDTO`, `PlanAccessDTO`, `planAccessDenial`; `apiClient.payments.listPlans()`, `.listCatalog()`, `.createCheckout()`, `.openPortal()`, `.summary()`. |
 | Rotas | `apps/api/app/(routes)/payments/{plans,checkout,portal}` | Catálogo, sessão de checkout e sessão de portal, todas com `requireCommonPanelApi`. |
 | Catálogo público | `apps/api/app/(routes)/payments/catalog`, `(shared)/lib/plan-catalog-cache.ts` | `GET /payments/catalog` sem guard, com o contrato de `GET /payments/plans` e cache de uma hora na memória do processo. Ver "Página de preços da landing". |

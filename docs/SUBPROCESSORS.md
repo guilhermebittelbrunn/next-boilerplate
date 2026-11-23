@@ -90,7 +90,6 @@ Notas que mudam o que o fork precisa fazer:
 | Candidato | Por que fica fora | Evidência |
 |---|---|---|
 | Firebase Analytics | O `measurementId` vai para o `firebaseConfig`, mas nenhum código chama `getAnalytics`, então o SDK de analytics do Firebase não carrega. | `packages/auth/client.ts:72`; `grep -rn "getAnalytics\|firebase/analytics" apps packages` sem resultado fora de `node_modules` |
-| `@stripe/agent-toolkit` | Tem fábrica em `packages/payments/ai.ts`, mas nenhum consumidor fora dos testes. Se ganhar um, o provedor continua sendo a Stripe. | `grep -rn "payments/ai" apps packages` sem resultado fora de `__tests__` |
 | Sentry, Better Stack, Axiom, PostHog, Upstash | Nenhuma integração. Sentry, Better Stack e Axiom aparecem só como sugestão em [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §11. | nenhum `import` desses pacotes em `apps/` e `packages/` |
 | GitHub (Actions) | Recebe código, não dado de usuário final. | `.github/workflows/ci.yml` |
 | Fontes | `geist` vem como pacote npm e é servida pelo próprio app. Não há `next/font/google`. | `grep -rn "next/font/google" apps packages` sem resultado |

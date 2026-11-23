@@ -777,6 +777,15 @@ Uma chave sem o prefixo `ajkey_` tem efeito diferente em cada app. Na `api` ela 
 vira no-op e o boot registra um `console.error`, sem imprimir o valor. Em `app` e `web` o build falha em
 "Collecting page data" com `Invalid environment variables`, e na Vercel o deploy anterior continua no ar.
 
+Sem a chave, o no-op cobre também o orçamento padrão: todo `POST`, `PUT`, `PATCH` e `DELETE` da API fica sem
+limite, não só as rotas de autenticação, e o aviso do boot diz isso.
+
+- [ ] Conferir o plano do Arcjet contra o volume novo
+
+Com a chave, o orçamento padrão consulta o Arcjet em toda requisição mutável da API, além das 21 rotas da
+lista estrita. A cota do plano gratuito não foi medida; confira no painel do Arcjet se o volume esperado de
+escritas do fork cabe nela antes de ligar a chave em produção.
+
 ### 9. Branch protection na `main`
 
 - [ ] Exigir os checks `verify` e `e2e` do CI antes do merge
