@@ -211,3 +211,108 @@ describe("rate limit key lookup", () => {
         );
     });
 });
+
+describe("rate limit budgets", () => {
+    it("counts the strict budget per address, 20 a minute, by default", async () => {
+        const { checkRateLimit } = await loadLimiter(ARCJET_KEY);
+        protectMock.mockResolvedValue(allowedDecision());
+        const incoming = new Request("http://api.test/auth/sign-in");
+
+        await checkRateLimit(incoming);
+
+        expect(arcjetMock).toHaveBeenCalledWith(
+            expect.objectContaining({ characteristics: ["ip.src"] })
+        );
+        expect(slidingWindowMock).toHaveBeenCalledWith({
+            mode: "LIVE",
+            interval: "60s",
+            max: 20,
+        });
+        expect(protectMock).toHaveBeenCalledWith(incoming);
+    });
+
+    it("ignores the subject on the strict budget", async () => {
+        const { checkRateLimit } = await loadLimiter(ARCJET_KEY);
+        protectMock.mockResolvedValue(allowedDecision());
+        const incoming = new Request("http://api.test/auth/sign-in");
+
+        await checkRateLimit(incoming, { budget: "strict", subject: "abc" });
+
+        expect(protectMock).toHaveBeenCalledWith(incoming);
+    });
+
+    it("counts the standard budget per address and actor, 60 a minute", async () => {
+        const { checkRateLimit } = await loadLimiter(ARCJET_KEY);
+        protectMock.mockResolvedValue(allowedDecision());
+        const incoming = new Request("http://api.test/notifications/read-all");
+
+        await checkRateLimit(incoming, {
+            budget: "standard",
+            subject: "hashed-subject",
+        });
+
+        expect(arcjetMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                key: ARCJET_KEY,
+                characteristics: ["ip.src", "subject"],
+            })
+        );
+        expect(slidingWindowMock).toHaveBeenCalledWith({
+            mode: "LIVE",
+            interval: "60s",
+            max: 60,
+        });
+        expect(protectMock).toHaveBeenCalledWith(incoming, {
+            subject: "hashed-subject",
+        });
+    });
+
+    it("counts a request without an actor under the anonymous subject", async () => {
+        const { checkRateLimit } = await loadLimiter(ARCJET_KEY);
+        protectMock.mockResolvedValue(allowedDecision());
+        const incoming = new Request("http://api.test/contact");
+
+        await checkRateLimit(incoming, { budget: "standard" });
+
+        expect(protectMock).toHaveBeenCalledWith(incoming, {
+            subject: "anonymous",
+        });
+    });
+
+    it("carries the wait back on the standard budget too", async () => {
+        const { checkRateLimit } = await loadLimiter(ARCJET_KEY);
+        protectMock.mockResolvedValue(rateLimitedDecision());
+
+        await expect(
+            checkRateLimit(new Request("http://api.test/entities"), {
+                budget: "standard",
+                subject: "hashed-subject",
+            })
+        ).resolves.toEqual({
+            allowed: false,
+            reason: "rate-limit",
+            retryAfterSeconds: RESET_SECONDS,
+        });
+    });
+
+    it.each([
+        ["without a key", undefined],
+        ["with an empty key", "   "],
+        ["with a malformed key", "invalida"],
+    ])("is a no-op for both budgets %s", async (_label, key) => {
+        const { checkRateLimit } = await loadLimiter(key);
+
+        for (const budget of ["strict", "standard"] as const) {
+            await expect(
+                checkRateLimit(new Request("http://api.test/entities"), {
+                    budget,
+                    subject: "hashed-subject",
+                })
+            ).resolves.toEqual({ allowed: true, enforced: false });
+        }
+
+        expect(arcjetMock).not.toHaveBeenCalled();
+        expect(protectMock).not.toHaveBeenCalled();
+        expect(requestMock).not.toHaveBeenCalled();
+    });
+});

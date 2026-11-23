@@ -14,7 +14,25 @@ const RATE_LIMIT_INTERVAL = "60s";
  * while a whole office behind one NAT address shares this budget. It still starves
  * credential stuffing, which needs thousands. Tighten from evidence, not from fear.
  */
-const RATE_LIMIT_MAX = 20;
+const STRICT_RATE_LIMIT_MAX = 20;
+/**
+ * Counted per address and actor together, so one office behind a NAT address does not
+ * share a single budget. Folds a person filling forms; stops a loop hammering writes.
+ */
+const STANDARD_RATE_LIMIT_MAX = 60;
+const ANONYMOUS_SUBJECT = "anonymous";
+
+/**
+ * `strict` guards the endpoints that spend provider quota, send mail or charge money;
+ * `standard` is the floor for every other write.
+ */
+export type RateLimitBudget = "strict" | "standard";
+
+export type RateLimitOptions = {
+    budget?: RateLimitBudget;
+    /** Opaque per-actor key; ignored by the strict budget, which counts the address only. */
+    subject?: string;
+};
 
 export type RateLimitBlockReason = "rate-limit" | "bot" | "denied";
 
@@ -29,32 +47,61 @@ export type RateLimitResult =
 /** Whether a request budget is actually being counted, or the limiter is a no-op. */
 export const isRateLimitEnforced = (): boolean => Boolean(readArcjetKey());
 
-/**
- * Counts requests per source address in a shared store. Answers with a decision
- * instead of throwing so the caller can turn a refusal into `429` plus the wait
- * the client should honour.
- */
-export const checkRateLimit = async (
-    sourceRequest?: Request
-): Promise<RateLimitResult> => {
-    const arcjetKey = readArcjetKey();
-    if (!arcjetKey) {
-        return { allowed: true, enforced: false };
+type ProtectedRequest = Request | Awaited<ReturnType<typeof request>>;
+
+const protectWithBudget = async (
+    arcjetKey: string,
+    req: ProtectedRequest,
+    budget: RateLimitBudget,
+    subject: string
+) => {
+    if (budget === "standard") {
+        return await arcjet({
+            key: arcjetKey,
+            characteristics: ["ip.src", "subject"],
+            rules: [
+                slidingWindow({
+                    mode: "LIVE",
+                    interval: RATE_LIMIT_INTERVAL,
+                    max: STANDARD_RATE_LIMIT_MAX,
+                }),
+            ],
+        }).protect(req, { subject });
     }
 
-    const aj = arcjet({
+    return await arcjet({
         key: arcjetKey,
         characteristics: ["ip.src"],
         rules: [
             slidingWindow({
                 mode: "LIVE",
                 interval: RATE_LIMIT_INTERVAL,
-                max: RATE_LIMIT_MAX,
+                max: STRICT_RATE_LIMIT_MAX,
             }),
         ],
-    });
+    }).protect(req);
+};
 
-    const decision = await aj.protect(sourceRequest ?? (await request()));
+/**
+ * Counts requests in a shared store, per source address (`strict`, the default) or per
+ * address and actor (`standard`). Answers with a decision instead of throwing so the
+ * caller can turn a refusal into `429` plus the wait the client should honour.
+ */
+export const checkRateLimit = async (
+    sourceRequest?: Request,
+    { budget = "strict", subject = ANONYMOUS_SUBJECT }: RateLimitOptions = {}
+): Promise<RateLimitResult> => {
+    const arcjetKey = readArcjetKey();
+    if (!arcjetKey) {
+        return { allowed: true, enforced: false };
+    }
+
+    const decision = await protectWithBudget(
+        arcjetKey,
+        sourceRequest ?? (await request()),
+        budget,
+        subject
+    );
 
     if (!decision.isDenied()) {
         return { allowed: true, enforced: true };
