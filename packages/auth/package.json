@@ -20,8 +20,8 @@
     "@repo/internationalization": "workspace:*",
     "@repo/shared": "workspace:*",
     "firebase": "^11.1.0",
-    "firebase-admin": "^13.0.2",
-    "next": "16.4.3",
+    "firebase-admin": "^13.10.0",
+    "next": "16.4.6",
     "@tanstack/react-query": "^5.90.20",
     "react": "19.2.0",
     "zod": "^4.1.12"

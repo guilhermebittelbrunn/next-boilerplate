@@ -24,7 +24,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "next": "16.4.3",
+    "next": "16.4.6",
     "zod": "^4.1.12"
   },
   "peerDependencies": {

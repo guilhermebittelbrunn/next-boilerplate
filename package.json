@@ -1,4 +1,10 @@
 {
+  "//": {
+    "pnpm.overrides.zod": "Pinned to one version so every workspace validates with the same zod. 4.6.7 carries the fix for the 4.1.x advisory flagged by pnpm audit; the declared ranges (^4.1.12) already admit it.",
+    "pnpm.overrides.parse5": "Inherited from next-forge: unifies parse5 on 7.x for jsdom (Vitest) and cli-highlight (firebase-tools). Both chains are dev-only.",
+    "audit-exception.@grpc/grpc-js": "packages/auth > firebase > @firebase/firestore pins @grpc/grpc-js ~1.9.0, and the latest @firebase/firestore still does. GHSA-m9gg-hp2v-232j and GHSA-f596-whhp-79r4 affect a gRPC server; here grpc-js is only a client, and only the Node build of the client Firestore SDK loads it, which the repo uses solely in emulator tests (the browser build talks over WebChannel). Revisit when @firebase/firestore widens the range, or by 2027-05-19.",
+    "pnpm.auditConfig.ignoreGhsas": "Each entry is an audit exception documented under its own audit-exception.* key above; remove it together with that key."
+  },
   "name": "next-forge",
   "version": "5.2.3",
   "bin": {
@@ -49,7 +55,13 @@
   "pnpm": {
     "overrides": {
       "parse5": "^7.2.1",
-      "zod": "4.1.12"
+      "zod": "4.6.7"
+    },
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-m9gg-hp2v-232j",
+        "GHSA-f596-whhp-79r4"
+      ]
     }
   },
   "type": "module"

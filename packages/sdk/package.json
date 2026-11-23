@@ -7,7 +7,7 @@
     "@repo/auth": "workspace:*",
     "@repo/shared": "workspace:*",
     "react": "19.2.0",
-    "axios": "^1.13.5"
+    "axios": "^1.21.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.2"
