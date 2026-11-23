@@ -66,7 +66,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
 - `apps/api/proxy.ts:70-92` — `/auth/sign-in/google` está no orçamento estrito de rate limit (`:73`; era `:60-78` e `:63` até a PR #64, que criou o orçamento padrão; a lista era `:55-70`, com a rota em
   `:58`, até a PR #57, que acrescentou um parágrafo de comentário acima e três rotas de convite ao fim, `:53-67` até a PR #56,
   que acrescentou `/auth/sign-in/email-link/request`, `:49-62` até a PR #49 e `:45-58` até a PR #47).
-- `docs/FORKING.md:195` (era `:193` até a PR #65 e `:175` até a PR #63) — o roteiro do fork descreve "e-mail/senha e Google".
+- `docs/FORKING.md:196` (era `:195` até a PR #71, `:193` até a PR #65 e `:175` até a PR #63) — o roteiro do fork descreve "e-mail/senha e Google".
 - **Lacuna:** não há forma de ligar outro provedor sem escrever um fluxo novo inteiro.
 
 ## Evidência de mercado

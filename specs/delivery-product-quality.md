@@ -8,8 +8,8 @@ audience: produto
 area: [apps/web, apps/app, apps/api, apps/e2e, packages/seo, packages/analytics, packages/security, packages/internationalization]
 mode: ambos
 depends_on: []
-contends_on: [packages/security/middleware.ts, packages/seo/metadata.ts, "apps/web/app/[locale]/layout.tsx", apps/e2e/playwright.config.ts]
-feature: -
+contends_on: [packages/seo/metadata.ts, apps/e2e/playwright.config.ts, apps/web/app/sitemap.ts, "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/layout.tsx"]
+feature: delivery-product-quality
 updated: 2026-11-23
 ---
 
@@ -26,7 +26,8 @@ de trocá-la. Sem esta spec, cada fork descobre as mesmas falhas na própria ent
 
 ## O que já existe no repo
 
-Medido em 2026-11-19 sobre `583194b`.
+Medido em 2026-11-19 sobre `583194b`. Os itens de 404, `og:image` e `robots.txt` foram relidos em 2026-11-23 sobre
+`a391d1c`, depois da fatia 1 (PR #71); o que ela fechou está marcado em cada item.
 
 - **Celular** — Tailwind mobile-first e o padrão de viewport do Next (nenhum `export const viewport` em app
   ou web). `apps/e2e/playwright.config.ts:49-56` tem só o projeto `Desktop Chrome`. **Lacuna:** nenhum E2E
@@ -36,34 +37,33 @@ Medido em 2026-11-19 sobre `583194b`.
   convite e usuários do admin; `emailLinkSchema`, `onboardingFormSchema` e `buildUpdateUserFormSchema` sem
   teste de schema.
 - **404** — `apps/app/app/not-found.tsx:1-5` traduzido e testado (`notFoundPageHomeLink.test.tsx`).
-  **Lacuna:** a `apps/web` não tem `not-found.tsx` e mostra o 404 padrão do Next em inglês; a `apps/api` não
-  tem rota coringa e responde 404 em HTML, fora do contrato `{ error: { code } }`; nenhum `error.tsx` de
-  segmento.
+  **Fechado pela fatia 1:** a `apps/web` ganhou `app/[locale]/not-found.tsx` traduzido, e a `apps/api`, a rota
+  coringa `app/[[...path]]/route.ts` com `404 ROUTE_NOT_FOUND`. **Segue como lacuna:** nenhum `error.tsx` de
+  segmento (fora do corte).
 - **Desempenho** — bundle analyzer (`packages/next-config/index.ts:11`, era `:10` até a PR #64), fontes self-host
   (`packages/design-system/lib/fonts.ts`), nenhum `<img>` cru, GA carregado só depois do consentimento.
   **Lacuna:** nenhum Lighthouse no repo nem no CI; a landing monta o `DesignSystemProvider` (antd + um
-  `AuthProvider`) e um segundo `AuthProvider` (`apps/web/app/[locale]/layout.tsx:36-37`,
+  `AuthProvider`) e um segundo `AuthProvider` (`apps/web/app/[locale]/layout.tsx:40-41`, eram `:36-37` até a PR #71;
   `packages/design-system/index.tsx:42-44`), então todo visitante anônimo baixa antd e o SDK do Firebase
   Auth.
 - **Imagens** — nenhuma acima de 100 KB; `images.formats` com AVIF e WebP
   (`packages/next-config/index.ts:7`, era `:6` até a PR #64). Sem lacuna.
-- **`og:image`** — `apps/web/app/[locale]/opengraph-image.png`, 1200 × 630, estática e global. **Lacuna:** o
-  conteúdo é a arte do next-forge (cita Prisma e PlanetScale, que a stack não usa), não muda com a marca
-  (`getBrand()`), e nenhuma página passa imagem própria a `createMetadata`
-  (`packages/seo/metadata.ts:80-88`). Uma cópia idêntica está na `apps/api`, sem uso.
+- **`og:image`** — **fechado pela fatia 1:** a arte do next-forge saiu da `web` e da `api`, e
+  `apps/web/app/[locale]/opengraph-image.tsx` gera um PNG por idioma, no build, a partir de `getBrand()`.
+  **Segue como lacuna:** nenhuma página passa imagem própria a `createMetadata`, que usa o título como `alt`
+  (`packages/seo/metadata.ts:80-88`, `alt: title` em `:86`); uma imagem por página vai precisar de `alt` separado.
 - **Sitemap** — `apps/web/app/sitemap.ts:10-16`: 5 rotas × 3 idiomas com `alternates.languages`, base vinda
   de `NEXT_PUBLIC_WEB_URL`. **Lacuna:** `lastModified = new Date()` (`:20`) declara toda página alterada a
   cada requisição; a lista é manual e nenhum teste a compara com as páginas públicas.
 - **Google Analytics** — GA4 com Consent Mode v2 (`packages/analytics/consent.ts:79-97`,
   `provider.tsx:49-54`), carregado só depois do aceite. **Lacuna:** nenhum evento de conversão
   (`sign_up`, `generate_lead`): `sendGAEvent`/`gtag('event')` têm zero ocorrências.
-- **`robots.txt`** — `apps/web/app/robots.ts:4-14` é estático, `allow: "/"`, sem depender de env: a
-  produção nunca sai com `Disallow: /`. **Lacuna:** `apps/app` e `apps/api` não têm `robots` nem
-  `X-Robots-Tag: noindex`, então login, recuperação de senha e verificação de e-mail do painel ficam
-  indexáveis. As telas de login e cadastro da landing estão em `Disallow`, o que impede o Google de ler um
-  `noindex` nelas.
+- **`robots.txt`** — `apps/web/app/robots.ts:4-13` é estático, `allow: "/"`, sem depender de env: a
+  produção nunca sai com `Disallow: /`. **Fechado pela fatia 1:** `apps/app` e `apps/api` mandam
+  `X-Robots-Tag: noindex` pelo proxy, e as telas de login e cadastro da landing saíram do `Disallow` e levam
+  `noindex` na metadata.
 - **Meta descriptions e títulos** — as 7 páginas da landing têm título e descrição traduzidos com
-  `hreflang` (`apps/web/shared/lib/seo.ts:45-69`). **Lacuna:** a copy é de exemplo (home "Início" com a
+  `hreflang` (`apps/web/shared/lib/seo.ts:67-103`, era `:45-69` até a PR #71). **Lacuna:** a copy é de exemplo (home "Início" com a
   stack na descrição, contato com a marca literal "Next Boilerplate"); o painel tem dois títulos para cerca
   de doze telas (`(common)/layout.tsx:24-33`, `admin/layout.tsx:22-31`) e nenhuma descrição; não existe
   `title.template`.
@@ -96,15 +96,45 @@ Medido em 2026-11-19 sobre `583194b`.
 
 Em fatias, cada uma entregável sozinha:
 
-**Fatia 1: o que um fork herda sem perceber**
+**Fatia 1: o que um fork herda sem perceber** (✅ entregue pela PR #71, `a391d1c`, em 2026-11-23, e conferida no
+código de `main`)
 
-- [ ] **`og:image` gerada da marca**: a landing gera a imagem por código com o nome, o logo e a proposta
+- [x] **`og:image` gerada da marca**: a landing gera a imagem por código com o nome, o logo e a proposta
       vindos da marca configurável, por idioma, com `og:image:alt`; a arte do next-forge sai da `web` e da
       `api`.
-- [ ] **404 da landing traduzido**, com a marca e um link para a home, nos três idiomas.
-- [ ] **404 da API em JSON**, com `error.code` próprio, para qualquer rota que não existe.
-- [ ] **Painel, API e telas de autenticação fora do índice**: `X-Robots-Tag: noindex` em toda resposta do
+- [x] **404 da landing traduzido**, com a marca e um link para a home, nos três idiomas.
+- [x] **404 da API em JSON**, com `error.code` próprio, para qualquer rota que não existe.
+- [x] **Painel, API e telas de autenticação fora do índice**: `X-Robots-Tag: noindex` em toda resposta do
       `app` e da `api`, e `noindex` nas telas de login e cadastro da landing, que saem do `Disallow`.
+
+**Conferência da fatia 1 no código de `a391d1c`** (auditoria de 2026-11-23):
+
+| item | evidência | teste |
+|------|-----------|-------|
+| `og:image` da marca | `apps/web/app/[locale]/opengraph-image.tsx:24-26` (`generateStaticParams` com os três idiomas, então o PNG sai no build) e `:57` (`ImageResponse`); nome, logo e frase vêm de `getBrand()` e do dicionário em `apps/web/shared/lib/openGraph.ts:39-54`, com o logo trocado por monograma quando a busca falha (`:60-84`); `buildLocaleMetadata` declara `openGraph.images` com URL absoluta, 1200 × 630 e `alt` traduzido (`apps/web/shared/lib/seo.ts:91-99`); os dois `opengraph-image.png` saíram da `web` e da `api` | `apps/web/__tests__/openGraph.test.ts`, `seo.test.ts` |
+| 404 da landing | `apps/web/app/[locale]/not-found.tsx:15-53` (cartão com título, descrição, link para `/${locale}` e `<title>` com a marca em `:23`); `app/[locale]/[...rest]/page.tsx:3-5` leva caminho desconhecido ao `notFound()`; `shared/lib/localeSegment.ts:9-13`, chamado no layout (`app/[locale]/layout.tsx:24`), recusa idioma inválido; textos em `translations/apps/web/pages/notFound/index.ts` | `notFoundPage.test.tsx`, `localeSegment.test.ts`, E2E em `apps/e2e/tests/landing.spec.ts` |
+| 404 da API em JSON | `apps/api/app/[[...path]]/route.ts:6-16` responde `404 { error: { code: "ROUTE_NOT_FOUND" } }` nos cinco métodos; o código está nos três idiomas (`translations/packages/shared/utils.ts:116`, `:299`, `:488`) | `apps/api/__tests__/routeNotFound.test.ts` |
+| `noindex` | opção `noIndex` em `applySecurityHeaders` (`packages/security/middleware.ts:153-158`, `:180-182`), ligada em `apps/app/proxy.ts:199-207` (inclusive no atalho de `/api/*`) e em `apps/api/proxy.ts:137-139`, aplicada a toda resposta do proxy da API (recusa de origem, preflight, 429 e passagem); a `web` não liga; login e cadastro da landing com `indexable: false` (`sign-in/page.tsx:12`, `sign-up/page.tsx:12`, que vira `robots: { index: false, follow: true }` em `seo.ts:101`); `robots.ts` sem `disallow` | `packages/security/__tests__/csp.test.ts`, `apps/app/__tests__/securityHeaders.test.ts`, `apps/web/__tests__/securityHeaders.test.ts` (ausência na landing), `robots.test.ts` |
+
+O `/test` fechou com 11 ✅, 0 ❌ e 1 🔒 (o validador de Open Graph, que exige a landing publicada num domínio), em
+build de produção. O CI da execução de merge passou nos seis jobs (`gh run 45230519218`).
+
+**Deriva da fatia 1:**
+
+- **O 404 da landing depende de JavaScript.** Com idioma válido, o servidor responde 404 com
+  `<html id="__next_error__">` e o corpo vazio; o cartão traduzido só aparece depois que o cliente monta a
+  árvore. Antes da fatia, o mesmo endereço respondia o 404 do Next em inglês, com `<h1>`. O status 404 e o
+  `noindex` estão certos, e o buscador não indexa corpo de 404. O `/review` explicou a causa lendo o Next 16.4.6
+  (o caminho de recuperação de erro monta um shell vazio quando `notFound()` sobe até o layout numa rota
+  dinâmica), e o `/test` mediu que envolver o `children` em `Suspense` transforma o 404 em 200. A única saída
+  conhecida é o `global-not-found`, experimental, que o plano descartou. A decisão de aceitar está em
+  "Perguntas em aberto".
+- **`noindex` só nas respostas que passam pelo proxy.** Arquivo estático fora do `matcher` do `app` (como
+  `_next/static`) sai sem o cabeçalho. Não é página, então o efeito na busca é nulo.
+- **O `contends_on` foi revisto nesta auditoria para as fatias 2 e 3:** saíram `packages/security/middleware.ts` e
+  `apps/web/app/[locale]/layout.tsx`, entregues na fatia 1; entraram `apps/web/app/sitemap.ts` (fatia 2) e os dois
+  layouts do painel que ganham `title.template` (fatia 3). A fatia 1 declarou quatro arquivos, tocou dois deles e
+  mais 31 fora da lista (fora de `docs/` e `specs/`), 11 deles de teste.
 
 **Fatia 2: medição no repositório**
 
@@ -168,3 +198,9 @@ Em fatias, cada uma entregável sozinha:
   (`X-Robots-Tag`) no `applySecurityHeaders`, porque cobre também respostas que não são HTML.
 - **O Lighthouse roda no CI?** — **recomendação:** só como comando local e passo opcional do `/deliver`
   nesta spec; o job de CI fica para depois de medir a variação.
+- **Aceitar que o 404 da landing dependa de JavaScript?** (deriva da fatia 1) — **recomendação:** aceitar. O
+  status e o `noindex` estão certos e a correção conhecida é uma API experimental do Next. Sem JavaScript, a
+  pessoa vê página em branco onde antes via o 404 do Next em inglês.
+- **O Lighthouse por comando usa `npx` sem versão?** (fatia 2) — **recomendação:** fixar a versão no comando
+  (`npx lighthouse@<versão>`). Desde a PR #65 o core fixa as Actions por SHA e roda `pnpm audit` no CI; um `npx`
+  sem versão baixa a última publicada a cada execução.
