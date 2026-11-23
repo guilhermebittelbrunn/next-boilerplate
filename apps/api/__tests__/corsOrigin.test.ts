@@ -9,6 +9,7 @@ import {
     resolveAllowedOrigins,
 } from "@/(shared)/lib/cors";
 
+const HASHED_SUBJECT = /^[0-9a-f]{32}$/;
 const { envMock, checkRateLimitMock, warnMock } = vi.hoisted(() => ({
     envMock: { CORS_ORIGIN: undefined as string | undefined },
     checkRateLimitMock: vi.fn(),
@@ -38,16 +39,21 @@ type ProxyRequestOptions = {
     origin?: string;
     method?: string;
     path?: string;
+    authorization?: string;
 };
 
 function makeRequest({
     origin,
     method = "GET",
     path = "/entities",
+    authorization,
 }: ProxyRequestOptions = {}): NextRequest {
     const headers = new Headers();
     if (origin) {
         headers.set("origin", origin);
+    }
+    if (authorization) {
+        headers.set("authorization", authorization);
     }
 
     return {
@@ -63,6 +69,18 @@ async function loadProxy(corsOrigin: string | undefined) {
     vi.resetModules();
     const proxyModule = await import("@/proxy");
     return proxyModule.proxy;
+}
+
+function budgetsSpent(): unknown[] {
+    return checkRateLimitMock.mock.calls.map(
+        ([, options]) => (options as { budget?: string } | undefined)?.budget
+    );
+}
+
+function unsignedJwt(sub: string): string {
+    const encode = (value: object) =>
+        Buffer.from(JSON.stringify(value)).toString("base64url");
+    return `${encode({ alg: "RS256" })}.${encode({ sub })}.signature`;
 }
 
 beforeEach(() => {
@@ -278,9 +296,7 @@ describe("api proxy rate limit", () => {
             );
         }
 
-        expect(checkRateLimitMock).toHaveBeenCalledTimes(
-            publicAuthPaths.length
-        );
+        expect(budgetsSpent()).toEqual(publicAuthPaths.map(() => "strict"));
     });
 
     it("counts the email link request but not the availability read", async () => {
@@ -392,62 +408,110 @@ describe("api proxy rate limit", () => {
         );
     });
 
-    it("leaves the rest of the organization area unlimited", async () => {
+    it("counts the rest of the organization area in the standard budget", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
-
-        for (const path of [
+        const organizationPaths = [
             "/organization",
             "/organization/members",
             "/organization/leave",
             "/organization/invitations/abc",
-        ]) {
+        ];
+
+        for (const path of organizationPaths) {
             await proxy(
                 makeRequest({ origin: APP_ORIGIN, method: "POST", path })
             );
         }
+
+        expect(budgetsSpent()).toEqual(organizationPaths.map(() => "standard"));
+    });
+
+    it("leaves the invitation list read off both budgets", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "GET",
+                path: "/organization/invitations",
+            })
+        );
 
         expect(checkRateLimitMock).not.toHaveBeenCalled();
     });
 
     it("matches the contact endpoint exactly, not by prefix", async () => {
         const proxy = await loadProxy(WEB_ORIGIN);
+        const neighbours = ["/contact/", "/contact/x", "/contacts"];
 
-        for (const path of ["/contact/", "/contact/x", "/contacts"]) {
+        for (const path of neighbours) {
             await proxy(
                 makeRequest({ origin: WEB_ORIGIN, method: "POST", path })
             );
         }
 
-        expect(checkRateLimitMock).not.toHaveBeenCalled();
+        expect(budgetsSpent()).toEqual(neighbours.map(() => "standard"));
     });
 
-    it("leaves the rest of the account area unlimited", async () => {
+    it("counts changing and setting the password in the strict budget", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
+        const passwordPaths = ["/account/password", "/account/password/set"];
 
-        for (const path of ["/account", "/account/password", "/account/"]) {
+        for (const path of passwordPaths) {
             await proxy(
                 makeRequest({ origin: APP_ORIGIN, method: "POST", path })
             );
         }
 
-        expect(checkRateLimitMock).not.toHaveBeenCalled();
+        expect(budgetsSpent()).toEqual(passwordPaths.map(() => "strict"));
+    });
+
+    it("counts the payment sessions in the strict budget", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+        const paymentPaths = ["/payments/checkout", "/payments/portal"];
+
+        for (const path of paymentPaths) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "POST", path })
+            );
+        }
+
+        expect(budgetsSpent()).toEqual(paymentPaths.map(() => "strict"));
+    });
+
+    it("counts the rest of the account area in the standard budget", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+        const accountPaths = [
+            "/account",
+            "/account/",
+            "/account/sessions/revoke",
+        ];
+
+        for (const path of accountPaths) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method: "PATCH", path })
+            );
+        }
+
+        expect(budgetsSpent()).toEqual(accountPaths.map(() => "standard"));
     });
 
     it("matches the recovery endpoints exactly, not by prefix", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
-
-        for (const path of [
+        const neighbours = [
             "/auth/password",
             "/auth/password/reset/",
             "/auth/password/reset-request/extra",
             "/auth/email-verification",
-        ]) {
+        ];
+
+        for (const path of neighbours) {
             await proxy(
                 makeRequest({ origin: APP_ORIGIN, method: "POST", path })
             );
         }
 
-        expect(checkRateLimitMock).not.toHaveBeenCalled();
+        expect(budgetsSpent()).toEqual(neighbours.map(() => "standard"));
     });
 
     it("answers a spent budget with the code and the wait", async () => {
@@ -575,24 +639,156 @@ describe("api proxy rate limit", () => {
     });
 
     /**
-     * The budget is spent on an exact pathname, so a sibling route under the same
-     * prefix is unlimited until it is listed. Adding one is the price of never
-     * charging `/auth/sign-in/google` twice for a single request.
+     * The strict budget is spent on an exact pathname, so a sibling route under the same
+     * prefix falls back to the standard one. That is the price of never charging
+     * `/auth/sign-in/google` twice for a single request.
      */
-    it("counts the listed paths only, not their neighbours", async () => {
+    it("counts the neighbours of a strict path in the standard budget", async () => {
         const proxy = await loadProxy(APP_ORIGIN);
-
-        for (const path of [
+        const neighbours = [
             "/auth/sign-in/",
             "/auth/sign-in/apple",
             "/auth/sign-in-again",
-        ]) {
+        ];
+
+        for (const path of neighbours) {
             await proxy(
                 makeRequest({ origin: APP_ORIGIN, method: "POST", path })
             );
         }
 
+        expect(budgetsSpent()).toEqual(neighbours.map(() => "standard"));
+    });
+
+    it("limits a mutating route nobody listed, and answers 429 when spent", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+        checkRateLimitMock.mockResolvedValue({
+            allowed: false,
+            reason: "rate-limit",
+            retryAfterSeconds: RETRY_AFTER_SECONDS,
+        });
+
+        const response = await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "POST",
+                path: "/a-route-that-does-not-exist",
+            })
+        );
+
+        expect(budgetsSpent()).toEqual(["standard"]);
+        expect(response.status).toBe(TOO_MANY_REQUESTS);
+        expect(response.headers.get("retry-after")).toBe(
+            String(RETRY_AFTER_SECONDS)
+        );
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "AUTH_RATE_LIMITED" },
+        });
+    });
+
+    it.each(["POST", "PUT", "PATCH", "DELETE"])(
+        "counts %s in the standard budget",
+        async (method) => {
+            const proxy = await loadProxy(APP_ORIGIN);
+
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method, path: "/entities/1" })
+            );
+
+            expect(budgetsSpent()).toEqual(["standard"]);
+        }
+    );
+
+    it("leaves reads off both budgets", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        for (const method of ["GET", "HEAD"]) {
+            await proxy(
+                makeRequest({ origin: APP_ORIGIN, method, path: "/entities" })
+            );
+        }
+
         expect(checkRateLimitMock).not.toHaveBeenCalled();
+    });
+
+    it("never counts the payment webhook, whatever the method", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({ method: "POST", path: "/webhooks/payments" })
+        );
+
+        expect(checkRateLimitMock).not.toHaveBeenCalled();
+    });
+
+    it("spends a single budget on a strict path", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "POST",
+                path: "/account/password",
+                authorization: `Bearer ${unsignedJwt("uid-1")}`,
+            })
+        );
+
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(1);
+        expect(checkRateLimitMock.mock.calls[0][1]).toEqual({
+            budget: "strict",
+            subject: undefined,
+        });
+    });
+
+    it("keys the standard budget by a hash of the bearer subject", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                origin: APP_ORIGIN,
+                method: "POST",
+                path: "/notifications/read-all",
+                authorization: `Bearer ${unsignedJwt("uid-1")}`,
+            })
+        );
+
+        const [, options] = checkRateLimitMock.mock.calls[0] as [
+            unknown,
+            { budget: string; subject: string },
+        ];
+        expect(options.budget).toBe("standard");
+        expect(options.subject).toMatch(HASHED_SUBJECT);
+        expect(options.subject).not.toContain("uid-1");
+    });
+
+    it("counts signing out in the standard budget, keyed by the forwarded session subject", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(
+            makeRequest({
+                method: "DELETE",
+                path: "/auth/session",
+                authorization: `Bearer ${unsignedJwt("uid-1")}`,
+            })
+        );
+        await proxy(
+            makeRequest({
+                method: "DELETE",
+                path: "/auth/session",
+                authorization: `Bearer ${unsignedJwt("uid-2")}`,
+            })
+        );
+        await proxy(makeRequest({ method: "GET", path: "/auth/session" }));
+
+        expect(checkRateLimitMock).toHaveBeenCalledTimes(2);
+        const [firstOptions, secondOptions] = checkRateLimitMock.mock.calls.map(
+            ([, options]) => options as { budget: string; subject: string }
+        );
+        expect(firstOptions.budget).toBe("standard");
+        expect(secondOptions.budget).toBe("standard");
+        expect(firstOptions.subject).toMatch(HASHED_SUBJECT);
+        expect(secondOptions.subject).toMatch(HASHED_SUBJECT);
+        expect(firstOptions.subject).not.toBe(secondOptions.subject);
     });
 
     it("omits the wait when the refusal carries none", async () => {

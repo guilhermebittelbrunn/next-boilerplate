@@ -32,14 +32,14 @@ function warnOnDisabledRateLimit(): void {
 
     if (state === "absent") {
         console.warn(
-            "[security] rate limiting is DISABLED (no ARCJET_KEY). Public auth routes accept unlimited requests."
+            "[security] rate limiting is DISABLED (no ARCJET_KEY). Mutating routes accept unlimited requests."
         );
         return;
     }
 
     if (state === "malformed") {
         console.error(
-            '[security] rate limiting is DISABLED (ARCJET_KEY is set but does not start with "ajkey_"). Public auth routes accept unlimited requests.'
+            '[security] rate limiting is DISABLED (ARCJET_KEY is set but does not start with "ajkey_"). Mutating routes accept unlimited requests.'
         );
     }
 }

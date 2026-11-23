@@ -1,4 +1,8 @@
-import { checkRateLimit, type RateLimitBlockReason } from "@repo/security";
+import {
+    checkRateLimit,
+    type RateLimitBlockReason,
+    type RateLimitBudget,
+} from "@repo/security";
 import {
     applySecurityHeaders,
     buildApiOptions,
@@ -16,6 +20,7 @@ import {
     isOriginAllowed,
     resolveAllowedOrigins,
 } from "@/(shared)/lib/cors";
+import { rateLimitSubject } from "@/(shared)/lib/rate-limit-subject";
 import { env } from "@/env";
 
 const NO_CONTENT = 204;
@@ -28,11 +33,15 @@ const allowedOrigins = resolveAllowedOrigins(
 const securityOptions = buildApiOptions();
 
 /**
- * Account entry and recovery endpoints: no guard to hang a budget on, and each one
- * spends the project's Identity Toolkit quota or sends mail on the fork's account.
- * `/auth/me` is authenticated and on the hot path, `/webhooks/payments` is retried
- * aggressively by Stripe — throttling either costs more than it protects. The GET on
- * `/auth/sign-in/email-link` stays off for the same reason as `/auth/me`: every visit to the
+ * Two budgets. Every POST/PUT/PATCH/DELETE counts in the standard one (60 a minute per
+ * address and actor), so a new mutating endpoint is limited without being listed here.
+ * The paths below count in the strict one instead (20 a minute per address), never in
+ * both: each spends the project's Identity Toolkit quota, sends mail, writes billed
+ * storage or charges money on the fork's account.
+ *
+ * Account entry and recovery endpoints have no guard to hang a budget on. `/auth/me` is
+ * authenticated and on the hot path, so it stays off: GETs only count when listed here.
+ * The GET on `/auth/sign-in/email-link` stays off for the same reason: every visit to the
  * sign-in screen reads it, and it only describes the configuration.
  *
  * `/files` is the exception that is authenticated: a guard is no budget when the caller
@@ -40,7 +49,8 @@ const securityOptions = buildApiOptions();
  * and is billed as storage and egress. The two data-rights endpoints are the same kind of
  * exception: the export reads the whole dossier on every call, and the deletion spends
  * Identity Toolkit quota on each password attempt. The email change request spends it
- * too, and sends two emails on top.
+ * too, and sends two emails on top. Changing or setting the password spends it as well,
+ * and the payment endpoints open a session on the provider for each call.
  *
  * `/payments/catalog` stays off the list on purpose: the landing's server asks for it on
  * behalf of every visitor, from one address, so a per-address budget would throttle the
@@ -55,9 +65,9 @@ const securityOptions = buildApiOptions();
  * `/invitations/preview` is public and answers whether a token is live, `/invitations/accept`
  * consumes one. The pending ceiling and the resend interval still hold without a budget.
  *
- * Matched exactly, so a new endpoint is unlimited until it is listed here.
+ * Matched exactly: a neighbour of a listed path falls back to the standard budget.
  */
-const RATE_LIMITED_PATHS = [
+const STRICT_RATE_LIMITED_PATHS = [
     "/auth/sign-in",
     "/auth/sign-up",
     "/auth/sign-in/google",
@@ -71,24 +81,38 @@ const RATE_LIMITED_PATHS = [
     "/account/export",
     "/account/deletion",
     "/account/email",
+    "/account/password",
+    "/account/password/set",
     "/contact",
     "/organization/invitations",
     "/invitations/preview",
     "/invitations/accept",
+    "/payments/checkout",
+    "/payments/portal",
 ];
 
 /** Listed paths that count only these methods; every other listed path counts any method. */
-const RATE_LIMITED_METHODS = new Map<string, readonly string[]>([
+const STRICT_RATE_LIMITED_METHODS = new Map<string, readonly string[]>([
     ["/organization/invitations", ["POST"]],
 ]);
 
-function isRateLimited(request: NextRequest): boolean {
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+/** Stripe retries from a handful of addresses; a 429 here is a lost event. */
+const RATE_LIMIT_EXEMPT_PATHS = ["/webhooks/payments"];
+
+function rateLimitBudgetFor(request: NextRequest): RateLimitBudget | null {
     const { pathname } = request.nextUrl;
-    if (!RATE_LIMITED_PATHS.includes(pathname)) {
-        return false;
+    if (STRICT_RATE_LIMITED_PATHS.includes(pathname)) {
+        const methods = STRICT_RATE_LIMITED_METHODS.get(pathname);
+        if (methods === undefined || methods.includes(request.method)) {
+            return "strict";
+        }
     }
-    const methods = RATE_LIMITED_METHODS.get(pathname);
-    return methods === undefined || methods.includes(request.method);
+    if (RATE_LIMIT_EXEMPT_PATHS.includes(pathname)) {
+        return null;
+    }
+    return MUTATING_METHODS.has(request.method) ? "standard" : null;
 }
 
 /** Single line, stable prefix, no address, header or body: blocking is not a reason to start retaining personal data. */
@@ -173,8 +197,15 @@ export async function proxy(request: NextRequest) {
         );
     }
 
-    if (isRateLimited(request)) {
-        const decision = await checkRateLimit(request);
+    const budget = rateLimitBudgetFor(request);
+    if (budget) {
+        const decision = await checkRateLimit(request, {
+            budget,
+            subject:
+                budget === "standard"
+                    ? await rateLimitSubject(request)
+                    : undefined,
+        });
 
         if (!decision.allowed) {
             logBlocked(decision.reason, request, requestId);
