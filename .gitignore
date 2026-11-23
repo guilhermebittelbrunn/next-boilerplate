@@ -61,7 +61,9 @@ yarn-error.log*
 .pnpm-store
 
 # local env files
-.env*.local
+.env*
+!.env.example
+*-firebase-adminsdk-*.json
 
 # vercel
 .vercel
