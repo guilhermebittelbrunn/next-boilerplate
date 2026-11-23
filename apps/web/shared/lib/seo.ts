@@ -1,7 +1,16 @@
-import { getDefaultLocale, locales } from "@repo/internationalization/utils";
+import {
+    getDefaultLocale,
+    type Locale,
+    locales,
+    resolveLocale,
+} from "@repo/internationalization/utils";
 import { getBrand } from "@repo/next-config/brand";
 import { createMetadata } from "@repo/seo/metadata";
 import type { Metadata } from "next";
+import {
+    OPEN_GRAPH_IMAGE_SIZE,
+    resolveOpenGraphCard,
+} from "@/shared/lib/openGraph";
 
 const OG_LOCALES: Record<string, string> = {
     "pt-br": "pt_BR",
@@ -37,20 +46,36 @@ export function getWebBaseUrl(): string {
     return "http://localhost:3001";
 }
 
+/** Absolute, so crawlers that ignore `metadataBase` still resolve the share image. */
+export function openGraphImageUrl(locale: Locale): string {
+    return `${getWebBaseUrl()}/${locale}/opengraph-image`;
+}
+
 /**
  * Page metadata with i18n SEO: canonical + hreflang `alternates` for every
  * locale (+ x-default) and a locale-specific Open Graph locale. `path` is the
  * route without the locale prefix (e.g. "" for home, "/pricing").
+ *
+ * The share image is declared here, not left to the `opengraph-image` file of the
+ * layout: Next replaces the whole `openGraph` object a page exports, so the layout's
+ * image would never reach a page that sets its own Open Graph locale.
+ *
+ * `indexable: false` keeps a page out of search results while leaving it crawlable,
+ * which a `Disallow` in robots.txt would not: a blocked page is never read, so its
+ * `noindex` is never seen.
  */
 export function buildLocaleMetadata({
     meta,
     locale,
     path = "",
+    indexable = true,
 }: {
     meta: PageMeta;
     locale: string;
     path?: string;
+    indexable?: boolean;
 }): Metadata {
+    const card = resolveOpenGraphCard(locale);
     const languages: Record<string, string> = {};
     for (const supported of locales) {
         languages[supported] = `/${supported}${path}`;
@@ -65,6 +90,14 @@ export function buildLocaleMetadata({
         },
         openGraph: {
             locale: OG_LOCALES[locale] ?? "en_US",
+            images: [
+                {
+                    url: openGraphImageUrl(resolveLocale(locale)),
+                    ...OPEN_GRAPH_IMAGE_SIZE,
+                    alt: card.alt,
+                },
+            ],
         },
+        ...(indexable ? {} : { robots: { index: false, follow: true } }),
     });
 }

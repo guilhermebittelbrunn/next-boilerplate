@@ -10,6 +10,8 @@ import { buildLocaleMetadata, getWebBaseUrl } from "@/shared/lib/seo";
  */
 
 const LOCALHOST_FALLBACK = "http://localhost:3001";
+const SHARE_IMAGE_SIZE = { width: 1200, height: 630 };
+const SPANISH_SHARE_IMAGE_PATH = /\/es\/opengraph-image$/;
 
 afterEach(() => {
     vi.unstubAllEnvs();
@@ -137,5 +139,92 @@ describe("buildLocaleMetadata", () => {
         const metadata = buildLocaleMetadata({ meta, locale: "de" });
 
         expect(metadata.openGraph?.locale).toBe("en_US");
+    });
+});
+
+describe("buildLocaleMetadata share image", () => {
+    const meta = { title: "Pricing", description: "Plans and pricing" };
+    const BASE_URL = "https://landing.example";
+
+    const firstImage = (metadata: ReturnType<typeof buildLocaleMetadata>) => {
+        const images = metadata.openGraph?.images;
+        return (Array.isArray(images) ? images[0] : images) as {
+            url: string;
+            width: number;
+            height: number;
+            alt: string;
+        };
+    };
+
+    it.each([
+        ["pt-br", "Cartão de apresentação de"],
+        ["en", "preview card"],
+        ["es", "Tarjeta de presentación de"],
+    ])(
+        "points %s pages at the image of their own locale",
+        (locale, altFragment) => {
+            vi.stubEnv("NEXT_PUBLIC_WEB_URL", BASE_URL);
+            vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Acme");
+
+            const image = firstImage(
+                buildLocaleMetadata({ meta, locale, path: "/pricing" })
+            );
+
+            expect(image.url).toBe(`${BASE_URL}/${locale}/opengraph-image`);
+            expect({ width: image.width, height: image.height }).toEqual(
+                SHARE_IMAGE_SIZE
+            );
+            expect(image.alt).toContain(altFragment);
+            expect(image.alt).toContain("Acme");
+        }
+    );
+
+    it("keeps the Open Graph locale next to the image", () => {
+        const metadata = buildLocaleMetadata({ meta, locale: "es" });
+
+        expect(metadata.openGraph?.locale).toBe("es_ES");
+        expect(firstImage(metadata).url).toMatch(SPANISH_SHARE_IMAGE_PATH);
+    });
+
+    it("falls back to the default locale image for an unsupported locale", () => {
+        vi.stubEnv("NEXT_PUBLIC_WEB_URL", BASE_URL);
+        vi.stubEnv("NEXT_PUBLIC_DEFAULT_LOCALE", "en");
+
+        const image = firstImage(buildLocaleMetadata({ meta, locale: "de" }));
+
+        expect(image.url).toBe(`${BASE_URL}/en/opengraph-image`);
+        expect(image.alt).toContain("preview card");
+    });
+
+    it("points at localhost when no site URL is configured", () => {
+        vi.stubEnv("NEXT_PUBLIC_WEB_URL", "");
+        vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "");
+
+        const image = firstImage(
+            buildLocaleMetadata({ meta, locale: "pt-br" })
+        );
+
+        expect(image.url).toBe(`${LOCALHOST_FALLBACK}/pt-br/opengraph-image`);
+    });
+});
+
+describe("buildLocaleMetadata indexing", () => {
+    const meta = { title: "Sign in", description: "Access your account" };
+
+    it("leaves pages indexable by default", () => {
+        expect(
+            buildLocaleMetadata({ meta, locale: "en" }).robots
+        ).toBeUndefined();
+    });
+
+    it("keeps a non-indexable page crawlable so its noindex is read", () => {
+        const metadata = buildLocaleMetadata({
+            meta,
+            locale: "en",
+            path: "/sign-in",
+            indexable: false,
+        });
+
+        expect(metadata.robots).toEqual({ index: false, follow: true });
     });
 });
