@@ -1,4 +1,4 @@
-import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { getAuthInstance, revokeUserSessionsOrThrow } from "@repo/auth/server";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import {
@@ -6,6 +6,7 @@ import {
     identityResetPassword,
 } from "@/(shared)/lib/firebase-identity-toolkit";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
+import { sessionsNotRevokedResponse } from "@/(shared)/lib/session-revocation";
 import {
     mapOobActionMessageToCode,
     statusForAuthErrorCode,
@@ -48,11 +49,12 @@ export async function POST(req: Request) {
     // in every app at the next navigation.
     try {
         const user = await getAuthInstance().getUserByEmail(email);
-        await revokeUserSessions(user.uid);
+        await revokeUserSessionsOrThrow(user.uid);
     } catch {
         logEvent("auth", "session-revoke-failed", {
             requestId: requestIdFrom(req),
         });
+        return sessionsNotRevokedResponse();
     }
 
     return Response.json({ data: { confirmed: true } });

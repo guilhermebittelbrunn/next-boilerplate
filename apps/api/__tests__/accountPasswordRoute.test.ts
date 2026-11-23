@@ -60,6 +60,8 @@ vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ updateUser: updateUserMock }),
     revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
 }));
 
 const { POST: changePassword } = await import(
@@ -135,6 +137,16 @@ describe("POST /account/password", () => {
             password: VALID_BODY.password,
         });
         expect(revokeUserSessionsMock).toHaveBeenCalledWith(OWNER_UID);
+    });
+
+    it("responde 500 AUTH_SESSIONS_NOT_REVOKED quando a revogação falha depois da troca", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+
+        const response = await changePassword(request(VALID_BODY));
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("AUTH_SESSIONS_NOT_REVOKED");
+        expect(updateUserMock).toHaveBeenCalledTimes(1);
     });
 
     it("revoga as sessões apenas depois de a senha ter sido gravada", async () => {
@@ -286,6 +298,15 @@ describe("POST /account/sessions/revoke", () => {
         expect(response.status).toBe(HTTP_STATUS.OK);
         expect(body.data.confirmed).toBe(true);
         expect(revokeUserSessionsMock).toHaveBeenCalledWith(OWNER_UID);
+    });
+
+    it("responde 500 ACCOUNT_SESSIONS_REVOKE_FAILED quando o Firebase recusa a revogação", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+
+        const response = await revokeSessions(revokeRequest());
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("ACCOUNT_SESSIONS_REVOKE_FAILED");
     });
 
     it("ignora um uid enviado no corpo", async () => {

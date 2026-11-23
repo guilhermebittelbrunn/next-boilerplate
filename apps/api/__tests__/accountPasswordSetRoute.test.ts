@@ -43,6 +43,8 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ updateUser: updateUserMock }),
     revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
     verifyIdTokenClaims: (...args: unknown[]) =>
         verifyIdTokenClaimsMock(...args),
 }));
@@ -123,6 +125,21 @@ beforeEach(() => {
 });
 
 describe("POST /account/password/set", () => {
+    it("responde 500 AUTH_SESSIONS_NOT_REVOKED e registra na trilha quando a revogação falha", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+
+        const response = await setPassword(request(VALID_BODY));
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("AUTH_SESSIONS_NOT_REVOKED");
+        expect(updateUserMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                action: AuditAction.ACCOUNT_PASSWORD_SET,
+            })
+        );
+    });
+
     it("define a senha, encerra todas as sessões e registra na trilha", async () => {
         const response = await setPassword(request(VALID_BODY));
         const body = (await response.json()) as {

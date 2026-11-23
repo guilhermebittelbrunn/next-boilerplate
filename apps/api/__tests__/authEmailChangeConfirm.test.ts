@@ -30,6 +30,8 @@ vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
 
 vi.mock("@repo/auth/server", () => ({
     revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
 }));
 
 vi.mock("@/(shared)/repositories/user.repository", () => ({
@@ -204,6 +206,35 @@ describe("POST /auth/email-change/confirm", () => {
         const logged = JSON.stringify(logEventMock.mock.calls);
         expect(logged).not.toContain(OLD_EMAIL);
         expect(logged).not.toContain(NEW_EMAIL);
+    });
+
+    it("responde 500 AUTH_SESSIONS_NOT_REVOKED e ainda grava a troca quando a revogação falha", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+
+        const response = await post({ oobCode: "code-1" });
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("AUTH_SESSIONS_NOT_REVOKED");
+        expect(recordAuditEventMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                action: AuditAction.ACCOUNT_EMAIL_CHANGE,
+            })
+        );
+        expect(logEventMock).toHaveBeenCalledWith(
+            "auth",
+            "session-revoke-failed",
+            { requestId: REQUEST_ID }
+        );
+    });
+
+    it("responde 500 AUTH_SESSIONS_NOT_REVOKED quando a revogação falha e o perfil não existe", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+        findByReferenceIdMock.mockResolvedValue(null);
+
+        const response = await post({ oobCode: "code-1" });
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("AUTH_SESSIONS_NOT_REVOKED");
     });
 
     it("responde 200 quando a leitura do perfil falha depois da troca", async () => {

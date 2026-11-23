@@ -1,4 +1,4 @@
-import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { getAuthInstance } from "@repo/auth/server";
 import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
@@ -8,6 +8,10 @@ import {
     identitySignInWithPassword,
 } from "@/(shared)/lib/firebase-identity-toolkit";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
+import {
+    revokeSessionsOrReport,
+    sessionsNotRevokedResponse,
+} from "@/(shared)/lib/session-revocation";
 import {
     mapPasswordCheckMessageToCode,
     statusForAuthErrorCode,
@@ -63,7 +67,7 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
 
     // Every session of this account is dropped, including the caller's: Firebase cannot
     // revoke selectively, and leaving a stolen session alive would defeat the change.
-    await revokeUserSessions(ctx.user.uid);
+    const sessionsRevoked = await revokeSessionsOrReport(ctx.user.uid, req);
 
     await recordAuditEvent({
         action: AuditAction.ACCOUNT_PASSWORD_CHANGE,
@@ -75,6 +79,10 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
         targetLabel: email,
         requestId: requestIdFrom(req),
     });
+
+    if (!sessionsRevoked) {
+        return sessionsNotRevokedResponse();
+    }
 
     return Response.json({ data: { confirmed: true } });
 });

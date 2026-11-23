@@ -48,6 +48,8 @@ vi.mock("@repo/auth/server", () => ({
         getUserByEmail: (...args: unknown[]) => getUserByEmailMock(...args),
     }),
     revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
 }));
 
 /**
@@ -264,7 +266,7 @@ describe("POST /auth/password/reset", () => {
         expect(revokeUserSessionsMock).toHaveBeenCalledWith("uid-1");
     });
 
-    it("still confirms when the sessions could not be revoked", async () => {
+    it("answers AUTH_SESSIONS_NOT_REVOKED when the account lookup fails after the reset", async () => {
         getUserByEmailMock.mockRejectedValue(new Error("lookup down"));
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {
             // silence the expected report
@@ -275,9 +277,27 @@ describe("POST /auth/password/reset", () => {
             password: "secret12",
         });
 
-        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await response.json()).toEqual({
+            error: { code: "AUTH_SESSIONS_NOT_REVOKED" },
+        });
         expect(revokeUserSessionsMock).not.toHaveBeenCalled();
         errorSpy.mockRestore();
+    });
+
+    it("answers AUTH_SESSIONS_NOT_REVOKED when Firebase refuses the revocation", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+
+        const response = await postResetConfirm({
+            oobCode: "code",
+            password: "secret12",
+        });
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await response.json()).toEqual({
+            error: { code: "AUTH_SESSIONS_NOT_REVOKED" },
+        });
+        expect(identityResetPasswordMock).toHaveBeenCalledTimes(1);
     });
 
     it.each([

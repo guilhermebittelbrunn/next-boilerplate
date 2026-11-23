@@ -1,4 +1,4 @@
-import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { getAuthInstance } from "@repo/auth/server";
 import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
@@ -6,6 +6,10 @@ import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import { hasPasswordProvider } from "@/(shared)/lib/auth-providers";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import { isRecentGoogleSignIn } from "@/(shared)/lib/recent-google-sign-in";
+import {
+    revokeSessionsOrReport,
+    sessionsNotRevokedResponse,
+} from "@/(shared)/lib/session-revocation";
 import { parseSetPassword } from "@/(shared)/validation/account.schema";
 import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
 
@@ -71,7 +75,7 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
     }
 
     // A new credential ends every session, the caller's included, as a password change does.
-    await revokeUserSessions(ctx.user.uid);
+    const sessionsRevoked = await revokeSessionsOrReport(ctx.user.uid, req);
 
     await recordAuditEvent({
         action: AuditAction.ACCOUNT_PASSWORD_SET,
@@ -83,6 +87,10 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
         targetLabel: email,
         requestId: requestIdFrom(req),
     });
+
+    if (!sessionsRevoked) {
+        return sessionsNotRevokedResponse();
+    }
 
     return Response.json({ data: { confirmed: true } });
 });

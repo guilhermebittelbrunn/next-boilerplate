@@ -1,4 +1,3 @@
-import { revokeUserSessions } from "@repo/auth/server";
 import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { logEvent } from "@repo/shared/utils/helpers/log";
@@ -11,6 +10,10 @@ import {
     type ToolkitApplyOob,
 } from "@/(shared)/lib/firebase-identity-toolkit";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
+import {
+    revokeSessionsOrReport,
+    sessionsNotRevokedResponse,
+} from "@/(shared)/lib/session-revocation";
 import {
     mapOobActionMessageToCode,
     statusForAuthErrorCode,
@@ -72,11 +75,15 @@ export async function POST(req: Request) {
         throw error;
     }
 
-    // The provider has already moved the address, so from here on nothing is reported as
-    // a failure to whoever opened the link. Applying the code does not revoke the
+    // The provider has already moved the address. Applying the code does not revoke the
     // account's sessions on its own, and a session opened before the change must not
-    // outlive it.
-    await revokeUserSessions(applied.localId);
+    // outlive it. From here on the only failure reported is that one: the person has to
+    // know that older sessions are still open, while a missing trail entry is ours to log.
+    const sessionsRevoked = await revokeSessionsOrReport(applied.localId, req);
+    const confirmed = () =>
+        sessionsRevoked
+            ? Response.json({ data: { confirmed: true } })
+            : sessionsNotRevokedResponse();
 
     const requestId = requestIdFrom(req);
     const profile = await userRepository
@@ -85,7 +92,7 @@ export async function POST(req: Request) {
 
     if (!profile) {
         logEvent("account", "email-change-audit-skipped", { requestId });
-        return Response.json({ data: { confirmed: true } });
+        return confirmed();
     }
 
     await recordAuditEvent({
@@ -100,5 +107,5 @@ export async function POST(req: Request) {
         requestId,
     });
 
-    return Response.json({ data: { confirmed: true } });
+    return confirmed();
 }

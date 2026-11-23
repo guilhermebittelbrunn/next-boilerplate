@@ -55,6 +55,8 @@ vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ updateUser: updateUserMock }),
     revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
 }));
 
 const { POST: changePassword } = await import(
@@ -175,6 +177,20 @@ describe("POST /account/password leaves a trail", () => {
         expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
+    it("still records the change when ending the sessions fails, and answers the error", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+
+        const response = await changePassword(passwordRequest());
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "AUTH_SESSIONS_NOT_REVOKED" },
+        });
+        expect(recordedEvent()).toMatchObject({
+            action: AuditAction.ACCOUNT_PASSWORD_CHANGE,
+        });
+    });
+
     it("records the change only after the sessions are dropped", async () => {
         const order: string[] = [];
         revokeUserSessionsMock.mockImplementation(() => {
@@ -206,6 +222,18 @@ describe("POST /account/sessions/revoke leaves a trail", () => {
             targetLabel: OWNER_EMAIL,
             requestId: "req-77",
         });
+    });
+
+    it("records nothing when no session was ended", async () => {
+        revokeUserSessionsMock.mockRejectedValue(new Error("auth is down"));
+
+        const response = await revokeSessions(revokeRequest());
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "ACCOUNT_SESSIONS_REVOKE_FAILED" },
+        });
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 
     it("records the revocation after the sessions are actually dropped", async () => {
