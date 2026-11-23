@@ -71,8 +71,10 @@ Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md).
    como roteiro, as URLs do Passo 0 e a regra de evidência: número medido escrito no relatório, prints em
    `docs/delivery/reports/<data>/screenshots/` (fora do Git). Ele é o único que dirige o `agent-browser`
    (regra de ouro 11) e sobe o que precisar, derrubando no fim só o que ele subiu.
-2. PageSpeed e Lighthouse: pela API do PageSpeed Insights quando houver URL pública; senão `npx lighthouse`
-   contra o build de produção local, nunca contra `next dev`.
+2. PageSpeed e Lighthouse: pela API do PageSpeed Insights quando houver URL pública; senão
+   `pnpm --filter web build` e `pnpm lighthouse` contra o build de produção local, nunca contra `next dev`. A
+   tabela de `apps/e2e/lighthouse-results/summary.md` vai para o relatório. Celular: `pnpm --filter e2e e2e
+   --project=mobile` antes da passada com o `agent-browser`.
 3. Preencha a seção 3 do relatório com o que o `analista-qa` mediu.
 
 ## Passo 4 — Documentação (parte 4)
