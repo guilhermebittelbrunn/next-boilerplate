@@ -94,4 +94,25 @@ describe("web proxy matcher", () => {
         expect(matches("/pt-br")).toBe(true);
         expect(matches("/en/pricing")).toBe(true);
     });
+
+    it.each([
+        "/api/auth/session",
+        "/api/auth/session/refresh",
+        "/api/auth/custom-token",
+    ])(
+        "runs on the session route %s, so it carries the security headers",
+        (path) => {
+            expect(matches(path)).toBe(true);
+        }
+    );
+
+    it.each([
+        "/_next/static/chunks/main.js",
+        "/_next/image",
+        "/favicon.ico",
+        "/robots.txt",
+        "/sitemap.xml",
+    ])("still skips %s", (path) => {
+        expect(matches(path)).toBe(false);
+    });
 });

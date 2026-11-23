@@ -56,11 +56,15 @@ const REPORT_ONLY = true;
 
 export const config = {
     // matcher tells Next.js which routes to run the proxy on. This runs on all
-    // routes except for static assets and API routes. Proxy always runs on Node.
+    // routes except for static assets. Proxy always runs on Node.
     matcher: [
-        "/((?!_next/static|_next/image|favicon.ico|api|robots.txt|sitemap.xml|showcase/).*)",
+        "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|showcase/).*)",
     ],
 };
+
+function isApiPath(pathname: string): boolean {
+    return pathname === "/api" || pathname.startsWith("/api/");
+}
 
 // Custom middleware for Arcjet security checks
 const arcjetMiddleware = async (request: NextRequest) => {
@@ -85,6 +89,16 @@ const arcjetMiddleware = async (request: NextRequest) => {
 };
 
 export default async function proxy(request: NextRequest) {
+    // Route handlers answer JSON on their own: no locale to resolve and no bot check,
+    // only the headers every response carries.
+    if (isApiPath(request.nextUrl.pathname)) {
+        return applySecurityHeaders(
+            NextResponse.next(),
+            securityOptions,
+            REPORT_ONLY
+        );
+    }
+
     return applySecurityHeaders(
         await route(request),
         securityOptions,
