@@ -92,18 +92,14 @@ export default async function proxy(request: NextRequest) {
     // Route handlers answer JSON on their own: no locale to resolve and no bot check,
     // only the headers every response carries.
     if (isApiPath(request.nextUrl.pathname)) {
-        return applySecurityHeaders(
-            NextResponse.next(),
-            securityOptions,
-            REPORT_ONLY
-        );
+        return applySecurityHeaders(NextResponse.next(), securityOptions, {
+            reportOnly: REPORT_ONLY,
+        });
     }
 
-    return applySecurityHeaders(
-        await route(request),
-        securityOptions,
-        REPORT_ONLY
-    );
+    return applySecurityHeaders(await route(request), securityOptions, {
+        reportOnly: REPORT_ONLY,
+    });
 }
 
 async function route(request: NextRequest) {

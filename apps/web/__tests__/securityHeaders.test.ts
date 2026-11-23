@@ -131,3 +131,16 @@ describe("web security headers on the session routes", () => {
         expect(secureMock).not.toHaveBeenCalled();
     });
 });
+
+describe("web responses stay indexable", () => {
+    it.each([
+        ["GET", "/pt-br"],
+        ["GET", "/en/pricing"],
+        ["GET", "/"],
+        ["POST", "/api/auth/session"],
+    ])("sends no robots header on %s %s", async (method, path) => {
+        const response = await proxy(makeRequest(path, method));
+
+        expect(response.headers.get("x-robots-tag")).toBeNull();
+    });
+});
