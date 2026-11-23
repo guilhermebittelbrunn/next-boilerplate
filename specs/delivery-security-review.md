@@ -87,8 +87,8 @@ foram reconferidas em `388a453`.
   ausência de `Origin` (`packages/auth/session.ts:78-82`); `customTokenPOST` não confere origem
   (`packages/auth/session-routes.ts:190-198`).
 - **1.18 Cookies** — o helper só põe `Secure` quando pedem (`packages/shared/utils/helpers/cookies.ts:24-31`),
-  e quase ninguém pede; `x-locale` sai sem `maxAge` nem `Secure` (`apps/app/proxy.ts:235,239`,
-  `apps/web/proxy.ts:111,115`); `bp:*` sem `Secure` (`apps/app/shared/lib/panelState.ts:142`). O cookie de
+  e quase ninguém pede; `x-locale` sai sem `maxAge` nem `Secure` (`apps/app/proxy.ts:245,249`, eram `:235,239` até a PR #65;
+  `apps/web/proxy.ts:125,129`, eram `:111,115`); `bp:*` sem `Secure` (`apps/app/shared/lib/panelState.ts:142`). O cookie de
   sessão em si está correto (`packages/auth/session.ts:60-71`).
 - **1.16 Dados sensíveis em log** — `console.error(error)` com o objeto inteiro em
   `packages/auth/server.ts:194,211,227,260,286,315,340` (sete; até a auditoria de 2026-11-23 a lista citava cinco e
@@ -186,7 +186,7 @@ O CI da execução de merge passou nos quatro jobs (`gh run 45105651062`). O `/t
 - **Segundo fator e reautenticação para admin.** Já é a fatia 3 de
   [`account-security-mfa`](account-security-mfa.md).
 - **Captcha, App Check e bloqueio de bot.** São controles de borda e de console; estão em
-  [`delivery-infra-hardening`](delivery-infra-hardening.md).
+  [`delivery-infra-hardening`](../docs/features/delivery-infra-hardening/spec.md), entregue pela PR #65.
 - **Nonce na CSP para tirar `'unsafe-inline'` de `script-src`.** É mudança grande (tema, hidratação e
   `gtag`) e merece spec própria.
 - **Exigir e-mail verificado nos guards.** Muda o fluxo de todo fork; fica como opção a decidir depois da

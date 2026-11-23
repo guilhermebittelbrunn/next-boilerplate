@@ -169,7 +169,7 @@ segue invisível até alguém conferir a fatura.
   > houve regressão — não houve. O código morto continua fora; o nome foi reaproveitado.
   `@repo/analytics` segue sem dependência oculta, declarando `NEXT_PUBLIC_GA_MEASUREMENT_ID` como sua
   única env.
-- `packages/security/index.ts:94-97` (era `:40-43` até a PR #64) — o padrão de referência do repo para integração opcional: sem a
+- `packages/security/index.ts:101-104` (era `:94-97` até a PR #65 e `:40-43` até a PR #64) — o padrão de referência do repo para integração opcional: sem a
   variável de ambiente, a função retorna sem fazer nada. É o critério que o coletor precisa seguir quando
   alguém o adotar.
 
@@ -262,7 +262,7 @@ o ponteiro para a seção 10 estava errado, e a 10 é a CSP bloqueante da `apps/
 ## Riscos e trade-offs
 
 - **Custo herdado por todo fork:** o serviço de coleta exige conta. Se a integração não for estritamente
-  no-op na ausência da variável — como `packages/security/index.ts:94-97` já faz com `ARCJET_KEY` — todo
+  no-op na ausência da variável — como `packages/security/index.ts:101-104` já faz com `ARCJET_KEY` — todo
   fork passa a ter uma env obrigatória a mais para subir. Este é o risco número um da spec.
 - **Cota queimada por amostragem alta** (prática 6): o free tier some em dias se o padrão for coletar tudo.
   O default do boilerplate precisa ser conservador, e o valor precisa ser configurável.

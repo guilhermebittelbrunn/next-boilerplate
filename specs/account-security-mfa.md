@@ -377,7 +377,7 @@ no nosso código.
 
 - **Custo herdado por todo fork:** se o segundo fator exigir habilitar um serviço pago no provedor, todo
   fork que não o usa não pode pagar por ele nem falhar no build. O padrão tem de ser **NO-OP quando falta
-  a configuração**, como `packages/security/index.ts:94-97` faz com `ARCJET_KEY` (era `:40-43` até a PR #64).
+  a configuração**, como `packages/security/index.ts:101-104` faz com `ARCJET_KEY` (era `:94-97` até a PR #65 e `:40-43` até a PR #64).
 - **Endurecer a verificação de credencial custa latência em toda requisição autenticada.** Checar
   revogação a cada chamada é mais seguro e mais caro; não checar é a falha atual. O meio-termo (checar
   onde importa) só funciona se "onde importa" estiver definido no core, e não a critério de cada fork.

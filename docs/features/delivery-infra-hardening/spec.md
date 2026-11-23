@@ -1,7 +1,7 @@
 ---
 id: delivery-infra-hardening
 title: Core aprovado na parte 2 da entrega (infra e hardening)
-status: approved
+status: done
 value: alto
 effort: M
 audience: confianca
@@ -9,7 +9,7 @@ area: [.github, apps/web, apps/api, apps/app, packages/security, packages/next-c
 mode: ambos
 depends_on: []
 contends_on: [.github/workflows/ci.yml, apps/web/env.ts, apps/web/proxy.ts, apps/app/proxy.ts, packages/security/middleware.ts, packages/next-config/brand.ts, apps/app/next.config.ts]
-feature: -
+feature: delivery-infra-hardening
 updated: 2026-11-23
 ---
 
@@ -17,10 +17,10 @@ updated: 2026-11-23
 
 ## Problema
 
-A parte 2 da [etapa de entrega](../docs/delivery/README.md),
-[infra e hardening](../docs/delivery/02-infra-hardening.md), confere 20 controles que precisam estar
+A parte 2 da [etapa de entrega](../../delivery/README.md),
+[infra e hardening](../../delivery/02-infra-hardening.md), confere 20 controles que precisam estar
 ligados em produção. Metade deles depende de console (GitHub, Vercel, Firebase, Arcjet, Stripe, Resend) e
-está coberta pelo [prompt do Claude Cowork](../docs/delivery/cowork-infra-prompt.md). A outra metade é do
+está coberta pelo [prompt do Claude Cowork](../../delivery/cowork-infra-prompt.md). A outra metade é do
 repositório, e ali o core tem lacunas que todo fork herda: nenhuma varredura de segredo nem de dependência
 roda sozinha, o bloqueio de bot da landing nunca executa, e faltam cabeçalhos. O próprio repositório de
 referência, que é público, tem um alerta de segredo aberto desde abril.
@@ -33,7 +33,7 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   `Referrer-Policy: no-referrer`, `frame-ancestors 'none'`, COOP e CORP
   (`packages/security/middleware.ts:54-139`); CSP bloqueante no painel e na API, `Report-Only` na landing.
   **Lacuna:** sem `Permissions-Policy`; `X-Powered-By: Next.js` nos três apps (nenhum `poweredByHeader`, item
-  que fica com a fatia 1 de [`delivery-security-review`](delivery-security-review.md), entregue pela PR #64:
+  que fica com a fatia 1 de [`delivery-security-review`](../../../specs/delivery-security-review.md), entregue pela PR #64:
   `packages/next-config/index.ts:5`);
   a CSP `Report-Only` da landing não tem destino de relatório; o matcher dos proxies exclui `/api/*`
   (`apps/app/proxy.ts:127`, `apps/web/proxy.ts:61`), então as rotas de sessão das front-ends saem sem
@@ -90,25 +90,25 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   (<https://docs.arcjet.com/bot-protection/concepts>).
 - OWASP Top 10 2025, A02 Security Misconfiguration e A03 Software Supply Chain Failures
   (<https://top10.owasp.org/2025>). Renovate e Lighthouse CI já aparecem em
-  [`research/engineering-baseline.md`](research/engineering-baseline.md).
+  [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md).
 - Todas as URLs acima foram abertas em 2026-11-19.
 
 ## Proposta — corte de MVP
 
-- [ ] **Varredura de segredo no CI**: um job que roda `gitleaks` (ou equivalente) no diff da PR e reprova
+- [x] **Varredura de segredo no CI**: um job que roda `gitleaks` (ou equivalente) no diff da PR e reprova
       com segredo; `.gitignore` cobrindo `.env*` (menos `.env.example`) e JSON de service account.
-- [ ] **Varredura de dependências que roda sozinha**: `.github/dependabot.yml` para `npm` (pnpm) e
+- [x] **Varredura de dependências que roda sozinha**: `.github/dependabot.yml` para `npm` (pnpm) e
       `github-actions`, com atualizações agrupadas, e um job de `pnpm audit --prod --audit-level=critical`
       que reprova a PR.
-- [ ] **Actions pinadas por SHA**, com a versão em comentário, e o Dependabot cuidando das atualizações.
-- [ ] **Bloqueio de bot da landing funcionando**: a chave do Arcjet chega ao proxy da `web` (o
+- [x] **Actions pinadas por SHA**, com a versão em comentário, e o Dependabot cuidando das atualizações.
+- [x] **Bloqueio de bot da landing funcionando**: a chave do Arcjet chega ao proxy da `web` (o
       `skipValidation` deixa de engolir o `extends`), com um teste que prova que `secure()` roda quando a chave
       existe.
-- [ ] **Cabeçalhos completos**: `Permissions-Policy` restritiva no `@repo/security`, e cabeçalhos também
+- [x] **Cabeçalhos completos**: `Permissions-Policy` restritiva no `@repo/security`, e cabeçalhos também
       nas rotas `/api/auth/*` das front-ends. Tirar o `X-Powered-By` era da fatia 1 de
-      [`delivery-security-review`](delivery-security-review.md), entregue pela PR #64.
-- [ ] **Logo da marca só em `https:`** e `images.remotePatterns` do painel restrito ao bucket do produto.
-- [ ] **Guia das chaves do Firebase** em `docs/FORKING.md`: chave do navegador com referenciador e API,
+      [`delivery-security-review`](../../../specs/delivery-security-review.md), entregue pela PR #64.
+- [x] **Logo da marca só em `https:`** e `images.remotePatterns` do painel restrito ao bucket do produto.
+- [x] **Guia das chaves do Firebase** em `docs/FORKING.md`: chave do navegador com referenciador e API,
       chave do servidor só com API; e a correção da seção da Resend.
 
 ### Fora do corte
@@ -165,3 +165,41 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
 - **Varredura de segredo pela action do Gitleaks ou pelo binário?** — **recomendação:** pelo binário (ou
   equivalente sem cadastro), chamado direto no job. A action pede uma chave de licença, gratuita, em todo
   repositório de organização, e isso viraria um segredo a mais para cada fork configurar.
+
+## Entrega conferida em 2026-11-23
+
+Entregue pela PR #65 (`afb5b35`, mergeada em 2026-11-23 às 12:58 UTC, 13 commits de `feat/delivery-infra-hardening`).
+A execução de merge do CI (`gh run 45179347409`) passou nos seis jobs: `changes`, `verify`, `secrets`, `audit`,
+`coverage` e `e2e`. A auditoria conferiu os sete itens do corte no código de `main`:
+
+| item | veredito | o que o código mostra |
+|------|----------|-----------------------|
+| 1. Varredura de segredo | implementado | job `secrets` (`.github/workflows/ci.yml:55-95`): Gitleaks 8.30.1 baixado da release com SHA-256 fixado no próprio arquivo, sobre os commits da PR ou do push. `.gitignore:64-66` ignora `.env*` (menos `.env.example`) e `*-firebase-adminsdk-*.json` |
+| 2. Dependências | implementado | `.github/dependabot.yml` para `npm` e `github-actions`, semanal, com grupos de `minor` e `patch` por tipo de dependência; job `audit` com `pnpm audit --prod --audit-level=high` (`ci.yml:97-113`) |
+| 3. Actions por SHA | implementado | os 21 `uses:` do `ci.yml` estão pinados por SHA de 40 caracteres, com a versão em comentário |
+| 4. Bloqueio de bot da landing | implementado | `apps/web/env.ts` sem `skipValidation`, então `env.ARCJET_KEY` chega ao `secure()` (`apps/web/proxy.ts:71-88`). Testes: `apps/web/__tests__/webEnvArcjet.test.ts:19` e `proxyBotProtection.test.ts:55-90` |
+| 5. Cabeçalhos | implementado | `PERMISSIONS_POLICY` em `packages/security/middleware.ts:25-26`, gravado por `applySecurityHeaders` (`:167`); `/api/*` das front-ends passa pelo proxy e recebe os cabeçalhos (`apps/app/proxy.ts:198-200`, `apps/web/proxy.ts:93-99`) |
+| 6. Logo e otimizador | implementado | `toHttpsUrl` aceita só `https:`, e `http:` apenas em loopback (`packages/next-config/brand.ts:23-46`); `apps/app/next.config.ts:21-39` troca `images.domains` por `remotePatterns`, com `storage.googleapis.com` restrito a `/<bucket>/**` |
+| 7. Guia das chaves | implementado | `docs/FORKING.md` §4, passo 8 (`:217-224`), e a seção da Resend (§7.1, `:316-317`) com as chaves só na `api`; o fork tem a caixa no `PRE-PRODUCTION.md` §17 |
+
+O `/test` fechou com 12 ✅, 0 ❌ e 3 🔒, os três dependentes do GitHub. Medidos depois do merge: os jobs `secrets` e
+`audit` rodaram verdes no merge e nas cinco PRs que o Dependabot abriu no mesmo dia (#66 a #70), e essas PRs mexem
+nos `package.json` dos workspaces, o que responde a dúvida sobre o `directory: /` cobrir o monorepo. Seguem sem
+medição no runner a PR com segredo reprovando e a dependência com CVE alta reprovando; a prova local das duas está em
+`test/report.md`. O sinal "`curl -A python-requests` devolve 403" foi medido em `next start` com
+`ARCJET_ENV=development`; em produção, depende da `ARCJET_KEY` de cada fork.
+
+**Deriva:** cinco diferenças, todas registradas no plano e aceitas na revisão.
+
+- O job `audit` reprova em `high`, não em `critical`. A spec deixava a escolha para o `/analyze`, e o `pnpm audit
+  --prod` saía 0 no dia.
+- O Gitleaks varre só os commits novos, não o histórico. O histórico de `main` já guarda a chave do alerta #1 de
+  secret scanning, e uma varredura completa reprovaria o primeiro push de todo fork.
+- O bloqueio de bot só decide localmente com `ARCJET_ENV=development`; sem isso o Arcjet não tem IP e deixa passar.
+  Está escrito no `docs/FORKING.md` §7.3 e no item 2.12 da parte 2.
+- O `shield` entrou nos dois orçamentos da API em `DRY_RUN` (`packages/security/index.ts:28`, `:68`, `:82`), como a
+  pergunta em aberto recomendava. Passar para `LIVE` é a caixa nova do `PRE-PRODUCTION.md` §8.
+- Os proxies passaram a atender `/api/*` com uma resposta cedo, em vez de o matcher excluir o caminho.
+
+O `contends_on` declarava sete arquivos, e a PR tocou os sete. Fora da lista, tocou mais 19 fora de `docs/features` e
+`specs`: testes, os documentos e o `packages/security/index.ts`.
