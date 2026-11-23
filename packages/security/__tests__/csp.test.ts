@@ -3,6 +3,7 @@ import {
     applySecurityHeaders,
     buildApiOptions,
     buildBrowserAppOptions,
+    PERMISSIONS_POLICY,
 } from "../middleware";
 
 const DIRECTIVE_SEPARATOR = /\s+/;
@@ -208,5 +209,39 @@ describe("report-only mode", () => {
 
         expect(headers.get("x-content-type-options")).toBe("nosniff");
         expect(headers.get("referrer-policy")).toBe("no-referrer");
+    });
+});
+
+describe("permissions policy", () => {
+    const EXPECTED_POLICY =
+        "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+
+    it("turns off the browser features no app uses", () => {
+        expect(PERMISSIONS_POLICY).toBe(EXPECTED_POLICY);
+    });
+
+    it.each([
+        ["the browser app policy", () => headersFor(buildBrowserAppOptions())],
+        ["the api policy", () => headersFor(buildApiOptions())],
+        [
+            "the landing while it only reports CSP violations",
+            () => headersFor(buildBrowserAppOptions(), true),
+        ],
+    ])("is sent with %s", (_label, resolveHeaders) => {
+        expect(resolveHeaders().get("permissions-policy")).toBe(
+            EXPECTED_POLICY
+        );
+    });
+
+    it("replaces a value the response already carried", () => {
+        const response = new Response(null, {
+            headers: { "permissions-policy": "camera=*" },
+        });
+
+        applySecurityHeaders(response, buildBrowserAppOptions());
+
+        expect(response.headers.get("permissions-policy")).toBe(
+            EXPECTED_POLICY
+        );
     });
 });

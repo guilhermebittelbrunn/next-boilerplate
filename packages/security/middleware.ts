@@ -16,6 +16,14 @@ const GOOGLE_APIS_ORIGIN = "https://apis.google.com";
 
 const CSP_HEADER = "content-security-policy";
 const CSP_REPORT_ONLY_HEADER = "content-security-policy-report-only";
+const PERMISSIONS_POLICY_HEADER = "permissions-policy";
+
+/**
+ * Browser features none of the apps use. A fork that needs one (camera capture, Stripe's
+ * Payment Request button) lists the allowed origin here instead of dropping the header.
+ */
+export const PERMISSIONS_POLICY =
+    "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
 
 export type SecurityHeadersInput = {
     /** Extra origins per directive, resolved from each app's environment. */
@@ -155,6 +163,8 @@ export function applySecurityHeaders<T extends Response>(
             reportOnly && name === CSP_HEADER ? CSP_REPORT_ONLY_HEADER : name;
         response.headers.set(headerName, value);
     }
+
+    response.headers.set(PERMISSIONS_POLICY_HEADER, PERMISSIONS_POLICY);
 
     return response;
 }
