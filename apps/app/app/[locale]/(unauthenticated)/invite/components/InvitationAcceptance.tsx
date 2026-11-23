@@ -15,13 +15,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
+import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { usePanelState } from "@/shared/stores/panelStore";
 import { AuthCard } from "../../components/AuthCard";
 import {
-    apiErrorCodeOf,
     useAcceptInvitation,
     useInvitationPreview,
 } from "../hooks/useInvitation";

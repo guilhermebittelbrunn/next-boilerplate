@@ -1,10 +1,13 @@
 "use client";
 
 import { getDictionary } from "@repo/internationalization/client";
+import FormattedError from "@repo/shared/utils/helpers/formattedError";
+import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import { useEmailVerification } from "@/shared/hooks/useEmailVerification";
+import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { AuthCard } from "../../components/AuthCard";
 
 type ConfirmEmailChangeResultProps = {
@@ -39,6 +42,17 @@ export function ConfirmEmailChangeResult({
         </div>
     );
 
+    const signInLink = (
+        <div className="text-center text-sm">
+            <Link
+                className="text-primary hover:underline"
+                href={`/${locale}/sign-in`}
+            >
+                {changeEmailCopy.signIn}
+            </Link>
+        </div>
+    );
+
     if (!oobCode) {
         return (
             <AuthCard
@@ -51,6 +65,26 @@ export function ConfirmEmailChangeResult({
     }
 
     if (confirmEmailChangeMutation.isError) {
+        // The address has already moved; only ending the older sessions failed.
+        if (
+            apiErrorCodeOf(confirmEmailChangeMutation.error) ===
+            "AUTH_SESSIONS_NOT_REVOKED"
+        ) {
+            return (
+                <AuthCard
+                    description={handleClientError(
+                        new FormattedError(
+                            confirmEmailChangeMutation.error,
+                            locale
+                        )
+                    )}
+                    title={changeEmailCopy.success.title}
+                >
+                    {signInLink}
+                </AuthCard>
+            );
+        }
+
         return (
             <AuthCard
                 description={changeEmailCopy.error.description}
@@ -67,14 +101,7 @@ export function ConfirmEmailChangeResult({
                 description={changeEmailCopy.success.description}
                 title={changeEmailCopy.success.title}
             >
-                <div className="text-center text-sm">
-                    <Link
-                        className="text-primary hover:underline"
-                        href={`/${locale}/sign-in`}
-                    >
-                        {changeEmailCopy.signIn}
-                    </Link>
-                </div>
+                {signInLink}
             </AuthCard>
         );
     }

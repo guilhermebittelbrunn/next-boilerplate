@@ -1,11 +1,16 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import { AxiosError, AxiosHeaders } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { confirmEmailChangeMock, confirmVerificationMock, mutationState } =
     vi.hoisted(() => ({
         confirmEmailChangeMock: vi.fn(),
         confirmVerificationMock: vi.fn(),
-        mutationState: { isError: false, isSuccess: false },
+        mutationState: {
+            isError: false,
+            isSuccess: false,
+            error: null as unknown,
+        },
     }));
 
 vi.mock("@/shared/hooks/useEmailVerification", () => ({
@@ -58,7 +63,26 @@ beforeEach(() => {
     vi.clearAllMocks();
     mutationState.isError = false;
     mutationState.isSuccess = false;
+    mutationState.error = null;
 });
+
+function apiError(code: string): AxiosError {
+    const headers = new AxiosHeaders();
+    const config = { headers };
+    return new AxiosError(
+        "Request failed",
+        "ERR_BAD_RESPONSE",
+        config,
+        {},
+        {
+            status: 500,
+            statusText: "Internal Server Error",
+            headers,
+            config,
+            data: { error: { code } },
+        }
+    );
+}
 
 afterEach(cleanup);
 
@@ -126,6 +150,34 @@ describe("ConfirmEmailChangeResult", () => {
             name: changeCopy.signIn,
         }) as HTMLAnchorElement;
         expect(link.getAttribute("href")).toBe("/pt-br/sign-in");
+    });
+
+    it("tells a saved change apart when only ending the sessions failed", () => {
+        mutationState.isError = true;
+        mutationState.error = apiError("AUTH_SESSIONS_NOT_REVOKED");
+        render(<ConfirmEmailChangeResult oobCode="code-1" />);
+
+        expect(screen.getByText(changeCopy.success.title)).toBeTruthy();
+        expect(
+            screen.getByText(
+                globalTranslations["pt-br"].packages.utils.apiErrors
+                    .AUTH_SESSIONS_NOT_REVOKED
+            )
+        ).toBeTruthy();
+        expect(screen.queryByText(changeCopy.error.title)).toBeNull();
+        const link = screen.getByRole("link", {
+            name: changeCopy.signIn,
+        }) as HTMLAnchorElement;
+        expect(link.getAttribute("href")).toBe("/pt-br/sign-in");
+    });
+
+    it("keeps the error card for any other code", () => {
+        mutationState.isError = true;
+        mutationState.error = apiError("AUTH_OOB_CODE_EXPIRED");
+        render(<ConfirmEmailChangeResult oobCode="code-1" />);
+
+        expect(screen.getByText(changeCopy.error.title)).toBeTruthy();
+        expect(screen.queryByText(changeCopy.success.title)).toBeNull();
     });
 
     it("shows the error card with a way back to the panel", () => {
