@@ -81,7 +81,7 @@ continuam nos backups até a retenção escolhida acima vencer. Declare esse pra
 ## Restaurar
 
 A restauração sempre escreve num banco que ainda não existe, e a API só lê o `(default)`:
-`getFirestore(getFirebaseAdminApp())`, sem id de banco (`packages/auth/server.ts:100`). Por isso os dados
+`getFirestore(getFirebaseAdminApp())`, sem id de banco (`packages/auth/server.ts:101`). Por isso os dados
 precisam voltar ao `(default)` por um dos dois caminhos do passo 3.
 
 1. **Antes de qualquer troca, liste as exclusões posteriores ao backup.** Em `/admin/audit`, filtre o

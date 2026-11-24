@@ -121,5 +121,8 @@ e `FIREBASE_ADMIN_*`). Com os apps no ar (`pnpm dev`):
 3. Logar no app e voltar à web → também autenticado. **Logout num** → o outro desloga na próxima
    carga ou renovação de token, com o aviso de sessão encerrada; um segundo navegador continua logado.
 
-Sem Firebase, as rotas respondem corretamente mesmo assim: `custom-token` → 401 `AUTH_NO_SESSION`,
-`session` POST sem corpo → 400 / cross-origin → 403, app protegido sem sessão → redirect a `sign-in`.
+Sem Firebase, as rotas respondem corretamente mesmo assim: `custom-token` com `Origin` do próprio host →
+401 `AUTH_NO_SESSION`, `session` POST com `Origin` do próprio host e sem corpo → 400, de outra origem ou sem
+`Origin` nem `Sec-Fetch-Site: same-origin` → 403 `AUTH_FORBIDDEN_ORIGIN`, app protegido sem sessão →
+redirect a `sign-in`. As quatro rotas de sessão (`session` POST e DELETE, `session/refresh`, `custom-token`)
+fazem a mesma checagem de origem antes de ler corpo ou cookie.

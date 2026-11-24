@@ -36,7 +36,10 @@ token de uma conta de teste (no emulador, qualquer conta do seed). Nunca use con
 chave secreta com esse prefixo está publicada.
 
 **O core já faz.** Cada app tem `env.ts` tipado (`@t3-oss/env-nextjs`) separando `server` de `client`;
-chaves de Stripe, Resend, Arcjet e a service account do Firebase são só de servidor.
+chaves de Stripe, Resend, Arcjet e a service account do Firebase são só de servidor. Os pacotes de
+integração que leem essas chaves (`@repo/auth` no servidor, `@repo/payments` e `@repo/email`) importam
+`server-only`, então o build falha se um componente cliente os importar. O `@repo/security` lê a chave do
+Arcjet sem `server-only`; no navegador ela chega vazia, porque só variável `NEXT_PUBLIC_` entra no bundle.
 
 **Como verificar.**
 
@@ -208,20 +211,24 @@ duplicado cobra, cria registro ou manda e-mail; 🟡 nos demais casos.
 **Risco.** Um site de terceiro faz o navegador do usuário logado disparar uma ação no produto.
 
 **O core já faz.** O cookie de sessão é `SameSite=Lax`; a API recusa `Origin` fora da allowlist com
-`403 AUTH_FORBIDDEN_ORIGIN`; o front fala com a API por Bearer token, que não vai sozinho numa requisição
-de outro site.
+`403 AUTH_FORBIDDEN_ORIGIN`, e recusa do mesmo jeito a escrita sem `Origin` que leva o cookie de sessão sem
+`Authorization`; o front fala com a API por Bearer token, que não vai sozinho numa requisição de outro
+site. As rotas de sessão dos front-ends (`/api/auth/session`, `/session/refresh`, `/custom-token`) exigem
+`Origin` do próprio host ou `Sec-Fetch-Site: same-origin`.
 
 **Como verificar.**
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'Origin: https://evil.example' -H 'content-type: application/json' -d '{}' "$API/<rota mutável>"
 curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'Origin: https://evil.example' -H 'content-type: application/json' -d '{"idToken":"x"}' "$APP/api/auth/session"
+curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'Cookie: access-token=x' -H 'content-type: application/json' -d '{}' "$API/<rota mutável>"
+curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'content-type: application/json' -d '{"idToken":"x"}' "$APP/api/auth/session"
 ```
 
-Os dois devolvem 403. Rota nova do fork que muda estado não pode aceitar só o cookie como credencial sem
+Os quatro devolvem 403. Rota nova do fork que muda estado não pode aceitar só o cookie como credencial sem
 conferir a origem.
 
-**Aprovado quando** as duas chamadas devolvem 403. Gravidade: 🔴.
+**Aprovado quando** as quatro chamadas devolvem 403. Gravidade: 🔴.
 
 ## 1.11 Upload sem validação
 
@@ -229,7 +236,10 @@ conferir a origem.
 diretório, link público e permanente para documento privado.
 
 **O core já faz.** `POST /files` confere o tipo real pelos primeiros bytes, limita a 4 MiB, monta o caminho
-no servidor com UUID e devolve URL assinada de 15 minutos; o bucket é privado.
+no servidor com UUID e devolve URL assinada de 15 minutos; o bucket é privado. O teto vale também para corpo
+sem `content-length`: a rota conta os bytes enquanto lê e responde `413 UPLOAD_FILE_TOO_LARGE` com
+`connection: close` ao passar de 4 MiB mais 64 KiB de envelope. A imagem é gravada sem EXIF (GPS, câmera,
+número de série), XMP, IPTC e comentários; ficam o perfil de cor e, no JPEG, a orientação.
 
 **Como verificar.**
 
@@ -350,7 +360,9 @@ analytics; 🟡 para log.
 de metadados da nuvem.
 
 **O core já faz.** O servidor só chama hosts fixos (Identity Toolkit, Stripe, Resend); `images.remotePatterns`
-é uma lista fechada.
+é uma lista fechada. Foto de entidade e avatar aceitam só objeto do bucket ou URL
+`https://lh3.googleusercontent.com/...` (`EXTERNAL_IMAGE_HOSTS` em `apps/api/(shared)/lib/entity-photo.ts`),
+e nenhum código do servidor busca essas URLs.
 
 **Como verificar.**
 
@@ -368,7 +380,9 @@ Para cada chamada, o host é fixo ou passa por allowlist, e IP privado (`10.`, `
 **Risco.** Cookie de sessão legível por JavaScript ou enviado por HTTP simples pode ser roubado.
 
 **O core já faz.** O cookie `access-token` é `httpOnly`, `Secure` em produção, `SameSite=Lax`, com
-`maxAge`, gravado só pelo servidor.
+`maxAge`, gravado só pelo servidor. Os cookies de preferência gravados pelo navegador (`setCookie` de
+`@repo/shared`) e os de painel (`bp:*`) saem com `Secure` quando a página é HTTPS; o `x-locale` gravado pelo
+proxy do `app` e da `web` dura 180 dias e sai com `Secure` quando a requisição chega por HTTPS.
 
 **Como verificar.**
 
@@ -387,7 +401,8 @@ sessão sem `HttpOnly` ou `Secure`; 🟡 nos demais casos.
 com a sessão do usuário.
 
 **O core já faz.** `CORS_ORIGIN` é uma lista fechada, obrigatória em produção, sem coringa e sem
-`Access-Control-Allow-Credentials`.
+`Access-Control-Allow-Credentials`. Em produção sem a lista, o processo da API encerra no boot com código 1
+e a linha `[boot] CORS_ORIGIN is required in production…`.
 
 **Como verificar.**
 

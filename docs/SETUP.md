@@ -42,7 +42,7 @@ Usado pelos **três** apps: `apps/api` (guards verificam o ID token), e `apps/ap
 
 \* `FIREBASE_ADMIN_PROJECT_ID` cai para `NEXT_PUBLIC_FIREBASE_PROJECT_ID` se omitido (mesmo projeto).
 
-> ⛔ **A `apps/api` não sobe sem as três.** Para ela a service account não é só auth: é a credencial do **banco** (o Firestore é acessado pelo Admin SDK). `apps/api/instrumentation.ts` resolve a instância no boot e o processo morre com mensagem clara se faltar alguma — não há modo degradado.
+> ⛔ **A `apps/api` não sobe sem as três.** Para ela a service account não é só auth: é a credencial do **banco** (o Firestore é acessado pelo Admin SDK). `apps/api/instrumentation.ts` resolve a instância no boot: em produção, se faltar alguma, o processo imprime `[boot] <mensagem do firebase-admin>` e sai com código 1; fora de produção o erro é lançado no boot. Não há modo degradado.
 >
 > As três também são exigidas em **`pnpm --filter api build`**: `apps/api/env.ts` as declara como server vars
 > obrigatórias e é importado por uma rota, então o build de produção falha com `Invalid environment
@@ -70,7 +70,7 @@ Usado por `apps/app` e `apps/web` (sign-in/sign-up no cliente, sessão).
 | `NEXT_PUBLIC_APP_URL` | todos | URL do painel. Link "Ir para o painel" (web, modo subscription), redirect comum→painel, e **base das URLs de retorno do Stripe checkout/portal** (api). |
 | `NEXT_PUBLIC_WEB_URL` | todos | URL da web. Redirect do comum → web no modo `simple`. |
 | `NEXT_PUBLIC_DOCS_URL` | `web` | Link de Documentação no header e no footer da landing, em aba nova (opcional; oculto se vazio). Com o link, a barra completa do header aparece a partir de 1280 px. |
-| `CORS_ORIGIN` | `api` | **Lista de origens separada por vírgula** (`https://app.example.com,https://example.com`) autorizadas a chamar a API pelo browser. **Obrigatória em produção**: sem ela a API não sobe (`apps/api/instrumentation.ts`). Fora de produção, vazia = `http://localhost:3000,http://localhost:3001`. **Não existe coringa.** Requisição sem header `Origin` (servidor→servidor, prefetch RSC) passa sem cabeçalho de CORS; origem fora da lista recebe `403 AUTH_FORBIDDEN_ORIGIN`. |
+| `CORS_ORIGIN` | `api` | **Lista de origens separada por vírgula** (`https://app.example.com,https://example.com`) autorizadas a chamar a API pelo browser. **Obrigatória em produção**: sem ela (ou com valor vazio) o processo da API imprime `[boot] CORS_ORIGIN is required in production…` e sai com código 1 (`apps/api/instrumentation.ts`). Fora de produção, vazia = `http://localhost:3000,http://localhost:3001`. **Não existe coringa.** Requisição sem header `Origin` (servidor→servidor, prefetch RSC) passa sem cabeçalho de CORS, exceto escrita (`POST`/`PUT`/`PATCH`/`DELETE`) que leva o cookie `access-token` sem `Authorization`: essa recebe `403 AUTH_FORBIDDEN_ORIGIN`. Origem fora da lista também recebe `403 AUTH_FORBIDDEN_ORIGIN`. |
 
 > ⚠️ **Preview deploys**: o domínio efêmero (`*.vercel.app`) não está em `CORS_ORIGIN` e o browser será recusado. Acrescente a origem do preview à variável do ambiente de preview — mesma armadilha dos *Authorized domains* do Firebase.
 
@@ -255,7 +255,8 @@ o botão de merge tem de ficar bloqueado.
 
 A suíte vive em `apps/e2e` e percorre, num Chromium de verdade e contra o emulador, os fluxos que todo fork
 herda: cadastro com onboarding, login (comum, admin, senha errada, deep link com `?redirect=`), CRUD de
-`entity`, troca de painel do admin, usuário comum barrado no `/admin`, o CTA de cadastro da landing e o fluxo da
+`entity`, troca de painel do admin, usuário comum barrado no `/admin`, o CTA de cadastro da landing, a saída
+entre apps (sair na landing encerra a sessão da app, e sair na app encerra a da landing) e o fluxo da
 equipe (convite, aceite, transferência de propriedade e saída do antigo dono). Membros e convites ficam ligados
 (`NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"`) na `api` e na `app` da suíte inteira; o modo B2C, com a
 variável vazia, fica com os testes de unidade. A suíte não tem provedor de e-mail, então o convite é gravado direto

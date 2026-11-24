@@ -380,11 +380,14 @@ outro é aplicado, e o gerador recusar endereço em uso).
 
 - [ ] Lista de origens do browser autorizadas a chamar a API, separada por vírgula. **Não há wildcard.**
 
-Obrigatória em produção: `apps/api/instrumentation.ts` derruba o boot sem ela.
+Obrigatória em produção: sem ela, vazia ou só com vírgulas, `apps/api/instrumentation.ts` imprime
+`[boot] CORS_ORIGIN is required in production…` e encerra o processo com código 1. A credencial do
+Firestore ausente tem o mesmo efeito, com a mensagem do `firebase-admin` na linha `[boot]`. O build não
+exige a variável: `next build` sem ela passa.
 
-⚠️ **O gate não mata o processo.** O Next imprime `Failed to prepare server` e **fica no ar respondendo
-500 a tudo** — uma plataforma que só verifica se a porta responde veria o container **saudável** e daria o
-deploy por bem-sucedido. Ou o health check distingue 5xx, ou vale trocar o `throw` por `process.exit(1)`.
+🔒 **Na Vercel o encerramento não foi medido.** Localmente, `next start` sai com código 1 e libera a porta.
+Numa função serverless, o esperado é a invocação falhar a cada cold start; confira no primeiro deploy de
+preview sem a variável que a função responde erro, e não 200.
 
 ### 6. Cloud Storage — **só se o fork usa upload de arquivo**
 
@@ -403,8 +406,8 @@ precisa de upload.
 
 | Consumidor | Sem Storage |
 |---|---|
-| Foto da entidade de exemplo (`entities`) | O campo volta a ser uma caixa de URL de texto. |
-| **Foto de perfil na área de conta** (`/account`, aba Perfil) | O campo de avatar **não aparece**; o resto da aba (nome, telefone) funciona normalmente. |
+| Foto da entidade de exemplo (`entities`) | O campo volta a ser uma caixa de URL de texto, que aceita só foto do Google (`https://lh3.googleusercontent.com/...`). Outra URL volta com o erro traduzido `ENTITY_PHOTO_INVALID`. |
+| **Foto de perfil na área de conta** (`/account`, aba Perfil) | O campo de avatar vira uma caixa de URL de texto com a mesma regra (outra URL recebe `ACCOUNT_AVATAR_INVALID`); o resto da aba (nome, telefone) funciona normalmente. |
 | **Exclusão de conta pelo titular** (`POST /account/deletion`) | O passo `storage` do expurgo reporta `skipped: storage-not-configured`. Sem bucket não há objeto para deixar para trás; o que fica pendente é conferir esse passo **depois** de ativar o Storage. A permissão que ele exige (listar e apagar por prefixo) já vem de `roles/storage.objectAdmin`, acima. |
 
 Se as variáveis estiverem preenchidas mas o serviço **não** estiver ativado, o upload responde **503 com
@@ -495,10 +498,10 @@ pelo próprio repositório**, mais dois do Google:
 | cookie | onde | categoria |
 |--------|------|-----------|
 | `access-token` | `packages/auth/session.ts:14` | estritamente necessário (sessão) |
-| `bp:panel-request-role` | `apps/app/shared/lib/panelState.ts:18` | estritamente necessário (estado de painel) |
-| `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
+| `bp:panel-request-role` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
+| `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:20` | estritamente necessário (estado de painel) |
 | `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
-| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:249,253` · `apps/web/proxy.ts:121,125` | preferência |
+| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:250,254` · `apps/web/proxy.ts:122,126` | preferência |
 | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:25` | preferência |
 | `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:29` | preferência |
 | `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
@@ -1121,11 +1124,11 @@ publicam um canal que alguém lê.
 
 `SESSION_ABSOLUTE_MAX_AGE_DAYS` (nos `.env.example` da `apps/app` e da `apps/web`) define o teto absoluto
 da sessão, contado a partir do login original. Vazia ou ausente, vale **30 dias**; o valor é grampeado
-entre a vida do cookie e **90 dias** (`packages/auth/session.ts:28-29`, `:96-107`). Nada quebra se o fork
+entre a vida do cookie e **90 dias** (`packages/auth/session.ts:28-29`, `:97-108`). Nada quebra se o fork
 não definir: ele só herda uma política de sessão que talvez nunca tenha lido.
 
 **O teto pode ser ultrapassado por até metade da vida do cookie.** A renovação só é tentada depois de o
-cookie cumprir metade da vida (`session.ts:30`, `:137-139`), e é nessa tentativa que o teto é conferido (`:154`).
+cookie cumprir metade da vida (`session.ts:30`, `:138-140`), e é nessa tentativa que o teto é conferido (`:155`).
 Com os padrões (cookie de 5 dias, teto de 30), uma sessão pode seguir válida até cerca de 32,5 dias depois
 do login: ela não é renovada além do teto, mas o último cookie emitido vive até expirar sozinho. Conferir o
 teto a cada navegação custaria uma chamada ao provedor em toda requisição, e por isso ficou assim de
