@@ -45,6 +45,15 @@ vi.mock("@/env", () => ({ env: { ARCJET_KEY: undefined } }));
 const proxy = (await import("@/proxy")).default;
 
 const ORIGIN = "http://localhost:3000";
+const HTTPS_ORIGIN = "https://app.example.com";
+const ONE_HUNDRED_EIGHTY_DAYS_IN_SECONDS = 15_552_000;
+
+const localeCookieOptions = (secure: boolean) => ({
+    path: "/",
+    sameSite: "lax",
+    maxAge: ONE_HUNDRED_EIGHTY_DAYS_IN_SECONDS,
+    secure,
+});
 const TEMPORARY_REDIRECT = 307;
 const FORWARDED_LOCALE = `x-middleware-request-${LOCALE_REQUEST_HEADER}`;
 
@@ -57,8 +66,11 @@ function makeNextUrl(href: string) {
 const BROWSER_UA =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
 
-function makeRequest(path: string, options?: { token?: string }) {
-    const href = `${ORIGIN}${path}`;
+function makeRequest(
+    path: string,
+    options?: { token?: string; origin?: string }
+) {
+    const href = `${options?.origin ?? ORIGIN}${path}`;
     return {
         method: "GET",
         url: href,
@@ -129,7 +141,33 @@ describe("proxy locale", () => {
     it("stores the locale of the path being served", async () => {
         await proxy(anonymous("/pt-br/sign-in"));
 
-        expect(cookieSetMock).toHaveBeenCalledWith("x-locale", "pt-br");
+        expect(cookieSetMock).toHaveBeenCalledWith(
+            "x-locale",
+            "pt-br",
+            localeCookieOptions(false)
+        );
+    });
+
+    it("keeps the default locale for 180 days on the redirect, without Secure over HTTP", async () => {
+        await proxy(anonymous("/entities"));
+
+        expect(cookieSetMock).toHaveBeenCalledWith(
+            "x-locale",
+            "pt-br",
+            localeCookieOptions(false)
+        );
+    });
+
+    it("marks the locale cookie Secure when the request arrived over HTTPS", async () => {
+        getUserFromSessionCookieMock.mockResolvedValue(null);
+
+        await proxy(makeRequest("/en/sign-in", { origin: HTTPS_ORIGIN }));
+        await proxy(makeRequest("/entities", { origin: HTTPS_ORIGIN }));
+
+        expect(cookieSetMock.mock.calls).toEqual([
+            ["x-locale", "en", localeCookieOptions(true)],
+            ["x-locale", "pt-br", localeCookieOptions(true)],
+        ]);
     });
 
     it("hands the locale of the path to server rendering", async () => {
@@ -413,7 +451,11 @@ describe("proxy requested path", () => {
     it("still stores the locale cookie when it forwards the request headers", async () => {
         const response = await proxy(signedIn("/en/entities"));
 
-        expect(cookieSetMock).toHaveBeenCalledWith("x-locale", "en");
+        expect(cookieSetMock).toHaveBeenCalledWith(
+            "x-locale",
+            "en",
+            localeCookieOptions(false)
+        );
         expect(response.headers.get("x-middleware-request-x-app-path")).toBe(
             "/en/entities"
         );

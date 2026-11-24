@@ -1,5 +1,5 @@
 import { UserRoleLevel } from "@repo/auth/types";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
     ANONYMOUS_PANEL_SNAPSHOT,
     clearPanelMirror,
@@ -18,6 +18,8 @@ import {
 const DAYS_IN_PANEL_COOKIE_WINDOW = 14;
 const SECONDS_IN_A_DAY = 24 * 60 * 60;
 const FOURTEEN_DAYS_IN_SECONDS = DAYS_IN_PANEL_COOKIE_WINDOW * SECONDS_IN_A_DAY;
+const COOKIE_WRITES_FOR_TWO_SNAPSHOTS = 4;
+const ENDS_WITH_SECURE = /; secure$/;
 
 function clearAllCookies() {
     for (const entry of document.cookie.split(";")) {
@@ -226,6 +228,69 @@ describe("cookie mirror", () => {
         expect(PANEL_COOKIE_MAX_AGE_SECONDS).toBeGreaterThanOrEqual(
             FOURTEEN_DAYS_IN_SECONDS
         );
+    });
+});
+
+describe("cookie mirror Secure attribute", () => {
+    /**
+     * jsdom drops a `Secure` cookie written from an `http://` page, so reading
+     * `document.cookie` back cannot tell the attribute apart: the writes are recorded instead.
+     */
+    function recordCookieWrites(protocol: "http:" | "https:"): string[] {
+        const writes: string[] = [];
+        vi.stubGlobal("window", { location: { protocol } });
+        vi.stubGlobal("document", {
+            get cookie() {
+                return "";
+            },
+            set cookie(value: string) {
+                writes.push(value);
+            },
+        });
+        return writes;
+    }
+
+    const IMPERSONATING = {
+        profileKind: "admin",
+        panelRequestRole: UserRoleLevel.COMMON,
+        impersonatedFirebaseUid: "target-1",
+    } as const;
+
+    const NOT_IMPERSONATING = {
+        profileKind: "admin",
+        panelRequestRole: UserRoleLevel.ADMIN,
+        impersonatedFirebaseUid: null,
+    } as const;
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("marks both cookies Secure on an HTTPS page, including the one being cleared", () => {
+        const writes = recordCookieWrites("https:");
+
+        writePanelCookies(IMPERSONATING);
+        writePanelCookies(NOT_IMPERSONATING);
+
+        expect(writes).toHaveLength(COOKIE_WRITES_FOR_TWO_SNAPSHOTS);
+        for (const write of writes) {
+            expect(write).toMatch(ENDS_WITH_SECURE);
+        }
+        expect(writes.at(-1)).toBe(
+            `${IMPERSONATE_UID_COOKIE}=; path=/; max-age=0; samesite=lax; secure`
+        );
+    });
+
+    it("leaves Secure off on an HTTP page", () => {
+        const writes = recordCookieWrites("http:");
+
+        writePanelCookies(IMPERSONATING);
+        writePanelCookies(NOT_IMPERSONATING);
+
+        expect(writes).toHaveLength(COOKIE_WRITES_FOR_TWO_SNAPSHOTS);
+        for (const write of writes) {
+            expect(write).not.toContain("secure");
+        }
     });
 });
 

@@ -12,7 +12,7 @@ import {
     applySecurityHeaders,
     buildBrowserAppOptions,
 } from "@repo/security/middleware";
-import { handleClientError } from "@repo/shared/utils";
+import { handleClientError, preferenceCookieOptions } from "@repo/shared/utils";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
@@ -233,6 +233,7 @@ async function route(request: NextRequest) {
     const cookieStore = await cookies();
 
     const defaultLocale = getDefaultLocale();
+    const localeCookie = preferenceCookieOptions(request.nextUrl.protocol);
 
     const currentLocale = pathname.split("/")[1];
 
@@ -246,11 +247,11 @@ async function route(request: NextRequest) {
             `/${defaultLocale}${pathname}${search}`,
             request.url
         );
-        cookieStore.set("x-locale", defaultLocale);
+        cookieStore.set("x-locale", defaultLocale, localeCookie);
         return NextResponse.redirect(newUrl);
     }
 
-    cookieStore.set("x-locale", currentLocale);
+    cookieStore.set("x-locale", currentLocale, localeCookie);
 
     const appPath = pathWithoutLocale(pathname, currentLocale);
     const isPublic = isPublicPath(appPath);

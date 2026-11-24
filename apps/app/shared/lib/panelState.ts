@@ -1,4 +1,5 @@
 import { canSwitchPanelEnvironment, UserRoleLevel } from "@repo/auth/types";
+import { isHttpsPage } from "@repo/shared/utils/helpers/cookies";
 import type { ProfileKind } from "./authRequestHeaders";
 
 /**
@@ -133,13 +134,14 @@ function writeCookie(name: string, value: string | null): void {
     if (typeof document === "undefined") {
         return;
     }
+    const secureAttribute = isHttpsPage() ? "; secure" : "";
     if (value === null || value === "") {
         // biome-ignore lint/suspicious/noDocumentCookie: mirrored synchronously for SSR
-        document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
+        document.cookie = `${name}=; path=/; max-age=0; samesite=lax${secureAttribute}`;
         return;
     }
     // biome-ignore lint/suspicious/noDocumentCookie: mirrored synchronously for SSR
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${PANEL_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${PANEL_COOKIE_MAX_AGE_SECONDS}; samesite=lax${secureAttribute}`;
 }
 
 /** Mirrors the snapshot into the cookies the server reads. */
