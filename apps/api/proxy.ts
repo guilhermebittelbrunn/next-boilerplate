@@ -16,6 +16,10 @@ import {
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import {
+    isUnprovenCookieWrite,
+    MUTATING_METHODS,
+} from "@/(shared)/lib/cookie-write-origin";
+import {
     buildCorsHeaders,
     isOriginAllowed,
     resolveAllowedOrigins,
@@ -96,8 +100,6 @@ const STRICT_RATE_LIMITED_METHODS = new Map<string, readonly string[]>([
     ["/organization/invitations", ["POST"]],
 ]);
 
-const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-
 /** Stripe retries from a handful of addresses; a 429 here is a lost event. */
 const RATE_LIMIT_EXEMPT_PATHS = ["/webhooks/payments"];
 
@@ -115,9 +117,11 @@ function rateLimitBudgetFor(request: NextRequest): RateLimitBudget | null {
     return MUTATING_METHODS.has(request.method) ? "standard" : null;
 }
 
+type OriginRefusalReason = "origin" | "missing-origin";
+
 /** Single line, stable prefix, no address, header or body: blocking is not a reason to start retaining personal data. */
 function logBlocked(
-    reason: RateLimitBlockReason | "origin",
+    reason: RateLimitBlockReason | OriginRefusalReason,
     request: NextRequest,
     requestId: string
 ): void {
@@ -145,8 +149,12 @@ function withCors<T extends Response>(response: T, origin: string | null): T {
     return response;
 }
 
-function refuseOrigin(request: NextRequest, requestId: string): NextResponse {
-    logBlocked("origin", request, requestId);
+function refuseOrigin(
+    request: NextRequest,
+    requestId: string,
+    reason: OriginRefusalReason = "origin"
+): NextResponse {
+    logBlocked(reason, request, requestId);
 
     // A preflight has no body the browser would read; withholding
     // `Access-Control-Allow-Origin` is itself the refusal.
@@ -183,6 +191,18 @@ export async function proxy(request: NextRequest) {
         return withRequestId(
             withSecurityHeaders(
                 withCors(refuseOrigin(request, requestId), null)
+            ),
+            requestId
+        );
+    }
+
+    if (isUnprovenCookieWrite(request)) {
+        return withRequestId(
+            withSecurityHeaders(
+                withCors(
+                    refuseOrigin(request, requestId, "missing-origin"),
+                    null
+                )
             ),
             requestId
         );

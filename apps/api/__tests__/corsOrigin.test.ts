@@ -32,6 +32,10 @@ const TOO_MANY_REQUESTS = 429;
 const RETRY_AFTER_SECONDS = 43;
 const ORIGIN_REFUSAL_LINE =
     /^\[security] blocked reason=origin path=\/entities method=GET requestId=[0-9a-f-]{36}$/;
+const MISSING_ORIGIN_REFUSAL_LINE =
+    /^\[security] blocked reason=missing-origin path=\/entities method=POST requestId=[0-9a-f-]{36}$/;
+const REQUEST_ID = /^[0-9a-f-]{36}$/;
+const SESSION_COOKIE = { "access-token": "session-cookie-value" };
 const RATE_LIMIT_REFUSAL_LINE =
     /^\[security] blocked reason=rate-limit path=\/auth\/sign-in method=POST requestId=[0-9a-f-]{36}$/;
 
@@ -40,6 +44,8 @@ type ProxyRequestOptions = {
     method?: string;
     path?: string;
     authorization?: string;
+    cookies?: Record<string, string>;
+    secFetchSite?: string;
 };
 
 function makeRequest({
@@ -47,6 +53,8 @@ function makeRequest({
     method = "GET",
     path = "/entities",
     authorization,
+    cookies = {},
+    secFetchSite,
 }: ProxyRequestOptions = {}): NextRequest {
     const headers = new Headers();
     if (origin) {
@@ -55,10 +63,20 @@ function makeRequest({
     if (authorization) {
         headers.set("authorization", authorization);
     }
+    if (secFetchSite) {
+        headers.set("sec-fetch-site", secFetchSite);
+    }
+    const cookieHeader = Object.entries(cookies)
+        .map(([name, value]) => `${name}=${value}`)
+        .join("; ");
+    if (cookieHeader) {
+        headers.set("cookie", cookieHeader);
+    }
 
     return {
         method,
         headers,
+        cookies: { has: (name: string) => name in cookies },
         url: `http://localhost:3002${path}`,
         nextUrl: { pathname: path },
     } as unknown as NextRequest;
@@ -242,6 +260,137 @@ describe("api proxy origin decision", () => {
         expect(warnMock).toHaveBeenCalledWith(
             expect.stringMatching(ORIGIN_REFUSAL_LINE)
         );
+    });
+});
+
+describe("api proxy write carried only by the session cookie", () => {
+    it("refuses a cookie-carried write without Origin before the guard and the rate limit", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const response = await proxy(
+            makeRequest({ method: "POST", cookies: SESSION_COOKIE })
+        );
+
+        expect(response.status).toBe(FORBIDDEN);
+        await expect(response.json()).resolves.toEqual({
+            error: { code: "AUTH_FORBIDDEN_ORIGIN" },
+        });
+        expect(response.headers.get("vary")).toBe("Origin");
+        expect(response.headers.get("access-control-allow-origin")).toBeNull();
+        expect(response.headers.get("x-request-id")).toMatch(REQUEST_ID);
+        expect(checkRateLimitMock).not.toHaveBeenCalled();
+    });
+
+    it("records the refusal as missing-origin without the cookie", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        await proxy(makeRequest({ method: "POST", cookies: SESSION_COOKIE }));
+
+        expect(warnMock).toHaveBeenCalledTimes(1);
+        expect(warnMock).toHaveBeenCalledWith(
+            expect.stringMatching(MISSING_ORIGIN_REFUSAL_LINE)
+        );
+        expect(String(warnMock.mock.calls[0]?.[0])).not.toContain(
+            "session-cookie-value"
+        );
+    });
+
+    it("refuses every mutating method", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+            const response = await proxy(
+                makeRequest({ method, cookies: SESSION_COOKIE })
+            );
+
+            expect(response.status).toBe(FORBIDDEN);
+        }
+    });
+
+    it("lets the same write through with a bearer token", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const response = await proxy(
+            makeRequest({
+                method: "POST",
+                cookies: SESSION_COOKIE,
+                authorization: "Bearer token",
+            })
+        );
+
+        expect(response.status).toBe(OK);
+    });
+
+    it("lets the same write through from an allowlisted origin", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const response = await proxy(
+            makeRequest({
+                method: "POST",
+                cookies: SESSION_COOKIE,
+                origin: APP_ORIGIN,
+            })
+        );
+
+        expect(response.status).toBe(OK);
+    });
+
+    it("lets the same write through when the browser marks it same-origin", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const response = await proxy(
+            makeRequest({
+                method: "POST",
+                cookies: SESSION_COOKIE,
+                secFetchSite: "same-origin",
+            })
+        );
+
+        expect(response.status).toBe(OK);
+    });
+
+    it("still refuses when the browser marks it cross-site", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const response = await proxy(
+            makeRequest({
+                method: "POST",
+                cookies: SESSION_COOKIE,
+                secFetchSite: "cross-site",
+            })
+        );
+
+        expect(response.status).toBe(FORBIDDEN);
+    });
+
+    it("lets a GET carrying the cookie through without Origin", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const response = await proxy(makeRequest({ cookies: SESSION_COOKIE }));
+
+        expect(response.status).toBe(OK);
+    });
+
+    it("lets an anonymous write without Origin through, like the payments webhook", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const write = await proxy(makeRequest({ method: "POST" }));
+        const webhook = await proxy(
+            makeRequest({ method: "POST", path: "/webhooks/payments" })
+        );
+
+        expect(write.status).toBe(OK);
+        expect(webhook.status).toBe(OK);
+    });
+
+    it("ignores cookies other than the session one", async () => {
+        const proxy = await loadProxy(APP_ORIGIN);
+
+        const response = await proxy(
+            makeRequest({ method: "POST", cookies: { "x-locale": "en" } })
+        );
+
+        expect(response.status).toBe(OK);
     });
 });
 

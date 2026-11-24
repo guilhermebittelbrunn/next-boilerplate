@@ -43,7 +43,8 @@ export function resolveAllowedOrigins(
 /**
  * A request without an `Origin` header did not come from a browser page — it is a
  * server calling this server, and CORS has nothing to say about it. Authorization
- * still runs: this decides who may read the answer, not who may ask.
+ * still runs: this decides who may read the answer, not who may ask. A write carried
+ * only by the session cookie is the exception, refused by `isUnprovenCookieWrite`.
  */
 export function isOriginAllowed(
     origin: string | null,
