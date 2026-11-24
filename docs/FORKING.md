@@ -369,6 +369,22 @@ bloqueio funcionando fora da Vercel, suba com `ARCJET_ENV=development`.
 definido, o banner de consentimento de cookies aparece e nenhuma tag carrega antes da escolha do visitante.
 Revise a seção de cookies da política de privacidade: [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 7.
 
+O core já manda dois eventos de conversão ao GA4, `sign_up` (cadastro, com o parâmetro `method`) e
+`generate_lead` (mensagem de contato aceita). Para os eventos do seu produto, use o mesmo hook num componente
+cliente que esteja abaixo do `AnalyticsProvider` (os layouts raiz de `app` e `web` já o montam):
+
+```tsx
+import { useAnalyticsEvent } from "@repo/analytics/events-context";
+
+const trackEvent = useAnalyticsEvent();
+trackEvent("purchase", { currency: "BRL", value: 49.9 });
+```
+
+O `trackEvent` só envia quando o visitante aceitou a medição e há um id do GA configurado; em qualquer outro
+caso não faz nada e não lança erro. Nunca passe dado pessoal nos parâmetros (e-mail, nome, id do usuário,
+texto digitado): os termos do Google Analytics proíbem. Depois de publicar, marque os eventos de conversão
+como eventos principais no GA4: [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 19.
+
 ### 7.5 Cloud Storage (upload de arquivo)
 
 Só se o produto usa upload. Exige o plano **Blaze** (forma de pagamento cadastrada), embora o gasto de um MVP

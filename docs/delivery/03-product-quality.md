@@ -220,6 +220,29 @@ produto descumpre a LGPD.
 4. Confira que os eventos de conversão do produto (por exemplo, `sign_up` e `generate_lead`) estão
    marcados como eventos principais no GA4.
 
+**O que o core já dispara.** O `@repo/analytics` manda dois eventos de conversão, e só quando o visitante
+consentiu com a medição e há um id do GA configurado:
+
+- `sign_up`, com o parâmetro `method` (`email` ou `google`): no cadastro por e-mail aceito pela API, na app e
+  na landing, e no primeiro acesso com Google, nas telas de cadastro e de login das duas apps. Um login com
+  uma conta Google que já existia não dispara.
+- `generate_lead`, sem parâmetros: quando a API aceita a mensagem do formulário de contato da landing.
+
+Nenhum dos dois leva e-mail, nome, id ou texto digitado. Eventos do produto do fork passam pelo mesmo
+`useAnalyticsEvent()` ([`FORKING.md`](../FORKING.md) §7.4). O passo 4 continua manual e está descrito em
+[`PRE-PRODUCTION.md`](../PRE-PRODUCTION.md), item 19.
+
+Para conferir o disparo antes de olhar o GA4, aceite o banner, faça a ação e leia a fila no console do
+navegador:
+
+```js
+JSON.stringify(window.dataLayer.map((entry) => Array.from(entry)))
+```
+
+Uma entrada `["event","sign_up",{"method":"email"}]` confirma o disparo. Recusando o banner, a entrada não
+aparece. O cadastro na app termina num carregamento completo de página, que zera a fila: para ler a entrada
+ali, use o DebugView do GA4 ou interrompa a navegação.
+
 **Aprovado quando** os quatro passos conferem. Gravidade: 🔴 se houver requisição ao Google antes do aceite;
 🟡 se o GA não recebe dados ou não há evento de conversão.
 
@@ -274,6 +297,12 @@ leia `document.title`:
 ```bash
 agent-browser open "$APP/$LOCALE/<tela>" && agent-browser eval "document.title"
 ```
+
+No painel, o título sai como `<tela> | <marca>`: os layouts das áreas comum e admin declaram
+`title.template` e cada tela registra o próprio rótulo em `PANEL_PAGE_TITLES`
+(`apps/app/shared/lib/panelTitles.ts`), lido do dicionário no idioma da rota. As duas telas iniciais ficam
+com o nome da área ("Painel do usuário" e "Administração"). Uma tela nova sem registro reprova
+`apps/app/__tests__/panelTitles.test.ts`.
 
 **Aprovado quando** todo título da landing é único, descreve a página e termina com a marca do produto
 (convenção da casa: 30 a 60 caracteres), e cada tela do painel tem título próprio. Gravidade: 🟡 na landing;

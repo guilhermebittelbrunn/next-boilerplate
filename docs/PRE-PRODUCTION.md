@@ -498,7 +498,7 @@ pelo próprio repositório**, mais dois do Google:
 | `bp:panel-request-role` | `apps/app/shared/lib/panelState.ts:18` | estritamente necessário (estado de painel) |
 | `bp:impersonate-firebase-uid` | `apps/app/shared/lib/panelState.ts:19` | estritamente necessário (estado de painel) |
 | `bp:cookie-consent` | `packages/analytics/consent.ts:1` | estritamente necessário (a própria escolha) |
-| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:235,239` · `apps/web/proxy.ts:111,115` | preferência |
+| `x-locale` | `packages/internationalization/server.ts:13` · `apps/app/proxy.ts:249,253` · `apps/web/proxy.ts:121,125` | preferência |
 | `x-theme` | `apps/app/shared/lib/themePreference.ts:10` · `apps/app/app/layout.tsx:25` | preferência |
 | `sidebar_state` | `packages/design-system/components/ui/sidebar.tsx:29` | preferência |
 | `_ga` · `_ga_<id>` | Google Analytics | medição — só depois do consentimento |
@@ -993,6 +993,53 @@ remoção no Search Console.
 
 Como verificar: `curl -s https://<landing>/pt-br | grep -o '<meta property="og:image"[^>]*>'` mostra a URL
 no domínio de produção, e abri-la responde um PNG de 1200 × 630.
+
+### 19. Eventos de conversão no GA4 — só se o fork usa Google Analytics
+
+- [ ] Propriedade GA4 criada e o id dela (`G-…`) em `NEXT_PUBLIC_GA_MEASUREMENT_ID` nos projetos `web` e
+      `app` da Vercel, em produção
+- [ ] `sign_up` e `generate_lead` recebidos pelo menos uma vez e marcados como eventos principais (key
+      events) na propriedade
+- [ ] Eventos de conversão do próprio produto, se o fork criou algum, marcados da mesma forma
+
+O core já dispara os dois eventos, e só com o consentimento do visitante: `sign_up` (parâmetro `method`,
+`email` ou `google`) quando uma conta é criada pela app ou pela landing, e `generate_lead` quando a API aceita
+uma mensagem do formulário de contato. O que falta é do lado do Google. Sem marcar os eventos como
+principais, o GA4 os guarda como eventos comuns, e os relatórios de conversão e as campanhas não os
+enxergam. É o passo 4 do item 3.8 da [etapa de entrega](delivery/03-product-quality.md).
+
+**Passo a passo.**
+
+1. Em [analytics.google.com](https://analytics.google.com): Administrador → Criar → Propriedade, depois um
+   fluxo de dados **Web** com o domínio da landing. O id do fluxo é o `G-…`.
+2. Na Vercel, em cada um dos dois projetos (`web` e `app`): Settings → Environment Variables →
+   `NEXT_PUBLIC_GA_MEASUREMENT_ID` = `G-…` em Production. A variável é embutida no build, então faça um novo
+   deploy depois de salvar.
+3. Gere um evento de cada: aceite o banner de cookies, crie uma conta de teste e envie uma mensagem pelo
+   formulário de contato (este exige o item 3 e `NEXT_PUBLIC_APP_SUPPORT_EMAIL`, senão o formulário nem
+   aparece).
+4. No GA4: Administrador → Exibição de dados → Eventos. Quando `sign_up` e `generate_lead` aparecerem na
+   lista, o que pode levar horas, ligue "Marcar como evento principal" em cada um. Para não esperar, crie
+   os dois pelo nome em Administrador → Exibição de dados → Eventos principais → Novo evento principal,
+   digitando o nome exato.
+
+**O que acontece sem configurar.** Nada quebra. Sem `NEXT_PUBLIC_GA_MEASUREMENT_ID`, ou com o valor vazio que
+o `.env.example` publica, ou sem o prefixo `G-`, a variável é descartada (`packages/analytics/keys.ts`): fora
+da Vercel o banner nem aparece, o `useAnalyticsEvent()` não faz nada, e cadastro e contato funcionam como
+antes. Na Vercel sem o id, o banner aparece por causa do Vercel Analytics, mas nenhum evento sai, porque não
+há tag do Google para recebê-lo. Com o id configurado e os eventos sem marcar, eles chegam, mas não contam
+como conversão.
+
+**Como verificar.** No navegador, com o app servindo e o banner aceito, faça a ação e leia a fila no console:
+
+```js
+JSON.stringify(window.dataLayer.map((entry) => Array.from(entry)))
+// [..., ["event","sign_up",{"method":"email"}]]
+```
+
+Recusando o banner, a entrada não aparece. O cadastro na app termina num carregamento completo da página,
+que zera a fila: ali, confira pelo DebugView do GA4. Na propriedade, Relatórios → Tempo real mostra os
+eventos chegando, e Administrador → Eventos mostra a chave "evento principal" ligada nos dois.
 
 ---
 
