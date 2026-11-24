@@ -1,4 +1,5 @@
 import "server-only";
+import { logEvent } from "@repo/shared/utils";
 import { type App, cert, getApps, initializeApp } from "firebase-admin/app";
 import {
     type Auth,
@@ -142,6 +143,20 @@ function firebaseAuthErrorCode(error: unknown): string | null {
     return null;
 }
 
+/**
+ * The provider echoes the address, uid or token into `message`, so only the code (or,
+ * without one, the error class) reaches the log.
+ */
+function authErrorFields(
+    error: unknown
+): { code: string } | { reason: string } {
+    const code = firebaseAuthErrorCode(error);
+    if (code) {
+        return { code };
+    }
+    return { reason: error instanceof Error ? error.name : "unknown" };
+}
+
 const MILLISECONDS_IN_A_SECOND = 1000;
 
 /**
@@ -191,7 +206,7 @@ export const getIdTokenSession = async (
         if (code && benignIdTokenVerifyCodes.has(code)) {
             return null;
         }
-        console.error("Error verifying token:", error);
+        logEvent("auth", "id-token-session-failed", authErrorFields(error));
         return null;
     }
 };
@@ -208,7 +223,7 @@ export const getUserById = async (uid: string) => {
         const authInstance = getAuthInstance();
         return await authInstance.getUser(uid);
     } catch (error) {
-        console.error("Error getting user:", error);
+        logEvent("auth", "user-lookup-failed", authErrorFields(error));
         return null;
     }
 };
@@ -224,7 +239,7 @@ export const createCustomToken = async (
         const authInstance = getAuthInstance();
         return await authInstance.createCustomToken(uid, additionalClaims);
     } catch (error) {
-        console.error("Error creating custom token:", error);
+        logEvent("auth", "custom-token-failed", authErrorFields(error));
         throw error;
     }
 };
@@ -257,7 +272,7 @@ export const verifyIdTokenClaims = async (
         if (code && benignIdTokenVerifyCodes.has(code)) {
             return null;
         }
-        console.error("Error verifying id token:", error);
+        logEvent("auth", "id-token-verify-failed", authErrorFields(error));
         return null;
     }
 };
@@ -283,7 +298,11 @@ export const decodeSessionCookie = async (
         if (code && benignSessionCookieCodes.has(code)) {
             return null;
         }
-        console.error("Error decoding session cookie:", error);
+        logEvent(
+            "auth",
+            "session-cookie-decode-failed",
+            authErrorFields(error)
+        );
         return null;
     }
 };
@@ -312,7 +331,11 @@ export const getSessionFromCookie = async (
         if (code && benignSessionCookieCodes.has(code)) {
             return null;
         }
-        console.error("Error verifying session cookie:", error);
+        logEvent(
+            "auth",
+            "session-cookie-verify-failed",
+            authErrorFields(error)
+        );
         return null;
     }
 };
@@ -337,7 +360,7 @@ export const revokeUserSessions = async (uid: string): Promise<void> => {
     try {
         await revokeUserSessionsOrThrow(uid);
     } catch (error) {
-        console.error("Error revoking user sessions:", error);
+        logEvent("auth", "session-revoke-failed", authErrorFields(error));
     }
 };
 

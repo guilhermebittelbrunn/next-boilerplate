@@ -79,6 +79,7 @@ describe("getCurrentUser — id token contra a revogação de sessões", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, "error").mockImplementation(vi.fn());
+        vi.spyOn(console, "warn").mockImplementation(vi.fn());
     });
 
     it("recusa um id token emitido antes da revogação", async () => {
@@ -140,6 +141,7 @@ describe("getCurrentUser — id token contra a revogação de sessões", () => {
 
         await expect(getCurrentUser("expired")).resolves.toBeNull();
         expect(console.error).not.toHaveBeenCalled();
+        expect(console.warn).not.toHaveBeenCalled();
     });
 });
 
@@ -147,6 +149,7 @@ describe("getCurrentUser — conta desativada", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, "error").mockImplementation(vi.fn());
+        vi.spyOn(console, "warn").mockImplementation(vi.fn());
     });
 
     it("recusa o id token de uma conta desativada", async () => {
@@ -172,6 +175,7 @@ describe("getCurrentUser — conta desativada", () => {
         await getCurrentUser("id-token");
 
         expect(console.error).not.toHaveBeenCalled();
+        expect(console.warn).not.toHaveBeenCalled();
     });
 
     it("aceita a conta com disabled: false", async () => {
@@ -200,6 +204,7 @@ describe("getIdTokenSession — as claims acompanham o usuário", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, "error").mockImplementation(vi.fn());
+        vi.spyOn(console, "warn").mockImplementation(vi.fn());
     });
 
     it("devolve o usuário e as claims verificadas", async () => {
@@ -237,6 +242,7 @@ describe("getUserFromSessionCookie", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, "error").mockImplementation(vi.fn());
+        vi.spyOn(console, "warn").mockImplementation(vi.fn());
     });
 
     it("verifica o cookie pedindo a checagem de revogação ao Firebase", async () => {
@@ -260,6 +266,7 @@ describe("getUserFromSessionCookie", () => {
             getUserFromSessionCookie("session-cookie")
         ).resolves.toBeNull();
         expect(console.error).not.toHaveBeenCalled();
+        expect(console.warn).not.toHaveBeenCalled();
     });
 });
 
@@ -267,6 +274,7 @@ describe("revogação de sessões", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, "error").mockImplementation(vi.fn());
+        vi.spyOn(console, "warn").mockImplementation(vi.fn());
     });
 
     it("revokeUserSessionsOrThrow revoga os refresh tokens do uid", async () => {
@@ -283,12 +291,16 @@ describe("revogação de sessões", () => {
         await expect(revokeUserSessionsOrThrow(UID)).rejects.toBe(failure);
     });
 
-    it("revokeUserSessions continua engolindo a recusa e registrando o erro", async () => {
+    it("revokeUserSessions continua engolindo a recusa e registrando o código", async () => {
         revokeRefreshTokensMock.mockRejectedValue(
             firebaseError("auth/internal-error")
         );
 
         await expect(revokeUserSessions(UID)).resolves.toBeUndefined();
-        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+            "[auth] session-revoke-failed code=auth/internal-error"
+        );
+        expect(console.error).not.toHaveBeenCalled();
     });
 });
