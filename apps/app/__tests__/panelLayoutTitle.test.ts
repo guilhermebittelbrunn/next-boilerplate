@@ -50,9 +50,10 @@ describe("panel layout titles", () => {
     ])("titles the common panel in %s", async (locale, environment) => {
         vi.stubEnv("NEXT_PUBLIC_APP_NAME", "");
 
-        expect(await titleFor(commonMetadata, locale)).toBe(
-            `${environment} | ${DEFAULT_BRAND_NAME}`
-        );
+        expect(await titleFor(commonMetadata, locale)).toEqual({
+            default: `${environment} | ${DEFAULT_BRAND_NAME}`,
+            template: `%s | ${DEFAULT_BRAND_NAME}`,
+        });
     });
 
     it.each([
@@ -62,24 +63,27 @@ describe("panel layout titles", () => {
     ])("titles the admin panel in %s", async (locale, environment) => {
         vi.stubEnv("NEXT_PUBLIC_APP_NAME", "");
 
-        expect(await titleFor(adminMetadata, locale)).toBe(
-            `${environment} | ${DEFAULT_BRAND_NAME}`
-        );
+        expect(await titleFor(adminMetadata, locale)).toEqual({
+            default: `${environment} | ${DEFAULT_BRAND_NAME}`,
+            template: `%s | ${DEFAULT_BRAND_NAME}`,
+        });
     });
 
     it("falls back to the default locale when the segment is not a supported locale", async () => {
         vi.stubEnv("NEXT_PUBLIC_APP_NAME", "");
 
-        expect(await titleFor(commonMetadata, "xx")).toBe(
-            `Painel do usuário | ${DEFAULT_BRAND_NAME}`
-        );
+        expect(await titleFor(commonMetadata, "xx")).toEqual({
+            default: `Painel do usuário | ${DEFAULT_BRAND_NAME}`,
+            template: `%s | ${DEFAULT_BRAND_NAME}`,
+        });
     });
 
     it("uses the configured brand name", async () => {
         vi.stubEnv("NEXT_PUBLIC_APP_NAME", "QA Brand");
 
-        expect(await titleFor(adminMetadata, "en")).toBe(
-            "Administration | QA Brand"
-        );
+        expect(await titleFor(adminMetadata, "en")).toEqual({
+            default: "Administration | QA Brand",
+            template: "%s | QA Brand",
+        });
     });
 });

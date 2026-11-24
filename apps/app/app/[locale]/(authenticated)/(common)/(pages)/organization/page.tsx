@@ -5,10 +5,13 @@ import {
 } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
 import { getServerApiClient } from "@/lib/server/apiServerClient";
+import { panelPageMetadata } from "@/lib/server/panelMetadata";
 import { isImpersonating } from "@/lib/server/panelSnapshot";
 import { isOrganizationMembersEnabled } from "@/shared/lib/organizationMembersEnabled";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { OrganizationClient } from "./OrganizationClient";
+
+export const generateMetadata = panelPageMetadata("/organization");
 
 export default async function OrganizationPage() {
     if (!isOrganizationMembersEnabled()) {

@@ -4,10 +4,13 @@ import {
     QueryClient,
 } from "@tanstack/react-query";
 import { getServerApiClient } from "@/lib/server/apiServerClient";
+import { panelPageMetadata } from "@/lib/server/panelMetadata";
 import { isImpersonating } from "@/lib/server/panelSnapshot";
 import { ENTITIES_PAGE_SIZE } from "@/shared/lib/pagination";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { EntitiesListClient } from "./EntitiesListClient";
+
+export const generateMetadata = panelPageMetadata("/entities");
 
 export default async function EntitiesListPage() {
     const queryClient = new QueryClient();

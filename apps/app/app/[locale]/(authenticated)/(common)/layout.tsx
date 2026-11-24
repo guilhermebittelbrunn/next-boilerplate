@@ -1,7 +1,6 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar";
 import { getTranslations } from "@repo/internationalization/server";
 import { resolveLocale } from "@repo/internationalization/utils";
-import { getBrand } from "@repo/next-config/brand";
 import { secure } from "@repo/security";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -14,6 +13,7 @@ import NotificationsBell from "@/shared/components/notifications/NotificationsBe
 import { EmailNotVerifiedNotice } from "@/shared/components/ui/EmailNotVerifiedNotice";
 import Navbar from "@/shared/components/ui/Navbar";
 import { isImpersonatingSnapshot } from "@/shared/lib/panelState";
+import { panelTitleTemplate } from "@/shared/lib/panelTitles";
 import { SidebarCommon } from "./sidebar";
 
 type AppLayoutProperties = {
@@ -28,7 +28,9 @@ export const generateMetadata = async ({
     const dictionary = await getTranslations(resolveLocale(locale));
 
     return {
-        title: `${dictionary.apps.app.pages.navbar.environmentCommon} | ${getBrand().name}`,
+        title: panelTitleTemplate(
+            dictionary.apps.app.pages.navbar.environmentCommon
+        ),
     };
 };
 

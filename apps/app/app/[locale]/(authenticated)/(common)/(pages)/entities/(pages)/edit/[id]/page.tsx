@@ -4,9 +4,12 @@ import {
     QueryClient,
 } from "@tanstack/react-query";
 import { getServerApiClient } from "@/lib/server/apiServerClient";
+import { panelPageMetadata } from "@/lib/server/panelMetadata";
 import { isImpersonating } from "@/lib/server/panelSnapshot";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { EditEntityClient } from "./EditEntityClient";
+
+export const generateMetadata = panelPageMetadata("/entities/edit/[id]");
 
 type EditEntityPageProps = {
     params: Promise<{ id: string }>;

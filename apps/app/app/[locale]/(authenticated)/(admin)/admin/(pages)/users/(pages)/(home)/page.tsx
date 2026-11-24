@@ -4,9 +4,12 @@ import {
     QueryClient,
 } from "@tanstack/react-query";
 import { getServerApiClient } from "@/lib/server/apiServerClient";
+import { panelPageMetadata } from "@/lib/server/panelMetadata";
 import { isImpersonating } from "@/lib/server/panelSnapshot";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { UsersListClient } from "./UsersListClient";
+
+export const generateMetadata = panelPageMetadata("/admin/users");
 
 export default async function UsersPage() {
     const queryClient = new QueryClient();
