@@ -85,7 +85,7 @@ function daysAgoSeconds(days: number): number {
 }
 
 function request({
-    origin,
+    origin = `http://${HOST}`,
     body = { idToken: "id-token" },
     rawBody,
 }: {
@@ -98,7 +98,7 @@ function request({
         headers: {
             host: HOST,
             "content-type": "application/json",
-            ...(origin ? { origin } : {}),
+            origin,
         },
         body: rawBody ?? JSON.stringify(body),
     });
@@ -351,7 +351,7 @@ describe("customTokenPOST — o bootstrap de SSO carrega a origem", () => {
         });
         createCustomTokenMock.mockResolvedValue("custom-token");
 
-        const res = await customTokenPOST();
+        const res = await customTokenPOST(request());
 
         expect(res.status).toBe(STATUS_OK);
         await expect(res.json()).resolves.toEqual({ token: "custom-token" });
@@ -370,7 +370,7 @@ describe("customTokenPOST — o bootstrap de SSO carrega a origem", () => {
         });
         createCustomTokenMock.mockResolvedValue("custom-token");
 
-        await customTokenPOST();
+        await customTokenPOST(request());
 
         expect(createCustomTokenMock).toHaveBeenCalledWith(UID, {
             sessionAuthTime: originSeconds,
@@ -384,7 +384,7 @@ describe("customTokenPOST — o bootstrap de SSO carrega a origem", () => {
             auth_time: daysAgoSeconds(BEYOND_CAP_DAYS),
         });
 
-        const res = await customTokenPOST();
+        const res = await customTokenPOST(request());
 
         expect(res.status).toBe(STATUS_UNAUTHORIZED);
         await expect(res.json()).resolves.toEqual({
@@ -397,7 +397,7 @@ describe("customTokenPOST — o bootstrap de SSO carrega a origem", () => {
     it("recusa quando não há sessão compartilhada", async () => {
         givenCookie(null);
 
-        const res = await customTokenPOST();
+        const res = await customTokenPOST(request());
 
         expect(res.status).toBe(STATUS_UNAUTHORIZED);
         await expect(res.json()).resolves.toEqual({

@@ -89,6 +89,7 @@ function request(): Request {
         method: "POST",
         headers: {
             host: HOST,
+            origin: `http://${HOST}`,
             "content-type": "application/json",
             "user-agent": BROWSER_UA,
         },
@@ -282,7 +283,7 @@ describe("sessionDELETE — sai só deste navegador", () => {
         givenCookie(COOKIE);
         const authority = authorityAnswering("active");
 
-        const res = await sessionDELETE(authority);
+        const res = await sessionDELETE(request(), authority);
 
         expect(res.status).toBe(STATUS_OK);
         expect(authority.end).toHaveBeenCalledWith(COOKIE);
@@ -295,7 +296,7 @@ describe("sessionDELETE — sai só deste navegador", () => {
         const authority = authorityAnswering("active");
         authority.end.mockRejectedValue(new Error("api down"));
 
-        const res = await sessionDELETE(authority);
+        const res = await sessionDELETE(request(), authority);
 
         expect(res.status).toBe(STATUS_OK);
         expect(cookieSetMock).toHaveBeenCalledWith(...clearedCookieCall());
@@ -305,7 +306,7 @@ describe("sessionDELETE — sai só deste navegador", () => {
         givenCookie(null);
         const authority = authorityAnswering("active");
 
-        await sessionDELETE(authority);
+        await sessionDELETE(request(), authority);
 
         expect(authority.end).not.toHaveBeenCalled();
         expect(cookieSetMock).toHaveBeenCalledWith(...clearedCookieCall());
@@ -314,7 +315,7 @@ describe("sessionDELETE — sai só deste navegador", () => {
     it("sem autoridade, só limpa o cookie", async () => {
         givenCookie(COOKIE);
 
-        await sessionDELETE();
+        await sessionDELETE(request());
 
         expect(revokeRefreshTokensMock).not.toHaveBeenCalled();
         expect(verifySessionCookieMock).not.toHaveBeenCalled();

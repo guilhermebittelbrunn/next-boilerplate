@@ -1,5 +1,6 @@
 import "server-only";
 import { HTTP_STATUS } from "@repo/shared/utils";
+import { z } from "zod";
 import {
     createCustomToken,
     decodeSessionCookie,
@@ -19,6 +20,11 @@ import {
 import type { SessionAuthority } from "./types";
 
 const SESSION_REVOKED_CODE = "AUTH_SESSION_REVOKED";
+const ID_TOKEN_MAX_LENGTH = 4096;
+
+const idTokenBodySchema = z.object({
+    idToken: z.string().min(1).max(ID_TOKEN_MAX_LENGTH),
+});
 
 /**
  * Generic auth session route handlers shared by every front-end (web + app).
@@ -33,24 +39,19 @@ function jsonError(code: string, status: number): Response {
     return Response.json({ error: { code } }, { status });
 }
 
-function extractIdToken(body: unknown): string | null {
-    if (
-        typeof body === "object" &&
-        body !== null &&
-        "idToken" in body &&
-        typeof (body as { idToken: unknown }).idToken === "string"
-    ) {
-        return (body as { idToken: string }).idToken;
-    }
-    return null;
-}
-
 async function readIdToken(request: Request): Promise<string | null> {
     try {
-        return extractIdToken(await request.json());
+        const parsed = idTokenBodySchema.safeParse(await request.json());
+        return parsed.success ? parsed.data.idToken : null;
     } catch {
         return null;
     }
+}
+
+function refuseForeignOrigin(request: Request): Response | null {
+    return isSameOriginRequest(request)
+        ? null
+        : jsonError("AUTH_FORBIDDEN_ORIGIN", HTTP_STATUS.FORBIDDEN);
 }
 
 /**
@@ -92,8 +93,9 @@ export async function sessionPOST(
     request: Request,
     authority?: SessionAuthority
 ): Promise<Response> {
-    if (!isSameOriginRequest(request)) {
-        return jsonError("AUTH_FORBIDDEN_ORIGIN", HTTP_STATUS.FORBIDDEN);
+    const refused = refuseForeignOrigin(request);
+    if (refused) {
+        return refused;
     }
 
     const idToken = await readIdToken(request);
@@ -124,8 +126,9 @@ export async function sessionRefreshPOST(
     request: Request,
     authority?: SessionAuthority
 ): Promise<Response> {
-    if (!isSameOriginRequest(request)) {
-        return jsonError("AUTH_FORBIDDEN_ORIGIN", HTTP_STATUS.FORBIDDEN);
+    const refused = refuseForeignOrigin(request);
+    if (refused) {
+        return refused;
     }
 
     const idToken = await readIdToken(request);
@@ -172,8 +175,13 @@ export async function sessionRefreshPOST(
  * open in this browser from writing the cookie back.
  */
 export async function sessionDELETE(
+    request: Request,
     authority?: SessionAuthority
 ): Promise<Response> {
+    const refused = refuseForeignOrigin(request);
+    if (refused) {
+        return refused;
+    }
     const current = await readSessionCookie();
     if (current && authority) {
         await authority.end(current).catch(() => null);
@@ -188,9 +196,13 @@ export async function sessionDELETE(
  * emit ID tokens. Returns 401 when there is no valid shared session.
  */
 export async function customTokenPOST(
-    request?: Request,
+    request: Request,
     authority?: SessionAuthority
 ): Promise<Response> {
+    const refused = refuseForeignOrigin(request);
+    if (refused) {
+        return refused;
+    }
     const sessionCookie = await readSessionCookie();
     const session = await getSessionFromCookie(sessionCookie);
     if (!(session && sessionCookie)) {

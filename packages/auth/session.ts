@@ -71,14 +71,15 @@ function getSessionCookieOptions(maxAgeSeconds: number): SessionCookieOptions {
 }
 
 /**
- * Lightweight CSRF guard for the cookie-minting POST: reject when a cross-origin
- * `Origin` is present and does not match the request host. Same-origin POSTs
- * (the only legitimate callers) pass. Complements `SameSite=Lax`.
+ * CSRF guard for the session routes: the request must prove it came from this host,
+ * either with an `Origin` matching it or, when a browser omits `Origin`, with
+ * `Sec-Fetch-Site: same-origin`. A request carrying neither is refused, because the
+ * cookie these routes read or write is attached by the browser on its own.
  */
 export function isSameOriginRequest(request: Request): boolean {
     const origin = request.headers.get("origin");
     if (!origin) {
-        return true; // non-CORS request (e.g. same-origin form/server) — allowed
+        return request.headers.get("sec-fetch-site") === "same-origin";
     }
     const host = request.headers.get("host");
     try {
