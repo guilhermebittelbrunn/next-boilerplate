@@ -27,7 +27,7 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
 
 - `apps/app/shared/components/ui/ProfileDropdown.tsx:65` — "Minha conta" aponta para `/account` para
   qualquer perfil.
-- `apps/app/app/[locale]/(authenticated)/(common)/layout.tsx:47-52` — admin sem personificação é
+- `apps/app/app/[locale]/(authenticated)/(common)/layout.tsx:49-54` (era `:47-52` até a PR #73) — admin sem personificação é
   redirecionado para `/{locale}/admin`. É de propósito (o painel comum é do usuário comum) e não deve mudar.
 - `apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx:19-33` — o menu do admin tem só Usuários e
   Auditoria; não há entrada de conta.

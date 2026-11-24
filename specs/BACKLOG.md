@@ -6,43 +6,44 @@ conteúdo. Contrato, statuses e frontmatter: [`README.md`](README.md).
 `specs/` contém **apenas o que não foi entregue**. Spec concluída é arquivada junto da feature e passa a
 constar na seção [Entregues](#entregues).
 
-> **Última rodada:** 2026-11-23, **auditoria completa** (`/spec --sync` como passo 1 de um `/cycle`, no workspace
-> `honiara`, com o `HEAD` em `18288c9`, igual a `origin/main`, e o working tree limpo; leituras a partir das 17:40 BRT).
-> A anterior foi a da tarde do mesmo dia, sobre `a391d1c`. Depois dela entrou em `main` uma PR, a #72, e a execução de
-> merge passou nos seis jobs do CI.
+> **Última rodada:** 2026-11-23 (noite), **auditoria completa** (`/spec --sync` como passo 1 de um `/cycle`, no
+> workspace `lima`, com o `HEAD` em `5829ea3`, igual a `origin/main`, e o working tree limpo; leituras a partir das
+> 23:20 BRT). A anterior foi a do fim da tarde do mesmo dia, sobre `18288c9`. Depois dela entrou em `main` uma PR, a
+> #73, e a execução de merge terminou em `failure` no job `e2e`, por um teste instável que não é da PR.
 >
 > **O que mudou nesta rodada:**
-> 1. **A fatia 2 de [`delivery-product-quality`](delivery-product-quality.md) foi entregue pela PR #72** (`18288c9`,
->    2026-11-23 às 20:07 UTC, branch `feat/delivery-product-quality-slice-2`). Os três itens da fatia foram conferidos
->    no código de `main`. A spec segue `approved`, com a fatia 3 aberta, e **não** foi arquivada. Ver
->    [Entregas desta rodada](#entregas-desta-rodada-pr-72).
-> 2. **Nenhuma transição de status.** A spec ganhou a fatia 2 marcada como entregue, com a tabela de conferência,
->    duas derivas, duas perguntas novas (uma delas junta três escolhas menores da fatia) e o `contends_on` revisto
->    para a fatia 3.
-> 3. **A #1 passa a ser a fatia 3 de [`delivery-product-quality`](delivery-product-quality.md)** (título por tela do
->    painel e eventos `sign_up` e `generate_lead`). É a última fatia da spec que você pôs na ordem de 2026-11-19.
->    Ver [A próxima](#a-próxima-fatia-3-de-delivery-product-quality).
-> 4. **Duas decisões novas:** a D18 (abrir a spec da dieta do bundle da landing, cujo gatilho a fatia 2 atingiu) e a
->    D19 (as três escolhas menores da fatia 2).
-> 5. **Deriva de referência corrigida em duas specs vivas** e em três âncoras deste arquivo. Ver
->    [Âncoras relidas](#âncoras-relidas-em-2026-11-23-pós-pr-72).
-> 6. **Achados: 0 fechados e 4 novos; pendências: 1 ampliada.** Ver [Achados da PR #72](#-achados-da-pr-72-2026-11-23)
->    e [Pendências](#pendências-vivas-sem-dono).
-> 7. **Gates remedidos com `--force` e JDK 21, todos verdes:** `lint` (1098 arquivos), os 14 `typecheck`, os 14 `test`
->    (4101 testes) e o `test:emulator` (274). A auditoria também rodou o `pnpm lighthouse` que a PR #72 criou, contra
->    o build da landing. Ver [Gates](#gates-medidos-nesta-auditoria).
-> 8. **Medido em vez de perguntado:** o CI no SHA de merge (`gh run 45256020354`, seis jobs em `success`, com o job
->    `e2e` em 40 testes, 9 deles no projeto `mobile`); o `pnpm audit --prod --audit-level=high` sai 0 (sem `--prod`:
->    12 críticas e 98 altas, iguais à rodada anterior); a `main` segue sem branch protection (404 e `[]`); o alerta #1
->    de secret scanning segue aberto; as cinco PRs do Dependabot seguem abertas, com as mesmas quatro vermelhas (D16);
->    e as duas branches de `delivery-product-quality` **continuam** no remoto.
+> 1. **A fatia 3 de [`delivery-product-quality`](delivery-product-quality.md) foi entregue pela PR #73** (`5829ea3`,
+>    2026-11-24 às 02:22 UTC, branch `guilhermebittelbrunn/cycle-command-v13`). Os dois itens da fatia foram
+>    conferidos no código de `main`, e com isso o corte inteiro da spec (nove itens em três fatias) está em `main`.
+>    Ver [Entregas desta rodada](#entregas-desta-rodada-pr-73).
+> 2. **A spec não foi arquivada.** O CI da execução de merge (`gh run 45311956449`) ficou vermelho: o
+>    `organizationOwnership.spec.ts:68` reprovou na primeira tentativa por contraste do botão "Atualizar", passou na
+>    segunda, e o Playwright reprova teste instável no CI (`apps/e2e/playwright.config.ts:36`). O mesmo código passou
+>    nos seis jobs na PR (`gh run 45309579027`). Arquivar com o CI do merge vermelho é decisão sua (D20); a spec segue
+>    `approved`, com nada a implementar, e fica fora dos lotes.
+> 3. **Nenhuma transição de status.** A spec ganhou a conferência da fatia 3, três derivas e duas perguntas.
+> 4. **A #1 passa a ser a fatia 2 de [`delivery-security-review`](delivery-security-review.md)**, a única spec
+>    `approved` com trabalho pela frente. A fila completa que uma rodada autônoma pode executar está em
+>    [Ordem recomendada](#ordem-recomendada).
+> 5. **Decisões:** duas novas (D20, o arquivamento com o CI do merge vermelho; D21, as duas escolhas da fatia 3); a
+>    D17, a D18 e a D19 chegaram à segunda aparição e foram estacionadas (E16 a E18), pela §5.1 da `cycle-policy`.
+> 6. **Deriva de referência corrigida em quatro specs vivas** e em dezoito âncoras deste arquivo. Ver
+>    [Âncoras relidas](#âncoras-relidas-em-2026-11-23-pós-pr-73).
+> 7. **Achados: 1 fechado, 1 promovido de 🟢 a 🟡 e 3 novos; pendências: 1 nova (a 35) e 7 remedidas.** Ver
+>    [Achados da PR #73](#-achados-da-pr-73-2026-11-23) e [Pendências](#pendências-vivas-sem-dono).
+> 8. **Gates remedidos com `--force` e JDK 21, todos verdes:** `lint` (1112 arquivos), os 14 `typecheck`, os 14 `test`
+>    (4169 testes) e o `test:emulator` (274). Ver [Gates](#gates-medidos-nesta-auditoria).
+> 9. **Medido em vez de perguntado:** o CI no SHA de merge (vermelho, ver o item 2); o `pnpm audit --prod
+>    --audit-level=high` sai 0 (sem `--prod`: 12 críticas e 98 altas, iguais à rodada anterior); a `main` segue sem
+>    branch protection (404 e `[]`); o alerta #1 de secret scanning segue aberto; as cinco PRs do Dependabot seguem
+>    abertas, com as mesmas quatro vermelhas (D16); e a branch da PR #73 ficou no remoto, que passou a 71 cabeças.
 >
-> **Rodadas anteriores:** 2026-11-23 (tarde), auditoria completa pós-PR #71, cujo texto está na versão deste arquivo
-> em `18288c9`; 2026-11-23 (manhã), pós-PR #65 (versão em `a391d1c`); 2026-11-23 (madrugada), pós-PR #64 (versão em
-> `afb5b35`); 2026-11-19, auditoria completa pós-PR #63 (versão em `388a453`); 2026-11-19, spec dirigida (as três
-> `delivery-*`); 2026-11-10, spec dirigida (`app-internal-ux-polish` e `admin-own-account`); e mais de cinquenta
-> rodadas desde a semeadura de 2026-08-21. O texto de cada uma está no histórico deste arquivo
-> (`git log -- specs/BACKLOG.md`).
+> **Rodadas anteriores:** 2026-11-23 (fim da tarde), auditoria completa pós-PR #72, cujo texto está na versão deste
+> arquivo em `5829ea3`; 2026-11-23 (tarde), pós-PR #71 (versão em `18288c9`); 2026-11-23 (manhã), pós-PR #65 (versão
+> em `a391d1c`); 2026-11-23 (madrugada), pós-PR #64 (versão em `afb5b35`); 2026-11-19, auditoria completa pós-PR #63
+> (versão em `388a453`); 2026-11-19, spec dirigida (as três `delivery-*`); 2026-11-10, spec dirigida
+> (`app-internal-ux-polish` e `admin-own-account`); e mais de cinquenta rodadas desde a semeadura de 2026-08-21. O
+> texto de cada uma está no histórico deste arquivo (`git log -- specs/BACKLOG.md`).
 
 ## Contadores
 
@@ -63,47 +64,62 @@ Os 35 `spec.md` arquivados em `docs/features/` têm todos `status: done`.
 (`account-security-mfa`, `delivery-security-review`) · `dx` 1 (`observability-logging`).
 **Por esforço:** P 0 · M 5 · G 2. **Por valor:** alto 3 · médio 4 · baixo 0.
 
-**Transições aplicadas nesta auditoria: 0.** A fatia 2 de `delivery-product-quality` entrou, mas a fatia 3 segue
-aberta, então a spec fica `approved` e em `specs/`, como depois da PR #71. Para as sete specs, a auditoria procurou no
-código de `main` a capacidade que falta, fora de testes: `GithubAuthProvider`, `OAuthProvider`, `microsoft.com`,
-`mode: "payment"`, `multiFactor`, `TotpMultiFactor`, `passkey`, os SDKs de coletor `@sentry`, `@logtail`, `@axiomhq`
-e `betterstack`, `sendGAEvent`, `generate_lead` e `sign_up` dão 0; nenhum `title.template` nos layouts do painel (o
-`(common)/layout.tsx:24-33` segue com um título fixo por área); e o painel do admin segue sem área de conta
-(`admin/(pages)/` tem só `audit` e `users`). **Entrega parcial órfã: nenhuma nova.** **Spec nova: 0.**
+**Transições aplicadas nesta auditoria: 0.** O corte de `delivery-product-quality` está inteiro em `main`, mas o CI
+da execução de merge da PR #73 ficou vermelho, e a regra desta auditoria é arquivar só com o corte confirmado, a PR
+mergeada e o CI verde no SHA de merge (D20). Para as outras seis specs, a auditoria procurou no código de `main` a
+capacidade que falta, fora de testes: `GithubAuthProvider`, `OAuthProvider`, `microsoft.com`, `mode: "payment"`,
+`multiFactor`, `TotpMultiFactor`, `passkey` e os SDKs de coletor `@sentry`, `@logtail`, `@axiomhq` e `betterstack`
+dão 0; o painel do admin segue sem área de conta (`admin/(pages)/` tem só `audit` e `users`); e as lacunas das fatias
+2 e 3 de `delivery-security-review` seguem no código (o `isOriginAllowed` aceita `origin === null`,
+`apps/api/(shared)/lib/cors.ts:48-53`; o helper de cookie só põe `Secure` quando pedem,
+`packages/shared/utils/helpers/cookies.ts:24-31`; os sete `console.error` com o erro inteiro em
+`packages/auth/server.ts:194-340`; o boot que lança sem `CORS_ORIGIN`, `apps/api/instrumentation.ts:63-67`;
+`packages/auth/components/sign-in.tsx` no disco; nenhum `server-only` em `packages/email/index.ts`). A PR #73 não tocou
+nenhum desses arquivos. **Entrega parcial órfã: nenhuma nova.** **Spec nova: 0.**
 
-> **Elegíveis: 3 de 7.** As duas `delivery-*` que restam (`approved`; a de qualidade com a fatia 3 aberta, a de
-> segurança com as fatias 2 e 3) e `admin-own-account` (`proposed`, dependência entregue). `one-time-purchase` e
-> `social-sign-in-providers` seguem `deferred`, por decisão sua; `account-security-mfa` e `observability-logging`
-> seguem `in-progress` sem feature ativa (E12 e E1).
+> **Elegíveis: 2 de 7.** `delivery-security-review` (`approved`, fatias 2 e 3) e `admin-own-account` (`proposed`,
+> dependência entregue; só entra com a sua aprovação, D14). `delivery-product-quality` segue `approved` sem nada a
+> implementar, à espera da D20. `one-time-purchase` e `social-sign-in-providers` seguem `deferred`, por decisão sua;
+> `account-security-mfa` e `observability-logging` seguem `in-progress` sem feature ativa (E12 e E1).
 
-## Entregas desta rodada (PR #72)
+## Entregas desta rodada (PR #73)
 
-Uma PR entrou em `main` depois da auditoria da tarde. A execução de merge terminou em `success` nos seis jobs
-(`changes`, `verify`, `secrets`, `audit`, `coverage` e `e2e`), conferida com `gh run view`:
+Uma PR entrou em `main` depois da auditoria do fim da tarde. A execução de merge terminou em `failure`, conferida com
+`gh run view`: `changes`, `verify`, `secrets`, `audit` e `coverage` em `success`, e `e2e` em `failure`, com 39 testes
+passando e 1 instável.
 
 | PR | merge | branch | arquivos fora de `docs/` e `specs/` | execução de merge |
 |----|-------|--------|-------------------------------------|-------------------|
-| #72 | `18288c9`, 2026-11-23 20:07 UTC | `feat/delivery-product-quality-slice-2`, **ainda no remoto** | 15, 4 deles de teste (27 no total, com 2 documentos, os 6 artefatos da feature e os 4 arquivos da auditoria da tarde) | `gh run 45256020354` |
+| #73 | `5829ea3`, 2026-11-24 02:22 UTC | `guilhermebittelbrunn/cycle-command-v13`, **ainda no remoto** | 36, 14 novos e 10 de teste (48 no total, com 3 documentos, os 6 artefatos da feature e os 3 arquivos da auditoria anterior) | `gh run 45311956449`, ❌ `e2e` |
 
-A tabela de conferência item a item e as derivas estão na [spec](delivery-product-quality.md), na fatia 2. Resumo:
-**3 de 3 implementados**: o projeto `mobile` do Playwright (Pixel 7 a 390 × 844) com os quatro fluxos críticos, o
-axe e uma checagem nova de rolagem horizontal; o `pnpm lighthouse`, que sobe o `next start` da landing, mede home,
-preços e contato com o Lighthouse 12.8.2 e grava a tabela com os limiares da parte 3; e o teste do sitemap, com o
-`lastModified` removido. O job `e2e` da execução de merge rodou 40 testes, 9 deles no projeto `mobile`, em 3,7 min
-(eram 31 em 3,6 min na execução de merge da PR #71). O `/test` fechou com 0 ❌ e 1 🔒 (o `pnpm lighthouse --url`
-contra uma preview da Vercel), depois de duas rodadas: a primeira achou o Ctrl+C deixando o `next start` órfão na
-porta 3001, um defeito que a própria fatia introduziu e que o `/review` corrigiu antes do merge. O `STATE.md` da
-feature, numa pasta própria (`docs/features/delivery-product-quality-slice-2/`), tem `analyze`, `develop`, `review` e
-`test` em `done`, `observe` pendente (opcional), `spec: delivery-product-quality` e a branch real. A auditoria procurou
-senha, token, chave e e-mail fora de `@example.com` nos artefatos da pasta e não achou nada.
+A tabela de conferência item a item e as derivas estão na [spec](delivery-product-quality.md), na fatia 3. Resumo:
+**2 de 2 implementados**: o `title.template` nos dois layouts do painel, com dez telas registradas em
+`PANEL_PAGE_TITLES` e um teste que varre o disco e reprova tela sem registro; e o `useAnalyticsEvent()` do
+`@repo/analytics`, mudo sem consentimento ou sem id do GA, com `sign_up` em seis pontos (e-mail e Google, nas duas
+apps) e `generate_lead` no contato aceito. Sem dependência nem variável nova. O `/test` fechou com 14 ✅, 0 ❌ e 1 🔒
+(a propriedade GA4 real). O `STATE.md` da feature, numa pasta própria
+(`docs/features/delivery-product-quality-slice-3/`), tem `analyze`, `develop`, `review` e `test` em `done`, `observe`
+pendente (opcional), `spec: delivery-product-quality` e `branch: -`: o `/review` propôs
+`feat/delivery-product-quality-slice-3` e não a criou, e a PR saiu da branch do Conductor. A auditoria procurou senha,
+token, chave e e-mail fora de `@example.com` nos artefatos da pasta e não achou nada; o `report.md` lista as contas
+`qa-dpq-slice-3-*@example.com` do emulador sem senha.
 
-**O que a PR levou além do corte:** a seção nova "Lighthouse da landing" e o parágrafo do projeto `mobile` no
-`docs/SETUP.md`; a troca do `npx lighthouse` solto pelo `pnpm lighthouse` e o projeto `mobile` como primeiro passo do
-item de celular no `docs/delivery/03-product-quality.md`; uma linha no `CLAUDE.md` e duas no
-`.claude/commands/deliver.md`; e a pasta `apps/e2e/lighthouse-results/` no `.gitignore`. A auditoria conferiu por
-leitura as afirmações novas desses documentos contra o código (`--locale`, `--port`, `--url`, código 0 abaixo da meta,
-`not measured`, sitemap sem `<lastmod>`), e elas batem. O squash também levou a auditoria da tarde (este arquivo e
-três specs).
+**O CI da execução de merge.** O job `e2e` (02:23 a 02:29 UTC) rodou 40 testes, 9 deles no projeto `mobile`. O
+`[chromium] › tests/organizationOwnership.spec.ts:68` reprovou na primeira tentativa com
+`[serious] color-contrast @ /pt-br/organization (light)` no `<div>` "Atualizar" do botão de recarregar a tabela
+(`organizationOwnership.spec.ts:181`) e passou na segunda (24,0 s). Com `failOnFlakyTests: isCi`
+(`apps/e2e/playwright.config.ts:36`, desde a PR #26), um teste instável reprova o job. O teste já espera a opacidade
+do botão voltar a 1 antes do axe (`:172-180`), mas uma nova recarga da tabela entre essa espera e o axe repete o
+estado transitório. A PR #73 só acrescentou o `generateMetadata` à página da organização; a execução da PR
+(`gh run 45309579027`) passou nos seis jobs. É o segundo teste instável registrado no CI (ver a linha do detector em
+[Lacunas](#lacunas-avaliadas-e-não-especificadas)) e virou o primeiro item das tarefas diretas candidatas.
+
+**O que a PR levou além do corte:** o item 19 do `docs/PRE-PRODUCTION.md` (eventos principais no GA4, `:997-1042`) e a
+correção das âncoras do `x-locale` na tabela de cookies (`:501`); o parágrafo do hook de eventos no `docs/FORKING.md`
+§7.4 (`:372-387`); o que o core dispara e o formato do título no `docs/delivery/03-product-quality.md` (`:223-245` e
+`:301-306`); uma linha no `apps/app/CLAUDE.md` e outra na skill `new-crud`, que mandam toda tela nova registrar o
+título. A auditoria conferiu por leitura as afirmações desses documentos contra o código, e elas batem (ver
+[Contradições](#contradições-doc--código)). O squash também levou a auditoria anterior (este arquivo e duas specs).
 
 ## Tarefas diretas entregues (sem spec)
 
@@ -151,52 +167,49 @@ pasta de feature; fechou o 🟡 do `@repo/auth` em `next 15.1.3`.
 
 ## Gates medidos nesta auditoria
 
-Executados em 2026-11-23, entre 17:41 e 17:46 BRT, com `--force`, neste workspace, com o `HEAD` em `18288c9` (igual a
-`origin/main`), depois de um `pnpm install --frozen-lockfile` e com o JDK 21 de `/opt/homebrew/opt/openjdk@21`. Não
-copiados do `/test` nem da rodada anterior. A máquina rodava outros workspaces, com carga média entre 11 e 25 em 8
-núcleos; nenhum teste estourou o tempo.
+Executados em 2026-11-23, a partir das 23:24 BRT, com `--force`, neste workspace, com o `HEAD` em `5829ea3` (igual a
+`origin/main`) e o JDK 21 de `/opt/homebrew/opt/openjdk@21` no `PATH`. Não copiados do `/test` nem da rodada anterior.
 
 | execução | comando | resultado |
 |----------|---------|-----------|
-| 1 | `pnpm turbo run lint typecheck test --force --continue` | ✅ **29/29 tasks**, 0 do cache, 4 min 49 s. `lint` ✅ (**1098 arquivos**, `No fixes applied`); os **14 `typecheck`** ✅, zero `error TS`; os **14 `test`** ✅ |
-| 2 | `pnpm turbo run test:emulator --force --only` | ✅ **274 testes em 8 arquivos**, 31 s |
-| 3 | `pnpm --filter web build` e `pnpm lighthouse` (cinco vezes) | ✅ exit 0 nas cinco, a porta 3001 livre no fim; números em [A próxima](#a-próxima-fatia-3-de-delivery-product-quality) e na D18 |
+| 1 | `pnpm turbo run lint typecheck test test:emulator --force` | ✅ **30/30 tasks**, 0 do cache, 3 min 7 s. `lint` ✅ (**1112 arquivos**, `No fixes applied`); os **14 `typecheck`** ✅, zero `error TS`; os **14 `test`** ✅; `api#test:emulator` ✅ (**274 testes em 8 arquivos**) |
 
-| workspace | arquivos | testes | Δ vs. 2026-11-23, pós-PR #71 |
+| workspace | arquivos | testes | Δ vs. 2026-11-23, pós-PR #72 |
 |-----------|---------:|-------:|-----------------------------|
 | `api` | 127 | 1729 | — |
-| `app` | 137 | 1225 | — |
-| `web` | 33 | 296 | **+8**, **+1** arquivo (`sitemap`) |
+| `app` | 140 | 1273 | **+48**, **+3** arquivos (`analyticsEvents`, `panelTitles`, `signUpAnalytics`) |
+| `web` | 34 | 306 | **+10**, **+1** arquivo (`signUpAnalytics`) |
 | `@repo/email` | 7 | 208 | — |
 | `@repo/design-system` | 14 | 172 | — |
-| `@repo/auth` | 12 | 139 | — |
+| `@repo/auth` | 13 | 142 | **+3**, **+1** arquivo (`newAccount`) |
 | `@repo/internationalization` | 7 | 67 | — |
 | `@repo/security` | 3 | 65 | — |
 | `@repo/shared` | 5 | 56 | — |
-| `e2e` | 3 | 38 | **+21**, **+1** arquivo (`lighthouseSummary`) |
+| `@repo/analytics` | 3 | 41 | **+7**, **+1** arquivo (`events`) |
+| `e2e` | 3 | 38 | — |
 | `@repo/next-config` | 2 | 38 | — |
-| `@repo/analytics` | 2 | 34 | — |
 | `@repo/payments` | 3 | 19 | — |
 | `@repo/sdk` | 4 | 15 | — |
-| **total** | **359** | **4101** | **+29** testes e **+2** arquivos |
+| **total** | **365** | **4169** | **+68** testes e **+6** arquivos |
 | `api#test:emulator` (fora da linha acima) | 8 | 274 | — |
 
-O `pnpm e2e` não rodou nesta auditoria: o job `e2e` da execução de merge passou com 40 testes, 9 deles no projeto
-`mobile`, e a auditoria não mexeu em código. O `/test` da feature rodou o projeto `mobile` com `--repeat-each=5`
-(29 de 29) e não rodou a suíte inteira.
+O `pnpm e2e` não rodou nesta auditoria: a auditoria não mexeu em código, e o job `e2e` da execução de merge já mediu a
+suíte (40 testes, 1 instável, ver [Entregas desta rodada](#entregas-desta-rodada-pr-73)).
 
-CI: as seis últimas execuções do workflow `CI` na `main` estão verdes, de `583194b` a `18288c9`
-(`gh run list --branch main --workflow CI`). Branch protection segue **não ligado**:
-`gh api repos/:owner/:repo/branches/main/protection` → **404**, `rulesets` → **`[]`**. O repositório tem **72** PRs,
-**cinco abertas**, todas do Dependabot, e **70** cabeças no remoto (`git ls-remote --heads origin`).
+CI: a execução de merge da PR #73 (`gh run 45311956449`, `5829ea3`) é a única vermelha nas oito últimas
+execuções do workflow `CI` na `main`; as sete anteriores, de `599ce85` a `18288c9`, estão verdes
+(`gh run list --branch main --workflow CI --limit 8`).
+Branch protection segue **não ligado**: `gh api repos/:owner/:repo/branches/main/protection` → **404**, `rulesets` →
+**`[]`**. O repositório tem **73** PRs, **cinco abertas**, todas do Dependabot, e **71** cabeças no remoto
+(`git ls-remote --heads origin`).
 
 ## Ordem recomendada
 
 Respeita `depends_on` (lido do frontmatter em 2026-11-23) e a ordem que você aprovou em 2026-11-19: a fatia 1 de
 `delivery-security-review`, `delivery-infra-hardening` e `delivery-product-quality`, à frente de `admin-own-account`.
-A aprovação nomeou só a fatia 1 da spec de segurança e a spec de qualidade inteira. As duas primeiras foram entregues
-pelas PRs #64 e #65, e as fatias 1 e 2 de qualidade, pelas #71 e #72; a fatia 3 de qualidade é o que resta da ordem.
-As fatias 2 e 3 de segurança não entraram nela; a própria spec recomenda que só a fatia 1 bloqueie forks novos.
+As três foram entregues (PRs #64, #65 e #71 a #73). As fatias 2 e 3 de segurança não estavam nessa ordem, mas são as
+únicas partes `approved` que restam; a própria spec recomenda que só a fatia 1 bloqueie forks novos, então elas não
+têm urgência, só prioridade.
 
 > **Critério de execução, sem exceção:** o que uma rodada autônoma consegue provar. O `/cycle` não
 > provisiona infraestrutura, então spec cujos critérios dependem de conta em provedor volta com metade dos
@@ -204,83 +217,120 @@ As fatias 2 e 3 de segurança não entraram nela; a própria spec recomenda que 
 
 | # | id | valor · esforço | situação |
 |---|----|-----------------|----------|
-| 1 | [`delivery-product-quality`](delivery-product-quality.md), **fatia 3** | alto · G (a fatia, M) | `approved` em 2026-11-19; fatias 1 e 2 entregues pelas PRs #71 e #72. Título próprio por tela do painel com `title.template` e eventos `sign_up` e `generate_lead` só com consentimento. Fecha a spec |
-| 2 | [`delivery-security-review`](delivery-security-review.md), **fatia 2** | alto · G (a fatia, M) | `approved`; a fatia 1 foi entregue pela PR #64. Origem conferida em escrita por cookie, cookies com `Secure` e `maxAge`, logs sem objeto inteiro, boot que cai sem `CORS_ORIGIN`, `max` nas strings. Não colide com a #1 |
-| 3 | [`admin-own-account`](admin-own-account.md) | médio · M | `proposed` em 2026-11-10; dependência entregue pela PR #62. Precisa da sua triagem para virar `approved` (D14) |
+| 1 | [`delivery-security-review`](delivery-security-review.md), **fatia 2** | alto · G (a fatia, M) | `approved`; fatia 1 entregue pela PR #64. Origem conferida em escrita por cookie, cookies com `Secure` e `maxAge`, logs sem objeto inteiro, boot que cai sem `CORS_ORIGIN`, `max` nas strings e Zod nas rotas de sessão. Executável sem infra externa |
+| 2 | [`delivery-security-review`](delivery-security-review.md), **fatia 3** | alto · G (a fatia, P a M) | `approved`. Foto e avatar só do bucket ou de host em allowlist, upload sem `content-length` recusado antes de ler e sem metadados, botão do Google travado no cadastro da landing, formulário legado de `@repo/auth` removido e `server-only` em `@repo/email`. Executável sem infra externa, com uma ressalva sobre a remoção de metadados (ver abaixo). Fecha a spec |
+| 3 | [`admin-own-account`](admin-own-account.md) | médio · M | `proposed` em 2026-11-10; dependência entregue pela PR #62. Precisa da sua triagem para virar `approved` (D14). Sem ela, o `/cycle` não a leva |
+| — | [`delivery-product-quality`](delivery-product-quality.md) | alto · G | `approved`, **corte inteiro em `main`** (PRs #71 a #73). Nada a implementar; arquivar depende da D20 |
 | 4 | [`social-sign-in-providers`](social-sign-in-providers.md) | médio · M | `deferred` em 2026-10-16. Resta o motivo do adiamento: nenhum fork pediu GitHub ou Microsoft. O GitHub não prova sob o emulador |
 | 5 | [`one-time-purchase`](one-time-purchase.md) | médio · M | `deferred` em 2026-10-16. Toda prova real depende de conta Stripe (pendência 23) |
 | 6 | [`account-security-mfa`](account-security-mfa.md), **fatia 3** (segundo fator) | médio · M | `in-progress`, 4 de 6 itens entregues (PRs #29 e #39). Fora do conjunto elegível enquanto o status não mudar (E12) |
 | 7 | [`observability-logging`](observability-logging.md) | alto · M | `in-progress`, 5 dos 6 itens. Falta o coletor, que exige conta num provedor. Estacionada (E1) |
 
-### A próxima: fatia 3 de `delivery-product-quality`
+### A próxima: fatia 2 de `delivery-security-review`
 
-**Recomendação decidida: [`delivery-product-quality`](delivery-product-quality.md), fatia 3** ("títulos e
-conversão": título próprio por tela do painel, a partir do dicionário, com `title.template` nos layouts, e os eventos
-`sign_up` e `generate_lead` pelo `@repo/analytics`, só com consentimento, com um helper para o fork registrar os
-eventos do produto). É `approved`, é a última parte da spec que você pôs na ordem de 2026-11-19, e a spec pedia medir
-antes (fatia 2), o que já foi feito. Entregue, ela fecha a spec, que a auditoria seguinte arquiva em
-`docs/features/delivery-product-quality/spec.md` (a pasta da fatia 1 não tem `spec.md`, então não há colisão).
+**Recomendação decidida: [`delivery-security-review`](delivery-security-review.md), fatia 2** ("defesa em
+profundidade"). É a única spec `approved` com trabalho pela frente, a fatia 2 vem antes da 3 na própria spec, e ela
+fecha quatro achados abertos deste arquivo (o gate do `CORS_ORIGIN` que não derruba o processo, o helper de cookie
+sem `Secure`, o TTL do `x-locale` e a renovação de sessão sem `Origin`).
 
-O que dá para provar numa rodada autônoma: os títulos, por teste de unidade do `generateMetadata` e por
-`toHaveTitle` no E2E, que já roda no desktop e no celular; os eventos, por teste de unidade do helper com o `gtag`
-simulado, nos dois estados de consentimento, e pelo `dataLayer` no navegador com um `NEXT_PUBLIC_GA_MEASUREMENT_ID`
-de teste (a chave só aceita valor com prefixo `G-`, `packages/analytics/keys.ts:7-13`). **Depende de infra externa:**
-só ver o evento chegar numa propriedade real do GA4, que fica 🔒 e não reprova a fatia. A fatia não pede variável
-nova nem serviço pago.
+O que dá para provar numa rodada autônoma: a recusa de escrita sem `Origin` nem `Sec-Fetch-Site`, por teste de rota
+na API e nas rotas de sessão das front-ends, com o Bearer token seguindo aceito sem `Origin`; os cookies, por teste
+do helper (`Secure` em HTTPS, `maxAge` no `x-locale`); os logs, por teste que confere o `logEvent` com código no lugar
+do `console.error` com o objeto; os limites, por teste de schema. **Depende de infra externa:** só o comportamento do
+boot sem `CORS_ORIGIN` numa função da Vercel; localmente ele se mede com `pnpm --filter api build && start` e
+`NODE_ENV=production`. A fatia não pede variável nova nem serviço pago.
 
-**Fatos medidos nesta auditoria que mudam o plano dela:**
+**Fatos medidos nesta auditoria que o `/analyze` precisa considerar:**
 
-1. **Os dois layouts do painel têm um título fixo por área**, "ambiente comum" ou "ambiente admin" com a marca
-   (`(common)/layout.tsx:24-33`, `admin/layout.tsx:22-31`), e nenhum `title.template` existe no repositório.
-2. **Hoje não há nenhum evento de GA4 no código**: `sendGAEvent`, `gtag('event')`, `sign_up` e `generate_lead` dão 0
-   fora de testes. O `provider.tsx` só chama `gtag("consent", "update")` (`packages/analytics/provider.tsx:50`).
-3. **Há mais de um caminho de cadastro**: o formulário da app (`SignUpFormClient.tsx`), o da landing
-   (`apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx`) e o primeiro login com Google. O `/analyze`
-   precisa decidir onde o `sign_up` dispara para não contar duas vezes nem perder o Google. O `generate_lead` tem um
-   lugar só, o formulário de contato da landing (`contact-form-client.tsx`).
-4. **O `contends_on` da spec foi revisto para a fatia 3**: saíram o `playwright.config.ts` e o `sitemap.ts`
-   (entregues); entraram `packages/analytics/provider.tsx` e o `SignUpFormClient.tsx` da app, que também está no
-   `contends_on` de `social-sign-in-providers` (`deferred`, fora dos lotes).
-5. **O `pnpm lighthouse` varia muito nesta máquina**: em cinco execuções desta auditoria e cinco das etapas da PR
-   #72, a Performance da home foi de 57 a 97. Isso não muda a fatia 3, mas pesa na D18.
+1. **As lacunas seguem onde a spec diz.** `isOriginAllowed` aceita `origin === null`
+   (`apps/api/(shared)/lib/cors.ts:48-53`); o helper de cookie só põe `Secure` quando pedem
+   (`packages/shared/utils/helpers/cookies.ts:24-31`); `x-locale` sem `maxAge` nem `Secure`
+   (`apps/app/proxy.ts:249,253`, `apps/web/proxy.ts:121,125`); sete `console.error` com o erro inteiro em
+   `packages/auth/server.ts` (`:194`, `:211`, `:227`, `:260`, `:286`, `:315`, `:340`); o boot que lança sem
+   `CORS_ORIGIN` (`apps/api/instrumentation.ts:63-67`); `adminCreateUserSchema.email` sem `max`
+   (`apps/api/(shared)/validation/user-admin.schema.ts:8`).
+2. **Os quatro chamadores que ainda engolem a falha da revogação** (deriva da fatia 1) esperam a decisão do `/analyze`
+   desta fatia: a desativação pelo admin, desvincular um método de login, o expurgo e o bloqueio de conta arquivada.
+3. **O cookie de consentimento já nasce com `secure`** em produção (`packages/analytics/server.ts:28`, repassado ao
+   `setCookie` em `provider.tsx:81-86`); o helper compartilhado é que não o aplica sozinho.
+4. **A PR #73 acrescentou o `sign_up` aos formulários de cadastro**, que usam a sessão e o cookie que a fatia mexe. Os
+   testes de evento (`signUpAnalytics.test.tsx`, nas duas apps) mockam a sessão, então uma mudança no contrato do
+   cookie pode passar por eles sem aviso; o E2E de cadastro (`signUp.spec.ts`) é o que mede.
 
 **Alternativas consideradas:**
 
 | candidata | por que não é a #1 |
 |-----------|--------------------|
-| `delivery-security-review`, fatia 2 | `approved` e de valor alto, com quatro achados abertos que ela fecha, mas fora da ordem que você fixou e, pela própria spec, não bloqueia forks. Não colide com a #1 e pode rodar em paralelo (ver [Lotes](#lotes-paralelos)) |
+| `delivery-security-review`, fatia 3 | menor, mas a spec põe a fatia 2 antes, e a 2 fecha mais achados |
 | `admin-own-account` | elegível, mas `proposed`; o `/cycle` considera só `approved` (D14) |
-| a spec da dieta do bundle da landing | ainda não existe; depende da D18 |
+| o E2E instável de `organizationOwnership` (tarefa direta) | é P e deixou a `main` vermelha, mas é instável, não quebrado; perde para uma spec `approved` e é a primeira tarefa direta da fila |
 | as PRs vermelhas do Dependabot (D16) | não são spec; dependem da sua decisão sobre cada uma, e uma mexe em versão maior com efeito em provedor (Stripe) |
-| o laço de recarga com a sessão recusada (🟡, tarefa direta) | P a M; perde para uma spec `approved` de valor alto. Segue como a primeira tarefa direta candidata |
+| a dieta do bundle da landing | ainda não existe como spec; estacionada (E17) |
 
-**Registro das recomendações anteriores:** a auditoria da tarde de 2026-11-23 recomendou a fatia 2 de
-`delivery-product-quality`, entregue pela PR #72; a da manhã recomendou a fatia 1, entregue pela PR #71; a da
-madrugada recomendou `delivery-infra-hardening`, entregue pela PR #65; a de 2026-11-19 recomendou a fatia 1 de
+**Registro das recomendações anteriores:** a auditoria do fim da tarde de 2026-11-23 recomendou a fatia 3 de
+`delivery-product-quality`, entregue pela PR #73; a da tarde, a fatia 2, entregue pela PR #72; a da manhã, a fatia 1,
+entregue pela PR #71; a da madrugada, `delivery-infra-hardening`, entregue pela PR #65; a de 2026-11-19, a fatia 1 de
 `delivery-security-review`, entregue pela PR #64. As anteriores estão nas versões deste arquivo em `c9b4d9c`,
-`388a453`, `afb5b35`, `a391d1c` e `18288c9`.
+`388a453`, `afb5b35`, `a391d1c`, `18288c9` e `5829ea3`.
+
+### A fila para uma rodada autônoma
+
+Pedida pelo usuário em 2026-11-23: tudo o que uma rodada sem perguntas pode executar em sequência, dentro da
+[`cycle-policy`](../.claude/cycle-policy.md) (o ciclo não aprova spec, não leva `deferred` nem `in-progress` sem
+feature ativa, não provisiona infra e não commita).
+
+| ordem | item | por que nesta posição |
+|-------|------|-----------------------|
+| 1 | fatia 2 de `delivery-security-review` | a #1 da ordem |
+| 2 | fatia 3 de `delivery-security-review` | fecha a spec; ver a nota abaixo sobre rodar no mesmo working tree |
+| 3 | E2E instável de `organizationOwnership` | P, só `apps/e2e`; deixou o CI do merge da PR #73 vermelho |
+| 4 | laço de recarga com a sessão recusada, junto dos dois `AuthProvider` da web e do `signInStartedHereRef` | 🟡, P a M; mexe em `packages/auth/provider.tsx` e nos formulários de login, que as duas fatias não tocam |
+| 5 | foco escondido pelo rodapé fixo | 🟡, P a M, só `apps/app` |
+| 6 a 9 | `stackEnv` da `web` sem `NEXT_PUBLIC_API_URL`; os dois textos em inglês de `googleSignInApi.ts`; link de "esqueci a senha" no login da landing; o resto do `docs/SECURITY.md:7` | todos P, arquivos distintos |
+
+**Fatias 2 e 3 no mesmo working tree.** Dá para rodar uma depois da outra, porque nenhuma depende de infra externa, mas
+com custo. O `/cycle` não commita, então a fatia 3 começa com o diff da fatia 2 no working tree: o `/review` dela vê
+os dois diffs juntos e precisa separar o plano de commits por fatia, e uma rejeição da fatia 2 na revisão do dia
+seguinte arrasta a 3. Os arquivos que as duas tendem a tocar são os schemas Zod (o `max` da fatia 2 e a allowlist de
+URL da fatia 3 em `apps/api/(shared)/validation/entity.schema.ts` e no avatar, `account-avatar.ts`) e o `packages/auth`
+(a fatia 2 em `server.ts` e `session-routes.ts`; a 3 removendo `components/sign-in.tsx`). Rodar as duas em paralelo,
+em workspaces diferentes, não é opção: são a mesma spec e o mesmo `contends_on`. Recomendação: em sequência, cada uma
+com pasta própria (`docs/features/delivery-security-review-slice-2/` e `-slice-3/`), e o relatório final listando os
+arquivos de cada fatia.
+
+**Ressalva da fatia 3:** remover metadados da imagem pede decodificar e regravar o arquivo. O `sharp` está no lockfile
+só como dependência opcional do `next` (`pnpm-lock.yaml`, `sharp@0.34.4` e `sharp@0.35.5`), e nenhum `package.json`
+do repositório o declara. Declará-lo na `api` é dependência nova; a `cycle-policy` §2 manda implementar com o que já
+existe e levar a alternativa ao relatório. O `/analyze` decide entre isso e um corte que remove só o segmento EXIF do
+JPEG sem recodificar.
 
 ### Tarefas diretas candidatas
 
-Na ordem em que a auditoria as pegaria quando não houver spec para rodar. Nenhuma delas espera o merge de uma branch. As que uma spec `approved` vai absorver estão marcadas com o id dela e não devem
-rodar como tarefa direta.
+Na ordem em que a auditoria as pegaria quando não houver spec para rodar. Nenhuma delas espera o merge de uma branch.
+As que uma spec `approved` vai absorver estão marcadas com o id dela e não devem rodar como tarefa direta.
 
-- **Laço de recarga com a sessão recusada, no login e no cadastro da app** (`SignInForm.tsx:83-117`,
-  `SignUpFormClient.tsx:72-100`, `packages/auth/provider.tsx:353-365`): P a M, 🟡. Ver
-  [Achados da tarefa `app-auth-forms`](#-achados-da-tarefa-app-auth-forms-pr-60).
+- **E2E instável `organizationOwnership.spec.ts:68`** (`apps/e2e/tests/organizationOwnership.spec.ts:172-183`): P, 🟡,
+  só `apps/e2e`. Reprovou o CI da execução de merge da PR #73. Ver [Achados da PR #73](#-achados-da-pr-73-2026-11-23).
+- **Laço de recarga com a sessão recusada, no login e no cadastro da app** (`SignInForm.tsx:91-125`,
+  `SignUpFormClient.tsx:80-108`, eram `:83-117` e `:72-100` até a PR #73, `packages/auth/provider.tsx:353-365`): P a M,
+  🟡. Ver [Achados da tarefa `app-auth-forms`](#-achados-da-tarefa-app-auth-forms-pr-60).
 - **Foco escondido pelo rodapé fixo nos formulários de página inteira** (`apps/app/shared/components/ui/Footer.tsx`,
   WCAG 2.2 SC 2.4.11): P a M, 🟡, medido pelo `/test` da PR #62. Ver [Achados da PR #62](#-achados-da-pr-62-2026-11-19).
-- **Dois `AuthProvider` aninhados na web e a tela vazia do `signInStartedHereRef`**: P a M; vai junto do laço.
-- **O resto do `docs/SECURITY.md` atrás da PR #56** (`docs/SECURITY.md:7`): P, só documento. A parte do rate limit
-  saiu com a reescrita da seção pela PR #64.
-- **Os dois textos fixos em inglês de `googleSignInApi.ts`** (`:49`, `:63`, eram `:48` e `:62` até a PR #64): P, valor baixo.
+- **Dois `AuthProvider` aninhados na web e a tela vazia do `signInStartedHereRef`**: P a M; vai junto do laço. A dieta
+  do bundle (E17) também tiraria o `AuthProvider` duplicado; se ela virar spec antes, este item passa para ela.
+- **A `apps/web` sem `NEXT_PUBLIC_API_URL` na pilha do E2E** (`apps/e2e/support/stackEnv.ts:66-85`): P, só `apps/e2e`.
+  Novo, da PR #73.
+- **O resto do `docs/SECURITY.md` atrás da PR #56** (`docs/SECURITY.md:7`): P, só documento.
+- **Os dois textos fixos em inglês de `googleSignInApi.ts`** (`:62`, `:76`, eram `:49` e `:63` até a PR #73): P, valor
+  baixo.
 - **Link de "esqueci a senha" no login da landing** (`sign-in-form-client.tsx`): P.
 - **`markRead` contra documento apagado** (`notification.repository.ts:63-68`): P, só `apps/api`. Valor baixo.
-- **`radix-ui: latest` no design system** (`packages/design-system/package.json:25`): P. A fatia 1 de
-  `delivery-security-review` mexeu em dependência e lockfile e não o levou; segue sozinho.
+- **`radix-ui: latest` no design system** (`packages/design-system/package.json:25`): P. Mexe no lockfile, então fica
+  longe de qualquer fatia que declare dependência.
 - **`start` com porta fixa na `web` e na `api`** (`apps/web/package.json:7`, `apps/api/package.json:9`): P.
-- **Laço de redirecionamento da conta arquivada antes da correção** (`user-merge.ts:62-68`, `apps/app/proxy.ts:270-285`, era `:266-281`
-  até a PR #71, `authSession.ts:32-37`, era `:34-39` até a PR #64): P a M, e pede uma medição que o `/test` não conseguiu montar.
+- **Laço de redirecionamento da conta arquivada antes da correção** (`user-merge.ts:62-68`, `apps/app/proxy.ts:270-285`,
+  era `:266-281` até a PR #71, `authSession.ts:32-37`, era `:34-39` até a PR #64): P a M, e pede uma medição que o
+  `/test` não conseguiu montar.
 - **A `apps/web` com `RESEND_*` e `@repo/email` sem envio** (`apps/web/env.ts:1`, `.env.example:2-3`,
   `package.json:19`): P, só config da web.
 - **`getMergedUserFromIdToken` sem chamador** (`user-merge.ts:33-49`): P, `apps/api`.
@@ -294,15 +344,15 @@ rodar como tarefa direta.
   (`packages/auth/provider.tsx`): M.
 - **Tela de erro global da `apps/api` com texto fixo** (`apps/api/app/global-error.tsx:19-22`): P, valor quase nulo.
 - **Nome de marca longo no header a 1024 px**: decisão de produto (a marca sai do centro).
-- Absorvidas por specs `approved`, **não rodar à parte**: o componente `@repo/auth/components/sign-in` morto
-  (`delivery-security-review`, fatia 3); o `<title>` igual em cada área do painel (`delivery-product-quality`,
-  fatia 3, a #1). A `apps/web` sem `not-found` saiu desta lista: a PR #71 a entregou, como a #65 entregou o
-  `skipValidation` da `apps/web` e o `images.domains` deprecado.
+- Absorvido por spec `approved`, **não rodar à parte**: o componente `@repo/auth/components/sign-in` morto
+  (`delivery-security-review`, fatia 3). O `<title>` igual em cada área do painel saiu desta lista: a PR #73 o entregou.
 - **Da rodada pós-PR #71, todas 🟢 e P:** `PUT /health` com `405` sem `error.code`; o segundo `<title>` no 404 de
   `/favicon.ico`. Ver [Achados da PR #71](#-achados-da-pr-71-2026-11-23).
-- **Novas desta rodada, todas 🟢 e P:** o `[request] failed` registrado para o cliente que fecha a conexão no meio
+- **Da rodada pós-PR #72, todas 🟢 e P:** o `[request] failed` registrado para o cliente que fecha a conexão no meio
   da renderização; o primeiro toque perdido no botão da barra lateral no celular. Ver
   [Achados da PR #72](#-achados-da-pr-72-2026-11-23).
+- **Novas desta rodada, 🟢 e P:** o `RegExp` sem escape do `screenTitled` no E2E. Ver
+  [Achados da PR #73](#-achados-da-pr-73-2026-11-23).
 
 **Os demais candidatos não mudaram de motivo desde 2026-10-07 e não são mais reapresentados** (§5.1): o contraste
 do seletor de tamanho da paginação, o `CommandDialog` em inglês, o 404 de arquivo inexistente (O1 da PR #41), as
@@ -314,56 +364,53 @@ do seletor de tamanho da paginação, o `CommandDialog` em inglês, o 404 de arq
 
 ## Lotes paralelos
 
-Recalculado em **2026-11-23**, nesta auditoria, a partir do `contends_on` de cada spec, lido do disco, pelo algoritmo
-de [`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por disjunção →
-teto de 3. O `contends_on` de `delivery-product-quality` foi revisto nesta auditoria para a fatia 3 (saíram
-`apps/e2e/playwright.config.ts` e `apps/web/app/sitemap.ts`, entregues; entraram `packages/analytics/provider.tsx` e o
-`SignUpFormClient.tsx` da app). Os 31 caminhos declarados pelas sete specs, 27 distintos, existem no disco.
+Recalculado em **2026-11-23 (noite)**, nesta auditoria, a partir do `contends_on` de cada spec, lido do disco, pelo
+algoritmo de [`/spec-audit` §6](../.claude/skills/spec-audit/SKILL.md): elegíveis → ordem do backlog → guloso por
+disjunção → teto de 3. Nenhum `contends_on` mudou nesta auditoria. Os 31 caminhos declarados pelas sete specs, 27
+distintos, existem no disco.
 
-**Elegíveis agora: 3 de 7**, na ordem recomendada: `delivery-product-quality` (fatia 3), `delivery-security-review`
-(fatia 2) e `admin-own-account`.
+**Elegíveis agora: 2 de 7**, na ordem recomendada: `delivery-security-review` (fatias 2 e 3) e `admin-own-account`.
 
 | lote | specs | o que cada uma toca (`contends_on`) | por que não colidem |
 |------|-------|-------------------------------------|---------------------|
-| 1 | `delivery-product-quality` (fatia 3) · `delivery-security-review` (fatia 2) · `admin-own-account` | `packages/seo/metadata.ts`, os layouts `(common)/layout.tsx` e `admin/layout.tsx`, `packages/analytics/provider.tsx`, `SignUpFormClient.tsx` · os três `proxy.ts`, `packages/auth/session.ts`, `session-routes.ts`, `server.ts`, `packages/shared/utils/helpers/cookies.ts`, `apps/api/instrumentation.ts` · `apps/api/app/(guards)/common-panel.ts`, `ProfileDropdown.tsx`, `admin/routes.tsx` | os 16 caminhos são distintos |
+| 1 | `delivery-security-review` (fatia 2, depois a 3) · `admin-own-account` | os três `proxy.ts`, `packages/auth/session.ts`, `session-routes.ts`, `server.ts`, `packages/shared/utils/helpers/cookies.ts`, `apps/api/instrumentation.ts` · `apps/api/app/(guards)/common-panel.ts`, `ProfileDropdown.tsx`, `admin/routes.tsx` | os 11 caminhos são distintos |
 
-**Quem ficou de fora do lote 1, nominalmente:** nenhuma elegível. Fora dos elegíveis: `social-sign-in-providers` e
-`one-time-purchase` por estarem `deferred`, `account-security-mfa` e `observability-logging` por estarem `in-progress`
-sem feature ativa. Fora do lote, duas contenções a registrar: `account-security-mfa` e `delivery-security-review`
-declaram as duas `packages/auth/server.ts`, `session.ts` e `session-routes.ts`, então a fatia 3 do segundo fator não
-roda junto da fatia 2 de segurança; e `social-sign-in-providers` e a fatia 3 de qualidade declaram as duas o
-`SignUpFormClient.tsx` da app.
+**Quem ficou de fora do lote 1, nominalmente:** `delivery-product-quality`, sem colisão: o corte está inteiro em
+`main` e não há o que implementar; ela sai dos lotes até a D20 arquivá-la. Fora dos elegíveis:
+`social-sign-in-providers` e `one-time-purchase` por estarem `deferred`, `account-security-mfa` e
+`observability-logging` por estarem `in-progress` sem feature ativa. Duas contenções a registrar fora do lote:
+`account-security-mfa` e `delivery-security-review` declaram as duas `packages/auth/server.ts`, `session.ts` e
+`session-routes.ts`, então a fatia 3 do segundo fator não roda junto da fatia 2 de segurança; e as fatias 2 e 3 de
+segurança, sendo a mesma spec, não rodam em paralelo uma com a outra.
 
 **Ressalvas específicas deste lote, que o `contends_on` não captura:**
 
 - **`admin-own-account` só entra no lote se você a aprovar.** O `/cycle` considera só `approved`; sem a triagem, o
-  lote 1 tem duas specs.
-- **O layout do admin e os títulos.** A fatia 3 de qualidade dá título próprio a cada tela do painel, e a área de
-  conta de `admin-own-account` cria telas novas sob o `admin/layout.tsx`. Rodando juntas, quem mergear por último
-  precisa dar título às telas da outra.
-- **O formulário de cadastro.** A fatia 3 pode disparar o `sign_up` no `SignUpFormClient.tsx`; a fatia 2 de segurança
-  mexe em sessão e cookie, que o mesmo fluxo usa, sem declarar o arquivo.
-- **`apps/e2e`.** Desde a PR #72, todo teste novo em `landing`, `signIn`, `signUp` ou `entityCrud` roda também no
-  projeto `mobile`, a 390 px, com a checagem de rolagem horizontal.
-- **Dicionário de `apiErrors` e títulos.** A fatia 2 de segurança e `admin-own-account` podem as duas criar
-  `error.code` novo em `translations/packages/shared/utils.ts`; a fatia 3 de qualidade acrescenta os títulos no
-  dicionário da app. Nenhuma declara, por regra.
+  lote 1 tem uma spec.
+- **O título das telas novas do admin.** Desde a PR #73, toda tela do painel precisa de registro em
+  `PANEL_PAGE_TITLES` (`apps/app/shared/lib/panelTitles.ts`), e `panelTitles.test.ts` reprova tela sem registro. A
+  área de conta de `admin-own-account` cria telas novas.
+- **O guard do painel e a origem.** `admin-own-account` mexe no guard do painel comum; a fatia 2 de segurança passa a
+  recusar escrita por cookie sem `Origin` em toda a API. As rotas de conta que o admin passar a usar caem nas duas.
+- **`apps/e2e`.** Todo teste novo em `landing`, `signIn`, `signUp` ou `entityCrud` roda também no projeto `mobile`, a
+  390 px, com a checagem de rolagem horizontal.
+- **Dicionário de `apiErrors`.** As duas specs podem criar `error.code` novo em
+  `translations/packages/shared/utils.ts`. Nenhuma declara, por regra.
 
 **A ordem recomendada e os lotes respondem perguntas diferentes.** A ordem diz *o que vale mais a pena fazer*; o lote
 diz *o que pode ser feito junto sem uma spec pisar na outra*. Se você só vai rodar uma coisa, rode a #1 da ordem.
 
-**Lição da PR #72 para o campo:** a fatia 2 tinha dois arquivos seus no `contends_on` (`playwright.config.ts` e
-`sitemap.ts`) e tocou os dois. Fora da lista, tocou mais 13 fora de `docs/` e `specs/`, 5 deles arquivos novos; dos 8
-existentes, 3 são compartilhados por qualquer tarefa (`package.json` da raiz, `.gitignore` e `CLAUDE.md`).
-**Lições anteriores:** a PR #71 tocou 31 fora da lista; a #65 acertou os sete declarados e tocou 19 fora da lista; a
-#64 tocou 67, a #62, 59, e a #57, 131, o teto até hoje.
+**Lição da PR #73 para o campo:** a fatia 3 declarou cinco arquivos e tocou quatro (`packages/seo/metadata.ts` ficou
+de fora, porque o título foi para `apps/app`). Fora da lista, tocou 32 arquivos fora de `docs/` e `specs/`, 14 deles
+novos e 10 de teste. **Lições anteriores:** a PR #72 tocou 13 fora da lista; a #71, 31; a #65 acertou os sete
+declarados e tocou 19 fora da lista; a #64 tocou 67, a #62, 59, e a #57, 131, o teto até hoje.
 
 ### Nota de processo: a auditoria é de um workspace só
 
 **Só um workspace roda a auditoria do backlog** (`/spec --sync --audit-only`); os outros rodam com
 `--no-audit`. Sem essa disciplina, 3 agents regravam o `BACKLOG.md` ao mesmo tempo. É também por isso que
 `specs/BACKLOG.md` **não** aparece em nenhum `contends_on`: esse conflito se resolve por processo, não por
-dado (ver [`README.md`](README.md#depends_on--contends_on)). As PRs #40 a #72 tocaram este arquivo só para levar a
+dado (ver [`README.md`](README.md#depends_on--contends_on)). As PRs #40 a #73 tocaram este arquivo só para levar a
 auditoria anterior ou a spec dirigida, feitas num workspace só.
 
 ### A ressalva honesta
@@ -375,17 +422,17 @@ conflito de merge causado por esses erros.
 
 ## Precisam de decisão
 
-Seis abertas. A D9 espera a compra avulsa voltar da fila; a D14 destrava a terceira spec do lote 1; a D16 e a D17
-seguem iguais à rodada da tarde; a D18 e a D19 são novas e vêm da fatia 2 de `delivery-product-quality`.
+Cinco abertas. A D9 espera a compra avulsa voltar da fila; a D14 destrava a segunda spec do lote 1; a D16 segue igual;
+a D20 e a D21 são novas e vêm da PR #73. A D17, a D18 e a D19 chegaram à segunda aparição sem resposta e foram para
+[Decisões estacionadas](#decisões-estacionadas-51) (E16 a E18), pela §5.1 da `cycle-policy`.
 
 | # | pergunta | recomendação | por quê |
 |---|----------|--------------|---------|
 | D9 | Na compra avulsa, o estorno feito no painel da Stripe retira o acesso? | sim, quando a spec voltar da fila | sem isso, o acesso vitalício sobrevive ao dinheiro devolvido. A spec está `deferred` desde 2026-10-16, então a pergunta só volta junto dela |
-| D14 | Aprovar [`admin-own-account`](admin-own-account.md)? | aprovar, para depois das fatias que restam das duas `delivery-*` | a dependência (`app-internal-ux-polish`) foi entregue pela PR #62, a área do admin nasce no layout novo, e o custo herdado pelo fork é zero. Sem a aprovação, o `/cycle` não a leva e o lote 1 fica com duas specs |
-| D16 | O que fazer com as cinco PRs do Dependabot (#66 a #70)? | mergear a #68 (`react-email` 4 → 6, dependência de desenvolvimento, verde); fechar a #69 (`stripe` 19 → 23) e acrescentar ao `dependabot.yml` um `ignore` de versão maior do `stripe`; tratar a #66, a #67 e a #70 como tarefas diretas, uma por PR, e fechar as três até lá | a fila de `npm` está cheia (`open-pull-requests-limit: 5`) e nada novo entra. Remedido às 17:42 BRT, pós-PR #72: as cinco seguem abertas, com `verify` vermelho na #66, `verify` e `e2e` na #67 e na #69, `verify` na #70, e a #68 sem falha; a #67 foi rebaseada pelo Dependabot depois do merge da #72 e segue com as mesmas falhas. Os checks de preview da Vercel também falham na #66 (`app`) e na #69 (`api`). A #69 troca a versão da API da Stripe (`packages/payments/index.ts:5` fixa `2025-09-30.clover`), o que muda também o endpoint de webhook de cada fork (pendência 23); é decisão de produto, não atualização |
-| D17 | Aceitar que o 404 da landing dependa de JavaScript? | aceitar, e registrar o comportamento na spec (já feito nesta auditoria) | com idioma válido, o servidor responde 404 com `<html id="__next_error__">` e o corpo vazio, e o cartão traduzido só aparece com JavaScript; antes da PR #71 o mesmo endereço mostrava o 404 do Next em inglês. O status e o `noindex` estão certos. A opção com `Suspense` foi medida e transforma o 404 em 200; a única saída conhecida é o `global-not-found`, experimental no Next 16. Se você recusar, o trabalho volta como tarefa direta, com um `request.get` no E2E contando o `<h1>` |
-| D18 | Abrir a spec da dieta do bundle da landing (tirar o antd e o `AuthProvider` duplicado do layout público)? | sim, como spec `proposed` dirigida (`/spec`), para depois da fatia 3 | o "Fora do corte" de `delivery-product-quality` esperava o número do Lighthouse para decidir, e ele chegou: na mediana de cinco execuções desta auditoria, a home fica em Performance 87 (🟡, meta 90) e LCP 3,9 s (🟡, meta 2,5 s), e preços em LCP 2,8 s; contato passa (96 e 2,2 s). Melhor Performance da home em dez execuções: 97; pior: 57. Contato tem Best practices 93 (🟡) nas dez, por causa que nenhuma etapa registrou. A spec mexe em autenticação e no design system, então é decisão de produto, não tarefa direta |
-| D19 | As três escolhas da fatia 2 que o `/analyze` deixou como pergunta: (a) subir o Node para 22.19 ou mais e liberar o Lighthouse 13; (b) uma data declarada por rota no sitemap; (c) mediana de várias execuções no `pnpm lighthouse` | (a) não agora, só junto de outro motivo para mexer no Node; (b) não; (c) **sim, mas no procedimento**: o `/deliver` roda o comando três vezes e cita a mediana, sem mudar o comando | (a) e (b) seguem a recomendação do plano. Em (c) a auditoria diverge do plano: a variação medida (Performance da home de 57 a 97) faz uma execução só decidir a faixa por sorte (ver o achado da PR #72). Rodar três vezes custa cerca de três minutos e não mexe em código |
+| D14 | Aprovar [`admin-own-account`](admin-own-account.md)? | aprovar, para depois das fatias 2 e 3 de `delivery-security-review` | a dependência (`app-internal-ux-polish`) foi entregue pela PR #62, a área do admin nasce no layout novo, e o custo herdado pelo fork é zero. Sem a aprovação, o `/cycle` não a leva, e depois das duas fatias de segurança a fila de specs fica vazia |
+| D16 | O que fazer com as cinco PRs do Dependabot (#66 a #70)? | mergear a #68 (`react-email` 4 → 6, dependência de desenvolvimento, verde); fechar a #69 (`stripe` 19 → 23) e acrescentar ao `dependabot.yml` um `ignore` de versão maior do `stripe`; tratar a #66, a #67 e a #70 como tarefas diretas, uma por PR, e fechar as três até lá | a fila de `npm` está cheia (`open-pull-requests-limit: 5`) e nada novo entra. Remedido às 23:28 BRT, pós-PR #73: as cinco seguem abertas, com `verify` vermelho na #66 e na #70, `verify` e `e2e` na #67 e na #69, e a #68 sem falha. A #69 troca a versão da API da Stripe (`packages/payments/index.ts:5` fixa `2025-09-30.clover`), o que muda também o endpoint de webhook de cada fork (pendência 23); é decisão de produto, não atualização |
+| D20 | Arquivar [`delivery-product-quality`](delivery-product-quality.md) com o CI da execução de merge da PR #73 vermelho? | rodar de novo o job que falhou (`gh run rerun 45311956449 --failed`) e deixar a próxima auditoria arquivar se ele passar | o corte inteiro está em `main`, conferido no código; o mesmo código passou nos seis jobs na PR (`gh run 45309579027`); e a falha foi do `organizationOwnership.spec.ts:68`, que a PR não tocou, reprovando por contraste num estado transitório e passando na segunda tentativa. A auditoria não roda o job de novo por conta própria: o `failOnFlakyTests` existe para o vermelho aparecer, e apagar esse sinal é escolha sua. Consertar o teste é a primeira tarefa direta da fila. Arquivada, a spec vai para `docs/features/delivery-product-quality/spec.md` (a pasta da fatia 1, sem `spec.md`, então sem colisão) |
+| D21 | As duas escolhas da fatia 3 que o `/analyze` decidiu por padrão: (a) mandar os eventos também ao Vercel Analytics; (b) pôr a área no meio do título do admin (`<tela> \| <área> \| <marca>`) | (a) não agora; (b) não | (a) eventos customizados do Vercel Analytics dependem de plano pago, segundo o plano da fatia (a página de preços não foi reaberta), e o `useAnalyticsEvent()` aceita um segundo destino sem mudar os chamadores; (b) o título fica longo na aba, e as telas de cada área já têm nomes distintos. As duas seguem como entregues se você não mexer |
 
 Respondidas por você na triagem de 2026-10-16, todas pela recomendação: D3 a D8; cada uma está na seção "Decisões"
 da spec dela. **Respondidas pelo merge da PR #58 (2026-10-27):** D10 e D11, pela opção (b), e D12, pela PR única.
@@ -394,23 +441,24 @@ da spec dela. **Respondidas pelo merge da PR #58 (2026-10-27):** D10 e D11, pela
 
 Resolvidos sem pergunta nesta auditoria, por medição:
 
-- **O CI no SHA de merge da PR #72**: verde nos seis jobs (`gh run 45256020354`), e as seis últimas execuções do
-  workflow `CI` na `main` também.
-- **Se a fatia 2 de `delivery-product-quality` entrou inteira em `main`**: sim, 3 de 3, conferidos no código de
-  `18288c9` (tabela na [spec](delivery-product-quality.md)).
-- **Se o projeto `mobile` roda no CI**: sim. O job `e2e` da execução de merge listou 9 testes `[mobile]` (os 3 de
-  `landing`, os 4 de `signIn`, o de `signUp` e o de `entityCrud`), com 40 no total, em 3,7 min.
-- **Se o `pnpm lighthouse` funciona em `main` fora do pipeline da feature**: sim. Cinco execuções desta auditoria
-  contra o build da landing, exit 0 nas cinco, cerca de um minuto cada, a porta 3001 livre no fim.
-- **Se o `pnpm audit` segue em zero**: sim. `pnpm audit --prod --audit-level=high` sai 0, com 0 críticas, 1 alta (a do
-  `@grpc/grpc-js`, ignorada pela exceção escrita no `package.json`), 7 moderadas e 4 baixas. Sem `--prod`: 12
-  críticas, 98 altas, 104 moderadas e 24 baixas, iguais à rodada anterior.
+- **O CI no SHA de merge da PR #73**: vermelho no job `e2e` (`gh run 45311956449`), com os outros cinco verdes; a
+  execução da PR (`gh run 45309579027`) passou nos seis. Detalhe em [Entregas desta rodada](#entregas-desta-rodada-pr-73).
+- **Se a fatia 3 de `delivery-product-quality` entrou inteira em `main`**: sim, 2 de 2, conferidos no código de
+  `5829ea3` (tabela na [spec](delivery-product-quality.md)).
+- **Se o título por tela roda no CI**: sim. O `entityCrud.spec.ts` confere `toHaveTitle` nas três telas do CRUD, nos
+  projetos `chromium` e `mobile`, e passou na execução de merge.
+- **Se o `pnpm audit` segue em zero**: sim. `pnpm audit --prod --audit-level=high` sai 0, com 0 críticas, 1 alta
+  ignorada pela exceção do `package.json`, 7 moderadas e 4 baixas. Sem `--prod`: 12 críticas, 98 altas, 104 moderadas e
+  24 baixas, iguais à rodada anterior.
 - **Se a `main` ganhou proteção**: não. `gh api repos/:owner/:repo/branches/main/protection` → 404 ("Branch not
   protected"), `rulesets` → `[]`.
 - **Se o alerta #1 de secret scanning fechou**: não. `google_api_key`, aberto desde 2026-04-04 (pendência 32).
-- **Se o artefato da PR #72 vazou credencial**: não (ver [Entregas desta rodada](#entregas-desta-rodada-pr-72)).
-- **Se as branches de `delivery-product-quality` saíram do remoto**: não; `feat/delivery-product-quality` e
-  `feat/delivery-product-quality-slice-2` seguem lá. O remoto tem 70 cabeças: as 69 da rodada anterior e a da fatia 2.
+  `security_and_analysis` segue com `dependabot_security_updates`, `secret_scanning_validity_checks` e
+  `secret_scanning_non_provider_patterns` em `disabled`.
+- **Se o artefato da PR #73 vazou credencial**: não (ver [Entregas desta rodada](#entregas-desta-rodada-pr-73)).
+- **Se as branches de `delivery-product-quality` saíram do remoto**: não. `feat/delivery-product-quality`,
+  `feat/delivery-product-quality-slice-2` e `guilhermebittelbrunn/cycle-command-v13` (a da PR #73) seguem lá. O remoto
+  tem 71 cabeças: as 70 da rodada anterior e a da PR #73.
 
 ## Decisões estacionadas (§5.1)
 
@@ -421,20 +469,24 @@ que saíram nesta auditoria, na de `c9b4d9c`. **Saíram quatro em 2026-11-19:** 
 fechada pela entrega de `app-internal-ux-polish` na PR #62; a E13 (ligar o bloqueio de bot da landing), resolvida pela
 sua aprovação de `delivery-infra-hardening`, que traz o item no corte; a E14 (qual spec levar ao `/cycle` sem nenhuma
 `approved`), porque três estão `approved`; e a E15 (abrir a PR da pilha `fix/app-auth-forms`), porque a pilha virou a
-PR #60. **Nenhuma saiu nas quatro auditorias de 2026-11-23**; E3, E4 e E11 ganharam a medição da rodada pós-PR #72.
+PR #60. **Nenhuma saiu nas cinco auditorias de 2026-11-23.** Na da noite, pós-PR #73, entraram três (E16 a E18, as antigas
+D17, D18 e D19, na segunda aparição sem resposta), e E3, E4 e E11 ganharam a medição da rodada.
 
 | # | questão | dono | onde mora a decisão | recomendação registrada |
 |---|---------|------|---------------------|-------------------------|
 | E1 | `observability-logging` fecha como entregue, com o coletor virando spec P própria? (16 rodadas) | você | `docs/PRE-PRODUCTION.md` §11 (o coletor) | fechar e abrir spec P do coletor. A E12 pede a mesma coisa para `account-security-mfa` |
-| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify`, `e2e`, `secrets` e `audit` (a lista que o §9 pede desde a PR #65); não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md). Remedido em 2026-11-23, pós-PR #72: 404, `[]`. Com a proteção, o job `secrets` também deixa de correr o risco do "bad revision" depois de um force-push (ver [Achados da PR #65](#-achados-da-pr-65-2026-11-23)) |
-| E4 | O gate `approved` não é usado de forma consistente: das 35 specs entregues, dez passaram por ele, as três últimas `app-internal-ux-polish` (PR #62), a fatia 1 de `delivery-security-review` (PR #64) e `delivery-infra-hardening` (PR #65); as fatias 1 e 2 de `delivery-product-quality` (PRs #71 e #72) também passaram. `plan-entitlements`, `in-app-notifications`, `magic-link-sign-in` e `organization-ownership-transfer` entraram no ciclo ainda `proposed`, e `teams-organizations` entrou `deferred` e saiu `done` sem passar por `approved`. Desde 2026-11-10 todas as entregas passaram pelo gate | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
+| E3 | Ligar branch protection na `main` | você, no painel do GitHub | `docs/PRE-PRODUCTION.md` §9 | ligar, exigindo `verify`, `e2e`, `secrets` e `audit` (a lista que o §9 pede desde a PR #65); não há pré-requisito técnico. É o que falta para o item 2 de [`e2e-testing`](../docs/features/e2e-testing/spec.md). Remedido em 2026-11-23, pós-PR #73: 404, `[]`. A proteção não teria evitado o vermelho do merge da PR #73: o check exigido é o da PR, que passou, e o teste instável falhou só na execução de merge. Com a proteção, o job `secrets` também deixa de correr o risco do "bad revision" depois de um force-push (ver [Achados da PR #65](#-achados-da-pr-65-2026-11-23)) |
+| E4 | O gate `approved` não é usado de forma consistente: das 35 specs entregues, dez passaram por ele, as três últimas `app-internal-ux-polish` (PR #62), a fatia 1 de `delivery-security-review` (PR #64) e `delivery-infra-hardening` (PR #65); as três fatias de `delivery-product-quality` (PRs #71 a #73) também passaram. `plan-entitlements`, `in-app-notifications`, `magic-link-sign-in` e `organization-ownership-transfer` entraram no ciclo ainda `proposed`, e `teams-organizations` entrou `deferred` e saiu `done` sem passar por `approved`. Desde 2026-11-10 todas as entregas passaram pelo gate | você | `specs/README.md` (ciclo de vida) | remover `approved` do ciclo de vida ou fazer o `/cycle` recusar spec não aprovada; a auditoria recomenda a primeira |
 | E5 | Prazo de retenção da coleção `auditEvent` | você | `docs/PRE-PRODUCTION.md` §1.3 | decidir um prazo padrão sem invocar o art. 15 do Marco Civil |
 | E6 | Teto absoluto da sessão ultrapassável por até meia vida de cookie | — | `docs/PRE-PRODUCTION.md`, seção "Declaração — por quanto tempo uma sessão pode ser renovada" | manter o comportamento; o número está escrito onde o fork lê |
 | E7 | Busca da tabela enxerga só as páginas carregadas | quem sentir a dor | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | abrir spec quando houver caso de uso |
 | E8 | Como medir visitas à `apps/web` | quem pedir | [Lacunas](#lacunas-avaliadas-e-não-especificadas) | o contador próprio é a única saída sem conta nem variável obrigatória |
 | E10 | O que o modo `simple` deve fazer (a documentação descreve um redirecionamento que não existe) | você | achado A1 em [Achados](#-achados-abertos-reconferidos-ou-herdados) | **o usuário decidiu ignorar o modo por ora (2026-09-25)**. Não reapresentar até ele mexer |
-| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Auditoria de 2026-11-23, pós-PR #72:** a PR #72 saiu de `feat/delivery-product-quality-slice-2`, de novo na forma `feat/<slug>`, fora do regex, e a branch **continua no remoto** depois do merge, como as das PRs #65 e #71. O `/review` criou a branch dentro do pipeline, e o `STATE.md` traz `review: done` e a branch real, como na PR #71. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 74 pastas. O registro das PRs #57 a #71 está nas versões deste arquivo em `afb5b35`, `a391d1c` e `18288c9`. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico), e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
+| E11 | O registro da feature não acompanha o merge, e a branch sai fora do padrão `<project>/<type>/<title>` | você | `.claude/rules/git-commits.md` e `.claude/skills/spec-audit/SKILL.md` §4.1 | **Auditoria de 2026-11-23, pós-PR #73:** a PR #73 saiu de `guilhermebittelbrunn/cycle-command-v13`, a branch criada pelo Conductor, fora do regex e sem tipo nem projeto. O `/review` propôs `feat/delivery-product-quality-slice-3`, validou o nome e não o criou, porque o Conductor pede autorização para trocar de branch (`review/review.md` da feature); o `STATE.md` ficou com `branch: -` e `review: done`. A branch **continua no remoto** depois do merge, como as das PRs #65, #71 e #72. Seguem **25** `STATE.md` com `review: in-progress` depois do merge, entre 75 pastas. O registro das PRs #57 a #72 está nas versões deste arquivo em `afb5b35`, `a391d1c`, `18288c9` e `5829ea3`. Recomendação: a regra aceitar `fix/<slug>` e `feat/<slug>` para tarefa que cruza vários apps (como já aceita para épico); o `/review`, sob o Conductor, registrar no `STATE.md` a branch real de onde a PR vai sair; e a auditoria, ao confirmar o merge, gravar no `STATE.md` a linha `review` como `done` com o SHA e a branch |
 | E12 | O destino da fatia 3 de `account-security-mfa` (segundo fator com códigos de recuperação, itens 5 e 6). Opções: **(a)** arquivar a spec como entregue em 4/6 e abrir uma spec `proposed` só do segundo fator; **(b)** voltar a spec para `proposed`, com as fatias entregues registradas nela; **(c)** manter `in-progress`; **(d)** marcar a fatia 3 como `deferred` dentro da spec | você | a spec [`account-security-mfa`](account-security-mfa.md) | **(a)**. Com `in-progress` e nenhuma feature ativa, a spec fica fora dos lotes para sempre. A pasta de destino ainda não tem `spec.md` (reconferido em 2026-10-22), então não há colisão |
+| E16 | Aceitar que o 404 da landing dependa de JavaScript (era a D17, apresentada pós-PR #71 e pós-PR #72) | você | a spec [`delivery-product-quality`](delivery-product-quality.md), deriva da fatia 1 e "Perguntas em aberto" | aceitar. Com idioma válido, o servidor responde 404 com `<html id="__next_error__">` e o corpo vazio, e o cartão traduzido só aparece com JavaScript. O status e o `noindex` estão certos; a opção com `Suspense` transforma o 404 em 200, e a única saída conhecida é o `global-not-found`, experimental no Next 16. Recusando, o trabalho volta como tarefa direta, com um `request.get` no E2E contando o `<h1>` |
+| E17 | Abrir a spec da dieta do bundle da landing, tirando o antd e o `AuthProvider` duplicado do layout público (era a D18, apresentada pós-PR #72 e agora) | você | `/spec` dirigida; o gatilho está no "Fora do corte" de [`delivery-product-quality`](delivery-product-quality.md) | sim, como spec `proposed`. O gatilho que a spec pedia (o número do Lighthouse) chegou com a fatia 2: na mediana de cinco execuções, a home fica em Performance 87 e LCP 3,9 s, abaixo da meta da parte 3, com a Performance variando de 57 a 97 em dez execuções. A condição "depois da fatia 3" foi cumprida pela PR #73. Mexe em autenticação e no design system, então é decisão de produto |
+| E18 | As três escolhas da fatia 2 de `delivery-product-quality`: Node 22.19 para o Lighthouse 13, data por rota no sitemap, mediana no `pnpm lighthouse` (era a D19, apresentada pós-PR #72 e agora) | você | a spec [`delivery-product-quality`](delivery-product-quality.md), "Perguntas em aberto" | (a) Node, só junto de outro motivo; (b) data por rota, não; (c) mediana, sim, no procedimento do `/deliver` (rodar três vezes e citar a mediana), sem mudar o comando |
 
 **Duas recomendações repetidas são decisões técnicas e deveriam virar linha de política.** A auditoria
 não edita `.claude/`, então elas ficam aqui como texto pronto para você colar:
@@ -454,9 +506,9 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 
 ## Dependências e bloqueios
 
-| spec | `depends_on` | situação em 2026-11-23, pós-PR #72 |
+| spec | `depends_on` | situação em 2026-11-23, pós-PR #73 |
 |------|--------------|------------------------------------|
-| [`delivery-product-quality`](delivery-product-quality.md) | — | ✅ sem dependência. Fatias 1 e 2 entregues (PRs #71 e #72, `a391d1c` e `18288c9`); segue a fatia 3 |
+| [`delivery-product-quality`](delivery-product-quality.md) | — | ✅ sem dependência. As três fatias entregues (PRs #71 a #73, `a391d1c`, `18288c9` e `5829ea3`); o arquivamento espera a D20 |
 | [`delivery-security-review`](delivery-security-review.md) | — | ✅ sem dependência. Fatia 1 entregue (PR #64, `388a453`); seguem as fatias 2 e 3 |
 | [`admin-own-account`](admin-own-account.md) | `app-internal-ux-polish` | ✅ satisfeita (PR #62, `583194b`), arquivada em [`docs/features/app-internal-ux-polish/spec.md`](../docs/features/app-internal-ux-polish/spec.md). A spec segue `proposed` (D14) |
 | [`social-sign-in-providers`](social-sign-in-providers.md) | `linked-sign-in-methods` | ✅ satisfeita (PR #48, `44b2b04`). A spec segue `deferred` |
@@ -468,8 +520,8 @@ não edita `.claude/`, então elas ficam aqui como texto pronto para você colar
 
 | id | título | audiência | valor | esforço | status | depende de |
 |----|--------|-----------|-------|---------|--------|------------|
-| [`delivery-product-quality`](delivery-product-quality.md) | Core aprovado na parte 3 da entrega (celular, 404, desempenho e SEO) | produto | alto | G | `approved` (fatias 1 e 2 entregues, PRs #71 e #72) | — |
 | [`delivery-security-review`](delivery-security-review.md) | Core aprovado na parte 1 da entrega (validação de segurança) | confianca | alto | G | `approved` (fatia 1 entregue, PR #64) | — |
+| [`delivery-product-quality`](delivery-product-quality.md) | Core aprovado na parte 3 da entrega (celular, 404, desempenho e SEO) | produto | alto | G | `approved` (as três fatias entregues, PRs #71 a #73; arquivamento na D20) | — |
 | [`admin-own-account`](admin-own-account.md) | Área de conta para o admin (perfil, senha e preferências) | produto | médio | M | `proposed` | ✅ `app-internal-ux-polish` |
 | [`social-sign-in-providers`](social-sign-in-providers.md) | Login com GitHub e Microsoft, ligados por configuração | produto | médio | M | `deferred` | ✅ `linked-sign-in-methods` |
 | [`one-time-purchase`](one-time-purchase.md) | Compra avulsa com acesso vitalício | produto | médio | M | `deferred` | — |
@@ -509,7 +561,7 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `compliance-docs-kit` | 2026-09-30 | [`docs/features/compliance-docs-kit/spec.md`](../docs/features/compliance-docs-kit/spec.md) — **6/6 do corte** (PR #34, `c7aa4d9`), 18 ✅, 0 ❌ e 2 🔒 no `/test` (backup no Blaze e conformidade jurídica). Quinta spec entregue depois de passar por `approved`. ⚠️ Cinco derivas sem efeito no conteúdo. Preencher os `[FORK]`, aceitar os DPAs e decidir o backup são passo manual por fork (`PRE-PRODUCTION.md` §14) |
 | `plan-entitlements` | 2026-10-04 | [`docs/features/plan-entitlements/spec.md`](../docs/features/plan-entitlements/spec.md) — **5/5 do corte** (PR #38, `2ed0df2`), 15 ✅, 0 ❌ e 1 🔒 no `/test` (entrega real da Stripe). Entregue sem passar por `approved` (E4). Sem deriva. ⚠️ Recursos cadastrados no Dashboard da Stripe, o sexto evento no endpoint e o custo do Entitlements são passo manual por fork (`PRE-PRODUCTION.md` §12, a partir da `:506`, que era `:456` até a PR #52); a demo em `entity` fica desligada sem `NEXT_PUBLIC_ENTITY_REQUIRED_FEATURE` |
 | `pricing-page-catalog` | 2026-10-16 | [`docs/features/pricing-page-catalog/spec.md`](../docs/features/pricing-page-catalog/spec.md) — **5/5 do corte** (PR #47, `dd31a95`), 21 ✅, 0 ❌ e 3 🔒 no `/test` (catálogo, chamadas e checkout contra conta Stripe real). Sexta spec entregue depois de passar por `approved`. ⚠️ Quatro derivas sem efeito no que o corte pedia: rota nova `GET /payments/catalog`, cache de uma hora por instância, rota fora do rate limit de propósito, e quem tem sessão volta pelo bounce do proxy. Fechou a deriva do deep link de `onboarding-flow` e um open redirect em `packages/auth/redirect.ts`. Nenhum passo manual novo: o catálogo é o mesmo do `PRE-PRODUCTION.md` §12 |
-| `linked-sign-in-methods` | 2026-10-19 | [`docs/features/linked-sign-in-methods/spec.md`](../docs/features/linked-sign-in-methods/spec.md) — **6/6 do corte** (PR #48, `44b2b04`), 13 ✅, 0 ❌ e 3 🔒 no `/test` (popup real do Google, "User account linking" e `auth/unauthorized-domain` num projeto Firebase real). Sétima spec entregue depois de passar por `approved`. ⚠️ Quatro derivas sem efeito no que o corte pedia: desvincular no servidor, desvincular a senha encerra todas as sessões, definir senha também encerra todas, e `provider.tsx` intacto. Escolher o "User account linking" do projeto e autorizar os domínios do popup são passo manual por fork (`FORKING.md` §4, passos 3 e 4; declaração em `PRE-PRODUCTION.md:1178`, a seção da declaração, remedida em 2026-11-23 pós-PR #71; era `:1153` até a PR #71, `:1112` até a PR #65 e `:1103` até a PR #64) |
+| `linked-sign-in-methods` | 2026-10-19 | [`docs/features/linked-sign-in-methods/spec.md`](../docs/features/linked-sign-in-methods/spec.md) — **6/6 do corte** (PR #48, `44b2b04`), 13 ✅, 0 ❌ e 3 🔒 no `/test` (popup real do Google, "User account linking" e `auth/unauthorized-domain` num projeto Firebase real). Sétima spec entregue depois de passar por `approved`. ⚠️ Quatro derivas sem efeito no que o corte pedia: desvincular no servidor, desvincular a senha encerra todas as sessões, definir senha também encerra todas, e `provider.tsx` intacto. Escolher o "User account linking" do projeto e autorizar os domínios do popup são passo manual por fork (`FORKING.md` §4, passos 3 e 4; declaração em `PRE-PRODUCTION.md:1225`, a seção da declaração, remedida em 2026-11-23 pós-PR #73; era `:1178` até a PR #73, `:1153` até a PR #71, `:1112` até a PR #65 e `:1103` até a PR #64) |
 | `contact-support-channel` | 2026-10-19 | [`docs/features/contact-support-channel/spec.md`](../docs/features/contact-support-channel/spec.md) — **5/5 do corte** (PR #49, `4eeb07b`), 16 ✅, 0 ❌ e 4 🔒 no `/test` (entrega real pela Resend, confirmação vista no navegador, `429` com `ARCJET_KEY` e e-mail preenchido num domínio real). Oitava spec entregue depois de passar por `approved`. ⚠️ Quatro derivas sem efeito no que o corte pedia: sem Resend o aviso só aparece no envio, o ROPA já tinha a atividade, o item do menu depende de `NEXT_PUBLIC_WEB_URL` e só aparece no painel comum, e cerca de vinte arquivos fora do `contends_on`. Definir `NEXT_PUBLIC_APP_SUPPORT_EMAIL` na `api` e na `web` é passo manual por fork; sem ela o canal fica indisponível (`PRE-PRODUCTION.md` §13, `:927-930`, remedida em 2026-11-23 pós-PR #65; era `:911-914` até a PR #65 e `:902-905` até a PR #64) |
 | `in-app-notifications` | 2026-10-20 | [`docs/features/in-app-notifications/spec.md`](../docs/features/in-app-notifications/spec.md) — **6/6 do corte** (PR #52, `3a118c6`), 17 ✅, 0 ❌ e 3 🔒 no `/test` (evento real da Stripe, índice ausente num projeto real e a TTL apagando o documento). Entregue sem passar por `approved` (E4). ⚠️ Três derivas sem efeito no que o corte pedia: dois índices compostos em vez de um, boas-vindas só para perfil comum, e contagem com teto de 100 lida a cada 120 s. Publicar os dois índices de `notification` e ligar a TTL em `expiresAt` são passo manual por fork (`PRE-PRODUCTION.md` §1.9, `:253`); medido em 2026-10-20, os índices não estão publicados no projeto de referência |
 | `magic-link-sign-in` | 2026-10-22 | [`docs/features/magic-link-sign-in/spec.md`](../docs/features/magic-link-sign-in/spec.md) — **6/6 do corte** (PR #56, `9c793c6`), 16 ✅, 0 ❌ e 2 🔒 no `/test` (`429` com `ARCJET_KEY` e o provedor de link desligado num projeto real). Entregue sem passar por `approved` (E4). ⚠️ Uma deriva de escopo: o link vai só para conta com senha e e-mail confirmado, e o item 6 ficou atendido por construção. Ligar a variável, ativar "Link de e-mail" no console e autorizar o domínio são passo manual por fork (`PRE-PRODUCTION.md` §15, `:675-707`); desligado por padrão |
@@ -518,15 +570,17 @@ Specs concluídas e **arquivadas** junto da feature que as implementou.
 | `app-internal-ux-polish` | 2026-11-19 | [`docs/features/app-internal-ux-polish/spec.md`](../docs/features/app-internal-ux-polish/spec.md) — **5/5 do corte** (PR #62, `583194b`), 11 dos 13 itens de "Verificar no `/test`" confirmados, 1 parcial (o aviso de checkout, 🔒 sem Stripe) e 1 derrubado (o foco escondido pelo rodapé fixo, anterior à entrega, que virou achado). Nona spec entregue depois de passar por `approved`. Sem deriva de comportamento; o `contends_on` errou para menos (4 declarados, 59 fora da lista). Nenhum passo manual novo |
 | `delivery-infra-hardening` | 2026-11-23 | [`docs/features/delivery-infra-hardening/spec.md`](../docs/features/delivery-infra-hardening/spec.md) — **7/7 do corte** (PR #65, `afb5b35`), 12 ✅, 0 ❌ e 3 🔒 no `/test`; dois dos três 🔒 (os jobs no runner e o Dependabot cobrindo os workspaces) foram medidos depois do merge, e segue 🔒 a reprovação real de uma PR com segredo ou com dependência vulnerável. Décima spec entregue depois de passar por `approved`. ⚠️ Cinco derivas escritas na spec, entre elas o `audit` em `high` e o Gitleaks só nos commits novos; o `contends_on` acertou os sete arquivos. Restringir as chaves do Firebase, ligar os alertas do Dependabot e passar o Shield da API para `LIVE` são passo manual por fork (`PRE-PRODUCTION.md` §17, §9 e §8) |
 
-**Verificado na auditoria de 2026-11-23 (pós-PR #72):** `docs/features/` tem **74** pastas e **35** `spec.md`
-arquivados, todos com `status: done`. Nenhum arquivamento nesta rodada. As 39 pastas sem `spec.md` são
+**Verificado na auditoria de 2026-11-23 (pós-PR #73):** `docs/features/` tem **75** pastas e **35** `spec.md`
+arquivados, todos com `status: done`. Nenhum arquivamento nesta rodada (D20). As 40 pastas sem `spec.md` são
 `account-security-mfa` e `account-active-sessions` (fatias 1 e 2 da spec `in-progress`), `delivery-security-review`,
-`delivery-product-quality` e `delivery-product-quality-slice-2` (fatias entregues de specs `approved`; os três
-`STATE.md` trazem o `spec:`), `observability-logging` (spec `in-progress`), `auth-panel-context` e
-`impersonation-read-only` (as duas anteriores à semeadura) e as trinta e uma tarefas diretas listadas em
-[Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec). Quando a fatia 3 de qualidade for entregue, a spec
-vai para `docs/features/delivery-product-quality/spec.md`, a pasta da fatia 1; a da fatia 2 fica sem `spec.md`, com
-o `spec:` no `STATE.md` apontando para lá.
+`delivery-product-quality`, `delivery-product-quality-slice-2` e `delivery-product-quality-slice-3` (fatias entregues
+de specs `approved`; os quatro `STATE.md` trazem o `spec:`), `observability-logging` (spec `in-progress`),
+`auth-panel-context` e `impersonation-read-only` (as duas anteriores à semeadura) e as trinta e uma tarefas diretas
+listadas em [Tarefas diretas entregues](#tarefas-diretas-entregues-sem-spec). Quando a D20 liberar, a spec de
+qualidade vai para `docs/features/delivery-product-quality/spec.md`, a pasta da fatia 1, que não tem `spec.md`; as
+pastas das fatias 2 e 3 ficam sem `spec.md`, com o `spec:` no `STATE.md` apontando para lá. O link de saída da spec
+para `research/engineering-baseline.md` e os links relativos para `../docs/delivery/` precisam ser reescritos no
+movimento.
 O verificador de links desta auditoria, um script descartável fora do repositório, sobre `specs/*.md`,
 `specs/research/*.md` e os 35 `spec.md` arquivados, acha os mesmos dois alvos mortos das rodadas anteriores: o
 placeholder `research/<topico>.md` do `TEMPLATE.md` e a âncora interna da spec de `session-refresh`.
@@ -539,23 +593,24 @@ estão na versão deste arquivo em `9c793c6`. Até a rodada pós-PR #56 a audito
 arquivados, para mover a spec entregue e consertar os links que o movimento quebra). Desde a pós-PR #57, a pedido do
 `/cycle`, ela corrige nos documentos as afirmações baratas de medir que estão falsas.
 
-A PR #72 alterou dois documentos fora de `docs/features` e `specs`, mais o `CLAUDE.md` e o comando `/deliver`: o
-`docs/SETUP.md` (o parágrafo do projeto `mobile`, a partir de `:266`, e a seção "Lighthouse da landing", a partir de
-`:336`), o `docs/delivery/03-product-quality.md` (o `pnpm lighthouse` em `:13` e `:116-123`, o projeto `mobile` no
-item de celular, `:27-34`, e o parágrafo do sitemap, `:196-199`), o `CLAUDE.md:48` e o
-`.claude/commands/deliver.md:74-77`.
-A auditoria conferiu por leitura as afirmações novas contra o código: os quatro fluxos do `mobile` batem com o
-`CRITICAL_FLOWS` (`apps/e2e/playwright.config.ts:19`), Pixel 7 a 390 × 844 com `:20` e `:64`, e a checagem de rolagem
-contra o `clientWidth` com `apps/e2e/support/a11y.ts:104-118`; `--url`, `--locale`, `--port`, o `CHROME_PATH`, o
-Chromium do Playwright e a versão 12.8.2 batem com `apps/e2e/lighthouse/run.mjs:47-49`, `:84` e
-`apps/e2e/lighthouse/summary.mjs:1-3`; código 0 abaixo da meta e `not measured` na página que falhou batem com o
-`/test` (o ramo de erro foi forçado com `CHROME_PATH=/usr/bin/false`) e com as cinco execuções desta auditoria; o
-sitemap sem `<lastmod>` bate com `apps/web/app/sitemap.ts:18-36`. A afirmação de que o Lighthouse 13 exige Node 22.19
-é do registro do pacote e não foi medida aqui. A tabela da PR #71 está na versão deste arquivo em `18288c9`.
+A PR #73 alterou três documentos fora de `docs/features` e `specs`, mais o `apps/app/CLAUDE.md` e a skill `new-crud`:
+o `docs/PRE-PRODUCTION.md` (o item 19, `:997-1042`, e as âncoras do `x-locale` na tabela de cookies, `:501`), o
+`docs/FORKING.md` (o hook de eventos em §7.4, `:372-387`) e o `docs/delivery/03-product-quality.md` (o que o core
+dispara, `:223-245`, e o formato do título, `:301-306`).
+A auditoria conferiu por leitura as afirmações novas contra o código: os seis pontos do `sign_up` e o `generate_lead`
+no contato aceito batem com as chamadas listadas na conferência da fatia 3 da spec; "só com consentimento e id do GA"
+bate com `packages/analytics/events.ts:20-31`; o id sem prefixo `G-` descartado bate com `packages/analytics/keys.ts:7-13`;
+"fora da Vercel o banner nem aparece" e "na Vercel sem o id, o banner aparece por causa do Vercel Analytics" batem
+com o `consentable`, que vale com id do GA ou com `VERCEL_ENV` (`packages/analytics/server.ts:22-25`, recusa em
+`provider.tsx:115-121`); "uma tela nova sem registro reprova o teste" bate com
+`apps/app/__tests__/panelTitles.test.ts:113-143`, que varre o disco; e as âncoras novas do `x-locale`
+(`apps/app/proxy.ts:249,253`, `apps/web/proxy.ts:121,125`) batem com o código. O caminho no console do GA4 (passo 4
+do item 19) vem de conhecimento do produto e não foi conferido, como o próprio `handoff.md` registra. A conferência
+da PR #72 está na versão deste arquivo em `5829ea3`, e a da PR #71, na de `18288c9`.
 
 | documento | afirma | realidade medida | veredito |
 |-----------|--------|------------------|----------|
-| `docs/PRE-PRODUCTION.md:675-707` (item 15, novo pela PR #56) | só `"true"` liga, sem diferenciar maiúsculas; sem Resend ou sem `NEXT_PUBLIC_APP_URL` a opção some e o pedido responde `503 EMAIL_NOT_CONFIGURED`; a recusa do provedor sai como `[auth-action-link] refused kind=sign-in code=…`; desligar a variável recusa pedidos novos com `404 AUTH_EMAIL_LINK_DISABLED` e deixa os links já enviados concluírem | `email-link-sign-in.ts:4-8`; `request/route.ts:48-60`; `auth-action-links.ts:38-40`, `:102-117`; a conclusão é só no cliente (`client.ts:154-164`) | ✅ **honesto**, por leitura |
+| `docs/PRE-PRODUCTION.md:675-707` (item 15, novo pela PR #56) | só `"true"` liga, sem diferenciar maiúsculas; sem Resend ou sem `NEXT_PUBLIC_APP_URL` a opção some e o pedido responde `503 EMAIL_NOT_CONFIGURED`; a recusa do provedor sai como `[auth-action-link] refused kind=sign-in code=…`; desligar a variável recusa pedidos novos com `404 AUTH_EMAIL_LINK_DISABLED` e deixa os links já enviados concluírem | `email-link-sign-in.ts:4-8`; `request/route.ts:48-60`; `auth-action-links.ts:38-40`, `:102-117`; a conclusão é só no cliente (`client.ts:156-166`, era `:154-164` até a PR #73) | ✅ **honesto**, por leitura |
 | `docs/SETUP.md:118-122` (novo pela PR #56) | o código do link aparece em `GET http://127.0.0.1:9099/emulator/v1/projects/demo-next-boilerplate/oobCodes` | o projeto do emulador é `DEMO_PROJECT_ID` (`packages/auth/emulator.ts:16`); o `/test` da PR leu o código por essa rota | ✅ **honesto** |
 | `docs/SECURITY.md:7` | os métodos de login são "e-mail/senha ou Google" | o login por link existe desde a PR #56; a regra de quem recebe o link (conta com senha e e-mail confirmado) não aparece | ⚠️ **reduzido de novo pela PR #64**, que reescreveu a seção do rate limit (hoje `:183-218`, depois do parágrafo que a PR #71 acrescentou acima): a rota de disponibilidade do link fica fora porque todo `GET` fora da lista estrita fica (`:191`). Segue o resto da PR #56, na linha `:7` |
 | `docs/features/delivery-infra-hardening/analyze/plan.md:3`, `app-internal-ux-polish/analyze/plan.md:3`, `organization-ownership-transfer/analyze/plan.md:3`, `teams-organizations/analyze/plan.md:3`, `magic-link-sign-in/analyze/plan.md:3` e os planos de `plan-entitlements`, `pricing-page-catalog`, `linked-sign-in-methods`, `contact-support-channel` e `in-app-notifications` (este também em `review/review.md:6`) | link para `../../../../specs/<id>.md` | as dez specs foram movidas para `../spec.md` | ❌ **onze links mortos**, criados pelos arquivamentos; o de `delivery-infra-hardening`, por este. A auditoria não edita os artefatos; ver o achado |
@@ -589,71 +644,82 @@ as linhas das specs vivas; as derivas das specs arquivadas estão escritas nelas
 | `delivery-security-review` (fatia 1, item 3) | a redefinição de senha responde erro com `error.code` quando a revogação falha | a API responde `500 AUTH_SESSIONS_NOT_REVOKED`, e a tela da `apps/app` mostra o cartão de senha alterada com o aviso, sem formulário (`ResetPasswordForm.tsx:51-53`, `:89-91`); a confirmação da troca de e-mail faz o mesmo | **a spec não dizia o que a interface faria**. A senha nova já vale e o link já foi gasto, então reenviar o formulário dava "link inválido" (❌ da rodada 1 do `/test`). Nota escrita na spec |
 | `delivery-security-review` (fatia 1, item 3) | revogação que falha visível nas rotas do corte | as cinco rotas do corte usam a variante que lança; quatro chamadores fora dele seguem com a que engole o erro (a desativação pelo admin, desvincular um método de login, o expurgo e o bloqueio de conta arquivada) | **dentro do corte**, que listava só senha, redefinição e troca de e-mail. Fica para o `/analyze` da fatia 2. Nota escrita na spec e achado novo |
 | `delivery-security-review` (`contends_on`) | sete arquivos | três tocados (`apps/api/proxy.ts`, `packages/next-config/index.ts`, `user.mapper.ts`), e 67 fora da lista | o erro para menos continua. O campo foi revisto para as fatias 2 e 3. Ver [Lotes paralelos](#lotes-paralelos) |
-| `delivery-product-quality` (fatia 1, 404 da landing) | 404 da landing traduzido, com a marca e um link para a home | o cartão traduzido aparece só com JavaScript; o HTML do servidor sai como `<html id="__next_error__">` com o corpo vazio, onde antes saía o 404 do Next em inglês com `<h1>` | **a implementação desviou por limite do Next 16.4.6**, medido pelo `/test`. Decisão sua (D17); recomendação: aceitar. Nota escrita na spec |
+| `delivery-product-quality` (fatia 1, 404 da landing) | 404 da landing traduzido, com a marca e um link para a home | o cartão traduzido aparece só com JavaScript; o HTML do servidor sai como `<html id="__next_error__">` com o corpo vazio, onde antes saía o 404 do Next em inglês com `<h1>` | **a implementação desviou por limite do Next 16.4.6**, medido pelo `/test`. Decisão sua (E16, era a D17); recomendação: aceitar. Nota escrita na spec |
 | `delivery-product-quality` (fatia 1, `noindex`) | `X-Robots-Tag: noindex` em toda resposta do `app` e da `api` | em toda resposta que passa pelo proxy; arquivo estático fora do `matcher` do `app` sai sem | **a spec estava imprecisa**, sem efeito na busca (não é página). Nota escrita na spec |
 | `delivery-product-quality` (`contends_on`, fatia 1) | quatro arquivos | dois tocados (`packages/security/middleware.ts` e o layout da landing), 31 fora da lista | o erro para menos continua |
-| `delivery-product-quality` (fatia 2, sitemap) | "`lastModified` deixa de ser a hora da requisição" no corte; "sitemap com `lastModified` estável" no impacto por camada | o sitemap não emite `lastModified` (`apps/web/app/sitemap.ts:18-36`), e o teste afirma que a saída não depende da hora | **a spec estava imprecisa**: o corte admitia omitir, o impacto pedia valor estável. O protocolo trata `lastmod` como opcional, e o Google só o usa quando ele é preciso. A data declarada por rota ficou como pergunta (D19). Nota escrita na spec |
+| `delivery-product-quality` (fatia 2, sitemap) | "`lastModified` deixa de ser a hora da requisição" no corte; "sitemap com `lastModified` estável" no impacto por camada | o sitemap não emite `lastModified` (`apps/web/app/sitemap.ts:18-36`), e o teste afirma que a saída não depende da hora | **a spec estava imprecisa**: o corte admitia omitir, o impacto pedia valor estável. O protocolo trata `lastmod` como opcional, e o Google só o usa quando ele é preciso. A data declarada por rota ficou como pergunta (E18, era a D19). Nota escrita na spec |
 | `delivery-product-quality` (fatia 2, celular) | projeto `mobile` com os fluxos críticos e o axe a 390 px | o mesmo, mais uma checagem de rolagem horizontal em todo `expectAccessible` do celular (WCAG 1.4.10, `apps/e2e/support/a11y.ts:104-118`) e um helper que repete o toque no botão da barra lateral enquanto ela não abre (`apps/e2e/support/panelNavigation.ts`) | **capacidade extra**, dentro do que a parte 3 da entrega mede. O helper esconde um defeito pequeno do componente, que virou achado. Nota escrita na spec |
 | `delivery-product-quality` (`contends_on`, fatia 2) | dois arquivos da fatia (`playwright.config.ts`, `sitemap.ts`) | os dois tocados, e 13 fora da lista (5 novos) | o melhor acerto das entregas de `delivery-*`. O campo foi revisto para a fatia 3 |
+| `delivery-product-quality` (fatia 3, título) | template de título em `packages/seo` (impacto por camada) | a lógica ficou em `apps/app/shared/lib/panelTitles.ts` e `lib/server/panelMetadata.ts`; `packages/seo/metadata.ts` não foi tocado | **a spec estava imprecisa**: o único consumidor é o painel, e a landing titula cada página por `buildLocaleMetadata`. Sem efeito no corte. Nota escrita na spec |
+| `delivery-product-quality` (fatia 3, `sign_up` do Google na app) | evento de cadastro | sai logo depois do popup, antes da troca de sessão (`googleSignInApi.ts:42`); se a troca falhar, o evento já saiu | **escolha da implementação**, aceita pelo `/review`: o evento conta "conta criada", a conta existe no Firebase nesse ponto, e a próxima tentativa não repete o evento. Nota escrita na spec |
+| `delivery-product-quality` (`contends_on`, fatia 3) | cinco arquivos | quatro tocados (ficou de fora `packages/seo/metadata.ts`), e 32 fora da lista (14 novos, 10 de teste) | o erro para menos continua |
 
-**Deriva de pipeline da PR #72:** seguiu o pipeline inteiro, com duas rodadas de `/review` e duas de `/test`, sem
-❌ no placar final. A rodada 1 do `/test` achou o Ctrl+C no `pnpm lighthouse` deixando o `next start` órfão na
-porta 3001, defeito que a própria fatia introduziu; o `/review` da rodada 1 tinha declarado a correção sem medir, e o
-`review.md` registra o erro. A branch saiu de `feat/delivery-product-quality-slice-2`, fora do regex
-`<project>/<type>/<title>`, na forma `feat/<slug>` que a E11 pede que a regra aceite, e ficou no remoto depois do
-merge. A feature ganhou pasta própria em vez de reabrir a da fatia 1; os dois `STATE.md` trazem
-`spec: delivery-product-quality`. A da PR #71 está na versão deste arquivo em `18288c9`.
+**Deriva de pipeline da PR #73:** seguiu o pipeline inteiro, com uma rodada de cada etapa, sem ❌ no placar final do
+`/test`. O `/review` corrigiu dois 🟡 antes do merge: um comentário que justificava o `mutateAsync` do cadastro da
+landing com um motivo falso, e o `panelTitles.test.ts`, que reprovaria a chamada quebrada em várias linhas pelo
+Biome. O harness do `analista-qa` recusou gravar o `report.md`, e o orquestrador gravou o conteúdo devolvido (nota
+do `STATE.md`). A branch saiu da do Conductor, `guilhermebittelbrunn/cycle-command-v13`, fora do regex; o nome
+proposto pelo `/review` não foi criado (E11). O CI da PR passou nos seis jobs e o da execução de merge ficou vermelho
+por um E2E instável que a PR não tocou (D20). A da PR #72 está na versão deste arquivo em `5829ea3`.
 
-### Âncoras relidas em 2026-11-23, pós-PR #72
+### Âncoras relidas em 2026-11-23, pós-PR #73
 
-As specs vivas que citavam arquivo alterado pela PR #72 com número de linha foram corrigidas, com o número antigo
-entre parênteses. A conferência mapeou cada âncora pelo `git diff -U0 a391d1c 18288c9` do arquivo e releu a linha
+As specs vivas que citavam arquivo alterado pela PR #73 com número de linha foram corrigidas, com o número antigo
+entre parênteses. A conferência mapeou cada âncora pelo `git diff -U0 18288c9 5829ea3` do arquivo e releu a linha
 nova.
 
 | spec | o que mudou |
 |------|-------------|
-| `delivery-product-quality` | `apps/e2e/playwright.config.ts:49-56` → `:54-67` (o item de celular, agora fechado); o `:20` do `sitemap.ts` saiu com o `lastModified`; os itens de celular, desempenho e sitemap de "O que já existe" marcados como fechados pela fatia 2 |
-| `delivery-security-review` | `package.json:55-66` → `:56-67` (o bloco `pnpm` da raiz, que a PR #72 desceu uma linha com o script `lighthouse`) |
+| `admin-own-account` | `(common)/layout.tsx:47-52` → `:49-54` (o redirecionamento do admin sem personificação) |
+| `social-sign-in-providers` | `SignInForm.tsx:189-199` → `:197-207`; `googleSignInApi.ts:23-84` → `:27-97`; `packages/auth/client.ts:169-174` → `:171-176` |
+| `account-security-mfa` | `packages/auth/client.ts:261-272` → `:266-277` (`reloadCurrentUser`); `SignUpFormClient.tsx:121` → `:129` e `sign-up-form-client.tsx:52` → `:56` (a chamada a `authApi.signUp`). O `client.ts:163` da linha do `createUserWithEmailAndPassword` é histórico (a função saiu do arquivo na PR #29) e ficou como estava |
+| `delivery-security-review` | `sign-up-form-client.tsx:145-147,168` → `:158-160,181` (o botão do Google que não trava, item 1.9) |
+| `delivery-product-quality` | a fatia 3 ganhou a conferência com âncoras de `5829ea3`; os itens de Google Analytics e títulos de "O que já existe" marcados como fechados |
 
-`account-security-mfa`, `admin-own-account`, `one-time-purchase`, `observability-logging` e
-`social-sign-in-providers` não citam arquivo alterado pela PR #72 com número de linha. Nenhuma nota de `research/`
-cita. Os 27 caminhos distintos de `contends_on` existem.
+`one-time-purchase` e `observability-logging` não citam arquivo alterado pela PR #73 com número de linha (o
+`PRE-PRODUCTION.md:604-607` de `one-time-purchase` fica acima da inserção, e o `FORKING.md:196` de
+`social-sign-in-providers` também). Nenhuma nota de `research/` cita. Os 27 caminhos distintos de `contends_on`
+existem.
 
-Neste arquivo, três âncoras de linhas vivas foram remedidas, todas no `package.json` da raiz: o `engines.node` do
-achado do `package.json` herdado do next-forge (`:48` → `:49`) e o `pnpm.auditConfig.ignoreGhsas` da exceção do
-`@grpc/grpc-js` (`:60-65` → `:61-66`), mais a do item de celular na seção [Contadores](#contadores), que saiu com o
-texto novo. As âncoras dentro de texto histórico ("era `:N` até a PR #X") ficaram como estavam.
+Neste arquivo, dezoito âncoras foram remedidas, em dez linhas vivas: as do laço de recarga (`SignInForm.tsx:91-125` e o freio
+em `:110`, `SignUpFormClient.tsx:80-108`), as do reenvio do cadastro (`SignUpFormClient.tsx:127-136`,
+`sign-up-form-client.tsx:54-63`), o `reloadCurrentUser` (`client.ts:266`), o `<h1>` do contato
+(`contact-form-client.tsx:153-155`), as cinco do `signInStartedHereRef` no login da landing, os dois textos em inglês
+de `googleSignInApi.ts` (`:62`, `:76`), a conclusão do link no cliente (`client.ts:156-166`) e três do
+`PRE-PRODUCTION.md` deslocadas pelo item 19 (`:1225`, `:1137` e `:1275`). As âncoras dentro de texto histórico ("era
+`:N` até a PR #X") ficaram como estavam.
 
 ### O que a auditoria **não** encontrou
 
-Nenhuma spec `done` perdeu código. A PR #72 mexeu em peças de `e2e-testing` (a config do Playwright e o helper do
-axe) e de `accessibility-conformance` (o `expectAccessible`, que ganhou a checagem de rolagem só no celular). As duas
-seguem inteiras: o projeto `chromium` roda os mesmos arquivos de antes, a allowlist do axe segue vazia, e o job `e2e`
-da execução de merge passou com 40 testes. Nenhuma entrega parcial órfã além da fatia 3 de `account-security-mfa`,
-que é a E12.
+Nenhuma spec `done` perdeu código. A PR #73 mexeu em peças de `accessibility-conformance` (os dois layouts do painel,
+cujo título por área a spec arquivada registrava como deriva de letra), de `cookie-consent` (o `AnalyticsProvider`,
+que ganhou o contexto de eventos sem mudar o banner nem o Consent Mode) e de `linked-sign-in-methods` (o Google da app
+e da landing, que ganhou o aviso de conta nova sem mudar a troca de sessão). As três seguem inteiras: a allowlist do
+axe segue vazia, os testes de consentimento passaram nesta auditoria e o E2E de login e cadastro passou na execução
+de merge. Nenhuma entrega parcial órfã além da fatia 3 de `account-security-mfa`, que é a E12.
 
 ## Achados: correções pontuais, não specs
 
 Coisas que não merecem spec própria, mas que são correções pontuais. Viram tarefa direta no `/analyze`.
 
-> **Auditoria de 2026-11-23 (pós-PR #72).** A PR #72 alterou 15 arquivos de código, teste e configuração e dois
-> documentos fora de `docs/features` e `specs`. As linhas desta seção que citam um deles foram relidas em `main`
-> (`18288c9`), com a âncora mapeada pelo `git diff -U0 a391d1c 18288c9` de cada arquivo; duas âncoras desta seção foram
-> remedidas, as duas no `package.json` da raiz. A linha do `next dev` que grava `AGENTS.md` cita o `.gitignore`, que a
-> PR mexeu só para acrescentar `apps/e2e/lighthouse-results/`; o achado segue aberto, e o `/test` da PR #72 apagou os
-> três arquivos à mão de novo.
-> **Placar: 0 fechados · 0 reduzidos · 4 novos, em [Achados da PR #72](#-achados-da-pr-72-2026-11-23) · 172 abertos**
-> (🟡 55, 🟢 113, ⚠️ 3, ⚪ 1), pela contagem direta das linhas com marcador de severidade nas tabelas `| achado |` desta
-> seção. Os quatro achados da PR #71 foram reconferidos um a um e seguem abertos (vereditos na seção deles). Os
-> placares das auditorias anteriores, de 2026-10-23 à tarde de 2026-11-23, estão nas versões deste arquivo em
-> `afb5b35`, `a391d1c` e `18288c9`.
+> **Auditoria de 2026-11-23 (noite, pós-PR #73).** A PR #73 alterou 36 arquivos de código, teste e configuração e
+> três documentos fora de `docs/features` e `specs`. As linhas desta seção que citam um deles foram relidas em `main`
+> (`5829ea3`), com a âncora mapeada pelo `git diff -U0 18288c9 5829ea3` de cada arquivo; dezoito âncoras foram
+> remedidas, em dez linhas (ver [Âncoras relidas](#âncoras-relidas-em-2026-11-23-pós-pr-73)).
+> **Placar: 1 fechado · 1 promovido · 3 novos, em [Achados da PR #73](#-achados-da-pr-73-2026-11-23) · 174 abertos**
+> (🟡 55, 🟢 115, ⚠️ 3, ⚪ 1), pela contagem direta das linhas com marcador de severidade nas tabelas `| achado |` desta
+> seção. O fechado é o 🟡 do `<title>` igual em todas as páginas de cada área do painel, entregue pela fatia 3 de
+> `delivery-product-quality`; a linha saiu da seção de `accessibility-conformance`. O promovido é o E2E instável de
+> `organizationOwnership`, de 🟢 a 🟡, porque reprovou o CI do merge da PR #73. Os quatro achados da PR #72 e os quatro
+> da PR #71 foram reconferidos um a um e seguem abertos (vereditos na seção de cada um). Os placares das auditorias
+> anteriores, de 2026-10-23 ao fim da tarde de 2026-11-23, estão nas versões deste arquivo em `afb5b35`, `a391d1c`,
+> `18288c9` e `5829ea3`.
 >
-> **Absorvidos por specs `approved`, contados como abertos até a entrega:** o gate do `CORS_ORIGIN` que não derruba o
+> **Absorvidos por spec `approved`, contados como abertos até a entrega:** o gate do `CORS_ORIGIN` que não derruba o
 > processo, o helper de cookie sem `Secure`, o TTL do `x-locale` e a renovação de sessão sem `Origin` (fatia 2 de
 > [`delivery-security-review`](delivery-security-review.md)), e os quatro chamadores que ainda engolem a falha da
-> revogação, se o `/analyze` dela os puser no corte; o componente `@repo/auth/components/sign-in` morto (fatia 3); o
-> `<title>` igual em cada área do painel ([`delivery-product-quality`](delivery-product-quality.md), fatia 3, a #1 da ordem). Rodar
-> qualquer um como tarefa direta pisa no corte dessas specs.
+> revogação, se o `/analyze` dela os puser no corte; o componente `@repo/auth/components/sign-in` morto (fatia 3). Rodar
+> qualquer um como tarefa direta pisa no corte dessa spec.
 
 ### ⚠️ Achados abertos, reconferidos ou herdados
 
@@ -683,7 +749,7 @@ entrega; os três ficaram fora dela por decisão registrada.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **Reenviar o cadastro depois de conta criada e login falho responde `USERS_AUTH_EMAIL_ALREADY_IN_USE`** | `apps/app/.../sign-up/components/SignUpFormClient.tsx:119-126` (era `:112-119` até a PR #47) · `apps/web/.../sign-up/components/sign-up-form-client.tsx:50-57` (era `:34-40` até a PR #55, que acrescentou o pedido de verificação no `onSuccess`) | A criação e o login são duas chamadas. Se a primeira passa e a segunda falha (rede, 429, cookie de sessão), a pessoa reenvia, recebe "e-mail já cadastrado" e precisa ir ao login por conta própria. O `/review` deixou como está porque a correção muda o fluxo; a alternativa registrada é tentar o `signIn` quando o reenvio receber esse código logo depois de um 201 na mesma tela |
+| 🟡 **Reenviar o cadastro depois de conta criada e login falho responde `USERS_AUTH_EMAIL_ALREADY_IN_USE`** | `apps/app/.../sign-up/components/SignUpFormClient.tsx:127-136` (era `:119-126` até a PR #73, `:112-119` até a PR #47) · `apps/web/.../sign-up/components/sign-up-form-client.tsx:54-63` (era `:50-57` até a PR #73, `:34-40` até a PR #55, que acrescentou o pedido de verificação no `onSuccess`) | A criação e o login são duas chamadas. Se a primeira passa e a segunda falha (rede, 429, cookie de sessão), a pessoa reenvia, recebe "e-mail já cadastrado" e precisa ir ao login por conta própria. O `/review` deixou como está porque a correção muda o fluxo; a alternativa registrada é tentar o `signIn` quando o reenvio receber esse código logo depois de um 201 na mesma tela |
 | 🟡 **`create-dev-admin.mjs` não aplica a política de senha** | `apps/api/scripts/create-dev-admin.mjs:36-46` | O script cria administrador com qualquer senha que o Firebase aceite (6 ou mais). Fora da fatia por decisão do plano (P4): o script roda em Node puro e repetir a constante criaria a 12ª cópia. Afeta só quem opera o fork |
 | 🟡 **Sem `ARCJET_KEY`, nada limita a criação de contas em massa** | `apps/api/proxy.ts:72` (`/auth/sign-up` na lista estrita) · `docs/PRE-PRODUCTION.md:772-774` · `docs/SECURITY.md:216` (âncora remedida em 2026-11-23, pós-PR #71, era `:207` até a PR #71 e `:187` até a PR #65; as três foram remedidas também depois da PR #64, quando eram `:62`, `:770-772` e `:173`) | A rota cria a conta pelo Admin SDK, que não passa pelo limite do Firebase de 100 contas por hora por IP. A rota está na lista de rate limit, mas o limite é no-op sem a chave. Está escrito nos dois documentos; o critério 19 do `/test` ficou 🔒 |
 
@@ -707,7 +773,7 @@ entrega; os três ficaram fora dela por decisão registrada.
 | 🟡 **`packages/internationalization` tem dois defeitos de `exports`** | `packages/internationalization/package.json:5-12` | Reconferido em 2026-09-26, depois da PR #28 mexer no arquivo: falta `"./utils/*"`, e `"."` (`:6`) aponta para `index.ts`, que não existe |
 | 🟡 **`isRateLimitEnforced()` é export morto** | `packages/security/index.ts:53` (era `:48` até a PR #65 e `:30` até a PR #64) | Reconferido em `main` em 2026-10-03: a PR #36 passou a função a ler a chave por chamada (`readArcjetKey()`), e ela segue sem chamador fora dos testes. As 9 referências estão em `__tests__/rateLimit.test.ts`. Reconferido em 2026-11-23, depois das PRs #64 e #65: a função segue sem chamador |
 | 🟡 **`FormattedError.retryAfterSeconds` sem consumidor** fora dos testes | `packages/shared/utils/helpers/formattedError.ts:14,23` | Reconferido. O homônimo de outro tipo em `apps/api/proxy.ts:163` (âncora remedida em 2026-11-23, depois da PR #64; era `:139` desde a PR #58 e `:129` antes) segue sem relação |
-| 🟡 **`reloadCurrentUser` sem teste próprio** | `packages/auth/client.ts:261` (era `:244` até a PR #56 e `:214` até a PR #48) | Reconferido em 2026-10-22: só testes que a mockam (`useEmailVerification.test.tsx` e, desde a PR #48, `accountSignInMethodsPanel.test.tsx` e `useSignInMethodMutations.test.tsx`, que conferem que ela **não** é chamada). O único chamador de produção segue sendo `useEmailVerification.ts:34` |
+| 🟡 **`reloadCurrentUser` sem teste próprio** | `packages/auth/client.ts:266` (era `:261` até a PR #73, `:244` até a PR #56 e `:214` até a PR #48) | Reconferido em 2026-10-22: só testes que a mockam (`useEmailVerification.test.tsx` e, desde a PR #48, `accountSignInMethodsPanel.test.tsx` e `useSignInMethodMutations.test.tsx`, que conferem que ela **não** é chamada). O único chamador de produção segue sendo `useEmailVerification.ts:34` |
 | 🟡 **`packages/shared` tem `test` e não tem `typecheck`** | `packages/shared/package.json:11` (só `test`) | Metade fechada pela PR #32: o `@repo/design-system` ganhou a task de `test` (`packages/design-system/package.json:7`, 45 testes). Falta o `typecheck` do `packages/shared`, adiado desde a primeira auditoria. **Medido em 2026-10-14:** `tsc --noEmit` sobre os 21 arquivos do pacote, com um `tsconfig` temporário fora do repositório, dá 0 erros neles e 2 `TS2580` em `packages/internationalization/utils.ts:22-23` (`process` sem `@types/node`, que o pacote não declara). A correção é o script, um `tsconfig.json` e o `@types/node` que os outros workspaces já usam. P. **Ampliado em 2026-10-16, pós-PR #47:** o pacote passou a guardar o formatador de preço (`formatPlanPrice.ts`), que a landing e a aba de cobrança usam; ele continua checado só pelo `typecheck` da `app` e da `web`, que o importam |
 | 🟡 **`welcomeEmail` sem chamador de produção** (reduzido em 2026-10-19, pós-PR #49) | `packages/email/templates/welcome.tsx:50` | Reconferido em 2026-10-20, pós-PR #52: `git grep welcomeEmail` fora de testes acha só a definição. A PR #52 criou as boas-vindas como notificação no sino (`user-merge.ts:94-99`), sem o e-mail; mandar ou não o e-mail de boas-vindas segue decisão de produto. **Reduzido:** a outra metade da linha, o formulário de contato de fachada para onde o canal de privacidade caía, fechou com a PR #49; o formulário entrega na caixa de suporte ou diz que o canal está indisponível. A spec `in-app-notifications`, entregue pela PR #52, usou as boas-vindas como produtor de notificação, não de e-mail |
 | 🟡 **`useListAuditEvents.test.tsx` deixa trabalho do React pendente depois do teardown** (novo, 2026-09-28) | `apps/app/__tests__/useListAuditEvents.test.tsx:55-70` (um `QueryClient` por teste, sem `clear()` nem `unmount` ao fim) | A suíte da `apps/app` falhou em 2 de 6 execuções locais em 2026-09-28 com `ReferenceError: window is not defined`, que o Vitest atribui a este arquivo: os testes passam e o erro não tratado reprova a task. Na auditoria pós-PR #31 passou nas 6 execuções (688 testes cada) na pós-PR #32 também (6 de 6, 702 testes cada) e na pós-PR #33 também (6 de 6, 756 testes cada), então o acumulado era 2 falhas em 24; com as execuções das rodadas pós-PR #34, #35, #36, #39, #40, #41, #42, #43, #44 (três, 841 testes cada), #45 e #46 (uma cada, 846 testes), #47 (uma, 861 testes), #48 (uma, 914 testes), #49 (uma, 919 testes), #50 (uma, 924 testes), #51 (uma, 924 testes), #52 (uma, 958 testes), #53 (uma, 968 testes), #54 (uma, 975 testes), #55 (uma, 1001 testes), #56 (uma, 1045 testes), #57 (uma, 1099 testes), #58 (uma, 1099 testes) e #59 (uma, 1108 testes) e as duas da auditoria pós-PR #63 (1198 testes; uma delas reprovou por outro arquivo), nenhuma com falha neste, é 2 em 61. O arquivo não muda desde a PR #18. O CI passou nas execuções de merge das PRs #29 a #63. Correção provável, não testada: limpar o `QueryClient` e desmontar o hook no `afterEach`. Tarefa direta P |
@@ -779,7 +845,8 @@ Vindos do §12.2 do plano, do handoff, do `/review` e do `/test` da spec, entreg
 2026-09-29. Todos são anteriores ao diff ou ficaram fora do corte por decisão registrada; nenhum bloqueou a entrega.
 Reconferidos no código em 2026-09-29. Os dois do `ActionsMenu` (Enter em "Excluir" e o gatilho sem
 `aria-haspopup`) fecharam com a PR #40; a lista de fechados daquela rodada está na versão deste arquivo em `0a49a3b`.
-O dos seed tokens do antd fechou com a PR #42. O grupo de rádio sem nome, o menu mobile da web sem nome, o `Button` que
+O dos seed tokens do antd fechou com a PR #42, e o do `<title>` igual em todas as páginas de cada área do painel, com a
+PR #73 (fatia 3 de `delivery-product-quality`). O grupo de rádio sem nome, o menu mobile da web sem nome, o `Button` que
 encolhia, o `disabled` antes do spread, o `placeholder` ignorado e o rótulo da data da `/contact` fecharam com a PR #45
 e estão na lista de fechados daquela rodada.
 
@@ -787,7 +854,6 @@ e estão na lista de fechados daquela rodada.
 |--------|------|-----------------|
 | 🟡 **`--destructive` do claro abaixo de 4,5:1 sobre `--accent` e `--muted`** | `packages/design-system/styles/globals.css:24` | 4,38:1 no "Excluir" com foco de teclado (fundo `--accent`, medido pelo `/test`) e 4,37:1 como texto de erro dentro de card `muted` (calculado no plano). Não aparece nas rotas que a suíte cobre. **Remedido pelo `/test` da PR #42** (O1): no foco por seta, o item "Excluir" fica `#e7000b` sobre `#f5f5f5`, 4,38:1, igual no código anterior; a PR #42 não mudou o `--destructive` |
 | 🟡 **Os tokens `Menu.dangerItem*` não alcançam o `Dropdown`** | `packages/design-system/providers/antd-app.tsx:97-101` (âncora remedida em 2026-10-13, pós-PR #43; era `:91-95` e, antes da PR #42, `:66-70`) | Configuração que não tem efeito onde o `danger` aparece no repo. Reconferido depois da PR #43: o item `danger` é pintado pelo `colorError` global, em hex (`:136`), e os testes esperam esse hex (`actionMenu.test.tsx:101-104`), não os tokens do `Menu`. A PR #42 não os resolveu, como a recomendação previa |
-| 🟡 **`<title>` igual em todas as páginas de cada área do painel** | `(common)/layout.tsx:24-31` (era `:23-30` até a PR #52) · `(admin)/admin/layout.tsx:22-29` | Satisfaz o axe, mas o WCAG 2.4.2 pede título que descreva a página. Os rótulos por rota já existem em `common/routes` e `admin/routes`. Quatro das onze páginas são `"use client"` e precisariam de `layout.tsx` de segmento |
 | 🟡 **A página 404 da `apps/app` sai com `document.title` vazio** | `apps/app/app/not-found.tsx:3-5` | Fica fora dos layouts do painel, que são os que ganharam `generateMetadata` |
 | 🟡 **A dica do `TextareaInput` não entra no `aria-describedby`** | `packages/design-system/components/ui/textarea-input.tsx:42-43` | O `<p>` do `hint` não tem id |
 
@@ -1133,7 +1199,7 @@ fechados. O cartão encostado na borda a 375 px ampliou a linha das seções da 
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🟢 **A `apps/web` ainda declara `RESEND_*` e depende de `@repo/email`, sem enviar nada** | `apps/web/env.ts:1` (importa `@repo/email/keys`) · `apps/web/.env.example:2-3` · `apps/web/package.json:19` | Desde a PR #49 o envio do contato passa pela API, e o único uso do pacote na web é o `env.ts`. Quem configura o fork põe a chave da Resend num projeto que não a usa, como o achado A3 registra para a Stripe. **Reduzido em 2026-11-23, pós-PR #65:** o `docs/FORKING.md` §7.1 (`:316-317`) passou a mandar `RESEND_TOKEN` e `RESEND_FROM` só para a `api`; o código e o `.env.example` da web seguem iguais. P, só configuração da web |
-| 🟢 **A página de contato mostra "Next Boilerplate" fixo no título e promete resposta em 24 horas** | `translations/apps/web/pages/contact/contact.ts:4`, `:49`, `:94` (`meta.title`, que também é o `<h1>`, `contact-form-client.tsx:149-151`) · `:11`, `:56`, `:101` (o benefício) | O título não lê a marca de `getBrand()`, e a resposta em 24 horas é um compromisso que o core não cumpre sozinho. Copy, P. Do plano da PR #49 |
+| 🟢 **A página de contato mostra "Next Boilerplate" fixo no título e promete resposta em 24 horas** | `translations/apps/web/pages/contact/contact.ts:4`, `:49`, `:94` (`meta.title`, que também é o `<h1>`, `contact-form-client.tsx:153-155`, era `:149-151` até a PR #73) · `:11`, `:56`, `:101` (o benefício) | O título não lê a marca de `getBrand()`, e a resposta em 24 horas é um compromisso que o core não cumpre sozinho. Copy, P. Do plano da PR #49 |
 | 🟢 **O `Textarea` do design system cresce sem limite de altura** | `packages/design-system/components/ui/textarea.tsx:11` (`field-sizing-content` sem `max-h`) | Medido pelo `/test` da PR #49: com 5000 caracteres, a caixa de mensagem chega a 2798 px e empurra o botão de enviar para fora da tela. Vale para todo `HookFormTextarea` e `TextareaInput`. P no design system |
 
 **Lacunas de teste e 🔒 herdados da entrega, com veredito desta auditoria:**
@@ -1285,7 +1351,7 @@ registrar, a passada procurou cada um neste arquivo (`AuthProvider`, `noAccount`
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🟢 **A web monta dois `AuthProvider` aninhados, e o login com Google faz dois `POST /api/auth/session`** | `apps/web/app/[locale]/layout.tsx:40-41` (o `DesignSystemProvider` e, dentro dele, outro `AuthProvider`; eram `:36-37` até a PR #71) · `packages/design-system/index.tsx:17-35`, `:44-49` (o `DesignSystemProvider` já monta um, com `errorAlert` e `getRedirectPath`) · cada um assina o token em `packages/auth/provider.tsx:330-346` e grava o cookie em `:161-187` (eram `:323-339` e `:154-180` até a PR #56) | **Medido** pelo `/test` de `web-auth-forms`: dois `POST /api/auth/session` por login com Google na landing, um por provider. Pela leitura, cada provider também tenta o bootstrap de SSO por conta própria e pede a renovação do cookie a cada troca de token (`refreshSessionCookie`, `provider.tsx:220`), então essas chamadas também dobram. A `apps/app` monta um só (`AppDesignProvider` → `DesignSystemProvider`). Os formulários da landing leem o provider mais interno, e o pedido de verificação do cadastro depende do observer dele, que não desmonta na navegação (R3 do plano da tarefa). Tirar um dos dois pede medir sessão, SSO e o fim de sessão de novo. P a M. **Ampliado em 2026-10-22:** o `/test` da PR #56 viu dois `POST /api/auth/session` por conclusão do link também na `apps/app`, que monta um provider só; pela leitura, um vem do `onAuthSuccess` (`provider.tsx:357`) e o outro do observador do token (`:330-346`). Se for isso, parte da duplicação da landing tem a mesma causa e não some tirando um dos providers. Não medido para o login por senha nem pelo Google na app |
-| 🟢 **No login da landing, `signInStartedHereRef` não volta a `false`, e a tela fica vazia se o Firebase aceita a credencial e o cookie de sessão é recusado** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:28` (o ref), `:79` e `:133` (vira `true` no envio e no Google), `:52-56` (o efeito não navega com o ref em `true`), `:58-60` (com `user`, devolve `null`) · `packages/auth/provider.tsx:353-365` (era `:353-370` até a PR #60 e `:346-362` até a PR #56; `onAuthSuccess`: o `catch` em `:360` mostra o toast traduzido e não navega) | A pessoa vê o toast de erro e a área do formulário vazia, sem botão para tentar de novo, até recarregar. Em `main` o resultado é o mesmo, porque o componente devolve `null` com usuário em qualquer caso. **Medido em 2026-10-28** pelo `/test` de `app-auth-forms` (F1b), com `:3001/api/auth/session` bloqueado: toast traduzido 250 ms depois do clique, URL parada em `/pt-br/sign-in` e `<main>` com `innerText` vazio, sem laço. As âncoras do formulário (`:28`, `:52-56`, `:58-60`, `:79`, `:133`) foram relidas no `HEAD` e não mudaram. A correção natural mora no provider (deslogar quando o cookie falha) e vai junto da linha anterior. P |
+| 🟢 **No login da landing, `signInStartedHereRef` não volta a `false`, e a tela fica vazia se o Firebase aceita a credencial e o cookie de sessão é recusado** | `apps/web/app/[locale]/sign-in/components/sign-in-form-client.tsx:31` (o ref), `:83` e `:137` (vira `true` no envio e no Google), `:56-60` (o efeito não navega com o ref em `true`), `:62-64` (com `user`, devolve `null`; as cinco âncoras remedidas em 2026-11-23, pós-PR #73, eram `:28`, `:79`, `:133`, `:52-56` e `:58-60`) · `packages/auth/provider.tsx:353-365` (era `:353-370` até a PR #60 e `:346-362` até a PR #56; `onAuthSuccess`: o `catch` em `:360` mostra o toast traduzido e não navega) | A pessoa vê o toast de erro e a área do formulário vazia, sem botão para tentar de novo, até recarregar. Em `main` o resultado é o mesmo, porque o componente devolve `null` com usuário em qualquer caso. **Medido em 2026-10-28** pelo `/test` de `app-auth-forms` (F1b), com `:3001/api/auth/session` bloqueado: toast traduzido 250 ms depois do clique, URL parada em `/pt-br/sign-in` e `<main>` com `innerText` vazio, sem laço. As âncoras do formulário (`:28`, `:52-56`, `:58-60`, `:79`, `:133`) foram relidas no `HEAD` e não mudaram. A correção natural mora no provider (deslogar quando o cookie falha) e vai junto da linha anterior. P |
 | 🟢 **`consoleErrorSpy.mockRestore()` só roda quando as asserções passam** | `apps/web/__tests__/signUpFormApi.test.tsx:189` (o `spyOn`) e `:204` (o `mockRestore`, depois do `expect` de `:203`) | Se o `expect` falhar, o espião fica ligado para os testes seguintes do arquivo. Só afeta a suíte depois de um teste já vermelho. O arquivo entrou em `main` pela PR #55 sem a correção; o `/review` registrou e não corrigiu. P (um `afterEach` ou `try/finally`) |
 
 **Lacunas de teste herdadas de `web-auth-forms`:** os vereditos estão na versão deste arquivo em `df381f4`, seção
@@ -1469,8 +1535,8 @@ recusada, em [Achados da PR #56](#-achados-da-pr-56-2026-10-22), falava do provi
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
-| 🟡 **Com a sessão recusada, o login e o cadastro da app recarregam a página em laço, e o alerta fica visível por uns 200 ms** | `apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx:83-117` (com usuário no Firebase client, o efeito grava a sessão de novo e navega; o freio é só o `401` em `:102`) · `sign-up/components/SignUpFormClient.tsx:72-100` (o mesmo efeito, sem freio: navega com qualquer resposta) · `packages/auth/provider.tsx:353-365` (`onAuthSuccess` mostra o alerta e a mutação termina em sucesso, com o client ainda logado) | **Medido** pelo `/test` de `app-auth-forms`, com `--abort` em `/api/auth/session`: no login, o alerta traduzido aparece de 221 a 258 ms depois do clique, a primeira recarga chega de 398 a 454 ms depois, e foram 16 a 18 recargas em 5 s (32 em 13 s), sempre em `/<locale>/sign-in?redirect=…`; no cadastro, 20 cargas em 7 s, passando pelo login. A pessoa não consegue ler a mensagem. Tirado o bloqueio, o laço para. Fora do corte da tarefa por decisão do plano (D1 e D3): a correção é a metade "função que lança" que o `/review` da PR #56 recomendou, ou deslogar o client quando a sessão falha, como o Google da app já faz (`googleSignInApi.ts:34-39`, que segue certa). As duas mexem no link por e-mail, que depende do `isSuccess` com a sessão recusada (`EmailLinkCompletion.tsx:165-178`). Na mesma passada, tirar a navegação do `try` de `onAuthSuccess`: hoje o `catch` (`:360`) também pega uma falha de `resolvePostLoginPath`, que roda depois do toast de sucesso; pela leitura do `/review`, ela não lança hoje. P a M. Desbloqueado: a branch que reescrevia os mesmos trechos entrou em `main` pela PR #60 (reconferido em 2026-11-19, âncoras iguais) |
-| 🟢 **Dois textos fixos em inglês sobram no Google da app** | `apps/app/shared/lib/googleSignInApi.ts:49` ("Google sign-in did not return an ID token") · `:63` ("Invalid response from auth API"), as duas uma linha abaixo desde a PR #64 | Saem pelo `FormattedError` como `message` crua, em inglês nos três idiomas (regra de ouro 2). Só aparecem com resposta malformada do Google ou da API, então ninguém deve vê-los em uso normal. Registrado pela §1.6 do plano. P, uma chave e duas linhas, no arquivo que a branch mudou |
+| 🟡 **Com a sessão recusada, o login e o cadastro da app recarregam a página em laço, e o alerta fica visível por uns 200 ms** | `apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx:91-125` (era `:83-117` até a PR #73; com usuário no Firebase client, o efeito grava a sessão de novo e navega; o freio é só o `401` em `:110`) · `sign-up/components/SignUpFormClient.tsx:80-108` (era `:72-100` até a PR #73; o mesmo efeito, sem freio: navega com qualquer resposta) · `packages/auth/provider.tsx:353-365` (`onAuthSuccess` mostra o alerta e a mutação termina em sucesso, com o client ainda logado) | **Medido** pelo `/test` de `app-auth-forms`, com `--abort` em `/api/auth/session`: no login, o alerta traduzido aparece de 221 a 258 ms depois do clique, a primeira recarga chega de 398 a 454 ms depois, e foram 16 a 18 recargas em 5 s (32 em 13 s), sempre em `/<locale>/sign-in?redirect=…`; no cadastro, 20 cargas em 7 s, passando pelo login. A pessoa não consegue ler a mensagem. Tirado o bloqueio, o laço para. Fora do corte da tarefa por decisão do plano (D1 e D3): a correção é a metade "função que lança" que o `/review` da PR #56 recomendou, ou deslogar o client quando a sessão falha, como o Google da app já faz (`googleSignInApi.ts:34-39`, que segue certa). As duas mexem no link por e-mail, que depende do `isSuccess` com a sessão recusada (`EmailLinkCompletion.tsx:165-178`). Na mesma passada, tirar a navegação do `try` de `onAuthSuccess`: hoje o `catch` (`:360`) também pega uma falha de `resolvePostLoginPath`, que roda depois do toast de sucesso; pela leitura do `/review`, ela não lança hoje. P a M. Desbloqueado: a branch que reescrevia os mesmos trechos entrou em `main` pela PR #60 (reconferido em 2026-11-19, âncoras iguais) |
+| 🟢 **Dois textos fixos em inglês sobram no Google da app** | `apps/app/shared/lib/googleSignInApi.ts:62` ("Google sign-in did not return an ID token") · `:76` ("Invalid response from auth API"); eram `:49` e `:63` até a PR #73, que acrescentou o aviso de conta nova acima, e `:48` e `:62` até a PR #64 | Saem pelo `FormattedError` como `message` crua, em inglês nos três idiomas (regra de ouro 2). Só aparecem com resposta malformada do Google ou da API, então ninguém deve vê-los em uso normal. Registrado pela §1.6 do plano. P, uma chave e duas linhas, no arquivo que a branch mudou |
 
 **Lacunas de teste herdadas de `app-auth-forms`, com veredito desta rodada:**
 
@@ -1572,14 +1638,14 @@ de registrar, a auditoria procurou cada caso neste arquivo (`dependabot`, `bad r
 Vindos do `develop/handoff.md`, do `review/review.md` e do `test/report.md` de `delivery-product-quality` (fatia 1)
 e das medições desta auditoria, conferidos no código de `main` (`a391d1c`). Nenhum bloqueou a entrega. Antes de
 registrar, a auditoria procurou cada caso neste arquivo (`405`, `https://http`, `<title>`, `organizationOwnership`) e
-não achou linha anterior. A regressão do HTML do 404 da landing não está aqui: é a D17 e a deriva da spec.
+não achou linha anterior. A regressão do HTML do 404 da landing não está aqui: é a E16 (era a D17) e a deriva da spec.
 
 | achado | onde | por que importa |
 |--------|------|-----------------|
 | 🟢 **Método não suportado numa rota que existe responde `405` do Next, sem `error.code`** | `apps/api/app/(routes)/health/route.ts:5` (só `GET`) · a rota coringa `apps/api/app/[[...path]]/route.ts:6-16` cobre só caminho inexistente | Medido pelo `/develop` da PR #71: `PUT /health` → `405`, sem corpo no contrato `{ error: { code } }`. Vale para toda rota que não exporta o método pedido. Quem chama pelo SDK não manda método errado, então o efeito é em cliente externo. P |
 | 🟢 **A `og:image` da metadata do 404 da landing sai como `https://http/localhost:3001/...` com o `.env` local** | `apps/app/.env.example:37` e `apps/api/.env.example:84` publicam `VERCEL_PROJECT_PRODUCTION_URL` com protocolo; o `apps/web/.env.example:11` deixa vazia · `packages/seo/metadata.ts:13-30` já tolera o protocolo, mas o Next monta a URL da imagem do arquivo do layout sozinho, prefixando `https://` | Medido pelo `/test` por `curl`. Só aparece na metadata do 404, porque nas páginas o `openGraph.images` de `buildLocaleMetadata` substitui a do layout; na Vercel a variável vem sem protocolo. Afeta só quem copia o valor com protocolo para a `web`. P: documentar que a variável é só o host, ou deixá-la fora dos `.env.example` |
 | 🟢 **O 404 de `/favicon.ico` na landing tem dois `<title>`** | `apps/web/app/[locale]/(home)/page.tsx:15` (`generateMetadata` da home roda com `favicon.ico` no lugar do idioma) · `apps/web/shared/lib/localeSegment.ts:9-13` (a recusa acontece no layout, depois) | Medido pelo `/test` da PR #71: `document.title` mostra o do Next, e o segundo `<title>` vem da home. Ninguém lê esse título, porque o endereço não é página. P, valor quase nulo |
-| 🟢 **`organizationOwnership.spec.ts` estoura o tempo sob `next dev` local, inclusive em `main`** | `apps/e2e/tests/organizationOwnership.spec.ts:68` | Medido pelo `/test` da PR #71 em três execuções (suíte completa, isolado na branch, isolado num worktree de `main` em `afb5b35`), cada uma quebrando num ponto diferente, sempre por tempo. Passou no job `e2e` da execução de merge. É o primeiro E2E instável registrado. A fatia 2 de `delivery-product-quality` deixou este arquivo fora do projeto `mobile` (PR #72), e ele passou de novo no CI da execução de merge. Entra na lacuna do detector de teste instável. P a M |
+| 🟡 **`organizationOwnership.spec.ts` é instável: estoura o tempo sob `next dev` local e, desde a PR #73, reprovou o CI da `main`** (promovido de 🟢 em 2026-11-23, pós-PR #73) | `apps/e2e/tests/organizationOwnership.spec.ts:68` · a espera da opacidade do botão de recarregar antes do axe, `:172-183` · `failOnFlakyTests: isCi` em `apps/e2e/playwright.config.ts:36` | Medido pelo `/test` da PR #71 em três execuções locais, cada uma quebrando num ponto diferente, sempre por tempo. **Na execução de merge da PR #73** (`gh run 45311956449`, job `e2e`) o teste reprovou na primeira tentativa por outro motivo, `[serious] color-contrast @ /pt-br/organization (light)` no `<div>` "Atualizar", e passou na segunda (24,0 s); com `failOnFlakyTests`, o job e a execução ficaram vermelhos. O teste espera a opacidade dos dois botões de recarregar voltar a 1 e só depois chama o axe, mas uma recarga da tabela que começa entre as duas coisas repete a meia opacidade. É o segundo teste instável no CI (ver a linha do detector em [Lacunas](#lacunas-avaliadas-e-não-especificadas)). P: esperar a tabela parar de recarregar (ou repetir a espera da opacidade dentro do `expectAccessible` para esse caso), sem mexer no `failOnFlakyTests` |
 
 **Lacunas de teste e 🔒 herdados da PR #71, com veredito desta auditoria:**
 
@@ -1588,10 +1654,12 @@ não achou linha anterior. A regressão do HTML do 404 da landing não está aqu
 | O PNG renderizado pelo `ImageResponse` sem regressão automática | **continua aberta**, risco baixo | medido em runtime pelo `/develop` e pelo `/test`; `openGraph.test.ts` cobre a montagem do cartão, não o render |
 | O validador de Open Graph com a landing publicada | **fora de escopo**, 🔒 | exige domínio público; virou a caixa do `PRE-PRODUCTION.md` §18 (pendência 34) |
 | O `x-robots-tag` ausente em resposta da `web` que não passa pelo proxy | **continua aberta**, risco baixo | nenhuma rota da `web` grava o cabeçalho fora do proxy; o `/test` mediu `robots.txt`, `sitemap.xml` e a imagem sem ele |
-| O HTML vazio do 404 da landing sem teste em nenhuma direção | **continua aberta**, depende da D17 | aceitando, não há o que travar; recusando, o teste é um `request.get` no E2E contando o `<h1>` |
+| O HTML vazio do 404 da landing sem teste em nenhuma direção | **continua aberta**, depende da E16 (era a D17) | aceitando, não há o que travar; recusando, o teste é um `request.get` no E2E contando o `<h1>` |
 | O 404 da landing mostrando o cartão no navegador | **fechada** pela PR #71 | E2E novo em `apps/e2e/tests/landing.spec.ts`, com `toHaveTitle` e `expectAccessible` |
 
-**Reconferência dos achados da PR #71 em 2026-11-23, pós-PR #72:** os quatro **continuam abertos**. A PR #72 não tocou
+**Reconferência dos achados da PR #71 em 2026-11-23, pós-PR #73:** os quatro **continuam abertos**; o do E2E instável
+foi promovido a 🟡, porque reprovou o CI do merge da PR #73. A PR #73 não tocou `apps/api`, os `.env.example`, a home
+da landing nem o arquivo do teste (tocou só a página da organização, para o título). **Pós-PR #72:** os quatro **continuavam abertos**. A PR #72 não tocou
 `apps/api`, os `.env.example`, a home da landing nem `organizationOwnership.spec.ts`. O `405` segue: a rota de saúde
 exporta só `GET` (`apps/api/app/(routes)/health/route.ts:5`). O E2E instável passou de novo no CI da execução de
 merge (`[chromium] › tests/organizationOwnership.spec.ts:68:1`, 21,3 s) e não entrou no projeto `mobile`.
@@ -1608,7 +1676,7 @@ registrar, a auditoria procurou cada caso neste arquivo (`destination stream`, `
 | 🟢 **O cliente que fecha a conexão no meio da renderização vira `[request] failed` no log** | `packages/shared/utils/helpers/requestErrorReporter.ts:39-53` (registra todo erro que o Next passa ao `onRequestError`) · `apps/app/instrumentation.ts:4` | O job `e2e` da execução de merge da PR #72 registrou 7 linhas `[app] [request] failed … routeType=render` em `/pt-br`, `/pt-br/admin` e `/pt-br/onboarding`, todas com `Error: The destination stream errored while writing data`, o que acontece quando a navegação segue antes de a resposta terminar; os testes passaram. O `/review` da PR #72 achou o mesmo no CI de `a391d1c`, então é anterior. Hoje é ruído de log; com um coletor (E1, pendência 8), cada linha vira alerta falso. P: decidir no `/analyze` de `observability-logging` se o erro de stream fechado sai do relatório |
 | 🟢 **No celular, o primeiro toque no botão da barra lateral se perde antes da hidratação** | `packages/design-system/components/ui/sidebar.tsx:115-117` (`toggleSidebar` alterna o estado de desktop enquanto `isMobile` ainda é `false`) · `apps/e2e/support/panelNavigation.ts` (o helper repete o toque) | Medido pelo `/test` da PR #72: em 10 execuções que usam o helper, 1 precisou de dois toques. Para uma pessoa a janela é de milissegundos, e o E2E cobre com o retry, que não esconde menu que nunca abre. P, no componente compartilhado |
 | 🟢 **Um `SIGTERM` mandado só ao `node` do `pnpm lighthouse` não chega ao `npx lighthouse`** | `apps/e2e/lighthouse/run.mjs:215` (o filho não é `detached`) · `:288-302` (o handler derruba o `next start`, não o filho) | Registrado pelo `/review` sem correção: com Ctrl+C o terminal sinaliza o grupo inteiro e o filho cai junto, que é o uso documentado. Um orquestrador que mande `SIGTERM` só ao processo pode deixar um Chromium aberto até a página terminar. P |
-| 🟢 **Uma execução do `pnpm lighthouse` não sustenta o número que o relatório de entrega cita** | `apps/e2e/lighthouse/run.mjs` (uma execução por página, Q9 do plano) · `docs/delivery/03-product-quality.md:116-123` ("copie essa tabela para o relatório") | Em dez execuções na mesma máquina e no mesmo dia (cinco das etapas da PR #72, cinco desta auditoria), a Performance da home foi de 57 a 97 e o LCP dela de 2,3 s a 7,6 s, cruzando as faixas ✅ e 🟡 da parte 3. O relatório de um fork pode ganhar ou perder um 🟡 pela sorte da execução. P: a D19 |
+| 🟢 **Uma execução do `pnpm lighthouse` não sustenta o número que o relatório de entrega cita** | `apps/e2e/lighthouse/run.mjs` (uma execução por página, Q9 do plano) · `docs/delivery/03-product-quality.md:116-123` ("copie essa tabela para o relatório") | Em dez execuções na mesma máquina e no mesmo dia (cinco das etapas da PR #72, cinco desta auditoria), a Performance da home foi de 57 a 97 e o LCP dela de 2,3 s a 7,6 s, cruzando as faixas ✅ e 🟡 da parte 3. O relatório de um fork pode ganhar ou perder um 🟡 pela sorte da execução. P: a E18 (era a D19) |
 
 **Lacunas de teste e 🔒 herdados da PR #72, com veredito desta auditoria:**
 
@@ -1619,12 +1687,44 @@ registrar, a auditoria procurou cada caso neste arquivo (`destination stream`, `
 | `pnpm lighthouse --url` contra uma preview da Vercel | **fora de escopo**, 🔒 | exige deploy; o `--url` contra um `next start` local foi medido (V5) |
 | Tema escuro e os outros idiomas a 390 px | **fora de escopo** | o projeto `mobile` roda em `pt-br` e no tema claro por decisão do plano (Q2); o resto segue com o `agent-browser` no `/deliver` |
 
+**Reconferência dos achados da PR #72 em 2026-11-23, pós-PR #73:** os quatro **continuam abertos**. O
+`[request] failed … The destination stream errored while writing data` apareceu de novo no job `e2e` da execução de
+merge da PR #73 (12 linhas, em `/pt-br`, `/pt-br/admin` e `/pt-br/onboarding`). A PR #73 não tocou
+`requestErrorReporter.ts`, `sidebar.tsx`, `run.mjs` nem `summary.mjs`.
+
+### 🆕 Achados da PR #73 (2026-11-23)
+
+Vindos do `develop/handoff.md`, do `review/review.md` e do `test/report.md` de `delivery-product-quality-slice-3` e
+das medições desta auditoria, conferidos no código de `main` (`5829ea3`). Nenhum bloqueou a entrega. Antes de
+registrar, a auditoria procurou cada caso neste arquivo (`stackEnv`, `screenTitled`, `measuring`, `sendBeacon`) e não
+achou linha anterior. O teste instável que reprovou o CI da execução de merge não está aqui: é a linha promovida em
+[Achados da PR #71](#-achados-da-pr-71-2026-11-23). O `generate_lead` com `params` indefinido, que o `/test` registrou,
+não entra: o `gtag` trata o terceiro argumento ausente como evento sem parâmetro.
+
+| achado | onde | por que importa |
+|--------|------|-----------------|
+| 🟢 **A pilha do E2E sobe a landing sem `NEXT_PUBLIC_API_URL`** | `apps/e2e/support/stackEnv.ts:66-85` (`crossAppUrls` devolve `{}` para `web`) | Medido pelo `/test` da PR #73: com a pilha do E2E, o cadastro da landing manda `POST /pt-br/auth/sign-up` para a própria origem e recebe 404. Nenhum spec envia esse formulário hoje, então a suíte não percebe; o primeiro E2E de cadastro pela landing vai falhar por isso. P: devolver `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL` e `NEXT_PUBLIC_WEB_URL` também para `web` (hipótese do `/test`, não medida) |
+| 🟢 **O `screenTitled` do E2E monta a `RegExp` com o rótulo do dicionário sem escapar** | `apps/e2e/tests/entityCrud.spec.ts:15` | Registrado pelo `/review` sem correção. Os rótulos de hoje não têm metacaractere; um fork que copie o padrão para um recurso com `(`, `+` ou `?` no nome recebe um teste que reprova ou passa por engano. P |
+| 🟢 **Aceitar o banner com o popup do Google aberto deixa aquele cadastro sem `sign_up`** | `packages/analytics/provider.tsx:102-113` (o `trackEvent` guarda o `measuring` do render em que a mutação começou) | Registrado pelo `/review` sem correção. O erro é para menos, nunca um envio sem consentimento. P, valor baixo |
+
+**Lacunas de teste e 🔒 herdados da PR #73, com veredito desta auditoria:**
+
+| lacuna | veredito 2026-11-23 | motivo |
+|--------|---------------------|--------|
+| Ver os eventos chegarem numa propriedade GA4 real | **fora de escopo**, 🔒 | exige conta no Google; virou o item 19 do `PRE-PRODUCTION.md` (pendência 35) |
+| Nenhum teste automatizado chega ao `window.dataLayer` real nem à corrida com o `window.location.replace` das telas da app | **continua aberta**, risco baixo | o `/test` mediu no navegador que o evento sobrevive ao carregamento completo nas duas telas; um teste automatizado exigiria o `gtag` real no E2E, que roda sem id do GA |
+| O `sign_up` do Google no login da landing com `?redirect=` para outra origem | **continua aberta**, risco baixo | o `router.push` vira navegação completa antes do callback; o `gtag` usa `sendBeacon`, o que não foi medido. Exige primeiro acesso com Google vindo de um link com redirect |
+| Aceitar o banner e enviar o contato no mesmo instante | **continua aberta**, 🔒 por reprodução | o evento pode entrar na fila antes do `gtag('config')`; o pior caso é não medir |
+| O `panelTitles.test.ts` quebrando com a chamada em várias linhas | **fechada** pelo `/review` da PR #73 | a comparação ignora espaço e quebra de linha, medida com duas sondas |
+
 ## Pendências vivas sem dono
 
 > A maior parte destas tem **casa versionada** em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md).
-> Na auditoria de 2026-11-23 (pós-PR #72) as 34 foram relidas uma a uma; a PR #72 não tocou o `PRE-PRODUCTION.md` nem o
-> `FORKING.md`, então nenhuma âncora mudou. Foram remedidas a 6 (branch protection), a 8 (coletor e `logEvent`), a 16
-> (branches vivas, ampliada com a da fatia 2), a 32 (o alerta de secret scanning) e a 33 (o ref de checkpoint). As demais dependem de console de
+> Na auditoria de 2026-11-23 (noite, pós-PR #73) as 34 linhas abertas até então foram relidas uma a uma. A PR #73 acrescentou o item 19 ao
+> `PRE-PRODUCTION.md` (`:997-1042`), o que deslocou em 47 linhas tudo o que vem depois; as âncoras das linhas 15 e 27
+> foram remedidas. Entrou a 35 (eventos principais no GA4). Foram remedidas a 6 (branch protection), a 8 (coletor e
+> `logEvent`), a 16 (branches vivas, ampliada com a da PR #73), a 32 (o alerta de secret scanning) e a 33 (o ref de
+> checkpoint). As demais dependem de console de
 > provedor ou de conta real e seguem com o veredito da rodada anterior. Os registros das auditorias anteriores, de
 > 2026-10-23 à tarde de 2026-11-23, estão nas versões deste arquivo em `afb5b35`, `a391d1c` e `18288c9`.
 
@@ -1635,17 +1735,17 @@ registrar, a auditoria procurou cada caso neste arquivo (`destination stream`, `
 | 3 | 🔴 Publicar o índice da trilha de auditoria (filtro por usuário responde 503) | `PRE-PRODUCTION.md` §1.2 | **continua aberto, medido em 2026-10-23**; idem |
 | 4 | 🔴 Publicar o índice da listagem paginada de `entity` | `PRE-PRODUCTION.md` §1.1 | **continua aberto, medido**: o `/test` da PR #35 recebeu `503 PAGINATION_INDEX_MISSING` em `GET /entities` contra o projeto de desenvolvimento (`test/report.md:85`), então o índice não está publicado nem lá; a medição de 2026-10-23 confirma. **Ampliado pela PR #57:** o índice passou a `organizationId` + `deletedAt` + `createdAt`, e o antigo por `userId` saiu do arquivo. Com os dois de `notification` (§1.9, PR #52), seguem **oito** índices sem publicação, de nove declarados; o comando é um só |
 | 5 | Retenção da coleção `auditEvent` | `PRE-PRODUCTION.md` §1.3 | **continua aberto**, estacionado (E5) |
-| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 (`:798-874`) | **continua aberto**, remedido em 2026-11-23 pós-PR #72 (404, `[]`, 72 PRs, cinco abertas, todas do Dependabot); estacionado (E3). **Ampliado pela PR #65:** o §9 passou a pedir os checks `verify`, `e2e`, `secrets` e `audit`. É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
+| 6 | ⚠️ `main` sem branch protection | `PRE-PRODUCTION.md` §9 (`:798-874`) | **continua aberto**, remedido em 2026-11-23 pós-PR #73 (404, `[]`, 73 PRs, cinco abertas, todas do Dependabot); estacionado (E3). Sem proteção, o merge da PR #73 entrou com o `e2e` da PR verde e deixou a `main` com a execução de merge vermelha; com a proteção, o check exigido é o da PR, então o caso se repetiria. **Ampliado pela PR #65:** o §9 passou a pedir os checks `verify`, `e2e`, `secrets` e `audit`. É o que falta para o item 2 de `e2e-testing`, arquivada com esse ⚠️ |
 | 7 | Backfill de instantes em base que já tem dado | `PRE-PRODUCTION.md` §1.4 | **continua aberto**; não é mensurável daqui |
-| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-11-23 pós-PR #72: `git grep` por `@sentry`, `@logtail`, `@axiomhq` e `betterstack` em `apps/` e `packages/` devolve 0, e `logEvent(` fora de testes segue em **51** (50 chamadas e a definição). A PR #72 não somou caso, mas o CI dela mostrou o inverso: sete `[request] failed` de cliente que fechou a conexão, que um coletor transformaria em alerta falso (ver [Achados da PR #72](#-achados-da-pr-72-2026-11-23)). A PR #64 somou um caso que só um coletor alcança: a revogação que falha sai como `[auth] session-revoke-failed` (`(shared)/lib/session-revocation.ts:15`, `account/sessions/revoke/route.ts:13`), e a tela mostra o aviso; estacionado (E1). A PR #58 somou um caso que só um coletor alcança: a falha na conferência do convidado sai como `[organization] invitation-member-check-failed` (`organization/invitations/route.ts:82`), e a tela mostra `503 ORGANIZATION_INVITATION_FAILED`. A PR #57 somou quatro casos que só um coletor alcança: o convite gravado cujo e-mail falhou (`[organization] invitation-delivery-failed`, `organization/invitations/route.ts:162`), a organização que não se cria no cadastro (`membership-create-failed`, `organization-membership.ts:96`) e a migração dos registros antigos que falha ou para no teto (`legacy-claim-failed` e `legacy-claim-unfinished`, `:41` e `:37`). A PR #56 somou dois casos: a entrega do link que falha depois da resposta sai só como `[auth] email-link-delivery-failed` (`auth/sign-in/email-link/request/route.ts:40`), e o provedor de link desligado num projeto real só aparece como `[auth-action-link] refused` no log, com a tela dizendo "Confira seu e-mail" (`PRE-PRODUCTION.md` §15). A PR #52 somou mais um caso: a notificação que não se grava sai só como `[notifications] emit-failed` no log (`(shared)/lib/notifications.ts:46`), e o produtor segue sem ela. A PR #51 trocou um caso por outro: o desvínculo da senha que falha no meio agora registra o `uid` no log (`password-unlink-email-restore-failed`, `account/sign-in-methods/[id]/route.ts:125`), mas a conta pode seguir sem e-mail, e só um coletor faz alguém ver a linha. A PR #50 acrescentou mais um caso que só um coletor alcança: a falha persistente da desativação no primeiro contato vai só para o log (`archived-account-lockout-failed`, `user-merge.ts:64`). A PR #48 tinha deixado o desvínculo da senha sem registro nenhum do `uid` (achado fechado pela PR #51) |
+| 8 | Ninguém vigia a trilha de erro (nenhum coletor) | `PRE-PRODUCTION.md` §11 | **continua aberto**, remedido em 2026-11-23 pós-PR #73: `git grep` por `@sentry`, `@logtail`, `@axiomhq` e `betterstack` em `apps/` e `packages/` devolve 0, e `logEvent(` fora de testes segue em **51** (50 chamadas e a definição). A PR #73 não somou caso, e o CI do merge dela repetiu as 12 linhas `[request] failed` de cliente que fechou a conexão. A PR #72 não somou caso, mas o CI dela mostrou o inverso: sete `[request] failed` de cliente que fechou a conexão, que um coletor transformaria em alerta falso (ver [Achados da PR #72](#-achados-da-pr-72-2026-11-23)). A PR #64 somou um caso que só um coletor alcança: a revogação que falha sai como `[auth] session-revoke-failed` (`(shared)/lib/session-revocation.ts:15`, `account/sessions/revoke/route.ts:13`), e a tela mostra o aviso; estacionado (E1). A PR #58 somou um caso que só um coletor alcança: a falha na conferência do convidado sai como `[organization] invitation-member-check-failed` (`organization/invitations/route.ts:82`), e a tela mostra `503 ORGANIZATION_INVITATION_FAILED`. A PR #57 somou quatro casos que só um coletor alcança: o convite gravado cujo e-mail falhou (`[organization] invitation-delivery-failed`, `organization/invitations/route.ts:162`), a organização que não se cria no cadastro (`membership-create-failed`, `organization-membership.ts:96`) e a migração dos registros antigos que falha ou para no teto (`legacy-claim-failed` e `legacy-claim-unfinished`, `:41` e `:37`). A PR #56 somou dois casos: a entrega do link que falha depois da resposta sai só como `[auth] email-link-delivery-failed` (`auth/sign-in/email-link/request/route.ts:40`), e o provedor de link desligado num projeto real só aparece como `[auth-action-link] refused` no log, com a tela dizendo "Confira seu e-mail" (`PRE-PRODUCTION.md` §15). A PR #52 somou mais um caso: a notificação que não se grava sai só como `[notifications] emit-failed` no log (`(shared)/lib/notifications.ts:46`), e o produtor segue sem ela. A PR #51 trocou um caso por outro: o desvínculo da senha que falha no meio agora registra o `uid` no log (`password-unlink-email-restore-failed`, `account/sign-in-methods/[id]/route.ts:125`), mas a conta pode seguir sem e-mail, e só um coletor faz alguém ver a linha. A PR #50 acrescentou mais um caso que só um coletor alcança: a falha persistente da desativação no primeiro contato vai só para o log (`archived-account-lockout-failed`, `user-merge.ts:64`). A PR #48 tinha deixado o desvínculo da senha sem registro nenhum do `uid` (achado fechado pela PR #51) |
 | 9 | Health check da plataforma não aponta para `/health/ready` | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: configuração de plataforma |
 | 10 | `SESSION_COOKIE_DOMAIN` em subdomínios distintos | `PRE-PRODUCTION.md` §7 | **continua aberto** (configuração de deploy). Desde a PR #49 o e-mail preenchido em "Ajuda e contato" depende dele: a landing lê a sessão compartilhada, e o `/test` só mediu em `localhost` (🔒) |
 | 11 | Cloud Storage não ativado (plano Blaze) | `PRE-PRODUCTION.md` §6 | **continua aberto** em produção. Desde a PR #31, upload, avatar e o passo `storage` do expurgo rodam e têm teste sob o emulador; contra bucket real seguem sem prova o objeto que não abre sem assinatura e a expiração da URL V4 |
 | 12 | Revogação de sessão nunca provada ponta a ponta | *(só neste arquivo)* | **metade fechada**, reconhecido na auditoria pós-PR #34: o `/test` de `compliance-docs-kit` mediu em 2026-09-30, contra o projeto Firebase de desenvolvimento, que depois de `revokeRefreshTokens` o cookie emitido antes volta `null`, o bearer volta `null` em `resolveApiActor` e `createSessionCookie` com o token anterior lança `auth/id-token-expired` (`docs/features/compliance-docs-kit/test/report.md`, tabela "Resultado bruto"). É a prova que a ressalva de `session-refresh` pedia para a camada de verificação. **Continua aberto** só o percurso de navegador: sair numa app e ver a outra perder a sessão. O `/test` da PR #35 somou a medição da conta desativada (bearer recusado com e sem revogação, e depois da reativação) e também não subiu navegador |
 | 13 | Envio real de e-mail nunca provado | `PRE-PRODUCTION.md` §3 | **continua aberto** (exige domínio com SPF/DKIM). O `/test` da PR #24 viu o envio do e-mail de verificação falhar sob o emulador, com `RESEND_TOKEN` vazio, como esperado. O `/test` da PR #29 deixou 🔒 o e-mail de verificação depois do cadastro pela API (critério 20). O `/test` de `brand-config` deixou 🔒 o nome da marca com acento na caixa de entrada. O `/test` da PR #33 deixou 🔒 a entrega do aviso ao endereço antigo e do link ao novo; sem Resend o pedido responde `503 EMAIL_NOT_CONFIGURED`, medido nos 3 idiomas. O `/test` da PR #49 deixou 🔒 a entrega do formulário de contato na caixa de suporte; sem Resend a rota responde `503 CONTACT_UNAVAILABLE`, e com token falso, `503 EMAIL_SEND_FAILED`, medidos nos 3 idiomas. O `/test` de `web-auth-forms` (PR #55) deixou 🔒 o e-mail de verificação pedido pelo cadastro da landing; sem Resend, `503 EMAIL_NOT_CONFIGURED` nos 3 idiomas. O `/test` da PR #56 deixou 🔒 a entrega do link de acesso; sem Resend, `503 EMAIL_NOT_CONFIGURED`, e com token falso o Resend recusou e a resposta seguiu `200`, sem endereço no log. O `/test` da PR #57 deixou 🔒 a entrega do convite; sem Resend, o `POST /organization/invitations` responde `503 EMAIL_NOT_CONFIGURED` antes de gravar (`organization/invitations/route.ts:55-60`, era `:53-58` até a PR #59), e o `PRE-PRODUCTION.md:752-753` registra que o ciclo com e-mail real nunca rodou. O `/test` da PR #59 deixou 🔒 o envio do convite pelo dono novo e o rótulo "convite enviado" na trilha, pelo mesmo motivo |
 | 14 | CSP Report-Only na `apps/web` | `PRE-PRODUCTION.md` §10 | **continua aberto**, deliberado |
-| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:1228`, era `:1203` até a PR #71, `:1162` até a PR #65 e `:1153` até a PR #64). Pelos relatórios, todos os `/test` desde a PR #37 rodaram sob o emulador, com contas `@example.com` que morreram com o processo; o da PR #56 criou cinco `qa-magic-link-*@example.com` lá, e o da PR #57 rodou sob o emulador, que parou sem exportar (`STATE.md` da feature). Os dois `/test` da PR #58 não criaram dado de QA (os `STATE.md` registram "sem dado de QA"). O da PR #59 rodou sob o emulador, com três contas `qa-ownership-*@example.com` e a do seed, apagadas pelo próximo seed (`test/report.md` da feature). A lista de cada rodada está no relatório da feature e na versão deste arquivo em `9c793c6`. O console não foi aberto |
-| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto, ampliado** em 2026-11-23 pós-PR #72: `git ls-remote --heads origin` devolve 70. São as 69 da rodada anterior e `feat/delivery-product-quality-slice-2`, que ficou viva depois do merge, como a `feat/delivery-product-quality` e a `feat/delivery-infra-hardening`; as cinco do Dependabot são de PRs abertas e não contam como mergeadas. As branches das PRs #56 a #63 seguem vivas. O registro das rodadas anteriores está nas versões deste arquivo em `afb5b35` e `18288c9` |
+| 15 | Contas de QA acumuladas no projeto de desenvolvimento | `PRE-PRODUCTION.md` | **continua aberto, não recontado**: exige o console do Firebase. O `/test` da PR #35 criou e apagou a própria conta (`PRE-PRODUCTION.md:1275`, era `:1228` até a PR #73, `:1203` até a PR #71, `:1162` até a PR #65 e `:1153` até a PR #64). Pelos relatórios, todos os `/test` desde a PR #37 rodaram sob o emulador, com contas `@example.com` que morreram com o processo; o da PR #56 criou cinco `qa-magic-link-*@example.com` lá, e o da PR #57 rodou sob o emulador, que parou sem exportar (`STATE.md` da feature). Os dois `/test` da PR #58 não criaram dado de QA (os `STATE.md` registram "sem dado de QA"). O da PR #59 rodou sob o emulador, com três contas `qa-ownership-*@example.com` e a do seed, apagadas pelo próximo seed (`test/report.md` da feature). O da PR #73 rodou sob o emulador, com onze contas `qa-dpq-slice-3-*@example.com` que morreram com o processo, e não criou conta em projeto real (`test/report.md` da feature). A lista de cada rodada está no relatório da feature e na versão deste arquivo em `9c793c6`. O console não foi aberto |
+| 16 | Branches mergeadas vivas no remoto | `PRE-PRODUCTION.md` | **continua aberto, ampliado** em 2026-11-23 pós-PR #73: `git ls-remote --heads origin` devolve 71. São as 70 da rodada anterior e `guilhermebittelbrunn/cycle-command-v13`, a da PR #73, que ficou viva depois do merge, como a `feat/delivery-product-quality-slice-2`, a `feat/delivery-product-quality` e a `feat/delivery-infra-hardening`; as cinco do Dependabot são de PRs abertas e não contam como mergeadas. As branches das PRs #56 a #63 seguem vivas. O registro das rodadas anteriores está nas versões deste arquivo em `afb5b35` e `18288c9` |
 | 17 | Login com Google sem passe manual com conta real; desde a PR #48, também vincular e confirmar o Google num projeto real | *(só neste arquivo)*; o "User account linking" e os domínios autorizados estão no `FORKING.md` §4, passos 3 e 4 | **continua aberto, ampliado em 2026-10-19.** O `/test` da PR #24 não percorreu o Google no emulador; o da PR #48 percorreu, mas com o IdP falso do emulador. Ficaram 🔒 o popup real do Google, a escolha de "User account linking" do projeto (que muda o primeiro login com Google de uma conta com senha) e a mensagem de `auth/unauthorized-domain` num domínio fora da lista |
 | 18 | `storage.rules` nunca publicado (o teste veio com a PR #31) | `PRE-PRODUCTION.md` §6 e `:54-58` | **metade fechada** pela PR #31: `storage.rules` e `firestore.rules` têm teste contra emulador no `verify` (20 e 145 testes; entrega em [`storage-emulator-rules-tests`](../docs/features/storage-emulator-rules-tests/spec.md)). **Continua aberto** publicar no projeto real, que depende da 11 |
 | 19 | Conferir a retenção de log da plataforma | `PRE-PRODUCTION.md` §11 | **fora de escopo** da auditoria: painel do provedor |
@@ -1656,16 +1756,17 @@ registrar, a auditoria procurou cada caso neste arquivo (`destination stream`, `
 | 24 | 🆕 `ARCJET_KEY` por fork: sem ela o rate limit é no-op, e o cadastro pela API passa a depender dela (a rota usa o Admin SDK, fora do limite do Firebase por IP) | `PRE-PRODUCTION.md` §8 (`:761-797`, era `:761-788` até a PR #65 e `:761-779` até a PR #64) | **aberto**, entrou com a PR #29. **Ampliado pela PR #65:** com a chave, a landing também consulta o Arcjet em toda página que serve (o bloqueio de bot passou a rodar), e a cota precisa caber esse tráfego; os dois orçamentos da API levam o `shield` em `DRY_RUN`, e passar para `LIVE` depois de uma semana em produção é a caixa nova do §8 (`:791-797`). Localmente, o bloqueio só decide com `ARCJET_ENV=development` (`docs/FORKING.md:364`, era `:363` até a PR #71). **Ampliado pela PR #64:** sem a chave, o orçamento padrão também é no-op, então todo `POST`, `PUT`, `PATCH` e `DELETE` da API fica sem limite; com a chave, o orçamento padrão consulta o Arcjet em toda escrita, e a cota do plano gratuito não foi medida (a caixa "Conferir o plano do Arcjet", `:783-789`). O `429` dos dois orçamentos ficou 🔒 no `/test`. A lista estrita tem 21 caminhos (`apps/api/proxy.ts:70-92`). Critério 19 do `/test` da fatia 1 🔒. Desde a PR #36, a chave precisa ter o prefixo `ajkey_`: sem ele, a API trata a chave como ausente e registra um erro no boot, e o build de `app` e `web` falha (`PRE-PRODUCTION.md:776-778`). A chave válida contra a Arcjet real segue 🔒 (`/test` da tarefa `arcjet-key-lazy-validation`). O `/test` da PR #46 deixou 🔒 o `429` do `/auth/sign-in`, pelo mesmo motivo (remedido em 2026-10-16). Desde a PR #49 a lista inclui `POST /contact`, e o §8 diz que, sem a chave, qualquer script enche a caixa de suporte e gasta a cota da Resend (`:769-770`); o `429` real da rota ficou 🔒. Desde a PR #51, sem a chave, nada limita quantos corpos acima do teto alguém manda às rotas públicas; até a PR #53 cada um prendia uma conexão por até cerca de 300 s, e desde ela o `413` fecha a conexão, então sobra o custo de cada invocação. Desde a PR #56 a lista inclui `POST /auth/sign-in/email-link/request`; sem a chave, o pedido de link manda e-mail sem teto, como a recuperação de senha, e o `429` real ficou 🔒. Desde a PR #57 a lista inclui `/organization/invitations`, `/invitations/preview` e `/invitations/accept` (17 caminhos, `apps/api/proxy.ts:60-78` até a PR #64); sem a chave sobram o teto de 20 convites pendentes e o intervalo de 60 s entre reenvios (`PRE-PRODUCTION.md:724-726`) |
 | 25 | 🆕 Fechar o cadastro pelo REST do Identity Toolkit com a chave pública, que ainda aceita senha de 6 ou 7 (Identity Platform: password policy em `ENFORCE` ou cadastro pelo cliente desligado) | `PRE-PRODUCTION.md`, "Declaração — o que a política de senha não alcança" | **opcional, declarado**: o upgrade tem custo ou teto (3.000 DAU no Spark). Critério 18 do `/test` da fatia 1 🔒 |
 | 26 | 🆕 Marca por fork: `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e `NEXT_PUBLIC_APP_SUPPORT_EMAIL` nos projetos `app`, `web` e `api`, logo numa URL `https` pública, ícones do produto no lugar dos padrões | `PRE-PRODUCTION.md` §13 (`:918-931`, era `:902-915` até a PR #65 e `:893-906` até a PR #64) | **aberto**, entrou com a PR #30. Sem ela, o produto sobe com o nome `next-boilerplate`; não bloqueia nada. Desde a PR #33, sem `NEXT_PUBLIC_APP_SUPPORT_EMAIL` o aviso de troca de e-mail sai sem a linha de suporte, que é o canal para contestar (`PRE-PRODUCTION.md` §3). Desde a PR #49, sem ela o formulário de contato fica indisponível, e a variável precisa estar na `api` (o destino) e na `web` (decide se o formulário aparece) (`:927-930`, era `:911-914` até a PR #65) |
-| 27 | 🆕 Custo e latência da leitura de sessão em cada requisição autenticada | *(só neste arquivo)*; a declaração de sessões do `PRE-PRODUCTION.md` (`:1090`, era `:1065` até a PR #71, `:1024` até a PR #65 e `:1015` até a PR #64) fala da recusa, não do custo | **aberto**, entrou com a PR #39. Toda requisição autenticada lê o documento da sessão antes do guard (`session-tracker.ts:106-134`), além da leitura do perfil. No emulador, `GET /auth/session` p50 9,3 ms; em produção, latência e consumo da cota de leituras do Firestore não foram medidos (🔒 no `/test`) |
+| 27 | 🆕 Custo e latência da leitura de sessão em cada requisição autenticada | *(só neste arquivo)*; a declaração de sessões do `PRE-PRODUCTION.md` (`:1137`, era `:1090` até a PR #73, `:1065` até a PR #71, `:1024` até a PR #65 e `:1015` até a PR #64) fala da recusa, não do custo | **aberto**, entrou com a PR #39. Toda requisição autenticada lê o documento da sessão antes do guard (`session-tracker.ts:106-134`), além da leitura do perfil. No emulador, `GET /auth/session` p50 9,3 ms; em produção, latência e consumo da cota de leituras do Firestore não foram medidos (🔒 no `/test`) |
 | 28 | 🆕 Política de TTL em `notification.expiresAt` (90 dias), e os dois índices compostos de `notification` | `PRE-PRODUCTION.md` §1.9 (`:253-298`) | **aberto**, entrou com a PR #52. Os índices foram medidos em 2026-10-20 e duas vezes em 2026-10-21 e não estão publicados no projeto de referência (somam às linhas 1 a 4). A TTL exige faturamento ativo no projeto; sem ela nada quebra, as notificações ficam até a exclusão da conta e o prazo de 90 dias do `ROPA.md` §10 deixa de valer. A auditoria não tem leitura da TTL pelas ferramentas que usa; conferir com `gcloud firestore fields ttls list`. Os critérios 18 e 19 do `/test` ficaram 🔒 |
 | 29 | 🆕 Login por link num projeto real: provedor "E-mail/senha" com "Link de e-mail" ativo no console, domínio da app autorizado e `EMAIL_LINK_SIGN_IN_ENABLED="true"` na `apps/api`, só para o fork que liga o recurso | `PRE-PRODUCTION.md` §15 (`:675-707`) | **aberto**, entrou com a PR #56. Desligado por padrão, então não bloqueia quem não liga. O documento marca ⛔ "nunca foi provado de ponta a ponta fora do emulador": com o provedor desligado ou o domínio fora da lista, o pedido responde `200` e nenhum e-mail sai. Os critérios de falha do provedor e de `429` do `/test` ficaram 🔒. Depende das pendências 13 e 24 |
 | 30 | 🆕 Membros e convites num projeto real: `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED="true"` na `api` e na `app`, a TTL opcional em `organizationInvitation.expiresAt`, e os três índices de `entity` por organização publicados antes do deploy da API | `PRE-PRODUCTION.md` §16 (`:709-753`, era `:709-751` até a PR #59) e §1.10 (`:299-331`) | **aberto**, entrou com a PR #57; remedido em 2026-10-28, pós-PR #59, que acrescentou ao §16 o passo da transferência ("Tornar dono") no roteiro de validação, sem passo novo de infra. Desligado por padrão, então membros e convites não bloqueiam quem não liga; os índices de `entity` valem para todo fork (pendências 1 e 4). O documento marca que o ciclo com e-mail real nunca rodou. Desligar a variável com membros não desfaz a equipe (`:744-746`). Os critérios de rate limit, entrega, índices e TTL do `/test` ficaram 🔒. Depende das pendências 13 e 24 |
 | 31 | 🆕 Restringir as chaves do Firebase: a do navegador por referenciador HTTP e por API, e uma chave separada, só com restrição de API, para `FIREBASE_WEB_API_KEY` | `PRE-PRODUCTION.md` §17 (`:947-971`) · `docs/FORKING.md` §4, passo 8 (`:218-225`, era `:217-224` até a PR #71) | **aberto**, entrou com a PR #65. Vale para todo fork e para o projeto de referência. O documento traz o `curl` que confere: a chave restrita responde 403 sem `Referer`, e 400 quer dizer que ela aceita chamada de qualquer origem. A auditoria não mediu a chave do projeto de referência, para não usar credencial |
-| 32 | 🆕 Repositório de referência: o alerta #1 de secret scanning (`google_api_key`, aberto desde 2026-04-04, apontando para um commit em `origin/main`) e os alertas e as atualizações de segurança do Dependabot desligados | *(só neste arquivo)* para o alerta; `PRE-PRODUCTION.md` §9 (`:801`) para o Code security | **aberto**, era pergunta em aberto de `delivery-infra-hardening`, que foi arquivada. Remedido em 2026-11-23, pós-PR #72: o #1 segue `open`. Medido antes, no mesmo dia: `gh api …/secret-scanning/alerts` → o #1 `open`; `security_and_analysis` com `dependabot_security_updates: disabled`, `secret_scanning_validity_checks: disabled` e `secret_scanning_non_provider_patterns: disabled`. A recomendação da spec continua: restringir a chave no Google Cloud (ou rotacioná-la), conferir o login e fechar o alerta como "revoked". É ação de console, sua |
-| 33 | 🆕 Um ref local de checkpoint do Conductor guarda três `.env` com chave privada | a máquina do dono · `docs/features/delivery-infra-hardening/analyze/plan.md:704` (P5) | **aberto**, remedido em 2026-11-23, pós-PR #72: o ref `refs/conductor-checkpoints/conductor-archive-bb3ed7d1-…` existe no repositório local (entre 652 refs de checkpoint; eram 641) e nenhum ref de checkpoint está no `origin` (`git ls-remote origin 'refs/conductor-checkpoints/*'` → 0). O risco é um `git push --all` ou `--mirror`. Apagar o ref é decisão sua e irreversível; a auditoria não mexeu |
+| 32 | 🆕 Repositório de referência: o alerta #1 de secret scanning (`google_api_key`, aberto desde 2026-04-04, apontando para um commit em `origin/main`) e os alertas e as atualizações de segurança do Dependabot desligados | *(só neste arquivo)* para o alerta; `PRE-PRODUCTION.md` §9 (`:801`) para o Code security | **aberto**, era pergunta em aberto de `delivery-infra-hardening`, que foi arquivada. Remedido em 2026-11-23, pós-PR #73: o #1 segue `open`, e o `security_and_analysis` segue igual. Medido antes, no mesmo dia: `gh api …/secret-scanning/alerts` → o #1 `open`; `security_and_analysis` com `dependabot_security_updates: disabled`, `secret_scanning_validity_checks: disabled` e `secret_scanning_non_provider_patterns: disabled`. A recomendação da spec continua: restringir a chave no Google Cloud (ou rotacioná-la), conferir o login e fechar o alerta como "revoked". É ação de console, sua |
+| 33 | 🆕 Um ref local de checkpoint do Conductor guarda três `.env` com chave privada | a máquina do dono · `docs/features/delivery-infra-hardening/analyze/plan.md:704` (P5) | **aberto**, remedido em 2026-11-23, pós-PR #73: o ref `refs/conductor-checkpoints/conductor-archive-bb3ed7d1-…` existe no repositório local (entre 657 refs de checkpoint; eram 652) e nenhum ref de checkpoint está no `origin` (`git ls-remote origin 'refs/conductor-checkpoints/*'` → 0). O risco é um `git push --all` ou `--mirror`. Apagar o ref é decisão sua e irreversível; a auditoria não mexeu |
 | 34 | 🆕 Imagem de compartilhamento e indexação por fork: `NEXT_PUBLIC_WEB_URL` no projeto `web` da Vercel com o domínio público, a landing conferida num validador de Open Graph, o `x-robots-tag` conferido numa preview da landing e, para fork que já esteve no ar, a remoção das URLs do painel e da API pedida no Search Console | `PRE-PRODUCTION.md` §18 (`:972-996`) | **aberto**, entrou com a PR #71. Sem `NEXT_PUBLIC_WEB_URL`, a `og:image` aponta para `localhost` e o cartão sai sem imagem em toda rede social. A preview da landing não leva `noindex` do código, de propósito; fica fora do índice só pela proteção de previews da Vercel. O validador ficou 🔒 no `/test` |
+| 35 | 🆕 Eventos de conversão no GA4 por fork: propriedade GA4, `NEXT_PUBLIC_GA_MEASUREMENT_ID` nos projetos `web` e `app` da Vercel, e `sign_up` e `generate_lead` marcados como eventos principais (mais os eventos do produto, se o fork criar) | `PRE-PRODUCTION.md` §19 (`:997-1042`) · `docs/FORKING.md` §7.4 (`:372-387`) | **aberto**, entrou com a PR #73. Só vale para o fork que usa Google Analytics. Sem o id, nada quebra: o hook não faz nada e cadastro e contato seguem iguais (`packages/analytics/keys.ts:7-13`, `events.ts:20-31`). Com o id e sem marcar os eventos, eles chegam ao GA4 mas não contam como conversão. Ver os eventos numa propriedade real ficou 🔒 no `/test` |
 
-A PR #72 não criou pendência. A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. Com a PR #56
+A PR #73 criou a 35, e a PR #72 não criou pendência. A 21 foi fechada pelo usuário em 2026-09-25. A 18 fechou pela metade em 2026-09-29, e a 12 em 2026-09-30. Com a PR #56
 entrou a 29, com a PR #57, a 30, com a PR #65, as 31 a 33, e com a PR #71, a 34; a PR #57 também somou casos às 1 a 4, 8, 13 e 24. O histórico de quem criou ou mudou cada linha está na versão
 deste arquivo em `9c793c6`.
 
@@ -1742,14 +1843,14 @@ Descartadas de propósito, com o motivo. Reabrir exige argumento novo.
 | Firebase App Check | — | Exige configuração de projeto por fork. |
 | Waitlist / captura de lead | 2/10 | Decisão do fork. |
 | **Migrar a listagem de usuários para o cursor** | — | O N+1 de `userRepository.list()` vem primeiro. |
-| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 61 execuções locais até 2026-11-19, pós-PR #63; ver achados), e o CI passou. Em 2026-10-19 apareceu um terceiro, também só local e sob carga (`actionMenu.test.tsx`, 3 execuções com falha em 17 até a auditoria pós-PR #63, as duas novas com load acima de 48; ver achados da tarefa `admin-archive-access-revocation`). Na mesma auditoria, `securityPolicySources.test.ts` da `apps/app` e o arranque do pool do Vitest em `@repo/auth` e `api` também estouraram o tempo sob carga, e passaram em sequência. Na auditoria de 2026-11-23, pós-PR #64 (load de 22 a 55), o `actionMenu.test.tsx` caiu em mais três execuções, quatro arquivos da `apps/app` caíram por tempo (`securityPolicySources`, `accountSecurityForm`, `auditFiltersDateInput` e `signInEmailLinkEntry`, este o primeiro a cair perto dos 2 s, pela espera do `findBy`, duas vezes em quatro), o pool da `apps/app` morreu com `EPIPE`, e o arranque do pool falhou em `@repo/internationalization`, `web` e `api`; todos passaram em outra execução. Na auditoria de 2026-11-23, pós-PR #71 (load de 12 a 15), nenhum arquivo caiu. Na pós-PR #72 (load de 11 a 25), também nenhum. O `/test` da PR #71 registrou o primeiro E2E instável, `organizationOwnership.spec.ts`, que estourou o tempo sob `next dev` local em três execuções, inclusive em `main`, e passou no CI (ver achados); passou de novo no CI da PR #72. O critério de reabertura era um segundo *flake* **no CI**; nenhum destes conta. Consertar o teste é tarefa direta P. |
+| **Detector de teste instável no CI** | — | O primeiro caso foi consertado na PR #22. Em 2026-09-28 apareceu um segundo, de causa diferente, só local (`useListAuditEvents.test.tsx`, 2 falhas em 61 execuções locais até 2026-11-19, pós-PR #63; ver achados), e o CI passou. Em 2026-10-19 apareceu um terceiro, também só local e sob carga (`actionMenu.test.tsx`, 3 execuções com falha em 17 até a auditoria pós-PR #63, as duas novas com load acima de 48; ver achados da tarefa `admin-archive-access-revocation`). Na mesma auditoria, `securityPolicySources.test.ts` da `apps/app` e o arranque do pool do Vitest em `@repo/auth` e `api` também estouraram o tempo sob carga, e passaram em sequência. Na auditoria de 2026-11-23, pós-PR #64 (load de 22 a 55), o `actionMenu.test.tsx` caiu em mais três execuções, quatro arquivos da `apps/app` caíram por tempo (`securityPolicySources`, `accountSecurityForm`, `auditFiltersDateInput` e `signInEmailLinkEntry`, este o primeiro a cair perto dos 2 s, pela espera do `findBy`, duas vezes em quatro), o pool da `apps/app` morreu com `EPIPE`, e o arranque do pool falhou em `@repo/internationalization`, `web` e `api`; todos passaram em outra execução. Na auditoria de 2026-11-23, pós-PR #71 (load de 12 a 15), nenhum arquivo caiu. Na pós-PR #72 (load de 11 a 25), também nenhum, nem na pós-PR #73. O `/test` da PR #71 registrou o primeiro E2E instável, `organizationOwnership.spec.ts`, que estourou o tempo sob `next dev` local em três execuções, inclusive em `main`, e passou no CI (ver achados); passou de novo no CI da PR #72. O critério de reabertura era um segundo *flake* **no CI**, e ele foi atingido em 2026-11-24, na execução de merge da PR #73 (`gh run 45311956449`): o mesmo `organizationOwnership.spec.ts` reprovou na primeira tentativa, por contraste num estado transitório, passou na segunda, e o `failOnFlakyTests: isCi` (`apps/e2e/playwright.config.ts:36`, desde a PR #26) reprovou o job. **Reavaliada em 2026-11-23, pós-PR #73: segue sem spec**, porque o detector já existe para o E2E: o Playwright retenta uma vez no CI e reprova o job quando a segunda tentativa passa, que foi o que tornou este caso visível. Falta só para o Vitest, onde nenhum *flake* chegou ao CI. Consertar o teste é a primeira tarefa direta da fila. |
 | Provedor de e-mail plugável · rastreio de abertura/clique | — | Fora do corte de `transactional-emails`. |
 | Múltiplos arquivos, galeria, thumbnails, antivírus, PDF | — | Fora do corte de `file-upload-storage`. |
 | Tracing distribuído (OpenTelemetry) · session replay · monitoramento sintético | prática 6 | Fora do corte de `observability-logging`. |
 | API keys do usuário · webhooks de saída | 1/10 cada | Só valem se o produto é uma API. |
 | Widget de feedback · referral/afiliados | 1/10 e 0/10 | Terceirizar é mais racional. |
 | SSO enterprise · SCIM | 0/10 | Só entra com o primeiro contrato enterprise. |
-| Preview deploy por PR · orçamento de performance | práticas 14 e 18 | O pré-requisito (CI verde e estável) vale nas 30 últimas execuções do CI na `main`, até `c9b4d9c` (`gh run list --branch main --limit 30`, todas `success`, remedido em 2026-11-19 pós-PR #63). Reavaliar junto com o branch protection (E3). **Saiu desta linha em 2026-11-19:** o Dependabot entrou no corte de [`delivery-infra-hardening`](../docs/features/delivery-infra-hardening/spec.md), entregue pela PR #65, e o Lighthouse por comando, no de [`delivery-product-quality`](delivery-product-quality.md), entregue pela PR #72 sem bloquear o CI. O orçamento de performance só faz sentido com mediana: a home variou de 57 a 97 em dez execuções (D19). |
+| Preview deploy por PR · orçamento de performance | práticas 14 e 18 | O pré-requisito (CI verde e estável) vale nas 30 últimas execuções do CI na `main`, até `c9b4d9c` (`gh run list --branch main --limit 30`, todas `success`, remedido em 2026-11-19 pós-PR #63). A execução de merge da PR #73 (`5829ea3`) quebrou a série, por um E2E instável (ver [Achados da PR #71](#-achados-da-pr-71-2026-11-23)). Reavaliar junto com o branch protection (E3). **Saiu desta linha em 2026-11-19:** o Dependabot entrou no corte de [`delivery-infra-hardening`](../docs/features/delivery-infra-hardening/spec.md), entregue pela PR #65, e o Lighthouse por comando, no de [`delivery-product-quality`](delivery-product-quality.md), entregue pela PR #72 sem bloquear o CI. O orçamento de performance só faz sentido com mediana: a home variou de 57 a 97 em dez execuções (E18). |
 | Remote Cache do Turbo | prática 1 | Arrasta conta e env; entra quando doer, como opt-in. |
 | Limiar de cobertura que bloqueia merge | prática 5 | A cobertura já é medida e consolidada (`pnpm coverage`, job `coverage` do CI), pela PR #26. O limiar ficou fora do corte de [`e2e-testing`](../docs/features/e2e-testing/spec.md); reavaliar depois de algumas medições. |
 | Changesets / versionamento · Storybook | — | Pacotes `private: true`; o `playground` serve de catálogo. |

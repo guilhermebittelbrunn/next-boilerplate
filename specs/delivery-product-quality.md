@@ -27,8 +27,9 @@ de trocá-la. Sem esta spec, cada fork descobre as mesmas falhas na própria ent
 ## O que já existe no repo
 
 Medido em 2026-11-19 sobre `583194b`. Os itens de 404, `og:image` e `robots.txt` foram relidos em 2026-11-23 sobre
-`a391d1c`, depois da fatia 1 (PR #71), e os de celular, desempenho e sitemap, sobre `18288c9`, depois da fatia 2
-(PR #72); o que cada fatia fechou está marcado no item.
+`a391d1c`, depois da fatia 1 (PR #71); os de celular, desempenho e sitemap, sobre `18288c9`, depois da fatia 2
+(PR #72); e os de Google Analytics e títulos, sobre `5829ea3`, depois da fatia 3 (PR #73). O que cada fatia fechou
+está marcado no item.
 
 - **Celular** — Tailwind mobile-first e o padrão de viewport do Next (nenhum `export const viewport` em app
   ou web). **Fechado pela fatia 2:** o Playwright tem o projeto `mobile` ao lado do `chromium`
@@ -61,17 +62,17 @@ Medido em 2026-11-19 sobre `583194b`. Os itens de 404, `og:image` e `robots.txt`
   `apps/web/__tests__/sitemap.test.ts` compara a lista com as páginas de `app/[locale]`. A lista continua manual,
   mas o teste quebra quando ela diverge.
 - **Google Analytics** — GA4 com Consent Mode v2 (`packages/analytics/consent.ts:79-97`,
-  `provider.tsx:49-54`), carregado só depois do aceite. **Lacuna:** nenhum evento de conversão
-  (`sign_up`, `generate_lead`): `sendGAEvent`/`gtag('event')` têm zero ocorrências.
+  `provider.tsx:49-54`), carregado só depois do aceite. **Fechado pela fatia 3:** `sign_up` e `generate_lead` saem
+  pelo `useAnalyticsEvent()` do `@repo/analytics`, só com consentimento e id do GA (ver a conferência da fatia 3).
 - **`robots.txt`** — `apps/web/app/robots.ts:4-13` é estático, `allow: "/"`, sem depender de env: a
   produção nunca sai com `Disallow: /`. **Fechado pela fatia 1:** `apps/app` e `apps/api` mandam
   `X-Robots-Tag: noindex` pelo proxy, e as telas de login e cadastro da landing saíram do `Disallow` e levam
   `noindex` na metadata.
 - **Meta descriptions e títulos** — as 7 páginas da landing têm título e descrição traduzidos com
   `hreflang` (`apps/web/shared/lib/seo.ts:67-103`, era `:45-69` até a PR #71). **Lacuna:** a copy é de exemplo (home "Início" com a
-  stack na descrição, contato com a marca literal "Next Boilerplate"); o painel tem dois títulos para cerca
-  de doze telas (`(common)/layout.tsx:24-33`, `admin/layout.tsx:22-31`) e nenhuma descrição; não existe
-  `title.template`.
+  stack na descrição, contato com a marca literal "Next Boilerplate"); o painel não tem descrição por tela.
+  **Fechado pela fatia 3:** os dois layouts do painel declaram `title.template`, e as dez telas internas têm
+  título próprio.
 
 ## Evidência de mercado
 
@@ -187,11 +188,40 @@ entre 57 e 93 em outras cinco execuções.
   `apps/web/app/sitemap.ts`; entraram `packages/analytics/provider.tsx` e o `SignUpFormClient.tsx` da app, onde o
   evento de cadastro tende a nascer.
 
-**Fatia 3: títulos e conversão**
+**Fatia 3: títulos e conversão** (✅ entregue pela PR #73, `5829ea3`, em 2026-11-23, e conferida no código de
+`main`; o CI da execução de merge ficou vermelho por um E2E instável fora da fatia, então a spec **não** foi
+arquivada nesta auditoria; ver "Perguntas em aberto")
 
-- [ ] **Título próprio por tela do painel**, a partir do dicionário, com `title.template` nos layouts.
-- [ ] **Eventos `sign_up` e `generate_lead`** pelo `@repo/analytics`, só com consentimento, e um helper para
+- [x] **Título próprio por tela do painel**, a partir do dicionário, com `title.template` nos layouts.
+- [x] **Eventos `sign_up` e `generate_lead`** pelo `@repo/analytics`, só com consentimento, e um helper para
       o fork registrar os eventos do produto.
+
+**Conferência da fatia 3 no código de `5829ea3`** (auditoria de 2026-11-23, noite):
+
+| item | evidência | teste |
+|------|-----------|-------|
+| título por tela | `panelTitleTemplate` (`apps/app/shared/lib/panelTitles.ts:11-19`) devolve `default: "<área> \| <marca>"` e `template: "%s \| <marca>"`, usado no `generateMetadata` dos dois layouts (`(common)/layout.tsx:24-35`, `title` em `:31`; `admin/layout.tsx:22-33`, `title` em `:29`); `PANEL_PAGE_TITLES` (`panelTitles.ts:21-42`) registra dez telas com rótulos que o dicionário já tinha, e `panelPageMetadata` (`apps/app/lib/server/panelMetadata.ts:13-20`) lê o dicionário no idioma da rota; as seis telas server exportam `generateMetadata` na própria `page.tsx`, e as quatro telas cliente num `layout.tsx` irmão (criar entidade, criar e editar usuário, playground). As duas telas iniciais ficam com o nome da área | `apps/app/__tests__/panelTitles.test.ts` (varre o disco e reprova tela sem registro), `panelLayoutTitle.test.ts`; E2E com `toHaveTitle` em `apps/e2e/tests/entityCrud.spec.ts:15`, nos projetos `chromium` e `mobile` |
+| `sign_up` e `generate_lead` | `ANALYTICS_EVENT` e `sendAnalyticsEvent` (`packages/analytics/events.ts:1-4`, `:20-31`), que só chama o `gtag` com consentimento, id do GA e `gtag` presente; `useAnalyticsEvent()` (`packages/analytics/events-context.tsx:15-20`), mudo fora do provider; o `AnalyticsProvider` publica o `trackEvent` (`provider.tsx:102-113`, `:125-127`). `sign_up` em seis pontos: cadastro por e-mail na app (`SignUpFormClient.tsx:133`) e na landing (`sign-up-form-client.tsx:60`), e Google nas duas telas da app (`SignInForm.tsx:53`, `SignUpFormClient.tsx:54`, pelo `onAccountCreated` de `googleSignInApi.ts:42`) e nas duas da landing (`sign-in-form-client.tsx:140-141`, `sign-up-form-client.tsx:92-93`), com `isNewAccount` (`packages/auth/client.ts:177-178`). `generate_lead` no contato aceito (`contact-form-client.tsx:62`). Nenhuma dependência nem variável nova | `packages/analytics/__tests__/events.test.ts`, `apps/app/__tests__/analyticsEvents.test.tsx`, `signUpAnalytics.test.tsx` e `googleSignInApi.test.ts`, `apps/web/__tests__/signUpAnalytics.test.tsx` e `contactForm.test.tsx`, `packages/auth/__tests__/newAccount.test.ts` |
+
+O `/test` fechou com 14 ✅, 0 ❌ e 1 🔒 (ver os eventos chegarem numa propriedade GA4 real, item 19 do
+`docs/PRE-PRODUCTION.md`). No navegador, o `sign_up` sobreviveu ao carregamento completo de página nas duas telas da
+app e não saiu com o banner recusado, sem decisão ou no login seguinte com Google. O CI da PR passou nos seis jobs
+(`gh run 45309579027`). O da execução de merge (`gh run 45311956449`) terminou em `failure` no job `e2e`:
+`organizationOwnership.spec.ts:68` reprovou na primeira tentativa por contraste do botão "Atualizar" em
+`/pt-br/organization` e passou na segunda, e a config do Playwright reprova teste instável no CI
+(`apps/e2e/playwright.config.ts:36`). Os outros cinco jobs passaram.
+
+**Deriva da fatia 3:**
+
+- **O título fica em `apps/app`, não em `packages/seo`.** O impacto por camada citava um template de título no
+  pacote; o `/analyze` pôs a lógica em `apps/app/shared/lib/panelTitles.ts`, porque o único consumidor é o painel e
+  a landing já titula cada página por `buildLocaleMetadata`. `packages/seo/metadata.ts` não foi tocado. A spec
+  estava imprecisa; sem efeito no corte.
+- **O `sign_up` do Google na app sai logo depois do popup, antes da troca de sessão.** Se a troca falhar, o evento
+  já saiu; a conta existe no Firebase nesse ponto, então o evento conta "conta criada", e a próxima tentativa não
+  repete o evento porque o `isNewUser` volta falso. Decisão do `/develop`, aceita pelo `/review`.
+- **`contends_on`:** a fatia declarou cinco arquivos e tocou quatro (ficou de fora `packages/seo/metadata.ts`);
+  fora da lista, tocou 32 arquivos fora de `docs/` e `specs/`, 14 deles novos e 10 de teste.
 
 ### Fora do corte
 
@@ -249,6 +279,16 @@ entre 57 e 93 em outras cinco execuções.
   (b) uma data declarada por rota no sitemap: não, até existir conteúdo que muda com frequência; (c) mediana de
   várias execuções: sim, mas no procedimento do `/deliver` (rodar o comando três vezes e citar a mediana), sem
   mudar o comando. Em (c) a auditoria de 2026-11-23 diverge do plano, por causa da variação medida.
+
+- **Arquivar a spec com o CI da execução de merge da PR #73 vermelho?** — **recomendação:** rodar de novo o job
+  que falhou (`gh run rerun 45311956449 --failed`) e deixar a próxima auditoria arquivar se ele passar. O corte
+  inteiro está em `main`, o mesmo código passou nos seis jobs na PR (`gh run 45309579027`), e a falha foi de um E2E
+  que não é desta fatia. O conserto do teste instável é tarefa direta, à parte.
+- **Duas escolhas da fatia 3 que o `/analyze` decidiu por padrão** — (a) mandar os eventos também ao Vercel
+  Analytics: **não agora**; eventos customizados lá dependem de plano pago, segundo o próprio plano (a página de
+  preços não foi reaberta), e o hook aceita um segundo destino sem mudar os chamadores; (b) pôr a área no meio do
+  título do admin (`<tela> | <área> | <marca>`): **não**; fica longo na aba, e as telas de cada área já têm nomes
+  distintos.
 
 **Respondidas pelas entregas:** o `noindex` do painel foi por cabeçalho (`X-Robots-Tag` em `applySecurityHeaders`,
 fatia 1); o Lighthouse ficou como comando local, fora do CI, e com a versão fixada em 12.8.2 (fatia 2).

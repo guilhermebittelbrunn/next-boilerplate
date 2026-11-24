@@ -38,7 +38,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
 
 ## O que já existe no repo
 
-- `packages/auth/client.ts:169-174` (era `:152-157` até a PR #56, que acrescentou `signInWithEmailLinkCode` acima, e
+- `packages/auth/client.ts:171-176` (era `:169-174` até a PR #73, `:152-157` até a PR #56, que acrescentou `signInWithEmailLinkCode` acima, e
   `:150-155` até a PR #48) — `signInWithGoogle` abre o popup com `GoogleAuthProvider`; não há outro provedor no
   repositório (grep por `GithubAuthProvider`, `OAuthProvider` e `microsoft` vazio fora de testes, reconferido em
   2026-10-22). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:187`, `:195`; eram `:170`, `:178` até a
@@ -47,7 +47,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   (senha, Google e link por e-mail), todas terminando no mesmo `onAuthSuccess` (`:353-365`). As âncoras são as de
   `main` desde a PR #60 (eram `:376`, `:383`, `:386-389` e `:353-370`). Um provedor novo entra como a quarta, no
   mesmo molde.
-- `apps/app/shared/lib/googleSignInApi.ts:23-84` (era `:22-83` até a PR #64, `:21-79` até a PR #60, que traduziu o erro da sessão, e `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
+- `apps/app/shared/lib/googleSignInApi.ts:27-97` (era `:23-84` até a PR #73, que acrescentou o aviso de conta nova, `:22-83` até a PR #64, `:21-79` até a PR #60, que traduziu o erro da sessão, e `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
   `providerId=google.com` fixo.
@@ -59,7 +59,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   `429 USERS_AUTH_RATE_LIMITED` (`:33-45`). Antes ela lia o corpo sem validação e devolvia a mensagem crua do
   provedor em 401. A parte "a rota do Google entra no mesmo contrato" do impacto na `apps/api` já está paga; falta
   generalizar a rota para outros provedores.
-- `apps/app/.../sign-in/components/SignInForm.tsx:189-199` (era `:188-198` até a PR #60, que acrescentou o `noValidate`; remedida em 2026-10-22: a PR #56 acrescentou duas linhas
+- `apps/app/.../sign-in/components/SignInForm.tsx:197-207` (era `:189-199` até a PR #73, `:188-198` até a PR #60, que acrescentou o `noValidate`; remedida em 2026-10-22: a PR #56 acrescentou duas linhas
   acima, e a âncora anterior, `:187-197`, já estava uma linha adiantada) e `sign-up/components/SignUpFormClient.tsx` —
   um botão do Google em cada tela. Desde a PR #56 o login também tem o link "Receber link de acesso por e-mail"
   (`:210-219`, era `:209-218` até a PR #60), condicionado à disponibilidade que a API informa.

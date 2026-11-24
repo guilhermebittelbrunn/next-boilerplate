@@ -103,7 +103,7 @@ foram reconferidas em `388a453`.
 - **1.3 / 1.19 Limites** — `adminCreateUserSchema.email` sem `max`; `session-routes.ts:36-50` lê o
   `idToken` sem Zod e sem teto.
 - **1.9 Bloqueio durante o envio** — no cadastro da landing, o botão do Google não trava enquanto o envio
-  por e-mail está pendente (`apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:145-147,168`).
+  por e-mail está pendente (`apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:158-160,181`, eram `:145-147,168` até a PR #73).
 - **1.2** — `packages/auth/components/sign-in.tsx:23` é um formulário legado sem schema, com texto em
   inglês, exportado e sem importador.
 - **1.1** — falta `import "server-only"` em `packages/email/index.ts`.
