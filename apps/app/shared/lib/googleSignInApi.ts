@@ -1,6 +1,6 @@
 "use client";
 
-import { getAuthClient } from "@repo/auth/client";
+import { getAuthClient, isNewAccount } from "@repo/auth/client";
 import { getDictionary } from "@repo/internationalization/client";
 import type { AuthMePayload } from "@repo/sdk/src/actions/auth/action";
 import {
@@ -20,15 +20,28 @@ export type GoogleApiSignInResult = {
     user: AuthMePayload | null;
 };
 
+export type GoogleApiSignInOptions = {
+    onAccountCreated?: () => void;
+};
+
 /**
  * Google popup (Firebase client) → Google ID token → SDK `authApi.signInWithGoogle`
  * (same `session` + merged `user` as e-mail/password), then persists the Firebase
  * ID token cookie via the app's own session route.
  */
-export async function signInWithGoogleViaApi(): Promise<GoogleApiSignInResult> {
+export async function signInWithGoogleViaApi({
+    onAccountCreated,
+}: GoogleApiSignInOptions = {}): Promise<GoogleApiSignInResult> {
     const auth = getAuthClient();
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
+
+    // Reported here and not after the API exchange: the popup's own sign-in makes the
+    // sign-in screens navigate with a full page load, which can land before the
+    // exchange resolves and would drop the event.
+    if (isNewAccount(result)) {
+        onAccountCreated?.();
+    }
 
     // The popup has already signed the Firebase client in. If the API turns the account
     // away, that client user has to go, or the screens keep treating it as signed in.

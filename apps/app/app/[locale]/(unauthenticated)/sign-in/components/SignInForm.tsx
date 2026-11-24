@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ANALYTICS_EVENT } from "@repo/analytics/events";
+import { useAnalyticsEvent } from "@repo/analytics/events-context";
 import useAuth from "@repo/auth/provider";
 import {
     HookFormInput,
@@ -42,8 +44,14 @@ export const SignInForm = ({ redirect = null }: SignInFormProps) => {
     const { signIn, user, loading: authLoading } = useAuth();
     const emailLinkAvailability = useEmailLinkAvailability();
 
+    const trackEvent = useAnalyticsEvent();
+
     const googleSignIn = useMutation({
-        mutationFn: signInWithGoogleViaApi,
+        mutationFn: () =>
+            signInWithGoogleViaApi({
+                onAccountCreated: () =>
+                    trackEvent(ANALYTICS_EVENT.signUp, { method: "google" }),
+            }),
         onError: (error) =>
             errorAlert(handleClientError(new FormattedError(error, locale))),
         onSuccess: async (result) => {

@@ -9,6 +9,7 @@ const {
     credentialFromResultMock,
     signInWithGoogleMock,
     setAuthorizationHeaderMock,
+    isNewAccountMock,
 } = vi.hoisted(() => ({
     authClient: { name: "auth-client" },
     signInWithPopupMock: vi.fn(),
@@ -16,10 +17,12 @@ const {
     credentialFromResultMock: vi.fn(),
     signInWithGoogleMock: vi.fn(),
     setAuthorizationHeaderMock: vi.fn(),
+    isNewAccountMock: vi.fn(),
 }));
 
 vi.mock("@repo/auth/client", () => ({
     getAuthClient: () => authClient,
+    isNewAccount: (...args: unknown[]) => isNewAccountMock(...args),
 }));
 
 vi.mock("firebase/auth", () => ({
@@ -56,6 +59,8 @@ const STATUS_OK = 200;
 const STATUS_UNAUTHORIZED = 401;
 const ONE_HOUR_IN_SECONDS = 3600;
 
+const POPUP_CREDENTIAL = { user: { uid: "google-uid" } };
+
 const fetchMock = vi.fn();
 
 beforeEach(() => {
@@ -65,11 +70,13 @@ beforeEach(() => {
         credentialFromResultMock,
         signInWithGoogleMock,
         setAuthorizationHeaderMock,
+        isNewAccountMock,
         fetchMock,
     ]) {
         mock.mockReset();
     }
-    signInWithPopupMock.mockResolvedValue({ user: { uid: "google-uid" } });
+    signInWithPopupMock.mockResolvedValue(POPUP_CREDENTIAL);
+    isNewAccountMock.mockReturnValue(false);
     credentialFromResultMock.mockReturnValue({ idToken: "google-id-token" });
     signInWithGoogleMock.mockResolvedValue({
         session: SESSION,
@@ -156,5 +163,47 @@ describe("signInWithGoogleViaApi", () => {
         await expect(signInWithGoogleViaApi()).rejects.toThrow("popup");
         expect(signOutMock).not.toHaveBeenCalled();
         expect(signInWithGoogleMock).not.toHaveBeenCalled();
+    });
+
+    it("reports a new account as soon as the popup created it, before the API exchange", async () => {
+        isNewAccountMock.mockReturnValue(true);
+        const onAccountCreated = vi.fn();
+
+        await signInWithGoogleViaApi({ onAccountCreated });
+
+        expect(isNewAccountMock).toHaveBeenCalledWith(POPUP_CREDENTIAL);
+        expect(onAccountCreated).toHaveBeenCalledTimes(1);
+        expect(onAccountCreated.mock.invocationCallOrder[0]).toBeLessThan(
+            signInWithGoogleMock.mock.invocationCallOrder[0] ?? 0
+        );
+    });
+
+    it("does not report an account that already existed", async () => {
+        const onAccountCreated = vi.fn();
+
+        await signInWithGoogleViaApi({ onAccountCreated });
+
+        expect(onAccountCreated).not.toHaveBeenCalled();
+    });
+
+    it("still reports the created account when the API exchange fails afterwards", async () => {
+        isNewAccountMock.mockReturnValue(true);
+        signInWithGoogleMock.mockRejectedValue(new Error("Request failed"));
+        const onAccountCreated = vi.fn();
+
+        await expect(
+            signInWithGoogleViaApi({ onAccountCreated })
+        ).rejects.toThrow("Request failed");
+        expect(onAccountCreated).toHaveBeenCalledTimes(1);
+    });
+
+    it("reports nothing when the popup fails", async () => {
+        signInWithPopupMock.mockRejectedValue(new Error("popup"));
+        const onAccountCreated = vi.fn();
+
+        await expect(
+            signInWithGoogleViaApi({ onAccountCreated })
+        ).rejects.toThrow("popup");
+        expect(onAccountCreated).not.toHaveBeenCalled();
     });
 });
