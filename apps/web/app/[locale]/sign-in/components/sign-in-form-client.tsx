@@ -51,6 +51,12 @@ export const SignInFormClient = () => {
         }
     };
 
+    useEffect(() => {
+        if (!user) {
+            signInStartedHereRef.current = false;
+        }
+    }, [user]);
+
     // A sign-in started on this screen is navigated by the auth provider, which honours
     // `?redirect=`; only a visitor who arrives already signed in is sent home from here.
     useEffect(() => {

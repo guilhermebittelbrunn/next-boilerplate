@@ -151,6 +151,35 @@ describe("web SignInFormClient redirect", () => {
         expect(pushMock).not.toHaveBeenCalled();
     });
 
+    it("sends home a user who signs in elsewhere after an attempt here was refused", async () => {
+        const { container, rerender } = render(tree());
+        fireEvent.change(inputNamed(container, "email"), {
+            target: { value: VALID_EMAIL },
+        });
+        fireEvent.change(inputNamed(container, "password"), {
+            target: { value: VALID_PASSWORD },
+        });
+        fireEvent.click(
+            screen.getByRole("button", { name: signInCopy.form.submit })
+        );
+        await waitFor(() => expect(signInMutateMock).toHaveBeenCalledTimes(1));
+
+        authState.user = SIGNED_IN_USER;
+        rerender(tree());
+        expect(pushMock).not.toHaveBeenCalled();
+
+        authState.user = null;
+        rerender(tree());
+        expect(
+            screen.getByRole("button", { name: signInCopy.form.submit })
+        ).toBeTruthy();
+
+        authState.user = SIGNED_IN_USER;
+        rerender(tree());
+
+        expect(pushMock).toHaveBeenCalledWith("/en");
+    });
+
     it("leaves e-mail validation to the translated form messages instead of the browser bubble", async () => {
         const { container } = render(tree());
 
