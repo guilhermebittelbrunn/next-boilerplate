@@ -12,14 +12,17 @@ import { ThemeProvider } from "./providers/theme";
 
 type DesignSystemProviderProperties = ComponentProps<typeof ThemeProvider> & {
     resolveDefaultPostLoginPath?: AuthProviderProps["resolveDefaultPostLoginPath"];
+    postLoginNavigation?: AuthProviderProps["postLoginNavigation"];
 };
 
 function AuthProviderWithAlerts({
     children,
     resolveDefaultPostLoginPath,
+    postLoginNavigation,
 }: {
     children: ReactNode;
     resolveDefaultPostLoginPath?: AuthProviderProps["resolveDefaultPostLoginPath"];
+    postLoginNavigation?: AuthProviderProps["postLoginNavigation"];
 }) {
     const { errorAlert } = useAlert();
     const getRedirectPath = () => `/${getDictionary().locale}`;
@@ -27,6 +30,7 @@ function AuthProviderWithAlerts({
         <AuthProvider
             getRedirectPath={getRedirectPath}
             onError={(error) => errorAlert(handleClientError(error))}
+            postLoginNavigation={postLoginNavigation}
             resolveDefaultPostLoginPath={resolveDefaultPostLoginPath}
         >
             {children}
@@ -37,11 +41,13 @@ function AuthProviderWithAlerts({
 export const DesignSystemProvider = ({
     children,
     resolveDefaultPostLoginPath,
+    postLoginNavigation,
     ...properties
 }: DesignSystemProviderProperties) => (
     <ThemeProvider {...properties}>
         <AntdAppProvider>
             <AuthProviderWithAlerts
+                postLoginNavigation={postLoginNavigation}
                 resolveDefaultPostLoginPath={resolveDefaultPostLoginPath}
             >
                 <TooltipProvider>{children}</TooltipProvider>
