@@ -17,6 +17,11 @@ import {
     CookieConsentContext,
     type CookieConsentControls,
 } from "./consent-context";
+import { type GtagEventCommand, sendAnalyticsEvent } from "./events";
+import {
+    AnalyticsEventsContext,
+    type TrackAnalyticsEvent,
+} from "./events-context";
 
 type AnalyticsProviderProps = {
     readonly children: ReactNode;
@@ -33,12 +38,14 @@ const DENIED_ADVERTISING_SIGNALS = {
 
 type ConsentSignals = Record<string, "granted" | "denied">;
 
+type GtagConsentCommand = (
+    command: "consent",
+    action: "default" | "update",
+    signals: ConsentSignals
+) => void;
+
 type WindowWithGtag = Window & {
-    gtag?: (
-        command: "consent",
-        action: "default" | "update",
-        signals: ConsentSignals
-    ) => void;
+    gtag?: GtagConsentCommand & GtagEventCommand;
 };
 
 const ConsentModeDefaults = ({ script }: { readonly script: string }) => (
@@ -92,6 +99,19 @@ export const AnalyticsProvider = ({
         [consentable]
     );
 
+    const measuring = snapshot.decided && snapshot.analytics;
+    const trackEvent = useCallback<TrackAnalyticsEvent>(
+        (name, params) => {
+            sendAnalyticsEvent(
+                window as WindowWithGtag,
+                { measuring, gaMeasurementId },
+                name,
+                params
+            );
+        },
+        [measuring, gaMeasurementId]
+    );
+
     if (!consentable) {
         return (
             <CookieConsentContext.Provider value={controls}>
@@ -100,11 +120,11 @@ export const AnalyticsProvider = ({
         );
     }
 
-    const measuring = snapshot.decided && snapshot.analytics;
-
     return (
         <CookieConsentContext.Provider value={controls}>
-            {children}
+            <AnalyticsEventsContext.Provider value={trackEvent}>
+                {children}
+            </AnalyticsEventsContext.Provider>
             <ConsentModeDefaults script={consentModeDefaults} />
             {measuring && <VercelAnalytics />}
             {measuring && gaMeasurementId && (
