@@ -1,4 +1,4 @@
-import useAuth from "@repo/auth/provider";
+import useAuth, { type AuthProviderProps } from "@repo/auth/provider";
 import {
     getDictionaryForLocale,
     LocaleProvider,
@@ -8,21 +8,33 @@ import { act, cleanup, render } from "@testing-library/react";
 import type { User } from "firebase/auth";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { errorAlertMock, params, pushMock, signInMock, successAlertMock } =
-    vi.hoisted(() => ({
-        errorAlertMock: vi.fn(),
-        params: { locale: "en" } as Record<string, string>,
-        pushMock: vi.fn(),
-        signInMock: vi.fn(),
-        successAlertMock: vi.fn(),
-    }));
+const {
+    errorAlertMock,
+    logoutMock,
+    params,
+    pushMock,
+    signInMock,
+    signInWithEmailLinkCodeMock,
+    signInWithGoogleMock,
+    successAlertMock,
+} = vi.hoisted(() => ({
+    errorAlertMock: vi.fn(),
+    logoutMock: vi.fn(),
+    params: { locale: "en" } as Record<string, string>,
+    pushMock: vi.fn(),
+    signInMock: vi.fn(),
+    signInWithEmailLinkCodeMock: vi.fn(),
+    signInWithGoogleMock: vi.fn(),
+    successAlertMock: vi.fn(),
+}));
 
 vi.mock("@repo/auth/client", () => ({
     loginWithCustomToken: vi.fn(),
-    logout: vi.fn(),
+    logout: () => logoutMock(),
     signIn: (...args: unknown[]) => signInMock(...args),
-    signInWithGoogle: vi.fn(),
-    signInWithEmailLinkCode: vi.fn(),
+    signInWithGoogle: (...args: unknown[]) => signInWithGoogleMock(...args),
+    signInWithEmailLinkCode: (...args: unknown[]) =>
+        signInWithEmailLinkCodeMock(...args),
     subscribeToIdTokenState: () => vi.fn(),
 }));
 
@@ -49,6 +61,8 @@ vi.mock("../../../packages/auth/node_modules/next/navigation.js", () => ({
 
 const { AuthProvider } = await import("@repo/auth/provider");
 
+const STATUS_OK = 200;
+const STATUS_FORBIDDEN = 403;
 const STATUS_INTERNAL_ERROR = 500;
 const LOCALES = ["pt-br", "en", "es"] as const;
 
@@ -68,6 +82,23 @@ function refuseSession() {
     } as Response);
 }
 
+function acceptSession() {
+    fetchMock.mockResolvedValue({
+        ok: true,
+        status: STATUS_OK,
+        json: () => Promise.resolve({}),
+    } as Response);
+}
+
+function refuseForeignOrigin() {
+    fetchMock.mockResolvedValue({
+        ok: false,
+        status: STATUS_FORBIDDEN,
+        json: () =>
+            Promise.resolve({ error: { code: "AUTH_FORBIDDEN_ORIGIN" } }),
+    } as Response);
+}
+
 function firebaseCredential() {
     return {
         user: {
@@ -76,7 +107,10 @@ function firebaseCredential() {
     };
 }
 
-function authTree(onContext: (value: AuthContextValue) => void) {
+function authTree(
+    onContext: (value: AuthContextValue) => void,
+    providerProps: Omit<AuthProviderProps, "children"> = {}
+) {
     const queryClient = new QueryClient({
         defaultOptions: {
             mutations: { retry: false },
@@ -89,7 +123,7 @@ function authTree(onContext: (value: AuthContextValue) => void) {
     }
     return (
         <QueryClientProvider client={queryClient}>
-            <AuthProvider>
+            <AuthProvider {...providerProps}>
                 <ContextProbe />
             </AuthProvider>
         </QueryClientProvider>
@@ -111,8 +145,14 @@ beforeEach(() => {
     errorAlertMock.mockReset();
     successAlertMock.mockReset();
     pushMock.mockReset();
+    logoutMock.mockReset();
+    logoutMock.mockResolvedValue(undefined);
     signInMock.mockReset();
     signInMock.mockResolvedValue(firebaseCredential());
+    signInWithGoogleMock.mockReset();
+    signInWithGoogleMock.mockResolvedValue(firebaseCredential());
+    signInWithEmailLinkCodeMock.mockReset();
+    signInWithEmailLinkCodeMock.mockResolvedValue(firebaseCredential());
     vi.stubGlobal("fetch", fetchMock);
 });
 
@@ -186,5 +226,146 @@ describe("AuthProvider quando o servidor recusa a sessão depois do login", () =
         expect(errorAlertMock).not.toHaveBeenCalledWith(
             copyFor("pt-br").session.notEstablished
         );
+    });
+
+    it.each([
+        ["responde 500", refuseSession],
+        ["responde 403 AUTH_FORBIDDEN_ORIGIN", refuseForeignOrigin],
+        [
+            "nem chega ao servidor",
+            () => fetchMock.mockRejectedValue(new TypeError("Failed to fetch")),
+        ],
+    ] as const)(
+        "desloga o cliente e zera o token quando a gravação %s",
+        async (_case, refuse) => {
+            params.locale = "en";
+            let auth: AuthContextValue | undefined;
+            render(
+                <LocaleProvider>
+                    {authTree((value) => {
+                        auth = value;
+                    })}
+                </LocaleProvider>
+            );
+
+            refuse();
+            await signInWithPassword(auth);
+
+            expect(logoutMock).toHaveBeenCalledTimes(1);
+            expect(auth?.accessToken).toBeNull();
+            expect(errorAlertMock).toHaveBeenCalledWith(
+                copyFor("en").session.notEstablished
+            );
+            expect(successAlertMock).not.toHaveBeenCalled();
+            expect(pushMock).not.toHaveBeenCalled();
+        }
+    );
+});
+
+describe("AuthProvider quando o servidor grava a sessão depois do login", () => {
+    it("navega sem deslogar", async () => {
+        params.locale = "en";
+        let auth: AuthContextValue | undefined;
+        render(
+            <LocaleProvider>
+                {authTree(
+                    (value) => {
+                        auth = value;
+                    },
+                    { resolveDefaultPostLoginPath: async () => "/en/entities" }
+                )}
+            </LocaleProvider>
+        );
+
+        acceptSession();
+        await signInWithPassword(auth);
+
+        expect(logoutMock).not.toHaveBeenCalled();
+        expect(auth?.accessToken).toBe("id-token");
+        expect(successAlertMock).toHaveBeenCalledWith(copyFor("en").onSuccess);
+        expect(pushMock).toHaveBeenCalledWith("/en/entities");
+        expect(errorAlertMock).not.toHaveBeenCalled();
+    });
+
+    it("cai no destino padrão sem alerta de sessão quando o destino não resolve", async () => {
+        params.locale = "en";
+        let auth: AuthContextValue | undefined;
+        render(
+            <LocaleProvider>
+                {authTree(
+                    (value) => {
+                        auth = value;
+                    },
+                    {
+                        resolveDefaultPostLoginPath: () =>
+                            Promise.reject(new Error("profile lookup failed")),
+                    }
+                )}
+            </LocaleProvider>
+        );
+
+        acceptSession();
+        await signInWithPassword(auth);
+
+        expect(pushMock).toHaveBeenCalledWith("/en");
+        expect(successAlertMock).toHaveBeenCalledWith(copyFor("en").onSuccess);
+        expect(errorAlertMock).not.toHaveBeenCalled();
+        expect(logoutMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("AuthProvider com a sessão recusada nos outros métodos de login", () => {
+    it("desloga sem navegar quando a sessão do login com Google é recusada", async () => {
+        params.locale = "en";
+        let auth: AuthContextValue | undefined;
+        render(
+            <LocaleProvider>
+                {authTree((value) => {
+                    auth = value;
+                })}
+            </LocaleProvider>
+        );
+
+        refuseForeignOrigin();
+        await act(async () => {
+            await auth?.signInWithGoogle.mutateAsync();
+        });
+
+        expect(logoutMock).toHaveBeenCalledTimes(1);
+        expect(auth?.accessToken).toBeNull();
+        expect(errorAlertMock).toHaveBeenCalledWith(
+            copyFor("en").session.notEstablished
+        );
+        expect(successAlertMock).not.toHaveBeenCalled();
+        expect(pushMock).not.toHaveBeenCalled();
+    });
+
+    it("desloga sem navegar e mantém a mutação do link por e-mail em sucesso quando a sessão é recusada", async () => {
+        params.locale = "en";
+        let auth: AuthContextValue | undefined;
+        render(
+            <LocaleProvider>
+                {authTree((value) => {
+                    auth = value;
+                })}
+            </LocaleProvider>
+        );
+
+        fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+        await act(async () => {
+            await auth?.signInWithEmailLink.mutateAsync({
+                email: "qa@example.com",
+                oobCode: "code",
+            });
+        });
+
+        expect(auth?.signInWithEmailLink.isSuccess).toBe(true);
+        expect(logoutMock).toHaveBeenCalledTimes(1);
+        expect(auth?.accessToken).toBeNull();
+        expect(errorAlertMock).toHaveBeenCalledWith(
+            copyFor("en").session.notEstablished
+        );
+        expect(successAlertMock).not.toHaveBeenCalled();
+        expect(pushMock).not.toHaveBeenCalled();
     });
 });
