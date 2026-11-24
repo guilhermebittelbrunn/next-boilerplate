@@ -82,7 +82,9 @@ const crossAppUrls = (
             VERCEL_PROJECT_PRODUCTION_URL: urls.app,
         };
     }
-    return {};
+    // NEXT_PUBLIC_APP_URL stays empty here: filled, the landing CTA would leave for the
+    // app instead of opening the landing's own sign-up page.
+    return { NEXT_PUBLIC_API_URL: urls.api };
 };
 
 const readEnvFile = (filePath: string): Record<string, string> => {

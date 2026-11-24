@@ -41,6 +41,7 @@ setup("compile the signed-out routes", async ({ page }) => {
     await compileRoutes(page, [
         `/${LOCALE}/sign-up`,
         `${WEB_URL}/${LOCALE}/sign-up`,
+        `${WEB_URL}/${LOCALE}/sign-in`,
     ]);
 });
 

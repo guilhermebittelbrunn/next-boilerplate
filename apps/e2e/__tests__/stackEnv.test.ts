@@ -87,7 +87,10 @@ describe("buildStackEnv", () => {
             'CORS_ORIGIN="http://localhost:3000"',
         ]);
         writeEnv("app", ".env.example", ['NEXT_PUBLIC_API_URL="x"']);
-        writeEnv("web", ".env.example", ['NEXT_PUBLIC_APP_URL=""']);
+        writeEnv("web", ".env.example", [
+            'NEXT_PUBLIC_APP_URL=""',
+            'NEXT_PUBLIC_API_URL=""',
+        ]);
 
         expect(buildStackEnv("api", { appsRoot, urls })).toMatchObject({
             CORS_ORIGIN: `${urls.app},${urls.web}`,
@@ -98,9 +101,10 @@ describe("buildStackEnv", () => {
             NEXT_PUBLIC_APP_URL: urls.app,
         });
         // An empty app URL is what sends the landing CTA to the web sign-up page.
-        expect(
-            buildStackEnv("web", { appsRoot, urls }).NEXT_PUBLIC_APP_URL
-        ).toBe("");
+        expect(buildStackEnv("web", { appsRoot, urls })).toMatchObject({
+            NEXT_PUBLIC_API_URL: urls.api,
+            NEXT_PUBLIC_APP_URL: "",
+        });
     });
 
     it("turns members on in the api and the app, over the empty value of .env.example, and not in the web", () => {
