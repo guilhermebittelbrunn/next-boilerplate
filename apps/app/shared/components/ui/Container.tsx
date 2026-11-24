@@ -95,7 +95,10 @@ export const Container = ({
     const backLabel = dictionary.components.footer.back;
 
     const stickyBar = (inner: React.ReactNode) => (
-        <div className="sticky bottom-0 z-10 mt-4 flex w-full flex-wrap items-center justify-end gap-3 border-border border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/80">
+        <div
+            className="sticky bottom-0 z-10 mt-4 flex w-full flex-wrap items-center justify-end gap-3 border-border border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/80"
+            data-sticky-action-bar=""
+        >
             {inner}
         </div>
     );

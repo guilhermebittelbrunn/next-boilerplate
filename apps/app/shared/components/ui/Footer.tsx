@@ -52,6 +52,7 @@ export function Footer({
                     "sticky bottom-0 z-10 border-border border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/80",
                 className
             )}
+            data-sticky-action-bar={sticky ? "" : undefined}
         >
             {showBack || onBack ? (
                 <Button onClick={handleBack} type="button" variant="outline">

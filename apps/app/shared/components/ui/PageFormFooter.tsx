@@ -30,6 +30,7 @@ export function PageFormFooter({
                 "sticky bottom-0 z-10 mt-4 flex w-full flex-wrap items-center justify-end gap-3 border-border border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/80",
                 className
             )}
+            data-sticky-action-bar=""
         >
             <Button onClick={onCancel} type="button" variant="outline">
                 {cancelLabel}

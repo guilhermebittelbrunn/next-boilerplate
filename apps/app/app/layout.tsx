@@ -66,7 +66,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <html
             className={cn(
                 fonts,
-                "scroll-smooth",
+                // Focus only scrolls when the field leaves the viewport, which still counts the
+                // area under the sticky bars; 80 px reserves the 64–69 px bars plus the focus ring.
+                "scroll-smooth has-[[data-panel-navbar]]:scroll-pt-20 has-[[data-sticky-action-bar]]:scroll-pb-20",
                 preferredTheme && themeClassNames.includes(preferredTheme)
                     ? preferredTheme
                     : undefined
