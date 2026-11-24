@@ -9,7 +9,10 @@ test.use({ storageState: AUTH_STATE.common });
 
 const entitiesCopy = ptBr.apps.app.pages.common.entities;
 const actionMenuCopy = ptBr.components.actionMenu;
+const entityRoutesCopy = ptBr.apps.app.pages.common.routes.platform.entities;
 const listPath = `/${LOCALE}/entities`;
+
+const screenTitled = (label: string) => new RegExp(`^${label} \\| .+`);
 
 const rowNamed = (page: Page, name: string) =>
     page.getByRole("row").filter({ hasText: name });
@@ -24,6 +27,7 @@ test("creates, edits and deletes an entity", async ({ page }, testInfo) => {
 
     await page.goto(listPath);
     await expect(rowNamed(page, SEEDED_ENTITY_NAME)).toBeVisible();
+    await expect(page).toHaveTitle(screenTitled(entityRoutesCopy.list));
     await expectAccessible(page, testInfo, { route: listPath });
 
     await page
@@ -32,6 +36,7 @@ test("creates, edits and deletes an entity", async ({ page }, testInfo) => {
     await expect(page).toHaveURL(`${APP_URL}${listPath}/create`);
     const nameInput = page.getByLabel(entitiesCopy.form.name);
     await expect(nameInput).toBeVisible();
+    await expect(page).toHaveTitle(screenTitled(entityRoutesCopy.create));
     await expectAccessible(page, testInfo, { route: `${listPath}/create` });
 
     await nameInput.fill(createdName);
@@ -56,6 +61,7 @@ test("creates, edits and deletes an entity", async ({ page }, testInfo) => {
     await expect(page).toHaveURL(new RegExp(`${listPath}/edit/[^/]+$`));
     const editNameInput = page.getByLabel(entitiesCopy.form.name);
     await expect(editNameInput).toHaveValue(createdName);
+    await expect(page).toHaveTitle(screenTitled(entityRoutesCopy.update));
     await expectAccessible(page, testInfo, { route: `${listPath}/edit/[id]` });
 
     await editNameInput.fill(editedName);
