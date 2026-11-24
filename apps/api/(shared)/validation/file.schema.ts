@@ -1,5 +1,7 @@
 import type { UploadScope } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { stripImageMetadata } from "@/(shared)/lib/image-metadata";
+import { readCappedBody } from "@/(shared)/lib/read-capped-body";
 
 /**
  * Vercel refuses a request body over 4.5 MB before the handler runs, with a response
@@ -62,6 +64,19 @@ const refuse = (code: string, status: number): UploadRefusal => ({
     response: Response.json({ error: { code } }, { status }),
 });
 
+// The rest of an oversized body is never read, so Node would keep the keep-alive socket
+// open waiting for it until requestTimeout. Closing it frees the socket right away.
+const refuseTooLarge = (): UploadRefusal => ({
+    ok: false,
+    response: Response.json(
+        { error: { code: "UPLOAD_FILE_TOO_LARGE" } },
+        {
+            status: HTTP_STATUS.PAYLOAD_TOO_LARGE,
+            headers: { connection: "close" },
+        }
+    ),
+});
+
 const isRiffWebp = (head: Buffer): boolean => {
     const tags = head.toString("latin1");
     return (
@@ -93,25 +108,45 @@ const isTypeDeclared = (type: string): boolean =>
     type !== "" && type !== "application/octet-stream";
 
 /**
- * Reading the body is what puts it in memory, so an oversized upload has to be refused
- * from the declared length first. The header is a hint — a request that omits or lies
- * about it still meets the exact check on the decoded file below.
+ * Reading the body is what puts it in memory, so an oversized upload is refused from the
+ * declared length first. The header is only a hint: a body that omits or lies about it is
+ * counted while it is read, and the decoded file still meets the exact check below.
  */
 const exceedsDeclaredLength = (req: Request): boolean => {
     const declared = Number(req.headers.get("content-length"));
     return Number.isFinite(declared) && declared > DECLARED_BODY_MAX_BYTES;
 };
 
+const stripImageMetadataOrNull = (
+    body: Buffer,
+    type: UploadImageType
+): Buffer | null => {
+    try {
+        return stripImageMetadata(body, type);
+    } catch {
+        return null;
+    }
+};
+
 export async function parseUploadedImage(
     req: Request
 ): Promise<UploadAccepted | UploadRefusal> {
     if (exceedsDeclaredLength(req)) {
-        return refuse("UPLOAD_FILE_TOO_LARGE", HTTP_STATUS.PAYLOAD_TOO_LARGE);
+        return refuseTooLarge();
+    }
+    if (!req.body) {
+        return refuse("UPLOAD_FILE_MISSING", HTTP_STATUS.BAD_REQUEST);
     }
 
     let form: FormData;
     try {
-        form = await req.formData();
+        const bytes = await readCappedBody(req.body, DECLARED_BODY_MAX_BYTES);
+        if (!bytes) {
+            return refuseTooLarge();
+        }
+        form = await new Response(bytes, {
+            headers: { "content-type": req.headers.get("content-type") ?? "" },
+        }).formData();
     } catch {
         return refuse("UPLOAD_FILE_MISSING", HTTP_STATUS.BAD_REQUEST);
     }
@@ -122,7 +157,7 @@ export async function parseUploadedImage(
     }
 
     if (file.size > UPLOAD_MAX_BYTES) {
-        return refuse("UPLOAD_FILE_TOO_LARGE", HTTP_STATUS.PAYLOAD_TOO_LARGE);
+        return refuseTooLarge();
     }
 
     const body = Buffer.from(await file.arrayBuffer());
@@ -135,13 +170,21 @@ export async function parseUploadedImage(
         );
     }
 
+    const stripped = stripImageMetadataOrNull(body, sniffed);
+    if (!stripped) {
+        return refuse(
+            "UPLOAD_FILE_TYPE_NOT_ALLOWED",
+            HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE
+        );
+    }
+
     return {
         ok: true,
         value: {
-            body,
+            body: stripped,
             contentType: sniffed,
             extension: UPLOAD_IMAGE_EXTENSION[sniffed],
-            size: file.size,
+            size: stripped.length,
         },
     };
 }

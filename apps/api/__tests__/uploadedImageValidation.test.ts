@@ -5,24 +5,106 @@ import {
     UPLOAD_MAX_BYTES,
 } from "@/(shared)/validation/file.schema";
 
-const JPEG_HEAD = "ffd8ffe0";
-const PNG_HEAD = "89504e470d0a1a0a";
-/** "RIFF", a four-byte length, then "WEBP". */
-const WEBP_HEAD = "524946462400000057454250";
+const JPEG = "jpeg";
+const PNG = "png";
+const WEBP = "webp";
 const GIF_HEAD = "47494638";
 const RIFF_ONLY_HEAD = "52494646";
 
 const MIN_PAYLOAD_BYTES = 32;
+const BYTES_PER_KIB = 1024;
+const MULTIPART_ENVELOPE_ALLOWANCE_KIB = 64;
+const STREAM_CHUNK_KIB = 64;
+const STREAMED_BODY_MIB = 6;
+const READ_CAP_BYTES =
+    UPLOAD_MAX_BYTES + MULTIPART_ENVELOPE_ALLOWANCE_KIB * BYTES_PER_KIB;
+const STREAM_CHUNK_BYTES = STREAM_CHUNK_KIB * BYTES_PER_KIB;
+const STREAMED_BODY_BYTES = STREAMED_BODY_MIB * BYTES_PER_KIB * BYTES_PER_KIB;
+
+type ImageFormat = typeof JPEG | typeof PNG | typeof WEBP;
+
+const hex = (value: string) => Buffer.from(value.replace(/\s+/g, ""), "hex");
+
+const u32be = (value: number) => {
+    const bytes = Buffer.alloc(Uint32Array.BYTES_PER_ELEMENT);
+    bytes.writeUInt32BE(value);
+    return bytes;
+};
+
+const u32le = (value: number) => {
+    const bytes = Buffer.alloc(Uint32Array.BYTES_PER_ELEMENT);
+    bytes.writeUInt32LE(value);
+    return bytes;
+};
+
+const pngChunk = (type: string, data: Buffer) =>
+    Buffer.concat([
+        u32be(data.length),
+        Buffer.from(type, "latin1"),
+        data,
+        u32be(0),
+    ]);
+
+const JPEG_SOI = hex("ffd8");
+const JPEG_SOS = hex("ffda 0008 01 01 00 00 3f 00");
+const JPEG_EOI = hex("ffd9");
+const PNG_SIGNATURE = hex("89504e470d0a1a0a");
+const PNG_IHDR = pngChunk("IHDR", hex("00000001 00000001 08 06 00 00 00"));
+const PNG_IEND = pngChunk("IEND", Buffer.alloc(0));
+const PNG_CHUNK_OVERHEAD = pngChunk("IDAT", Buffer.alloc(0)).length;
+const RIFF_HEADER_BYTES = 12;
+const RIFF_CHUNK_HEADER_BYTES = 8;
+const RIFF_FORM_TAG_BYTES = 4;
+
+/** The smallest structure of each format that the metadata stripper walks, padded to size. */
+function structuredImage(format: ImageFormat, totalSize: number): Buffer {
+    if (format === JPEG) {
+        const fixed = JPEG_SOI.length + JPEG_SOS.length + JPEG_EOI.length;
+        const scan = Buffer.alloc(Math.max(totalSize - fixed, 1));
+        return Buffer.concat([JPEG_SOI, JPEG_SOS, scan, JPEG_EOI]);
+    }
+    if (format === PNG) {
+        const fixed =
+            PNG_SIGNATURE.length +
+            PNG_IHDR.length +
+            PNG_CHUNK_OVERHEAD +
+            PNG_IEND.length;
+        const idat = pngChunk(
+            "IDAT",
+            Buffer.alloc(Math.max(totalSize - fixed, 1))
+        );
+        return Buffer.concat([PNG_SIGNATURE, PNG_IHDR, idat, PNG_IEND]);
+    }
+    const room = Math.max(
+        totalSize - RIFF_HEADER_BYTES - RIFF_CHUNK_HEADER_BYTES,
+        2
+    );
+    const dataLength = room % 2 ? room - 1 : room;
+    const chunk = Buffer.concat([
+        Buffer.from("VP8L", "latin1"),
+        u32le(dataLength),
+        Buffer.alloc(room),
+    ]);
+    return Buffer.concat([
+        Buffer.from("RIFF", "latin1"),
+        u32le(chunk.length + RIFF_FORM_TAG_BYTES),
+        Buffer.from("WEBP", "latin1"),
+        chunk,
+    ]);
+}
 
 function imageBytes(
-    headHex: string,
+    formatOrHead: ImageFormat | string,
     totalSize = MIN_PAYLOAD_BYTES
 ): Uint8Array<ArrayBuffer> {
-    const head = Buffer.from(headHex, "hex");
+    const source =
+        formatOrHead === JPEG || formatOrHead === PNG || formatOrHead === WEBP
+            ? structuredImage(formatOrHead, totalSize)
+            : Buffer.from(formatOrHead, "hex");
     const bytes = new Uint8Array(
-        new ArrayBuffer(Math.max(totalSize, head.length))
+        new ArrayBuffer(Math.max(totalSize, source.length))
     );
-    bytes.set(head, 0);
+    bytes.set(source, 0);
     return bytes;
 }
 
@@ -52,9 +134,9 @@ async function refusalCode(response: Response): Promise<string> {
 describe("sniffing the real image type", () => {
     it("accepts the three supported formats and names the extension from the bytes", async () => {
         const cases = [
-            { head: JPEG_HEAD, contentType: "image/jpeg", extension: "jpg" },
-            { head: PNG_HEAD, contentType: "image/png", extension: "png" },
-            { head: WEBP_HEAD, contentType: "image/webp", extension: "webp" },
+            { head: JPEG, contentType: "image/jpeg", extension: "jpg" },
+            { head: PNG, contentType: "image/png", extension: "png" },
+            { head: WEBP, contentType: "image/webp", extension: "webp" },
         ];
 
         for (const { head, contentType, extension } of cases) {
@@ -79,7 +161,7 @@ describe("sniffing the real image type", () => {
             multipartRequest([
                 [
                     "file",
-                    fileFrom(imageBytes(PNG_HEAD), {
+                    fileFrom(imageBytes(PNG), {
                         name: "../../evil.php.jpg",
                     }),
                 ],
@@ -131,10 +213,7 @@ describe("sniffing the real image type", () => {
     it("refuses real image bytes whose declared type disagrees with them", async () => {
         const parsed = await parseUploadedImage(
             multipartRequest([
-                [
-                    "file",
-                    fileFrom(imageBytes(PNG_HEAD), { type: "image/jpeg" }),
-                ],
+                ["file", fileFrom(imageBytes(PNG), { type: "image/jpeg" })],
             ])
         );
 
@@ -155,7 +234,7 @@ describe("sniffing the real image type", () => {
             multipartRequest([
                 [
                     "file",
-                    fileFrom(imageBytes(JPEG_HEAD), {
+                    fileFrom(imageBytes(JPEG), {
                         type: "application/octet-stream",
                     }),
                 ],
@@ -186,7 +265,7 @@ describe("size boundaries", () => {
     it("accepts the largest allowed payload", async () => {
         const parsed = await parseUploadedImage(
             multipartRequest([
-                ["file", fileFrom(imageBytes(PNG_HEAD, UPLOAD_MAX_BYTES))],
+                ["file", fileFrom(imageBytes(PNG, UPLOAD_MAX_BYTES))],
             ])
         );
 
@@ -199,7 +278,7 @@ describe("size boundaries", () => {
     it("refuses one byte over the limit", async () => {
         const parsed = await parseUploadedImage(
             multipartRequest([
-                ["file", fileFrom(imageBytes(PNG_HEAD, UPLOAD_MAX_BYTES + 1))],
+                ["file", fileFrom(imageBytes(PNG, UPLOAD_MAX_BYTES + 1))],
             ])
         );
 
@@ -225,7 +304,7 @@ describe("size boundaries", () => {
         });
         const guarded = new Proxy(request, {
             get(target, property, receiver) {
-                if (property === "formData") {
+                if (property === "formData" || property === "body") {
                     bodyWasRead = true;
                 }
                 return Reflect.get(target, property, receiver);
@@ -237,6 +316,7 @@ describe("size boundaries", () => {
         expect(parsed.ok).toBe(false);
         if (!parsed.ok) {
             expect(parsed.response.status).toBe(HTTP_STATUS.PAYLOAD_TOO_LARGE);
+            expect(parsed.response.headers.get("connection")).toBe("close");
             expect(await refusalCode(parsed.response)).toBe(
                 "UPLOAD_FILE_TOO_LARGE"
             );
@@ -244,10 +324,65 @@ describe("size boundaries", () => {
         expect(bodyWasRead).toBe(false);
     });
 
+    /**
+     * A chunked body carries no length to refuse up front, so the cap has to hold while
+     * the stream is read: past it, reading stops and the rest is never pulled.
+     */
+    it("stops reading a body without a declared length once it passes the cap", async () => {
+        let delivered = 0;
+        const stream = new ReadableStream<Uint8Array>({
+            pull(controller) {
+                if (delivered >= STREAMED_BODY_BYTES) {
+                    controller.close();
+                    return;
+                }
+                delivered += STREAM_CHUNK_BYTES;
+                controller.enqueue(new Uint8Array(STREAM_CHUNK_BYTES));
+            },
+        });
+        const request = new Request("http://localhost:3002/files", {
+            method: "POST",
+            headers: { "content-type": "multipart/form-data; boundary=x" },
+            body: stream,
+            duplex: "half",
+        } as RequestInit);
+
+        expect(request.headers.get("content-length")).toBeNull();
+
+        const parsed = await parseUploadedImage(request);
+
+        expect(parsed.ok).toBe(false);
+        if (!parsed.ok) {
+            expect(parsed.response.status).toBe(HTTP_STATUS.PAYLOAD_TOO_LARGE);
+            expect(parsed.response.headers.get("connection")).toBe("close");
+            expect(await refusalCode(parsed.response)).toBe(
+                "UPLOAD_FILE_TOO_LARGE"
+            );
+        }
+        expect(delivered).toBeGreaterThan(READ_CAP_BYTES);
+        expect(delivered).toBeLessThanOrEqual(
+            READ_CAP_BYTES + 2 * STREAM_CHUNK_BYTES
+        );
+        expect(delivered).toBeLessThan(STREAMED_BODY_BYTES);
+    });
+
+    it("closes the connection when the decoded file is over the limit", async () => {
+        const parsed = await parseUploadedImage(
+            multipartRequest([
+                ["file", fileFrom(imageBytes(PNG, UPLOAD_MAX_BYTES + 1))],
+            ])
+        );
+
+        expect(parsed.ok).toBe(false);
+        if (!parsed.ok) {
+            expect(parsed.response.headers.get("connection")).toBe("close");
+        }
+    });
+
     it("still measures the file itself when no length is declared", async () => {
         const parsed = await parseUploadedImage(
             multipartRequest([
-                ["file", fileFrom(imageBytes(PNG_HEAD, UPLOAD_MAX_BYTES + 1))],
+                ["file", fileFrom(imageBytes(PNG, UPLOAD_MAX_BYTES + 1))],
             ])
         );
 
@@ -318,18 +453,98 @@ describe("malformed submissions", () => {
         }
     });
 
+    it("refuses a body whose stream fails mid-read with a code instead of throwing", async () => {
+        const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+                controller.enqueue(new Uint8Array(STREAM_CHUNK_BYTES));
+            },
+            pull(controller) {
+                controller.error(new Error("client went away"));
+            },
+        });
+        const request = new Request("http://localhost:3002/files", {
+            method: "POST",
+            headers: { "content-type": "multipart/form-data; boundary=x" },
+            body: stream,
+            duplex: "half",
+        } as RequestInit);
+
+        const parsed = await parseUploadedImage(request);
+
+        expect(parsed.ok).toBe(false);
+        if (!parsed.ok) {
+            expect(parsed.response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+            expect(await refusalCode(parsed.response)).toBe(
+                "UPLOAD_FILE_MISSING"
+            );
+        }
+    });
+
     /** Two fields with the same name: only the first is read, and it decides. */
     it("reads the first file field when the form repeats it", async () => {
         const parsed = await parseUploadedImage(
             multipartRequest([
-                ["file", fileFrom(imageBytes(PNG_HEAD))],
-                ["file", fileFrom(imageBytes(JPEG_HEAD))],
+                ["file", fileFrom(imageBytes(PNG))],
+                ["file", fileFrom(imageBytes(JPEG))],
             ])
         );
 
         expect(parsed.ok).toBe(true);
         if (parsed.ok) {
             expect(parsed.value.contentType).toBe("image/png");
+        }
+    });
+});
+
+describe("metadata on the stored image", () => {
+    const FAKE_GPS = "GPS 12.3456N 65.4321W fixture";
+    const exifApp1 = Buffer.concat([
+        hex("ffe1"),
+        hex("0000"),
+        Buffer.from(`Exif\0\0MM\0*${FAKE_GPS}`, "latin1"),
+    ]);
+    exifApp1.writeUInt16BE(exifApp1.length - 2, 2);
+
+    it("stores the image without its EXIF and reports the stored size", async () => {
+        const original = Buffer.concat([
+            JPEG_SOI,
+            exifApp1,
+            JPEG_SOS,
+            Buffer.alloc(MIN_PAYLOAD_BYTES),
+            JPEG_EOI,
+        ]);
+
+        const parsed = await parseUploadedImage(
+            multipartRequest([["file", fileFrom(new Uint8Array(original))]])
+        );
+
+        expect(parsed.ok).toBe(true);
+        if (parsed.ok) {
+            const stored = parsed.value.body;
+            expect(stored.includes(Buffer.from("Exif", "latin1"))).toBe(false);
+            expect(stored.includes(Buffer.from(FAKE_GPS, "latin1"))).toBe(
+                false
+            );
+            expect(parsed.value.size).toBe(stored.length);
+            expect(parsed.value.size).toBeLessThan(original.length);
+        }
+    });
+
+    it("refuses an image whose structure cannot be walked", async () => {
+        const truncated = Buffer.concat([JPEG_SOI, hex("ffdb 00ff 00 01")]);
+
+        const parsed = await parseUploadedImage(
+            multipartRequest([["file", fileFrom(new Uint8Array(truncated))]])
+        );
+
+        expect(parsed.ok).toBe(false);
+        if (!parsed.ok) {
+            expect(parsed.response.status).toBe(
+                HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE
+            );
+            expect(await refusalCode(parsed.response)).toBe(
+                "UPLOAD_FILE_TYPE_NOT_ALLOWED"
+            );
         }
     });
 });
