@@ -31,6 +31,12 @@ describe("avatar reference ownership", () => {
         expect(isUsablePhotoReference(OWN_OBJECT, OWNER)).toBe(true);
         expect(
             isUsablePhotoReference("https://cdn.example.com/a.png", OWNER)
+        ).toBe(false);
+        expect(
+            isUsablePhotoReference(
+                "https://lh3.googleusercontent.com/a/photo-id",
+                OWNER
+            )
         ).toBe(true);
         expect(isUsablePhotoReference("javascript:alert(1)", OWNER)).toBe(
             false

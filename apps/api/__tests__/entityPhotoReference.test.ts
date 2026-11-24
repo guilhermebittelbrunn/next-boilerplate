@@ -113,6 +113,17 @@ const PERSONAL_OBJECT = `uploads/${OWNER_PROFILE.id}/9f1c8e30-4b7a-4c21-9f2a-3c5
 const OTHER_OBJECT =
     "uploads/someone-else/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp";
 const LEGACY_URL = "https://cdn.example.com/legacy.png";
+const GOOGLE_PHOTO_URL = "https://lh3.googleusercontent.com/a/photo-id";
+/** Hosts the panel's CSP would never render, and URL shapes that dodge a host check. */
+const REFUSED_EXTERNAL_URLS = [
+    LEGACY_URL,
+    "http://example.com/a.jpg",
+    "http://lh3.googleusercontent.com/a/photo-id",
+    "https://lh3.googleusercontent.com:8443/a/photo-id",
+    "https://user:secret@lh3.googleusercontent.com/a/photo-id",
+    "https://lh4.googleusercontent.com/a/photo-id",
+    "https://lh3.googleusercontent.com.evil.example/a/photo-id",
+];
 const SIGNED_URL = "https://storage.googleapis.com/bucket/obj?X-Goog-Sig=1";
 
 const ENTITY_ID = "entity-1";
@@ -226,8 +237,9 @@ describe("the photo reference schema", () => {
  * value, so the two can never drift into a gap that reaches the signing step.
  */
 describe("what counts as a usable reference", () => {
-    const usable = [LEGACY_URL, "http://example.com/a.jpg", PERSONAL_OBJECT];
+    const usable = [GOOGLE_PHOTO_URL, PERSONAL_OBJECT];
     const refused = [
+        ...REFUSED_EXTERNAL_URLS,
         OTHER_OBJECT,
         "uploads/../../etc/passwd",
         `uploads/${OWNER_PROFILE.id}x/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp`,
@@ -246,11 +258,12 @@ describe("what counts as a usable reference", () => {
 });
 
 describe("what a record's photo may point at", () => {
-    it.each([LEGACY_URL, OWN_OBJECT])("accepts %s", (photo) => {
+    it.each([GOOGLE_PHOTO_URL, OWN_OBJECT])("accepts %s", (photo) => {
         expect(isAttachablePhoto(photo, ORGANIZATION_ID)).toBe(true);
     });
 
     it.each([
+        ...REFUSED_EXTERNAL_URLS,
         PERSONAL_OBJECT,
         OTHER_OBJECT,
         `uploads/org-${ORGANIZATION_ID}x/9f1c8e30-4b7a-4c21-9f2a-3c5b0d8e1a44.webp`,
@@ -301,6 +314,89 @@ describe("ownership of the referenced object", () => {
         expect(createMock).toHaveBeenCalledWith(
             expect.objectContaining({ photo: OWN_OBJECT })
         );
+    });
+
+    it("refuses to create a record pointing at an external host outside the allow-list", async () => {
+        const response = await POST(
+            request("POST", { ...VALID_BODY, photo: LEGACY_URL })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await errorCode(response)).toBe("ENTITY_PHOTO_INVALID");
+        expect(createMock).not.toHaveBeenCalled();
+    });
+
+    it("accepts a Google profile photo, the host the panel renders", async () => {
+        const response = await POST(
+            request("POST", { ...VALID_BODY, photo: GOOGLE_PHOTO_URL })
+        );
+
+        expect(response.status).toBe(STATUS_CREATED);
+        expect(createMock).toHaveBeenCalledWith(
+            expect.objectContaining({ photo: GOOGLE_PHOTO_URL })
+        );
+    });
+
+    /** Records saved before the allow-list keep working: the edit form sends the photo back. */
+    it("accepts an external url already stored on the record when it is sent back unchanged", async () => {
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: LEGACY_URL,
+        });
+
+        const response = await PUT(
+            request("PUT", { name: "Renamed", photo: LEGACY_URL }),
+            idContext
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateMock).toHaveBeenCalledWith(
+            expect.objectContaining({ name: "Renamed", photo: LEGACY_URL })
+        );
+    });
+
+    it("switches a record with a legacy external url to a Google profile photo", async () => {
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: LEGACY_URL,
+        });
+
+        const response = await PUT(
+            request("PUT", { photo: GOOGLE_PHOTO_URL }),
+            idContext
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateMock).toHaveBeenCalledWith(
+            expect.objectContaining({ photo: GOOGLE_PHOTO_URL })
+        );
+    });
+
+    it.each(REFUSED_EXTERNAL_URLS)(
+        "refuses to update a record to %s",
+        async (photo) => {
+            const response = await PUT(request("PUT", { photo }), idContext);
+
+            expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+            expect(await errorCode(response)).toBe("ENTITY_PHOTO_INVALID");
+            expect(updateMock).not.toHaveBeenCalled();
+        }
+    );
+
+    it("refuses to switch a record to another external host outside the allow-list", async () => {
+        findInOrganizationMock.mockResolvedValue({
+            ...baseEntity,
+            photo: LEGACY_URL,
+        });
+
+        const response = await PUT(
+            request("PUT", { photo: "https://cdn.example.com/other.png" }),
+            idContext
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await errorCode(response)).toBe("ENTITY_PHOTO_INVALID");
+        expect(updateMock).not.toHaveBeenCalled();
     });
 
     it("stores an empty reference as null", async () => {

@@ -169,6 +169,28 @@ describe("/account", () => {
         expect(updateMock).not.toHaveBeenCalled();
     });
 
+    it("refuses a new avatar on an external host outside the allow-list", async () => {
+        const response = await PUT(
+            request("PUT", { avatar: "https://example.com/a.png" })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await codeOf(response)).toBe("ACCOUNT_AVATAR_INVALID");
+        expect(updateMock).not.toHaveBeenCalled();
+    });
+
+    it("accepts a Google profile photo as the avatar", async () => {
+        const googlePhoto = "https://lh3.googleusercontent.com/a/photo-id";
+
+        const response = await PUT(request("PUT", { avatar: googlePhoto }));
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateMock).toHaveBeenCalledWith({
+            id: OWNER_PROFILE.id,
+            avatar: googlePhoto,
+        });
+    });
+
     it("merges preferences instead of replacing the stored map", async () => {
         findByReferenceIdMock.mockResolvedValue({
             ...OWNER_PROFILE,
@@ -417,6 +439,44 @@ describe("/account — lifecycle of the previous avatar object", () => {
             avatar: null,
         });
         expect(deleteObjectQuietlyMock).toHaveBeenCalledWith(OWN_AVATAR);
+    });
+
+    /** Accounts saved before the allow-list must still save their name and phone. */
+    it("accepts an external avatar already stored when the form sends it back", async () => {
+        const storedExternal = "https://example.com/external.png";
+        findByReferenceIdMock.mockResolvedValue({
+            ...OWNER_PROFILE,
+            avatar: storedExternal,
+        });
+
+        const response = await PUT(
+            request("PUT", { displayName: "Ana Lima", avatar: storedExternal })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateMock).toHaveBeenCalledWith({
+            id: OWNER_PROFILE.id,
+            avatar: storedExternal,
+        });
+        expect(updateUserMock).toHaveBeenCalledWith(OWNER_UID, {
+            displayName: "Ana Lima",
+        });
+        expect(deleteObjectQuietlyMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses to swap a stored external avatar for another host outside the allow-list", async () => {
+        findByReferenceIdMock.mockResolvedValue({
+            ...OWNER_PROFILE,
+            avatar: "https://example.com/external.png",
+        });
+
+        const response = await PUT(
+            request("PUT", { avatar: "https://example.com/other.png" })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await codeOf(response)).toBe("ACCOUNT_AVATAR_INVALID");
+        expect(updateMock).not.toHaveBeenCalled();
     });
 
     it("never deletes a stored reference that is not an object of this account", async () => {

@@ -68,7 +68,8 @@ export const PUT = requireOrganizationApi<RouteIdParamsContext>(
             // The edit form sends the current photo back on every save, so the value
             // already on the record is accepted as it is: a member editing someone
             // else's record must not be refused over a photo they never touched. Any
-            // other value has to be an object of the organization, or an external URL.
+            // other value has to be an object of the organization, or an image on an
+            // allowed host.
             if (
                 patch.photo &&
                 patch.photo !== existing.photo &&

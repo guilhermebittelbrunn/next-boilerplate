@@ -36,9 +36,15 @@ type AvatarResolution =
     | { ok: true; value: string | null | undefined }
     | { ok: false; response: Response };
 
+/**
+ * The profile form sends the stored avatar back on every save, so the value already on the
+ * account is accepted as it is: an avatar stored before the current host rules must not
+ * block saving the name or phone.
+ */
 function resolveAvatar(
     raw: string | null | undefined,
-    ownerId: string
+    ownerId: string,
+    stored: string | null
 ): AvatarResolution {
     if (raw === undefined) {
         return { ok: true, value: undefined };
@@ -46,7 +52,7 @@ function resolveAvatar(
 
     const value = normalizePhotoReference(raw);
 
-    if (value && !isUsablePhotoReference(value, ownerId)) {
+    if (value && value !== stored && !isUsablePhotoReference(value, ownerId)) {
         return {
             ok: false,
             response: Response.json(
@@ -127,7 +133,7 @@ export const PUT = requireCommonPanelApi(async (req, ctx) => {
     const ownerId = ctx.subjectProfile.id;
     const previousAvatar = ctx.subjectProfile.avatar ?? null;
 
-    const resolvedAvatar = resolveAvatar(input.avatar, ownerId);
+    const resolvedAvatar = resolveAvatar(input.avatar, ownerId, previousAvatar);
     if (!resolvedAvatar.ok) {
         return resolvedAvatar.response;
     }
