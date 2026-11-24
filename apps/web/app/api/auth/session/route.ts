@@ -9,6 +9,6 @@ export function POST(request: Request) {
     return sessionPOST(request, sessionAuthority);
 }
 
-export function DELETE() {
-    return sessionDELETE(sessionAuthority);
+export function DELETE(request: Request) {
+    return sessionDELETE(request, sessionAuthority);
 }
