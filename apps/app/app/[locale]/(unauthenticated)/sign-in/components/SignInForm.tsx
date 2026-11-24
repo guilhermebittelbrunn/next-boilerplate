@@ -14,16 +14,15 @@ import useAlert from "@repo/design-system/hooks/useAlert";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
-import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { useMutation } from "@tanstack/react-query";
 import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import { useEmailLinkAvailability } from "@/shared/hooks/useEmailLinkSignIn";
+import { useSignedInRedirect } from "@/shared/hooks/useSignedInRedirect";
 import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { apiClient } from "@/shared/lib/client";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
@@ -40,9 +39,9 @@ type SignInFormProps = {
 export const SignInForm = ({ redirect = null }: SignInFormProps) => {
     const { dictionary, locale } = getDictionary();
     const { errorAlert, successAlert } = useAlert();
-    const router = useRouter();
     const { signIn, user, loading: authLoading } = useAuth();
     const emailLinkAvailability = useEmailLinkAvailability();
+    useSignedInRedirect();
 
     const trackEvent = useAnalyticsEvent();
 
@@ -61,7 +60,7 @@ export const SignInForm = ({ redirect = null }: SignInFormProps) => {
                 locale,
                 fallbackPath: `/${locale}`,
             });
-            router.push(path);
+            window.location.replace(path);
         },
     });
 
@@ -84,45 +83,6 @@ export const SignInForm = ({ redirect = null }: SignInFormProps) => {
             apiClient.setAuthorizationHeader(accessToken);
         }
     };
-
-    // Already authenticated (e.g. persisted session): refresh the session cookie,
-    // then redirect. Refreshing first avoids the proxy bouncing the destination
-    // back to sign-in (redirect loop) when the httpOnly cookie has expired.
-    useEffect(() => {
-        if (authLoading || !user) {
-            return;
-        }
-        let cancelled = false;
-        (async () => {
-            const token = await user.getIdToken();
-            const session = await fetch("/api/auth/session", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken: token }),
-            }).catch(() => null);
-            if (cancelled) {
-                return;
-            }
-            // A refused session (the absolute lifetime is over) leaves no cookie for
-            // the proxy, which would bounce the destination straight back here. The
-            // provider signs the stale user out; staying put is what ends the loop.
-            if (session?.status === HTTP_STATUS.UNAUTHORIZED) {
-                return;
-            }
-            const path = await resolveAppPostLoginPath({
-                idToken: token,
-                locale,
-                fallbackPath: `/${locale}`,
-            });
-            if (!cancelled) {
-                window.location.replace(path);
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [user, authLoading, locale]);
 
     if (authLoading || user) {
         return <FullScreenLoader />;

@@ -163,8 +163,8 @@ export function EmailLinkCompletion({ oobCode }: EmailLinkCompletionProps) {
     }
 
     // A resolved attempt has spent the code, so offering the form again would only earn a
-    // refusal. The provider reports a session it could not store as an alert and stays
-    // put; the sign-in screen retries that session, which makes it the way out.
+    // refusal. A session the provider could not store is reported as an alert and signed
+    // out, so going back to sign-in is the way out.
     if (signInWithEmailLink.isSuccess) {
         return (
             <div className="space-y-4">

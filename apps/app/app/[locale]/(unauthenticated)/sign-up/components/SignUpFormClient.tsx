@@ -19,11 +19,11 @@ import { handleClientError } from "@repo/shared/utils/helpers/handleClientError"
 import { useMutation } from "@tanstack/react-query";
 import type { UserCredential } from "firebase/auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
+import { useSignedInRedirect } from "@/shared/hooks/useSignedInRedirect";
 import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { apiClient } from "@/shared/lib/client";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
@@ -40,7 +40,6 @@ type SignUpFormClientProps = {
 export default function SignUpFormClient({
     redirect = null,
 }: SignUpFormClientProps) {
-    const router = useRouter();
     const { dictionary, locale } = getDictionary();
     const { errorAlert, successAlert } = useAlert();
     const { signIn, loading: authLoading, user } = useAuth();
@@ -62,7 +61,7 @@ export default function SignUpFormClient({
                 locale,
                 fallbackPath: `/${locale}`,
             });
-            router.push(path);
+            window.location.replace(path);
         },
     });
 
@@ -77,35 +76,7 @@ export default function SignUpFormClient({
         },
     });
 
-    useEffect(() => {
-        if (authLoading || !user) {
-            return;
-        }
-        let cancelled = false;
-        (async () => {
-            const token = await user.getIdToken();
-            await fetch("/api/auth/session", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken: token }),
-            }).catch(() => null);
-            if (cancelled) {
-                return;
-            }
-            const path = await resolveAppPostLoginPath({
-                idToken: token,
-                locale,
-                fallbackPath: `/${locale}`,
-            });
-            if (!cancelled) {
-                window.location.replace(path);
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [user, authLoading, locale]);
+    useSignedInRedirect();
 
     /**
      * Only accounts created with a password get here: signing in with Google brings an
