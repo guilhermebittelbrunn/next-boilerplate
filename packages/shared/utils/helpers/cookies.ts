@@ -5,6 +5,22 @@ export type SetCookieOptions = {
     secure?: boolean;
 };
 
+const PREFERENCE_COOKIE_MAX_AGE_DAYS = 180;
+const SECONDS_PER_DAY = 86_400;
+export const PREFERENCE_COOKIE_MAX_AGE_SECONDS =
+    PREFERENCE_COOKIE_MAX_AGE_DAYS * SECONDS_PER_DAY;
+
+export const isHttpsPage = (): boolean =>
+    typeof window !== "undefined" && window.location?.protocol === "https:";
+
+/** Attributes for a preference cookie written by the server (`cookies().set`). */
+export const preferenceCookieOptions = (protocol: string) => ({
+    path: "/",
+    sameSite: "lax" as const,
+    maxAge: PREFERENCE_COOKIE_MAX_AGE_SECONDS,
+    secure: protocol === "https:",
+});
+
 export const setCookie = (
     name: string,
     value: string,
@@ -15,6 +31,7 @@ export const setCookie = (
         return;
     }
 
+    const secure = options?.secure ?? isHttpsPage();
     const expires = new Date();
     const ms = 1000;
     expires.setTime(expires.getTime() + expiresIn * ms);
@@ -27,7 +44,7 @@ export const setCookie = (
         "path=/",
         "SameSite=Lax",
         ...(options?.domain ? [`domain=${options.domain}`] : []),
-        ...(options?.secure ? ["Secure"] : []),
+        ...(secure ? ["Secure"] : []),
     ].join(";");
 };
 

@@ -1,13 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getCookie, removeCookie, setCookie } from "../utils/helpers/cookies";
+import {
+    getCookie,
+    isHttpsPage,
+    PREFERENCE_COOKIE_MAX_AGE_SECONDS,
+    preferenceCookieOptions,
+    removeCookie,
+    setCookie,
+} from "../utils/helpers/cookies";
 
 const EXPIRES_PATTERN = /expires=([^;]+)/;
 const ONE_HOUR_IN_SECONDS = 3600;
 const ONE_HOUR_IN_MS = 3_600_000;
 
+const ONE_HUNDRED_EIGHTY_DAYS_IN_SECONDS = 15_552_000;
+
 function documentWith(cookie: string) {
     vi.stubGlobal("window", {});
     vi.stubGlobal("document", { cookie });
+}
+
+function pageServedOver(protocol: "http:" | "https:") {
+    vi.stubGlobal("window", { location: { protocol } });
+    vi.stubGlobal("document", { cookie: "" });
 }
 
 beforeEach(() => {
@@ -132,11 +146,70 @@ describe("setCookie", () => {
         expect(document.cookie).toContain("Secure");
     });
 
+    it("declara Secure sem precisar pedir quando a página é HTTPS", () => {
+        pageServedOver("https:");
+
+        setCookie("x-locale", "es", 60);
+
+        expect(document.cookie).toContain("Secure");
+    });
+
+    it("não declara Secure numa página HTTP", () => {
+        pageServedOver("http:");
+
+        setCookie("x-locale", "es", 60);
+
+        expect(document.cookie).not.toContain("Secure");
+    });
+
+    it("respeita secure: false explícito mesmo numa página HTTPS", () => {
+        pageServedOver("https:");
+
+        setCookie("x-locale", "es", 60, { secure: false });
+
+        expect(document.cookie).not.toContain("Secure");
+    });
+
     it("ignora domain vazio, que o navegador rejeitaria", () => {
         setCookie("x-locale", "en", 60, { domain: "", secure: false });
 
         expect(document.cookie).not.toContain("domain=");
         expect(document.cookie).not.toContain("Secure");
+    });
+});
+
+describe("isHttpsPage", () => {
+    it("é verdadeiro só quando a página foi servida por HTTPS", () => {
+        pageServedOver("https:");
+        expect(isHttpsPage()).toBe(true);
+
+        pageServedOver("http:");
+        expect(isHttpsPage()).toBe(false);
+    });
+
+    it("é falso no servidor, onde não há window", () => {
+        vi.stubGlobal("window", undefined);
+
+        expect(isHttpsPage()).toBe(false);
+    });
+});
+
+describe("preferenceCookieOptions", () => {
+    it("dura 180 dias, no path raiz, com SameSite=Lax", () => {
+        expect(PREFERENCE_COOKIE_MAX_AGE_SECONDS).toBe(
+            ONE_HUNDRED_EIGHTY_DAYS_IN_SECONDS
+        );
+        expect(preferenceCookieOptions("http:")).toEqual({
+            path: "/",
+            sameSite: "lax",
+            maxAge: ONE_HUNDRED_EIGHTY_DAYS_IN_SECONDS,
+            secure: false,
+        });
+    });
+
+    it("marca Secure só quando a requisição chegou por HTTPS", () => {
+        expect(preferenceCookieOptions("https:").secure).toBe(true);
+        expect(preferenceCookieOptions("http:").secure).toBe(false);
     });
 });
 
