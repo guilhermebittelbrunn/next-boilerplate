@@ -36,6 +36,7 @@ Sob `(pages)/<plural>/`:
 - **Lista**: `(pages)/(home)/page.tsx` com o `Table` do design system (`searchFields`, `onRefresh`, `refreshLoading`). Coluna `enabled` = `Switch` controlado disparando o toggle. Miniaturas via `ResponsiveImage`.
 - **Criar/editar**: `(pages)/create/page.tsx` e `(pages)/edit/[id]/page.tsx` com `Container` (`contentOnly`, `loadError`), `FormContainer` e `Footer` **dentro** do `<form>`.
 - **Rotas/paths**: registre em `(authenticated)/(<contexto>)/paths.ts` e `routes.tsx`.
+- **Título da aba**: as três telas (lista, criar, editar) entram em `PANEL_PAGE_TITLES` (`apps/app/shared/lib/panelTitles.ts`), reaproveitando os rótulos de rota do `paths.ts`, e exportam `generateMetadata = panelPageMetadata("/<plural>")` (e `/<plural>/create`, `/<plural>/edit/[id]`). Página com `"use client"` leva o export num `layout.tsx` irmão que só devolve `children`. Sem isso, `apps/app/__tests__/panelTitles.test.ts` reprova o CRUD novo.
 - **Textos**: tudo via dictionary — ver passo 5.
 
 ## 5. Traduções

@@ -34,6 +34,7 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 - Formulários e configurações usam `width="narrow"` no `Container` externo (largura máxima em `shared/components/ui/pageLayout.ts`); listas e dashboards ficam com a largura cheia. `Container` aninhado com `className="p-0"` não recebe `header` nem `width`.
 - Pilhas dentro da página usam `gap-6`.
 - `loading.tsx` usa **`PageSkeleton`** (`shared/components/ui/PageSkeleton.tsx`) com as mesmas flags da tela (`description`, `actions`, `width`) e o corpo como filho (`TableSkeleton`, `FormSkeleton`…), para o título e o breadcrumb não pularem quando o conteúdo chega.
+- **Título da aba**: tela nova do painel registra o rótulo em `PANEL_PAGE_TITLES` (`shared/lib/panelTitles.ts`), com chave que já existe no dicionário, e exporta `generateMetadata = panelPageMetadata("<rota>")` (`lib/server/panelMetadata.ts`). Página com `"use client"` não pode exportar metadata: o export vai num `layout.tsx` irmão que só devolve `children`. O layout da área compõe `"<tela> | <marca>"` com `title.template`, e `__tests__/panelTitles.test.ts` reprova tela sem registro.
 - Blocos de configuração usam **`SettingsSection`** (`shared/components/ui/SettingsSection.tsx`): região nomeada pelo `h3` do título, descrição opcional e `tone="destructive"` para ações irreversíveis, que ficam por último na seção.
 
 ## Formulários com ações no rodapé
