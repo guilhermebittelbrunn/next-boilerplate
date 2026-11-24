@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ANALYTICS_EVENT } from "@repo/analytics/events";
+import { useAnalyticsEvent } from "@repo/analytics/events-context";
 import useAuth from "@repo/auth/provider";
 import {
     HookFormInput,
@@ -31,6 +33,7 @@ export const ContactFormClient = ({ available }: ContactFormClientProps) => {
     const contactCopy = dictionary.apps.web.pages.contact;
     const { errorAlert } = useAlert();
     const { user } = useAuth();
+    const trackEvent = useAnalyticsEvent();
 
     const schema = useMemo(
         () => buildContactFormSchema(dictionary),
@@ -56,6 +59,7 @@ export const ContactFormClient = ({ available }: ContactFormClientProps) => {
             apiClient.contact.send({ ...values, locale }),
         onError: (error) =>
             errorAlert(handleClientError(new FormattedError(error, locale))),
+        onSuccess: () => trackEvent(ANALYTICS_EVENT.generateLead),
         onSettled: () => {
             sendingRef.current = false;
         },

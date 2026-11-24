@@ -1,6 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ANALYTICS_EVENT } from "@repo/analytics/events";
+import { useAnalyticsEvent } from "@repo/analytics/events-context";
+import { isNewAccount } from "@repo/auth/client";
 import useAuth from "@repo/auth/provider";
 import {
     HookFormInput,
@@ -31,6 +34,7 @@ export const SignUpFormClient = () => {
     const { dictionary, locale } = getDictionary();
     const { errorAlert } = useAlert();
     const { signIn, signInWithGoogle, loading: authLoading, user } = useAuth();
+    const trackEvent = useAnalyticsEvent();
 
     // The account already exists when this runs, so a refused or failed request (an API
     // without an e-mail provider answers 503) must not turn the sign-up into an error.
@@ -52,8 +56,10 @@ export const SignUpFormClient = () => {
             apiClient.authApi.signUp(credentials),
         onError: (error) =>
             errorAlert(handleClientError(new FormattedError(error, locale))),
-        onSuccess: (_created, credentials) =>
-            signIn.mutate(credentials, { onSuccess: requestVerificationEmail }),
+        onSuccess: (_created, credentials) => {
+            trackEvent(ANALYTICS_EVENT.signUp, { method: "email" });
+            signIn.mutate(credentials, { onSuccess: requestVerificationEmail });
+        },
     });
 
     const schema = useMemo(() => buildSignUpSchema(dictionary), [dictionary]);
@@ -77,8 +83,15 @@ export const SignUpFormClient = () => {
         createAccount.mutate({ email: data.email, password: data.password });
     };
 
-    const handleGoogleSignIn = () => {
-        signInWithGoogle.mutate();
+    // The auth provider's own `onError` already alerts the visitor; the catch only keeps
+    // the rejection from going unhandled.
+    const handleGoogleSignIn = async () => {
+        const credential = await signInWithGoogle
+            .mutateAsync()
+            .catch(() => null);
+        if (credential && isNewAccount(credential)) {
+            trackEvent(ANALYTICS_EVENT.signUp, { method: "google" });
+        }
     };
 
     // If user is already logged in, redirect (will redirect via useEffect)

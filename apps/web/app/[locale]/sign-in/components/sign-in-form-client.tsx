@@ -1,6 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ANALYTICS_EVENT } from "@repo/analytics/events";
+import { useAnalyticsEvent } from "@repo/analytics/events-context";
+import { isNewAccount } from "@repo/auth/client";
 import useAuth from "@repo/auth/provider";
 import {
     HookFormInput,
@@ -26,6 +29,7 @@ export const SignInFormClient = () => {
     const { dictionary, locale } = getDictionary();
     const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
     const signInStartedHereRef = useRef(false);
+    const trackEvent = useAnalyticsEvent();
 
     const isLoading = signIn.isPending || signInWithGoogle.isPending;
 
@@ -132,7 +136,14 @@ export const SignInFormClient = () => {
                     onClick={() => {
                         signInStartedHereRef.current = true;
                         signInWithGoogle.mutate(undefined, {
-                            onSuccess: handleSuccessSignIn,
+                            onSuccess: (credential) => {
+                                if (isNewAccount(credential)) {
+                                    trackEvent(ANALYTICS_EVENT.signUp, {
+                                        method: "google",
+                                    });
+                                }
+                                return handleSuccessSignIn(credential);
+                            },
                         });
                     }}
                     type="button"

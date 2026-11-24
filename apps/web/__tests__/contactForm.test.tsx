@@ -7,16 +7,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 type CapturedMutation = {
     mutationFn: (variables: unknown) => Promise<unknown>;
     onError: (error: unknown) => void;
+    onSuccess: () => void;
 };
 
-const { mutations, mutationState, sendContactMock, errorAlertMock, params } =
-    vi.hoisted(() => ({
-        mutations: [] as CapturedMutation[],
-        mutationState: { isPending: false, isSuccess: false },
-        sendContactMock: vi.fn(),
-        errorAlertMock: vi.fn(),
-        params: { locale: "pt-br" } as Record<string, string>,
-    }));
+const {
+    mutations,
+    mutationState,
+    sendContactMock,
+    errorAlertMock,
+    trackEventMock,
+    params,
+} = vi.hoisted(() => ({
+    mutations: [] as CapturedMutation[],
+    trackEventMock: vi.fn(),
+    mutationState: { isPending: false, isSuccess: false },
+    sendContactMock: vi.fn(),
+    errorAlertMock: vi.fn(),
+    params: { locale: "pt-br" } as Record<string, string>,
+}));
 
 /**
  * This workspace renders on the server only, so the form is rendered to string and the
@@ -27,6 +35,10 @@ vi.mock("@tanstack/react-query", () => ({
         mutations.push(options);
         return { ...mutationState, mutate: vi.fn() };
     },
+}));
+
+vi.mock("@repo/analytics/events-context", () => ({
+    useAnalyticsEvent: () => trackEventMock,
 }));
 
 vi.mock("@repo/auth/provider", () => ({
@@ -182,4 +194,24 @@ describe("contact form submission", () => {
             DISABLED_ATTRIBUTE
         );
     });
+
+    it("reports a generate_lead event, without parameters, once the API accepts the message", () => {
+        renderContactForm(true);
+
+        capturedMutation().onSuccess();
+
+        expect(trackEventMock).toHaveBeenCalledTimes(1);
+        expect(trackEventMock.mock.calls[0]).toEqual(["generate_lead"]);
+    });
+
+    it.each(["CONTACT_UNAVAILABLE", "EMAIL_SEND_FAILED"])(
+        "reports nothing when the API answers %s",
+        (code) => {
+            renderContactForm(true);
+
+            capturedMutation().onError(apiError(code));
+
+            expect(trackEventMock).not.toHaveBeenCalled();
+        }
+    );
 });
