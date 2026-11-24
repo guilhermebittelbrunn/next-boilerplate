@@ -1,3 +1,4 @@
+import "server-only";
 import { type Locale, resolveLocale } from "@repo/internationalization/utils";
 import { getBrand } from "@repo/next-config/brand";
 import { Resend } from "resend";
