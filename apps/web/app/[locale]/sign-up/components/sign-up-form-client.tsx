@@ -79,6 +79,11 @@ export const SignUpFormClient = () => {
         }
     }, [user, authLoading, router, locale]);
 
+    const isSubmitting =
+        createAccount.isPending ||
+        signIn.isPending ||
+        signInWithGoogle.isPending;
+
     const onSubmit = (data: SignUpFormValues) => {
         createAccount.mutate({ email: data.email, password: data.password });
     };
@@ -155,9 +160,7 @@ export const SignUpFormClient = () => {
 
                         <Button
                             className="w-full"
-                            disabled={
-                                createAccount.isPending || signIn.isPending
-                            }
+                            disabled={isSubmitting}
                             type="submit"
                         >
                             {dictionary.apps.web.pages.signUp.form.submit}
@@ -178,7 +181,7 @@ export const SignUpFormClient = () => {
 
                 <Button
                     className="w-full"
-                    disabled={signInWithGoogle.isPending}
+                    disabled={isSubmitting}
                     onClick={handleGoogleSignIn}
                     type="button"
                     variant="outline"

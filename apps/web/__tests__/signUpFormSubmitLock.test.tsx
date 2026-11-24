@@ -121,6 +121,31 @@ describe("web SignUpFormClient submit lock", () => {
         );
     });
 
+    it("disables the submit button while the Google sign-in is pending", () => {
+        pendingState.googleSignIn = true;
+
+        expect(isDisabled(renderedButtonTag(signUpCopy.form.submit))).toBe(
+            true
+        );
+    });
+
+    it("enables the Google button while nothing is pending", () => {
+        expect(isDisabled(renderedButtonTag(signUpCopy.googleSignIn))).toBe(
+            false
+        );
+    });
+
+    it.each(["createAccount", "signIn", "googleSignIn"] as const)(
+        "disables the Google button while %s is pending",
+        (pending) => {
+            pendingState[pending] = true;
+
+            expect(isDisabled(renderedButtonTag(signUpCopy.googleSignIn))).toBe(
+                true
+            );
+        }
+    );
+
     it("leaves e-mail validation to the translated form messages instead of the browser bubble", () => {
         const formTag = renderForm().match(FORM_OPENING_TAG)?.[0] ?? "";
 
