@@ -8,7 +8,7 @@ audience: produto
 area: [apps/web, apps/app, apps/api, apps/e2e, packages/seo, packages/analytics, packages/security, packages/internationalization]
 mode: ambos
 depends_on: []
-contends_on: [packages/seo/metadata.ts, apps/e2e/playwright.config.ts, apps/web/app/sitemap.ts, "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/layout.tsx"]
+contends_on: [packages/seo/metadata.ts, "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/layout.tsx", packages/analytics/provider.tsx, "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: delivery-product-quality
 updated: 2026-11-23
 ---
@@ -27,11 +27,13 @@ de trocá-la. Sem esta spec, cada fork descobre as mesmas falhas na própria ent
 ## O que já existe no repo
 
 Medido em 2026-11-19 sobre `583194b`. Os itens de 404, `og:image` e `robots.txt` foram relidos em 2026-11-23 sobre
-`a391d1c`, depois da fatia 1 (PR #71); o que ela fechou está marcado em cada item.
+`a391d1c`, depois da fatia 1 (PR #71), e os de celular, desempenho e sitemap, sobre `18288c9`, depois da fatia 2
+(PR #72); o que cada fatia fechou está marcado no item.
 
 - **Celular** — Tailwind mobile-first e o padrão de viewport do Next (nenhum `export const viewport` em app
-  ou web). `apps/e2e/playwright.config.ts:49-56` tem só o projeto `Desktop Chrome`. **Lacuna:** nenhum E2E
-  em celular; o axe roda só em desktop e pt-br.
+  ou web). **Fechado pela fatia 2:** o Playwright tem o projeto `mobile` ao lado do `chromium`
+  (`apps/e2e/playwright.config.ts:54-67`), e o axe roda a 390 px nos fluxos críticos. **Segue como lacuna:** o
+  celular roda só em pt-br e no tema claro; tema escuro e os outros idiomas a 390 px seguem com o `agent-browser`.
 - **Formulários** — os 20 formulários do core usam `buildXSchema(dictionary)` com `zodResolver`. **Lacuna:**
   sem E2E para contato, login da landing, esqueci/redefinir senha, link por e-mail, os blocos da conta,
   convite e usuários do admin; `emailLinkSchema`, `onboardingFormSchema` e `buildUpdateUserFormSchema` sem
@@ -42,10 +44,12 @@ Medido em 2026-11-19 sobre `583194b`. Os itens de 404, `og:image` e `robots.txt`
   segmento (fora do corte).
 - **Desempenho** — bundle analyzer (`packages/next-config/index.ts:11`, era `:10` até a PR #64), fontes self-host
   (`packages/design-system/lib/fonts.ts`), nenhum `<img>` cru, GA carregado só depois do consentimento.
-  **Lacuna:** nenhum Lighthouse no repo nem no CI; a landing monta o `DesignSystemProvider` (antd + um
-  `AuthProvider`) e um segundo `AuthProvider` (`apps/web/app/[locale]/layout.tsx:40-41`, eram `:36-37` até a PR #71;
+  **Fechado pela fatia 2:** `pnpm lighthouse` mede home, preços e contato contra o build de produção da landing.
+  **Segue como lacuna:** a landing monta o `DesignSystemProvider` (antd + um `AuthProvider`) e um segundo
+  `AuthProvider` (`apps/web/app/[locale]/layout.tsx:40-41`, eram `:36-37` até a PR #71;
   `packages/design-system/index.tsx:42-44`), então todo visitante anônimo baixa antd e o SDK do Firebase
-  Auth.
+  Auth. O número que o "Fora do corte" esperava chegou com a fatia 2: na mediana de cinco execuções, a home
+  fica em Performance 87 e LCP 3,9 s, abaixo da meta da parte 3 nos dois (ver a conferência da fatia 2).
 - **Imagens** — nenhuma acima de 100 KB; `images.formats` com AVIF e WebP
   (`packages/next-config/index.ts:7`, era `:6` até a PR #64). Sem lacuna.
 - **`og:image`** — **fechado pela fatia 1:** a arte do next-forge saiu da `web` e da `api`, e
@@ -53,8 +57,9 @@ Medido em 2026-11-19 sobre `583194b`. Os itens de 404, `og:image` e `robots.txt`
   **Segue como lacuna:** nenhuma página passa imagem própria a `createMetadata`, que usa o título como `alt`
   (`packages/seo/metadata.ts:80-88`, `alt: title` em `:86`); uma imagem por página vai precisar de `alt` separado.
 - **Sitemap** — `apps/web/app/sitemap.ts:10-16`: 5 rotas × 3 idiomas com `alternates.languages`, base vinda
-  de `NEXT_PUBLIC_WEB_URL`. **Lacuna:** `lastModified = new Date()` (`:20`) declara toda página alterada a
-  cada requisição; a lista é manual e nenhum teste a compara com as páginas públicas.
+  de `NEXT_PUBLIC_WEB_URL`. **Fechado pela fatia 2:** o sitemap não emite mais `lastModified`, e
+  `apps/web/__tests__/sitemap.test.ts` compara a lista com as páginas de `app/[locale]`. A lista continua manual,
+  mas o teste quebra quando ela diverge.
 - **Google Analytics** — GA4 com Consent Mode v2 (`packages/analytics/consent.ts:79-97`,
   `provider.tsx:49-54`), carregado só depois do aceite. **Lacuna:** nenhum evento de conversão
   (`sign_up`, `generate_lead`): `sendGAEvent`/`gtag('event')` têm zero ocorrências.
@@ -136,13 +141,51 @@ build de produção. O CI da execução de merge passou nos seis jobs (`gh run 4
   layouts do painel que ganham `title.template` (fatia 3). A fatia 1 declarou quatro arquivos, tocou dois deles e
   mais 31 fora da lista (fora de `docs/` e `specs/`), 11 deles de teste.
 
-**Fatia 2: medição no repositório**
+**Fatia 2: medição no repositório** (✅ entregue pela PR #72, `18288c9`, em 2026-11-23, e conferida no código de
+`main`)
 
-- [ ] **Projeto `mobile` no Playwright** rodando os fluxos críticos e o axe a 390 px.
-- [ ] **Lighthouse por comando** (`pnpm lighthouse` ou equivalente) contra o build de produção da landing,
+- [x] **Projeto `mobile` no Playwright** rodando os fluxos críticos e o axe a 390 px.
+- [x] **Lighthouse por comando** (`pnpm lighthouse` ou equivalente) contra o build de produção da landing,
       com os limiares da parte 3 e saída que o relatório de entrega consegue citar.
-- [ ] **Teste do sitemap**: a lista bate com as páginas públicas da landing e `lastModified` deixa de ser a
+- [x] **Teste do sitemap**: a lista bate com as páginas públicas da landing e `lastModified` deixa de ser a
       hora da requisição.
+
+**Conferência da fatia 2 no código de `18288c9`** (auditoria de 2026-11-23):
+
+| item | evidência | teste |
+|------|-----------|-------|
+| projeto `mobile` | `apps/e2e/playwright.config.ts:61-66`: projeto `mobile` com `devices["Pixel 7"]` e viewport 390 × 844 (`:20`), restrito aos fluxos de `landing`, `signIn`, `signUp` e `entityCrud` (`CRITICAL_FLOWS`, `:19`); `expectAccessible` roda o axe e, só no celular, reprova a rota com rolagem horizontal (`apps/e2e/support/a11y.ts:104-118`); `apps/e2e/support/panelNavigation.ts` abre a barra lateral antes de procurar o link do painel | o job `e2e` da execução de merge (`gh run 45256020354`) rodou 9 testes `[mobile]` e 40 no total, todos verdes; o `/test` rodou o `mobile` com `--repeat-each=5` (29 de 29) e provou com uma spec temporária que a checagem reprova um bloco de 600 px |
+| `pnpm lighthouse` | atalho na raiz (`package.json:28`) para `apps/e2e/lighthouse/run.mjs`, que sobe o `next start` da landing na 3001 (ou mede um servidor dado com `--url`), roda `npx lighthouse@12.8.2` em perfil mobile no Chromium do Playwright (`:84`) e grava a tabela em `apps/e2e/lighthouse-results/summary.md`, pasta fora do Git (`.gitignore:325`); limiares da parte 3 em `apps/e2e/lighthouse/summary.mjs:11-49` (Performance 90, demais categorias 95, LCP 2,5 s, CLS 0,1, TBT 200 ms); a versão fica em `summary.mjs:1` | `apps/e2e/__tests__/lighthouseSummary.test.ts` (21 casos); a auditoria rodou o comando cinco vezes em `main`, exit 0 nas cinco, com a porta livre no fim |
+| teste do sitemap | `apps/web/app/sitemap.ts:18-36` sem `lastModified`; as 5 rotas manuais seguem em `:10-16` | `apps/web/__tests__/sitemap.test.ts`: a lista bate com as páginas de `app/[locale]` menos login e cadastro, cada entrada tem URL absoluta e alternativa nos três idiomas, e a saída não depende da hora; o `/test` contou 15 `<loc>` e 0 `<lastmod>` no build |
+
+O `/test` fechou com 0 ❌ e 1 🔒 (o `--url` contra uma preview da Vercel), depois de duas rodadas: a primeira achou o
+Ctrl+C deixando o `next start` órfão na porta 3001, e o `/review` corrigiu antes do merge. O CI da execução de merge
+passou nos seis jobs.
+
+**Números do `pnpm lighthouse` em `main`** (cinco execuções da auditoria de 2026-11-23, mesma máquina, perfil
+mobile; mediana, com mínimo e máximo entre parênteses):
+
+| página | Performance | LCP | Best practices |
+|--------|-------------|-----|----------------|
+| `/pt-br` | 87 🟡 (85 a 97) | 3,9 s 🟡 (2,3 a 4,0) | 96 ✅ |
+| `/pt-br/pricing` | 94 ✅ (91 a 96) | 2,8 s 🟡 (2,2 a 2,9) | 96 ✅ |
+| `/pt-br/contact` | 96 ✅ (94 a 98) | 2,2 s ✅ (2,0 a 3,0) | 93 🟡 |
+
+Acessibilidade e SEO deram 100 e CLS 0 nas três páginas, nas cinco execuções. As etapas da PR #72 mediram a home
+entre 57 e 93 em outras cinco execuções.
+
+**Deriva da fatia 2:**
+
+- **O sitemap não emite `lastModified`.** O corte pedia que ele deixasse de ser a hora da requisição, e o impacto
+  por camada falava em valor estável; a fatia omitiu o campo, que o protocolo trata como opcional. Uma data por rota
+  ficou como pergunta.
+- **O projeto `mobile` faz mais do que o corte pedia:** além do axe, reprova rolagem horizontal (WCAG 1.4.10). O
+  helper da barra lateral repete o toque quando o primeiro se perde antes da hidratação (cerca de 1 em 10 no
+  `/test`); o defeito do componente virou achado no `BACKLOG.md`.
+- **`contends_on`:** a fatia tocou os dois arquivos seus que estavam na lista e mais 13 fora de `docs/` e `specs/`,
+  5 deles novos. O campo foi revisto nesta auditoria para a fatia 3: saíram `apps/e2e/playwright.config.ts` e
+  `apps/web/app/sitemap.ts`; entraram `packages/analytics/provider.tsx` e o `SignUpFormClient.tsx` da app, onde o
+  evento de cadastro tende a nascer.
 
 **Fatia 3: títulos e conversão**
 
@@ -169,10 +212,10 @@ build de produção. O CI da execução de merge passou nos seis jobs (`gh run 4
 | `packages/sdk` | Nenhum. |
 | `apps/api` | Rota coringa de 404 em JSON; `noindex` pelo cabeçalho de segurança; remove a `opengraph-image.png` sem uso. |
 | `apps/app` | `noindex`; `title.template` e título por tela. |
-| `apps/web` | `opengraph-image` por código; `not-found` traduzido; `noindex` nas telas de autenticação e `robots.ts` sem os `Disallow` delas; sitemap com `lastModified` estável; eventos de conversão. |
-| `apps/e2e` | Projeto `mobile`; E2E dos formulários sem cobertura que a fatia escolher (contato e esqueci/redefinir senha primeiro). |
+| `apps/web` | `opengraph-image` por código; `not-found` traduzido; `noindex` nas telas de autenticação e `robots.ts` sem os `Disallow` delas; sitemap sem `lastModified` (entregue assim pela fatia 2); eventos de conversão. |
+| `apps/e2e` | Projeto `mobile` e `pnpm lighthouse` (entregues pela fatia 2); E2E dos formulários sem cobertura que a fatia escolher (contato e esqueci/redefinir senha primeiro). |
 | `packages/*` | `seo` (template de título, imagem por página), `analytics` (helper de evento), `security` (`X-Robots-Tag`), `internationalization` (404, títulos, `og:image:alt`). |
-| Infra/env | Nenhuma variável nova. O Lighthouse usa `npx`, sem dependência fixa. |
+| Infra/env | Nenhuma variável nova. O Lighthouse roda por `npx` com a versão fixada (12.8.2), sem entrar no `package.json` nem no lockfile. |
 
 ## Riscos e trade-offs
 
@@ -194,13 +237,18 @@ build de produção. O CI da execução de merge passou nos seis jobs (`gh run 4
 
 ## Perguntas em aberto
 
-- **O `noindex` do painel vai por cabeçalho ou por `robots` no layout?** — **recomendação:** cabeçalho
-  (`X-Robots-Tag`) no `applySecurityHeaders`, porque cobre também respostas que não são HTML.
-- **O Lighthouse roda no CI?** — **recomendação:** só como comando local e passo opcional do `/deliver`
-  nesta spec; o job de CI fica para depois de medir a variação.
 - **Aceitar que o 404 da landing dependa de JavaScript?** (deriva da fatia 1) — **recomendação:** aceitar. O
   status e o `noindex` estão certos e a correção conhecida é uma API experimental do Next. Sem JavaScript, a
   pessoa vê página em branco onde antes via o 404 do Next em inglês.
-- **O Lighthouse por comando usa `npx` sem versão?** (fatia 2) — **recomendação:** fixar a versão no comando
-  (`npx lighthouse@<versão>`). Desde a PR #65 o core fixa as Actions por SHA e roda `pnpm audit` no CI; um `npx`
-  sem versão baixa a última publicada a cada execução.
+- **Abrir a spec da dieta do bundle da landing?** (gatilho do "Fora do corte", atingido pela fatia 2) —
+  **recomendação:** sim, como spec `proposed` dirigida (`/spec`), depois da fatia 3. Na mediana de cinco
+  execuções, a home fica em Performance 87 e LCP 3,9 s, e preços em LCP 2,8 s. A Performance da home foi de 57 a
+  97 em dez execuções na mesma máquina, então a spec nova precisa partir da mediana, não de uma execução.
+- **Três escolhas da fatia 2 que o `/analyze` deixou como pergunta** — **recomendação:** (a) subir o Node do
+  repositório para 22.19 ou mais, o que libera o Lighthouse 13: só quando houver outro motivo para mexer no Node;
+  (b) uma data declarada por rota no sitemap: não, até existir conteúdo que muda com frequência; (c) mediana de
+  várias execuções: sim, mas no procedimento do `/deliver` (rodar o comando três vezes e citar a mediana), sem
+  mudar o comando. Em (c) a auditoria de 2026-11-23 diverge do plano, por causa da variação medida.
+
+**Respondidas pelas entregas:** o `noindex` do painel foi por cabeçalho (`X-Robots-Tag` em `applySecurityHeaders`,
+fatia 1); o Lighthouse ficou como comando local, fora do CI, e com a versão fixada em 12.8.2 (fatia 2).
