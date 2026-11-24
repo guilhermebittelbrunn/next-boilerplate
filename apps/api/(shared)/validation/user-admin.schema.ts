@@ -3,9 +3,10 @@ import { z } from "zod";
 import { newPasswordSchema } from "./password.schema";
 
 const MAX_DISPLAY_NAME_LENGTH = 120;
+const EMAIL_MAX = 320;
 
 export const adminCreateUserSchema = z.object({
-    email: z.string().email(),
+    email: z.string().max(EMAIL_MAX).email(),
     password: newPasswordSchema,
     type: z.nativeEnum(UserType),
     displayName: z.string().trim().max(MAX_DISPLAY_NAME_LENGTH).optional(),

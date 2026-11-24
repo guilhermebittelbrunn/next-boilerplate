@@ -227,3 +227,56 @@ describe("POST /users password policy", () => {
         });
     });
 });
+
+describe("POST /users email ceiling", () => {
+    const EMAIL_MAX = 320;
+    const LOCAL_PART_MAX = 64;
+    const DOMAIN_LABEL_MAX = 63;
+    const LOCAL_PART = "a".repeat(LOCAL_PART_MAX);
+    const TOP_LEVEL = "example.com";
+
+    /** A syntactically valid address of exactly `length` characters, built from 63-character labels. */
+    function emailOfLength(length: number): string {
+        let domain = TOP_LEVEL;
+        const budget = length - LOCAL_PART.length - 1;
+        while (domain.length < budget) {
+            const room = budget - domain.length - 1;
+            domain = `${"b".repeat(Math.min(DOMAIN_LABEL_MAX, room))}.${domain}`;
+        }
+        return `${LOCAL_PART}@${domain}`;
+    }
+
+    const body = (email: string) => ({
+        email,
+        password: "a".repeat(PASSWORD_MIN_LENGTH),
+        type: UserType.COMMON,
+    });
+
+    it("refuses an address one character past the ceiling without calling the provider", async () => {
+        const email = emailOfLength(EMAIL_MAX + 1);
+        expect(email).toHaveLength(EMAIL_MAX + 1);
+
+        const response = await POST(createRequest(body(email)));
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await response.json()).toEqual({
+            error: { code: "VALIDATION_FAILED" },
+        });
+        expect(identitySignUpMock).not.toHaveBeenCalled();
+    });
+
+    it("lets an address at the ceiling reach the provider", async () => {
+        identitySignUpMock.mockRejectedValue(
+            new FakeIdentityToolkitError("EMAIL_EXISTS")
+        );
+        const email = emailOfLength(EMAIL_MAX);
+        expect(email).toHaveLength(EMAIL_MAX);
+
+        await POST(createRequest(body(email)));
+
+        expect(identitySignUpMock).toHaveBeenCalledWith(
+            email,
+            expect.any(String)
+        );
+    });
+});
