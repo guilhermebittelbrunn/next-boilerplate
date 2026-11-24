@@ -17,6 +17,7 @@ const onboardingCopy = ptBr.apps.app.pages.onboarding;
 const actionMenuCopy = ptBr.components.actionMenu;
 
 const organizationPath = `/${LOCALE}/organization`;
+const INVITATIONS_API_PATH = "/organization/invitations";
 // Not used by any other spec, so the team built here cannot disturb them.
 const OWNER = { email: "user2@example.com", password: SEED_PASSWORD };
 const INVITEE_NAME = "E2E Team Member";
@@ -161,6 +162,11 @@ test("a member joins by invitation, receives ownership and the previous owner le
         await expect(roleBadge(ownerPage, OWNER.email, "owner")).toBeVisible();
         await expect(memberRow(ownerPage, inviteeEmail)).toHaveCount(0);
 
+        const invitationsFetched = inviteePage.waitForResponse(
+            (response) =>
+                response.request().method() === "GET" &&
+                new URL(response.url()).pathname === INVITATIONS_API_PATH
+        );
         await inviteePage.reload();
         await expect(
             roleBadge(inviteePage, inviteeEmail, "owner")
@@ -169,13 +175,16 @@ test("a member joins by invitation, receives ownership and the previous owner le
         await expect(
             inviteePage.getByText(organizationCopy.invite.title)
         ).toBeVisible();
-        // While a table refetches, its refresh button is disabled at half opacity
-        // and fades back in; axe would measure that transient contrast.
+        // Invitations are not prefetched on the server: the table fetches them once the
+        // client holds the bearer token, which can happen after the page looks settled.
+        // During that fetch its refresh button is disabled at half opacity, then fades in.
+        expect((await invitationsFetched).ok()).toBe(true);
         const refreshButtons = inviteePage.getByRole("button", {
             name: ptBr.components.table.refresh,
         });
         await expect(refreshButtons).toHaveCount(2);
         for (const refreshButton of await refreshButtons.all()) {
+            await expect(refreshButton).toBeEnabled();
             await expect(refreshButton).toHaveCSS("opacity", "1");
         }
         await expectAccessible(inviteePage, testInfo, {
