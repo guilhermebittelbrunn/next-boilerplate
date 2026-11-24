@@ -31,6 +31,7 @@ export function AppDesignProvider({
     return (
         <DesignSystemProvider
             defaultTheme={defaultTheme}
+            postLoginNavigation="full-page"
             resolveDefaultPostLoginPath={({ idToken, locale }) =>
                 resolveDefaultPostLoginForApp({ idToken, locale })
             }

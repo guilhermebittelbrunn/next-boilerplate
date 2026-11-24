@@ -36,9 +36,8 @@ export async function signInWithGoogleViaApi({
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
 
-    // Reported here and not after the API exchange: the popup's own sign-in makes the
-    // sign-in screens navigate with a full page load, which can land before the
-    // exchange resolves and would drop the event.
+    // Reported here and not after the API exchange: the sign-in screens follow a
+    // successful exchange with a full page load, which can drop an event sent after it.
     if (isNewAccount(result)) {
         onAccountCreated?.();
     }
