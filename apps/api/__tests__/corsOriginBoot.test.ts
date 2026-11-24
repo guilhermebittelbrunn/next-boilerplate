@@ -12,7 +12,9 @@ vi.mock("@repo/auth/server", () => ({
 
 const { register } = await import("@/instrumentation");
 
-const MISSING_CORS_ORIGIN = /CORS_ORIGIN is required in production/;
+const MISSING_CORS_ORIGIN_LINE =
+    /^\[boot] CORS_ORIGIN is required in production/;
+const EXIT_FAILURE = 1;
 const RATE_LIMIT_DISABLED = /rate limiting is DISABLED/;
 const MALFORMED_ARCJET_KEY = /does not start with "ajkey_"/;
 
@@ -42,27 +44,63 @@ afterEach(() => {
     Object.assign(process.env, originalEnv);
 });
 
-describe("boot gate for the origin allowlist", () => {
-    it("refuses to start in production without an allowlist", async () => {
-        givenBootEnv({ NODE_ENV: "production" });
+function spyOnExit() {
+    return vi.spyOn(process, "exit").mockImplementation((() => {
+        // keep the test runner alive; the call itself is what is asserted
+    }) as never);
+}
 
-        await expect(register()).rejects.toThrow(MISSING_CORS_ORIGIN);
-        expect(getFirestoreAdminMock).not.toHaveBeenCalled();
+function spyOnBootError() {
+    return vi.spyOn(console, "error").mockImplementation(() => {
+        // asserted below, kept out of the test output
     });
+}
+
+describe("boot gate for the origin allowlist", () => {
+    it.each([
+        ["unset", undefined],
+        ["empty", ""],
+        ["only separators", " , "],
+    ])(
+        "ends the process in production when the allowlist is %s",
+        async (_label, value) => {
+            const exit = spyOnExit();
+            const error = spyOnBootError();
+            givenBootEnv({
+                NODE_ENV: "production",
+                ...(value === undefined ? {} : { CORS_ORIGIN: value }),
+            });
+
+            await register();
+
+            expect(error).toHaveBeenCalledTimes(1);
+            expect(error).toHaveBeenCalledWith(
+                expect.stringMatching(MISSING_CORS_ORIGIN_LINE)
+            );
+            expect(exit).toHaveBeenCalledWith(EXIT_FAILURE);
+            expect(getFirestoreAdminMock).not.toHaveBeenCalled();
+        }
+    );
 
     it("starts in production once the allowlist is configured", async () => {
+        const exit = spyOnExit();
         givenBootEnv({
             NODE_ENV: "production",
             CORS_ORIGIN: "https://app.example.com",
         });
 
         await expect(register()).resolves.toBeUndefined();
+        expect(getFirestoreAdminMock).toHaveBeenCalledTimes(1);
+        expect(exit).not.toHaveBeenCalled();
     });
 
     it("starts outside production without one, falling back to localhost", async () => {
+        const exit = spyOnExit();
         givenBootEnv({ NODE_ENV: "development" });
 
         await expect(register()).resolves.toBeUndefined();
+        expect(getFirestoreAdminMock).toHaveBeenCalledTimes(1);
+        expect(exit).not.toHaveBeenCalled();
     });
 });
 

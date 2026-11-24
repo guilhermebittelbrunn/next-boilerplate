@@ -56,6 +56,37 @@ describe("instrumentation register", () => {
         await expect(register()).rejects.toThrow(MISSING_CREDENTIALS_MESSAGE);
     });
 
+    it("ends the process in production when the service account is not configured", async () => {
+        process.env.NEXT_RUNTIME = "nodejs";
+        vi.stubEnv("NODE_ENV", "production");
+        vi.stubEnv("CORS_ORIGIN", "https://app.example.com");
+        const exit = vi.spyOn(process, "exit").mockImplementation((() => {
+            // keep the test runner alive; the call itself is what is asserted
+        }) as never);
+        const error = vi.spyOn(console, "error").mockImplementation(() => {
+            // asserted below, kept out of the test output
+        });
+        vi.spyOn(console, "warn").mockImplementation(() => {
+            // the rate limiter notice is not under test here
+        });
+        getFirestoreAdminMock.mockImplementation(() => {
+            throw new Error(
+                "Firebase Admin credentials are not configured. Please set FIREBASE_ADMIN_* environment variables."
+            );
+        });
+
+        await register();
+
+        expect(error).toHaveBeenCalledWith(
+            "[boot] Firebase Admin credentials are not configured. Please set FIREBASE_ADMIN_* environment variables."
+        );
+        expect(exit).toHaveBeenCalledWith(1);
+
+        vi.unstubAllEnvs();
+        exit.mockRestore();
+        error.mockRestore();
+    });
+
     describe("half-configured Stripe", () => {
         let warn: MockInstance<typeof console.warn>;
 
