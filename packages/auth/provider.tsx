@@ -121,12 +121,19 @@ export type AuthProviderProps = {
         idToken: string;
         locale: string;
     }) => Promise<string | null>;
+    /**
+     * How to reach the destination once the session cookie is written. `full-page` loads
+     * it as a new document, for apps whose layouts seed signed-in state on the server and
+     * keep it across client-side navigation. Defaults to `client` (`router.push`).
+     */
+    postLoginNavigation?: "client" | "full-page";
 };
 
 export function AuthProvider({
     children,
     getRedirectPath,
     resolveDefaultPostLoginPath,
+    postLoginNavigation = "client",
 }: AuthProviderProps): ReactElement {
     const { errorAlert, successAlert } = useAlert();
     const router = useRouter();
@@ -350,18 +357,39 @@ export function AuthProvider({
      * Session cookie must exist before navigating to locale home / admin — otherwise
      * the proxy sees no `access-token` and redirects back to sign-in.
      */
-    const onAuthSuccess = async (credential: UserCredential) => {
+    const establishSession = async (
+        credential: UserCredential
+    ): Promise<string | null> => {
         try {
             const token = await credential.user.getIdToken();
             setAccessToken(token);
             await syncSessionCookie(token);
-            successAlert(dictionary.packages.auth.provider.onSuccess);
-            router.push(await resolvePostLoginPath(token));
+            return token;
         } catch {
+            setAccessToken(null);
+            // A Firebase user left signed in without the cookie makes the auth screens
+            // navigate, get bounced back to sign-in by the proxy, and navigate again.
+            await logout().catch(() => null);
+            return null;
+        }
+    };
+
+    const onAuthSuccess = async (credential: UserCredential) => {
+        const token = await establishSession(credential);
+        if (!token) {
             errorAlert(
                 dictionary.packages.auth.provider.session.notEstablished
             );
+            return;
         }
+        successAlert(dictionary.packages.auth.provider.onSuccess);
+        const destination =
+            await resolvePostLoginPath(token).catch(redirectPath);
+        if (postLoginNavigation === "full-page") {
+            window.location.replace(destination);
+            return;
+        }
+        router.push(destination);
     };
 
     const signInMutation = useMutation({
