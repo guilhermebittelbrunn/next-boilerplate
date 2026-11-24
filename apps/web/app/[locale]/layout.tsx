@@ -1,7 +1,6 @@
 import "./styles.css";
 import { AnalyticsProvider } from "@repo/analytics/provider";
 import { resolveConsentBootstrap } from "@repo/analytics/server";
-import { AuthProvider } from "@repo/auth/provider";
 import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
@@ -38,23 +37,18 @@ const RootLayout = async ({ children, params }: RootLayoutProperties) => {
                 <LocaleProvider>
                     <QueryProvider>
                         <DesignSystemProvider>
-                            <AuthProvider>
-                                <AnalyticsProvider
-                                    consent={consent}
-                                    locale={locale}
-                                    privacyPolicyHref={`/${locale}/legal/privacy`}
-                                >
-                                    <ToastContainer />
-                                    <Header />
-                                    <main>
-                                        <ClientLayout>
-                                            {" "}
-                                            {children}{" "}
-                                        </ClientLayout>
-                                    </main>
-                                    <Footer />
-                                </AnalyticsProvider>
-                            </AuthProvider>
+                            <AnalyticsProvider
+                                consent={consent}
+                                locale={locale}
+                                privacyPolicyHref={`/${locale}/legal/privacy`}
+                            >
+                                <ToastContainer />
+                                <Header />
+                                <main>
+                                    <ClientLayout> {children} </ClientLayout>
+                                </main>
+                                <Footer />
+                            </AnalyticsProvider>
                         </DesignSystemProvider>
                     </QueryProvider>
                 </LocaleProvider>
