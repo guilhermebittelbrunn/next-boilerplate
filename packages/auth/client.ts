@@ -5,6 +5,7 @@ import {
     type Auth,
     connectAuthEmulator,
     GoogleAuthProvider,
+    getAdditionalUserInfo,
     getAuth,
     linkWithPopup,
     onAuthStateChanged,
@@ -17,6 +18,7 @@ import {
     signInWithPopup,
     signOut,
     type User,
+    type UserCredential,
 } from "firebase/auth";
 import {
     authEmulatorOrigin,
@@ -171,6 +173,9 @@ export const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
     return signInWithPopup(auth, provider);
 };
+
+export const isNewAccount = (credential: UserCredential): boolean =>
+    getAdditionalUserInfo(credential)?.isNewUser === true;
 
 const requireCurrentUser = (): User => {
     const user = getAuthClient().currentUser;
