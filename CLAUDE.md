@@ -46,6 +46,7 @@ pnpm bump-ui        # re-sincroniza componentes shadcn no design-system
 pnpm e2e            # suíte Playwright (apps/e2e): sobe emulador + api/app/web e roda os fluxos críticos
 pnpm coverage       # cobertura Vitest consolidada do repo em coverage/ (sem limiar)
 pnpm lighthouse     # Lighthouse mobile do build de produção da landing (medição, não gate)
+pnpm kickoff        # formulário visual do começo de um fork (http://localhost:3010) → docs/product/
 
 pnpm turbo run lint typecheck test test:emulator   # os gates do job verify do CI, na mesma linha
 ```
@@ -130,8 +131,12 @@ da spec → padrão do repo → menor raio de impacto, e junta tudo num relatór
 descartou. Pendências que exigem infra externa vão para [`docs/PRE-PRODUCTION.md`](docs/PRE-PRODUCTION.md).
 ⛔ Ele **não commita nem cria branch** — rodar o `/cycle` não é aprovação de commit.
 
+**`/kickoff`** é o **começo de um fork**: o formulário do `pnpm kickoff` descreve produto, domínio, telas e
+marca (com pré-visualização ao vivo e o prompt de design para o Claude Design) e salva em `docs/product/`; o
+comando lê isso, completa as lacunas e gera as specs do MVP. Passo a passo em [`docs/FORKING.md`](docs/FORKING.md) §0.
+
 **`/deliver`** é a **etapa de entrega**, obrigatória antes da entrega final de todo fork: segurança, infra e
-hardening, qualidade do produto e documentação, cada parte com a sua especificação em
+hardening, qualidade do produto, documentação e políticas legais, cada parte com a sua especificação em
 [`docs/delivery/`](docs/delivery/README.md), e um relatório versionado em `docs/delivery/reports/<data>/`.
 Ele audita e registra; não corrige código nem commita. O README de todo fork segue
 [`docs/templates/README.template.md`](docs/templates/README.template.md), sempre.
@@ -149,7 +154,7 @@ os artefatos do fluxo no código) e
 
 ### Skills do projeto (digite `/` para invocar)
 
-- **`/market-research`** — pesquisa de mercado **com fontes** para decidir se uma feature merece entrar no core (prevalência entre starters, exigência de provedor/lei, custo herdado pelos forks); grava nota citável em `specs/research/`.
+- **`/market-research`** — pesquisa de mercado **com fontes** para decidir se uma feature merece entrar no core (prevalência entre starters, exigência de provedor/lei, custo herdado pelos forks); grava nota citável em `specs/reference/research/`.
 - **`/spec-audit`** — reconcilia o backlog `specs/` com a realidade do código (fecha o loop; é o motor do `/spec --sync`).
 - **`/new-crud`** — scaffold de um CRUD vertical completo (SDK → API → app → i18n), seguindo o padrão `entity`.
 - **`/new-api-route`** — cria rota na `apps/api` (validação, guard, repo+mapper, `error.code`).

@@ -28,6 +28,8 @@ e-mails de verdade são renderizados e enviados pela `api` (e pela `web`, no for
 
 ## Checklist resumido
 
+0. [Definir o produto](#0-kickoff-da-ideia-ao-backlog) com o `pnpm kickoff` e o `/kickoff`: da ideia às
+   telas e às specs do MVP.
 1. [Criar o repositório](#1-criar-o-repositório-do-produto) e limpar os resíduos do projeto de origem.
 2. [Rodar localmente](#2-rodar-localmente) com os emuladores.
 3. [Definir a identidade](#3-identidade-do-produto): marca, ícones, cores, textos e idioma padrão.
@@ -40,6 +42,35 @@ e-mails de verdade são renderizados e enviados pela `api` (e pela `web`, no for
    [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md).
 10. Passar pela [etapa de entrega](delivery/README.md) (`/deliver`) antes da entrega final. Ela é
     obrigatória para todo produto.
+
+## 0. Kickoff: da ideia ao backlog
+
+Antes de configurar serviços, descreva o produto. O kickoff tem uma parte visual e uma parte no Claude Code:
+
+```bash
+pnpm kickoff          # abre http://localhost:3010
+```
+
+O formulário tem seis etapas: Produto, Recursos e regras, Domínio, Telas, Marca e Revisar. No Domínio, cada
+entidade pede só o nome e o papel no sistema; campos, tipos e relações são opcionais, e o `/kickoff` os propõe. Ao lado de cada
+uma há uma pré-visualização que muda enquanto você digita: o diagrama das entidades e relações, a galeria de
+telas e a paleta aplicada nos temas claro e escuro. O Salvar (ou `⌘S`) grava em `docs/product/`:
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| `kickoff.json` | A fonte de tudo. Os `.md` abaixo são regenerados a partir dele a cada salvamento |
+| `PRODUCT.md` | Ideia, público, cobrança, recursos do core ligados, papéis e regras de negócio |
+| `DOMAIN.md` | Entidades, campos, relações (com diagrama mermaid) e fluxos |
+| `SCREENS.md` | Cada tela com rota, painel, objetivo, estados e o design anexado |
+| `DESIGN-PROMPT.md` | O prompt de estilização para o Claude Design, com as restrições do design system do repo |
+| `screens/` | O design de cada tela, arrastado para o quadro dela no formulário (PNG, JPG, WebP ou HTML) |
+
+Na etapa Revisar, "Copiar prompt de design" leva o prompt para o Claude Design. Quando as telas voltarem,
+arraste cada uma para o quadro dela na etapa Telas. Depois rode **`/kickoff`** no Claude Code: ele pergunta o
+que ficou faltando e gera as specs do MVP em `specs/features/`, já na ordem de dependência. A partir daí o
+fluxo é o de sempre (`/analyze`, ou `/cycle`).
+
+`pnpm kickoff:render` regenera os `.md` sem abrir o navegador. O formulário escuta só em `127.0.0.1`.
 
 ## 1. Criar o repositório do produto
 

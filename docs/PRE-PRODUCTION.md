@@ -418,7 +418,7 @@ projeto no Spark **não tem acesso a bucket nenhum**; as chamadas voltam **402/4
 **$0,00/mês** no cenário de um MVP (a faixa "Always Free" do GCS cobre folgado), mas a **forma de pagamento
 passou a ser obrigatória** — e isso contraria a leitura ingênua de "começar de graça". Os números, o
 comparativo com S3/R2 e o veredito estão em
-[`specs/research/object-storage-costs.md`](../specs/research/object-storage-costs.md).
+[`specs/reference/research/object-storage-costs.md`](../specs/reference/research/object-storage-costs.md).
 
 ⚠️ **Escolha a região do bucket com cuidado — é o erro caro deste passo.** A franquia "Always Free" do
 Cloud Storage só existe em **`us-central1`, `us-east1` e `us-west1`**. Criar o bucket em
@@ -1093,7 +1093,7 @@ mexer no modo `simple` por ora. Reabra se o modo passar a restringir o painel co
 > para esconder a cobrança (a home do admin o lê para a cobrança também). `commonUserUsesPanel()` não existe em
 > `packages/next-config/product-mode.ts`, e a `apps/web` não tem área autenticada. Hoje, num fork `simple`, o
 > usuário comum entra no painel e alcança a aba de privacidade. A pendência real é outra: o modo `simple`
-> não faz o que `docs/AUTH-SSO.md` descreve. Ela está registrada nos achados do `specs/BACKLOG.md`. O texto
+> não faz o que `docs/AUTH-SSO.md` descreve. Ela está registrada nos achados do `specs/reference/AUDIT.md`. O texto
 > abaixo fica como estava, porque as saídas listadas voltam a valer no dia em que a restrição existir.
 
 A exportação e a exclusão de conta vivem na aba Privacidade da área de conta, que fica sob o painel comum

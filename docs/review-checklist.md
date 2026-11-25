@@ -53,7 +53,7 @@ responsabilidade da revisão e do deploy da Vercel.
 - [ ] Import momentaneamente sem uso: o hook de format (`biome check --write`) **apaga** imports não
       usados entre edições. Adicione o uso antes (ou junto) do import.
 - [ ] Se a tarefa nasceu de uma spec (`spec: <id>` no `STATE.md`): o que foi implementado **corresponde ao
-      corte de MVP** de `specs/<id>.md`. Divergência não é erro, mas tem de ser **registrada** no
+      corte de MVP** de `specs/features/<id>.md`. Divergência não é erro, mas tem de ser **registrada** no
       `review.md` — ou a spec estava errada, ou a implementação desviou. Fechar a spec é do `/spec --sync`.
 
 ## 1. `apps/api`

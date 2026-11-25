@@ -5,7 +5,7 @@
 > usar como procedimento oficial.
 >
 > Fontes coletadas em 2026-09-30. Base na nota
-> [`compliance-trust-baseline`](../specs/research/compliance-trust-baseline.md), a revalidar depois de
+> [`compliance-trust-baseline`](../specs/reference/research/compliance-trust-baseline.md), a revalidar depois de
 > 2027-08-21. Prazo legal muda com resolução nova; confira antes de confiar num número daqui.
 
 Roteiro para quem está de plantão quando alguém descobre que dado pessoal vazou, foi alterado, apagado ou
@@ -40,7 +40,7 @@ afetou dados pessoais (art. 6º, §1º, e art. 9º). Fonte:
 | Registro interno | todo incidente, inclusive o não comunicado, por no mínimo 5 anos | igual | Res. 15/2024, art. 10 |
 
 Quem é pequeno porte está na Res. CD/ANPD 2/2022, art. 2º; tratamento de alto risco tira a empresa dessa
-categoria (art. 3º). Resumo na [nota de pesquisa](../specs/research/compliance-trust-baseline.md).
+categoria (art. 3º). Resumo na [nota de pesquisa](../specs/reference/research/compliance-trust-baseline.md).
 `[FORK]` O fork é agente de pequeno porte? `[FORK]` Atende titulares na União Europeia?
 
 ## 1. Conter

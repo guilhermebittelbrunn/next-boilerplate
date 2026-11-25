@@ -10,7 +10,7 @@ Monorepo **boilerplate full-stack** (fork customizado do [next-forge](https://gi
 > crédito) — o Cloud Storage deixou de existir no plano Spark em 2026-02-03. O gasto real continua
 > **$0,00/mês** num MVP, e um fork que **não** usa upload segue inteiramente no Spark, sem cartão: a
 > capacidade é opt-in por env. Comparativo com S3/R2, cenários e números em
-> [`specs/research/object-storage-costs.md`](../specs/research/object-storage-costs.md); ativação em
+> [`specs/reference/research/object-storage-costs.md`](../specs/reference/research/object-storage-costs.md); ativação em
 > [`PRE-PRODUCTION.md`](PRE-PRODUCTION.md) §6.
 
 ## Topologia

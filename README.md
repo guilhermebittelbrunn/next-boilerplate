@@ -55,6 +55,7 @@ capturadas contra os emuladores, só com os dados do seed. Como refazer: parte 4
 - [🗂️ Estrutura](#️-estrutura)
 - [🧰 Tecnologias](#-tecnologias)
 - [⚡ Começando](#-começando)
+- [🧭 Kickoff de um fork](#-kickoff-de-um-fork)
 - [⌨️ Comandos](#️-comandos)
 - [✅ Etapa de entrega](#-etapa-de-entrega)
 - [📐 Padrões do repositório](#-padrões-do-repositório)
@@ -178,7 +179,7 @@ real.
 | 🪵 | Log estruturado com request id e sonda de prontidão (`/health/ready`) |
 | ⚖️ | Modelos de conformidade: registro de operações (RoPA), suboperadores, resposta a incidente e backup |
 | ✅ | CI no GitHub Actions: lint, typecheck, testes, E2E e cobertura |
-| 🚚 | Etapa de entrega com quatro partes e relatório versionado, e modelo de README para os forks |
+| 🚚 | Etapa de entrega com cinco partes e relatório versionado, e modelo de README para os forks |
 
 ---
 
@@ -201,6 +202,12 @@ packages/
 ├── shared/                utilitários comuns (HTTP_STATUS, FormattedError, datas)
 ├── next-config/           config Next, variáveis comuns e marca (getBrand)
 └── analytics/ · security/ · seo/ · typescript-config/
+scripts/
+└── kickoff/               formulário do `pnpm kickoff`, o começo de um fork
+specs/
+├── BACKLOG.md             a fila do que falta no core, em uma página
+├── features/              uma spec por arquivo, com bloco Resumo no topo
+└── reference/             template, pesquisa de mercado e registro de auditoria
 ```
 
 São **três deploys independentes**: `app`, `web` e `api`. O `email` só existe para visualizar os templates
@@ -276,6 +283,60 @@ dado real. O seed cria estas contas, que só existem no emulador:
 
 ---
 
+## 🧭 Kickoff de um fork
+
+Um fork começa com uma ideia, não com código. O `pnpm kickoff` abre um formulário no navegador para descrever
+o produto, e o `/kickoff` no Claude Code transforma o que foi salvo nas specs do MVP.
+
+<p align="center">
+  <a href="docs/assets/kickoff/kickoff.mp4">
+    <img src="docs/assets/kickoff/kickoff.gif" alt="Vídeo de 22 segundos do kickoff: o nome do produto sendo digitado com a landing de exemplo acompanhando, as entidades descritas só por nome e papel, ligadas por linhas tracejadas e depois completadas com campos e relações, a galeria de telas com um design anexado, a marca aplicada nos temas claro e escuro e o salvamento dos documentos" width="720">
+  </a>
+</p>
+
+```bash
+pnpm kickoff        # abre http://localhost:3010
+```
+
+O formulário tem seis etapas, cada uma com uma pré-visualização que muda enquanto você digita:
+
+| | Etapa | O que você preenche | O que aparece ao lado |
+|---|-------|---------------------|-----------------------|
+| 💡 | Produto | Nome, frase, problema, público, cobrança, métrica, o que fica fora do MVP | Como a landing apresentaria a ideia |
+| 🧩 | Recursos e regras | Modo do produto, recursos do core ligados (assinaturas, organizações, upload…), papéis e regras de negócio | Os recursos ligados e as variáveis de ambiente que eles pedem |
+| 🗄️ | Domínio | O nome e o papel de cada entidade, em português. Campos, tipos e relações são opcionais: o `/kickoff` propõe e você confirma | O diagrama, com as entidades que um papel menciona já ligadas |
+| 🖼️ | Telas | Rota, painel, entidade, objetivo e estados de cada tela. "Sugerir a partir das entidades" cria as de lista e formulário | A galeria de telas: arraste o design (PNG, JPG, WebP ou HTML) para o quadro de cada uma |
+| 🎨 | Marca | Cores, cantos, fonte, estilo, tom de voz e referências | A paleta aplicada nos temas claro e escuro |
+| ✅ | Revisar | O que ainda falta definir | Os documentos gerados e o botão "Copiar prompt de design" |
+
+**Salvar** (ou `⌘S`) grava em `docs/product/`:
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| `kickoff.json` | A fonte de tudo; os `.md` são regenerados a partir dele |
+| `PRODUCT.md` | Ideia, público, cobrança, recursos ligados, papéis e regras |
+| `DOMAIN.md` | Entidades, campos, relações (diagrama mermaid) e fluxos |
+| `SCREENS.md` | Cada tela com rota, painel, objetivo, estados e o design anexado |
+| `DESIGN-PROMPT.md` | O prompt de estilização para o Claude Design, com as restrições do design system do repo |
+| `screens/` | O design de cada tela |
+
+O caminho completo:
+
+1. `pnpm kickoff` e preencha as etapas. Dá para salvar no meio e voltar depois: o formulário recarrega o que já
+   foi salvo.
+2. Na etapa Revisar, copie o prompt de design e cole no Claude Design. Exporte cada tela e arraste para o quadro
+   dela na etapa Telas.
+3. No Claude Code, rode **`/kickoff`**. Ele propõe os campos, tipos e relações de cada entidade a partir do
+   papel dela, pergunta o que ficou faltando, lê os designs anexados, oferece aplicar os tokens de cor no
+   design system e gera as specs do MVP em `specs/features/`, na ordem de dependência.
+4. Siga com `/analyze <spec>`, ou `/cycle` para rodar a fila.
+
+`pnpm kickoff:render` regenera os `.md` sem abrir o navegador. O formulário escuta só em `127.0.0.1` e não
+instala dependência. Detalhes em [`docs/FORKING.md`](docs/FORKING.md) §0 e no comando
+[`/kickoff`](.claude/commands/kickoff.md).
+
+---
+
 ## ⌨️ Comandos
 
 <table>
@@ -290,6 +351,7 @@ pnpm --filter api dev:with-stripe
 pnpm emulators              # Auth + Firestore
 pnpm seed                   # apaga e repovoa o emulador
 pnpm --filter api create-dev-admin <email> <senha>
+pnpm kickoff                # formulário do começo de um fork (:3010)
 ```
 
 </td><td valign="top">
@@ -324,21 +386,22 @@ pnpm --filter e2e showcase  # captura as telas do vídeo de demonstração contr
 
 ## ✅ Etapa de entrega
 
-Antes da entrega final, todo produto passa por quatro partes, cada uma com a sua especificação em
+Antes da entrega final, todo produto passa por cinco partes, cada uma com a sua especificação em
 [`docs/delivery/`](docs/delivery/README.md):
 
 | | Parte | O que mede |
 |---|-------|------------|
 | 🔒 | [Validação de segurança](docs/delivery/01-security-review.md) | 19 itens no código do produto: env exposta, validação, IDOR, CSRF, upload, tokens, rate limit, CORS e o resto da lista |
 | 🛡️ | [Infra e hardening](docs/delivery/02-infra-hardening.md) | 20 controles ligados em produção: chaves restritas, segredos fora do Git, rules, cabeçalhos, HTTPS, varredura de dependências. Os passos de console têm [prompt pronto para o Claude Cowork](docs/delivery/cowork-infra-prompt.md) |
-| 📈 | [Qualidade do produto](docs/delivery/03-product-quality.md) | Celular, formulários, 404, PageSpeed, imagens, `og:image`, sitemap, Analytics, `robots.txt`, títulos e descrições |
+| 📈 | [Qualidade do produto](docs/delivery/03-product-quality.md) | Celular, formulários, 404, PageSpeed, imagens, `og:image`, sitemap, Analytics, `robots.txt`, títulos e descrições, idiomas e formatos |
 | 📚 | [Documentação](docs/delivery/04-documentation.md) | README no [modelo da casa](docs/templates/README.template.md), vídeo e GIF do produto, documentos em dia |
+| ⚖️ | [Políticas e conformidade legal](docs/delivery/05-legal-policies.md) | Privacidade, termos, cookies, reembolso, dados mínimos, LGPD, acessibilidade, publicidade honesta, direitos autorais, dados da empresa, riscos jurídicos e mercados atendidos fora do Brasil |
 
-No Claude Code, `/deliver` roda as quatro partes em ordem e grava o relatório em
-`docs/delivery/reports/<data>/report.md`. A entrega só é aprovada sem nenhuma falha 🔴 aberta. O que o
-próprio core ainda não passa está nas specs [`delivery-security-review`](specs/delivery-security-review.md),
-[`delivery-infra-hardening`](specs/delivery-infra-hardening.md) e
-[`delivery-product-quality`](specs/delivery-product-quality.md).
+No Claude Code, `/deliver` roda as cinco partes em ordem e grava o relatório em
+`docs/delivery/reports/<data>/report.md`. A entrega só é aprovada sem nenhuma falha 🔴 aberta. As lacunas
+que o próprio core tinha foram fechadas pelas specs [`delivery-security-review`](docs/features/delivery-security-review/spec.md),
+[`delivery-infra-hardening`](docs/features/delivery-infra-hardening/spec.md) e
+[`delivery-product-quality`](docs/features/delivery-product-quality/spec.md), já entregues.
 
 ---
 
@@ -412,7 +475,8 @@ auditando o próprio backlog contra o código:
 ```
 
 Cada etapa tem um subagent e deixa um artefato em `docs/features/<slug>/`. O `/cycle` roda a linha inteira
-sem parar para perguntar, mas nunca commita. O `/deliver` roda a [etapa de entrega](docs/delivery/README.md)
+sem parar para perguntar, mas nunca commita. O `/kickoff` começa um fork a partir do que o
+[`pnpm kickoff`](#-kickoff-de-um-fork) salvou. O `/deliver` roda a [etapa de entrega](docs/delivery/README.md)
 e a skill `brag-slim` (baixada de [latent-spaces/brag](https://github.com/latent-spaces/brag), licença MIT)
 gera o vídeo de demonstração. Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e
 [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md). O que ainda falta no core está em

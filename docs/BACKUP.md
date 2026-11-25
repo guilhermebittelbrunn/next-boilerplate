@@ -5,7 +5,7 @@
 > foram executados contra um projeto real.
 >
 > Fontes coletadas em 2026-09-30. Base na nota
-> [`compliance-trust-baseline`](../specs/research/compliance-trust-baseline.md), a revalidar depois de
+> [`compliance-trust-baseline`](../specs/reference/research/compliance-trust-baseline.md), a revalidar depois de
 > 2027-08-21. Recurso de nuvem muda de plano e de sintaxe; confira a página do provedor antes de rodar.
 
 ## No plano Spark não há backup

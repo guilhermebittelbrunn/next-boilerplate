@@ -94,15 +94,16 @@ exemplos de `entity`).
 
 ## Fluxo de trabalho
 
-- **Spec** — a ficha de uma funcionalidade **candidata**, em `specs/<id>.md`: problema, evidência de
+- **Spec** — a ficha de uma funcionalidade **candidata**, em `specs/features/<id>.md`: problema, evidência de
   mercado, corte de MVP e riscos. Responde **o quê** e **por quê**; o **como** é do `analyze/plan.md`. Uma
   spec não contém pseudo-diff nem nome de arquivo a criar. Ver [`specs/README.md`](../specs/README.md).
 - **Arquivar uma spec** — tirá-la de `specs/` e guardá-la junto da feature que a implementou, quando o
   `/spec --sync` confirma a entrega **no código**. É o que mantém `specs/` significando "o que falta".
   Regra e exceções: [`specs/README.md`](../specs/README.md).
-- **Backlog** — `specs/BACKLOG.md`, o índice priorizado das specs. É a **fonte da ordem**; o arquivo da
-  spec é a fonte do conteúdo.
-- **Nota de pesquisa** — `specs/research/<topico>.md`: o levantamento de mercado com fontes, `collected` e
+- **Backlog** — `specs/BACKLOG.md`, a fila priorizada das specs em uma página. É a **fonte da ordem**; o
+  arquivo da spec, em `specs/features/<id>.md`, é a fonte do conteúdo. A evidência de cada auditoria (achados,
+  gates, deriva, lotes paralelos) fica em `specs/reference/AUDIT.md`.
+- **Nota de pesquisa** — `specs/reference/research/<topico>.md`: o levantamento de mercado com fontes, `collected` e
   `revalidate_after`. As specs **citam** a nota em vez de recopiar os argumentos.
 - **Prevalência** — quantas referências de um painel declarado entregam um recurso por padrão ("7 de 11").
   É o dado que sustenta "isso é padrão de mercado"; impressão não é.

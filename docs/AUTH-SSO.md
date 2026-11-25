@@ -103,7 +103,7 @@ Enforcement server-side: o layout `(common)` do app redireciona comum→web no `
 > `simple` faz hoje é esconder a cobrança: a aba e o item da barra lateral no app
 > (`(common)/routes.tsx:67`, `account/(components)/accountTabRouting.ts:15`), o `/pricing` da web e as rotas `payments/*` da API.
 > Também tira o link "Ir para o painel" do header da web (`apps/web/app/[locale]/components/header/index.tsx:38`).
-> O usuário comum que chega ao painel por URL continua entrando. Registrado como achado em `specs/BACKLOG.md`.
+> O usuário comum que chega ao painel por URL continua entrando. Registrado como achado em `specs/reference/AUDIT.md`.
 
 ## Fallback: domínios registráveis distintos
 

@@ -33,7 +33,7 @@ Documentação de produto/infra: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`SETUP
 
 | Agent | Papel |
 |-------|-------|
-| `estrategista-produto` | Descobre e especifica o que vale construir → `specs/<id>.md` + `specs/BACKLOG.md`. |
+| `estrategista-produto` | Descobre e especifica o que vale construir → `specs/features/<id>.md` + `specs/BACKLOG.md`. |
 | `planejador-tarefa` | Analisa e planeja (PO + Tech Lead) → `analyze/plan.md`. |
 | `desenvolvedor` | Implementa o slice vertical → `develop/handoff.md`. |
 | `revisor-codigo` | Revisa e corrige o diff por **leitura** + gates estáticos, **dono da branch**, propõe os commits → `review/review.md`. Não executa o produto. |
@@ -54,10 +54,10 @@ Digite `/` no Claude Code para invocar. Cada skill encapsula o passo a passo já
 - **`/market-research`** — pesquisa de mercado **com fontes** para decidir se uma feature merece entrar no
   core: hierarquia de fontes (lei/regulador > doc de provedor > página do produto > blog **nunca**),
   **prevalência** medida sobre um painel declarado ("7 de 11"), ceticismo sobre hype e **custo herdado por
-  todo fork**. Grava nota citável em `specs/research/<topico>.md` com `collected`/`revalidate_after`.
+  todo fork**. Grava nota citável em `specs/reference/research/<topico>.md` com `collected`/`revalidate_after`.
 - **`/spec-audit`** — reconcilia `specs/` com a realidade do **código** (não com o `status` gravado):
   confere o corte de MVP de cada spec, cruza com `docs/features/*/STATE.md`, aplica transições, detecta
-  **deriva** e regressão, e regrava o `BACKLOG.md`. É o motor do `/spec --sync` — o passo que fecha o loop.
+  **deriva** e regressão, e regrava o `BACKLOG.md` (a fila) e o `reference/AUDIT.md` (a evidência). É o motor do `/spec --sync` — o passo que fecha o loop.
 
 ### Criadas para este repo (scaffolding)
 
@@ -301,7 +301,7 @@ governam isso, e elas são diferentes:
 | `contends_on` | "pode ser feito **ao mesmo tempo**?" | `cursor-pagination` e `audit-log` alteram as duas o `base.repository.ts` |
 
 `depends_on` vazio **não** significa paralelizável. O `/spec --sync` calcula os **lotes paralelos** a partir
-do `contends_on` e escreve a tabela no [`BACKLOG.md`](../specs/BACKLOG.md) — é de lá que você tira o que
+do `contends_on` e escreve a tabela no [`AUDIT.md`](../specs/reference/AUDIT.md#lotes-paralelos) — é de lá que você tira o que
 rodar junto.
 
 **A regra de processo que evita estrago:** só **um** workspace roda a auditoria (`/cycle --audit-only` ou

@@ -44,7 +44,8 @@ deixou, sem depender da conversa.
 | `/observe [slug?]` | Observador *(opcional)* | Observação final de 2–3 parágrafos em linguagem de negócio, pronta para colar num card. Exige só o `/review`. |
 | `/mediate [PR?]` | Mediador de PR *(avulso)* | Triagem dos comentários de uma PR aberta → markdown de replies com status por item. **Independente** do pipeline. |
 | `/cycle [id? / --audit-only / --max-rounds N]` | Orquestrador do ciclo | Roda a linha inteira — `/spec --sync` → `/analyze` → `/develop` → `/review` → `/test` — **sem parar para perguntar**, acumulando as decisões para um relatório final. Para quando você **não vai acompanhar**. Detalhes em [`AI-WORKFLOW.md`](AI-WORKFLOW.md#cycle--o-ciclo-inteiro-numa-tacada). |
-| `/deliver [partes?]` | Orquestrador da entrega | **Etapa de entrega** de um fork, obrigatória antes da entrega final: segurança, infra e hardening, qualidade do produto e documentação, conforme [`docs/delivery/`](delivery/README.md). Grava `docs/delivery/reports/<data>/report.md`; não corrige código nem commita. |
+| `/kickoff [--refine etapa \| --specs]` | Orquestrador do começo de um fork | Lê `docs/product/`, que o formulário visual do `pnpm kickoff` grava (produto, domínio, telas com o design anexado, marca e prompt para o Claude Design), completa as lacunas e gera as specs do MVP em `specs/features/` com `depends_on`. Não escreve código nem commita. |
+| `/deliver [partes?]` | Orquestrador da entrega | **Etapa de entrega** de um fork, obrigatória antes da entrega final: segurança, infra e hardening, qualidade do produto, documentação e políticas legais, conforme [`docs/delivery/`](delivery/README.md). Grava `docs/delivery/reports/<data>/report.md`; não corrige código nem commita. |
 
 > ⚠️ **Colisão de nome**: existe um `/review` global (revisão de PR do GitHub); o deste projeto tem
 > precedência. Para a revisão genérica de diff, use `/code-review`.
@@ -232,7 +233,7 @@ Depois, **cada subtarefa roda o pipeline completo**: `/develop <subtask> → /re
    → varre o repo, pesquisa o mercado, propõe specs em specs/; você aprova "audit-log";
      spec fica approved no specs/BACKLOG.md.
 1. /analyze audit-log                          ← o nome da spec é o argumento padrão
-   → lê specs/audit-log.md (problema, evidência, corte de MVP já decidido) e produz o blueprint em
+   → lê specs/features/audit-log.md (problema, evidência, corte de MVP já decidido) e produz o blueprint em
      docs/features/audit-log/analyze/plan.md + STATE.md (analyze=done, spec: audit-log);
      a spec passa a in-progress e CONTINUA em specs/ durante todo o desenvolvimento.
 2. /develop
@@ -249,7 +250,7 @@ Depois, **cada subtarefa roda o pipeline completo**: `/develop <subtask> → /re
    → observação de negócio pronta para colar no card.
 6. /spec --sync
    → confere no código que o corte de MVP foi entregue; audit-log vira done e é MOVIDA
-     (git mv specs/audit-log.md docs/features/audit-log/spec.md);
+     (git mv specs/features/audit-log.md docs/features/audit-log/spec.md);
      o BACKLOG.md a registra em "Entregues" e specs/ volta a conter só o que falta.
 ```
 

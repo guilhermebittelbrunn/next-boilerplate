@@ -5,7 +5,7 @@
 > usar como registro oficial.
 >
 > Fontes coletadas em 2026-09-30. Base na nota
-> [`compliance-trust-baseline`](../specs/research/compliance-trust-baseline.md), a revalidar depois de
+> [`compliance-trust-baseline`](../specs/reference/research/compliance-trust-baseline.md), a revalidar depois de
 > 2027-08-21. Prazo legal e lista de provedor mudam; confira antes de confiar num número daqui.
 
 ## Por que existe e como preencher
