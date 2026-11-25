@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Kickoff do produto</title>
+        <link rel="stylesheet" href="/styles.css">
+        <script type="module" src="/app.js"></script>
+    </head>
+    <body>
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark" id="brand-mark" aria-hidden="true"
+                    >K</span
+                >
+                <div>
+                    <strong id="product-title">Kickoff do produto</strong>
+                    <small
+                        >Da ideia ao backlog. Salva em
+                        <code>docs/product/</code>.</small
+                    >
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <span
+                    class="save-status"
+                    id="save-status"
+                    role="status"
+                    aria-live="polite"
+                ></span>
+                <button
+                    type="button"
+                    class="button ghost"
+                    id="theme-toggle"
+                    aria-label="Alternar tema"
+                >
+                    ◐
+                </button>
+                <button type="button" class="button primary" id="save-button">
+                    Salvar <kbd>⌘S</kbd>
+                </button>
+            </div>
+        </header>
+
+        <nav class="steps" id="steps" aria-label="Etapas do kickoff"></nav>
+
+        <main class="layout" data-mobile-view="form">
+            <div
+                class="mobile-switch"
+                role="tablist"
+                aria-label="Alternar entre formulário e pré-visualização"
+            >
+                <button
+                    type="button"
+                    role="tab"
+                    data-mobile-view="form"
+                    aria-selected="true"
+                >
+                    Formulário
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    data-mobile-view="preview"
+                    aria-selected="false"
+                >
+                    Pré-visualização
+                </button>
+            </div>
+            <section class="form-column" id="form" aria-live="off"></section>
+            <aside class="preview-column" aria-label="Pré-visualização">
+                <div class="preview-header">
+                    <span>Pré-visualização</span>
+                    <small id="preview-hint"></small>
+                </div>
+                <div class="preview" id="preview"></div>
+            </aside>
+        </main>
+
+        <input
+            type="file"
+            id="screen-upload"
+            accept=".png,.jpg,.jpeg,.webp,.html"
+            hidden
+        >
+    </body>
+</html>

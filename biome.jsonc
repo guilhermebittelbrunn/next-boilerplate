@@ -54,7 +54,9 @@
       "!docs/hooks",
       "!apps/docs/**/*.json",
       "!apps/email/.react-email",
-      "!packages/cms/basehub-types.d.ts"
+      "!packages/cms/basehub-types.d.ts",
+      // Gravado pelo formulário do `pnpm kickoff`, que é o dono do formato.
+      "!docs/product/kickoff.json"
     ]
   },
   "overrides": [
