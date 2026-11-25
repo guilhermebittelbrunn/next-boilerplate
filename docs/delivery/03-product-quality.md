@@ -308,6 +308,37 @@ com o nome da área ("Painel do usuário" e "Administração"). Uma tela nova se
 (convenção da casa: 30 a 60 caracteres), e cada tela do painel tem título próprio. Gravidade: 🟡 na landing;
 🟢 no painel.
 
+## 3.12 Idiomas e formatos
+
+**Por quê.** O core fala português, inglês e espanhol, mas o fork escreve telas e textos novos. Uma chave que
+ficou só em português, uma data no formato americano para um brasileiro ou um preço sem o símbolo da moeda
+aparecem na primeira tela de quem não é do idioma padrão.
+
+**O core já faz.** O dicionário tem paridade testada entre os três idiomas
+(`packages/internationalization/__tests__/parity.test.ts`). Datas saem no idioma da rota e no fuso de quem
+vê (`apps/app/shared/lib/formatDisplayDateTime.ts` e `DisplayTimeZoneProvider`), o campo de data segue o
+idioma e o preço dos planos sai na moeda cadastrada na Stripe, formatado no idioma da tela
+(`packages/shared/utils/helpers/formatPlanPrice.ts`).
+
+**Como medir.**
+
+1. Liste os idiomas que o produto atende. Idioma que o fork não atende continua no dicionário (a lista
+   `locales` alimenta rotas, `sitemap.xml` e `hreflang`), mas não precisa desta passada.
+2. `pnpm --filter @repo/internationalization test` passa, e nenhuma tela nova tem texto fora do dicionário:
+
+   ```bash
+   git diff <base>...HEAD -- 'apps/**/*.tsx' | grep -nE '^\+.*>[^<{]*[A-Za-zÀ-ú]{3,}[^<{]*<' | grep -v '{'
+   ```
+
+   O grep acha candidatos; cada um é conferido à mão.
+3. Com o `agent-browser`, percorra cadastro, a tela principal do produto, a cobrança e um e-mail
+   transacional (no preview da `apps/email`) em cada idioma atendido. Confira se não há texto de outro idioma,
+   se datas, horas, números e moeda saem no formato do idioma, e se textos mais longos (inglês e espanhol
+   costumam ocupar até 30% mais) não quebram botão, menu nem tabela.
+
+**Aprovado quando** os três passos conferem em todo idioma atendido. Gravidade: 🔴 se um fluxo principal
+mostra texto de outro idioma ou trava por layout; 🟡 nos demais casos.
+
 ## Registro no relatório
 
 Na seção 3 do [`report-template.md`](report-template.md), cada item ganha o status, o número medido

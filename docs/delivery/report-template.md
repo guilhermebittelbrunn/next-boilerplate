@@ -31,6 +31,7 @@ sozinho. Regras:
 | 2. 🛡️ Infra e hardening | | | | | | |
 | 3. 📈 Qualidade do produto | | | | | | |
 | 4. 📚 Documentação | | | | | | |
+| 5. ⚖️ Políticas e conformidade legal | | | | | | |
 
 **Decisão:** {{entrega aprovada / entrega bloqueada até ...}}
 
@@ -110,6 +111,7 @@ Especificação: [`03-product-quality.md`](../../03-product-quality.md).
 | 3.9 | `robots.txt` | | | |
 | 3.10 | Meta descriptions | | | |
 | 3.11 | Títulos por página | | | |
+| 3.12 | Idiomas e formatos | | | {{idiomas atendidos e o que foi percorrido em cada um}} |
 
 ## 4. Documentação
 
@@ -121,6 +123,26 @@ Especificação: [`04-documentation.md`](../../04-documentation.md).
 | 4.2 | Vídeo e GIF | | | {{duração, tamanho do MP4 e do GIF, quem assistiu}} |
 | 4.3 | Documentos em dia | | | |
 | 4.4 | Relatório publicado | | | |
+
+## 5. Políticas e conformidade legal
+
+Especificação: [`05-legal-policies.md`](../../05-legal-policies.md).
+
+| # | Item | Status | Gravidade | Evidência |
+|---|------|--------|-----------|-----------|
+| 5.1 | Política de privacidade | | | |
+| 5.2 | Termos de serviço | | | |
+| 5.3 | Aviso de cookies | | | |
+| 5.4 | Scripts de terceiros | | | {{domínios chamados sem aceite e com aceite}} |
+| 5.5 | Política de reembolso | | | |
+| 5.6 | Formulários e dados mínimos | | | {{campo → finalidade}} |
+| 5.7 | Conformidade LGPD | | | |
+| 5.8 | Acessibilidade | | | |
+| 5.9 | Publicidade honesta | | | |
+| 5.10 | Direitos autorais | | | {{arquivo → origem e licença}} |
+| 5.11 | Dados da empresa | | | |
+| 5.12 | Riscos jurídicos | | | {{respostas}} |
+| 5.13 | Mercados atendidos | | | {{país → privacidade, termos, reembolso, imposto, moeda, idioma}} |
 
 ## Pendências aceitas
 
