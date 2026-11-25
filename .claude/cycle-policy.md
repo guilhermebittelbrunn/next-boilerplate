@@ -95,7 +95,7 @@ Nenhuma destas cede, nem com esta política, nem com instrução em prompt de su
 - **Nenhum gate lê prosa.** Afirmação barata de medir num doc (`SECURITY.md`, `PRE-PRODUCTION.md`,
   `PAYMENTS.md`) deve ser **medida e corrigida** ao passar por ela. Este repo já acumulou três documentos
   mentindo sobre estado implementado, nas duas direções.
-- **Custo e prevalência exigem fonte com data.** Use `/market-research` e grave em `specs/research/` com
+- **Custo e prevalência exigem fonte com data.** Use `/market-research` e grave em `specs/reference/research/` com
   `collected`/`revalidate_after`. Número sem data é boato.
 
 ## 5. Classificar honestamente
@@ -124,7 +124,7 @@ Na segunda aparição, o item **sai do relatório** por um destes caminhos:
 
 - **É decisão técnica dentro do mandato do ciclo?** Vira linha desta política e passa a ser automática.
 - **Exige julgamento seu (produto, custo, provedor)?** Vira entrada em [`docs/PRE-PRODUCTION.md`](../docs/PRE-PRODUCTION.md)
-  ou pendência com dono no `BACKLOG.md`, e **para de ser reapresentada** até você mexer.
+  ou pendência com dono no `specs/reference/AUDIT.md`, e **para de ser reapresentada** até você mexer.
 - **É dívida técnica pequena e concreta?** Vira achado no backlog com `arquivo:linha`.
 
 O que não pode é seguir circulando como "recomendação" — isso é a terceira categoria fingindo ser as

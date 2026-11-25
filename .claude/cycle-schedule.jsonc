@@ -74,7 +74,7 @@
       "model": "sonnet",
       "effort": "medium",
 
-      "description": "Segunda feature do lote. Trocar o id conforme os lotes do BACKLOG.md."
+      "description": "Segunda feature do lote. Trocar o id conforme os lotes do specs/reference/AUDIT.md."
     },
 
     {
@@ -100,7 +100,7 @@
   // Quais features podem rodar juntas NÃO se deduz do depends_on — ele modela ordem lógica
   // ("A precisa de B"), não contenção de arquivo. Quem responde isso é o campo `contends_on`
   // das specs, e o /spec --sync escreve os lotes prontos na seção "Lotes paralelos" do
-  // specs/BACKLOG.md. Tire os ids de lá.
+  // specs/reference/AUDIT.md. Tire os ids de lá.
   //
   // Escalone os horários em alguns minutos (20h07, 20h09, 20h11): subir 3 instâncias no mesmo
   // instante desperdiça I/O e embaralha os logs.

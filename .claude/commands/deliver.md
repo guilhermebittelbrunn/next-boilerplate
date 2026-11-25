@@ -1,6 +1,6 @@
 ---
-description: Roda a etapa de entrega de um produto (fork) antes da entrega final — segurança, infra e hardening, qualidade do produto e documentação — seguindo as especificações de docs/delivery/, e grava o relatório versionado em docs/delivery/reports/<data>/report.md. Obrigatória para todo fork. Audita e registra; não commita.
-argument-hint: "[opcional: partes — 1 | 2 | 3 | 4 | lista como 1,3 — padrão: todas]"
+description: Roda a etapa de entrega de um produto (fork) antes da entrega final — segurança, infra e hardening, qualidade do produto, documentação e políticas legais — seguindo as especificações de docs/delivery/, e grava o relatório versionado em docs/delivery/reports/<data>/report.md. Obrigatória para todo fork. Audita e registra; não commita.
+argument-hint: "[opcional: partes — 1 | 2 | 3 | 4 | 5 | lista como 1,3 — padrão: todas]"
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill
 ---
 
@@ -26,7 +26,7 @@ Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md).
 
 ## Passo 0 — Preparar a rodada
 
-1. Partes: as de `$ARGUMENTS` ou, sem argumento, `1,2,3,4`, sempre nessa ordem.
+1. Partes: as de `$ARGUMENTS` ou, sem argumento, `1,2,3,4,5`, sempre nessa ordem.
 2. `git rev-parse --abbrev-ref HEAD` e `git status --short`. Este comando **não** cria branch nem commita;
    só avisa se houver mudança não commitada (o relatório mede o commit atual, e mudança solta entra na
    conta sem estar nele).
@@ -87,9 +87,23 @@ Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md).
    `showcase.gif`). Antes de dar o item por aprovado, peça a uma pessoa que assista ao vídeo inteiro
    conferindo as regras de conteúdo; até lá ele fica 🔒.
 3. Confira `PRE-PRODUCTION.md`, os `.env.example` e o mapa do `FORKING.md` (item 4.3).
-4. Preencha a seção 4 e o resumo do relatório.
+4. Preencha a seção 4 do relatório.
 
-## Passo 5 — Fechar
+## Passo 5 — Políticas e conformidade legal (parte 5)
+
+1. Siga [`05-legal-policies.md`](../../docs/delivery/05-legal-policies.md). Os itens de leitura (5.1, 5.2,
+   5.5, 5.6, 5.7, 5.9 a 5.11) você faz lendo as páginas publicadas e os textos do dicionário, e rodando os
+   `git grep` da especificação.
+2. Os itens que pedem navegador (5.3 banner de cookies, 5.4 scripts de terceiros sem aceite, 5.8 teclado)
+   vão para o subagent **`analista-qa`**, com o `agent-browser`, numa chamada só junto com a parte 3 quando as
+   duas rodam na mesma rodada.
+3. O 5.12 (riscos jurídicos) e o 5.13 (mercados atendidos) são perguntas ao usuário: apresente a lista com `AskUserQuestion` ou em texto e
+   registre as respostas. Não responda por ele.
+4. Este comando **não escreve política nem termos**. Texto jurídico faltando vira ❌ com o que falta; a
+   redação é do time do produto.
+5. Preencha a seção 5 e o resumo do relatório.
+
+## Passo 6 — Fechar
 
 1. Aplique a regra de aprovação do `docs/delivery/README.md`: nenhum 🔴 aberto e toda 🟡 com dono e prazo.
 2. Leve as 🟡 aceitas para `docs/PRE-PRODUCTION.md`.

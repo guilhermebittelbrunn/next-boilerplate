@@ -20,7 +20,7 @@ Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as ski
 - **`caveman` no que chega até o usuário**: tabela de specs, lacunas descartadas, triagem, recomendação da
   próxima. Estilo restrito a este comando — **não** fixe o modo na sessão. Saia do estilo no texto das
   perguntas de triagem: aprovar ou rejeitar spec é decisão que o usuário toma em cima delas.
-- **`humanizer` no que vira arquivo**: `specs/<id>.md`, `specs/BACKLOG.md` e `specs/research/*`, inclusive
+- **`humanizer` no que vira arquivo**: `specs/features/<id>.md`, `specs/BACKLOG.md` e `specs/reference/research/*`, inclusive
   na consolidação do Passo 4. Spec é o documento onde mais aparece superlativo sem número — a skill corta
   o inflado, mas a fonte com URL e data continua sendo exigência sua.
 - **Repita as regras no prompt do `estrategista-produto`.**
@@ -54,8 +54,8 @@ foco e o lote escolhidos, e instruindo a:
   `rejected`/`deferred`;
 - **pesquisar o mercado** com a skill `market-research`, com fontes primárias, prevalência declarada e
   ceticismo sobre hype;
-- **escrever as specs** no formato de [`specs/TEMPLATE.md`](../../specs/TEMPLATE.md) (status `proposed`),
-  regravar o `specs/BACKLOG.md` e gravar as notas em `specs/research/`;
+- **escrever as specs** no formato de [`specs/reference/TEMPLATE.md`](../../specs/reference/TEMPLATE.md) (status `proposed`),
+  regravar o `specs/BACKLOG.md` e gravar as notas em `specs/reference/research/`;
 - retornar a tabela de specs, as **lacunas descartadas com motivo** e as **"Perguntas em aberto"**.
 
 Em `--sync`, instrua-o a **seguir a skill `spec-audit` passo a passo** — ela é o procedimento canônico da
@@ -80,7 +80,9 @@ Aplique as respostas nos arquivos de spec e no `BACKLOG.md` (`status`, `value`, 
 `deferred`/`rejected`, `updated` com `date '+%Y-%m-%d'`). Garanta que:
 
 - todo frontmatter está completo e com valores válidos (ver `specs/README.md`);
-- o `BACKLOG.md` está ordenado por prioridade e com os contadores por status corretos;
+- toda spec em `specs/features/` tem o bloco **Resumo** no topo, coerente com o frontmatter;
+- o `BACKLOG.md` está ordenado por prioridade, com os contadores por status corretos, e continua cabendo numa
+  tela: evidência de auditoria vai para o `specs/reference/AUDIT.md`;
 - nenhuma spec contém pseudo-diff ou nome de arquivo a criar — isso é do `/analyze`.
 
 ## Passo 5 — Apresente e feche o loop

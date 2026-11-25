@@ -23,8 +23,8 @@ pseudo-diff são do `planejador-tarefa` (`/analyze`). Sua fronteira está em
 
 Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md). O que vale para você:
 
-- **`humanizer` antes de salvar** cada `specs/<id>.md`, o `specs/BACKLOG.md` e as notas de
-  `specs/research/`. Spec é onde mais aparece o vício que a skill caça: superlativo sem número
+- **`humanizer` antes de salvar** cada `specs/features/<id>.md`, o `specs/BACKLOG.md` e as notas de
+  `specs/reference/research/`. Spec é onde mais aparece o vício que a skill caça: superlativo sem número
   ("solução robusta", "padrão de mercado consolidado") e afirmação sem fonte com cara de fato. A skill
   corta o inflado; a **prevalência com URL e data** é sua e continua obrigatória.
 - **`caveman` no retorno ao orquestrador** — tabela de specs, lacunas descartadas, perguntas em aberto.
@@ -64,9 +64,9 @@ Produzir um lote de specs novas a partir de lacunas reais.
    três audiências (`produto`, `dx`, `confianca`) — um backlog só de features de tela é um backlog torto.
 4. **Cruze inventário × mercado** e liste as lacunas. Para cada uma, decida: spec nova, atualização de spec
    existente, ou descarte (com o motivo em uma linha, no retorno).
-5. **Escreva as specs** a partir de [`specs/TEMPLATE.md`](../../specs/TEMPLATE.md), status `proposed`.
-6. **Atualize o `specs/BACKLOG.md`** (índice priorizado) e grave as notas de pesquisa em
-   `specs/research/`.
+5. **Escreva as specs** a partir de [`specs/reference/TEMPLATE.md`](../../specs/reference/TEMPLATE.md), status `proposed`.
+6. **Atualize o `specs/BACKLOG.md`** (a fila em uma página, sem evidência de auditoria) e grave as notas de pesquisa em
+   `specs/reference/research/`.
 
 Calibre o lote: **6 a 12 specs** numa descoberta ampla. Mais que isso vira ruído que ninguém lê.
 
@@ -90,12 +90,13 @@ Fechar o loop: o backlog tem de refletir o código.
    capacidades do corte de MVP existem hoje. Use `Grep`/`Glob`/`Read` — não confie no `status` gravado.
 2. Cruze com `docs/features/*/STATE.md`: uma feature `done` que corresponde a uma spec fecha essa spec.
 3. Atualize: entregue → `done` **e arquive** (passo 5); em execução → `in-progress`; absorvida por outra →
-   `superseded` (aponte qual, fica em `specs/`); tornou-se irrelevante → proponha `rejected` **mas não
+   `superseded` (aponte qual, fica em `specs/features/`); tornou-se irrelevante → proponha `rejected` **mas não
    decida sozinho** — leve ao retorno como recomendação.
 4. Sinalize **deriva**: spec cujo corte de MVP foi implementado *diferente* do especificado. Isso é
    informação valiosa: ou a spec estava errada, ou a implementação desviou.
 5. **Arquive as entregues** — só depois de confirmar a entrega **no código**, nunca pelo `status` gravado.
-6. Regrave o `BACKLOG.md` com os contadores por status e a seção **Entregues**.
+6. Regrave o `BACKLOG.md` (a fila, curta) e o `reference/AUDIT.md` (a evidência da rodada), como manda o §7 da
+   skill.
 
 **Siga a skill [`/spec-audit`](../skills/spec-audit/SKILL.md) passo a passo** — ela é o procedimento
 canônico da auditoria e do arquivamento, incluindo os casos em que **não** se deve mover. Não reconstrua o
@@ -117,16 +118,21 @@ Recomende **uma** spec, com justificativa em 5 linhas: valor × esforço, depend
   `value`. Hype não é evidência.
 - **Nunca invente** número, artigo de lei, versão de norma ou prevalência. Não confirmou? Escreva
   "não confirmado" e siga.
-- Grave o que pesquisou em `specs/research/<topico>.md` com `collected:` e `revalidate_after:`. Se uma nota
+- Grave o que pesquisou em `specs/reference/research/<topico>.md` com `collected:` e `revalidate_after:`. Se uma nota
   existente já cobre o tema e está dentro da validade, **reuse** em vez de repesquisar.
 
 ## Saída
 
 ### Arquivos
 
-- `specs/<id>.md` — uma por spec, no formato do `TEMPLATE.md`, frontmatter completo e válido.
-- `specs/BACKLOG.md` — índice priorizado. Regrave inteiro, mantendo as specs que você não tocou.
-- `specs/research/<topico>.md` — notas de pesquisa com fontes.
+- `specs/features/<id>.md` — uma por spec, no formato do `TEMPLATE.md`, frontmatter completo e válido e o
+  bloco **Resumo** (o quê, por quê, status, próximo passo) logo abaixo do título. Mudou o status, atualize o
+  Resumo junto.
+- `specs/BACKLOG.md` — a fila em uma página, para o usuário decidir. Sem âncora `arquivo:linha`, gate, deriva
+  nem achado: isso vai para o `specs/reference/AUDIT.md`. Formato no §7 da skill
+  [`spec-audit`](../skills/spec-audit/SKILL.md).
+- `specs/reference/AUDIT.md` — registro de auditoria (só no `--sync`, ou quando a rodada medir algo).
+- `specs/reference/research/<topico>.md` — notas de pesquisa com fontes.
 
 Regras de forma: `id`/slug **em inglês** (kebab-case), conteúdo **em português**, datas absolutas
 (`date '+%Y-%m-%d'`), tabelas em Markdown. Não crie subpasta por spec — é um arquivo por spec.

@@ -35,18 +35,18 @@ Valem para você tanto quanto para o subagent — a regra é
 3. **Parece nome de spec** — o caso padrão. O discriminador é a **forma**: um token único, sem espaço, em
    kebab-case (aceite também os prefixos/sufixos `spec:`, `.md` e `specs/`, normalizando-os). Se a forma
    casar, o usuário **quis dizer uma spec** — e a partir daqui o argumento nunca vira descrição livre:
-   - `specs/<id>.md` existe → **Modo spec** (abaixo);
+   - `specs/features/<id>.md` existe → **Modo spec** (abaixo);
    - `docs/features/*/spec.md` tem esse `id` → a spec **já foi entregue e arquivada**. Diga isso, mostre a
      feature, e pergunte se é para tratar como evolução/regressão daquilo;
-   - não achou em lugar nenhum → **é typo**. Liste os ids disponíveis em `specs/` e pergunte qual era.
+   - não achou em lugar nenhum → **é typo**. Liste os ids disponíveis em `specs/features/` e pergunte qual era.
 4. **Descrição em texto livre** (qualquer coisa com espaço) → modo descrição. Antes de seguir, **procure em
-   `specs/` uma spec que já cubra o assunto** (`grep` por palavras-chave nos títulos e no `id`). Se
+   `specs/features/` uma spec que já cubra o assunto** (`grep` por palavras-chave nos títulos e no `id`). Se
    encontrar, avise e pergunte se deve usá-la em vez da descrição solta — é o que evita planejar duas vezes
    a mesma coisa.
 
 ### Modo spec
 
-1. Leia `specs/<id>.md` **por completo**. O problema, a evidência e o **corte de MVP** são **decisão de
+1. Leia `specs/features/<id>.md` **por completo**. O problema, a evidência e o **corte de MVP** são **decisão de
    produto já tomada** — não as re-litigue no plano.
 2. Confira o `status` no frontmatter:
    - `approved` → siga.
@@ -60,7 +60,8 @@ Valem para você tanto quanto para o subagent — a regra é
 3. Verifique o `depends_on`: se alguma dependência **não** estiver entregue, avise antes de planejar.
 4. Repasse o conteúdo da spec ao `planejador-tarefa` e instrua-o a gravar `spec: <id>` no frontmatter do
    `STATE.md`.
-5. Ao final, marque a spec como `status: in-progress`, `feature: <slug>` e `updated` de hoje.
+5. Ao final, marque a spec como `status: in-progress`, `feature: <slug>` e `updated` de hoje, e atualize o bloco
+   **Resumo** dela (linhas **Status** e **Próximo passo**: `/develop`).
    **Não mova o arquivo** — arquivar é do `/spec --sync` (ciclo de vida em
    [`specs/README.md`](../../specs/README.md)).
 

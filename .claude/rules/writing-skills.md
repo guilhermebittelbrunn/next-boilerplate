@@ -14,7 +14,7 @@ Roda **antes** de gravar qualquer arquivo de texto do fluxo:
 
 - `docs/features/<slug>/` — `analyze/plan.md`, `develop/handoff.md`, `review/review.md`,
   `test/criterios-aceite.md`, `test/report.md`, `observacao.md`, `STATE.md`;
-- `specs/` — specs, `BACKLOG.md`, notas em `specs/research/`;
+- `specs/` — specs em `features/`, `BACKLOG.md`, `reference/AUDIT.md`, notas em `specs/reference/research/`;
 - markdown de replies de PR (`pr-review/pr-<numero>.md`);
 - qualquer `docs/*.md` novo ou editado (incluindo `docs/PRE-PRODUCTION.md`).
 

@@ -36,7 +36,7 @@ Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md
 
 A tarefa pode chegar como:
 - **Descrição em texto livre** (o caso comum).
-- **Uma spec do backlog** (`specs/<id>.md`) — **é a entrada padrão**. Leia a spec por completo: o
+- **Uma spec do backlog** (`specs/features/<id>.md`) — **é a entrada padrão**. Leia a spec por completo: o
   **problema**, a **evidência de mercado** e o **corte de MVP** dela já são decisão de produto tomada — não
   os re-litigue. Seu trabalho é o **como**: a Etapa 2. Se discordar do corte, registre em "Perguntas em
   aberto" em vez de mudá-lo por conta própria, e grave `spec: <id>` no frontmatter do `STATE.md`.

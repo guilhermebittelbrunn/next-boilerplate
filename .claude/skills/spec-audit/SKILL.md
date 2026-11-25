@@ -1,6 +1,6 @@
 ---
 name: spec-audit
-description: Reconcilia o backlog de specs (specs/) com a realidade do código e do pipeline — confere no código se o corte de MVP de cada spec foi entregue, cruza com docs/features/*/STATE.md, corrige os status, detecta deriva, move as specs entregues para docs/features/<slug>/spec.md e regrava o BACKLOG.md. Use no /spec --sync, ao fechar um ciclo de entrega, ou quando desconfiar que o backlog está mentindo.
+description: Reconcilia o backlog de specs (specs/features/) com a realidade do código e do pipeline — confere no código se o corte de MVP de cada spec foi entregue, cruza com docs/features/*/STATE.md, corrige os status, detecta deriva, move as specs entregues para docs/features/<slug>/spec.md, regrava a fila em specs/BACKLOG.md e a evidência em specs/reference/AUDIT.md. Use no /spec --sync, ao fechar um ciclo de entrega, ou quando desconfiar que o backlog está mentindo.
 ---
 
 # Auditoria do backlog de specs
@@ -13,13 +13,13 @@ implementada, o frontmatter está errado.
 
 ## 1. Levante o material
 
-**Antes de tudo, meça o quanto o backlog está defasado.** O `BACKLOG.md` registra a data e a PR da última
-auditoria; compare com o que já entrou em `main`:
+**Antes de tudo, meça o quanto o backlog está defasado.** O `specs/reference/AUDIT.md` registra a data e a PR da
+última auditoria; compare com o que já entrou em `main`:
 
 ```bash
 git fetch origin --quiet
 git log origin/main --oneline -5          # o que mergeou desde a última auditoria
-grep -n "Última auditoria" specs/BACKLOG.md
+grep -n "Última rodada" specs/reference/AUDIT.md
 ```
 
 Se mergeou PR depois da auditoria registrada, **essas entregas ainda não foram reconciliadas** — é o
@@ -27,7 +27,7 @@ trabalho óbvio desta rodada, e começar por ele evita auditar uma fila que já 
 `BACKLOG.md` dizer "pós-PR #19" com a #20 mergeada, e o desvio só foi pego na mão.
 
 ```bash
-ls specs/*.md
+ls specs/features/*.md
 ls docs/features/*/spec.md 2>/dev/null    # specs já entregues e arquivadas
 grep -l '' docs/features/*/STATE.md 2>/dev/null
 ```
@@ -111,26 +111,30 @@ Uma spec `done` **sai de `specs/`** e passa a viver junto da feature que a imple
 5. Mova preservando o histórico do arquivo:
 
    ```bash
-   git mv specs/<id>.md docs/features/<slug>/spec.md
+   git mv specs/features/<id>.md docs/features/<slug>/spec.md
    ```
 
    Se o arquivo ainda não estiver rastreado pelo git, use `mv` simples — mas prefira `git mv` sempre que
    possível, porque a rastreabilidade do arquivo é metade do valor de guardar a spec.
-6. No `BACKLOG.md`, tire a spec da fila ativa e registre-a na seção **Entregues**, com link para o novo
-   caminho. **O id nunca some do índice** — some da fila.
+6. No `BACKLOG.md`, tire a spec da fila e registre-a na seção **Entregues** (uma linha: id, data, link para o
+   novo caminho). O detalhe da conferência (itens do corte, PRs, `/test`, derivas) vai para a seção **Entregues**
+   do `reference/AUDIT.md`. **O id nunca some do índice** — some da fila.
 7. Se o `docs/features/<slug>/STATE.md` ainda não citar a spec, acrescente `spec: <id>` ao frontmatter.
 8. **Conserte os links que o movimento quebrou.** Toda spec que citava `](<id>.md)` agora aponta para
    nada — as specs restantes se referenciam entre si o tempo todo (`depends_on`, "bloqueada por",
    comparações de esforço). Varra e corrija:
 
    ```bash
-   grep -rn "](<id>.md)" specs/ docs/
+   grep -rn "](<id>.md)\|features/<id>.md" specs/ docs/
    ```
 
-   O alvo novo é `](../docs/features/<slug>/spec.md)` a partir de `specs/`. Três specs ficaram com link
+   O alvo novo é `](../../docs/features/<slug>/spec.md)` a partir de `specs/features/` e de `specs/reference/`, e
+   `](../docs/features/<slug>/spec.md)` a partir do `specs/BACKLOG.md`. Reescreva também os links de **saída** da
+   spec movida: `../reference/research/*.md` vira `../../../specs/reference/research/*.md`, spec viva vira
+   `../../../specs/features/<id>.md`, e `../../docs/...` vira `../../...`. Três specs ficaram com link
    morto por uma rodada inteira porque este passo não existia.
 
-**Nunca apague uma spec.** `done` é movida; `rejected` e `superseded` ficam em `specs/` como memória
+**Nunca apague uma spec.** `done` é movida; `rejected` e `superseded` ficam em `specs/features/` como memória
 institucional — é o que impede o `/spec` de repropor a mesma coisa na rodada seguinte.
 
 > **Commit:** o arquivo movido pertence ao commit `docs(features): <slug>` daquela feature. Como o
@@ -176,9 +180,9 @@ arquivo: duas specs com `depends_on: []` podem alterar as duas o mesmo
 
 Leia o `contends_on` do frontmatter **do disco**; não o reconstrua de memória nem o deduza do `area:`.
 
-### O que escrever no `BACKLOG.md`
+### O que escrever no `reference/AUDIT.md`
 
-Seção **"Lotes paralelos"**, logo depois de "Ordem recomendada", contendo:
+Seção **"Lotes paralelos"** do `reference/AUDIT.md`, contendo:
 
 - a **tabela dos lotes** — lote · specs · o que cada uma toca · por que não colidem;
 - **por que uma spec ficou de fora do lote 1, nominalmente** — é a parte que se consulta de verdade
@@ -189,16 +193,33 @@ Seção **"Lotes paralelos"**, logo depois de "Ordem recomendada", contendo:
 - a **ressalva honesta**: lote disjunto em `contends_on` **reduz** conflito, não elimina. Duas features
   ainda podem brigar num arquivo que nenhuma das duas previu.
 
-## 7. Regrave o `BACKLOG.md`
+## 7. Regrave o `BACKLOG.md` e o `reference/AUDIT.md`
 
-- Regrave **o arquivo inteiro**, preservando as specs que você não tocou.
-- Mantenha a seção **Entregues** com uma linha por spec arquivada, apontando para
-  `docs/features/<slug>/spec.md`. O índice é a única visão que mostra entregue e pendente lado a lado.
-- Ordene por prioridade (`value` alto e `effort` baixo primeiro), respeitando `depends_on`.
-- Atualize os contadores por `status` e a data de auditoria.
-- Confira as dependências: spec `approved` cujo `depends_on` aponta para spec não-`done` **não** pode ser
-  recomendada como próxima — sinalize o bloqueio.
-- Regrave a seção **Lotes paralelos** com o resultado do §6.
+São dois arquivos com leitores diferentes, e a separação é o que mantém o backlog legível.
+
+**`specs/BACKLOG.md` é para o usuário decidir.** Cabe numa tela e não traz evidência de auditoria: nada de âncora
+`arquivo:linha`, gate, deriva ou achado. Seções, nesta ordem:
+
+1. **Ordem recomendada**: tabela com `#`, spec (link), o quê (uma linha), status, valor e esforço, e o próximo
+   comando. Só `approved`, ordenadas por prioridade (`value` alto e `effort` baixo primeiro), respeitando
+   `depends_on`. Spec `approved` cujo `depends_on` aponta para spec não-`done` **não** pode ser recomendada como
+   próxima; sinalize o bloqueio na linha.
+2. **Em andamento** (`in-progress`), **Aguardando triagem** (`proposed`) e **Adiadas e rejeitadas**
+   (`deferred`, `rejected`, `superseded`, com o motivo em uma linha).
+3. **Tarefas diretas**: as poucas que vêm a seguir, em uma linha cada, com link para o achado no `AUDIT.md`.
+4. **Precisam de decisão**: só as abertas, com a recomendação.
+5. **Entregues**: uma linha por spec arquivada (id, data, link para `docs/features/<slug>/spec.md`). O índice é a
+   única visão que mostra entregue e pendente lado a lado.
+6. Contadores por `status` e a data da última auditoria, numa linha, com link para o `AUDIT.md`.
+
+**`specs/reference/AUDIT.md` é a evidência.** Regrave o cabeçalho "Última rodada" e as seções que a rodada
+tocou: entregas conferidas, tarefas diretas entregues, gates, lotes paralelos (§6), decisões estacionadas,
+dependências, a tabela detalhada de Entregues, contradições doc × código, deriva, achados e pendências.
+Preserve o que a rodada não tocou.
+
+**Bloco Resumo das specs.** Toda spec em `specs/features/` abre com o bloco **Resumo** (ver
+[`TEMPLATE.md`](../../../specs/reference/TEMPLATE.md)). Spec cujo status, valor, esforço ou próximo passo mudou
+nesta rodada tem o Resumo atualizado junto. Spec sem Resumo ganha um.
 
 ## 8. Relatório
 
@@ -227,7 +248,7 @@ Seção **"Lotes paralelos"**, logo depois de "Ordem recomendada", contendo:
 
 ## Limites
 
-- **Escreve em `specs/`** e, **só para arquivar a spec entregue**, cria `docs/features/<slug>/spec.md` e
+- **Escreve em `specs/`** (`BACKLOG.md`, `features/`, `reference/AUDIT.md`) e, **só para arquivar a spec entregue**, cria `docs/features/<slug>/spec.md` e
   acrescenta o campo `spec:` ao `STATE.md` daquela feature. Nada além disso em `docs/features/**`.
 - **Nunca toque em `apps/**` ou `packages/**`.**
 - **Nunca aplique `rejected`** por conta própria — proponha.

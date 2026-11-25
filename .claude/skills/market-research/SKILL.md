@@ -1,19 +1,19 @@
 ---
 name: market-research
-description: Pesquisa de mercado com fontes para decidir se uma funcionalidade vale entrar neste boilerplate de MVPs. Levanta prevalência entre starters/SaaS de referência, requisitos de provedores (Stripe, Firebase, Vercel) e obrigações normativas (LGPD/GDPR/WCAG/OWASP), e grava uma nota citável em specs/research/. Use ao escrever ou revisar uma spec, ao avaliar "isso é padrão de mercado?", ou antes de adotar uma dependência/serviço novo.
+description: Pesquisa de mercado com fontes para decidir se uma funcionalidade vale entrar neste boilerplate de MVPs. Levanta prevalência entre starters/SaaS de referência, requisitos de provedores (Stripe, Firebase, Vercel) e obrigações normativas (LGPD/GDPR/WCAG/OWASP), e grava uma nota citável em specs/reference/research/. Use ao escrever ou revisar uma spec, ao avaliar "isso é padrão de mercado?", ou antes de adotar uma dependência/serviço novo.
 ---
 
 # Pesquisa de mercado para o backlog do boilerplate
 
 Transforma "acho que isso é padrão" em **evidência com fonte e data**. A saída é uma nota em
-`specs/research/<topico>.md` que as specs citam em vez de recopiar argumentos.
+`specs/reference/research/<topico>.md` que as specs citam em vez de recopiar argumentos.
 
 Este repo é um **core de MVPs**: a pergunta nunca é "isso é legal?", é **"um fork qualquer sentiria falta
 disso, e o mercado concorda?"**.
 
 ## 0. Antes de pesquisar
 
-1. **Reuse.** Liste `specs/research/` e leia o frontmatter. Se uma nota cobre o tema e
+1. **Reuse.** Liste `specs/reference/research/` e leia o frontmatter. Se uma nota cobre o tema e
    `revalidate_after` ainda não passou, **use-a** e pare aqui. Repesquisar tema fresco é desperdício.
 2. **Delimite a pergunta.** "Notificações" é tema; "vale entregar notificações in-app + preferências de
    e-mail por padrão num boilerplate?" é pergunta pesquisável. Sem pergunta, a pesquisa vira coletânea.
@@ -81,7 +81,7 @@ Cheque explicitamente, e registre a resposta:
 
 ## 6. Formato da nota
 
-Grave em `specs/research/<topico>.md` — `<topico>` em inglês, kebab-case.
+Grave em `specs/reference/research/<topico>.md` — `<topico>` em inglês, kebab-case.
 
 ```markdown
 ---

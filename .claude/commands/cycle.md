@@ -92,7 +92,7 @@ Com `--no-audit`, o `$ARGUMENTS` **tem** de trazer o id da spec — sem auditori
 adivinhar qual atacar é exatamente como dois workspaces acabam na mesma feature. Se vier vazio, **pare** e
 peça o id.
 
-Antes de começar, confirme no `BACKLOG.md` que a spec pedida está no **mesmo lote** que as outras em
+Antes de começar, confirme nos lotes paralelos do `specs/reference/AUDIT.md` que a spec pedida está no **mesmo lote** que as outras em
 execução: lote é calculado por `contends_on` disjunto. `depends_on` vazio **não** significa paralelizável —
 ele modela ordem ("A precisa de B"), não contenção de arquivo.
 
@@ -229,7 +229,7 @@ que ficou certa.
 > de medir, **meça e corrija** — é a única forma de esse arquivo não apodrecer.
 
 Se a decisão envolver **custo ou escolha de provedor**, use a skill
-[`/market-research`](../skills/market-research/SKILL.md) e grave a nota em `specs/research/`, com
+[`/market-research`](../skills/market-research/SKILL.md) e grave a nota em `specs/reference/research/`, com
 `collected`/`revalidate_after`. Preço envelhece; número sem data é boato.
 
 ## Passo 7 — Relatório final
