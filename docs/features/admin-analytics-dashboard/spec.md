@@ -83,7 +83,7 @@ começar do zero.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md)
   (coletada em 2026-08-21, revalidar após 2027-02-21 — dentro da validade).
 - Prevalência: **3 em 10** starters entregam "dashboard de métricas do produto", valor **médio**, esforço
   **M**. A mesma nota registra que tela cheia de widget "aparece em templates de dashboard, não em kits de
@@ -124,7 +124,7 @@ porque não tem caminho decidido.
 - Exportar as métricas, comparar com período anterior, filtro de intervalo escolhido pelo usuário.
 - Segmentação (por tipo, por origem, por plano) e detalhamento por usuário a partir do número.
 - Métricas de plataforma, como erro e latência — pertencem a
-  [`observability-logging`](../../../specs/observability-logging.md).
+  [`observability-logging`](../../../specs/features/observability-logging.md).
 
 ## Impacto por camada
 

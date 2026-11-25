@@ -76,11 +76,11 @@ lista, mais o `@stripe/agent-toolkit`, que a própria lista exclui por não ter 
 
 **Achado que a entrega produziu:** a medição do `/test` confirmou que conta desativada pelo admin segue com o
 ID token aceito pela API por até 1 hora. Está no `BACKLOG.md` como achado de segurança e na spec
-[`account-security-mfa`](../../../specs/account-security-mfa.md).
+[`account-security-mfa`](../../../specs/features/account-security-mfa.md).
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md), controles 6, 8, 9 e
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/reference/research/compliance-trust-baseline.md), controles 6, 8, 9 e
   19, e adendo de 2026-09-26.
 - Natureza da obrigação: **lei**. Registro de operações: LGPD art. 37, que a Res. CD/ANPD 2/2022 art. 9º permite
   cumprir de forma simplificada para pequeno porte, sem isentar. Incidente: Res. CD/ANPD 15/2024, com

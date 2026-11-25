@@ -138,7 +138,7 @@ Conferido em `main` (`9c793c6`) em 2026-10-22.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md)
 - Prevalência: **6 de 10** starters entregam times/organizações; **5 de 10** entregam convites + RBAC.
   Valor **alto (B2B)**, esforço **G** nos dois casos.
 - A nota é categórica: organizações são "o eixo que separa B2B de B2C e a decisão **mais cara de

@@ -1,6 +1,6 @@
 # Plano: política de senha (fatia 1 de `account-security-mfa`)
 
-- **Spec:** [`specs/account-security-mfa.md`](../../../../specs/account-security-mfa.md), com o bloco "Reescopo que o `/analyze` deve aplicar" (auditoria de 2026-09-26).
+- **Spec:** [`specs/account-security-mfa.md`](../../../../specs/features/account-security-mfa.md), com o bloco "Reescopo que o `/analyze` deve aplicar" (auditoria de 2026-09-26).
 - **Fatia:** só o item 4 do corte, a política de senha. Lista de sessões, logout local, encerramento seletivo e segundo fator ficam para fatias seguintes da mesma spec.
 - **Rodada:** autônoma (`/cycle`). As decisões tomadas sem perguntar estão na seção 13, cada uma com a alternativa descartada.
 
@@ -14,7 +14,7 @@ Toda senha **definida** no produto (cadastro na `apps/app` e na `apps/web`, rede
 
 ### 1.2 Por que agora
 
-- ASVS 5.0 L1 pede senha com pelo menos 8 caracteres e sem regra de composição (6.2.1 e 6.2.5), e pede que o usuário possa colar e usar gerenciador de senha (6.2.6 e 6.2.7). Fonte: [`specs/research/compliance-trust-baseline.md`](../../../../specs/research/compliance-trust-baseline.md), linhas 208-210, dentro da validade (`revalidate_after: 2027-08-21`).
+- ASVS 5.0 L1 pede senha com pelo menos 8 caracteres e sem regra de composição (6.2.1 e 6.2.5), e pede que o usuário possa colar e usar gerenciador de senha (6.2.6 e 6.2.7). Fonte: [`specs/research/compliance-trust-baseline.md`](../../../../specs/reference/research/compliance-trust-baseline.md), linhas 208-210, dentro da validade (`revalidate_after: 2027-08-21`).
 - WCAG 2.2, critério 3.3.8: nada de CAPTCHA, de bloquear colar ou de exigir memorizar sequência de símbolos. Um mínimo de tamanho sem composição respeita isso.
 - Hoje o mínimo é 6 e está declarado 11 vezes (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`, conferido nesta análise):
 

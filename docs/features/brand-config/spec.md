@@ -94,7 +94,7 @@ lateral) estão no `specs/BACKLOG.md` como achados. O `package.json` da raiz con
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-09-26.
 - Prevalência: **4 de 4 verificados** têm um ponto único de configuração por app. Makerkit usa
   `app.config.ts` alimentado por env e validado com Zod no build; ShipFast chama o `config.js` de "the

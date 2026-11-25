@@ -77,7 +77,7 @@ jeito de agregar número e o próprio gráfico, geralmente na pressa da demo.
 
 ## Evidência de mercado
 
-- Nota: [`specs/research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
+- Nota: [`specs/research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md)
 - Prevalência: **3 de 10** starters entregam "dashboard de métricas do produto" — valor **médio**,
   esforço **M**. A nota registra ainda que command palette e afins "aparecem em templates de dashboard,
   não em kits de SaaS", ou seja, tela cheia de widget é decoração em boa parte do mercado.

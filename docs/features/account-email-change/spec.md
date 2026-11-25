@@ -49,7 +49,7 @@ sequestre a conta de vez.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-09-26.
 - Prevalência: **2 confirmados** (Makerkit no código público do kit lite; Better-Auth como biblioteca,
   desligado por padrão), **1 confirmado sem** (Open SaaS), os demais do painel **não verificados**. Não há
@@ -131,7 +131,7 @@ sem o evento de auditoria. Está declarado em `docs/SECURITY.md:11` e fica fora 
 - **Troca pelo administrador.** O formulário de edição do admin mostra o e-mail sem permitir edição
   (`UserFormFields.tsx:34`). Trocar o e-mail de outra pessoa pede outro contrato de verificação.
 - **Conta só Google.** A reautenticação por senha não serve; é o mesmo bloqueio da exclusão de conta e
-  pertence à iteração de "sessão recente" de [`account-security-mfa`](../../../specs/account-security-mfa.md).
+  pertence à iteração de "sessão recente" de [`account-security-mfa`](../../../specs/features/account-security-mfa.md).
 - **Desfazer a troca pelo link do e-mail antigo.** O Firebase tem uma ação de recuperação de e-mail, mas não
   foi confirmado se ela vale para links gerados pelo Admin SDK.
 - **Avisos de segurança por e-mail para outras mudanças** (senha trocada, sessões encerradas). Mesmo

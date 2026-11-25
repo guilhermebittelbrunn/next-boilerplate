@@ -95,7 +95,7 @@ existir, cada guarda nova do subsistema (PR #58) fecha uma porta a mais sem abri
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-27, "Administração da organização depois do convite". A nota original (2026-08-21) já lista "deixar o último
   owner sair da organização" entre as armadilhas de convites e RBAC.
 - Prevalência: a transferência explícita da propriedade aparece em **1 de 6** referências lidas (Makerkit, nos dois

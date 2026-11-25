@@ -107,7 +107,7 @@ produto" do zero, como um formulário solto que não sobrevive a um refresh.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md)
 - Prevalência: **3 de 10** starters do painel entregam onboarding pós-signup multi-step.
 - Valor atribuído na nota: **muito alto** — descrito como o **maior desequilíbrio valor/prevalência de
   todo o painel**: "é onde o usuário decide se fica, e quase nenhum kit entrega".

@@ -46,7 +46,7 @@ trata nenhum dos casos.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Vincular métodos de login".
 - Prevalência: **1 de 10** starters confirmado (Makerkit, desligado por padrão, `NEXT_PUBLIC_AUTH_IDENTITY_LINKING`:
   "link Google to an existing email account"). Os demais não mencionam ou não foram verificados. A prevalência é
@@ -74,9 +74,9 @@ trata nenhum dos casos.
 ### Fora do corte
 
 - **Outros provedores** (GitHub, Microsoft, Apple): ficam em
-  [`social-sign-in-providers`](../../../specs/social-sign-in-providers.md), que depende desta.
+  [`social-sign-in-providers`](../../../specs/features/social-sign-in-providers.md), que depende desta.
 - **Reautenticar conta Google para excluir a conta sem criar senha**: é o contrato de "sessão recente" que
-  [`account-security-mfa`](../../../specs/account-security-mfa.md) deixou fora do corte. Esta spec dá à conta só Google um caminho
+  [`account-security-mfa`](../../../specs/features/account-security-mfa.md) deixou fora do corte. Esta spec dá à conta só Google um caminho
   pelo fluxo de senha que já existe, sem generalizar esse contrato.
 - **Mesclar duas contas** quando o Google já pertence a outra conta: a doc do Firebase sugere mesclar e apagar a
   antiga; isso mexe em posse de registros e fica para quando houver caso.

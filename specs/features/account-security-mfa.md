@@ -10,10 +10,16 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # MFA, sessões ativas e política de senha
+
+> **Resumo**
+> - **O quê:** segundo fator no login, com códigos de recuperação. A política de senha e a lista de sessões ativas já foram entregues.
+> - **Por quê:** a conta ainda vale só o que vale a senha; falta o segundo fator para quem quiser proteger mais o acesso.
+> - **Status:** `in-progress` (4 de 6 itens entregues nas PRs #29 e #39) · valor médio · esforço M · confianca
+> - **Próximo passo:** aguardando sua decisão sobre o que fazer com o segundo fator (E12 em [`AUDIT.md`](../reference/AUDIT.md#decisões-estacionadas-51)): a recomendação é fechar esta spec e abrir uma só do segundo fator
 
 ## Problema
 
@@ -28,19 +34,19 @@ eficácia.
 
 ## O que já existe no repo
 
-- `packages/auth/server.ts:331-342` (era `:330` até a PR #64): `revokeUserSessionsOrThrow` revoga todas as sessões da
+- `packages/auth/server.ts:354-365` (era `:331-342` até a PR #74 e `:330` até a PR #64): `revokeUserSessionsOrThrow` revoga todas as sessões da
   conta no Firebase e deixa a falha subir; `revokeUserSessions` é a variante que registra e engole o erro. Desde a
   PR #39 a revogação é chamada só por "Sair de todos os dispositivos" (`apps/api/app/(routes)/account/sessions/revoke/route.ts:9-20`, era `:8` até a PR #64,
   acionado pela aba Segurança em `AccountSecurityForm.tsx:154`, conferida em 2026-11-19 depois da PR #62; era `:140` até a PR #48), pela troca de senha e pela desativação pelo
   admin. Desde a PR #64, a troca de senha, a definição, a redefinição, a troca de e-mail e "Sair de todos" usam a
   variante que falha e respondem `500` com `error.code` quando a revogação não acontece; a desativação pelo admin segue
   na que engole. O botão "Sair" deixou de ser um "sair de todos": `sessionDELETE`
-  (`packages/auth/session-routes.ts:174-183`) apaga o cookie e pede à API que marque só a sessão atual como
+  (`packages/auth/session-routes.ts:177-191`) apaga o cookie e pede à API que marque só a sessão atual como
   encerrada. *(Até a PR #39 este bloco descrevia o logout global, com âncoras em `server.ts:323` e
   `session-routes.ts:126`, `:132`.)*
 - ✅ **A janela de revogação foi FECHADA em 2026-09-15 pela entrega de `account-settings` (PR #12).**
   Esta seção afirmava o contrário até esta auditoria; a afirmação antiga **é falsa desde `a4df5ed`**.
-  `packages/auth/server.ts:183` segue chamando `verifyIdToken(token)` **sem** o segundo argumento, mas a
+  `packages/auth/server.ts:198` segue chamando `verifyIdToken(token)` **sem** o segundo argumento, mas a
   revogação é checada **manualmente** logo depois: `:184` carrega o `UserRecord` e `:185` aplica
   `isMintedBeforeRevocation` (`:153-166`), que recusa o token quando `decodedToken.auth_time` é anterior a
   `user.tokensValidAfterTime`, e também recusa conta desativada. O registro do usuário já estava carregado,
@@ -64,9 +70,11 @@ eficácia.
   O tipo declara os
   atributos em `:51` (`httpOnly`) e `:53` (`sameSite: "lax"`), mas os valores de fato são atribuídos no
   bloco `:62-70` — é dali que vem o já citado `:64` (`secure` **apenas em produção**).
-- `packages/auth/session.ts:78` — `isSameOriginRequest` é a **única** proteção contra CSRF no
-  `sessionPOST` (`packages/auth/session-routes.ts:95`) **e agora também no `sessionRefreshPOST` (`:127`)**,
-  e ela **retorna `true` quando não há cabeçalho `Origin`**. **Não há validação de csrfToken.** A PR #20
+- `packages/auth/session.ts:79` — `isSameOriginRequest` é a **única** proteção contra CSRF no
+  `sessionPOST` (`packages/auth/session-routes.ts:92`) **e agora também no `sessionRefreshPOST` (`:125`)**,
+  e ela **retornava `true` quando não havia cabeçalho `Origin`**. *(Desde a PR #74, fatia 2 de
+  `delivery-security-review`, ela exige `Origin` do mesmo host ou `Sec-Fetch-Site: same-origin`, e vale nas quatro
+  rotas de sessão.)* **Não há validação de csrfToken.** A PR #20
   acrescentou uma segunda superfície que grava cookie por trás dessa mesma guarda — o custo de não ter
   csrfToken dobrou sem que ninguém decidisse isso.
 - ✅ **Política de senha: entregue pela PR #29.** A regra mora em
@@ -112,7 +120,7 @@ eficácia.
   >
   > **Nota de 2026-09-17.** A contenção que mantinha esta spec sozinha no lote paralelo **caiu**. Os três
   > arquivos de `packages/auth` do `contends_on` eram exatamente os de `session-refresh`, agora entregue e
-  > arquivada em [`docs/features/session-refresh/spec.md`](../docs/features/session-refresh/spec.md). Resta
+  > arquivada em [`docs/features/session-refresh/spec.md`](../../docs/features/session-refresh/spec.md). Resta
   > a colisão com `data-rights-lgpd`, e só em `packages/auth/server.ts`. *(2026-09-23: essa colisão também
   > caiu. `data-rights-lgpd` foi entregue pela PR #23 e não alterou nenhum arquivo de `packages/auth`: o
   > expurgo apenas chama `revokeUserSessions` e `deleteUser`.)*
@@ -126,8 +134,8 @@ eficácia.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md) (controles 12,
-  17 e 18) · [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md)
+- Nota: [`research/compliance-trust-baseline.md`](../reference/research/compliance-trust-baseline.md) (controles 12,
+  17 e 18) · [`research/saas-starter-feature-benchmark.md`](../reference/research/saas-starter-feature-benchmark.md)
 - **Prevalência é baixa e isso está sendo dito de propósito:** MFA/2FA com UI aparece em **3/10** dos
   starters pesquisados e sessões/dispositivos gerenciáveis em **1/10** — a nota classifica o valor para o
   usuário como **médio** e **baixo**, respectivamente. Por isso o `value` desta spec é **médio**, não
@@ -180,7 +188,7 @@ eficácia.
 > ⚠️ **E a armadilha ganhou uma camada com a PR #20.** `session-refresh` acrescentou `decodeSessionCookie`
 > (hoje `:269`), que verifica o cookie com `checkRevoked: false` de propósito, para baratear o throttle. Duas
 > funções vizinhas leem o mesmo cookie com garantias opostas, e só uma delas tem a palavra no nome. A
-> renovação chama a barata primeiro e a cara depois (`session-routes.ts:141` e `:151`, remedidas em
+> renovação chama a barata primeiro e a cara depois (`session-routes.ts:144` e `:154`, eram `:141` e `:151` até a PR #74, remedidas em
 > 2026-10-04), o que está correto e é fácil de inverter sem ninguém perceber.
 >
 > Nota lateral útil para o `/analyze`: a PR #10 introduziu `reloadCurrentUser`
@@ -198,8 +206,8 @@ eficácia.
       emitida** continua sendo aceita pela API. Sem isso, tudo o mais nesta spec é decorativo.
       ✅ **Entregue por `account-settings` em 2026-09-15**, nos **dois** transportes: o bearer ID token
       passou a ser recusado quando `auth_time` é anterior a `tokensValidAfterTime`
-      (`packages/auth/server.ts:153-166`, aplicado em `getIdTokenSession`, `:185`), e o session cookie já era
-      verificado com `checkRevoked` (`packages/auth/server.ts:305-308`). Antes disso, um token emitido
+      (`packages/auth/server.ts:168-181`, aplicado em `getIdTokenSession`, `:200`), e o session cookie já era
+      verificado com `checkRevoked` (`packages/auth/server.ts:324-327`). Antes disso, um token emitido
       antes da revogação seguia aceito **até expirar — por até uma hora**. Coberto por
       `packages/auth/__tests__/serverSessionRevocation.test.ts` (9 casos); o teste **falha** se a checagem
       for removida (verificado por mutação).
@@ -225,7 +233,7 @@ eficácia.
       `POST /account/sessions/revoke-others` encerra as outras e mantém a atual
       (`account/sessions/revoke-others/route.ts:10-38`). A recusa vale nos dois transportes, porque
       `resolveApiCredential` consulta o registro da sessão a cada requisição (`resolve-api-actor.ts:57-79`,
-      `trackSession` em `session-tracker.ts:106`). O "Sair" ficou local (`session-routes.ts:174-183`). Quatro
+      `trackSession` em `session-tracker.ts:106`). O "Sair" ficou local (`session-routes.ts:177-191`). Quatro
       códigos novos nos 3 idiomas (`AUTH_SESSION_REVOKED`, `ACCOUNT_SESSION_NOT_FOUND`,
       `ACCOUNT_SESSION_IS_CURRENT`, `ACCOUNT_SESSION_UNIDENTIFIED`, a partir de
       `translations/packages/shared/utils.ts:60`, remedida em 2026-11-23 depois da PR #64, que acrescentou dois códigos acima; era `:58`, remedida em 2026-10-27 depois da PR #58, que acrescentou `USERS_DELETE_ORGANIZATION_HAS_MEMBERS` acima; era `:56` desde a PR #50 e `:54` antes dela).
@@ -243,12 +251,12 @@ eficácia.
       da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
       e na redefinição (`auth.schema.ts:32`, `:37`, `:109-110`, remedidas em 2026-10-22 depois da PR #56, que acrescentou o schema do pedido de link por e-mail; eram `:27`, `:32` e `:101-102` desde a PR #51 e `:24`, `:29` e `:89-90` antes), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
-      e na criação pelo admin (`user-admin.schema.ts:9`, `users/route.ts:48-49`), traduzido nos 3 idiomas
+      e na criação pelo admin (`user-admin.schema.ts:10`, `users/route.ts:48-49`), traduzido nos 3 idiomas
       (`translations/packages/shared/utils.ts:105`, `:289`, `:475`, remedidas em 2026-11-23 depois da PR #64, que acrescentou dois códigos por idioma; eram `:103`, `:285` e `:469`, remedidas em 2026-10-28 depois da PR #59, que acrescentou três linhas ao bloco pt-br e três ao en, acima das duas últimas, quando eram `:282` e `:463`; antes da PR #58, que acrescentou dois códigos por idioma, eram `:101`, `:276` e `:453` desde a PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
-      (`apiClient.authApi.signUp`, `SignUpFormClient.tsx:129` e `sign-up-form-client.tsx:56`, remedidas em 2026-11-23 depois da PR #73, que acrescentou o evento de cadastro; eram `:121`, desde a PR #47, e `:52`, desde a PR #55, que acrescentou o pedido de verificação; era `:36`, rota
+      (`apiClient.authApi.signUp`, `SignUpFormClient.tsx:100` e `sign-up-form-client.tsx:56`, remedidas em 2026-11-24 depois da PR #74 (a da app era `:129`) e em 2026-11-23 depois da PR #73, que acrescentou o evento de cadastro; eram `:121`, desde a PR #47, e `:52`, desde a PR #55, que acrescentou o pedido de verificação; era `:36`, rota
       `auth/sign-up/route.ts:19-77` com Admin SDK); `git grep createUserWithEmailAndPassword` em `apps/` e
       `packages/`: **0**. O `/test` confirmou colar nos campos de senha (item 10 do relatório). CI de merge
       verde (`gh run 36257926749`: `verify`, `changes`, `e2e`, `coverage`).
@@ -273,7 +281,7 @@ fator depois.
 **Primeira fatia: só o item 4, a política de senha.** Ela não custa nada ao fork, não exige conta em
 provedor e dá para provar sob o emulador.
 
-- O ponto de partida é a nota [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md),
+- O ponto de partida é a nota [`research/compliance-trust-baseline.md`](../reference/research/compliance-trust-baseline.md),
   dentro da validade (`revalidate_after: 2027-08-21`): ASVS 5.0 L1 pede senha com pelo menos 8 caracteres
   sem regra de composição (6.2.1/6.2.5), checagem contra as 3000 senhas mais comuns (6.2.4) e permissão
   para colar e usar gerenciador de senha (6.2.6/6.2.7). Isso casa com o critério 3.3.8 do WCAG 2.2.
@@ -309,8 +317,8 @@ e **não** é arquivada.
 | 3 — segundo fator | item 5, com códigos de recuperação, e o item 6 (opt-in) | ⏳ não iniciada, e **nenhuma feature ativa**. Preço do MFA no Identity Platform segue **não confirmado**. Enquanto a spec estiver `in-progress`, ela fica fora dos lotes paralelos; o destino da fatia é a decisão estacionada E12 do `BACKLOG.md` (era a D10 até 2026-10-07) |
 
 **Nota para a fatia 3 (2026-10-22, pós-PR #56):** o login agora tem três entradas, senha, Google e link por e-mail
-([`magic-link-sign-in`](../docs/features/magic-link-sign-in/spec.md), entregue pela PR #56). As três terminam no
-mesmo `onAuthSuccess` (`packages/auth/provider.tsx:353-365`, era `:353-370` até a PR #60), e a página do link conclui no cliente
+([`magic-link-sign-in`](../../docs/features/magic-link-sign-in/spec.md), entregue pela PR #56). As três terminam no
+mesmo `onAuthSuccess` (`packages/auth/provider.tsx:377-393`, era `:353-365` até a PR #74 e `:353-370` até a PR #60), e a página do link conclui no cliente
 (`apps/app/app/[locale]/(unauthenticated)/sign-in/email-link/components/EmailLinkCompletion.tsx`). Com o segundo
 fator ligado, essa página precisa tratar `auth/multi-factor-auth-required`, que hoje cai no cartão de falha
 genérico (`EmailLinkCompletion.tsx:152-163`); o link não pode dispensar o segundo fator.
@@ -326,11 +334,11 @@ in-progress` embora a PR tenha sido mergeada; a auditoria não escreve ali e reg
 ### Achado ligado à fatia 2 (auditoria de 2026-09-30): corrigido
 
 **Conta desativada pelo admin seguia com o ID token aceito pela API até ele expirar.** Corrigido em
-2026-09-30 por tarefa direta ([`disabled-account-revocation`](../docs/features/disabled-account-revocation/STATE.md)),
+2026-09-30 por tarefa direta ([`disabled-account-revocation`](../../docs/features/disabled-account-revocation/STATE.md)),
 mergeada pela PR #35 (`1936369`) com CI verde, em dois pontos:
 
 - `getCurrentUser` recusa o bearer quando o `UserRecord` que já carrega vem com `disabled: true`
-  (`packages/auth/server.ts:185`, sem chamada nova ao Firebase; âncora remedida em 2026-10-04). A API responde
+  (`packages/auth/server.ts:200`, sem chamada nova ao Firebase; âncora remedida em 2026-10-04). A API responde
   `401 AUTH_INVALID_TOKEN`.
 - `PUT /users/[id]` com `disabled: true` chama `revokeUserSessions` depois do `updateUser`
   (`apps/api/app/(routes)/users/[id]/route.ts:154-156`, era `:153-155` até a PR #58 e `:151-153` até a PR #50), então reativar a conta não devolve as sessões antigas.

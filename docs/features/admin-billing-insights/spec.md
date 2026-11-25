@@ -143,8 +143,8 @@ consultas usam só índices automáticos.
 
 ## Evidência de mercado
 
-- Notas: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md) e
-  [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (ambas coletadas em
+- Notas: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md) e
+  [`research/compliance-trust-baseline.md`](../../../specs/reference/research/compliance-trust-baseline.md) (ambas coletadas em
   2026-08-21, dentro da validade).
 
 **O benchmark não sustenta esta spec.** Ele mede "Assinatura Stripe (checkout + portal)" em **9 em 10**, com

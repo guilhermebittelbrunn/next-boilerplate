@@ -10,17 +10,23 @@ mode: ambos
 depends_on: [linked-sign-in-methods]
 contends_on: [packages/auth/client.ts, apps/api/(shared)/lib/firebase-identity-toolkit.ts, "apps/app/app/[locale]/(unauthenticated)/sign-in/components/SignInForm.tsx", "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: -
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # Login com GitHub e Microsoft, ligados por configuração
 
-> **`deferred` em 2026-10-16 — motivo.** Depende de [`linked-sign-in-methods`](../docs/features/linked-sign-in-methods/spec.md), aprovada
+> **Resumo**
+> - **O quê:** login com GitHub e Microsoft, cada um ligado por configuração, ao lado do Google.
+> - **Por quê:** MVP para desenvolvedores espera GitHub; MVP vendido a empresas espera conta Microsoft.
+> - **Status:** `deferred` desde 2026-10-16 · valor médio · esforço M · produto
+> - **Próximo passo:** volta para a fila quando um fork pedir um desses provedores
+
+> **`deferred` em 2026-10-16 — motivo.** Depende de [`linked-sign-in-methods`](../../docs/features/linked-sign-in-methods/spec.md), aprovada
 > no mesmo dia e ainda não entregue, e nenhum fork pediu GitHub ou Microsoft. Volta para a fila quando a dependência
 > for entregue e um fork pedir o provedor.
 >
 > **Atualização de 2026-10-19 (`/spec --sync`, pós-PR #48):** a dependência foi entregue e arquivada em
-> [`docs/features/linked-sign-in-methods/spec.md`](../docs/features/linked-sign-in-methods/spec.md). Metade do
+> [`docs/features/linked-sign-in-methods/spec.md`](../../docs/features/linked-sign-in-methods/spec.md). Metade do
 > motivo do adiamento caiu; a outra metade (nenhum fork pediu GitHub ou Microsoft) continua. O status segue
 > `deferred` até você decidir. Duas coisas da entrega encurtam o corte desta spec: o `DELETE
 > /account/sign-in-methods/[id]` aceita qualquer provedor que a conta liste (`[id]/route.ts:64-70`; era `:36-42` até
@@ -43,11 +49,11 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   repositório (grep por `GithubAuthProvider`, `OAuthProvider` e `microsoft` vazio fora de testes, reconferido em
   2026-10-22). Desde a PR #48, `linkGoogle` e `reauthenticateWithGoogle` (`:187`, `:195`; eram `:170`, `:178` até a
   PR #56) também usam só o Google.
-- `packages/auth/provider.tsx:371`, `:378`, `:381-384` — desde a PR #56 o `AuthProvider` tem três mutations de login
+- `packages/auth/provider.tsx:399`, `:406`, `:409-412` (eram `:371`, `:378` e `:381-384` até a PR #74) — desde a PR #56 o `AuthProvider` tem três mutations de login
   (senha, Google e link por e-mail), todas terminando no mesmo `onAuthSuccess` (`:353-365`). As âncoras são as de
   `main` desde a PR #60 (eram `:376`, `:383`, `:386-389` e `:353-370`). Um provedor novo entra como a quarta, no
   mesmo molde.
-- `apps/app/shared/lib/googleSignInApi.ts:27-97` (era `:23-84` até a PR #73, que acrescentou o aviso de conta nova, `:22-83` até a PR #64, `:21-79` até a PR #60, que traduziu o erro da sessão, e `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
+- `apps/app/shared/lib/googleSignInApi.ts:27-96` (era `:27-97` até a PR #74, `:23-84` até a PR #73, que acrescentou o aviso de conta nova, `:22-83` até a PR #64, `:21-79` até a PR #60, que traduziu o erro da sessão, e `:17-36` até a PR #50, que separou a troca pela sessão da API e desloga o popup quando a API recusa) — o fluxo da app: popup do Google, ID token do Google, ação
   `authApi.signInWithGoogle` do SDK, sessão devolvida pela API.
 - `apps/api/(shared)/lib/firebase-identity-toolkit.ts:200-215` — a API conclui o login no Identity Toolkit com
   `providerId=google.com` fixo.
@@ -59,11 +65,11 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
   `429 USERS_AUTH_RATE_LIMITED` (`:33-45`). Antes ela lia o corpo sem validação e devolvia a mensagem crua do
   provedor em 401. A parte "a rota do Google entra no mesmo contrato" do impacto na `apps/api` já está paga; falta
   generalizar a rota para outros provedores.
-- `apps/app/.../sign-in/components/SignInForm.tsx:197-207` (era `:189-199` até a PR #73, `:188-198` até a PR #60, que acrescentou o `noValidate`; remedida em 2026-10-22: a PR #56 acrescentou duas linhas
+- `apps/app/.../sign-in/components/SignInForm.tsx:157-167` (era `:197-207` até a PR #74, `:189-199` até a PR #73, `:188-198` até a PR #60, que acrescentou o `noValidate`; remedida em 2026-10-22: a PR #56 acrescentou duas linhas
   acima, e a âncora anterior, `:187-197`, já estava uma linha adiantada) e `sign-up/components/SignUpFormClient.tsx` —
   um botão do Google em cada tela. Desde a PR #56 o login também tem o link "Receber link de acesso por e-mail"
-  (`:210-219`, era `:209-218` até a PR #60), condicionado à disponibilidade que a API informa.
-- `apps/api/proxy.ts:70-92` — `/auth/sign-in/google` está no orçamento estrito de rate limit (`:73`; era `:60-78` e `:63` até a PR #64, que criou o orçamento padrão; a lista era `:55-70`, com a rota em
+  (`:178-187`, remedida em 2026-11-24 depois da PR #74; a âncora anterior, `:210-219`, já apontava para o link de senha esquecida, oito linhas acima do bloco certo), condicionado à disponibilidade que a API informa.
+- `apps/api/proxy.ts:74-96` — `/auth/sign-in/google` está no orçamento estrito de rate limit (`:77`; era `:70-92` e `:73` até a PR #74; era `:60-78` e `:63` até a PR #64, que criou o orçamento padrão; a lista era `:55-70`, com a rota em
   `:58`, até a PR #57, que acrescentou um parágrafo de comentário acima e três rotas de convite ao fim, `:53-67` até a PR #56,
   que acrescentou `/auth/sign-in/email-link/request`, `:49-62` até a PR #49 e `:45-58` até a PR #47).
 - `docs/FORKING.md:196` (era `:195` até a PR #71, `:193` até a PR #65 e `:175` até a PR #63) — o roteiro do fork descreve "e-mail/senha e Google".
@@ -71,7 +77,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Provedores sociais além do Google".
 - Prevalência: **5 de 10** starters oferecem pelo menos um provedor além do Google (Makerkit, Supastarter, Open
   SaaS, Saas UI e o starter arquivado da Vercel, este só com GitHub). ShipFast tem só o Google; Nextacular, só
@@ -91,7 +97,7 @@ mesma pessoa chegando por dois provedores com o mesmo e-mail.
       outros métodos.
 - [ ] Se o e-mail já pertence a uma conta de outro método, a tela explica com código traduzido e orienta a entrar
       pelo método existente e vincular o provedor na aba Segurança. Nenhuma conta duplicada nasce desse caso.
-- [ ] A lista de métodos de login de [`linked-sign-in-methods`](../docs/features/linked-sign-in-methods/spec.md) mostra os provedores
+- [ ] A lista de métodos de login de [`linked-sign-in-methods`](../../docs/features/linked-sign-in-methods/spec.md) mostra os provedores
       novos e permite vinculá-los e desvinculá-los.
 - [ ] O fluxo do Google passa a ser um caso do mesmo mecanismo, sem mudar o que o usuário vê.
 

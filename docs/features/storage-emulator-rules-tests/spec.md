@@ -63,7 +63,7 @@ o custo marginal de incluir mais um caiu.
 
 ## Evidência de mercado
 
-- Nota: [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md), prática 3 e adendo de
+- Nota: [`research/engineering-baseline.md`](../../../specs/reference/research/engineering-baseline.md), prática 3 e adendo de
   2026-09-26.
 - A prática 3 ("testes de security rules") é classificada como **obrigatória com Firebase**: a doc do
   Firebase trata as rules como a única barreira contra acesso direto do cliente.

@@ -33,7 +33,7 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   `Referrer-Policy: no-referrer`, `frame-ancestors 'none'`, COOP e CORP
   (`packages/security/middleware.ts:54-139`); CSP bloqueante no painel e na API, `Report-Only` na landing.
   **Lacuna:** sem `Permissions-Policy`; `X-Powered-By: Next.js` nos três apps (nenhum `poweredByHeader`, item
-  que fica com a fatia 1 de [`delivery-security-review`](../../../specs/delivery-security-review.md), entregue pela PR #64:
+  que fica com a fatia 1 de [`delivery-security-review`](../delivery-security-review/spec.md), entregue pela PR #64:
   `packages/next-config/index.ts:5`);
   a CSP `Report-Only` da landing não tem destino de relatório; o matcher dos proxies exclui `/api/*`
   (`apps/app/proxy.ts:127`, `apps/web/proxy.ts:61`), então as rotas de sessão das front-ends saem sem
@@ -90,7 +90,7 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
   (<https://docs.arcjet.com/bot-protection/concepts>).
 - OWASP Top 10 2025, A02 Security Misconfiguration e A03 Software Supply Chain Failures
   (<https://top10.owasp.org/2025>). Renovate e Lighthouse CI já aparecem em
-  [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md).
+  [`research/engineering-baseline.md`](../../../specs/reference/research/engineering-baseline.md).
 - Todas as URLs acima foram abertas em 2026-11-19.
 
 ## Proposta — corte de MVP
@@ -106,7 +106,7 @@ Medido em 2026-11-19 sobre `583194b`, com `gh api` só de leitura no GitHub.
       existe.
 - [x] **Cabeçalhos completos**: `Permissions-Policy` restritiva no `@repo/security`, e cabeçalhos também
       nas rotas `/api/auth/*` das front-ends. Tirar o `X-Powered-By` era da fatia 1 de
-      [`delivery-security-review`](../../../specs/delivery-security-review.md), entregue pela PR #64.
+      [`delivery-security-review`](../delivery-security-review/spec.md), entregue pela PR #64.
 - [x] **Logo da marca só em `https:`** e `images.remotePatterns` do painel restrito ao bucket do produto.
 - [x] **Guia das chaves do Firebase** em `docs/FORKING.md`: chave do navegador com referenciador e API,
       chave do servidor só com API; e a correção da seção da Resend.

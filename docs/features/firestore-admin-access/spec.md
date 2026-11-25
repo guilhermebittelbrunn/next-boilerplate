@@ -51,7 +51,7 @@ opcional para quem quiser contorná-lo, e **todo fork nasce com o impasse herdad
 
 ## Evidência de mercado
 
-- Nota: [`specs/research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md)
+- Nota: [`specs/research/compliance-trust-baseline.md`](../../../specs/reference/research/compliance-trust-baseline.md)
 - A nota abre com este item como **bloqueador que precede tudo**: "a `apps/api` acessa o Firestore pelo
   **client SDK não autenticado**, com `firestore.rules` em `deny-all`. Enquanto isso não migrar para
   `firebase-admin`, **qualquer controle de autorização a mais é teatro**." A frase é geral — a nota não a

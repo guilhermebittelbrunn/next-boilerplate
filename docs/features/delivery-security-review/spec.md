@@ -1,7 +1,7 @@
 ---
 id: delivery-security-review
 title: Core aprovado na parte 1 da entrega (validação de segurança)
-status: approved
+status: done
 value: alto
 effort: G
 audience: confianca
@@ -10,15 +10,15 @@ mode: ambos
 depends_on: []
 contends_on: [apps/api/proxy.ts, apps/web/proxy.ts, apps/app/proxy.ts, packages/auth/session.ts, packages/auth/session-routes.ts, packages/auth/server.ts, packages/shared/utils/helpers/cookies.ts, apps/api/instrumentation.ts]
 feature: delivery-security-review
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # Core aprovado na parte 1 da entrega (validação de segurança)
 
 ## Problema
 
-A [etapa de entrega](../docs/delivery/README.md) passa a exigir de todo fork a parte 1,
-[validação de segurança](../docs/delivery/01-security-review.md), com 19 itens. O core resolve a maior
+A [etapa de entrega](../../delivery/README.md) passa a exigir de todo fork a parte 1,
+[validação de segurança](../../delivery/01-security-review.md), com 19 itens. O core resolve a maior
 parte deles por desenho, mas, medido hoje, reprova em alguns e passa raspando em outros. O caso mais
 urgente é o de dependências: `pnpm audit --prod` acusa 8 vulnerabilidades críticas e 120 altas, parte delas
 no runtime da API. Um fork criado agora herda essas lacunas e precisaria corrigi-las na própria entrega,
@@ -47,8 +47,9 @@ Medido em 2026-11-19 sobre `583194b`, só leitura.
 - Nenhuma variável secreta com prefixo `NEXT_PUBLIC_`.
 
 **Lacunas**, por item da parte 1. As cinco primeiras (1.13, 1.15, 1.8, 1.14 e 1.12) foram fechadas pela fatia 1, na
-PR #64; o texto delas descreve o código de `583194b` e as âncoras são daquela versão. As outras seguem abertas e
-foram reconferidas em `388a453`.
+PR #64; o texto delas descreve o código de `583194b` e as âncoras são daquela versão. As outras foram fechadas pelas
+fatias 2 e 3, na PR #74 (`c58f2ef`); o texto delas descreve o código de `388a453` a `5829ea3`, e as âncoras não foram
+remedidas, porque o código que elas apontam mudou ou saiu. A conferência no código de hoje está no corte de MVP.
 
 
 - **1.13 Dependências vulneráveis** — `pnpm audit --prod`: 8 críticas, 120 altas, 115 moderadas. `axios`
@@ -117,7 +118,7 @@ foram reconferidas em `388a453`.
   host against an allowlist" (OWASP SSRF Prevention Cheat Sheet). CSRF: SameSite e conferência de
   `Origin` como defesa em profundidade (OWASP CSRF Prevention Cheat Sheet). As três abertas em 2026-11-19.
 - Baseline de confiança já pesquisado, com OWASP ASVS 5.0 e cookies do Firebase:
-  [`research/compliance-trust-baseline.md`](research/compliance-trust-baseline.md).
+  [`research/compliance-trust-baseline.md`](../../../specs/reference/research/compliance-trust-baseline.md).
 
 ## Proposta — corte de MVP
 
@@ -139,7 +140,7 @@ foram reconferidas em `388a453`.
 | item | evidência |
 |------|-----------|
 | Dependências | `next` 16.4.6 nos nove `package.json` que o declaram; `firebase-admin` `^13.10.0` (`apps/api/package.json:30`, `packages/auth/package.json:23`; o lockfile resolve 13.10.0); `axios` `^1.21.1` (`packages/sdk/package.json:10`); `@arcjet/next` 1.16.0; `@react-email/preview-server` em `devDependencies` (`apps/email/package.json:17`); `packages/payments/ai.ts` e o `@stripe/agent-toolkit` removidos. Overrides e a exceção do `@grpc/grpc-js` justificados no campo `"//"` (`package.json:2-7`), com `pnpm.auditConfig.ignoreGhsas` (`:56-67`, era `:55-66` até a PR #72). Medido nesta auditoria: `pnpm audit --prod --audit-level=high` sai 0 (0 críticas, 1 alta ignorada pela exceção, 7 moderadas, 4 baixas) |
-| Rate limit por padrão | `apps/api/proxy.ts:70-116`: 21 caminhos no orçamento estrito, todo `POST`/`PUT`/`PATCH`/`DELETE` restante no `standard`, `/webhooks/payments` isento; 60/min por IP e sujeito (`packages/security/index.ts:17-22`, `:52-83`), sujeito em `apps/api/(shared)/lib/rate-limit-subject.ts:61` |
+| Rate limit por padrão | `apps/api/proxy.ts:74-118` (era `:70-116` até a PR #74): 21 caminhos no orçamento estrito, todo `POST`/`PUT`/`PATCH`/`DELETE` restante no `standard`, `/webhooks/payments` isento; 60/min por IP e sujeito (`packages/security/index.ts:17-22`, `:52-83`), sujeito em `apps/api/(shared)/lib/rate-limit-subject.ts:61` |
 | Revogação que falha visível | `apps/api/(shared)/lib/session-revocation.ts:7-31` (`500 AUTH_SESSIONS_NOT_REVOKED`), usado em `account/password/route.ts:70,84`, `account/password/set/route.ts:78,92` e `auth/email-change/confirm/route.ts:82-86`; a redefinição responde o mesmo código em `auth/password/reset/route.ts:50-58`; "Sair de todos" responde `500 ACCOUNT_SESSIONS_REVOKE_FAILED` (`account/sessions/revoke/route.ts:10-20`). Traduzido nos três idiomas (`translations/packages/shared/utils.ts:58`, `:241`, `:426`) |
 | Allowlist | `toSessionUser` com cinco campos (`apps/api/(shared)/mappers/user.mapper.ts:80-89`), usado em `auth/me/route.ts:26`, `auth/sign-in/route.ts:61` e `auth/sign-in/google/route.ts:63` |
 | `X-Powered-By` | `poweredByHeader: false` em `packages/next-config/index.ts:5`, com teste em `packages/next-config/__tests__/config.test.ts:11` |
@@ -154,7 +155,7 @@ O CI da execução de merge passou nos quatro jobs (`gh run 45105651062`). O `/t
 - A redefinição de senha responde `500 AUTH_SESSIONS_NOT_REVOKED`, como o corte pede, mas a tela da `apps/app`
   mostra o cartão de "senha alterada" com a explicação, em vez de um erro: a senha nova já vale e o link já foi
   gasto (`ResetPasswordForm.tsx:51-53`, `:89-91`). A spec não dizia o que a interface faria; a escolha é do `/review`.
-- Quatro chamadores seguem com a revogação que engole o erro (`revokeUserSessions`, `packages/auth/server.ts:336-342`):
+- Quatro chamadores seguem com a revogação que engole o erro (`revokeUserSessions`, `packages/auth/server.ts:359-365`, era `:336-342` até a PR #74):
   a desativação pelo admin (`users/[id]/route.ts:155`), desvincular um método de login
   (`account/sign-in-methods/[id]/route.ts:122`), o expurgo da conta (`account-erasure.ts:237`) e o bloqueio de
   conta arquivada (`account-access.ts:20`). Estão fora da lista do corte (troca e definição de senha, redefinição,
@@ -164,29 +165,76 @@ O CI da execução de merge passou nos quatro jobs (`gh run 45105651062`). O `/t
   `packages/next-config/index.ts`, entregues na fatia 1; entraram `session-routes.ts`, `server.ts` e
   `apps/api/instrumentation.ts`, que as lacunas da fatia 2 citam.
 
-**Fatia 2: defesa em profundidade**
+**Fatia 2: defesa em profundidade** (✅ entregue pela PR #74, `c58f2ef`, em 2026-11-24, e conferida no código de
+`main`; pipeline em `docs/features/delivery-security-review-slice-2/`)
 
-- [ ] **Origem conferida em toda escrita autenticada por cookie**, na API e nas rotas de sessão das
+- [x] **Origem conferida em toda escrita autenticada por cookie**, na API e nas rotas de sessão das
       front-ends; requisição mutável sem `Origin` nem `Sec-Fetch-Site` é recusada.
-- [ ] **Cookies de preferência com `Secure` em HTTPS e `maxAge`**, pelo helper compartilhado.
-- [ ] **Logs sem objeto inteiro**: os `console.error(error)` de `@repo/auth` passam a `logEvent` com
+- [x] **Cookies de preferência com `Secure` em HTTPS e `maxAge`**, pelo helper compartilhado.
+- [x] **Logs sem objeto inteiro**: os `console.error(error)` de `@repo/auth` passam a `logEvent` com
       código.
-- [ ] **API cai no boot sem `CORS_ORIGIN` em produção**, em vez de responder 500 a tudo.
-- [ ] **`max` em toda string de entrada** e Zod no corpo das rotas de sessão.
+- [x] **API cai no boot sem `CORS_ORIGIN` em produção**, em vez de responder 500 a tudo.
+- [x] **`max` em toda string de entrada** e Zod no corpo das rotas de sessão.
 
-**Fatia 3: arestas**
+**Fatia 3: arestas** (✅ entregue pela mesma PR #74; pipeline em `docs/features/delivery-security-review-slice-3/`)
 
-- [ ] Foto e avatar aceitam só caminho do bucket ou host em allowlist.
-- [ ] Upload recusa corpo sem `content-length` acima do teto antes de ler, e remove metadados da imagem.
-- [ ] Botão do Google travado durante o envio no cadastro da landing.
-- [ ] Formulário legado de `@repo/auth` removido; `server-only` em `@repo/email`.
+- [x] Foto e avatar aceitam só caminho do bucket ou host em allowlist.
+- [x] Upload recusa corpo sem `content-length` acima do teto antes de ler, e remove metadados da imagem.
+- [x] Botão do Google travado durante o envio no cadastro da landing.
+- [x] Formulário legado de `@repo/auth` removido; `server-only` em `@repo/email`.
+
+**Conferência das fatias 2 e 3 no código de `c58f2ef`** (auditoria de 2026-11-24):
+
+| item | evidência |
+|------|-----------|
+| Origem na escrita por cookie | API: `isUnprovenCookieWrite` (`apps/api/(shared)/lib/cookie-write-origin.ts:12-20`) recusa método mutável sem `Origin`, sem `Sec-Fetch-Site: same-origin`, sem `Authorization` e com o cookie `access-token`; o proxy responde `403 AUTH_FORBIDDEN_ORIGIN` com `reason=missing-origin` no log (`apps/api/proxy.ts:199-203`, `:152-167`). Bearer continua aceito sem `Origin`. Front-ends: `isSameOriginRequest` exige `Origin` do mesmo host ou `Sec-Fetch-Site: same-origin` (`packages/auth/session.ts:79-90`), e as quatro rotas de sessão chamam `refuseForeignOrigin` (`packages/auth/session-routes.ts:96`, `:129`, `:181`, `:202`) |
+| Cookies | `setCookie` põe `Secure` sozinho em página HTTPS (`packages/shared/utils/helpers/cookies.ts:34`, `:47`); `preferenceCookieOptions` dá 180 dias e `Secure` por protocolo ao cookie gravado no servidor (`:8-22`), usado no `x-locale` dos dois proxies (`apps/app/proxy.ts:236`, `:250`, `:254`; `apps/web/proxy.ts:110`, `:122`, `:126`); os `bp:*` ganharam `secure` em HTTPS (`apps/app/shared/lib/panelState.ts:137-144`) |
+| Logs | nenhum `console.*` em `packages/auth/server.ts`; os sete pontos chamam `logEvent("auth", …, authErrorFields(error))` (`:209`, `:226`, `:242`, `:275`, `:301`, `:334`, `:363`), com o helper em `:150` |
+| Boot sem `CORS_ORIGIN` | `prepareServer` lança com lista vazia ou só de vírgulas (`apps/api/instrumentation.ts:59-67`, pelo mesmo `parseAllowedOrigins` do proxy); `bootOrExit` chama `process.exit(1)` em produção (`apps/api/instrumentation-node.ts:8-19`), importado no ramo `nodejs` (`instrumentation.ts:76-81`) |
+| Limites | `adminCreateUserSchema.email` com `max(320)` (`apps/api/(shared)/validation/user-admin.schema.ts:6`, `:9`); corpo das rotas de sessão por Zod com `idToken` de 1 a 4096 caracteres (`packages/auth/session-routes.ts:23-26`, `:42-45`). As strings sem `max` que sobram nos schemas da API são regex ancorada de tamanho fixo ou `refine` de data (decisão Q13 do plano da fatia 2) |
+| Foto e avatar | `isAllowedExternalImageUrl` aceita só `https://lh3.googleusercontent.com`, sem porta nem credencial (`apps/api/(shared)/lib/entity-photo.ts:21-37`); `isUsablePhotoReference` soma o objeto do próprio dono (`:57-61`); aplicado na criação e na edição de entidade (`apps/api/app/(routes)/entities/route.ts:75`, `entities/[id]/route.ts:76`) e no avatar, que aceita reenviar o valor já gravado (`apps/api/app/(routes)/account/route.ts:44-66`) |
+| Upload | recusa pelo `content-length` declarado antes de ler e conta os bytes na leitura quando o header falta ou mente (`apps/api/(shared)/validation/file.schema.ts:115-118`, `:134-146`, com `readCappedBody` em `apps/api/(shared)/lib/read-capped-body.ts:1-18`), `413` com `connection: close` (`file.schema.ts:72-75`); `stripImageMetadata` regrava JPEG, PNG e WebP sem metadados (`apps/api/(shared)/lib/image-metadata.ts:507`), e imagem que o removedor não percorre sai em `415` (`file.schema.ts:173-179`) |
+| Google no cadastro da landing | um `isSubmitting` só, somando as três mutações, trava o envio por e-mail e o botão do Google (`apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:82-85`, `:163`, `:184`) |
+| Legado e `server-only` | `packages/auth/components/` não existe mais, e o export saiu de `packages/auth/package.json`; `packages/email/index.ts:1` é `import "server-only"` |
+
+A execução de merge da PR #74 (`gh run 45408797430`) passou em `verify`, `audit`, `e2e` (45 testes, nenhum instável) e
+`coverage`, e reprovou em `secrets`: o Gitleaks marcou como `generic-api-key` a constante de teste `LEAKY_TOKEN`
+(`packages/auth/__tests__/serverErrorLogging.test.ts:62`), um JWT fictício usado para provar que o log não vaza o
+token. O log do job registra um achado só (`leaks found: 1`), sem arquivo nem regra, porque o passo roda com
+`--redact` e sem relatório. A identificação como `LEAKY_TOKEN` veio de uma execução local do Gitleaks 8.30.1 sobre
+`c58f2ef` na primeira parte desta auditoria; na retomada, sem rede para baixar o binário, ela não foi repetida. O
+repositório não tem `.gitleaksignore` nem `.gitleaks.toml`, e o passo só examina os commits novos de cada push, então
+o próximo merge em `main` não volta a reprovar por este arquivo. O mesmo job tinha reprovado na PR (`gh run 45389706834`), e a PR foi mergeada assim mesmo. O `/test` das duas
+fatias fechou com 11 ✅ e 1 🔒 (fatia 2: o encerramento numa função da Vercel) e 10 ✅ com 2 parciais 🔒 (fatia 3: o
+envio real pela Resend e a caixa de URL sem Storage).
+
+**Deriva das fatias 2 e 3:**
+
+- O boot que encerra vale para **toda** falha do `register` em produção, não só para a falta de `CORS_ORIGIN`
+  (decisão Q7 do plano da fatia 2): a credencial do Firestore ausente tinha o mesmo defeito. Capacidade a mais, dentro
+  do item. Também conta como ausente a lista feita só de vírgulas (Q8).
+- O `process.exit` mora num módulo próprio, `apps/api/instrumentation-node.ts`, porque o `instrumentation.ts` também é
+  empacotado para o Edge, onde `process.exit` não existe. Sem efeito no item.
+- Os quatro chamadores que engolem a falha da revogação ficaram como estavam (Q9): só o log virou `logEvent`. O item
+  da fatia 1 nunca os incluiu; a linha segue aberta como achado.
+- O `console.error(error)` do reporter de erro de requisição (`packages/shared/utils/helpers/requestErrorReporter.ts`) e os dois de navegador ficaram
+  (Q10). O item do corte falava só de `@repo/auth`; a lacuna 1.16 citava também o reporter, que justifica o objeto por
+  escrito porque o próprio runtime imprime o erro não tratado.
+- A allowlist de host é uma constante (`lh3.googleusercontent.com`), igual à CSP, e não uma variável de ambiente
+  (Q4); fork com CDN edita as duas juntas. As URLs externas já gravadas continuam sendo lidas como antes (Q5), e o EXIF
+  de objetos já gravados não é limpo (Q11).
+- A remoção de metadados é código próprio, sem `sharp` (Q1): mantém o perfil ICC e a orientação do JPEG e não
+  recodifica. O `/test` mediu um JPEG hostil de 4 MiB custando 301 MB de RSS por requisição; o `/review` reescreveu o
+  removedor, e a rodada 2 mediu 11 MB.
+- `@repo/email` importa `server-only` sem declarar a dependência no `package.json` (Q7); resolve pelo
+  `public-hoist-pattern[]=*` do `.npmrc`, como `@repo/auth`.
 
 ### Fora do corte
 
 - **Segundo fator e reautenticação para admin.** Já é a fatia 3 de
-  [`account-security-mfa`](account-security-mfa.md).
+  [`account-security-mfa`](../../../specs/features/account-security-mfa.md).
 - **Captcha, App Check e bloqueio de bot.** São controles de borda e de console; estão em
-  [`delivery-infra-hardening`](../docs/features/delivery-infra-hardening/spec.md), entregue pela PR #65.
+  [`delivery-infra-hardening`](../delivery-infra-hardening/spec.md), entregue pela PR #65.
 - **Nonce na CSP para tirar `'unsafe-inline'` de `script-src`.** É mudança grande (tema, hidratação e
   `gtag`) e merece spec própria.
 - **Exigir e-mail verificado nos guards.** Muda o fluxo de todo fork; fica como opção a decidir depois da
@@ -233,3 +281,10 @@ O CI da execução de merge passou nos quatro jobs (`gh run 45105651062`). O `/t
   cookie e derruba todas as sessões ativas dos forks já em produção.
 - **As fatias 2 e 3 bloqueiam a entrega de forks?** — **recomendação:** não; só a fatia 1 é pré-requisito
   para começar forks novos.
+- **Arquivar a spec com o job `secrets` vermelho na execução de merge da PR #74?** (D22) — o corte das três fatias
+  está em `main` e conferido no código (tabelas acima); o único job vermelho é o Gitleaks, por um JWT fictício num
+  teste. **Recomendação:** arquivar, e abrir uma tarefa direta que marque a constante como falso positivo
+  (comentário `gitleaks:allow` na linha ou `.gitleaksignore` com a impressão digital do achado), porque qualquer commit
+  que volte a tocar essa linha reprova o job de novo. Alternativa: segurar o arquivamento até essa tarefa mergear com o CI verde.
+  **Respondida em 2026-11-24:** arquivar agora. A spec saiu de `specs/` nesse dia, e a marcação do `LEAKY_TOKEN`
+  entrou como tarefa direta na fila do `specs/BACKLOG.md`.

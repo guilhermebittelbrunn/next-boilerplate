@@ -10,10 +10,16 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/(shared)/lib/billing.ts, apps/api/(shared)/lib/billing-state.ts, apps/api/(shared)/lib/plan-access.ts, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/(shared)/lib/account-export.ts, "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountBillingPanel.tsx"]
 feature: -
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # Compra avulsa com acesso vitalício
+
+> **Resumo**
+> - **O quê:** vender por pagamento único (acesso vitalício, módulo extra, pacote), além da assinatura.
+> - **Por quê:** muitos MVPs validam se alguém paga cobrando uma vez, e hoje a API recusa preço avulso.
+> - **Status:** `deferred` desde 2026-10-16 · valor médio · esforço M · produto
+> - **Próximo passo:** volta para a fila quando um fork precisar cobrar uma vez
 
 > **`deferred` em 2026-10-16 — motivo.** A spec altera todo o núcleo de cobrança (catálogo, estado da assinatura,
 > gate por plano, webhook e exportação de dados) e nenhum fork pediu venda avulsa até agora. Volta para a fila
@@ -35,7 +41,7 @@ e só então liberar o acesso no servidor.
   checkout só com `mode: "subscription"`.
 - `apps/api/(shared)/lib/billing-state.ts:63-73` — `toPlanDTO` devolve `null` para preço avulso.
 - `docs/PAYMENTS.md:207-208` (era `:208-209` até a PR #64, que tirou uma linha acima) — preço avulso pedido no checkout responde 404 `PAYMENTS_PLAN_NOT_FOUND`;
-  `docs/PRE-PRODUCTION.md:604-607` avisa o fork de que preço avulso não aparece. *(Âncoras remedidas em 2026-10-16:
+  `docs/PRE-PRODUCTION.md:607-610` avisa o fork de que preço avulso não aparece. *(Âncoras remedidas em 2026-10-16:
   a PR #47 acrescentou texto aos dois documentos; eram `:165-166` e `:513-516`. A do `PRE-PRODUCTION.md` desceu uma
   linha com a PR #49, remedida em 2026-10-19. A PR #52 acrescentou texto antes das duas, e elas desceram de `:199-200`
   e `:518-521` para `:208-209` e `:568-571`, remedidos em 2026-10-20. A PR #57 acrescentou texto antes da do
@@ -52,7 +58,7 @@ e só então liberar o acesso no servidor.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Pagamento avulso".
 - Prevalência: **4 de 10** starters (Makerkit, desligado por padrão, com pedidos e assinaturas coexistindo desde a
   versão 2.12.0; Supastarter, com plano vitalício de exemplo; ShipFast; Open SaaS, como pacote de créditos). O
@@ -94,7 +100,7 @@ e só então liberar o acesso no servidor.
 | `packages/sdk` | Tipo de produto avulso no catálogo, tipo de compra, ação de checkout avulso e de listagem das compras. |
 | `apps/api` | Catálogo com preços avulsos, checkout de pagamento único, entrega idempotente no webhook, coleção de compras por dono e acesso por recurso que soma assinatura e compras. |
 | `apps/app` | Seção de compras avulsas na aba de cobrança. |
-| `apps/web` | A página pública já lê o catálogo da Stripe desde [`pricing-page-catalog`](../docs/features/pricing-page-catalog/spec.md) (PR #47), mas só preços recorrentes (`listPlans`, `billing.ts:52-68`). Mostrar o produto avulso nela exige abrir essa leitura. |
+| `apps/web` | A página pública já lê o catálogo da Stripe desde [`pricing-page-catalog`](../../docs/features/pricing-page-catalog/spec.md) (PR #47), mas só preços recorrentes (`listPlans`, `billing.ts:52-68`). Mostrar o produto avulso nela exige abrir essa leitura. |
 | `packages/*` | i18n: textos da seção e `apiErrors` novos nos três idiomas. |
 | Infra/env | Novos eventos no endpoint de webhook de cada fork (`PRE-PRODUCTION.md` §12) e um índice por dono. Nenhuma variável. |
 

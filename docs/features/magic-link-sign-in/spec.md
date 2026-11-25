@@ -67,7 +67,7 @@ está no corte abaixo.)*
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Entrar com link por e-mail".
 - Prevalência: **5 de 10** starters oferecem (Makerkit, desligado por padrão; Supastarter; ShipFast, como padrão;
   Nextacular, como único método; o starter de assinatura da Vercel, arquivado). Open SaaS e `nextjs/saas-starter`
@@ -146,7 +146,7 @@ o `AuthProvider` ganhou a mutation. Os passos manuais estão no item 15 do `docs
 
 - **Segurança equivalente à recuperação de senha.** Quem controla a caixa de e-mail já consegue redefinir a senha
   hoje, então o link não baixa o piso de uma conta sem segundo fator. Com o segundo fator de
-  [`account-security-mfa`](../../../specs/account-security-mfa.md) ligado, o link não pode dispensá-lo.
+  [`account-security-mfa`](../../../specs/features/account-security-mfa.md) ligado, o link não pode dispensá-lo.
 - **Depende do e-mail do fork.** Sem Resend, o pedido responde `EMAIL_NOT_CONFIGURED`, como a recuperação. Com o
   recurso ligado e o e-mail desligado, a opção não deve aparecer.
 - **Leitores de link em e-mail corporativo** abrem o link antes da pessoa. Como a conclusão exige o e-mail guardado

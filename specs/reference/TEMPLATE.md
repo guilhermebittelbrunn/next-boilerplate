@@ -15,6 +15,12 @@ updated: <YYYY-MM-DD>
 
 # <Título>
 
+> **Resumo**
+> - **O quê:** <a capacidade nova, em uma frase de produto>
+> - **Por quê:** <a dor que resolve, para quem>
+> - **Status:** `proposed` · valor <alto/médio/baixo> · esforço <P/M/G> · <produto/dx/confianca>
+> - **Próximo passo:** <`/analyze <id>` | aguardando triagem | aguardando <decisão>>
+
 ## Problema
 
 Qual dor existe hoje, para quem, e o que acontece se nada for feito. 3–6 linhas, em linguagem de produto —
@@ -33,7 +39,7 @@ de onde a implementação vai partir.
 
 Por que isto é padrão (ou por que é aposta). Cite a nota de pesquisa e as fontes.
 
-- Nota: [`research/<topico>.md`](research/<topico>.md)
+- Nota: [`reference/research/<topico>.md`](../reference/research/<topico>.md)
 - Prevalência: <ex.: "8 de 12 starters pesquisados entregam por padrão">
 - Fontes: <URL> · <URL>
 

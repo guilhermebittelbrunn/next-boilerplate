@@ -1,7 +1,7 @@
 ---
 id: delivery-product-quality
 title: Core aprovado na parte 3 da entrega (celular, 404, desempenho e SEO)
-status: approved
+status: done
 value: alto
 effort: G
 audience: produto
@@ -10,15 +10,15 @@ mode: ambos
 depends_on: []
 contends_on: [packages/seo/metadata.ts, "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx", "apps/app/app/[locale]/(authenticated)/(admin)/admin/layout.tsx", packages/analytics/provider.tsx, "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx"]
 feature: delivery-product-quality
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # Core aprovado na parte 3 da entrega (celular, 404, desempenho e SEO)
 
 ## Problema
 
-A [etapa de entrega](../docs/delivery/README.md) passa a exigir de todo fork a parte 3,
-[validação de qualidade do produto](../docs/delivery/03-product-quality.md): celular, formulários, 404,
+A [etapa de entrega](../../delivery/README.md) passa a exigir de todo fork a parte 3,
+[validação de qualidade do produto](../../delivery/03-product-quality.md): celular, formulários, 404,
 PageSpeed, imagens, `og:image`, sitemap, Analytics, `robots.txt`, meta descriptions e títulos. Medido hoje,
 o próprio core reprova em itens que nenhum fork deveria ter de corrigir sozinho. O mais grave: a imagem de
 compartilhamento da landing ainda é a arte do next-forge, e vai para produção em silêncio se o fork esquecer
@@ -46,10 +46,10 @@ está marcado no item.
 - **Desempenho** — bundle analyzer (`packages/next-config/index.ts:11`, era `:10` até a PR #64), fontes self-host
   (`packages/design-system/lib/fonts.ts`), nenhum `<img>` cru, GA carregado só depois do consentimento.
   **Fechado pela fatia 2:** `pnpm lighthouse` mede home, preços e contato contra o build de produção da landing.
-  **Segue como lacuna:** a landing monta o `DesignSystemProvider` (antd + um `AuthProvider`) e um segundo
-  `AuthProvider` (`apps/web/app/[locale]/layout.tsx:40-41`, eram `:36-37` até a PR #71;
-  `packages/design-system/index.tsx:42-44`), então todo visitante anônimo baixa antd e o SDK do Firebase
-  Auth. O número que o "Fora do corte" esperava chegou com a fatia 2: na mediana de cinco execuções, a home
+  **Segue como lacuna:** a landing monta o `DesignSystemProvider` (antd + um `AuthProvider`,
+  `apps/web/app/[locale]/layout.tsx:39`; `packages/design-system/index.tsx:41-55`), então todo visitante anônimo
+  baixa antd e o SDK do Firebase Auth. O segundo `AuthProvider`, aninhado no layout, saiu na PR #74 (tarefa
+  direta `e2e-org-ownership-flake-and-web-api-url`). O número que o "Fora do corte" esperava chegou com a fatia 2: na mediana de cinco execuções, a home
   fica em Performance 87 e LCP 3,9 s, abaixo da meta da parte 3 nos dois (ver a conferência da fatia 2).
 - **Imagens** — nenhuma acima de 100 KB; `images.formats` com AVIF e WebP
   (`packages/next-config/index.ts:7`, era `:6` até a PR #64). Sem lacuna.
@@ -95,7 +95,7 @@ está marcado no item.
 - `sign_up` e `generate_lead` são eventos recomendados do GA4
   (<https://developers.google.com/analytics/devguides/collection/ga4/reference/events>).
 - Lighthouse CI aparece no baseline de engenharia já pesquisado:
-  [`research/engineering-baseline.md`](research/engineering-baseline.md).
+  [`research/engineering-baseline.md`](../../../specs/reference/research/engineering-baseline.md).
 - Todas as URLs acima foram abertas em 2026-11-19.
 
 ## Proposta — corte de MVP
@@ -118,9 +118,9 @@ código de `main`)
 | item | evidência | teste |
 |------|-----------|-------|
 | `og:image` da marca | `apps/web/app/[locale]/opengraph-image.tsx:24-26` (`generateStaticParams` com os três idiomas, então o PNG sai no build) e `:57` (`ImageResponse`); nome, logo e frase vêm de `getBrand()` e do dicionário em `apps/web/shared/lib/openGraph.ts:39-54`, com o logo trocado por monograma quando a busca falha (`:60-84`); `buildLocaleMetadata` declara `openGraph.images` com URL absoluta, 1200 × 630 e `alt` traduzido (`apps/web/shared/lib/seo.ts:91-99`); os dois `opengraph-image.png` saíram da `web` e da `api` | `apps/web/__tests__/openGraph.test.ts`, `seo.test.ts` |
-| 404 da landing | `apps/web/app/[locale]/not-found.tsx:15-53` (cartão com título, descrição, link para `/${locale}` e `<title>` com a marca em `:23`); `app/[locale]/[...rest]/page.tsx:3-5` leva caminho desconhecido ao `notFound()`; `shared/lib/localeSegment.ts:9-13`, chamado no layout (`app/[locale]/layout.tsx:24`), recusa idioma inválido; textos em `translations/apps/web/pages/notFound/index.ts` | `notFoundPage.test.tsx`, `localeSegment.test.ts`, E2E em `apps/e2e/tests/landing.spec.ts` |
+| 404 da landing | `apps/web/app/[locale]/not-found.tsx:15-53` (cartão com título, descrição, link para `/${locale}` e `<title>` com a marca em `:23`); `app/[locale]/[...rest]/page.tsx:3-5` leva caminho desconhecido ao `notFound()`; `shared/lib/localeSegment.ts:9-13`, chamado no layout (`app/[locale]/layout.tsx:23`, era `:24` até a PR #74), recusa idioma inválido; textos em `translations/apps/web/pages/notFound/index.ts` | `notFoundPage.test.tsx`, `localeSegment.test.ts`, E2E em `apps/e2e/tests/landing.spec.ts` |
 | 404 da API em JSON | `apps/api/app/[[...path]]/route.ts:6-16` responde `404 { error: { code: "ROUTE_NOT_FOUND" } }` nos cinco métodos; o código está nos três idiomas (`translations/packages/shared/utils.ts:116`, `:299`, `:488`) | `apps/api/__tests__/routeNotFound.test.ts` |
-| `noindex` | opção `noIndex` em `applySecurityHeaders` (`packages/security/middleware.ts:153-158`, `:180-182`), ligada em `apps/app/proxy.ts:199-207` (inclusive no atalho de `/api/*`) e em `apps/api/proxy.ts:137-139`, aplicada a toda resposta do proxy da API (recusa de origem, preflight, 429 e passagem); a `web` não liga; login e cadastro da landing com `indexable: false` (`sign-in/page.tsx:12`, `sign-up/page.tsx:12`, que vira `robots: { index: false, follow: true }` em `seo.ts:101`); `robots.ts` sem `disallow` | `packages/security/__tests__/csp.test.ts`, `apps/app/__tests__/securityHeaders.test.ts`, `apps/web/__tests__/securityHeaders.test.ts` (ausência na landing), `robots.test.ts` |
+| `noindex` | opção `noIndex` em `applySecurityHeaders` (`packages/security/middleware.ts:153-158`, `:180-182`), ligada em `apps/app/proxy.ts:199-207` (inclusive no atalho de `/api/*`) e em `apps/api/proxy.ts:141-143` (era `:137-139` até a PR #74), aplicada a toda resposta do proxy da API (recusa de origem, preflight, 429 e passagem); a `web` não liga; login e cadastro da landing com `indexable: false` (`sign-in/page.tsx:12`, `sign-up/page.tsx:12`, que vira `robots: { index: false, follow: true }` em `seo.ts:101`); `robots.ts` sem `disallow` | `packages/security/__tests__/csp.test.ts`, `apps/app/__tests__/securityHeaders.test.ts`, `apps/web/__tests__/securityHeaders.test.ts` (ausência na landing), `robots.test.ts` |
 
 O `/test` fechou com 11 ✅, 0 ❌ e 1 🔒 (o validador de Open Graph, que exige a landing publicada num domínio), em
 build de produção. O CI da execução de merge passou nos seis jobs (`gh run 45230519218`).
@@ -189,8 +189,8 @@ entre 57 e 93 em outras cinco execuções.
   evento de cadastro tende a nascer.
 
 **Fatia 3: títulos e conversão** (✅ entregue pela PR #73, `5829ea3`, em 2026-11-23, e conferida no código de
-`main`; o CI da execução de merge ficou vermelho por um E2E instável fora da fatia, então a spec **não** foi
-arquivada nesta auditoria; ver "Perguntas em aberto")
+`main`; o CI da execução de merge ficou vermelho por um E2E instável fora da fatia, e por isso a auditoria de
+2026-11-23 não arquivou a spec; arquivada em 2026-11-24, depois da sua resposta à D20, ver "Perguntas em aberto")
 
 - [x] **Título próprio por tela do painel**, a partir do dicionário, com `title.template` nos layouts.
 - [x] **Eventos `sign_up` e `generate_lead`** pelo `@repo/analytics`, só com consentimento, e um helper para
@@ -201,7 +201,7 @@ arquivada nesta auditoria; ver "Perguntas em aberto")
 | item | evidência | teste |
 |------|-----------|-------|
 | título por tela | `panelTitleTemplate` (`apps/app/shared/lib/panelTitles.ts:11-19`) devolve `default: "<área> \| <marca>"` e `template: "%s \| <marca>"`, usado no `generateMetadata` dos dois layouts (`(common)/layout.tsx:24-35`, `title` em `:31`; `admin/layout.tsx:22-33`, `title` em `:29`); `PANEL_PAGE_TITLES` (`panelTitles.ts:21-42`) registra dez telas com rótulos que o dicionário já tinha, e `panelPageMetadata` (`apps/app/lib/server/panelMetadata.ts:13-20`) lê o dicionário no idioma da rota; as seis telas server exportam `generateMetadata` na própria `page.tsx`, e as quatro telas cliente num `layout.tsx` irmão (criar entidade, criar e editar usuário, playground). As duas telas iniciais ficam com o nome da área | `apps/app/__tests__/panelTitles.test.ts` (varre o disco e reprova tela sem registro), `panelLayoutTitle.test.ts`; E2E com `toHaveTitle` em `apps/e2e/tests/entityCrud.spec.ts:15`, nos projetos `chromium` e `mobile` |
-| `sign_up` e `generate_lead` | `ANALYTICS_EVENT` e `sendAnalyticsEvent` (`packages/analytics/events.ts:1-4`, `:20-31`), que só chama o `gtag` com consentimento, id do GA e `gtag` presente; `useAnalyticsEvent()` (`packages/analytics/events-context.tsx:15-20`), mudo fora do provider; o `AnalyticsProvider` publica o `trackEvent` (`provider.tsx:102-113`, `:125-127`). `sign_up` em seis pontos: cadastro por e-mail na app (`SignUpFormClient.tsx:133`) e na landing (`sign-up-form-client.tsx:60`), e Google nas duas telas da app (`SignInForm.tsx:53`, `SignUpFormClient.tsx:54`, pelo `onAccountCreated` de `googleSignInApi.ts:42`) e nas duas da landing (`sign-in-form-client.tsx:140-141`, `sign-up-form-client.tsx:92-93`), com `isNewAccount` (`packages/auth/client.ts:177-178`). `generate_lead` no contato aceito (`contact-form-client.tsx:62`). Nenhuma dependência nem variável nova | `packages/analytics/__tests__/events.test.ts`, `apps/app/__tests__/analyticsEvents.test.tsx`, `signUpAnalytics.test.tsx` e `googleSignInApi.test.ts`, `apps/web/__tests__/signUpAnalytics.test.tsx` e `contactForm.test.tsx`, `packages/auth/__tests__/newAccount.test.ts` |
+| `sign_up` e `generate_lead` | `ANALYTICS_EVENT` e `sendAnalyticsEvent` (`packages/analytics/events.ts:1-4`, `:20-31`), que só chama o `gtag` com consentimento, id do GA e `gtag` presente; `useAnalyticsEvent()` (`packages/analytics/events-context.tsx:15-20`), mudo fora do provider; o `AnalyticsProvider` publica o `trackEvent` (`provider.tsx:102-113`, `:125-127`). `sign_up` em seis pontos: cadastro por e-mail na app (`SignUpFormClient.tsx:104`) e na landing (`sign-up-form-client.tsx:60`), e Google nas duas telas da app (`SignInForm.tsx:52`, `SignUpFormClient.tsx:53`, pelo `onAccountCreated` de `googleSignInApi.ts:41`) e nas duas da landing (`sign-in-form-client.tsx:146-147`, `sign-up-form-client.tsx:97-98`); âncoras remedidas em 2026-11-24, depois da PR #74, que mexeu nos cinco arquivos (eram `:133`, `:53`, `:54`, `:42`, `:140-141` e `:92-93`), com `isNewAccount` (`packages/auth/client.ts:177-178`). `generate_lead` no contato aceito (`contact-form-client.tsx:62`). Nenhuma dependência nem variável nova | `packages/analytics/__tests__/events.test.ts`, `apps/app/__tests__/analyticsEvents.test.tsx`, `signUpAnalytics.test.tsx` e `googleSignInApi.test.ts`, `apps/web/__tests__/signUpAnalytics.test.tsx` e `contactForm.test.tsx`, `packages/auth/__tests__/newAccount.test.ts` |
 
 O `/test` fechou com 14 ✅, 0 ❌ e 1 🔒 (ver os eventos chegarem numa propriedade GA4 real, item 19 do
 `docs/PRE-PRODUCTION.md`). No navegador, o `sign_up` sobreviveu ao carregamento completo de página nas duas telas da
@@ -209,7 +209,11 @@ app e não saiu com o banner recusado, sem decisão ou no login seguinte com Goo
 (`gh run 45309579027`). O da execução de merge (`gh run 45311956449`) terminou em `failure` no job `e2e`:
 `organizationOwnership.spec.ts:68` reprovou na primeira tentativa por contraste do botão "Atualizar" em
 `/pt-br/organization` e passou na segunda, e a config do Playwright reprova teste instável no CI
-(`apps/e2e/playwright.config.ts:36`). Os outros cinco jobs passaram.
+(`apps/e2e/playwright.config.ts:36`). Os outros cinco jobs passaram. A PR #74 consertou o teste (a espera da
+`GET /organization/invitations` antes do axe, tarefa direta `e2e-org-ownership-flake-and-web-api-url`), e a execução de
+merge dela (`gh run 45408797430`, sobre `c58f2ef`, que contém o corte inteiro desta spec) passou no `e2e` com 45
+testes e nenhum instável; reprovou só em `secrets`, por um falso positivo do Gitleaks num arquivo de teste de
+`delivery-security-review` (ver a spec dela).
 
 **Deriva da fatia 3:**
 
@@ -280,10 +284,12 @@ app e não saiu com o banner recusado, sem decisão ou no login seguinte com Goo
   várias execuções: sim, mas no procedimento do `/deliver` (rodar o comando três vezes e citar a mediana), sem
   mudar o comando. Em (c) a auditoria de 2026-11-23 diverge do plano, por causa da variação medida.
 
-- **Arquivar a spec com o CI da execução de merge da PR #73 vermelho?** — **recomendação:** rodar de novo o job
-  que falhou (`gh run rerun 45311956449 --failed`) e deixar a próxima auditoria arquivar se ele passar. O corte
-  inteiro está em `main`, o mesmo código passou nos seis jobs na PR (`gh run 45309579027`), e a falha foi de um E2E
-  que não é desta fatia. O conserto do teste instável é tarefa direta, à parte.
+- **Arquivar a spec com o CI da execução de merge da PR #73 vermelho?** (D20) — **recomendação de 2026-11-24:**
+  arquivar. O motivo do vermelho sumiu: o teste instável foi consertado pela PR #74, e o `e2e` da execução de merge
+  dela, sobre um código que contém o corte inteiro desta spec, passou com 45 testes e nenhum instável. O único job
+  vermelho nessa execução é o `secrets`, por um falso positivo num teste de outra spec, que só examina o commit novo
+  e não diz nada sobre este corte. A recomendação de 2026-11-23 (rodar de novo o job da PR #73) não foi seguida e
+  perdeu o sentido. **Respondida em 2026-11-24:** arquivar. A spec saiu de `specs/` nesse dia.
 - **Duas escolhas da fatia 3 que o `/analyze` decidiu por padrão** — (a) mandar os eventos também ao Vercel
   Analytics: **não agora**; eventos customizados lá dependem de plano pago, segundo o próprio plano (a página de
   preços não foi reaberta), e o hook aceita um segundo destino sem mudar os chamadores; (b) pôr a área no meio do

@@ -1,7 +1,7 @@
 # Plano: conta como página de configurações e padrão único de página nas telas internas
 
 - **Spec de origem:** [`specs/app-internal-ux-polish.md`](../../../../specs/app-internal-ux-polish.md) (`approved`). Problema, evidência, corte de MVP e a seção `## Decisões` vêm de lá e não são rediscutidos aqui. Este plano trata do **como**.
-- **Pesquisa de apoio:** [`specs/research/settings-page-patterns.md`](../../../../specs/research/settings-page-patterns.md).
+- **Pesquisa de apoio:** [`specs/research/settings-page-patterns.md`](../../../../specs/reference/research/settings-page-patterns.md).
 - **Contenção:** a fatia 3 de `account-security-mfa` mexe em `AccountSecurityForm.tsx`. Esta tarefa roda antes dela e nunca em paralelo.
 - **Fatia:** `packages/design-system` → `apps/app` → `apps/e2e` → `packages/internationalization`. Sem SDK e sem API.
 

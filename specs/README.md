@@ -12,6 +12,20 @@ pena construir** — e o porquê.
 > qualquer fork** e **valiosa o bastante para alguém sentir falta**. Funcionalidade de um produto único
 > não vira spec — vira código no fork.
 
+## Como ler (para quem decide)
+
+Para acompanhar o backlog, bastam dois lugares:
+
+1. **[`BACKLOG.md`](BACKLOG.md)**: a fila em uma página. Mostra o que vem a seguir, o que está em andamento, o que
+   espera sua triagem e o que foi adiado, cada linha com o comando para começar.
+2. **[`features/`](features/)**: uma tarefa por arquivo. Todo arquivo abre com um bloco **Resumo** (o quê, por quê,
+   status e próximo passo). O Resumo basta para saber do que se trata; o resto do arquivo é o detalhe que o
+   `/analyze` usa para planejar.
+
+O que está em [`reference/`](reference/) é material de trabalho dos agents: o template, as notas de pesquisa de
+mercado e o [registro de auditoria](reference/AUDIT.md) (achados, gates, deriva, decisões estacionadas). Você não
+precisa abrir essa pasta para acompanhar o backlog.
+
 ## O ciclo (loop engineering)
 
 ```
@@ -39,7 +53,7 @@ o tamanho dela é a medida do que falta.
 ## Ciclo de vida de uma spec
 
 ```
-specs/<id>.md                          docs/features/<slug>/
+specs/features/<id>.md                 docs/features/<slug>/
 ├── proposed    (descoberta)                 │
 ├── approved    (você triou)                 │
 ├── in-progress (/analyze <id> …             │
@@ -51,16 +65,16 @@ specs/<id>.md                          docs/features/<slug>/
 Nunca mova à mão e nunca mova por acreditar no `status` gravado — é justamente essa verificação que
 sustenta o loop.
 
-**Como move:** `git mv specs/<id>.md docs/features/<slug>/spec.md`, para preservar o histórico do arquivo.
+**Como move:** `git mv specs/features/<id>.md docs/features/<slug>/spec.md`, para preservar o histórico do arquivo.
 No destino, o frontmatter fica com `status: done`, `feature: <slug>` e a data de entrega.
 
-**O que NÃO sai daqui:** `rejected`, `superseded` e `deferred` permanecem em `specs/`. Eles não têm feature
+**O que NÃO sai daqui:** `rejected`, `superseded` e `deferred` permanecem em `specs/features/`. Eles não têm feature
 para onde ir, e são a memória institucional que impede o `/spec` de repropor a mesma coisa na próxima
 rodada. O `BACKLOG.md` os separa da fila ativa.
 
 ## Spec × plano — a fronteira
 
-| | `specs/<id>.md` | `docs/features/<slug>/analyze/plan.md` |
+| | `specs/features/<id>.md` | `docs/features/<slug>/analyze/plan.md` |
 |---|---|---|
 | Responde | **o quê** e **por quê** | **como** |
 | Dono | `estrategista-produto` (`/spec`) | `planejador-tarefa` (`/analyze`) |
@@ -75,17 +89,25 @@ escrevendo isso, já é `/analyze`.
 ```
 specs/
   README.md          ← este arquivo
-  BACKLOG.md         ← índice priorizado (fonte da ordem)
-  TEMPLATE.md        ← esqueleto de uma spec nova
-  <id>.md            ← uma spec por arquivo
-  research/          ← notas de pesquisa de mercado, com fontes e data
-    <topico>.md
+  BACKLOG.md         ← a fila em uma página (fonte da ordem)
+  features/          ← o que vamos desenvolver: uma spec por arquivo, cada uma com bloco Resumo no topo
+    <id>.md
+  reference/         ← material dos agents
+    TEMPLATE.md      ← esqueleto de uma spec nova
+    AUDIT.md         ← registro do /spec --sync: entregas, gates, lotes, decisões, deriva, achados, pendências
+    research/        ← notas de pesquisa de mercado, com fontes e data
+      <topico>.md
 ```
 
 - **`id` = nome do arquivo = slug em inglês** (`audit-log`, `usage-limits`), igual à convenção de
   `docs/features/`. O **conteúdo é em português**.
 - O `BACKLOG.md` é a **fonte da ordem**; o arquivo da spec é a fonte do conteúdo. Os dois são atualizados
   juntos pelo `/spec`.
+- O `BACKLOG.md` **não guarda evidência de auditoria**. Tudo o que a auditoria mede (âncoras, gates, achados,
+  derivas) vai para o `reference/AUDIT.md`, e o `BACKLOG.md` só aponta para lá. Assim ele continua cabendo numa tela.
+- **Bloco Resumo obrigatório.** Logo abaixo do título de toda spec, quatro linhas: **O quê**, **Por quê**,
+  **Status** (status, valor, esforço e audiência) e **Próximo passo**. Quem muda o status de uma spec atualiza o
+  Resumo junto.
 
 ## Frontmatter (obrigatório)
 
@@ -110,13 +132,13 @@ updated: 2026-08-21
 
 | status | significa | onde o arquivo vive | quem move |
 |--------|-----------|---------------------|-----------|
-| `proposed` | descoberta pelo `/spec`, ainda não validada por você | `specs/` | `/spec` |
-| `approved` | você aprovou; está na fila para virar tarefa | `specs/` | você (via `/spec`) |
-| `in-progress` | tem uma feature em `docs/features/` em andamento | `specs/` | `/analyze <id>` |
+| `proposed` | descoberta pelo `/spec`, ainda não validada por você | `specs/features/` | `/spec` |
+| `approved` | você aprovou; está na fila para virar tarefa | `specs/features/` | você (via `/spec`) |
+| `in-progress` | tem uma feature em `docs/features/` em andamento | `specs/features/` | `/analyze <id>` |
 | `done` | entregue e **confirmada no código** | **`docs/features/<slug>/spec.md`** | `/spec --sync` |
-| `deferred` | vale, mas não agora (motivo obrigatório) | `specs/` | você |
-| `rejected` | não vai acontecer (motivo obrigatório) | `specs/` | você |
-| `superseded` | absorvida por outra spec (aponte qual) | `specs/` | `/spec` |
+| `deferred` | vale, mas não agora (motivo obrigatório) | `specs/features/` | você |
+| `rejected` | não vai acontecer (motivo obrigatório) | `specs/features/` | você |
+| `superseded` | absorvida por outra spec (aponte qual) | `specs/features/` | `/spec` |
 
 ### `audience`
 
@@ -143,7 +165,7 @@ outra em nada, e mesmo assim alteram as duas o `apps/api/(shared)/repositories/b
 **`contends_on` lista os arquivos compartilhados específicos que a spec vai *modificar*, e onde duas
 features rodando em paralelo produziriam conflito de merge caro.** É uma lista **curta** — tipicamente
 0 a 3 entradas, raramente mais. Ela existe para alimentar o cálculo de [lotes
-paralelos](BACKLOG.md#lotes-paralelos), não para descrever o raio de impacto da spec (isso é o `area:`,
+paralelos](reference/AUDIT.md#lotes-paralelos), não para descrever o raio de impacto da spec (isso é o `area:`,
 que é grosso demais para esta finalidade: quase toda spec lista `packages/internationalization`, então
 overlap de `area` marcaria tudo como conflitante com tudo).
 
@@ -152,7 +174,7 @@ overlap de `area` marcaria tudo como conflitante com tudo).
 | não entra | por quê |
 |-----------|---------|
 | `packages/internationalization/translations/*` | toda feature com UI escreve lá, mas em **nós diferentes** do dicionário. Conflito trivial, resolve sozinho. Se entrasse, **nada** seria paralelizável |
-| `specs/BACKLOG.md` | resolvido por **processo** (só um workspace roda a auditoria; os outros usam `--no-audit`), não por dado |
+| `specs/BACKLOG.md` e `specs/reference/AUDIT.md` | resolvido por **processo** (só um workspace roda a auditoria; os outros usam `--no-audit`), não por dado |
 | arquivos em `docs/` | markdown não quebra build e o conflito é barato de resolver à mão |
 | arquivos que a spec apenas **lê** | ler não conflita |
 | arquivos **novos** que a spec cria | arquivo que não existe não tem com o que conflitar |
@@ -183,7 +205,7 @@ um falso negativo custa um merge conflict noturno, sem ninguém acordado para re
    spec que reimplementa algo existente é um bug do processo.
 5. **Ceticismo sobre hype.** "Aparece em 1 de 12 starters" é informação, e deve estar escrita.
 
-## Notas de pesquisa (`specs/research/`)
+## Notas de pesquisa (`specs/reference/research/`)
 
 Pesquisa de mercado envelhece. Cada nota traz `collected:` (data) e `revalidate_after:` no frontmatter, e
 lista as URLs consultadas. Uma spec referencia a nota em vez de recopiar os argumentos — assim, quando a

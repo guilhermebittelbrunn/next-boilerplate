@@ -53,7 +53,7 @@ produção por um tipo ou uma chave de tradução faltando.
 
 ## Evidência de mercado
 
-- Nota: [`specs/research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md)
+- Nota: [`specs/research/engineering-baseline.md`](../../../specs/reference/research/engineering-baseline.md)
 - **Prática 1 (CI + Remote Caching)** — classificada como *padrão de facto*, e a nota a lista entre as
   quatro sem as quais nada mais se sustenta neste repo, citando explicitamente a ausência de `.github/`.
 - **Prática 5 (cobertura)** — consolidada; limiar global alto vira teatro e relatório por workspace **não

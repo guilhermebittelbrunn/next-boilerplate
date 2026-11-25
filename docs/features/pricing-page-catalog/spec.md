@@ -49,7 +49,7 @@ plano que já tinha escolhido, depois de criar a conta.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Página de preços".
 - Prevalência: **4 de 10** starters do painel geram a página de uma fonte única (Makerkit, Supastarter e ShipFast a
   partir de um arquivo de configuração; o starter de assinatura da Vercel, hoje arquivado, a partir da Stripe). O

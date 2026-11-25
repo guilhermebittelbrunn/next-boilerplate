@@ -394,7 +394,7 @@ Cabeçalho comum aos quatro (texto final no `/develop`):
 > usar como registro oficial.
 >
 > Fontes coletadas em <data>; base na nota
-> [`compliance-trust-baseline`](../specs/research/compliance-trust-baseline.md), a revalidar depois de
+> [`compliance-trust-baseline`](../specs/reference/research/compliance-trust-baseline.md), a revalidar depois de
 > 2027-08-21. Prazo legal e lista de provedor mudam; confira antes de confiar num número daqui.
 ```
 

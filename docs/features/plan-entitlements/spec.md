@@ -59,7 +59,7 @@ não existe mais no repositório.)*
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), tabela
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), tabela
   original e adendo de 2026-09-26.
 - Prevalência: **2/10** para feature flags e 2/10 para metering na tabela original; o adendo confirma que o
   padrão dos kits é entregar o estado da assinatura e deixar o gate com quem constrói. O Makerkit documenta

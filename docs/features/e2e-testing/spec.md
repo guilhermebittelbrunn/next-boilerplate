@@ -169,7 +169,7 @@ alterou os dois primeiros de fora e não tocou `turbo.json`.
 
 ## Evidência de mercado
 
-- Nota: [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md)
+- Nota: [`research/engineering-baseline.md`](../../../specs/reference/research/engineering-baseline.md)
 - **Prática 2 (testes E2E)** — *padrão de facto*, esforço M–G; a dor evitada é "regressão em login/checkout",
   que é exatamente o inventário de fluxos deste repo. A nota recomenda escopo enxuto — **5 a 10 fluxos**,
   não cobertura ampla — apontando para o **emulador**, nunca para o Firebase real, com rastro guardado

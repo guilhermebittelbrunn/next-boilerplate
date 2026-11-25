@@ -1,6 +1,6 @@
 # Observabilidade: log estruturado, request id e readiness
 
-Plano da spec [`observability-logging`](../../../../specs/observability-logging.md). Cobre a Etapa 1
+Plano da spec [`observability-logging`](../../../../specs/features/observability-logging.md). Cobre a Etapa 1
 (análise) e a Etapa 2 (blueprint) do [`feature-analysis-guide.md`](../../../feature-analysis-guide.md).
 
 Números do repo remedidos em **2026-09-16** contra este checkout, antes de planejar. Onde a medição diverge
@@ -93,7 +93,7 @@ três apps recria o defeito que a spec documenta (a degradação se copia junto 
 
 ### 1.6 Fontes
 
-A spec aponta para [`specs/research/engineering-baseline.md`](../../../../specs/research/engineering-baseline.md),
+A spec aponta para [`specs/research/engineering-baseline.md`](../../../../specs/reference/research/engineering-baseline.md),
 que foi lido. As três práticas aplicáveis, com a armadilha de cada uma:
 
 - Prática 6 (`:97-99`): Sentry conflita com `@vercel/otel` porque configura OTel sozinho; `tracesSampleRate:

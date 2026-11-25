@@ -81,8 +81,8 @@ cobertas, que nenhum achado sozinho tem.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md), controle 18, e
-  [`research/engineering-baseline.md`](../../../specs/research/engineering-baseline.md), prática 17.
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/reference/research/compliance-trust-baseline.md), controle 18, e
+  [`research/engineering-baseline.md`](../../../specs/reference/research/engineering-baseline.md), prática 17.
 - Natureza da obrigação: **lei**. A LBI (Lei 13.146/2015), art. 63, torna "obrigatória a acessibilidade nos
   sítios da internet mantidos por empresas com sede ou representação comercial no País"; a norma técnica é
   aberta, e a referência internacional é o WCAG 2.2 AA. Para fork que vende a consumidor na UE, o European

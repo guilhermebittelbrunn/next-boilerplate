@@ -4,7 +4,7 @@
 - **Slug**: `session-refresh`
 - **Rodada**: autônoma (`/cycle`). As perguntas em aberto da spec já vêm decididas — ver a seção final.
 - **Contenção**: `packages/auth/session.ts`, `session-routes.ts`, `server.ts`. A spec
-  [`account-security-mfa`](../../../../specs/account-security-mfa.md) declara os mesmos três arquivos e
+  [`account-security-mfa`](../../../../specs/features/account-security-mfa.md) declara os mesmos três arquivos e
   não pode rodar no mesmo lote.
 
 ---

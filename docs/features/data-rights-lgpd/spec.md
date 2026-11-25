@@ -78,8 +78,8 @@ acumula, maior o estrago de uma exclusão feita errado.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (controles 1, 2,
-  3, 4, 6, 7, 8, 9 e 19) · [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md)
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/reference/research/compliance-trust-baseline.md) (controles 1, 2,
+  3, 4, 6, 7, 8, 9 e 19) · [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md)
 - **Prevalência é baixa e isso não é desculpa:** exclusão de conta aparece em **4/10** starters e
   exportação de dados em **0/10**. A obrigação não vem do mercado, vem da lei — e é por quase ninguém
   entregar que isso vira diferencial de confiança do core.

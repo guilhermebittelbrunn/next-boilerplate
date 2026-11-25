@@ -1,6 +1,6 @@
 # Plano: sessões ativas da conta (fatia 2 de `account-security-mfa`)
 
-Spec de origem: [`specs/account-security-mfa.md`](../../../../specs/account-security-mfa.md), fatia 2 da
+Spec de origem: [`specs/account-security-mfa.md`](../../../../specs/features/account-security-mfa.md), fatia 2 da
 tabela "Estado das fatias" (`:278-284`). Itens do corte: item 2 (`:199-200`, ver onde a conta está
 conectada) e o resíduo do item 3 (`:201-211`, encerrar uma sessão ou todas as outras mantendo a atual, e
 logout comum deixando de ser "sair de todos"). A fatia 1 (política de senha) está registrada em

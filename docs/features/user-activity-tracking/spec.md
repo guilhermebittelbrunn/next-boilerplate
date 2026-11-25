@@ -62,11 +62,11 @@ Esta seção mudou o desenho da spec, então merece ser lida antes do corte.
 
 ## Evidência de mercado
 
-- Nota: [`research/compliance-trust-baseline.md`](../../../specs/research/compliance-trust-baseline.md) (coletada em
+- Nota: [`research/compliance-trust-baseline.md`](../../../specs/reference/research/compliance-trust-baseline.md) (coletada em
   2026-08-21, dentro da validade) para a parte de dado pessoal e retenção.
 
 **O benchmark não sustenta esta spec.** Em
-[`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md) não existe linha
+[`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md) não existe linha
 para "último acesso" nem para rastreio de atividade de usuário. A linha mais próxima é "Admin/super-admin
 (listar, banir)", com **4 em 10** e valor classificado como operacional — que é o painel onde a coluna
 entraria, não a coluna em si. Não medi prevalência de coluna de último acesso entre os starters, e não vou

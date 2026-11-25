@@ -59,7 +59,7 @@ Para o fork, isso significa perder o primeiro contato de um cliente interessado 
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Formulário de contato que entrega".
 - Prevalência: **2 de 4** verificados entregam (Supastarter, "Contact form"; Makerkit, `CONTACT_EMAIL`, "The email
   address for contact inquiries"). O next-forge tem a mesma fachada que este repositório herdou; o ShipFast oferece

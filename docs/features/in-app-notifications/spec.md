@@ -58,7 +58,7 @@ resolvidos uma vez.
 
 ## Evidência de mercado
 
-- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/research/saas-starter-feature-benchmark.md), adendo de
+- Nota: [`research/saas-starter-feature-benchmark.md`](../../../specs/reference/research/saas-starter-feature-benchmark.md), adendo de
   2026-10-16, seção "Notificações in-app (remedição)".
 - Prevalência: **4 de 10** (next-forge com Knock; Makerkit com tabela própria, ligado por padrão; Supastarter
   segundo a página inicial; Saas UI pelo router de notificações da API). Continua minoria, e o `value` reflete isso.

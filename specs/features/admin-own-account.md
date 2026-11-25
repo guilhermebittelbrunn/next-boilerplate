@@ -1,7 +1,7 @@
 ---
 id: admin-own-account
 title: Área de conta para o admin (perfil, senha e preferências)
-status: proposed
+status: approved
 value: médio
 effort: M
 audience: produto
@@ -10,10 +10,16 @@ mode: ambos
 depends_on: [app-internal-ux-polish]
 contends_on: [apps/api/app/(guards)/common-panel.ts, apps/app/shared/components/ui/ProfileDropdown.tsx, "apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx"]
 feature: -
-updated: 2026-11-23
+updated: 2026-11-24
 ---
 
 # Área de conta para o admin (perfil, senha e preferências)
+
+> **Resumo**
+> - **O quê:** uma área de conta para o admin trocar senha, avatar, tema e idioma sem sair do painel.
+> - **Por quê:** hoje "Minha conta" manda o admin para `/account`, o painel comum o devolve para `/admin`, e ele só troca a senha pelo "esqueci a senha".
+> - **Status:** `approved` · valor médio · esforço M · produto
+> - **Próximo passo:** `/analyze admin-own-account` (é a primeira da fila)
 
 ## Problema
 
@@ -31,7 +37,7 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
   redirecionado para `/{locale}/admin`. É de propósito (o painel comum é do usuário comum) e não deve mudar.
 - `apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx:19-33` — o menu do admin tem só Usuários e
   Auditoria; não há entrada de conta.
-- `apps/api/app/(guards)/common-panel.ts:77` — todas as rotas de `/account` (`account/route.ts:105`, `:115`,
+- `apps/api/app/(guards)/common-panel.ts:77` — todas as rotas de `/account` (`account/route.ts:111`, `:121`, eram `:105` e `:115` até a PR #74;
   `account/password/route.ts:22`, era `:18` até a PR #64 e as demais em `apps/api/app/(routes)/account/`) passam por
   `requireCommonPanelApi`, que recusa com `403 COMMON_PANEL_FORBIDDEN` quando o sujeito não é `COMMON`. Mesmo
   com uma tela, o admin não conseguiria salvar nada pela API de hoje.
@@ -41,7 +47,7 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
   `403 USERS_SELF_LOCKOUT_FORBIDDEN` (tarefa `admin-self-lockout-guard`).
 - Peças reaproveitáveis: os formulários de perfil, senha e preferências da conta comum
   (`apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/`), já no layout de
-  configurações que [`app-internal-ux-polish`](../docs/features/app-internal-ux-polish/spec.md) entregou pela
+  configurações que [`app-internal-ux-polish`](../../docs/features/app-internal-ux-polish/spec.md) entregou pela
   PR #62: navegação por seção derivada do `?tab=` (`AccountTabs.tsx`, `accountTabRouting.ts`), blocos em
   `apps/app/shared/components/ui/SettingsSection.tsx` e cabeçalho de página em `ui/PageHeader.tsx`. A lista de
   seções é fixa no módulo (`accountTabRouting.ts:3-9`), então a área do admin precisa de uma lista própria, sem
@@ -51,7 +57,7 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
 
 ## Evidência de mercado
 
-- Nota: [`research/settings-page-patterns.md`](research/settings-page-patterns.md). Ela cobre o formato das
+- Nota: [`research/settings-page-patterns.md`](../reference/research/settings-page-patterns.md). Ela cobre o formato das
   páginas de configurações (navegação lateral em 4 de 10 referências) e não pesquisa a conta do operador em
   particular. Não houve pesquisa nova para esta spec.
 - Nas referências da nota, as configurações de conta são do usuário logado, sem separar quem administra.
