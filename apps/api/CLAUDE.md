@@ -22,7 +22,7 @@ Regras de escopo para a API Next — rotas, validação, auth na borda. O Claude
 ## Mappers e repositórios Firestore
 
 - Mappers em `(shared)/mappers/`: interface `MapperInterface<Entity, DTO>`, classe base `Mapper<Entity, DTO>` (sem camada domain), `AllOptional` via `@repo/shared/utils`. Reutilize `stringIfExists` e `normalizeFirestoreInstant`.
-- Repositório por recurso: classe `<Recurso>Mapper` + instância exportada; repositório estende `BaseRepository<DTO>` passando o mapper no `super` (3.º arg). Repositórios sem normalização (ex.: `user`) mantêm só `super(db, tabela)`.
+- Repositório por recurso: classe `<Recurso>Mapper` + instância exportada; repositório estende `BaseRepository<DTO>` passando o mapper no `super` (3.º arg). Repositórios sem normalização (ex.: `organization`) mantêm só `super(db, tabela)`.
 - `POST` após `create`: pode devolver diretamente o DTO retornado pelo repositório.
 - `PUT` opcional: resposta mínima `{ data: { id } }` quando não for necessário devolver o registo completo.
 
