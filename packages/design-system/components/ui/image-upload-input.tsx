@@ -168,6 +168,7 @@ export function ImageUploadInput({
                 {previewUrl ? (
                     <ResponsiveImage
                         alt={texts.alt}
+                        className="shrink-0"
                         height={PREVIEW_SIZE}
                         priority={false}
                         src={previewUrl}

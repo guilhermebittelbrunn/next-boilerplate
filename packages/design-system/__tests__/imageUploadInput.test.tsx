@@ -81,4 +81,20 @@ describe("ImageUploadInput", () => {
             texts.errors.typeNotAllowed,
         ]);
     });
+
+    it("keeps the preview from shrinking when the row runs out of width", () => {
+        render(
+            <ImageUploadInput
+                label={LABEL}
+                previewSrc="https://example.com/avatar.png"
+                texts={texts}
+                upload={vi.fn()}
+                value="avatars/user.png"
+            />
+        );
+
+        const previewFrame = screen.getByAltText(texts.alt).parentElement;
+
+        expect(previewFrame?.classList.contains("shrink-0")).toBe(true);
+    });
 });
