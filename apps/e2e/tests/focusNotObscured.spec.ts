@@ -189,12 +189,20 @@ test("arrow keys keep the focused genre option clear of the action bar", async (
     page,
 }) => {
     await page.goto(listPath);
-    await page
-        .getByRole("row")
-        .filter({ hasText: SEEDED_ENTITY_NAME })
-        .getByRole("button", { name: actionMenuCopy.trigger })
-        .click();
-    await page.getByRole("menuitem", { name: actionMenuCopy.edit }).click();
+    const editItem = page.getByRole("menuitem", { name: actionMenuCopy.edit });
+    // A click that lands before the row's dropdown hydrates is lost, so the trigger is
+    // pressed again while the menu is still closed.
+    await expect(async () => {
+        if (!(await editItem.isVisible())) {
+            await page
+                .getByRole("row")
+                .filter({ hasText: SEEDED_ENTITY_NAME })
+                .getByRole("button", { name: actionMenuCopy.trigger })
+                .click();
+        }
+        await expect(editItem).toBeVisible({ timeout: 2000 });
+    }).toPass();
+    await editItem.click();
     await expect(page.getByLabel(entitiesForm.name)).toHaveValue(
         SEEDED_ENTITY_NAME
     );
