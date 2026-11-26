@@ -79,7 +79,7 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
     };
 
     return (
-        <div className="flex w-full flex-1 flex-col gap-6">
+        <div className="flex w-full flex-col gap-6">
             <SettingsSection
                 description={privacyCopy.export.description}
                 title={privacyCopy.export.title}

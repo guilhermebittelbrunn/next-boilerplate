@@ -68,7 +68,7 @@ export default function CreateUserPage() {
             >
                 <Form {...form}>
                     <form
-                        className="flex min-h-[50vh] w-full flex-1 flex-col"
+                        className="flex w-full flex-col"
                         onSubmit={form.handleSubmit(onSubmit)}
                     >
                         <Container className="p-0">

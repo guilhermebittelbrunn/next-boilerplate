@@ -111,7 +111,7 @@ export function EditEntityClient() {
                 {entity ? (
                     <Form {...form}>
                         <form
-                            className="flex min-h-[50vh] w-full flex-1 flex-col"
+                            className="flex w-full flex-col"
                             onSubmit={form.handleSubmit(onSubmit)}
                         >
                             <Container className="flex flex-col gap-4 p-0">

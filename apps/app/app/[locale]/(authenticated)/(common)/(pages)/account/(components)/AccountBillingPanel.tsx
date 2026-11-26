@@ -278,7 +278,7 @@ export function AccountBillingPanel({ account }: AccountBillingPanelProps) {
     const plans = catalog?.plans ?? [];
 
     return (
-        <div className="flex w-full flex-1 flex-col gap-6">
+        <div className="flex w-full flex-col gap-6">
             <CheckoutNotice
                 billingCopy={billingCopy}
                 confirmed={liveSubscription !== null}
