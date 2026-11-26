@@ -85,13 +85,14 @@ describe("Container com cabeçalho de página", () => {
         expect(screen.getByRole("alert").textContent).toBe("Falhou");
     });
 
-    it("limita a largura só com width narrow", () => {
+    it("limita a largura e centraliza só com width narrow", () => {
         const { container, rerender } = render(
             <Container header={header}>conteúdo</Container>
         );
         expect(container.firstElementChild?.className).not.toContain(
             "max-w-4xl"
         );
+        expect(container.firstElementChild?.className).not.toContain("mx-auto");
 
         rerender(
             <Container header={header} width="narrow">
@@ -100,6 +101,7 @@ describe("Container com cabeçalho de página", () => {
         );
 
         expect(container.firstElementChild?.className).toContain("max-w-4xl");
+        expect(container.firstElementChild?.className).toContain("mx-auto");
     });
 });
 
