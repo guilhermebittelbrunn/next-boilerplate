@@ -49,7 +49,7 @@ Monorepo **boilerplate full-stack** (fork customizado do [next-forge](https://gi
 5. O **repositório** estende `BaseRepository<DTO>` (Firestore) e usa um **mapper** para normalizar (`Timestamp`→ISO, opcionais) entre o documento persistido e o `DTO` exposto pelo `@repo/sdk`. Soft delete via `deletedAt`.
 6. A resposta volta como `{ data }` ou, em erro, `{ error: { code } }` com status HTTP correto.
 
-> Não há camada "domain" separada: a `Entity` é o documento Firestore + `id`; o `DTO` é o tipo do `@repo/sdk`. Repositórios simples (ex.: `user`) dispensam mapper.
+> Não há camada "domain" separada: a `Entity` é o documento Firestore + `id`; o `DTO` é o tipo do `@repo/sdk`. Repositórios simples (ex.: `organization`) dispensam mapper.
 
 ## Autenticação e impersonação (admin)
 
