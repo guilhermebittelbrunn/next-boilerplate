@@ -39,6 +39,8 @@ export const PANEL_PAGE_TITLES = {
         dictionary.apps.app.pages.admin.routes.platform.users.update,
     "/admin/audit": (dictionary: Dictionary) =>
         dictionary.apps.app.pages.admin.routes.platform.audit.list,
+    "/admin/account": (dictionary: Dictionary) =>
+        dictionary.apps.app.pages.admin.routes.platform.account,
 } as const;
 
 export type PanelPageRoute = keyof typeof PANEL_PAGE_TITLES;
