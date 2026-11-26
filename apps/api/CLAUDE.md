@@ -9,7 +9,7 @@ Regras de escopo para a API Next — rotas, validação, auth na borda. O Claude
 
 ## Camadas
 
-- **Guards** (`app/(guards)`): auth/session antes da lógica (`requireOrganizationApi` para dado da organização, `requireCommonPanelApi`, `requireAdminApi`). Para rota `[id]`, parametrize com `RouteIdParamsContext`.
+- **Guards** (`app/(guards)`): auth/session antes da lógica (`requireOrganizationApi` para dado da organização, `requireCommonPanelApi`, `requireOwnAccountApi` para a conta da própria pessoa — aceita também o admin sem personificação —, `requireAdminApi`). Para rota `[id]`, parametrize com `RouteIdParamsContext`.
 - **Repositórios / adapters** (`(shared)/repositories`): isolam persistência; contratos alinhados ao `@repo/sdk` na borda. Entrada/saída "crua" do Firestore ainda pode exigir normalização mínima (ex.: `Timestamp` → ISO); evite camadas DTO redundantes (`findDtoById`) quando a rota já valida posse.
 - **Mappers** (`(shared)/mappers`): use quando DTO de API ≠ modelo interno; para recursos simples prefira um helper pequeno no repositório em vez de ficheiros só para isso.
 
