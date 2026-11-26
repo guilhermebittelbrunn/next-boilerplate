@@ -351,3 +351,65 @@ describe("POST /account/password/set", () => {
         expect(nothingWritten()).toBe(true);
     });
 });
+
+describe("POST /account/password/set — admin na própria conta", () => {
+    const ADMIN_UID = "google-only-admin";
+    const ADMIN_EMAIL = "admin@example.com";
+    const ADMIN_PROFILE = {
+        id: "admin-profile",
+        reference_id: ADMIN_UID,
+        type: UserType.ADMIN,
+    };
+
+    const asAdmin = (requestRole: string, target: string) =>
+        request(VALID_BODY, {
+            [AUTH_REQUEST_HEADER.USER_ID]: ADMIN_UID,
+            [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.ADMIN,
+            [AUTH_REQUEST_HEADER.REQUEST_ROLE]: requestRole,
+            [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: target,
+        });
+
+    beforeEach(() => {
+        resolveApiActorMock.mockResolvedValue({
+            uid: ADMIN_UID,
+            email: ADMIN_EMAIL,
+            providerData: [{ providerId: "google.com", email: ADMIN_EMAIL }],
+        });
+        findByReferenceIdMock.mockImplementation((uid: string) =>
+            Promise.resolve(
+                uid === ADMIN_UID ? { ...ADMIN_PROFILE } : { ...OWNER_PROFILE }
+            )
+        );
+        updateUserMock.mockResolvedValue({ uid: ADMIN_UID });
+        verifyIdTokenClaimsMock.mockResolvedValue({
+            uid: ADMIN_UID,
+            auth_time: nowSeconds() - FRESH_SIGN_IN_AGE_SECONDS,
+            firebase: { sign_in_provider: "google.com" },
+        });
+    });
+
+    it("define a senha do admin que só entrava pelo Google", async () => {
+        const response = await setPassword(
+            asAdmin(UserRoleLevel.ADMIN, ADMIN_UID)
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateUserMock).toHaveBeenCalledWith(ADMIN_UID, {
+            email: ADMIN_EMAIL,
+            password: VALID_BODY.password,
+        });
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(ADMIN_UID);
+    });
+
+    it("recusa definir a senha do personificado", async () => {
+        const response = await setPassword(
+            asAdmin(UserRoleLevel.COMMON, OWNER_UID)
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe(
+            "AUTH_REQUEST_IMPERSONATION_READ_ONLY"
+        );
+        expect(nothingWritten()).toBe(true);
+    });
+});

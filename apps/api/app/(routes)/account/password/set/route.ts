@@ -11,13 +11,13 @@ import {
     sessionsNotRevokedResponse,
 } from "@/(shared)/lib/session-revocation";
 import { parseSetPassword } from "@/(shared)/validation/account.schema";
-import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
+import { requireOwnAccountApi } from "@/app/(guards)/common-panel";
 
 function errorResponse(code: string, status: number) {
     return Response.json({ error: { code } }, { status });
 }
 
-export const POST = requireCommonPanelApi(async (req, ctx) => {
+export const POST = requireOwnAccountApi(async (req, ctx) => {
     if (ctx.subjectProfile.reference_id !== ctx.user.uid) {
         return errorResponse(
             "AUTH_REQUEST_IMPERSONATION_FORBIDDEN",

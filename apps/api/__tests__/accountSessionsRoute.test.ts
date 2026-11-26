@@ -408,3 +408,37 @@ describe("POST /account/sessions/revoke-others", () => {
         expect(revokeOthersMock).not.toHaveBeenCalled();
     });
 });
+
+describe("/account/sessions — admin sem personificação", () => {
+    const asAdminSelf = (method: string) =>
+        ({
+            method,
+            url: "http://localhost:3002/account/sessions",
+            headers: new Headers({
+                [AUTH_REQUEST_HEADER.USER_ID]: ADMIN_UID,
+                [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: ADMIN_UID,
+            }),
+        }) as unknown as NextRequest;
+
+    beforeEach(() => {
+        signInAs(ADMIN_UID);
+    });
+
+    it("continua recusando a listagem com COMMON_PANEL_FORBIDDEN", async () => {
+        const response = await listSessions(asAdminSelf("GET"));
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe("COMMON_PANEL_FORBIDDEN");
+        expect(listByUidMock).not.toHaveBeenCalled();
+    });
+
+    it("continua recusando encerrar as outras sessões", async () => {
+        const response = await revokeOthers(asAdminSelf("POST"));
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe("COMMON_PANEL_FORBIDDEN");
+        expect(revokeOthersMock).not.toHaveBeenCalled();
+    });
+});

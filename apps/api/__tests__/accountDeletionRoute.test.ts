@@ -358,3 +358,27 @@ describe("POST /account/deletion", () => {
         expect(runAccountErasureMock).not.toHaveBeenCalled();
     });
 });
+
+describe("POST /account/deletion — admin sem personificação", () => {
+    it("continua recusando o admin na própria conta, sem conferir senha", async () => {
+        resolveApiActorMock.mockResolvedValue({
+            uid: ADMIN_UID,
+            email: "admin@example.com",
+            providerData: PASSWORD_PROVIDER,
+        });
+
+        const response = await deleteAccount(
+            request(VALID_BODY, {
+                [AUTH_REQUEST_HEADER.USER_ID]: ADMIN_UID,
+                [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: ADMIN_UID,
+            })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe("COMMON_PANEL_FORBIDDEN");
+        expect(signInWithPasswordMock).not.toHaveBeenCalled();
+        expect(runAccountErasureMock).not.toHaveBeenCalled();
+    });
+});

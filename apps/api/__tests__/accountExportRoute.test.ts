@@ -556,3 +556,25 @@ describe("GET /account/export", () => {
         expect(await codeOf(response)).toBe("AUTH_INVALID_TOKEN");
     });
 });
+
+describe("GET /account/export — admin sem personificação", () => {
+    it("continua recusando o admin na própria conta", async () => {
+        resolveApiActorMock.mockResolvedValue({
+            uid: ADMIN_UID,
+            email: "admin@example.com",
+        });
+
+        const response = await exportData(
+            request({
+                [AUTH_REQUEST_HEADER.USER_ID]: ADMIN_UID,
+                [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: ADMIN_UID,
+            })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe("COMMON_PANEL_FORBIDDEN");
+        expect(mergedUserMock).not.toHaveBeenCalled();
+    });
+});
