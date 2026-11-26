@@ -5,7 +5,10 @@ import {
 } from "@repo/sdk/src/types";
 import type { Query } from "firebase-admin/firestore";
 import db from "../infra/database";
-import { isAlreadyExistsError } from "../infra/firestore-errors";
+import {
+    isAlreadyExistsError,
+    isNotFoundError,
+} from "../infra/firestore-errors";
 import { notificationMapper } from "../mappers/notification.mapper";
 import {
     BaseRepository,
@@ -59,12 +62,22 @@ class NotificationRepository extends BaseRepository<NotificationDTO> {
         );
     }
 
-    /** Both fields get the same instant, which is also what the caller hands back. */
-    async markRead(id: string, at: Date = new Date()): Promise<string> {
-        await this.db
-            .collection(this.table)
-            .doc(id)
-            .update({ readAt: at, updatedAt: at });
+    /**
+     * Both fields get the same instant, which is also what the caller hands back. `null` means
+     * the document was gone by the time of the write (TTL or account purge).
+     */
+    async markRead(id: string, at: Date = new Date()): Promise<string | null> {
+        try {
+            await this.db
+                .collection(this.table)
+                .doc(id)
+                .update({ readAt: at, updatedAt: at });
+        } catch (error) {
+            if (isNotFoundError(error)) {
+                return null;
+            }
+            throw error;
+        }
         return at.toISOString();
     }
 

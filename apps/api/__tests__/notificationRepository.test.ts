@@ -19,6 +19,7 @@ const MANY_UNREAD_BATCHES = [
 ];
 const LISTED_ROWS = 5;
 const ROOMY_EXPORT_CAP = 5;
+const PERMISSION_DENIED = 7;
 
 /**
  * In-memory stand-in for the slice of firebase-admin the notification repository uses.
@@ -28,6 +29,8 @@ const { fakeDb } = vi.hoisted(() => {
     const MISSING = Symbol("missing");
     // gRPC ALREADY_EXISTS, the status Firestore answers when `create()` hits a taken id.
     const ALREADY_EXISTS = 6;
+    // gRPC NOT_FOUND, the status Firestore answers when `update()` targets a missing document.
+    const NOT_FOUND = 5;
     const store = new Map<string, Row>();
     const batchSizes: number[] = [];
     const countLimits: (number | null)[] = [];
@@ -106,7 +109,11 @@ const { fakeDb } = vi.hoisted(() => {
                 update: (patch: Row) => {
                     const row = store.get(id);
                     if (!row) {
-                        return Promise.reject(new Error("no document"));
+                        return Promise.reject(
+                            Object.assign(new Error("no document"), {
+                                code: NOT_FOUND,
+                            })
+                        );
                     }
                     store.set(id, { ...row, ...patch });
                     return Promise.resolve();
@@ -311,6 +318,37 @@ describe("notificationRepository", () => {
             readAt: NOW,
             updatedAt: NOW,
         });
+    });
+
+    it("devolve null sem criar documento quando a notificação some antes da escrita", async () => {
+        await expect(
+            notificationRepository.markRead("gone", NOW)
+        ).resolves.toBeNull();
+        expect(fakeDb.store.has("gone")).toBe(false);
+    });
+
+    it("propaga uma falha de escrita que não é documento ausente", async () => {
+        const original = fakeDb.collection;
+        fakeDb.collection = () =>
+            ({
+                ...original(),
+                doc: () => ({
+                    update: () =>
+                        Promise.reject(
+                            Object.assign(new Error("permission denied"), {
+                                code: PERMISSION_DENIED,
+                            })
+                        ),
+                }),
+            }) as never;
+
+        try {
+            await expect(
+                notificationRepository.markRead("n1", NOW)
+            ).rejects.toMatchObject({ code: PERMISSION_DENIED });
+        } finally {
+            fakeDb.collection = original;
+        }
     });
 
     it("marca todas do dono em lotes de até 500 e para quando acaba", async () => {
