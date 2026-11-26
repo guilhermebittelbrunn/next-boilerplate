@@ -37,7 +37,9 @@ const { assertReadOnlyWhileImpersonating } = await import(
     "@/(shared)/lib/impersonation-read-only"
 );
 const { requireAdminApi } = await import("@/app/(guards)/admin");
-const { requireCommonPanelApi } = await import("@/app/(guards)/common-panel");
+const { requireCommonPanelApi, requireOwnAccountApi } = await import(
+    "@/app/(guards)/common-panel"
+);
 const { requirePlanApi } = await import("@/app/(guards)/plan");
 
 const ADMIN_UID = "admin-1";
@@ -156,6 +158,25 @@ describe("read-only impersonation is symmetric across panels", () => {
             expect(adminResponse.status).toBe(commonResponse.status);
             expect(adminResponse.status).toBe(HTTP_STATUS.FORBIDDEN);
             expect(await adminResponse.json()).toEqual(
+                await commonResponse.json()
+            );
+        }
+    });
+
+    it("answers the same on the own-account guard", async () => {
+        for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+            const handler = vi.fn();
+
+            const commonResponse = await requireCommonPanelApi(handler)(
+                request(method)
+            );
+            const ownAccountResponse = await requireOwnAccountApi(handler)(
+                request(method)
+            );
+
+            expect(handler).not.toHaveBeenCalled();
+            expect(ownAccountResponse.status).toBe(commonResponse.status);
+            expect(await ownAccountResponse.json()).toEqual(
                 await commonResponse.json()
             );
         }

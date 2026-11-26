@@ -15,7 +15,7 @@ import { userRepository } from "@/(shared)/repositories/user.repository";
 export type CommonPanelAuthContext = {
     user: UserRecord;
     authRequest: ResolvedAuthRequestContext;
-    /** Perfil Firestore do usuário comum em contexto (titular ou personificação). */
+    /** Perfil Firestore do sujeito em contexto (titular, personificado ou o próprio admin nas rotas de conta). */
     subjectProfile: UserDTO;
 };
 
@@ -29,9 +29,29 @@ type CommonPanelHandler<TRouteContext extends RouteContext> = (
             : TRouteContext)
 ) => Promise<Response>;
 
-export function requireCommonPanelApi<
-    TRouteContext extends RouteContext = undefined,
->(handler: CommonPanelHandler<TRouteContext>) {
+type SubjectCheck = (args: {
+    subject: UserDTO;
+    actorUid: string;
+    isImpersonating: boolean;
+}) => boolean;
+
+const acceptsCommonSubject: SubjectCheck = ({ subject }) =>
+    subject.type === UserType.COMMON;
+
+const acceptsCommonSubjectOrOwnAdmin: SubjectCheck = ({
+    subject,
+    actorUid,
+    isImpersonating,
+}) =>
+    subject.type === UserType.COMMON ||
+    (subject.type === UserType.ADMIN &&
+        !isImpersonating &&
+        subject.reference_id === actorUid);
+
+function guardSubject<TRouteContext extends RouteContext>(
+    acceptsSubject: SubjectCheck,
+    handler: CommonPanelHandler<TRouteContext>
+) {
     return async (req: NextRequest, routeContext?: TRouteContext) => {
         const userRecord = await resolveApiActor(req);
 
@@ -74,7 +94,16 @@ export function requireCommonPanelApi<
             resolved.data.requestUserId
         );
 
-        if (!subjectProfile || subjectProfile.type !== UserType.COMMON) {
+        if (
+            !(
+                subjectProfile &&
+                acceptsSubject({
+                    subject: subjectProfile,
+                    actorUid: userRecord.uid,
+                    isImpersonating: resolved.data.isImpersonating,
+                })
+            )
+        ) {
             return Response.json(
                 { error: { code: "COMMON_PANEL_FORBIDDEN" } },
                 { status: 403 }
@@ -111,4 +140,21 @@ export function requireCommonPanelApi<
 
         return handler(req, enrichedContext);
     };
+}
+
+export function requireCommonPanelApi<
+    TRouteContext extends RouteContext = undefined,
+>(handler: CommonPanelHandler<TRouteContext>) {
+    return guardSubject(acceptsCommonSubject, handler);
+}
+
+/**
+ * For the routes that act on the caller's own account: a common subject as in the common
+ * panel, or an admin acting on themself without impersonation. Never another admin, and
+ * writes under impersonation are already refused before the subject is resolved.
+ */
+export function requireOwnAccountApi<
+    TRouteContext extends RouteContext = undefined,
+>(handler: CommonPanelHandler<TRouteContext>) {
+    return guardSubject(acceptsCommonSubjectOrOwnAdmin, handler);
 }
