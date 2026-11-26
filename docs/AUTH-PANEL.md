@@ -41,7 +41,7 @@ proxy.ts                  default-deny: tudo exige sessão, exceto /sign-in e /s
         │                            comum com onboarding pendente → /{locale}/onboarding
         ├── onboarding/page.tsx      nada pendente (ou admin) → destino do ?redirect=
         └── (admin)/admin/layout.tsx requireAdmin()        → não-admin: /{locale}
-              └── guard da API       requireAdminApi / requireCommonPanelApi
+              └── guard da API       requireAdminApi / requireCommonPanelApi / requireOwnAccountApi
 ```
 
 - O **proxy** é *default-deny*: uma rota autenticada nova já nasce protegida, sem allowlist para lembrar.
@@ -57,6 +57,17 @@ proxy.ts                  default-deny: tudo exige sessão, exceto /sign-in e /s
   ⚠️ **Leituras seguem abertas de propósito**: o próprio seletor de impersonação é alimentado por
   `GET /users`. Fechar a leitura tranca o admin no primeiro usuário que ele acessou, sem volta — e a
   listagem já vem restrita a usuários comuns pelo contexto da request, então nada de admin vaza.
+- **Conta da própria pessoa: `requireOwnAccountApi`.** `GET`/`PUT /account`, `POST /account/password`,
+  `POST /account/password/set` e o upload pessoal (`POST /files` sem `scope` ou com `scope=personal`)
+  aceitam sujeito comum, como o painel comum, **ou** o próprio admin sem personificação (sujeito admin
+  com `reference_id` igual ao uid do ator). Outro admin como sujeito nunca passa: o contexto da request
+  já recusa antes (`AUTH_REQUEST_ADMIN_TARGET_INVALID` ou `AUTH_REQUEST_IMPERSONATION_TARGET_INVALID`), e
+  o guard responde `COMMON_PANEL_FORBIDDEN` se chegar até ele. Escrita sob personificação continua
+  recusada com `AUTH_REQUEST_IMPERSONATION_READ_ONLY`, então o admin não troca senha nem perfil do
+  personificado. O `requireCommonPanelApi` continua recusando o admin sem personificação em todas as
+  outras rotas (sessões, métodos de login, troca de e-mail, export, deleção, onboarding, organização,
+  entidades, notificações e o upload com `scope=organization`). A tela do admin fica em
+  `/{locale}/admin/account` e mostra só Perfil, Segurança (senha) e Preferências.
 - **UI oculta nunca é proteção.** Cada camada acima é redundante de propósito; a última palavra é sempre
   o guard da API, que revalida papel e alvo a cada request.
 - **Onboarding pós-cadastro.** O layout comum desvia o usuário comum cujo perfil tem
@@ -205,7 +216,7 @@ Definições: `AUTH_REQUEST_HEADER` (`packages/shared/utils/helpers/auth-request
 |--------------|------|--------|
 | `AUTH_INVALID_TOKEN` | 401 | token/sessão inválidos ou expirados |
 | `ADMIN_FORBIDDEN` | 403 | rota admin com perfil não-admin |
-| `COMMON_PANEL_FORBIDDEN` | 403 | sem perfil, ou sujeito resolvido não é comum |
+| `COMMON_PANEL_FORBIDDEN` | 403 | sem perfil, ou sujeito resolvido não é comum (nas rotas de `requireOwnAccountApi`: nem comum, nem o próprio admin sem personificação) |
 | `AUTH_REQUEST_USER_ID_MISMATCH` | 403 | `x-user-id` ≠ uid do token |
 | `AUTH_REQUEST_USER_ROLE_MISMATCH` | 403 | `x-user-role` ≠ papel no Firestore |
 | `AUTH_REQUEST_PANEL_FORBIDDEN` | 403 | painel incoerente com o perfil |
@@ -250,7 +261,7 @@ a resposta inteira.
 Testes: `apps/app/__tests__/panel*.test.ts(x)`, `deriveAuthRequestProps.test.ts`,
 `postAuthRedirectTarget.test.ts`, `serverGuards.test.ts`, `entitiesListReadOnly.test.tsx` ·
 `apps/api/__tests__/authRequestContext.test.ts`, `adminGuard.test.ts`, `commonPanelGuard.test.ts`,
-`impersonationReadOnly.test.ts` (este último falha se um guard novo esquecer a regra de somente leitura).
+`ownAccountGuard.test.ts`, `impersonationReadOnly.test.ts` (este último falha se um guard novo esquecer a regra de somente leitura).
 
 **Ao mudar qualquer regra desta página, atualize esta página.** É o que impede a regra de negócio de
 existir só na cabeça de quem escreveu o código.
