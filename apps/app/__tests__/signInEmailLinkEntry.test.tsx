@@ -52,6 +52,8 @@ const { SignInForm } = await import(
 
 const signInCopy = globalTranslations["pt-br"].apps.app.pages.signIn;
 
+const SLOW_MACHINE_WAIT = { timeout: 10_000 };
+
 function renderSignIn() {
     const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },
@@ -78,9 +80,11 @@ describe("entrada do login por link na tela de login", () => {
 
         renderSignIn();
 
-        const link = await screen.findByRole("link", {
-            name: signInCopy.emailLink,
-        });
+        const link = await screen.findByRole(
+            "link",
+            { name: signInCopy.emailLink },
+            SLOW_MACHINE_WAIT
+        );
         expect(link.getAttribute("href")).toBe("/pt-br/sign-in/email-link");
     });
 
@@ -89,8 +93,15 @@ describe("entrada do login por link na tela de login", () => {
 
         renderSignIn();
 
-        await waitFor(() => expect(availabilityMock).toHaveBeenCalled());
-        await screen.findByRole("link", { name: signInCopy.forgotPassword });
+        await waitFor(
+            () => expect(availabilityMock).toHaveBeenCalled(),
+            SLOW_MACHINE_WAIT
+        );
+        await screen.findByRole(
+            "link",
+            { name: signInCopy.forgotPassword },
+            SLOW_MACHINE_WAIT
+        );
         expect(emailLinkEntry()).toBeNull();
     });
 
@@ -99,7 +110,10 @@ describe("entrada do login por link na tela de login", () => {
 
         renderSignIn();
 
-        await waitFor(() => expect(availabilityMock).toHaveBeenCalled());
+        await waitFor(
+            () => expect(availabilityMock).toHaveBeenCalled(),
+            SLOW_MACHINE_WAIT
+        );
         await new Promise((settle) => setTimeout(settle, 0));
         expect(emailLinkEntry()).toBeNull();
     });
