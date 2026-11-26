@@ -1,4 +1,5 @@
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import type { NextRequest } from "next/server";
 import {
     buildObjectPath,
     isStorageConfigured,
@@ -10,21 +11,20 @@ import {
     parseUploadedImage,
     parseUploadScope,
 } from "@/(shared)/validation/file.schema";
+import { requireOwnAccountApi } from "@/app/(guards)/common-panel";
 import { requireOrganizationApi } from "@/app/(guards)/organization";
 
 const STATUS_CREATED = 201;
 
-export const POST = requireOrganizationApi(async (req, ctx) => {
+async function storeUpload(
+    req: NextRequest,
+    ownerSegment: string
+): Promise<Response> {
     if (!isStorageConfigured()) {
         return Response.json(
             { error: { code: "STORAGE_NOT_CONFIGURED" } },
             { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
         );
-    }
-
-    const scope = parseUploadScope(req);
-    if (!scope.ok) {
-        return scope.response;
     }
 
     const parsed = await parseUploadedImage(req);
@@ -33,10 +33,6 @@ export const POST = requireOrganizationApi(async (req, ctx) => {
     }
 
     const { body, contentType, extension, size } = parsed.value;
-    const ownerSegment =
-        scope.value === "organization"
-            ? organizationOwnerSegment(ctx.organization.organizationId)
-            : ctx.subjectProfile.id;
     const path = buildObjectPath(ownerSegment, extension);
 
     // Signing is inside the same refusal as the write: an object the caller cannot be
@@ -56,4 +52,27 @@ export const POST = requireOrganizationApi(async (req, ctx) => {
             { status: HTTP_STATUS.SERVICE_UNAVAILABLE }
         );
     }
-});
+}
+
+const uploadPersonal = requireOwnAccountApi((req, ctx) =>
+    storeUpload(req, ctx.subjectProfile.id)
+);
+
+const uploadForOrganization = requireOrganizationApi((req, ctx) =>
+    storeUpload(req, organizationOwnerSegment(ctx.organization.organizationId))
+);
+
+/**
+ * A personal upload (the avatar) belongs to whoever owns the account, admins included,
+ * while an organization upload needs a common member of an organization.
+ */
+export const POST = (req: NextRequest): Promise<Response> => {
+    const scope = parseUploadScope(req);
+    if (!scope.ok) {
+        return Promise.resolve(scope.response);
+    }
+
+    return scope.value === "organization"
+        ? uploadForOrganization(req)
+        : uploadPersonal(req);
+};

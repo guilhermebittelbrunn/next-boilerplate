@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/api/app/(guards)/common-panel.ts, apps/api/proxy.ts, "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx", "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx"]
 feature: -
-updated: 2026-11-24
+updated: 2026-11-25
 ---
 
 # Confirmação do e-mail por código no cadastro
@@ -37,9 +37,9 @@ de confirmação de endereço. O segundo fator no login é TOTP, coberto pela sp
 
 ## O que já existe no repo
 
-- Cadastro no app: `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:98-106`
+- Cadastro no app: `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:98-107`
   cria a conta, faz login e só então pede o e-mail de verificação (`:88-96`), engolindo a falha. O comentário
-  em `:80-87` registra que conta Google chega com o endereço já confirmado pelo provedor.
+  em `:81-87` registra que conta Google chega com o endereço já confirmado pelo provedor.
 - Cadastro na landing: `apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:41-62`, o mesmo
   fluxo, também sem bloquear.
 - API: `POST /auth/sign-up` cria a conta pelo Admin SDK (`apps/api/app/(routes)/auth/sign-up/route.ts:30-35`).

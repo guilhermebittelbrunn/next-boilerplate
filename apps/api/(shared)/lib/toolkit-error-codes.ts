@@ -76,7 +76,7 @@ const ADMIN_CREATE_USER_ERROR_CODES: Record<string, string> = {
     "auth/quota-exceeded": "USERS_AUTH_RATE_LIMITED",
 };
 
-function adminErrorCodeOf(error: unknown): string | undefined {
+export function adminErrorCodeOf(error: unknown): string | undefined {
     const code = (error as { code?: unknown } | null)?.code;
     return typeof code === "string" ? code : undefined;
 }

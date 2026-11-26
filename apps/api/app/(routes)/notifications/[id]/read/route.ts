@@ -28,6 +28,9 @@ export const POST = requireCommonPanelApi<RouteIdParamsContext>(
 
         const readAt =
             row.readAt ?? (await notificationRepository.markRead(id));
+        if (readAt === null) {
+            return notFound();
+        }
 
         return Response.json({ data: { id, readAt } });
     }

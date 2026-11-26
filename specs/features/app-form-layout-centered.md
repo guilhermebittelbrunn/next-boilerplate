@@ -8,9 +8,9 @@ audience: produto
 area: [apps/app]
 mode: ambos
 depends_on: []
-contends_on: [apps/app/shared/components/ui/pageLayout.ts, apps/app/shared/components/ui/Container.tsx, apps/app/shared/components/ui/PageSkeleton.tsx]
+contends_on: [apps/app/shared/components/ui/pageLayout.ts, apps/app/shared/components/ui/Container.tsx, apps/app/shared/components/ui/PageSkeleton.tsx, "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountProfileForm.tsx", "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountPreferencesForm.tsx", "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountSecurityForm.tsx"]
 feature: -
-updated: 2026-11-24
+updated: 2026-11-25
 ---
 
 # Telas de formulário do painel centralizadas e com altura do conteúdo
@@ -19,7 +19,7 @@ updated: 2026-11-24
 > - **O quê:** as telas de formulário do `apps/app` (criar e editar usuário no admin, criar e editar entidade, conta) passam a ficar centralizadas na área de conteúdo, com o painel do formulário na altura dos campos e a barra de ações logo abaixo dele.
 > - **Por quê:** hoje o formulário fica colado à esquerda e o painel cinza estica até o rodapé, deixando um bloco vazio grande em telas largas. Parece página quebrada, e a primeira impressão de todo fork é essa.
 > - **Status:** `approved` · valor médio · esforço P · produto
-> - **Próximo passo:** `/analyze app-form-layout-centered`
+> - **Próximo passo:** `/analyze app-form-layout-centered` (é a primeira da fila desde 2026-11-25)
 
 ## Problema
 
@@ -59,8 +59,8 @@ são centralizadas e do tamanho do conteúdo, então a diferença aparece logo d
   (`apps/app/app/[locale]/(authenticated)/onboarding/(components)/OnboardingClient.tsx:150-151`), e
   cadastro/login, em `max-w-md` centralizado
   (`apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:124`).
-- Organização (`apps/app/app/[locale]/(authenticated)/(common)/(pages)/organization/OrganizationClient.tsx:36-47`)
-  usa largura cheia e mistura o formulário de convite com duas tabelas; o `mx-auto` em `:47` não tem efeito
+- Organização (`apps/app/app/[locale]/(authenticated)/(common)/(pages)/organization/OrganizationClient.tsx:36-46`)
+  usa largura cheia e mistura o formulário de convite com duas tabelas; o `mx-auto` em `:46` não tem efeito
   sem largura máxima.
 - **Lacuna:** a coluna estreita não é centralizada, e o painel e o `<form>` esticam até o fim da janela.
 

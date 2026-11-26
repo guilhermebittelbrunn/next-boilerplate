@@ -77,7 +77,7 @@ vi.mock("@repo/auth/server", () => ({
         },
     }),
     getCurrentUser: vi.fn(),
-    revokeUserSessions: (...args: unknown[]) => {
+    revokeUserSessionsOrThrow: (...args: unknown[]) => {
         calls.push("revoke");
         return revokeUserSessionsMock(...args);
     },
@@ -232,6 +232,61 @@ describe("DELETE /users/[id] takes the account's access away", () => {
         expect(JSON.stringify(logEventMock.mock.calls)).not.toContain(
             "provider-detail"
         );
+    });
+
+    it("refuses to archive when Firebase Auth rejects the session revocation", async () => {
+        revokeUserSessionsMock.mockRejectedValue({
+            code: "auth/internal-error",
+            message: "provider-detail",
+        });
+
+        const response = await archive();
+
+        expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
+        expect(await response.json()).toEqual({
+            error: { code: "USERS_DELETE_AUTH_FAILED" },
+        });
+        expect(calls).toEqual(["disable", "revoke"]);
+        expect(deleteMock).not.toHaveBeenCalled();
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
+        expect(authFailureLog()?.[2]).toEqual({
+            requestId: "req-7",
+            reason: "auth/internal-error",
+        });
+        expect(JSON.stringify(logEventMock.mock.calls)).not.toContain(
+            "provider-detail"
+        );
+    });
+
+    it("archives on the retry once the revocation goes through", async () => {
+        revokeUserSessionsMock.mockRejectedValueOnce({
+            code: "auth/internal-error",
+        });
+
+        const refused = await archive();
+        const retried = await archive();
+
+        expect(refused.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
+        expect(retried.status).toBe(STATUS_NO_CONTENT);
+        expect(calls).toEqual([
+            "disable",
+            "revoke",
+            "disable",
+            "revoke",
+            "delete",
+        ]);
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("archives when the account disappears between the disable and the revocation", async () => {
+        revokeUserSessionsMock.mockRejectedValue({
+            code: "auth/user-not-found",
+        });
+
+        const response = await archive();
+
+        expect(response.status).toBe(STATUS_NO_CONTENT);
+        expect(deleteMock).toHaveBeenCalledWith(TARGET_DOC_ID);
     });
 
     it("archives a profile whose account is already gone from Firebase Auth", async () => {

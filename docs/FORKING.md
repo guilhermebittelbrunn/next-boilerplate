@@ -370,8 +370,7 @@ sozinhos na página de preços, sem editar o dicionário.
 3. Registre o webhook `https://api.example.com/webhooks/payments`, na versão de API `2025-09-30.clover`, com
    os eventos `checkout.session.completed`, `customer.subscription.created`,
    `customer.subscription.updated`, `customer.subscription.deleted` e `invoice.paid`.
-4. `STRIPE_SECRET_KEY` (`sk_…`) e `STRIPE_WEBHOOK_SECRET` (`whsec_…`) **só na `api`**. Os
-   `.env.example` de `app` e `web` também listam as duas, mas nenhum desses apps as lê.
+4. `STRIPE_SECRET_KEY` (`sk_…`) e `STRIPE_WEBHOOK_SECRET` (`whsec_…`) **só na `api`**, o único app que as lê.
 5. `NEXT_PUBLIC_PRODUCT_MODE` com o mesmo valor nos três apps, e diferente de `simple`.
 
 Passo a passo, verificação e riscos aceitos: [`PAYMENTS.md`](PAYMENTS.md) e

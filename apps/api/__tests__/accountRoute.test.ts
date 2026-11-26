@@ -490,3 +490,116 @@ describe("/account — lifecycle of the previous avatar object", () => {
         expect(deleteObjectQuietlyMock).not.toHaveBeenCalled();
     });
 });
+
+describe("/account — admin acting on their own account", () => {
+    const ADMIN_UID = "admin-1";
+    const ADMIN_PROFILE = {
+        id: "admin-profile",
+        reference_id: ADMIN_UID,
+        type: UserType.ADMIN,
+        avatar: null as string | null,
+        preferences: undefined as unknown,
+    };
+
+    function asAdmin(
+        method: string,
+        body?: unknown,
+        target = ADMIN_UID
+    ): NextRequest {
+        return {
+            method,
+            url: "http://localhost:3002/account",
+            headers: new Headers({
+                [AUTH_REQUEST_HEADER.USER_ID]: ADMIN_UID,
+                [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: target,
+            }),
+            json: () => Promise.resolve(body ?? {}),
+        } as unknown as NextRequest;
+    }
+
+    beforeEach(() => {
+        for (const mock of [
+            resolveApiActorMock,
+            findByReferenceIdMock,
+            updateMock,
+            updateUserMock,
+            getMergedUserByFirestoreDocIdMock,
+            isBillingEnabledMock,
+        ]) {
+            mock.mockReset();
+        }
+        isBillingEnabledMock.mockReturnValue(false);
+        resolveApiActorMock.mockResolvedValue({
+            uid: ADMIN_UID,
+            email: "admin@example.com",
+        });
+        findByReferenceIdMock.mockImplementation((uid: string) =>
+            Promise.resolve(
+                uid === ADMIN_UID
+                    ? { ...ADMIN_PROFILE }
+                    : {
+                          id: "other-admin-profile",
+                          reference_id: uid,
+                          type: UserType.ADMIN,
+                      }
+            )
+        );
+        getMergedUserByFirestoreDocIdMock.mockResolvedValue({
+            uid: ADMIN_UID,
+            email: "admin@example.com",
+            displayName: "Ana Admin",
+            type: UserType.ADMIN,
+        });
+    });
+
+    it("reads the admin's own account", async () => {
+        const response = await GET(asAdmin("GET"));
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(getMergedUserByFirestoreDocIdMock).toHaveBeenCalledWith(
+            ADMIN_PROFILE.id
+        );
+    });
+
+    it("writes the admin's own profile and Auth record", async () => {
+        const response = await PUT(
+            asAdmin("PUT", {
+                displayName: "Ana Admin",
+                phone: "+55 11 90000-0000",
+                preferences: { theme: "dark", locale: "en" },
+            })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(updateMock).toHaveBeenCalledWith({
+            id: ADMIN_PROFILE.id,
+            phone: "+55 11 90000-0000",
+            preferences: { theme: "dark", locale: "en" },
+        });
+        expect(updateUserMock).toHaveBeenCalledWith(ADMIN_UID, {
+            displayName: "Ana Admin",
+        });
+    });
+
+    it("never writes to an id sent in the body", async () => {
+        await PUT(asAdmin("PUT", { id: "someone-else", displayName: "Ana" }));
+
+        expect(updateMock).not.toHaveBeenCalled();
+        expect(updateUserMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses an admin pointing the request at another admin", async () => {
+        const response = await PUT(
+            asAdmin("PUT", { displayName: "Hijack" }, "admin-2")
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe(
+            "AUTH_REQUEST_ADMIN_TARGET_INVALID"
+        );
+        expect(updateMock).not.toHaveBeenCalled();
+        expect(updateUserMock).not.toHaveBeenCalled();
+    });
+});

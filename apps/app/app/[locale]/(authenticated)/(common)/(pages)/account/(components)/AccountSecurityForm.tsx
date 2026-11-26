@@ -36,9 +36,13 @@ import { AccountSignInMethodsPanel } from "./AccountSignInMethodsPanel";
 
 type AccountSecurityFormProps = {
     account: AccountDTO | undefined;
+    passwordOnly?: boolean;
 };
 
-export function AccountSecurityForm({ account }: AccountSecurityFormProps) {
+export function AccountSecurityForm({
+    account,
+    passwordOnly = false,
+}: AccountSecurityFormProps) {
     const { dictionary } = getDictionary();
     const { isImpersonating } = useAuthRequestPanel();
     const { signOut } = useAuth();
@@ -73,8 +77,10 @@ export function AccountSecurityForm({ account }: AccountSecurityFormProps) {
     };
 
     return (
-        <div className="flex w-full flex-1 flex-col gap-6">
-            <AccountSignInMethodsPanel account={account} />
+        <div className="flex w-full flex-col gap-6">
+            {passwordOnly ? null : (
+                <AccountSignInMethodsPanel account={account} />
+            )}
 
             {lacksPasswordProvider(account) ? (
                 <AccountPasswordSetForm />
@@ -120,50 +126,63 @@ export function AccountSecurityForm({ account }: AccountSecurityFormProps) {
                 </SettingsSection>
             )}
 
-            <AccountSessionsPanel />
-
-            <SettingsSection
-                description={accountSecurity.signOutEverywhereDescription}
-                title={accountSecurity.signOutEverywhere}
-            >
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button
-                            className="self-start"
-                            disabled={isImpersonating}
-                            type="button"
-                            variant="outline"
-                        >
-                            {accountSecurity.signOutEverywhere}
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>
-                                {accountSecurity.signOutEverywhere}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {accountSecurity.signOutEverywhereConfirm}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>
-                                {accountSecurity.cancel}
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={() =>
-                                    revokeSessionsMutation.mutate(undefined, {
-                                        onSuccess: () => signOut.mutate(),
-                                    })
-                                }
-                                variant="destructive"
-                            >
-                                {accountSecurity.signOutEverywhereAction}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </SettingsSection>
+            {passwordOnly ? null : (
+                <>
+                    <AccountSessionsPanel />
+                    <SettingsSection
+                        description={
+                            accountSecurity.signOutEverywhereDescription
+                        }
+                        title={accountSecurity.signOutEverywhere}
+                    >
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    className="self-start"
+                                    disabled={isImpersonating}
+                                    type="button"
+                                    variant="outline"
+                                >
+                                    {accountSecurity.signOutEverywhere}
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        {accountSecurity.signOutEverywhere}
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        {
+                                            accountSecurity.signOutEverywhereConfirm
+                                        }
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        {accountSecurity.cancel}
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() =>
+                                            revokeSessionsMutation.mutate(
+                                                undefined,
+                                                {
+                                                    onSuccess: () =>
+                                                        signOut.mutate(),
+                                                }
+                                            )
+                                        }
+                                        variant="destructive"
+                                    >
+                                        {
+                                            accountSecurity.signOutEverywhereAction
+                                        }
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </SettingsSection>
+                </>
+            )}
         </div>
     );
 }

@@ -17,6 +17,10 @@ const ACTION_BAR = "[data-sticky-action-bar]";
 const PANEL_NAVBAR = "[data-panel-navbar]";
 const MAX_FOCUS_STOPS = 40;
 const LONG_DESCRIPTION_LINES = 12;
+const LONG_DESCRIPTION = Array.from(
+    { length: LONG_DESCRIPTION_LINES },
+    (_, line) => `${line + 1}`
+).join("\n");
 const NAVBAR_OVERLAP = 24;
 
 /**
@@ -100,6 +104,17 @@ test("Tab and Shift+Tab keep every focused field clear of the sticky bars", asyn
     await page.goto(createPath);
     await expectFormWithStickyBars(page);
 
+    // A longer description pushes the lower fields under the action bar, so the Tab walk
+    // has to scroll the document.
+    const descriptionInput = page.getByLabel(entitiesForm.description);
+    await descriptionInput.fill(LONG_DESCRIPTION);
+    // Focusing a textarea scrolls its caret into view, not the whole field. With the caret
+    // on the last line, Shift+Tab would leave the top of the description under the navbar.
+    await descriptionInput.evaluate((textarea: HTMLTextAreaElement) =>
+        textarea.setSelectionRange(0, 0)
+    );
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+
     const nameInput = page.getByLabel(entitiesForm.name);
     await nameInput.focus();
     await expectFocusUnobscured(page);
@@ -117,6 +132,10 @@ test("Tab and Shift+Tab keep every focused field clear of the sticky bars", asyn
         await expectFocusUnobscured(page);
         stops += 1;
     }
+    expect(
+        await page.evaluate(() => window.scrollY),
+        "the Tab walk must scroll the document"
+    ).toBeGreaterThan(0);
 
     stops = 0;
     while (!(await nameInput.evaluate((el) => el === document.activeElement))) {
@@ -138,12 +157,7 @@ test("Shift+Tab brings a field out from under the navbar", async ({ page }) => {
     // The description grows with its content, which gives the page room to scroll the
     // name field up under the navbar.
     const descriptionInput = page.getByLabel(entitiesForm.description);
-    await descriptionInput.fill(
-        Array.from(
-            { length: LONG_DESCRIPTION_LINES },
-            (_, line) => `${line + 1}`
-        ).join("\n")
-    );
+    await descriptionInput.fill(LONG_DESCRIPTION);
     await descriptionInput.focus();
 
     const nameInput = page.getByLabel(entitiesForm.name);
@@ -189,12 +203,20 @@ test("arrow keys keep the focused genre option clear of the action bar", async (
     page,
 }) => {
     await page.goto(listPath);
-    await page
-        .getByRole("row")
-        .filter({ hasText: SEEDED_ENTITY_NAME })
-        .getByRole("button", { name: actionMenuCopy.trigger })
-        .click();
-    await page.getByRole("menuitem", { name: actionMenuCopy.edit }).click();
+    const editItem = page.getByRole("menuitem", { name: actionMenuCopy.edit });
+    // A click that lands before the row's dropdown hydrates is lost, so the trigger is
+    // pressed again while the menu is still closed.
+    await expect(async () => {
+        if (!(await editItem.isVisible())) {
+            await page
+                .getByRole("row")
+                .filter({ hasText: SEEDED_ENTITY_NAME })
+                .getByRole("button", { name: actionMenuCopy.trigger })
+                .click();
+        }
+        await expect(editItem).toBeVisible({ timeout: 2000 });
+    }).toPass();
+    await editItem.click();
     await expect(page.getByLabel(entitiesForm.name)).toHaveValue(
         SEEDED_ENTITY_NAME
     );

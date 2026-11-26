@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-11-24
+updated: 2026-11-25
 ---
 
 # MFA, sessões ativas e política de senha
@@ -222,7 +222,7 @@ eficácia.
       (`packages/sdk/src/actions/account/action.ts:163`, `:174`, `:182`; eram `:127`, `:138` e `:146` até a PR #48).
       **Deriva de letra, a spec estava imprecisa:** "origem" virou navegador, sistema e tipo de aparelho,
       tirados do user-agent. IP não é gravado, coerente com a lacuna "IP, user-agent, dispositivo e
-      geolocalização" do `BACKLOG.md` (o Marco Civil, art. 5º, VIII, muda a natureza do dado com IP). App e web
+      geolocalização" do `reference/AUDIT.md` (o Marco Civil, art. 5º, VIII, muda a natureza do dado com IP). App e web
       no mesmo navegador contam como uma sessão só.
 - [x] O usuário **encerra sessões**: uma específica ou todas as outras, mantendo a atual. E o logout
       comum deixa de ser um "sair de todos" silencioso.
@@ -314,7 +314,7 @@ e **não** é arquivada.
 |-------|----------------|----------|
 | 1 — política de senha | item 4 | ✅ **entregue** pela PR #29 (`597f641`), mergeada em 2026-09-26 com CI verde no SHA de merge. Evidência no item 4 acima |
 | 2 — sessões | item 2 e o resíduo do item 3 (logout local, encerramento seletivo) | ✅ **entregue** pela PR #39 (`d92d21b`), mergeada em 2026-10-04 com CI verde no SHA de merge (`gh run 37239437558`). Feature em `docs/features/account-active-sessions/`. Evidência nos itens 2 e 3 acima |
-| 3 — segundo fator | item 5, com códigos de recuperação, e o item 6 (opt-in) | ⏳ não iniciada, e **nenhuma feature ativa**. Preço do MFA no Identity Platform segue **não confirmado**. Enquanto a spec estiver `in-progress`, ela fica fora dos lotes paralelos; o destino da fatia é a decisão estacionada E12 do `BACKLOG.md` (era a D10 até 2026-10-07) |
+| 3 — segundo fator | item 5, com códigos de recuperação, e o item 6 (opt-in) | ⏳ não iniciada, e **nenhuma feature ativa**. Preço do MFA no Identity Platform segue **não confirmado**. Enquanto a spec estiver `in-progress`, ela fica fora dos lotes paralelos; o destino da fatia é a decisão estacionada E12 do `reference/AUDIT.md` (era a D10 até 2026-10-07) |
 
 **Nota para a fatia 3 (2026-10-22, pós-PR #56):** o login agora tem três entradas, senha, Google e link por e-mail
 ([`magic-link-sign-in`](../../docs/features/magic-link-sign-in/spec.md), entregue pela PR #56). As três terminam no
@@ -328,7 +328,7 @@ A spec passou a `in-progress` com `feature: account-security-mfa` e **não** foi
 frontmatter aponta para `account-active-sessions`, a pasta da fatia 2; a fatia 1 continua em
 `docs/features/account-security-mfa/`.)* O `docs/features/account-security-mfa/STATE.md` ficou com `review:
 in-progress` embora a PR tenha sido mergeada; a auditoria não escreve ali e registra a defasagem no
-`BACKLOG.md`. A próxima fatia deve abrir pasta própria em `docs/features/` ou reaproveitar esta com um
+`reference/AUDIT.md`. A próxima fatia deve abrir pasta própria em `docs/features/` ou reaproveitar esta com um
 `STATE.md` novo; decidir isso é do `/analyze` daquela fatia.
 
 ### Achado ligado à fatia 2 (auditoria de 2026-09-30): corrigido

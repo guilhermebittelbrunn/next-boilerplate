@@ -573,6 +573,87 @@ describe("BaseRepository.create", () => {
     });
 });
 
+describe("BaseRepository document id precedence", () => {
+    const FORGED_ID = "forged";
+
+    function unmappedRepository() {
+        return new BaseRepository<EntityDTO>(fakeDb as never, "entity");
+    }
+
+    it("findById with a mapper keeps the document id over a stored id field", async () => {
+        fakeDb.seed("entity", "e1", entityRow({ id: FORGED_ID }));
+
+        const found = await repository.findById("e1");
+
+        expect(found?.id).toBe("e1");
+    });
+
+    it("findAll with a mapper keeps the document id over a stored id field", async () => {
+        fakeDb.seed("entity", "e1", entityRow({ id: FORGED_ID }));
+
+        const rows = await repository.findAll();
+
+        expect(rows.map((row) => row.id)).toEqual(["e1"]);
+    });
+
+    it("findAll without a mapper keeps the document id over a stored id field", async () => {
+        fakeDb.seed("entity", "e1", entityRow({ id: FORGED_ID }));
+
+        const rows = await unmappedRepository().findAll();
+
+        expect(rows.map((row) => row.id)).toEqual(["e1"]);
+    });
+
+    it("findById without a mapper keeps the document id over a stored id field", async () => {
+        fakeDb.seed("entity", "e1", entityRow({ id: FORGED_ID }));
+
+        const found = await unmappedRepository().findById("e1");
+
+        expect(found?.id).toBe("e1");
+    });
+
+    it("paginate keeps the document id over a stored id field", async () => {
+        fakeDb.seed("entity", "e1", entityRow({ id: FORGED_ID }));
+
+        const page = await entityRepository.listByOrganization("org-1", {
+            limit: 20,
+            cursorId: null,
+        });
+
+        expect(page.items.map((row) => row.id)).toEqual(["e1"]);
+    });
+
+    it("create returns the generated id even if the payload carries one", async () => {
+        const created = await repository.create({
+            id: FORGED_ID,
+            organizationId: "org-1",
+            userId: "profile-1",
+            name: "Acme",
+            description: "an entity",
+            type: EntityType.CUSTOMER,
+            photo: null,
+            genre: null,
+            birthdate: null,
+            enabled: true,
+        } as never);
+
+        expect(created.id).toBe("doc-1");
+    });
+
+    it("findByReferenceId resolves the profile by its document id, not a stored id field", async () => {
+        fakeDb.seed("user", "p1", {
+            id: "victim",
+            reference_id: "auth-uid-1",
+            type: "common",
+            deletedAt: null,
+        });
+
+        const profile = await userRepository.findByReferenceId("auth-uid-1");
+
+        expect(profile?.id).toBe("p1");
+    });
+});
+
 describe("BaseRepository.update and delete", () => {
     it("returns the id and refreshes updatedAt", async () => {
         fakeDb.seed("entity", "e1", entityRow());
@@ -806,6 +887,54 @@ describe("UserRepository.findByReferenceId", () => {
             userRepository.findByReferenceId("auth-uid-missing")
         ).resolves.toBeNull();
     });
+
+    it("hands back the stored instants as Date", async () => {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+
+        const profile = await userRepository.findByReferenceId("auth-uid-1");
+
+        expect(profile?.createdAt).toBeInstanceOf(Date);
+        expect(profile?.createdAt.toISOString()).toBe(CREATED_AT_ISO);
+        expect(profile?.updatedAt).toBeInstanceOf(Date);
+        expect(profile?.deletedAt).toBeNull();
+    });
+});
+
+describe("UserRepository.findById", () => {
+    it("hands back the stored instants as Date", async () => {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+
+        const profile = await userRepository.findById("p1");
+
+        expect(profile?.id).toBe("p1");
+        expect(profile?.createdAt).toBeInstanceOf(Date);
+        expect(profile?.createdAt.toISOString()).toBe(CREATED_AT_ISO);
+        expect(profile?.updatedAt).toBeInstanceOf(Date);
+    });
+
+    it("answers null for a soft-deleted profile", async () => {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+        });
+
+        await expect(userRepository.findById("p1")).resolves.toBeNull();
+    });
 });
 
 describe("UserRepository.list over the Firestore driver", () => {
@@ -883,7 +1012,7 @@ describe("UserRepository.update and delete", () => {
         });
     }
 
-    it("keeps createdAt a Timestamp, since the repository has no mapper", async () => {
+    it("update writes only the given fields", async () => {
         seedProfile();
 
         await userRepository.update({ id: "p1", type: UserType.ADMIN });

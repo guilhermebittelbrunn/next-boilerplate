@@ -1,4 +1,5 @@
 import type { AccountDTO } from "@repo/sdk/src/types";
+import { removeCookie } from "@repo/shared/utils/helpers/cookies";
 import {
     cleanup,
     fireEvent,
@@ -8,13 +9,13 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { panelMock, updatePreferencesMutateMock, setThemeMock } = vi.hoisted(
-    () => ({
+const { panelMock, updatePreferencesMutateMock, setThemeMock, pushMock } =
+    vi.hoisted(() => ({
         panelMock: vi.fn(),
         updatePreferencesMutateMock: vi.fn(),
         setThemeMock: vi.fn(),
-    })
-);
+        pushMock: vi.fn(),
+    }));
 
 vi.mock("@/shared/providers/AuthRequestPanelContext", () => ({
     useAuthRequestPanel: () => panelMock(),
@@ -37,7 +38,7 @@ vi.mock("next-themes", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-    useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), back: vi.fn() }),
+    useRouter: () => ({ push: pushMock, refresh: vi.fn(), back: vi.fn() }),
     useParams: () => ({ locale: "pt-br" }),
 }));
 
@@ -106,4 +107,42 @@ describe("AccountPreferencesForm", () => {
             preferences: { theme: "light", locale: "es" },
         });
     });
+
+    it.each([
+        [undefined, "/en/account?tab=preferences"],
+        ["/admin/account", "/en/admin/account?tab=preferences"],
+    ])(
+        "com accountPath %j, salvar navega para %s no idioma escolhido",
+        async (accountPath, expectedUrl) => {
+            // Saving writes the x-locale cookie, which the dictionary of the next render reads.
+            removeCookie("x-locale");
+            updatePreferencesMutateMock.mockImplementation(
+                (_body, options: { onSuccess: () => void }) =>
+                    options.onSuccess()
+            );
+
+            render(
+                <AccountPreferencesForm
+                    account={accountWith("en", "dark")}
+                    accountPath={accountPath}
+                />
+            );
+
+            await waitFor(() => {
+                expect(
+                    screen.getByRole("combobox", {
+                        name: accountPreferences.language,
+                    }).textContent
+                ).toContain("English");
+            });
+
+            fireEvent.click(
+                screen.getByRole("button", { name: accountPreferences.save })
+            );
+
+            await waitFor(() => {
+                expect(pushMock).toHaveBeenCalledWith(expectedUrl);
+            });
+        }
+    );
 });

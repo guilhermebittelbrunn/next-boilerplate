@@ -264,6 +264,20 @@ describe("POST /notifications/[id]/read", () => {
         expect(markReadMock).not.toHaveBeenCalled();
     });
 
+    it("responde 404 NOTIFICATION_NOT_FOUND quando a notificação some entre a leitura e a escrita", async () => {
+        findByIdMock.mockResolvedValue(notification("n1"));
+        markReadMock.mockResolvedValue(null);
+
+        const response = await markRead(
+            ownerRequest("POST", "/notifications/n1/read"),
+            idContext("n1")
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+        expect(await errorCode(response)).toBe("NOTIFICATION_NOT_FOUND");
+        expect(markReadMock).toHaveBeenCalledWith("n1");
+    });
+
     it("responde 404 para a notificação de outro dono, sem gravar", async () => {
         findByIdMock.mockResolvedValue(
             notification("n1", { userId: "someone-else" })

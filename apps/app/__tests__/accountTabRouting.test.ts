@@ -40,6 +40,32 @@ describe("resolveAccountTab", () => {
     });
 });
 
+describe("resolveAccountTab na área do admin", () => {
+    it.each(["profile", "security", "preferences"])(
+        "aceita a seção %s",
+        async (tab) => {
+            vi.stubEnv("NEXT_PUBLIC_PRODUCT_MODE", "subscription");
+            const { resolveAccountTab, adminAccountTabValues } =
+                await loadRouting();
+
+            expect(resolveAccountTab(tab, adminAccountTabValues)).toBe(tab);
+        }
+    );
+
+    it.each(["billing", "privacy", "xyz", null])(
+        "cai no perfil quando a URL pede %j, mesmo no modo subscription",
+        async (raw) => {
+            vi.stubEnv("NEXT_PUBLIC_PRODUCT_MODE", "subscription");
+            const { resolveAccountTab, adminAccountTabValues } =
+                await loadRouting();
+
+            expect(resolveAccountTab(raw, adminAccountTabValues)).toBe(
+                "profile"
+            );
+        }
+    );
+});
+
 describe("accountTabHref", () => {
     it("troca só o tab e preserva checkout e plan", async () => {
         const { accountTabHref } = await loadRouting();

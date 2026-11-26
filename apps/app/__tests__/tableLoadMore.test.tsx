@@ -1,6 +1,6 @@
 import { Table } from "@repo/design-system/components/ui/table";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 // jsdom ships without matchMedia, and the antd table subscribes to it on mount.
 window.matchMedia = ((query: string) => ({
@@ -47,9 +47,7 @@ function loadMoreButton() {
     return screen.queryByRole("button", { name: "Carregar mais" });
 }
 
-beforeEach(() => {
-    cleanup();
-});
+afterEach(cleanup);
 
 describe("Table com paginação por cursor", () => {
     it("avisa que a busca não alcançou as páginas pendentes em vez de dizer que não há registros", () => {

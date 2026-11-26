@@ -60,7 +60,9 @@ responsabilidade da revisão e do deploy da Vercel.
 
 - [ ] Handler é `export const GET = guard(async (req, ctx) => …)` — **nunca** `export async function GET`.
 - [ ] Protegido por guard: `requireOrganizationApi` (comum, dado da organização; expõe também
-      `ctx.organization`), `requireCommonPanelApi` (comum, expõe `ctx.subjectProfile`) ou
+      `ctx.organization`), `requireCommonPanelApi` (comum, expõe `ctx.subjectProfile`),
+      `requireOwnAccountApi` (a conta da própria pessoa: comum ou o próprio admin sem personificação;
+      reservado às rotas de `/account` que fazem sentido para o admin e ao upload pessoal) ou
       `requireAdminApi` (admin, **sem** `subjectProfile`). Autorização repetida no servidor — UI oculta
       não é proteção.
 - [ ] Rota `[id]`: genérico no guard (`requireOrganizationApi<RouteIdParamsContext>`, ou o do painel

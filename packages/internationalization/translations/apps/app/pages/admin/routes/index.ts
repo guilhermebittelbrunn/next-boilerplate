@@ -11,6 +11,7 @@ export const adminRoutesTranslations = {
             audit: {
                 list: "Auditoria",
             },
+            account: "Minha conta",
             settings: {
                 list: "Configurações",
                 create: "Criar Configuração",
@@ -30,6 +31,7 @@ export const adminRoutesTranslations = {
             audit: {
                 list: "Audit trail",
             },
+            account: "My account",
             settings: {
                 list: "Settings",
                 create: "Create Setting",
@@ -49,6 +51,7 @@ export const adminRoutesTranslations = {
             audit: {
                 list: "Auditoría",
             },
+            account: "Mi cuenta",
             settings: {
                 list: "Configuración",
                 create: "Crear configuración",

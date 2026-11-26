@@ -17,7 +17,7 @@ import { deleteObjectQuietly } from "@/(shared)/lib/storage";
 import { getMergedUserByFirestoreDocId } from "@/(shared)/lib/user-merge";
 import { userRepository } from "@/(shared)/repositories/user.repository";
 import { parseUpdateAccount } from "@/(shared)/validation/account.schema";
-import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
+import { requireOwnAccountApi } from "@/app/(guards)/common-panel";
 
 const notFound = (): Response =>
     Response.json(
@@ -108,7 +108,7 @@ async function writeAccount(args: {
     return { ok: true };
 }
 
-export const GET = requireCommonPanelApi(async (_req, ctx) => {
+export const GET = requireOwnAccountApi(async (_req, ctx) => {
     const merged = await getMergedUserByFirestoreDocId(ctx.subjectProfile.id);
 
     if (!merged) {
@@ -118,7 +118,7 @@ export const GET = requireCommonPanelApi(async (_req, ctx) => {
     return Response.json({ data: await toAccountResponse(merged) });
 });
 
-export const PUT = requireCommonPanelApi(async (req, ctx) => {
+export const PUT = requireOwnAccountApi(async (req, ctx) => {
     const parsedBody = await parseRequestJson(req);
     if (!parsedBody.ok) {
         return parsedBody.response;

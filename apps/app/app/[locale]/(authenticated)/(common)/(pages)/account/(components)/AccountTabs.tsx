@@ -25,11 +25,13 @@ import {
     type AccountTabValue,
     accountTabHref,
     accountTabValues,
+    adminAccountTabValues,
     resolveAccountTab,
 } from "./accountTabRouting";
 
 type AccountTabsProps = {
     account: AccountDTO | undefined;
+    area?: "common" | "admin";
 };
 
 function AccountSectionHeading({
@@ -47,15 +49,23 @@ function AccountSectionHeading({
     );
 }
 
-export function AccountTabs({ account }: AccountTabsProps) {
+export function AccountTabs({ account, area = "common" }: AccountTabsProps) {
     const { dictionary } = getDictionary();
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const sectionSelectId = useId();
     const accountCopy = dictionary.apps.app.pages.common.account;
+    const isAdminArea = area === "admin";
+    const tabValues = isAdminArea ? adminAccountTabValues : accountTabValues;
+    const sectionDescriptions = isAdminArea
+        ? {
+              ...accountCopy.sections,
+              ...dictionary.apps.app.pages.admin.account.sections,
+          }
+        : accountCopy.sections;
 
     const requestedTab = searchParams.get("tab");
-    const activeTab = resolveAccountTab(requestedTab);
+    const activeTab = resolveAccountTab(requestedTab, tabValues);
 
     // Next keeps useSearchParams in sync with the History API, so the section follows
     // the URL without a router navigation re-rendering the page on the server.
@@ -63,7 +73,11 @@ export function AccountTabs({ account }: AccountTabsProps) {
         window.history.replaceState(
             null,
             "",
-            accountTabHref(pathname, searchParams, resolveAccountTab(value))
+            accountTabHref(
+                pathname,
+                searchParams,
+                resolveAccountTab(value, tabValues)
+            )
         );
     };
 
@@ -78,9 +92,21 @@ export function AccountTabs({ account }: AccountTabsProps) {
     }, [requestedTab, activeTab, pathname, searchParams]);
 
     const sectionContent: Record<AccountTabValue, ReactNode> = {
-        profile: <AccountProfileForm account={account} />,
-        security: <AccountSecurityForm account={account} />,
-        preferences: <AccountPreferencesForm account={account} />,
+        profile: (
+            <AccountProfileForm
+                account={account}
+                allowEmailChange={!isAdminArea}
+            />
+        ),
+        security: (
+            <AccountSecurityForm account={account} passwordOnly={isAdminArea} />
+        ),
+        preferences: (
+            <AccountPreferencesForm
+                account={account}
+                accountPath={isAdminArea ? "/admin/account" : "/account"}
+            />
+        ),
         billing: <AccountBillingPanel account={account} />,
         privacy: <AccountPrivacyPanel account={account} />,
     };
@@ -102,7 +128,7 @@ export function AccountTabs({ account }: AccountTabsProps) {
                     onChange={(event) => selectTab(event.target.value)}
                     value={activeTab}
                 >
-                    {accountTabValues.map((value) => (
+                    {tabValues.map((value) => (
                         <NativeSelectOption key={value} value={value}>
                             {accountCopy.tabs[value]}
                         </NativeSelectOption>
@@ -115,7 +141,7 @@ export function AccountTabs({ account }: AccountTabsProps) {
                 className="hidden w-48 shrink-0 items-stretch lg:flex"
                 variant="line"
             >
-                {accountTabValues.map((value) => (
+                {tabValues.map((value) => (
                     <TabsTrigger
                         className="justify-start whitespace-normal px-3 py-2 text-left"
                         key={value}
@@ -128,14 +154,14 @@ export function AccountTabs({ account }: AccountTabsProps) {
 
             <div className="flex min-w-0 flex-1 flex-col gap-6">
                 <ImpersonationReadOnlyNotice />
-                {accountTabValues.map((value) => (
+                {tabValues.map((value) => (
                     <TabsContent
                         className="flex flex-col gap-6"
                         key={value}
                         value={value}
                     >
                         <AccountSectionHeading
-                            description={accountCopy.sections[value]}
+                            description={sectionDescriptions[value]}
                             title={accountCopy.tabs[value]}
                         />
                         {sectionContent[value]}

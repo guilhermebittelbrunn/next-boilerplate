@@ -1,6 +1,6 @@
 import { globalTranslations } from "@repo/internationalization/translations/global";
 import { setCookie } from "@repo/shared/utils/helpers/cookies";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { useAuthMock, useMyAccountMock } = vi.hoisted(() => ({
@@ -125,4 +125,33 @@ describe("ProfileDropdown — origem do nome e do avatar", () => {
             }
         }
     );
+});
+
+describe("ProfileDropdown — destino de Minha conta", () => {
+    const dropdownCopy =
+        globalTranslations["pt-br"].apps.app.shared.profileDropdown;
+
+    async function myAccountHref() {
+        fireEvent.pointerDown(
+            screen.getByRole("button", {
+                name: dropdownCopy.triggerLabel,
+            }),
+            { button: 0, ctrlKey: false }
+        );
+        return (await screen.findByText(dropdownCopy.myAccount))
+            .closest("a")
+            ?.getAttribute("href");
+    }
+
+    it("aponta para a conta comum sem a prop", async () => {
+        render(<ProfileDropdown />);
+
+        expect(await myAccountHref()).toBe("/pt-br/account");
+    });
+
+    it("aponta para o caminho recebido em accountPath", async () => {
+        render(<ProfileDropdown accountPath="/admin/account" />);
+
+        expect(await myAccountHref()).toBe("/pt-br/admin/account");
+    });
 });

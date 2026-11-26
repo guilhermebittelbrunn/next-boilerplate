@@ -167,7 +167,7 @@ gasto real no cenário de MVP, e **zero** dependência nova.
 
 ## Veredito sobre a decisão Q1 da spec
 
-A spec [`file-upload-storage.md`](../../docs/features/file-upload-storage/spec.md) — entregue e arquivada
+A spec [`file-upload-storage.md`](../../../docs/features/file-upload-storage/spec.md) — entregue e arquivada
 em 2026-09-14 — decidiu "Firebase Storage, não S3", justificada
 por coerência de stack. **A pesquisa confirma a decisão, mas invalida parte da justificativa.**
 

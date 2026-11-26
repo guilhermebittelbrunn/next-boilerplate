@@ -9,7 +9,7 @@ Regras de escopo para a API Next — rotas, validação, auth na borda. O Claude
 
 ## Camadas
 
-- **Guards** (`app/(guards)`): auth/session antes da lógica (`requireOrganizationApi` para dado da organização, `requireCommonPanelApi`, `requireAdminApi`). Para rota `[id]`, parametrize com `RouteIdParamsContext`.
+- **Guards** (`app/(guards)`): auth/session antes da lógica (`requireOrganizationApi` para dado da organização, `requireCommonPanelApi`, `requireOwnAccountApi` para a conta da própria pessoa — aceita também o admin sem personificação —, `requireAdminApi`). Para rota `[id]`, parametrize com `RouteIdParamsContext`.
 - **Repositórios / adapters** (`(shared)/repositories`): isolam persistência; contratos alinhados ao `@repo/sdk` na borda. Entrada/saída "crua" do Firestore ainda pode exigir normalização mínima (ex.: `Timestamp` → ISO); evite camadas DTO redundantes (`findDtoById`) quando a rota já valida posse.
 - **Mappers** (`(shared)/mappers`): use quando DTO de API ≠ modelo interno; para recursos simples prefira um helper pequeno no repositório em vez de ficheiros só para isso.
 
@@ -22,7 +22,7 @@ Regras de escopo para a API Next — rotas, validação, auth na borda. O Claude
 ## Mappers e repositórios Firestore
 
 - Mappers em `(shared)/mappers/`: interface `MapperInterface<Entity, DTO>`, classe base `Mapper<Entity, DTO>` (sem camada domain), `AllOptional` via `@repo/shared/utils`. Reutilize `stringIfExists` e `normalizeFirestoreInstant`.
-- Repositório por recurso: classe `<Recurso>Mapper` + instância exportada; repositório estende `BaseRepository<DTO>` passando o mapper no `super` (3.º arg). Repositórios sem normalização (ex.: `user`) mantêm só `super(db, tabela)`.
+- Repositório por recurso: classe `<Recurso>Mapper` + instância exportada; repositório estende `BaseRepository<DTO>` passando o mapper no `super` (3.º arg). Repositórios sem normalização (ex.: `organization`) mantêm só `super(db, tabela)`.
 - `POST` após `create`: pode devolver diretamente o DTO retornado pelo repositório.
 - `PUT` opcional: resposta mínima `{ data: { id } }` quando não for necessário devolver o registo completo.
 

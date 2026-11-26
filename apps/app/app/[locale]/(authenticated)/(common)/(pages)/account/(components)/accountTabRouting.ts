@@ -16,8 +16,17 @@ export const accountTabValues: readonly AccountTabValue[] = isSubscriptionMode()
     ? allAccountTabValues
     : allAccountTabValues.filter((value) => value !== "billing");
 
-export const resolveAccountTab = (raw: string | null): AccountTabValue =>
-    accountTabValues.includes(raw as AccountTabValue)
+export const adminAccountTabValues: readonly AccountTabValue[] = [
+    "profile",
+    "security",
+    "preferences",
+];
+
+export const resolveAccountTab = (
+    raw: string | null,
+    allowed: readonly AccountTabValue[] = accountTabValues
+): AccountTabValue =>
+    allowed.includes(raw as AccountTabValue)
         ? (raw as AccountTabValue)
         : "profile";
 

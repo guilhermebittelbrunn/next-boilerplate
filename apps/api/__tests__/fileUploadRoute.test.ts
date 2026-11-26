@@ -331,4 +331,58 @@ describe("POST /files", () => {
         );
         expect(putObjectMock).not.toHaveBeenCalled();
     });
+
+    describe("as an admin without impersonation", () => {
+        const asAdminSelf = (query = "") =>
+            uploadRequest(
+                {
+                    [AUTH_REQUEST_HEADER.USER_ID]: ADMIN_UID,
+                    [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.ADMIN,
+                    [AUTH_REQUEST_HEADER.REQUEST_ROLE]: UserRoleLevel.ADMIN,
+                    [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: ADMIN_UID,
+                },
+                query
+            );
+
+        beforeEach(() => {
+            resolveApiActorMock.mockResolvedValue({ uid: ADMIN_UID });
+        });
+
+        it("stores the avatar under the admin's own prefix", async () => {
+            const response = await POST(asAdminSelf());
+
+            expect(response.status).toBe(STATUS_CREATED);
+            const body = (await response.json()) as { data: { path: string } };
+            expect(body.data.path).toMatch(
+                new RegExp(`^uploads/${ADMIN_PROFILE.id}/[0-9a-f-]{36}\\.png$`)
+            );
+            expect(resolveMembershipMock).not.toHaveBeenCalled();
+        });
+
+        it("refuses an organization upload and writes nothing", async () => {
+            const response = await POST(asAdminSelf("?scope=organization"));
+
+            expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+            expect(await errorCode(response)).toBe("COMMON_PANEL_FORBIDDEN");
+            expect(parseUploadedImageMock).not.toHaveBeenCalled();
+            expect(putObjectMock).not.toHaveBeenCalled();
+        });
+    });
+
+    it("refuses an unknown scope before authenticating", async () => {
+        resolveApiActorMock.mockResolvedValue(null);
+
+        const response = await POST(asOwner("?scope=everyone"));
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await errorCode(response)).toBe("VALIDATION_FAILED");
+        expect(resolveApiActorMock).not.toHaveBeenCalled();
+    });
+
+    it("keeps a personal upload of a common user out of the organization", async () => {
+        const response = await POST(asOwner());
+
+        expect(response.status).toBe(STATUS_CREATED);
+        expect(resolveMembershipMock).not.toHaveBeenCalled();
+    });
 });

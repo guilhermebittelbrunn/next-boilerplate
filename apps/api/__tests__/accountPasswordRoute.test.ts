@@ -367,3 +367,89 @@ describe("POST /account/sessions/revoke", () => {
         expect(revokeUserSessionsMock).not.toHaveBeenCalled();
     });
 });
+
+describe("POST /account/password — admin na própria conta", () => {
+    const ADMIN_UID = "admin-1";
+    const ADMIN_EMAIL = "admin@example.com";
+    const ADMIN_PROFILE = {
+        id: "admin-profile",
+        reference_id: ADMIN_UID,
+        type: UserType.ADMIN,
+    };
+
+    function asAdmin(
+        body: unknown,
+        { requestRole = UserRoleLevel.ADMIN, target = ADMIN_UID } = {},
+        url = "http://localhost:3002/account/password"
+    ) {
+        return {
+            method: "POST",
+            url,
+            headers: new Headers({
+                [AUTH_REQUEST_HEADER.USER_ID]: ADMIN_UID,
+                [AUTH_REQUEST_HEADER.USER_ROLE]: UserRoleLevel.ADMIN,
+                [AUTH_REQUEST_HEADER.REQUEST_ROLE]: requestRole,
+                [AUTH_REQUEST_HEADER.REQUEST_USER_ID]: target,
+            }),
+            json: () => Promise.resolve(body ?? {}),
+        } as unknown as NextRequest;
+    }
+
+    beforeEach(() => {
+        resolveApiActorMock.mockResolvedValue({
+            uid: ADMIN_UID,
+            email: ADMIN_EMAIL,
+        });
+        findByReferenceIdMock.mockImplementation((uid: string) =>
+            Promise.resolve(
+                uid === ADMIN_UID ? { ...ADMIN_PROFILE } : { ...OWNER_PROFILE }
+            )
+        );
+        signInWithPasswordMock.mockResolvedValue({ localId: ADMIN_UID });
+        updateUserMock.mockResolvedValue({ uid: ADMIN_UID });
+    });
+
+    it("troca a senha do próprio admin, conferindo a senha atual contra o e-mail dele", async () => {
+        const response = await changePassword(asAdmin(VALID_BODY));
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(signInWithPasswordMock).toHaveBeenCalledWith(
+            ADMIN_EMAIL,
+            VALID_BODY.currentPassword
+        );
+        expect(updateUserMock).toHaveBeenCalledWith(ADMIN_UID, {
+            password: VALID_BODY.password,
+        });
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(ADMIN_UID);
+    });
+
+    it("recusa a troca da senha do personificado, sem tocar em nenhuma conta", async () => {
+        const response = await changePassword(
+            asAdmin(VALID_BODY, {
+                requestRole: UserRoleLevel.COMMON,
+                target: OWNER_UID,
+            })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe(
+            "AUTH_REQUEST_IMPERSONATION_READ_ONLY"
+        );
+        expect(signInWithPasswordMock).not.toHaveBeenCalled();
+        expect(updateUserMock).not.toHaveBeenCalled();
+    });
+
+    it("continua recusando o admin no encerramento de sessões, que fica no painel comum", async () => {
+        const response = await revokeSessions(
+            asAdmin(
+                undefined,
+                {},
+                "http://localhost:3002/account/sessions/revoke"
+            )
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+        expect(await codeOf(response)).toBe("COMMON_PANEL_FORBIDDEN");
+        expect(revokeUserSessionsMock).not.toHaveBeenCalled();
+    });
+});

@@ -23,7 +23,13 @@ import { useMyAccount } from "@/shared/hooks/useMyAccount";
 import { contactPageUrl } from "@/shared/lib/contactPageUrl";
 import { withLocalePath } from "@/shared/lib/localePath";
 
-export default function ProfileDropdown() {
+type ProfileDropdownProps = {
+    accountPath?: string;
+};
+
+export default function ProfileDropdown({
+    accountPath = "/account",
+}: ProfileDropdownProps) {
     const { user, signOut } = useAuth();
     const { dictionary, locale } = getDictionary();
     const { data: account } = useMyAccount();
@@ -35,7 +41,7 @@ export default function ProfileDropdown() {
     // avatar reference and keeps a stale display name until the token refreshes.
     const displayName = account?.displayName ?? user?.displayName ?? null;
     const email = account?.email ?? user?.email ?? null;
-    const avatarSrc = account?.avatarUrl ?? user?.photoURL ?? "";
+    const avatarSrc = account?.avatarUrl || user?.photoURL || null;
     const initials =
         displayName?.slice(0, 2) ?? email?.split("@")[0]?.slice(0, 2) ?? "";
 
@@ -44,7 +50,9 @@ export default function ProfileDropdown() {
             <DropdownMenuTrigger aria-label={profileDropdown.triggerLabel}>
                 <div className="flex w-full max-w-56 items-center gap-3 truncate">
                     <Avatar className="h-9 w-9">
-                        <AvatarImage alt="" src={avatarSrc} />
+                        {avatarSrc ? (
+                            <AvatarImage alt="" src={avatarSrc} />
+                        ) : null}
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <span className="hidden truncate md:inline">
@@ -62,7 +70,7 @@ export default function ProfileDropdown() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
-                        <Link href={withLocalePath(locale, "/account")}>
+                        <Link href={withLocalePath(locale, accountPath)}>
                             <UserIcon className="text-muted-foreground" />
                             <span>{profileDropdown.myAccount}</span>
                         </Link>

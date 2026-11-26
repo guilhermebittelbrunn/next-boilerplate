@@ -52,13 +52,19 @@ export async function signInWithGoogleViaApi({
     }
 }
 
+function sessionNotEstablishedError(): Error {
+    return new Error(
+        getDictionary().dictionary.packages.auth.provider.session.notEstablished
+    );
+}
+
 async function exchangeForApiSession(
     result: UserCredential
 ): Promise<GoogleApiSignInResult> {
     const cred = GoogleAuthProvider.credentialFromResult(result);
     const googleIdToken = cred?.idToken;
     if (!googleIdToken) {
-        throw new Error("Google sign-in did not return an ID token");
+        throw sessionNotEstablishedError();
     }
 
     const requestUri =
@@ -72,7 +78,7 @@ async function exchangeForApiSession(
     });
 
     if (!session?.idToken) {
-        throw new Error("Invalid response from auth API");
+        throw sessionNotEstablishedError();
     }
 
     const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -84,10 +90,7 @@ async function exchangeForApiSession(
     }).catch(() => null);
 
     if (!sessionRes?.ok) {
-        throw new Error(
-            getDictionary().dictionary.packages.auth.provider.session
-                .notEstablished
-        );
+        throw sessionNotEstablishedError();
     }
 
     apiClient.setAuthorizationHeader(session.idToken);

@@ -51,7 +51,7 @@ vi.mock("@repo/auth/server", () => ({
         updateUser: vi.fn(),
     }),
     getCurrentUser: vi.fn(),
-    revokeUserSessions: vi.fn(),
+    revokeUserSessionsOrThrow: vi.fn(),
 }));
 
 const UID = "google-uid-1";

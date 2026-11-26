@@ -66,7 +66,8 @@ vi.mock("@/(shared)/lib/user-merge", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ updateUser: updateUserMock }),
     getCurrentUser: vi.fn(),
-    revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
 }));
 
 vi.mock("@repo/payments", () => ({
@@ -279,6 +280,50 @@ describe("PUT /users/[id] revokes sessions when disabling", () => {
         expect(revokeUserSessionsMock).toHaveBeenCalledWith(TARGET_UID);
         expect(order).toEqual(["updateUser", "revoke", "audit"]);
         expect(recordedEvent().changedFields).toEqual(["disabled"]);
+    });
+
+    it("answers 500 USERS_SESSIONS_NOT_REVOKED and still records the change when revocation is refused", async () => {
+        const order: string[] = [];
+        updateUserMock.mockImplementation(() => {
+            order.push("updateUser");
+            return Promise.resolve({});
+        });
+        revokeUserSessionsMock.mockImplementation(() => {
+            order.push("revoke");
+            return Promise.reject({ code: "auth/internal-error" });
+        });
+        recordAuditEventMock.mockImplementation(() => {
+            order.push("audit");
+            return Promise.resolve();
+        });
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+            return;
+        });
+
+        const response = await PUT(
+            request({ type: UserType.ADMIN, disabled: true }),
+            routeContext
+        );
+        const printedLines = warnSpy.mock.calls.map((call) => call.join(" "));
+        warnSpy.mockRestore();
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await response.json()).toEqual({
+            error: { code: "USERS_SESSIONS_NOT_REVOKED" },
+        });
+        expect(updateMock).toHaveBeenCalledWith({
+            id: TARGET_DOC_ID,
+            type: UserType.ADMIN,
+        });
+        expect(updateUserMock).toHaveBeenCalledWith(TARGET_UID, {
+            disabled: true,
+        });
+        expect(order).toEqual(["updateUser", "revoke", "audit"]);
+        expect(recordedEvent().changedFields).toEqual(["type", "disabled"]);
+        expect(getMergedUserMock).not.toHaveBeenCalled();
+        expect(printedLines).toEqual([
+            "[auth] session-revoke-failed requestId=req-42 code=auth/internal-error",
+        ]);
     });
 
     it("revokes when disabling together with other edits", async () => {

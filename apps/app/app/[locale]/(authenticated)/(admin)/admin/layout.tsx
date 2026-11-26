@@ -49,7 +49,7 @@ const AppLayout = async ({ children, params }: AppLayoutProperties) => {
     return (
         <SidebarProvider defaultOpen={await resolveSidebarDefaultOpen()}>
             <SidebarAdmin>
-                <Navbar />
+                <Navbar accountPath="/admin/account" />
                 {children}
             </SidebarAdmin>
         </SidebarProvider>

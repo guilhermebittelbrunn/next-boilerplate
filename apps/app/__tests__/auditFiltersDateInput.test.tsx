@@ -86,16 +86,14 @@ describe("filtros de período da auditoria", () => {
 
         const calendar = openFromCalendar();
         for (let step = 0; step < MONTHS_FROM_OCTOBER_TO_JANUARY; step++) {
-            const next = within(calendar).getByRole("button", {
-                name: NEXT_MONTH,
-            });
+            const next = within(calendar).getByLabelText(NEXT_MONTH);
             expect(next.hasAttribute("aria-disabled")).toBe(false);
             fireEvent.click(next);
         }
         fireEvent.click(
-            within(within(calendar).getByRole("grid")).getByRole("button", {
-                name: JANUARY_10_2027_DAY_BUTTON,
-            })
+            within(within(calendar).getByRole("grid")).getByLabelText(
+                JANUARY_10_2027_DAY_BUTTON
+            )
         );
         await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 

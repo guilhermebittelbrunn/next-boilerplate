@@ -200,18 +200,22 @@ apontada pelo secret scanning do GitHub, e uma varredura completa reprovaria o p
 Para subir de versão, troque `GITLEAKS_VERSION` e `GITLEAKS_SHA256` juntos, com o valor do arquivo
 `gitleaks_<versão>_checksums.txt` do release. O Dependabot não enxerga esse download.
 
-Para rodar localmente antes de abrir a PR, com o binário numa pasta temporária fora do repositório:
+Para rodar localmente antes de abrir a PR, com o binário numa pasta temporária fora do repositório. Os três
+comandos usam o modo `git` do job, que só analisa linhas adicionadas; arquivo novo só aparece no diff depois
+de `git add` (ou `git add -N`):
 
 ```bash
 gitleaks git --redact --no-banner --log-opts="origin/main..HEAD" .   # commits da branch
-git diff origin/main | gitleaks stdin --redact --no-banner           # o que ainda não foi commitado
+gitleaks git --redact --no-banner --pre-commit --staged .            # o que está no índice
+gitleaks git --redact --no-banner --pre-commit .                     # o que mudou fora do índice
 ```
 
-Não há allowlist (`.gitleaks.toml`): com a configuração padrão, nenhum fixture do repositório dispara. Se
-aparecer um falso positivo, marque a linha com o comentário `gitleaks:allow` ou ponha a impressão digital
-do achado (o campo `Fingerprint` da saída com `--verbose`) num `.gitleaksignore` na raiz. Os dois são lidos pelo binário
-sem configuração. Um segredo de verdade não se resolve assim: revogue a chave no provedor e reescreva a
-branch antes do merge.
+Não há allowlist (`.gitleaks.toml`). Um único fixture dispara com a configuração padrão, o token fictício de
+`packages/auth/__tests__/serverErrorLogging.test.ts`, e a linha dele leva o comentário `gitleaks:allow`.
+Se aparecer outro falso positivo, use o mesmo comentário na linha. Um `.gitleaksignore` não serve para o
+job: no modo `git` a impressão digital inclui o SHA do commit, que muda no rebase e no squash do merge, e
+o próximo commit que tocar a linha gera outra. Um segredo de verdade não se resolve assim: revogue a chave
+no provedor e reescreva a branch antes do merge.
 
 ### Auditoria de dependências
 

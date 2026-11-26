@@ -338,9 +338,9 @@ Coletado na descoberta de 2026-09-26, para dimensionar uma spec de modelos em `d
 
 ## Adendo de 2026-09-30: fontes dos modelos de conformidade
 
-Coletado na implementação dos modelos em `docs/` ([`ROPA.md`](../../docs/ROPA.md),
-[`INCIDENT-RESPONSE.md`](../../docs/INCIDENT-RESPONSE.md), [`SUBPROCESSORS.md`](../../docs/SUBPROCESSORS.md),
-[`BACKUP.md`](../../docs/BACKUP.md)). Cada item foi lido na data acima. O `revalidate_after` da nota não
+Coletado na implementação dos modelos em `docs/` ([`ROPA.md`](../../../docs/ROPA.md),
+[`INCIDENT-RESPONSE.md`](../../../docs/INCIDENT-RESPONSE.md), [`SUBPROCESSORS.md`](../../../docs/SUBPROCESSORS.md),
+[`BACKUP.md`](../../../docs/BACKUP.md)). Cada item foi lido na data acima. O `revalidate_after` da nota não
 muda.
 
 ### Correções a esta nota

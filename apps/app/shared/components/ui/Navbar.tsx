@@ -9,9 +9,10 @@ import ProfileDropdown from "./ProfileDropdown";
 
 type NavbarProps = {
     notifications?: ReactNode;
+    accountPath?: string;
 };
 
-export default function Navbar({ notifications }: NavbarProps) {
+export default function Navbar({ notifications, accountPath }: NavbarProps) {
     const iconButtonProps = {
         className: "h-9 w-9 rounded-full bg-sidebar-border p-0",
     };
@@ -29,7 +30,7 @@ export default function Navbar({ notifications }: NavbarProps) {
                 {notifications}
                 <LanguageSwitcher icon triggerProps={iconButtonProps} />
                 <ModeToggle triggerProps={iconButtonProps} />
-                <ProfileDropdown />
+                <ProfileDropdown accountPath={accountPath} />
             </div>
         </nav>
     );

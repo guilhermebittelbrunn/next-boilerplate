@@ -36,5 +36,9 @@ export const ADMIN_ROUTES = (
                 url: buildPath("/admin/audit"),
             },
         },
+        account: {
+            label: dictionary?.apps.app.pages.admin.routes.platform.account,
+            url: buildPath("/admin/account"),
+        },
     };
 };

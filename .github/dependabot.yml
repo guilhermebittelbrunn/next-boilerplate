@@ -7,6 +7,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # A major of the Stripe SDK pins a new API version and needs a manual migration.
+    ignore:
+      - dependency-name: stripe
+        update-types: ["version-update:semver-major"]
     groups:
       production:
         dependency-type: production

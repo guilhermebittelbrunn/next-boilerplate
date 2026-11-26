@@ -32,14 +32,16 @@ const SECTION_DESCRIPTIONS = {
 };
 
 const SECTION_NAV_LABEL = "Seções da conta";
+const ADMIN_SECURITY_DESCRIPTION = "A senha do painel do admin";
 
 /** profile, security, preferences, billing e privacy. */
 const ACCOUNT_TAB_COUNT = 5;
 /** O modo simple não cobra assinatura, então a seção billing sai. */
 const SIMPLE_MODE_TAB_COUNT = 4;
 
-const { searchParamsMock } = vi.hoisted(() => ({
+const { searchParamsMock, panelPropsMock } = vi.hoisted(() => ({
     searchParamsMock: vi.fn(() => new URLSearchParams("")),
+    panelPropsMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -60,6 +62,13 @@ vi.mock("@repo/internationalization/client", () => ({
                                 sectionNav: { label: SECTION_NAV_LABEL },
                             },
                         },
+                        admin: {
+                            account: {
+                                sections: {
+                                    security: ADMIN_SECURITY_DESCRIPTION,
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -72,7 +81,10 @@ vi.mock("@/shared/components/ui/ImpersonationReadOnlyNotice", () => ({
     ImpersonationReadOnlyNotice: () => null,
 }));
 
-const stub = (label: string) => () => <div>{`${label}-panel`}</div>;
+const stub = (label: string) => (props: Record<string, unknown>) => {
+    panelPropsMock(label, props);
+    return <div>{`${label}-panel`}</div>;
+};
 
 vi.mock(
     "@/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountProfileForm",
@@ -118,6 +130,7 @@ afterEach(() => {
     vi.unstubAllEnvs();
     replaceStateSpy.mockRestore();
     useUrl("");
+    panelPropsMock.mockReset();
 });
 
 const selectedTab = () =>
@@ -284,4 +297,81 @@ describe("AccountTabs — cobrança por modo de produto", () => {
         expect(screen.queryByText("billing-panel")).toBeNull();
         expect(lastReplacedUrl()).toBe("/pt-br/account?tab=profile");
     });
+});
+
+describe("AccountTabs — área do admin", () => {
+    const ADMIN_TAB_LABELS = [
+        TAB_LABELS.profile,
+        TAB_LABELS.security,
+        TAB_LABELS.preferences,
+    ];
+
+    const propsOf = (label: string) =>
+        panelPropsMock.mock.calls.find(([panel]) => panel === label)?.[1];
+
+    it("lista só perfil, segurança e preferências na lista e no select, mesmo no modo subscription", async () => {
+        vi.stubEnv("NEXT_PUBLIC_PRODUCT_MODE", "subscription");
+        useUrl("tab=profile");
+        const AccountTabs = await loadAccountTabs();
+
+        render(<AccountTabs account={undefined} area="admin" />);
+
+        expect(
+            screen.getAllByRole("tab").map((tab) => tab.textContent)
+        ).toEqual(ADMIN_TAB_LABELS);
+        const select = screen.getByRole("combobox", {
+            name: SECTION_NAV_LABEL,
+        });
+        expect(
+            Array.from(
+                select.querySelectorAll("option"),
+                (option) => option.textContent
+            )
+        ).toEqual(ADMIN_TAB_LABELS);
+    });
+
+    it.each(["billing", "privacy"])(
+        "abre o perfil e normaliza a URL quando o link pede ?tab=%s",
+        async (tab) => {
+            vi.stubEnv("NEXT_PUBLIC_PRODUCT_MODE", "subscription");
+            useUrl(`tab=${tab}`);
+            const AccountTabs = await loadAccountTabs();
+
+            render(<AccountTabs account={undefined} area="admin" />);
+
+            expect(selectedTab()?.textContent).toBe(TAB_LABELS.profile);
+            expect(lastReplacedUrl()).toBe("/pt-br/account?tab=profile");
+            expect(propsOf("billing")).toBeUndefined();
+            expect(propsOf("privacy")).toBeUndefined();
+        }
+    );
+
+    it("usa a descrição de segurança do admin", async () => {
+        useUrl("tab=security");
+        const AccountTabs = await loadAccountTabs();
+
+        render(<AccountTabs account={undefined} area="admin" />);
+
+        expect(screen.getByText(ADMIN_SECURITY_DESCRIPTION)).toBeTruthy();
+        expect(screen.queryByText(SECTION_DESCRIPTIONS.security)).toBeNull();
+    });
+
+    it.each([
+        ["admin", "profile", { allowEmailChange: false }],
+        ["admin", "security", { passwordOnly: true }],
+        ["admin", "preferences", { accountPath: "/admin/account" }],
+        ["common", "profile", { allowEmailChange: true }],
+        ["common", "security", { passwordOnly: false }],
+        ["common", "preferences", { accountPath: "/account" }],
+    ] as const)(
+        "na área %s, configura a seção %s",
+        async (area, tab, expectedProps) => {
+            useUrl(`tab=${tab}`);
+            const AccountTabs = await loadAccountTabs();
+
+            render(<AccountTabs account={undefined} area={area} />);
+
+            expect(propsOf(tab)).toMatchObject(expectedProps);
+        }
+    );
 });

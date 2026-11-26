@@ -59,7 +59,7 @@ const {
 } = await import("../server");
 
 const LEAKY_EMAIL = "pessoa.ficticia@example.com";
-const LEAKY_TOKEN = "eyJhbGciOiJSUzI1NiJ9.ficticio.assinatura";
+const LEAKY_TOKEN = "eyJhbGciOiJSUzI1NiJ9.ficticio.assinatura"; // gitleaks:allow
 const LEAKY_UID = "uid-ficticio-123";
 const LEAKY_MESSAGE = `There is no user record for ${LEAKY_EMAIL} (${LEAKY_UID}) with token ${LEAKY_TOKEN}`;
 

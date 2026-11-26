@@ -1,4 +1,4 @@
-import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { getAuthInstance } from "@repo/auth/server";
 import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { logEvent } from "@repo/shared/utils/helpers/log";
@@ -12,6 +12,10 @@ import {
     type RouteIdParamsContext,
     resolveIdFromContext,
 } from "@/(shared)/lib/resolve-route-id";
+import {
+    revokeSessionsOrReport,
+    sessionsNotRevokedResponse,
+} from "@/(shared)/lib/session-revocation";
 import { adminAuthErrorReason } from "@/(shared)/lib/toolkit-error-codes";
 import { parseSignInMethodId } from "@/(shared)/validation/account.schema";
 import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
@@ -116,10 +120,8 @@ export const DELETE = requireCommonPanelApi<RouteIdParamsContext>(
               })
             : { restored: true };
 
-        // The password is gone either way, so every session ends, this one too. Firebase
-        // already revokes the refresh tokens when the address comes back; this call makes
-        // it hold when the address does not.
-        await revokeUserSessions(ctx.user.uid);
+        // The password is gone either way, so every session ends, this one too.
+        const sessionsRevoked = await revokeSessionsOrReport(ctx.user.uid, req);
 
         if (!restore.restored) {
             logEvent("account", "password-unlink-email-restore-failed", {
@@ -132,6 +134,10 @@ export const DELETE = requireCommonPanelApi<RouteIdParamsContext>(
                 "ACCOUNT_UPDATE_FAILED",
                 HTTP_STATUS.INTERNAL_SERVER_ERROR
             );
+        }
+
+        if (!sessionsRevoked) {
+            return sessionsNotRevokedResponse();
         }
 
         return new Response(null, { status: NO_CONTENT });

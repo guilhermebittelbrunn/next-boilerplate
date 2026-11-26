@@ -39,10 +39,12 @@ const languageOptions = [
 
 type AccountPreferencesFormProps = {
     account: AccountDTO | undefined;
+    accountPath?: string;
 };
 
 export function AccountPreferencesForm({
     account,
+    accountPath = "/account",
 }: AccountPreferencesFormProps) {
     const { dictionary } = getDictionary();
     const router = useRouter();
@@ -94,7 +96,7 @@ export function AccountPreferencesForm({
                     router.push(
                         withLocalePath(
                             values.locale,
-                            "/account?tab=preferences"
+                            `${accountPath}?tab=preferences`
                         )
                     );
                     router.refresh();
@@ -110,7 +112,7 @@ export function AccountPreferencesForm({
         >
             <Form {...form}>
                 <form
-                    className="flex w-full flex-1 flex-col"
+                    className="flex w-full flex-col"
                     onSubmit={form.handleSubmit(onSubmit)}
                 >
                     <FormContainer>

@@ -7,6 +7,7 @@ import type {
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import type {
@@ -17,6 +18,8 @@ import type {
 type UpdateUserMutationInput = UpdateUserFormValues & { id: string };
 
 type ToggleUserStatusInput = { id: string; disabled: boolean };
+
+const SESSIONS_NOT_REVOKED = "USERS_SESSIONS_NOT_REVOKED";
 
 type ToggleUserStatusContext = {
     previousList?: UserWithAuthDTO[];
@@ -112,6 +115,11 @@ export const useUserCrud = () => {
             return { previousList, previousDetail };
         },
         onError: (error, input, context) => {
+            // The account is already disabled on the server; only ending its sessions failed.
+            if (apiErrorCodeOf(error) === SESSIONS_NOT_REVOKED) {
+                errorAlert(formatClientError(error));
+                return;
+            }
             if (context?.previousList) {
                 queryClient.setQueryData(
                     queryKeys.users.list(),

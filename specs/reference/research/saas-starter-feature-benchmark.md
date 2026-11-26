@@ -227,7 +227,7 @@ Vercel lê a Stripe direto, com cache de uma hora.
 *Nota de 2026-10-16, depois da PR #47:* a linha do next-forge descreve o projeto de origem e a página que este
 repositório herdou. Desde a PR #47, a `/pricing` deste repositório lê o catálogo da Stripe pela API, com cache de
 uma hora (spec arquivada em
-[`docs/features/pricing-page-catalog/spec.md`](../../docs/features/pricing-page-catalog/spec.md)). A contagem de
+[`docs/features/pricing-page-catalog/spec.md`](../../../docs/features/pricing-page-catalog/spec.md)). A contagem de
 referências não muda: este repositório não faz parte do painel.
 
 ### Pagamento avulso (compra única)

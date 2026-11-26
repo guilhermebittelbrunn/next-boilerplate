@@ -1,7 +1,10 @@
 import type { AuthMePayload } from "@repo/sdk/src/actions/auth/action";
-import { UserType } from "@repo/sdk/src/types";
+import { type UserDTO, UserType } from "@repo/sdk/src/types";
+import type { AllOptional } from "@repo/shared/utils";
 import type { UserRecord } from "firebase-admin/auth";
 import { type DocumentData, Timestamp } from "firebase-admin/firestore";
+import type { FirestoreDocumentRow } from "../repositories/base.repository";
+import Mapper from "./Mapper";
 
 export function serializeUserRecord(user: UserRecord): Record<string, unknown> {
     return {
@@ -87,3 +90,82 @@ export function toSessionUser(merged: Record<string, unknown>): AuthMePayload {
         onboarding: plainObjectOrNull(merged.onboarding),
     };
 }
+
+/** A value that is not a readable instant is handed back as stored rather than turned into an invalid Date. */
+function toDate(value: unknown): unknown {
+    if (value instanceof Date) {
+        return value;
+    }
+    if (typeof value === "string") {
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? value : parsed;
+    }
+    const maybeTimestamp = value as { toDate?: () => Date } | null | undefined;
+    if (typeof maybeTimestamp?.toDate === "function") {
+        return maybeTimestamp.toDate();
+    }
+    return value;
+}
+
+/** Rewrites only the listed keys the object carries, so an absent field stays absent. */
+function withInstants(value: unknown, keys: readonly string[]): unknown {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return value;
+    }
+    const out: Record<string, unknown> = {
+        ...(value as Record<string, unknown>),
+    };
+    for (const key of keys) {
+        if (key in out && out[key] != null) {
+            out[key] = toDate(out[key]);
+        }
+    }
+    return out;
+}
+
+const PROFILE_INSTANTS = [
+    "createdAt",
+    "updatedAt",
+    "deletedAt",
+    "lastAccessAt",
+] as const;
+
+const NESTED_INSTANTS = {
+    onboarding: ["completedAt"],
+    subscription: ["currentPeriodEnd", "lastEventAt"],
+    entitlements: ["lastEventAt"],
+} as const;
+
+/**
+ * Copies the whole document: profiles carry fields outside `UserDTO` that callers still
+ * read, and an absent `onboarding` or `lastAccessAt` has a meaning of its own.
+ */
+class UserMapper extends Mapper<FirestoreDocumentRow, UserDTO> {
+    toDTO(row: FirestoreDocumentRow): UserDTO {
+        const dto = withInstants(row, PROFILE_INSTANTS) as Record<
+            string,
+            unknown
+        >;
+        for (const [field, keys] of Object.entries(NESTED_INSTANTS)) {
+            if (field in dto) {
+                dto[field] = withInstants(dto[field], keys);
+            }
+        }
+        return dto as unknown as UserDTO;
+    }
+
+    toPersistence(
+        input: AllOptional<UserDTO>
+    ): AllOptional<Record<string, unknown>> {
+        const {
+            id: _id,
+            createdAt: _createdAt,
+            updatedAt: _updatedAt,
+            deletedAt: _deletedAt,
+            ...rest
+        } = input;
+        return rest as AllOptional<Record<string, unknown>>;
+    }
+}
+
+export const userMapper = new UserMapper();

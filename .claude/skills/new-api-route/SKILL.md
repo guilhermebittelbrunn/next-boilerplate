@@ -28,7 +28,7 @@ Só se precisar normalizar (datas `Timestamp`→ISO, opcionais). Estenda `Mapper
 - `toDTO`: monta o DTO a partir do row; use `stringIfExists` e `normalizeFirestoreInstant` de `@repo/shared/utils`.
 - `toPersistence`: copia só as chaves definidas (`AllOptional<XDTO>`).
 - Exporte uma instância única (`xMapper`).
-Recursos sem normalização podem dispensar mapper (ver `user.repository`).
+Recursos sem normalização podem dispensar mapper (ver `organization.repository`).
 
 ### 4. Repositório (`apps/api/(shared)/repositories/<recurso>.repository.ts`)
 Estenda `BaseRepository<XDTO>` e, **se houver mapper**, passe-o no `super`: `super(db, "<coleção>", xMapper)`. `BaseRepository` já dá `findById`/`create`/`update`/`delete` (soft delete via `deletedAt`). Adicione queries específicas (ex.: `listByOrganization`, sobre o helper privado `inOrganization`) seguindo `entity.repository.ts`. Exporte instância única (`xRepository`).

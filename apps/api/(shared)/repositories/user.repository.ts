@@ -24,6 +24,7 @@ import {
 import {
     mergeAuthAndFirestore,
     serializeFirestoreData,
+    userMapper,
 } from "../mappers/user.mapper";
 import { BaseRepository } from "./base.repository";
 
@@ -43,7 +44,7 @@ function stringOrNull(value: unknown): string | null {
 
 class UserRepository extends BaseRepository<UserDTO> {
     constructor() {
-        super(db, "user");
+        super(db, "user", userMapper);
     }
 
     async findByReferenceId(referenceId: string): Promise<UserDTO | null> {
@@ -57,10 +58,8 @@ class UserRepository extends BaseRepository<UserDTO> {
             return null;
         }
 
-        return {
-            ...(querySnapshot.docs[0].data() as UserDTO),
-            id: querySnapshot.docs[0].id,
-        };
+        const [first] = querySnapshot.docs;
+        return this.toDTO(first.id, first.data());
     }
 
     /**
@@ -94,7 +93,7 @@ class UserRepository extends BaseRepository<UserDTO> {
             (docSnap) => docSnap.data().deletedAt == null
         );
 
-        return live ? { ...(live.data() as UserDTO), id: live.id } : null;
+        return live ? this.toDTO(live.id, live.data()) : null;
     }
 
     async linkStripeCustomer(id: string, customerId: string): Promise<void> {

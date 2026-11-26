@@ -17,9 +17,9 @@ import {
     statusForAuthErrorCode,
 } from "@/(shared)/lib/toolkit-error-codes";
 import { parseChangePassword } from "@/(shared)/validation/account.schema";
-import { requireCommonPanelApi } from "@/app/(guards)/common-panel";
+import { requireOwnAccountApi } from "@/app/(guards)/common-panel";
 
-export const POST = requireCommonPanelApi(async (req, ctx) => {
+export const POST = requireOwnAccountApi(async (req, ctx) => {
     const parsedBody = await parseRequestJson(req);
     if (!parsedBody.ok) {
         return parsedBody.response;
