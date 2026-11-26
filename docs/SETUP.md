@@ -210,11 +210,12 @@ gitleaks git --redact --no-banner --pre-commit --staged .            # o que est
 gitleaks git --redact --no-banner --pre-commit .                     # o que mudou fora do índice
 ```
 
-Não há allowlist (`.gitleaks.toml`): com a configuração padrão, nenhum fixture do repositório dispara. Se
-aparecer um falso positivo, marque a linha com o comentário `gitleaks:allow` ou ponha a impressão digital
-do achado (o campo `Fingerprint` da saída com `--verbose`) num `.gitleaksignore` na raiz. Os dois são lidos pelo binário
-sem configuração. Um segredo de verdade não se resolve assim: revogue a chave no provedor e reescreva a
-branch antes do merge.
+Não há allowlist (`.gitleaks.toml`). Um único fixture dispara com a configuração padrão, o token fictício de
+`packages/auth/__tests__/serverErrorLogging.test.ts`, e a linha dele leva o comentário `gitleaks:allow`.
+Se aparecer outro falso positivo, use o mesmo comentário na linha. Um `.gitleaksignore` não serve para o
+job: no modo `git` a impressão digital inclui o SHA do commit, que muda no rebase e no squash do merge, e
+o próximo commit que tocar a linha gera outra. Um segredo de verdade não se resolve assim: revogue a chave
+no provedor e reescreva a branch antes do merge.
 
 ### Auditoria de dependências
 
