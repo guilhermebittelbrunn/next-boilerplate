@@ -806,6 +806,54 @@ describe("UserRepository.findByReferenceId", () => {
             userRepository.findByReferenceId("auth-uid-missing")
         ).resolves.toBeNull();
     });
+
+    it("hands back the stored instants as Date", async () => {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+
+        const profile = await userRepository.findByReferenceId("auth-uid-1");
+
+        expect(profile?.createdAt).toBeInstanceOf(Date);
+        expect(profile?.createdAt.toISOString()).toBe(CREATED_AT_ISO);
+        expect(profile?.updatedAt).toBeInstanceOf(Date);
+        expect(profile?.deletedAt).toBeNull();
+    });
+});
+
+describe("UserRepository.findById", () => {
+    it("hands back the stored instants as Date", async () => {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: null,
+        });
+
+        const profile = await userRepository.findById("p1");
+
+        expect(profile?.id).toBe("p1");
+        expect(profile?.createdAt).toBeInstanceOf(Date);
+        expect(profile?.createdAt.toISOString()).toBe(CREATED_AT_ISO);
+        expect(profile?.updatedAt).toBeInstanceOf(Date);
+    });
+
+    it("answers null for a soft-deleted profile", async () => {
+        fakeDb.seed("user", "p1", {
+            reference_id: "auth-uid-1",
+            type: "common",
+            createdAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            updatedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+            deletedAt: Timestamp.fromDate(new Date(CREATED_AT_ISO)),
+        });
+
+        await expect(userRepository.findById("p1")).resolves.toBeNull();
+    });
 });
 
 describe("UserRepository.list over the Firestore driver", () => {
@@ -883,7 +931,7 @@ describe("UserRepository.update and delete", () => {
         });
     }
 
-    it("keeps createdAt a Timestamp, since the repository has no mapper", async () => {
+    it("update writes only the given fields", async () => {
         seedProfile();
 
         await userRepository.update({ id: "p1", type: UserType.ADMIN });

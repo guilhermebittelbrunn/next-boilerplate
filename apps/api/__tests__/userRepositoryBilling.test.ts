@@ -1,4 +1,5 @@
 import type { SubscriptionState } from "@repo/sdk/src/types";
+import { Timestamp } from "firebase-admin/firestore";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -167,6 +168,40 @@ describe("userRepository.findByStripeCustomerId", () => {
         await expect(
             userRepository.findByStripeCustomerId("cus_unknown")
         ).resolves.toBeNull();
+    });
+
+    it("devolve os instantes gravados como Date", async () => {
+        const createdAt = new Date("2026-01-02T03:04:05.000Z");
+        docs.set("profile-1", {
+            stripeCustomerId: "cus_qa",
+            createdAt: Timestamp.fromDate(createdAt),
+            updatedAt: Timestamp.fromDate(createdAt),
+            deletedAt: null,
+            subscription: {
+                ...snapshot(),
+                lastEventAt: Timestamp.fromMillis(EVENT_MS),
+            },
+        });
+
+        const profile = await userRepository.findByStripeCustomerId("cus_qa");
+
+        expect(profile?.createdAt).toBeInstanceOf(Date);
+        expect(profile?.createdAt.getTime()).toBe(createdAt.getTime());
+        expect(profile?.updatedAt).toBeInstanceOf(Date);
+        expect(profile?.subscription?.lastEventAt).toBeInstanceOf(Date);
+        expect(profile?.subscription?.lastEventAt.getTime()).toBe(EVENT_MS);
+        expect(profile?.subscription?.currentPeriodEnd).toBeNull();
+    });
+
+    it("aceita o perfil sem o campo deletedAt e consulta só pelo cliente", async () => {
+        docs.set("profile-legacy", { stripeCustomerId: "cus_qa" });
+
+        const profile = await userRepository.findByStripeCustomerId("cus_qa");
+
+        expect(profile?.id).toBe("profile-legacy");
+        expect(whereCalls).toEqual([
+            { field: "stripeCustomerId", op: "==", value: "cus_qa" },
+        ]);
     });
 });
 
