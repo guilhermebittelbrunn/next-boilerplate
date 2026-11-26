@@ -110,6 +110,7 @@ export function AccountProfileForm({ account }: AccountProfileFormProps) {
                             <div className="col-span-1 md:col-span-2">
                                 {canUploadAvatar ? (
                                     <HookFormImageUpload
+                                        disabled={isImpersonating}
                                         label={
                                             accountProfile.avatarUpload.label
                                         }
