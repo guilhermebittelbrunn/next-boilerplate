@@ -60,7 +60,7 @@ vi.mock(
 
 vi.mock(
     "@/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountSessionsPanel",
-    () => ({ AccountSessionsPanel: () => null })
+    () => ({ AccountSessionsPanel: () => <div>sessions-panel</div> })
 );
 
 vi.mock("next/navigation", () => ({
@@ -403,5 +403,51 @@ describe("AccountSecurityForm — conta sem senha", () => {
         }) as HTMLButtonElement;
 
         expect(save.disabled).toBe(true);
+    });
+});
+
+describe("AccountSecurityForm — só a senha", () => {
+    const signInMethodsTitle = accountSecurity.signInMethods.title;
+
+    it("na conta comum mostra métodos de login, sessões e sair de todos", () => {
+        render(<AccountSecurityForm account={PASSWORD_ACCOUNT} />);
+
+        expect(screen.queryByText(signInMethodsTitle)).not.toBeNull();
+        expect(screen.queryByText("sessions-panel")).not.toBeNull();
+        expect(
+            screen.queryAllByText(accountSecurity.signOutEverywhere).length
+        ).toBeGreaterThan(0);
+    });
+
+    it("com passwordOnly não monta métodos de login, sessões nem sair de todos", () => {
+        const { container } = render(
+            <AccountSecurityForm account={PASSWORD_ACCOUNT} passwordOnly />
+        );
+
+        expect(screen.queryByText(signInMethodsTitle)).toBeNull();
+        expect(screen.queryByText("sessions-panel")).toBeNull();
+        expect(
+            screen.queryAllByText(accountSecurity.signOutEverywhere)
+        ).toHaveLength(0);
+        expect(
+            container.querySelector('input[name="currentPassword"]')
+        ).not.toBeNull();
+        expect(
+            screen.getByRole("button", { name: accountSecurity.save })
+        ).toBeTruthy();
+    });
+
+    it("com passwordOnly e sem senha, mostra o formulário de definir senha", () => {
+        const { container } = render(
+            <AccountSecurityForm account={GOOGLE_ONLY_ACCOUNT} passwordOnly />
+        );
+
+        expect(
+            container.querySelector('input[name="currentPassword"]')
+        ).toBeNull();
+        expect(
+            container.querySelector('input[name="password"]')
+        ).not.toBeNull();
+        expect(screen.queryByText(signInMethodsTitle)).toBeNull();
     });
 });

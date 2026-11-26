@@ -29,9 +29,13 @@ import { AccountEmailChangeDialog } from "./AccountEmailChangeDialog";
 
 type AccountProfileFormProps = {
     account: AccountDTO | undefined;
+    allowEmailChange?: boolean;
 };
 
-export function AccountProfileForm({ account }: AccountProfileFormProps) {
+export function AccountProfileForm({
+    account,
+    allowEmailChange = true,
+}: AccountProfileFormProps) {
     const { dictionary } = getDictionary();
     const { isImpersonating } = useAuthRequestPanel();
     const accountProfile = dictionary.apps.app.pages.common.account.profile;
@@ -80,7 +84,7 @@ export function AccountProfileForm({ account }: AccountProfileFormProps) {
             >
                 <Form {...form}>
                     <form
-                        className="flex w-full flex-1 flex-col"
+                        className="flex w-full flex-col"
                         onSubmit={form.handleSubmit(onSubmit)}
                     >
                         <FormContainer>
@@ -160,7 +164,7 @@ export function AccountProfileForm({ account }: AccountProfileFormProps) {
                         readOnly
                         value={account?.email ?? ""}
                     />
-                    {canChangeEmail ? (
+                    {allowEmailChange && canChangeEmail ? (
                         <Button
                             className="self-start"
                             disabled={isImpersonating || !account}
@@ -171,19 +175,22 @@ export function AccountProfileForm({ account }: AccountProfileFormProps) {
                         >
                             {accountProfile.emailChange.action}
                         </Button>
-                    ) : (
+                    ) : null}
+                    {allowEmailChange && !canChangeEmail ? (
                         <p className="text-muted-foreground text-xs">
                             {accountProfile.emailChange.unsupported}
                         </p>
-                    )}
+                    ) : null}
                 </div>
             </SettingsSection>
-            <AccountEmailChangeDialog
-                currentEmail={account?.email ?? null}
-                onOpenChange={setEmailChangeOpen}
-                open={emailChangeOpen}
-                returnFocusRef={emailChangeTriggerRef}
-            />
+            {allowEmailChange ? (
+                <AccountEmailChangeDialog
+                    currentEmail={account?.email ?? null}
+                    onOpenChange={setEmailChangeOpen}
+                    open={emailChangeOpen}
+                    returnFocusRef={emailChangeTriggerRef}
+                />
+            ) : null}
         </>
     );
 }
