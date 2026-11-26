@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [app-internal-ux-polish]
 contends_on: [apps/api/app/(guards)/common-panel.ts, apps/app/shared/components/ui/ProfileDropdown.tsx, "apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx"]
 feature: -
-updated: 2026-11-24
+updated: 2026-11-25
 ---
 
 # Área de conta para o admin (perfil, senha e preferências)
@@ -19,7 +19,7 @@ updated: 2026-11-24
 > - **O quê:** uma área de conta para o admin trocar senha, avatar, tema e idioma sem sair do painel.
 > - **Por quê:** hoje "Minha conta" manda o admin para `/account`, o painel comum o devolve para `/admin`, e ele só troca a senha pelo "esqueci a senha".
 > - **Status:** `approved` · valor médio · esforço M · produto
-> - **Próximo passo:** `/analyze admin-own-account` (é a primeira da fila)
+> - **Próximo passo:** `/analyze admin-own-account`, depois de `app-form-layout-centered`: a área do admin reaproveita os formulários da conta que aquela spec ajusta
 
 ## Problema
 

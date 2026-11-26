@@ -6,18 +6,19 @@ A evidência por trás desta fila (conferência de entregas, gates, achados, der
 [registro de auditoria](reference/AUDIT.md).
 
 **Situação em 2026-11-25:** 3 `approved` · 2 `proposed` · 2 `in-progress` · 2 `deferred` · 37 entregues.
-Última auditoria: 2026-11-24, sobre `c58f2ef` (PR #74).
+Última auditoria: 2026-11-25, sobre `b7f9124` (PR #75).
 
 ## Ordem recomendada
 
-O que está aprovado e pronto para começar. Comece pela primeira; as três não disputam os mesmos arquivos, então
-podem rodar em paralelo, cada uma na sua branch.
+O que está aprovado e pronto para começar, com o mesmo valor nas três: a de esforço menor vem primeiro. As três não
+disputam arquivo declarado e podem rodar em paralelo, mas a #1 e a #2 mexem nos mesmos formulários da conta; rode as
+duas em série.
 
 | # | spec | o quê | valor · esforço | para começar |
 |---|------|-------|-----------------|--------------|
-| 1 | [`admin-own-account`](features/admin-own-account.md) | Área de conta para o admin trocar senha, avatar, tema e idioma | médio · M | `/analyze admin-own-account` |
-| 2 | [`app-form-layout-centered`](features/app-form-layout-centered.md) | Revisar as telas de formulário do app: centralizar e tirar o card esticado até o rodapé | médio · P | `/analyze app-form-layout-centered` |
-| 3 | [`audit-log-levels`](features/audit-log-levels.md) | Nível na trilha de auditoria (sensível × informativo), eventos informativos (cadastro, assinatura, cancelamento) e filtro por nível | médio · M | `/analyze audit-log-levels` |
+| 1 | [`app-form-layout-centered`](features/app-form-layout-centered.md) | Revisar as telas de formulário do app: centralizar e tirar o card esticado até o rodapé | médio · P | `/analyze app-form-layout-centered` |
+| 2 | [`admin-own-account`](features/admin-own-account.md) | Área de conta para o admin trocar senha, avatar, tema e idioma | médio · M | implementada no working tree da branch, aguardando commit/merge |
+| 3 | [`audit-log-levels`](features/audit-log-levels.md) | Nível na trilha de auditoria (sensível × informativo), eventos informativos (cadastro, assinatura, cancelamento) e filtro por nível | médio · M | responder as perguntas 2, 3 e 4 da spec; depois `/analyze audit-log-levels` |
 
 ## Aguardando triagem
 
@@ -46,23 +47,40 @@ Começadas, com parte entregue, e paradas esperando uma decisão sua.
 
 ## Tarefas diretas
 
-Correções pequenas que não precisam de spec. As próximas da fila; a lista completa, com a evidência de cada uma,
-está em [Tarefas diretas candidatas](reference/AUDIT.md#tarefas-diretas-candidatas).
+Correções pequenas que não precisam de spec. A lista completa, com a evidência de cada uma, está em
+[Tarefas diretas candidatas](reference/AUDIT.md#tarefas-diretas-candidatas).
 
-1. Marcar o JWT fictício `LEAKY_TOKEN` como falso positivo do Gitleaks, para o job `secrets` do CI voltar ao verde.
-2. Consertar o `pnpm --filter email build`, quebrado pelo `motion-dom` (pode se resolver com o merge da PR #68 do
+**Resolvidas no working tree da branch, aguardando commit/merge** (saem da fila no `--sync` depois do merge):
+
+1. O teste E2E de foco que reprova na `main` desde a PR #75.
+2. A suíte da `app` que cai por tempo em máquina carregada (mitigada; o sintoma não se reproduziu para provar a correção).
+3. O JWT fictício `LEAKY_TOKEN` marcado como falso positivo do Gitleaks.
+4. O `ignore` de versão maior do `stripe` no `.github/dependabot.yml` (falta confirmar se ele bloqueia também as
+   atualizações de segurança).
+5. Os chamadores que engoliam a falha da revogação de sessão, mais seis correções pequenas (avatar sob personificação,
+   textos do Google em inglês, notificação apagada, pré-condição do E2E, `AGENTS.md` do `next dev`, variáveis da Stripe
+   fora de `app` e `web`). Lista completa no registro de auditoria.
+
+**A fazer:**
+
+1. Fazer o CSS do antd sair no HTML do servidor: hoje toda tela com antd pula de layout na primeira carga. Depende da
+   D24 (dependência nova).
+2. Estabilizar a suíte do design system sob carga e ligar a limpeza automática do Testing Library na `app`.
+3. Consertar o `pnpm --filter email build`, quebrado pelo `motion-dom` (pode se resolver com o merge da PR #68 do
    Dependabot).
-3. Acrescentar ao `.github/dependabot.yml` um `ignore` de versão maior do `stripe`.
 4. Corrigir o que deixa vermelhas as PRs #66, #67 e #70 do Dependabot, uma tarefa por PR.
-5. Fazer os quatro chamadores que ainda engolem a falha da revogação de sessão responderem erro.
+5. A corrida do `markAllReadByUserId` e o aviso de erro para notificação expirada.
 
 ## Precisam de decisão
 
 | # | pergunta | recomendação |
 |---|----------|--------------|
+| D23 | Pôr `app-form-layout-centered` à frente de `admin-own-account` na fila? | sim: mesmo valor, esforço menor, e a área do admin reaproveita os formulários que ela ajusta |
+| D24 | Adotar o `@ant-design/nextjs-registry` para o CSS do antd sair no HTML do servidor? | sim, medindo o salto de layout antes e depois |
+| D25 | Dar ao admin uma ação para repetir só a revogação de sessões de uma conta desativada? | sim, como tarefa direta pequena |
 | E12 | O que fazer com o segundo fator de `account-security-mfa`? | fechar a spec como entregue e abrir uma só do segundo fator |
 | E1 | Fechar `observability-logging` e abrir uma spec pequena só do coletor de erros? | sim |
-| E3 | Ligar branch protection na `main`, exigindo `verify`, `e2e`, `secrets` e `audit` | sim; é configuração sua no GitHub |
+| E3 | Ligar branch protection na `main`, exigindo `verify`, `e2e`, `secrets` e `audit` | sim; é configuração sua no GitHub. As PRs #74 e #75 entraram com um check vermelho |
 | D9 | Na compra avulsa, o estorno feito na Stripe retira o acesso? | sim, quando `one-time-purchase` voltar da fila |
 
 As demais decisões estacionadas estão em [Decisões estacionadas](reference/AUDIT.md#decisões-estacionadas-51).
