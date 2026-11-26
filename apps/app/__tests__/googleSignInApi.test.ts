@@ -147,6 +147,50 @@ describe("signInWithGoogleViaApi", () => {
         expect(setAuthorizationHeaderMock).not.toHaveBeenCalled();
     });
 
+    it.each(["pt-br", "en", "es"])(
+        "signs the popup user out with the %s copy when the popup returns no Google ID token",
+        async (locale) => {
+            setCookie("x-locale", locale, ONE_HOUR_IN_SECONDS);
+            credentialFromResultMock.mockReturnValue(null);
+
+            await expect(signInWithGoogleViaApi()).rejects.toThrow(
+                getDictionaryForLocale(locale).dictionary.packages.auth.provider
+                    .session.notEstablished
+            );
+            expect(signInWithGoogleMock).not.toHaveBeenCalled();
+            expect(signOutMock).toHaveBeenCalledTimes(1);
+            expect(signOutMock).toHaveBeenCalledWith(authClient);
+        }
+    );
+
+    it.each(["pt-br", "en", "es"])(
+        "signs the popup user out with the %s copy when the API answers without a session token",
+        async (locale) => {
+            setCookie("x-locale", locale, ONE_HOUR_IN_SECONDS);
+            signInWithGoogleMock.mockResolvedValue({ session: {}, user: null });
+
+            await expect(signInWithGoogleViaApi()).rejects.toThrow(
+                getDictionaryForLocale(locale).dictionary.packages.auth.provider
+                    .session.notEstablished
+            );
+            expect(fetchMock).not.toHaveBeenCalled();
+            expect(setAuthorizationHeaderMock).not.toHaveBeenCalled();
+            expect(signOutMock).toHaveBeenCalledTimes(1);
+            expect(signOutMock).toHaveBeenCalledWith(authClient);
+        }
+    );
+
+    it("keeps the translated copy when signing out fails after an API answer without a session token", async () => {
+        setCookie("x-locale", "es", ONE_HOUR_IN_SECONDS);
+        signInWithGoogleMock.mockResolvedValue({ session: {}, user: null });
+        signOutMock.mockRejectedValue(new Error("sign-out failed"));
+
+        await expect(signInWithGoogleViaApi()).rejects.toThrow(
+            getDictionaryForLocale("es").dictionary.packages.auth.provider
+                .session.notEstablished
+        );
+    });
+
     it("surfaces the API refusal even when signing out fails", async () => {
         const refusal = new Error("Request failed");
         signInWithGoogleMock.mockRejectedValue(refusal);
