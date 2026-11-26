@@ -41,7 +41,8 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
 
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ updateUser: updateUserMock }),
-    revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
 }));
 
 vi.mock("@repo/shared/utils/helpers/log", () => ({
@@ -398,6 +399,64 @@ describe("DELETE /account/sign-in-methods/[id]", () => {
 
         expect(printedLines).toEqual([
             `[account] password-unlink-email-restore-failed uid=${OWNER_UID} requestId=${REQUEST_ID} reason=auth/internal-error attempts=${ADDRESS_RESTORE_ATTEMPTS}`,
+        ]);
+    });
+
+    it("responde 500 AUTH_SESSIONS_NOT_REVOKED quando o e-mail volta mas a revogação é recusada", async () => {
+        revokeUserSessionsMock.mockRejectedValue({
+            code: "auth/internal-error",
+            message: `${OWNER_EMAIL} is unavailable`,
+        });
+
+        const response = await unlinkMethod(
+            deleteRequest(OWNER_HEADERS_WITH_REQUEST_ID),
+            idContext("password")
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("AUTH_SESSIONS_NOT_REVOKED");
+        expect(updateUserMock.mock.calls).toEqual([
+            [OWNER_UID, { providersToUnlink: ["password"] }],
+            [OWNER_UID, { email: OWNER_EMAIL, emailVerified: true }],
+        ]);
+        expect(recordAuditEventMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                changedFields: ["password"],
+                requestId: REQUEST_ID,
+            })
+        );
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(OWNER_UID);
+        expect(logEventMock.mock.calls).toEqual([
+            [
+                "auth",
+                "session-revoke-failed",
+                { requestId: REQUEST_ID, code: "auth/internal-error" },
+            ],
+        ]);
+        expect(JSON.stringify(logEventMock.mock.calls)).not.toContain(
+            OWNER_EMAIL
+        );
+    });
+
+    it("mantém 500 ACCOUNT_UPDATE_FAILED quando a devolução do e-mail e a revogação falham", async () => {
+        failEveryAddressRestore();
+        revokeUserSessionsMock.mockRejectedValue({
+            code: "auth/internal-error",
+        });
+
+        const response = await unlinkMethod(
+            deleteRequest(OWNER_HEADERS_WITH_REQUEST_ID),
+            idContext("password")
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("ACCOUNT_UPDATE_FAILED");
+        expect(revokeUserSessionsMock).toHaveBeenCalledWith(OWNER_UID);
+        expect(
+            logEventMock.mock.calls.map(([scope, event]) => [scope, event])
+        ).toEqual([
+            ["auth", "session-revoke-failed"],
+            ["account", "password-unlink-email-restore-failed"],
         ]);
     });
 
