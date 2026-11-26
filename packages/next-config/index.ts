@@ -2,6 +2,7 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
 
 export const config: NextConfig = {
+    agentRules: false,
     poweredByHeader: false,
     images: {
         formats: ["image/avif", "image/webp"],
