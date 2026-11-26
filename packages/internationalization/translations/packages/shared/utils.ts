@@ -33,6 +33,8 @@ export const sharedUtilsTranslations = {
                 "Não foi possível cancelar a assinatura deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
             USERS_DELETE_AUTH_FAILED:
                 "Não foi possível bloquear o acesso deste usuário, então ele não foi arquivado. Tente de novo em instantes.",
+            USERS_SESSIONS_NOT_REVOKED:
+                "O usuário foi desativado, mas não conseguimos encerrar as sessões abertas dele. Enquanto a conta continuar desativada, ele não consegue entrar.",
             USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
                 "Este usuário é dono de uma equipe que ainda tem membros, então ele não foi arquivado. Antes, ele precisa transferir a propriedade a um dos membros, ou os membros precisam sair ou ser removidos.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
@@ -217,6 +219,8 @@ export const sharedUtilsTranslations = {
                 "We couldn't cancel this user's subscription, so they were not archived. Try again in a moment.",
             USERS_DELETE_AUTH_FAILED:
                 "We couldn't block this user's access, so they were not archived. Try again in a moment.",
+            USERS_SESSIONS_NOT_REVOKED:
+                "The user was disabled, but we couldn't end their open sessions. While the account stays disabled, they can't sign in.",
             USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
                 "This user owns a team that still has members, so they were not archived. First they must hand ownership to one of the members, or the members must leave or be removed.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
@@ -402,6 +406,8 @@ export const sharedUtilsTranslations = {
                 "No pudimos cancelar la suscripción de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
             USERS_DELETE_AUTH_FAILED:
                 "No pudimos bloquear el acceso de este usuario, así que no se archivó. Inténtalo de nuevo en unos instantes.",
+            USERS_SESSIONS_NOT_REVOKED:
+                "El usuario fue desactivado, pero no pudimos cerrar sus sesiones abiertas. Mientras la cuenta siga desactivada, no puede iniciar sesión.",
             USERS_DELETE_ORGANIZATION_HAS_MEMBERS:
                 "Este usuario es dueño de un equipo que todavía tiene miembros, así que no se archivó. Antes, debe transferir la propiedad a uno de los miembros, o los miembros deben salir o ser quitados del equipo.",
             USERS_SELF_LOCKOUT_FORBIDDEN:
