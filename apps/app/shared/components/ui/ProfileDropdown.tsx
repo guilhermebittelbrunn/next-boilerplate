@@ -23,7 +23,13 @@ import { useMyAccount } from "@/shared/hooks/useMyAccount";
 import { contactPageUrl } from "@/shared/lib/contactPageUrl";
 import { withLocalePath } from "@/shared/lib/localePath";
 
-export default function ProfileDropdown() {
+type ProfileDropdownProps = {
+    accountPath?: string;
+};
+
+export default function ProfileDropdown({
+    accountPath = "/account",
+}: ProfileDropdownProps) {
     const { user, signOut } = useAuth();
     const { dictionary, locale } = getDictionary();
     const { data: account } = useMyAccount();
@@ -64,7 +70,7 @@ export default function ProfileDropdown() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
-                        <Link href={withLocalePath(locale, "/account")}>
+                        <Link href={withLocalePath(locale, accountPath)}>
                             <UserIcon className="text-muted-foreground" />
                             <span>{profileDropdown.myAccount}</span>
                         </Link>
