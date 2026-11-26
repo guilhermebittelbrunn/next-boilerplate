@@ -67,14 +67,16 @@ export class BaseRepository<DTO> {
         id: string,
         raw: Record<string, unknown>
     ): FirestoreDocumentRow {
-        return { id, ...raw };
+        // The document id is the record's identity (ownership checks key on it), so a stray
+        // `id` field stored in the body must never override it.
+        return { ...raw, id };
     }
 
     protected toDTO(id: string, raw: Record<string, unknown>): DTO {
         if (this.rowMapper) {
             return this.rowMapper.toDTO(this.toEntity(id, raw));
         }
-        return { id, ...(raw as DTO) };
+        return { ...(raw as DTO), id };
     }
 
     /** Reads the whole collection. Prefer `paginate` for anything a user can grow. */
@@ -179,8 +181,8 @@ export class BaseRepository<DTO> {
         const docRef = await this.db.collection(this.table).add(dataToCreate);
 
         const created = {
-            id: docRef.id,
             ...dataToCreate,
+            id: docRef.id,
         } as DTO;
 
         if (this.rowMapper) {
