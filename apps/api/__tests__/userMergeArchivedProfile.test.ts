@@ -37,7 +37,8 @@ vi.mock("@repo/auth/server", () => ({
         updateUser: (...args: unknown[]) => updateUserMock(...args),
     }),
     getCurrentUser: (...args: unknown[]) => getCurrentUserMock(...args),
-    revokeUserSessions: (...args: unknown[]) => revokeUserSessionsMock(...args),
+    revokeUserSessionsOrThrow: (...args: unknown[]) =>
+        revokeUserSessionsMock(...args),
 }));
 
 vi.mock("@/(shared)/repositories/user.repository", () => ({
@@ -164,6 +165,27 @@ describe("getMergedUserByUid never recreates an archived profile", () => {
         expect(JSON.stringify(logEventMock.mock.calls)).not.toContain(
             "provider-detail"
         );
+    });
+
+    it("returns null and logs the lockout failure when the session revocation is refused", async () => {
+        hasArchivedProfileMock.mockResolvedValue(true);
+        revokeUserSessionsMock.mockRejectedValue({
+            code: "auth/internal-error",
+            message: "provider-detail",
+        });
+
+        const merged = await getMergedUserByUid(UID);
+
+        expect(merged).toBeNull();
+        expect(createMock).not.toHaveBeenCalled();
+        expect(updateUserMock).toHaveBeenCalledWith(UID, { disabled: true });
+        expect(logEventMock.mock.calls).toEqual([
+            [
+                "auth",
+                "archived-account-lockout-failed",
+                { reason: "auth/internal-error" },
+            ],
+        ]);
     });
 
     it("returns null without reading Firestore when the Auth account does not exist", async () => {

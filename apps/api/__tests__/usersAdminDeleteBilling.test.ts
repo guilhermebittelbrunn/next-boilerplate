@@ -65,7 +65,7 @@ vi.mock("@/(shared)/lib/user-merge", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: () => ({ updateUser: vi.fn() }),
     getCurrentUser: vi.fn(),
-    revokeUserSessions: vi.fn(),
+    revokeUserSessionsOrThrow: vi.fn(),
 }));
 
 vi.mock("@repo/payments", () => ({

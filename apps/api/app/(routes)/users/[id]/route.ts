@@ -1,4 +1,4 @@
-import { getAuthInstance, revokeUserSessions } from "@repo/auth/server";
+import { getAuthInstance } from "@repo/auth/server";
 import { getStripe } from "@repo/payments";
 import {
     AuditAction,
@@ -20,6 +20,10 @@ import {
     type RouteIdParamsContext,
     resolveIdFromContext,
 } from "@/(shared)/lib/resolve-route-id";
+import {
+    revokeSessionsOrReport,
+    sessionsNotRevokedResponse,
+} from "@/(shared)/lib/session-revocation";
 import { adminAuthErrorReason } from "@/(shared)/lib/toolkit-error-codes";
 import {
     getMergedUserByFirestoreDocId,
@@ -151,9 +155,9 @@ export const PUT = requireAdminApi<RouteIdParamsContext>(async (req, ctx) => {
         await getAuthInstance().updateUser(profile.reference_id, authUpdate);
     }
 
-    if (parsed.value.disabled === true) {
-        await revokeUserSessions(profile.reference_id);
-    }
+    const sessionsRevoked =
+        parsed.value.disabled !== true ||
+        (await revokeSessionsOrReport(profile.reference_id, req));
 
     await recordAuditEvent({
         action: AuditAction.USER_UPDATE,
@@ -166,6 +170,12 @@ export const PUT = requireAdminApi<RouteIdParamsContext>(async (req, ctx) => {
         changedFields: changedFieldsOf(parsed.value),
         requestId: requestIdFrom(req),
     });
+
+    // The account is already disabled, so it cannot sign in; reverting it would only
+    // bring the open sessions back.
+    if (!sessionsRevoked) {
+        return sessionsNotRevokedResponse("USERS_SESSIONS_NOT_REVOKED");
+    }
 
     const merged = await getMergedUserByFirestoreDocId(id);
 

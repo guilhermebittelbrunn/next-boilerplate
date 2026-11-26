@@ -17,7 +17,7 @@ vi.mock("@/(shared)/lib/organization-membership", () => ({
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: vi.fn(),
     getCurrentUser: vi.fn(),
-    revokeUserSessions: vi.fn(),
+    revokeUserSessionsOrThrow: vi.fn(),
 }));
 
 vi.mock("@/(shared)/repositories/user.repository", () => ({
