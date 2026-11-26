@@ -223,7 +223,7 @@ describe("POST /auth/email-change/confirm", () => {
         expect(logEventMock).toHaveBeenCalledWith(
             "auth",
             "session-revoke-failed",
-            { requestId: REQUEST_ID }
+            { requestId: REQUEST_ID, reason: "Error" }
         );
     });
 
