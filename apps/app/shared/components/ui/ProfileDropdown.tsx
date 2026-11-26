@@ -35,7 +35,7 @@ export default function ProfileDropdown() {
     // avatar reference and keeps a stale display name until the token refreshes.
     const displayName = account?.displayName ?? user?.displayName ?? null;
     const email = account?.email ?? user?.email ?? null;
-    const avatarSrc = account?.avatarUrl ?? user?.photoURL ?? "";
+    const avatarSrc = account?.avatarUrl || user?.photoURL || null;
     const initials =
         displayName?.slice(0, 2) ?? email?.split("@")[0]?.slice(0, 2) ?? "";
 
@@ -44,7 +44,9 @@ export default function ProfileDropdown() {
             <DropdownMenuTrigger aria-label={profileDropdown.triggerLabel}>
                 <div className="flex w-full max-w-56 items-center gap-3 truncate">
                     <Avatar className="h-9 w-9">
-                        <AvatarImage alt="" src={avatarSrc} />
+                        {avatarSrc ? (
+                            <AvatarImage alt="" src={avatarSrc} />
+                        ) : null}
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <span className="hidden truncate md:inline">
