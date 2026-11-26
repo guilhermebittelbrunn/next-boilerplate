@@ -200,11 +200,14 @@ apontada pelo secret scanning do GitHub, e uma varredura completa reprovaria o p
 Para subir de versão, troque `GITLEAKS_VERSION` e `GITLEAKS_SHA256` juntos, com o valor do arquivo
 `gitleaks_<versão>_checksums.txt` do release. O Dependabot não enxerga esse download.
 
-Para rodar localmente antes de abrir a PR, com o binário numa pasta temporária fora do repositório:
+Para rodar localmente antes de abrir a PR, com o binário numa pasta temporária fora do repositório. Os três
+comandos usam o modo `git` do job, que só analisa linhas adicionadas; arquivo novo só aparece no diff depois
+de `git add` (ou `git add -N`):
 
 ```bash
 gitleaks git --redact --no-banner --log-opts="origin/main..HEAD" .   # commits da branch
-git diff origin/main | gitleaks stdin --redact --no-banner           # o que ainda não foi commitado
+gitleaks git --redact --no-banner --pre-commit --staged .            # o que está no índice
+gitleaks git --redact --no-banner --pre-commit .                     # o que mudou fora do índice
 ```
 
 Não há allowlist (`.gitleaks.toml`): com a configuração padrão, nenhum fixture do repositório dispara. Se
