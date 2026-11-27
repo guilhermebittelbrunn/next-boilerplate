@@ -128,7 +128,12 @@ describe("GET /audit-events", () => {
         await GET(listRequest());
 
         expect(listPageMock).toHaveBeenCalledWith(
-            { userId: undefined, from: undefined, to: undefined },
+            {
+                userId: undefined,
+                from: undefined,
+                to: undefined,
+                level: undefined,
+            },
             { limit: 20, cursorId: null }
         );
     });
@@ -143,9 +148,50 @@ describe("GET /audit-events", () => {
                 userId: "p2",
                 from: new Date("2026-09-01T00:00:00.000Z"),
                 to: new Date("2026-09-16T23:59:59.999Z"),
+                level: undefined,
             },
             { limit: 5, cursorId: null }
         );
+    });
+
+    it("passes the level through together with the user and the period", async () => {
+        await GET(
+            listRequest("?userId=p2&level=info&from=2026-09-01&to=2026-09-16")
+        );
+
+        expect(listPageMock).toHaveBeenCalledWith(
+            {
+                userId: "p2",
+                from: new Date("2026-09-01T00:00:00.000Z"),
+                to: new Date("2026-09-16T23:59:59.999Z"),
+                level: "info",
+            },
+            { limit: 20, cursorId: null }
+        );
+    });
+
+    it("refuses a level outside the enum before reaching the repository", async () => {
+        const response = await GET(listRequest("?level=critical"));
+
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(await errorCode(response)).toBe("VALIDATION_FAILED");
+        expect(listPageMock).not.toHaveBeenCalled();
+    });
+
+    it("degrades the level filter to 503, never 500, while its index is missing", async () => {
+        listPageMock.mockRejectedValue(
+            Object.assign(
+                new Error(
+                    "9 FAILED_PRECONDITION: The query requires an index. You can create it here: https://console.firebase.google.com/..."
+                ),
+                { code: 9 }
+            )
+        );
+
+        const response = await GET(listRequest("?level=sensitive&userId=p2"));
+
+        expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
+        expect(await errorCode(response)).toBe("PAGINATION_INDEX_MISSING");
     });
 
     it("hands back an opaque cursor when another page exists", async () => {

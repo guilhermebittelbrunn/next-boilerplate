@@ -108,6 +108,26 @@ describe("firestore.indexes.json", () => {
         });
     });
 
+    it("declares the indexes the audit trail's level filter needs, alone and with the user", () => {
+        expect(indexes).toContainEqual({
+            collectionGroup: "auditEvent",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "level", order: "ASCENDING" },
+                { fieldPath: "createdAt", order: "DESCENDING" },
+            ],
+        });
+        expect(indexes).toContainEqual({
+            collectionGroup: "auditEvent",
+            queryScope: "COLLECTION",
+            fields: [
+                { fieldPath: "involvedUserIds", arrayConfig: "CONTAINS" },
+                { fieldPath: "level", order: "ASCENDING" },
+                { fieldPath: "createdAt", order: "DESCENDING" },
+            ],
+        });
+    });
+
     it("declares the indexes the notification list and unread count need", () => {
         expect(indexes).toContainEqual({
             collectionGroup: "notification",

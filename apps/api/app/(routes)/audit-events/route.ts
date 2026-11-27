@@ -13,11 +13,11 @@ export const GET = requireAdminApi(async (req) => {
         return parsed.response;
     }
 
-    const { limit, cursorId, userId, from, to } = parsed.value;
+    const { limit, cursorId, userId, from, to, level } = parsed.value;
 
     try {
         const page = await auditEventRepository.listPage(
-            { userId, from, to },
+            { userId, from, to, level },
             { limit, cursorId }
         );
 
