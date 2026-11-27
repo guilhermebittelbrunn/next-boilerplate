@@ -54,7 +54,7 @@ responsabilidade da revisão e do deploy da Vercel.
       usados entre edições. Adicione o uso antes (ou junto) do import.
 - [ ] Se a tarefa nasceu de uma spec (`spec: <id>` no `STATE.md`): o que foi implementado **corresponde ao
       corte de MVP** de `specs/features/<id>.md`. Divergência não é erro, mas tem de ser **registrada** no
-      `review.md` — ou a spec estava errada, ou a implementação desviou. Fechar a spec é do `/spec --sync`.
+      `review.md` — ou a spec estava errada, ou a implementação desviou. Fechar a spec é do `/spec --close`, depois do `/test`, na mesma branch.
 
 ## 1. `apps/api`
 

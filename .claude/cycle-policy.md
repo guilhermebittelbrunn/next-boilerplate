@@ -152,6 +152,9 @@ outras duas.
 
 - **Só um workspace roda a auditoria.** Os demais usam `--no-audit`, senão o `BACKLOG.md` é reescrito por
   vários agents ao mesmo tempo.
+- **Fechar a spec não é auditoria.** Cada workspace fecha a própria spec na própria branch (`/spec --close`),
+  mesmo com `--no-audit`: o fechamento edita só as linhas daquela spec no `BACKLOG.md`, então o conflito
+  entre PRs fica restrito a linhas vizinhas da tabela.
 - **Lote máximo de 3 specs.** Acima disso o custo em tokens e a revisão humana no dia seguinte deixam de
   compensar.
 - **Lote só com `contends_on` disjunto.** `depends_on` vazio não basta — ele modela ordem, não contenção.

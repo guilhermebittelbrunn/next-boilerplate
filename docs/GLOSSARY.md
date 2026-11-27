@@ -98,7 +98,8 @@ exemplos de `entity`).
   mercado, corte de MVP e riscos. Responde **o quê** e **por quê**; o **como** é do `analyze/plan.md`. Uma
   spec não contém pseudo-diff nem nome de arquivo a criar. Ver [`specs/README.md`](../specs/README.md).
 - **Arquivar uma spec** — tirá-la de `specs/` e guardá-la junto da feature que a implementou, quando o
-  `/spec --sync` confirma a entrega **no código**. É o que mantém `specs/` significando "o que falta".
+  `/spec --close` (na branch da feature) ou o `/spec --sync` (a partir de `main`) confirma a entrega **no
+  código**. É o que mantém `specs/` significando "o que falta".
   Regra e exceções: [`specs/README.md`](../specs/README.md).
 - **Backlog** — `specs/BACKLOG.md`, a fila priorizada das specs em uma página. É a **fonte da ordem**; o
   arquivo da spec, em `specs/features/<id>.md`, é a fonte do conteúdo. A evidência de cada auditoria (achados,

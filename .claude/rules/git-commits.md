@@ -75,9 +75,10 @@ que devia ter só o contrato do SDK — levou o rename junto.
 
 ## Push
 
-**Push só com o "sim" do usuário, e no fim do `/review`:** depois de **todos** os commits aprovados, o
-orquestrador do `/review` **pergunta** se deve sincronizar (`git push -u origin <branch>`). Fora disso,
-nunca faça `git push`. Nunca pushe para branch protegida, nunca use `--force`, nunca abra PR por conta
+**Push só com o "sim" do usuário, e no fim do `/review` ou do `/spec --close`:** depois de **todos** os
+commits aprovados, o orquestrador do `/review` **pergunta** se deve sincronizar
+(`git push -u origin <branch>`). O `/spec --close` faz a mesma pergunta depois do commit
+`docs(specs): close <id>`, que fecha a spec na branch da feature. Fora desses dois, nunca faça `git push`. Nunca pushe para branch protegida, nunca use `--force`, nunca abra PR por conta
 própria.
 
 O hook `PreToolUse` `.claude/hooks/block-protected-branch-write.sh` bloqueia commit em branch protegida,

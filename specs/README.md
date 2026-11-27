@@ -31,9 +31,9 @@ precisa abrir essa pasta para acompanhar o backlog.
 ```
         ┌─────────────────────────── ciclo fechado ───────────────────────────┐
         │                                                                     │
-   /spec ──→ /analyze ──→ /develop ──→ /review ──→ /test ──→ /observe ────────┘
-  descobrir    planejar    implementar   revisar     QA      comunicar
-  e priorizar
+   /spec ──→ /analyze ──→ /develop ──→ /review ──→ /test ──→ /spec --close ──┘
+  descobrir    planejar    implementar   revisar     QA      fecha a spec
+  e priorizar                                                na mesma branch
   (specs/)   (docs/features/<slug>/ ......................................)
 ```
 
@@ -42,11 +42,14 @@ precisa abrir essa pasta para acompanhar o backlog.
    O plano técnico nasce da spec, e o `STATE.md` da feature aponta de volta para ela.
 3. O pipeline segue normalmente (`/develop → /review → /test`). **A spec fica aqui o tempo todo**, com
    status `in-progress`: enquanto não estiver entregue, ela é backlog.
-4. **`/spec --sync`** reconcilia o backlog com o código. O que foi entregue vira `done` **e é movido** para
-   `docs/features/<slug>/spec.md`; o que o mercado tornou irrelevante vira `rejected`/`superseded`. O ciclo
-   recomeça com o backlog já limpo.
+4. **`/spec --close`**, ainda na branch da feature, confere o corte daquela spec no código, grava a
+   "Conferência da entrega" no arquivo dela, marca `done` e **move** para `docs/features/<slug>/spec.md`.
+   O `BACKLOG.md` muda na mesma PR, então depois do merge a próxima branch já encontra a fila atualizada.
+5. **`/spec --sync`**, depois do merge e a partir de `main`, reconcilia o backlog inteiro com o código:
+   confirma que as specs fechadas entraram com CI verde, arquiva alguma entregue que ninguém fechou e marca
+   `rejected`/`superseded` o que o mercado tornou irrelevante.
 
-O que faz disso um *loop* e não uma lista de desejos é o passo 4: **o backlog é auditado contra a
+O que faz disso um *loop* e não uma lista de desejos são os passos 4 e 5: **o backlog é auditado contra a
 realidade do código**, não mantido à mão. E como a spec entregue **sai da pasta**, `specs/` não acumula —
 o tamanho dela é a medida do que falta.
 
@@ -58,10 +61,11 @@ specs/features/<id>.md                 docs/features/<slug>/
 ├── approved    (você triou)                 │
 ├── in-progress (/analyze <id> …             │
 │               … /develop /review /test)    │
-└── done ──────── /spec --sync move ────────→ spec.md   ← junto do plano, handoff, review e testes
+└── done ──────── /spec --close move ───────→ spec.md   ← junto do plano, handoff, review e testes
 ```
 
-**Quem move:** o `/spec --sync`, e **só depois de confirmar no código** que o corte de MVP foi entregue.
+**Quem move:** o `/spec --close`, na branch da feature, depois do `/test`. O `/spec --sync` move só o que
+ficou sem fechar. Nos dois casos, **só depois de confirmar no código** que o corte de MVP foi entregue.
 Nunca mova à mão e nunca mova por acreditar no `status` gravado — é justamente essa verificação que
 sustenta o loop.
 
@@ -135,7 +139,7 @@ updated: 2026-08-21
 | `proposed` | descoberta pelo `/spec`, ainda não validada por você | `specs/features/` | `/spec` |
 | `approved` | você aprovou; está na fila para virar tarefa | `specs/features/` | você (via `/spec`) |
 | `in-progress` | tem uma feature em `docs/features/` em andamento | `specs/features/` | `/analyze <id>` |
-| `done` | entregue e **confirmada no código** | **`docs/features/<slug>/spec.md`** | `/spec --sync` |
+| `done` | entregue e **confirmada no código** | **`docs/features/<slug>/spec.md`** | `/spec --close` (ou `/spec --sync`) |
 | `deferred` | vale, mas não agora (motivo obrigatório) | `specs/features/` | você |
 | `rejected` | não vai acontecer (motivo obrigatório) | `specs/features/` | você |
 | `superseded` | absorvida por outra spec (aponte qual) | `specs/features/` | `/spec` |
@@ -219,7 +223,8 @@ nota é revalidada, todas as specs que dependem dela sabem disso.
 /spec --next          # recomenda a próxima spec a atacar, com justificativa
 /analyze <id>         # transforma a spec em plano técnico (o nome da spec é o argumento padrão)
 /develop → /review → /test
-/spec --sync          # confirma a entrega no código, fecha a spec e a move para a feature
+/spec --close         # na branch da feature: confirma a entrega no código, fecha a spec e a move para a feature
+/spec --sync          # depois do merge, a partir de main: confirma o merge e audita o backlog inteiro
 ```
 
 Detalhes do pipeline: [`docs/TASK-PIPELINE.md`](../docs/TASK-PIPELINE.md). Ferramental:

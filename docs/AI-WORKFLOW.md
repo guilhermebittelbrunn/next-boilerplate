@@ -5,8 +5,8 @@ quando usar cada coisa. O objetivo é que cada fork já nasça com uma base sól
 assistido por IA.
 
 > **Vai executar uma tarefa?** O fluxo de trabalho (`/spec → /analyze → /develop → /review → /test`,
-> fechando com `/spec --sync`) está em [`TASK-PIPELINE.md`](TASK-PIPELINE.md). Este documento cobre o
-> **ferramental**.
+> fechando com `/spec --close` na própria branch da feature) está em [`TASK-PIPELINE.md`](TASK-PIPELINE.md).
+> Este documento cobre o **ferramental**.
 
 ## O que está configurado
 
@@ -17,7 +17,7 @@ assistido por IA.
 | Regras por escopo | `apps/*/CLAUDE.md`, `packages/CLAUDE.md` | `CLAUDE.md` aninhados, **auto-carregados** ao trabalhar em cada pasta. |
 | Regras globais de conduta | `.claude/rules/*.md` | Sempre em contexto: commits/branches e comentários no código. |
 | Pipeline de tarefas | [`TASK-PIPELINE.md`](TASK-PIPELINE.md) | Comandos, subagents, `STATE.md`, gates, épicos. |
-| Backlog de funcionalidades | [`specs/`](../specs/README.md) | O que **ainda falta** no core, com evidência de mercado e status auditado contra o código. Entrada do ciclo — a spec entregue **sai daqui** e é arquivada em `docs/features/<slug>/spec.md`. |
+| Backlog de funcionalidades | [`specs/`](../specs/README.md) | O que **ainda falta** no core, com evidência de mercado e status auditado contra o código. Entrada do ciclo — a spec entregue **sai daqui** na própria branch da feature (`/spec --close`) e é arquivada em `docs/features/<slug>/spec.md`. |
 | Roteiro de análise | [`feature-analysis-guide.md`](feature-analysis-guide.md) | Checklist de tech lead + formato dos critérios de aceite (§9.1). |
 | Checklist de revisão | [`review-checklist.md`](review-checklist.md) | **Fonte única** das invariantes que uma revisão cobra. |
 | Glossário | [`GLOSSARY.md`](GLOSSARY.md) | Vocabulário do boilerplate (guard, subject, DTO/mapper, slice, modo de produto…). |
@@ -220,7 +220,23 @@ Estes arquivos são carregados em toda sessão — por isso são curtos:
 ## Fluxo recomendado para uma feature
 
 Formal, com rastreio em disco → use o [pipeline](TASK-PIPELINE.md):
-`/spec → /analyze → /develop → /review → /test` (+ `/observe`), fechando com `/spec --sync`.
+`/spec → /analyze → /develop → /review → /test → /spec --close` (+ `/observe`).
+
+### Fechar a spec na branch da feature
+
+O `/spec --close` é a última etapa de toda feature que nasceu de uma spec, e roda **na mesma branch**,
+depois do `/test`. Ele confere no código o corte daquela spec, grava a seção "Conferência da entrega" no
+arquivo dela, move o arquivo para `docs/features/<slug>/spec.md` e atualiza só as linhas dela no
+`specs/BACKLOG.md`. O resultado é um commit `docs(specs): close <id>` que entra na PR junto com o código.
+
+Se o arquivamento esperasse o `/spec --sync` do começo da rodada seguinte, a próxima branch nasceria de uma
+`main` em que a spec entregue ainda aparece como pendente, e o primeiro trabalho da tarefa nova seria
+descobrir o que a anterior fez. Fechando na mesma branch, a PR mergeada já traz o backlog atualizado: a
+próxima branch só lê a próxima tarefa da fila.
+
+O `/spec --sync` continua existindo, com outro papel: roda a partir de `main` atualizada, confirma que a PR
+de cada spec fechada entrou com CI verde, audita o resto do backlog e arquiva o que alguém esqueceu de
+fechar. Se a PR não for mergeada, nada vaza: a `main` continua com a spec em `specs/`.
 
 Autônomo, quando você não vai acompanhar → **`/cycle`** (abaixo).
 
@@ -240,8 +256,8 @@ Informal, para mudanças pequenas:
 ## `/cycle` — o ciclo inteiro numa tacada
 
 [`/cycle`](../.claude/commands/cycle.md) roda `/spec --sync`, escolhe a próxima spec do
-[`BACKLOG.md`](../specs/BACKLOG.md) e a leva por `/analyze → /develop → /review → /test` **sem parar para
-perguntar**. Existe para uma situação específica: **você não vai estar na frente da tela**.
+[`BACKLOG.md`](../specs/BACKLOG.md) e a leva por `/analyze → /develop → /review → /test → /spec --close`
+**sem parar para perguntar**. Existe para uma situação específica: **você não vai estar na frente da tela**.
 
 ```bash
 /cycle                      # audita o backlog e ataca a spec recomendada
@@ -366,9 +382,10 @@ depois um job só, e só então paralelize.
 
 ## Mantendo a base de IA saudável
 
-- **Rode `/spec --sync` ao fim de cada entrega.** É o passo que impede o backlog de virar ficção: ele
-  confere no código o que foi entregue, em vez de acreditar no `status` gravado. Backlog que ninguém audita
-  é pior que backlog nenhum, porque parece confiável.
+- **Feche a spec na branch de cada entrega (`/spec --close`) e rode `/spec --sync` depois do merge.** O
+  primeiro tira a spec do backlog na mesma PR do código; o segundo confere a `main` inteira contra o código,
+  em vez de acreditar no `status` gravado. Backlog que ninguém audita é pior que backlog nenhum, porque
+  parece confiável.
 - Nota de pesquisa vencida (`revalidate_after`) → revalide **só o que mudou** (preço, versão, prevalência),
   não a nota inteira.
 - Atualize o `CLAUDE.md` (regras de ouro / mapa) quando uma convenção mudar — mas mantenha-o **curto**,

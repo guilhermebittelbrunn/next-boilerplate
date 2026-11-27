@@ -1,6 +1,6 @@
 ---
-description: Descobre, escreve e mantém as specs de funcionalidades em specs/ — varre o repositório, confronta com padrões de mercado (com fontes) e propõe features genéricas para o core de MVPs. Também reconcilia o backlog com o código (--sync) e recomenda a próxima a atacar (--next). É a entrada do ciclo /spec → /analyze → /develop → /review → /test.
-argument-hint: "[ideia | --sync | --next | --status | vazio para descoberta ampla]"
+description: Descobre, escreve e mantém as specs de funcionalidades em specs/ — varre o repositório, confronta com padrões de mercado (com fontes) e propõe features genéricas para o core de MVPs. Fecha a spec na branch da feature depois do /test (--close), reconcilia o backlog com o código a partir de main (--sync) e recomenda a próxima a atacar (--next). É a entrada e a saída do ciclo /spec → /analyze → /develop → /review → /test → /spec --close.
+argument-hint: "[ideia | --close [id] | --sync | --next | --status | vazio para descoberta ampla]"
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill, ToolSearch
 ---
 
@@ -30,7 +30,8 @@ Regra em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md); as ski
 | `$ARGUMENTS` | Modo | O que fazer |
 |--------------|------|-------------|
 | vazio | **descoberta** | varredura ampla do repo + mercado → lote de specs novas |
-| `--sync` / `sync` | **reconciliação** | audita o backlog contra o código, **arquiva as specs entregues** em `docs/features/<slug>/spec.md` e fecha o loop |
+| `--close [id]` / `close` | **fechamento** | na branch da feature, depois do `/test`: confere o corte **daquela** spec no código, arquiva em `docs/features/<slug>/spec.md` e atualiza só as linhas dela no `BACKLOG.md` (Passo 2.1). Sem `id`, usa o `spec:` do `STATE.md` mais recente |
+| `--sync` / `sync` | **reconciliação** | a partir de `main` atualizada: audita o backlog inteiro contra o código, confirma o merge das specs já fechadas e arquiva as entregues que ninguém fechou |
 | `--next` / `next` | **priorização** | recomenda a próxima spec, com justificativa |
 | texto livre | **spec dirigida** | escreve/atualiza a spec daquela ideia |
 | `--status` / `status` | **leitura** | só resume o `BACKLOG.md`; não aciona subagent |
@@ -60,6 +61,29 @@ foco e o lote escolhidos, e instruindo a:
 
 Em `--sync`, instrua-o a **seguir a skill `spec-audit` passo a passo** — ela é o procedimento canônico da
 auditoria e do arquivamento. Reforce só o princípio: **verificar o código, não o `status` gravado**.
+
+### Passo 2.1 — `--close`: fechar a spec na branch da feature
+
+É a última etapa do pipeline de uma feature que nasceu de spec. Ela existe para que a spec entregue saia de
+`specs/` **na mesma PR** do código: quando a PR entra em `main`, a próxima branch já encontra o backlog
+atualizado e a conferência da entrega dentro de `docs/features/<slug>/spec.md`.
+
+1. Resolva a feature: o `id` do argumento, ou o `spec:` do `STATE.md` mais recente
+   (`ls -t docs/features/*/STATE.md | head -1`). Sem `spec:`, diga que é tarefa direta e pare.
+2. Confira o gate: `test = done` no `STATE.md` e branch atual não protegida. Se falhar, pare e diga qual.
+3. Acione o **`estrategista-produto`** instruindo-o a seguir **só o §4.2 da skill `spec-audit`**: uma spec,
+   sem auditar as outras; no `reference/AUDIT.md`, só a troca do alvo dos links que o movimento quebrou. Repita as regras de escrita.
+4. Se o agente disser que o corte está incompleto, mostre o que falta e pare: a spec continua
+   `in-progress`, e o caminho é voltar ao `/develop`.
+5. Mostre o que foi arquivado e as linhas do `BACKLOG.md` que mudaram. Depois pergunte, com
+   `AskUserQuestion`, se pode commitar `docs(specs): close <id>`. Com o "sim", confira o índice
+   (`git diff --cached --stat` vazio antes do `git add`), commite só o rename, o `BACKLOG.md` e os links
+   corrigidos, e confira com `git show --stat --oneline HEAD`.
+6. Se a branch já tem upstream (o `/review` fez o push), pergunte se pode dar `git push`. Sem o "sim", não
+   pushe.
+
+No `/cycle` o fechamento roda sem as perguntas dos passos 5 e 6: o commit entra no plano de commits do
+relatório final, como todo o resto.
 
 ## Passo 3 — Decida com o usuário
 
@@ -94,20 +118,20 @@ Sugira o próximo comando:
 /analyze <id>             # o nome da spec é o argumento padrão do /analyze
 ```
 
-Em `--sync`, mostre também **o que foi arquivado** e para onde, e confirme que `specs/` voltou a conter
-apenas o que falta.
+Em `--sync`, mostre também **o que foi arquivado** e para onde, quais fechamentos feitos em branch tiveram
+o merge confirmado, e confirme que `specs/` voltou a conter apenas o que falta.
 
-Ao final de um ciclo de entrega (`/test` concluído), lembre o usuário de rodar **`/spec --sync`** para
-fechar o loop e tirar a spec do backlog.
+Ao final de um ciclo de entrega (`/test` concluído), o próximo comando é **`/spec --close`**, ainda na
+branch da feature. O `/spec --sync` fica para depois do merge, a partir de `main`.
 
 ## Regras
 
 - **Nada de código.** Este comando não implementa, não faz scaffolding, não toca `apps/` nem `packages/`.
-- **Não escreva em `docs/features/`**, exceto para arquivar a spec entregue no `--sync` (procedimento em
-  [`spec-audit`](../skills/spec-audit/SKILL.md) §4.1). O backlog vive em `specs/`; o resto da pasta da
-  feature é do pipeline de execução.
-- **Não crie branch, não commite, não pushe** ([`.claude/rules/git-commits.md`](../rules/git-commits.md)).
-  Os arquivos de `specs/` são versionados e entram num commit `docs(specs): <resumo>` quando o usuário
-  aprovar — normalmente pelo `/review`.
+- **Não escreva em `docs/features/`**, exceto para arquivar a spec entregue no `--close` ou no `--sync`
+  (procedimento em [`spec-audit`](../skills/spec-audit/SKILL.md) §4.1 e §4.2). O backlog vive em `specs/`;
+  o resto da pasta da feature é do pipeline de execução.
+- **Não crie branch** ([`.claude/rules/git-commits.md`](../rules/git-commits.md)). Commit e push só no
+  `--close`, cada um com o "sim" explícito do usuário (Passo 2.1). Nos outros modos, os arquivos de `specs/`
+  entram num commit `docs(specs): <resumo>` quando o usuário aprovar, normalmente pelo `/review`.
 - **Genérico no core.** Recuse spec específica de domínio: explique que pertence ao fork.
 - Tudo em português; `id`/slug em inglês.

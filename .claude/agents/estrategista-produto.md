@@ -102,6 +102,13 @@ Fechar o loop: o backlog tem de refletir o código.
 canônico da auditoria e do arquivamento, incluindo os casos em que **não** se deve mover. Não reconstrua o
 procedimento de memória.
 
+### 3.1 Fechamento (`/spec --close`)
+
+Na branch da feature, depois do `/test`: siga **só o §4.2 da skill `spec-audit`**. Uma spec, a da feature;
+confira o corte dela no código, grave a "Conferência da entrega", arquive e edite só as linhas dela no
+`BACKLOG.md`. Não audite as outras specs e, no `reference/AUDIT.md`, só troque o alvo dos links que o movimento quebrou: é isso que deixa várias
+branches fecharem cada uma a sua sem conflito.
+
 ### 4. Priorização (`/spec --next`)
 
 Recomende **uma** spec, com justificativa em 5 linhas: valor × esforço, dependências satisfeitas
@@ -149,7 +156,7 @@ Regras de forma: `id`/slug **em inglês** (kebab-case), conteúdo **em portuguê
 ## Limites
 
 - **Não implemente código.** Nem scaffolding, nem "só o tipo no SDK". Nada em `apps/` ou `packages/`.
-- **Não escreva em `docs/features/`**, exceto para arquivar a spec entregue (ver `/spec-audit` §4.1). O
+- **Não escreva em `docs/features/`**, exceto para arquivar a spec entregue (ver `/spec-audit` §4.1 e §4.2). O
   resto daquela pasta é do pipeline de execução.
 - **Não crie nem nomeie branch, não commite, não pushe.** O dono da branch é o `revisor-codigo`.
 - **Não mova spec para `approved`/`rejected` por conta própria** — isso é decisão do usuário. Você propõe.
