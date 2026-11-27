@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useMyAccount } from "@/shared/hooks/useMyAccount";
 import { contactPageUrl } from "@/shared/lib/contactPageUrl";
 import { withLocalePath } from "@/shared/lib/localePath";
+import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 
 type ProfileDropdownProps = {
     accountPath?: string;
@@ -31,6 +32,7 @@ export default function ProfileDropdown({
     accountPath = "/account",
 }: ProfileDropdownProps) {
     const { user, signOut } = useAuth();
+    const { isImpersonating } = useAuthRequestPanel();
     const { dictionary, locale } = getDictionary();
     const { data: account } = useMyAccount();
     const cookieConsent = useCookieConsent();
@@ -38,10 +40,13 @@ export default function ProfileDropdown({
     const helpHref = contactPageUrl(locale);
 
     // The Firebase client user is the fallback, not the source: it does not know the
-    // avatar reference and keeps a stale display name until the token refreshes.
-    const displayName = account?.displayName ?? user?.displayName ?? null;
-    const email = account?.email ?? user?.email ?? null;
-    const avatarSrc = account?.avatarUrl || user?.photoURL || null;
+    // avatar reference and keeps a stale display name until the token refreshes. While
+    // impersonating it is the admin, so it is never shown.
+    const fallbackUser = isImpersonating ? null : user;
+    const displayName =
+        account?.displayName ?? fallbackUser?.displayName ?? null;
+    const email = account?.email ?? fallbackUser?.email ?? null;
+    const avatarSrc = account?.avatarUrl || fallbackUser?.photoURL || null;
     const initials =
         displayName?.slice(0, 2) ?? email?.split("@")[0]?.slice(0, 2) ?? "";
 

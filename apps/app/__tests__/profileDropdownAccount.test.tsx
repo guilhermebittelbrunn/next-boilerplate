@@ -3,9 +3,16 @@ import { setCookie } from "@repo/shared/utils/helpers/cookies";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { useAuthMock, useMyAccountMock } = vi.hoisted(() => ({
-    useAuthMock: vi.fn(),
-    useMyAccountMock: vi.fn(),
+const { useAuthMock, useMyAccountMock, useAuthRequestPanelMock } = vi.hoisted(
+    () => ({
+        useAuthMock: vi.fn(),
+        useMyAccountMock: vi.fn(),
+        useAuthRequestPanelMock: vi.fn(),
+    })
+);
+
+vi.mock("@/shared/providers/AuthRequestPanelContext", () => ({
+    useAuthRequestPanel: () => useAuthRequestPanelMock(),
 }));
 
 vi.mock("@repo/auth/provider", () => ({ default: () => useAuthMock() }));
@@ -18,6 +25,7 @@ const ProfileDropdown = (await import("@/shared/components/ui/ProfileDropdown"))
     .default;
 
 const ONE_HOUR_IN_SECONDS = 3600;
+const ADMIN_NAME = /Bruno/;
 
 const FIREBASE_USER = {
     displayName: "Bruno do Token",
@@ -32,6 +40,7 @@ beforeEach(() => {
         signOut: { mutate: vi.fn() },
     });
     useMyAccountMock.mockReturnValue({ data: undefined });
+    useAuthRequestPanelMock.mockReturnValue({ isImpersonating: false });
 });
 
 afterEach(cleanup);
@@ -125,6 +134,71 @@ describe("ProfileDropdown — origem do nome e do avatar", () => {
             }
         }
     );
+});
+
+describe("ProfileDropdown — personificando outra conta", () => {
+    const dropdownCopy =
+        globalTranslations["pt-br"].apps.app.shared.profileDropdown;
+
+    function openMenu() {
+        fireEvent.pointerDown(
+            screen.getByRole("button", { name: dropdownCopy.triggerLabel }),
+            { button: 0, ctrlKey: false }
+        );
+    }
+
+    beforeEach(() => {
+        useAuthRequestPanelMock.mockReturnValue({ isImpersonating: true });
+    });
+
+    it("não mostra o nome nem a foto do admin quando a conta não tem nome nem avatar", async () => {
+        useMyAccountMock.mockReturnValue({
+            data: {
+                displayName: null,
+                email: "alvo@example.com",
+                avatarUrl: null,
+            },
+        });
+
+        const { container } = render(<ProfileDropdown />);
+
+        expect(screen.getByText("alvo")).toBeTruthy();
+        expect(screen.getByText("al")).toBeTruthy();
+        expect(container.querySelector("img")).toBeNull();
+        expect(
+            container.querySelector(`[src="${FIREBASE_USER.photoURL}"]`)
+        ).toBeNull();
+        openMenu();
+        expect(await screen.findByText("alvo@example.com")).toBeTruthy();
+        expect(screen.queryByText(ADMIN_NAME)).toBeNull();
+        expect(screen.queryByText(FIREBASE_USER.email)).toBeNull();
+    });
+
+    it("não mostra nome nem e-mail do admin enquanto a conta carrega", async () => {
+        const { container } = render(<ProfileDropdown />);
+
+        expect(container.querySelector("img")).toBeNull();
+        openMenu();
+        expect(await screen.findByText(dropdownCopy.myAccount)).toBeTruthy();
+        expect(screen.queryByText(ADMIN_NAME)).toBeNull();
+        expect(screen.queryByText(FIREBASE_USER.email)).toBeNull();
+        expect(screen.queryByText("token")).toBeNull();
+    });
+
+    it("mostra o nome da conta personificada quando ela tem nome", () => {
+        useMyAccountMock.mockReturnValue({
+            data: {
+                displayName: "Carla Alvo",
+                email: "alvo@example.com",
+                avatarUrl: null,
+            },
+        });
+
+        render(<ProfileDropdown />);
+
+        expect(screen.getByText("Carla")).toBeTruthy();
+        expect(screen.queryByText("Bruno")).toBeNull();
+    });
 });
 
 describe("ProfileDropdown — destino de Minha conta", () => {
