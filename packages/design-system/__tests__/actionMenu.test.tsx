@@ -234,6 +234,40 @@ describe("ActionsMenu delete confirmation", () => {
         expect(onDelete).toHaveBeenCalledTimes(1);
     });
 
+    it("blocks cancel and Escape while an async onDelete is running", async () => {
+        let resolveDelete: (() => void) | undefined;
+        const onDelete = vi.fn(
+            () =>
+                new Promise<void>((resolve) => {
+                    resolveDelete = resolve;
+                })
+        );
+        render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
+
+        await openConfirmationFromKeyboard();
+        act(() => {
+            fireEvent.click(getDialogButton(actionMenuCopy.deleteConfirmOk));
+        });
+
+        const cancelButton = getDialogButton(
+            actionMenuCopy.deleteConfirmCancel
+        );
+        await waitFor(() =>
+            expect(cancelButton.hasAttribute("disabled")).toBe(true)
+        );
+
+        fireEvent.keyDown(screen.getByRole("alertdialog"), ESCAPE);
+        expect(screen.queryByRole("alertdialog")).not.toBeNull();
+
+        await act(async () => {
+            resolveDelete?.();
+            await Promise.resolve();
+        });
+        await waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+    });
+
     it("uses the custom delete labels", async () => {
         const onDelete = vi.fn();
         render(
