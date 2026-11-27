@@ -80,7 +80,7 @@ export function AccountSessionsPanel() {
             title: sessionsCopy.columns.signedInAt,
             dataIndex: "signedInAt",
             render: (value: string) => (
-                <span className="whitespace-nowrap text-muted-foreground">
+                <span className="text-muted-foreground">
                     {formatDateTime(value)}
                 </span>
             ),
@@ -89,7 +89,7 @@ export function AccountSessionsPanel() {
             title: sessionsCopy.columns.lastSeenAt,
             dataIndex: "lastSeenAt",
             render: (value: string) => (
-                <span className="whitespace-nowrap text-muted-foreground">
+                <span className="text-muted-foreground">
                     {formatDateTime(value)}
                 </span>
             ),
