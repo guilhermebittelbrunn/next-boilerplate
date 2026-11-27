@@ -153,3 +153,68 @@ describe("destructive button", () => {
         expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
     });
 });
+
+const SRGB_LINEAR_LIMIT = 0.003_130_8;
+const SRGB_ENCODED_LIMIT = 0.040_45;
+const SRGB_LINEAR_SLOPE = 12.92;
+const SRGB_GAMMA = 2.4;
+const SRGB_OFFSET = 0.055;
+const TONAL_FILL_ALPHA = 0.1;
+
+function encodeSrgb(channel: number): number {
+    return channel <= SRGB_LINEAR_LIMIT
+        ? SRGB_LINEAR_SLOPE * channel
+        : (1 + SRGB_OFFSET) * channel ** (1 / SRGB_GAMMA) - SRGB_OFFSET;
+}
+
+function decodeSrgb(channel: number): number {
+    return channel <= SRGB_ENCODED_LIMIT
+        ? channel / SRGB_LINEAR_SLOPE
+        : ((channel + SRGB_OFFSET) / (1 + SRGB_OFFSET)) ** SRGB_GAMMA;
+}
+
+function luminance(linear: Rgb): number {
+    return dot(WCAG_LUMINANCE_WEIGHTS, linear);
+}
+
+/** Browsers composite `bg-<token>/10` in gamma-encoded sRGB, so the blend happens there. */
+function tonalFill(color: Rgb, base: Rgb): Rgb {
+    return color.map((channel, index) =>
+        decodeSrgb(
+            encodeSrgb(channel) * TONAL_FILL_ALPHA +
+                encodeSrgb(base[index]) * (1 - TONAL_FILL_ALPHA)
+        )
+    ) as Rgb;
+}
+
+const tonalPairs: [keyof typeof themes, string, string][] = (
+    ["light", "dark"] as const
+).flatMap((theme) =>
+    ["success", "warning", "destructive", "primary"].flatMap((token) =>
+        ["background", "card", "muted"].map(
+            (base) =>
+                [theme, token, base] as [keyof typeof themes, string, string]
+        )
+    )
+);
+
+describe("tonal badges", () => {
+    it.each(tonalPairs)(
+        "%s: --%s text on a 10%% tint of itself over --%s reaches WCAG AA",
+        (theme, token, base) => {
+            const tokens = themes[theme];
+            const color = oklchToLinearRgb(tokens.get(token) ?? "");
+            const fill = tonalFill(
+                color,
+                oklchToLinearRgb(tokens.get(base) ?? "")
+            );
+            const [lighter, darker] = [luminance(color), luminance(fill)].sort(
+                (first, second) => second - first
+            );
+
+            expect(
+                (lighter + LUMINANCE_FLARE) / (darker + LUMINANCE_FLARE)
+            ).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+        }
+    );
+});

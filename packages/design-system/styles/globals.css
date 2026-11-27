@@ -26,10 +26,10 @@
     --muted-foreground: oklch(0.5 0.014 264);
     --accent: oklch(0.945 0.008 264);
     --accent-foreground: oklch(0.21 0.014 264);
-    --destructive: oklch(0.55 0.2 25);
-    --destructive-foreground: oklch(0.55 0.2 25);
-    --success: oklch(0.52 0.12 155);
-    --warning: oklch(0.55 0.14 55);
+    --destructive: oklch(0.51 0.19 25);
+    --destructive-foreground: oklch(0.51 0.19 25);
+    --success: oklch(0.48 0.11 155);
+    --warning: oklch(0.5 0.13 55);
     --border: oklch(0.915 0.006 264);
     --input: oklch(0.88 0.008 264);
     --ring: oklch(0.49 0.17 262);
@@ -250,6 +250,16 @@
     [role="button"] {
         touch-action: manipulation;
     }
+}
+
+/*
+ * Toasts ficam no canto inferior direito, onde mora o botão primário da barra de ações fixa
+ * (até 80 px). Com uma barra na tela, a pilha sobe para não cobrir o "Salvar".
+ */
+body:has([data-sticky-action-bar])
+[data-sonner-toaster][data-y-position="bottom"] {
+    --offset-bottom: 96px !important;
+    --mobile-offset-bottom: 96px !important;
 }
 
 /*
