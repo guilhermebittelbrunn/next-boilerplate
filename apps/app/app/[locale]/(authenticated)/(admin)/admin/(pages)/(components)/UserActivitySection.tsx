@@ -1,29 +1,25 @@
 "use client";
 
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
-import { ActivityIcon, MoonIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
-import { MetricCard } from "@/shared/components/ui/MetricCard";
+import { MetricStrip } from "@/shared/components/ui/MetricStrip";
 import { useUserActivitySummary } from "../(hooks)/useUserActivitySummary";
 
-// Deferred so the cards paint without waiting for recharts, which does not tree-shake and
+const CHART_HEIGHT_CLASS = "h-60";
+
+// Deferred so the counts paint without waiting for recharts, which does not tree-shake and
 // would otherwise land whole in the chunk of the first screen an admin opens.
 const UserRecencyChart = dynamic(
     () => import("./UserRecencyChart").then((mod) => mod.UserRecencyChart),
     {
         ssr: false,
-        loading: () => <Skeleton className="h-64 w-full rounded-xl" />,
+        loading: () => (
+            <Skeleton className={`${CHART_HEIGHT_CLASS} w-full rounded-lg`} />
+        ),
     }
 );
 
@@ -38,7 +34,13 @@ function fillPlaceholders(
 }
 
 export function UserActivitySection() {
-    const { data: activity, isLoading, error } = useUserActivitySummary();
+    const {
+        data: activity,
+        isLoading,
+        error,
+        refetch,
+        isFetching,
+    } = useUserActivitySummary();
     const { dictionary, locale } = getDictionary();
 
     const activityCopy = dictionary.apps.app.pages.admin.home.activity;
@@ -59,76 +61,86 @@ export function UserActivitySection() {
           })
         : undefined;
 
+    const loading = isLoading || !activity;
+    const neverCount = activity?.byRecency.never ?? 0;
+
+    const metrics = [
+        {
+            key: "active",
+            label: activityCopy.metrics.active.label,
+            hint: activeHint,
+            value: activity?.active ?? 0,
+        },
+        {
+            key: "inactive",
+            label: activityCopy.metrics.inactive.label,
+            hint: inactiveHint,
+            value: activity?.inactive ?? 0,
+        },
+    ];
+
     const renderContent = () => {
         if (activityLoadError) {
-            return <LoadErrorState message={activityLoadError} />;
-        }
-
-        if (isLoading || !activity) {
             return (
-                <>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <MetricCard
-                            label={activityCopy.metrics.active.label}
-                            loading
-                            value={0}
-                        />
-                        <MetricCard
-                            label={activityCopy.metrics.inactive.label}
-                            loading
-                            value={0}
-                        />
-                    </div>
-                    <Skeleton className="h-64 w-full rounded-xl" />
-                </>
+                <LoadErrorState
+                    message={activityLoadError}
+                    onRetry={() => refetch()}
+                    retrying={isFetching}
+                />
             );
         }
 
         return (
-            <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <MetricCard
-                        hint={activeHint}
-                        icon={<ActivityIcon className="size-4" />}
-                        label={activityCopy.metrics.active.label}
-                        value={activity.active}
-                    />
-                    <MetricCard
-                        hint={inactiveHint}
-                        icon={<MoonIcon className="size-4" />}
-                        label={activityCopy.metrics.inactive.label}
-                        value={activity.inactive}
-                    />
-                </div>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{activityCopy.chart.title}</CardTitle>
-                        <CardDescription>
+            <div className="overflow-hidden rounded-xl bg-card text-card-foreground shadow-card">
+                <MetricStrip
+                    items={metrics}
+                    loading={loading}
+                    locale={locale}
+                />
+                <div className="flex flex-col gap-4 border-border border-t px-5 py-5">
+                    <div className="flex flex-col gap-1">
+                        <h3 className="font-semibold text-base tracking-tight">
+                            {activityCopy.chart.title}
+                        </h3>
+                        <p className="max-w-[65ch] text-pretty text-muted-foreground text-sm">
                             {activityCopy.chart.description}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-3">
+                        </p>
+                    </div>
+                    {activity ? (
                         <UserRecencyChart byRecency={activity.byRecency} />
-                        {activity.byRecency.never > 0 && (
-                            <p className="text-muted-foreground text-xs">
-                                {fillPlaceholders(activityCopy.neverNotice, {
-                                    count: activity.byRecency.never,
-                                })}
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
-            </>
+                    ) : (
+                        <Skeleton
+                            className={`${CHART_HEIGHT_CLASS} w-full rounded-lg`}
+                        />
+                    )}
+                    {neverCount > 0 && (
+                        <p className="text-pretty text-muted-foreground text-xs">
+                            {fillPlaceholders(
+                                neverCount === 1
+                                    ? activityCopy.neverNoticeOne
+                                    : activityCopy.neverNotice,
+                                { count: neverCount }
+                            )}
+                        </p>
+                    )}
+                </div>
+            </div>
         );
     };
 
     return (
-        <section className="flex flex-col gap-4">
+        <section
+            aria-labelledby="admin-activity-title"
+            className="flex flex-col gap-4"
+        >
             <div className="flex flex-col gap-1">
-                <h2 className="font-semibold text-lg tracking-tight">
+                <h2
+                    className="font-semibold text-lg tracking-tight"
+                    id="admin-activity-title"
+                >
                     {activityCopy.title}
                 </h2>
-                <p className="text-muted-foreground text-sm">
+                <p className="max-w-[65ch] text-pretty text-muted-foreground text-sm">
                     {activityCopy.description}
                 </p>
             </div>

@@ -18,5 +18,6 @@ export const useUserSummary = () => {
         isLoading: query.isLoading,
         error: query.error,
         refetch: query.refetch,
+        isFetching: query.isFetching,
     };
 };
