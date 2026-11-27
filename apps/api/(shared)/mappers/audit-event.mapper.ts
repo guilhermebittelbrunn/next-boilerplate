@@ -1,7 +1,8 @@
-import type {
-    AuditAction,
-    AuditEventDTO,
-    AuditTargetType,
+import {
+    type AuditAction,
+    type AuditEventDTO,
+    AuditLevel,
+    type AuditTargetType,
 } from "@repo/sdk/src/types";
 import type { AllOptional } from "@repo/shared/utils";
 import { normalizeFirestoreInstant, stringIfExists } from "@repo/shared/utils";
@@ -27,6 +28,11 @@ class BaseAuditEventMapper extends Mapper<
         return {
             id,
             action: record.action as AuditAction,
+            // Events recorded before levels existed were all sensitive actions.
+            level:
+                record.level === AuditLevel.INFO
+                    ? AuditLevel.INFO
+                    : AuditLevel.SENSITIVE,
             actorUserId: String(record.actorUserId ?? ""),
             actorUid: String(record.actorUid ?? ""),
             actorLabel: stringIfExists(record.actorLabel),
@@ -56,6 +62,7 @@ class BaseAuditEventMapper extends Mapper<
         const out: Record<string, unknown> = {};
         const keys: (keyof AuditEventDTO)[] = [
             "action",
+            "level",
             "actorUserId",
             "actorUid",
             "actorLabel",

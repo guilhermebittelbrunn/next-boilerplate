@@ -1,4 +1,4 @@
-import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
+import { AuditAction, AuditLevel, AuditTargetType } from "@repo/sdk/src/types";
 import { Timestamp } from "firebase-admin/firestore";
 import { describe, expect, it } from "vitest";
 import { auditEventMapper } from "@/(shared)/mappers/audit-event.mapper";
@@ -93,6 +93,33 @@ describe("auditEventMapper.toDTO", () => {
     it("carries the document id into the DTO", () => {
         expect(auditEventMapper.toDTO(row()).id).toBe("evt-1");
     });
+
+    it("reads an event recorded before levels existed as sensitive", () => {
+        expect(auditEventMapper.toDTO(row()).level).toBe(AuditLevel.SENSITIVE);
+    });
+
+    it("reads an unknown level as sensitive", () => {
+        expect(auditEventMapper.toDTO(row({ level: "critical" })).level).toBe(
+            AuditLevel.SENSITIVE
+        );
+    });
+
+    it("keeps an info level", () => {
+        expect(
+            auditEventMapper.toDTO(row({ level: AuditLevel.INFO })).level
+        ).toBe(AuditLevel.INFO);
+    });
+
+    it("never exposes the persistence-only expiry", () => {
+        const dto = auditEventMapper.toDTO(
+            row({
+                level: AuditLevel.INFO,
+                expiresAt: Timestamp.fromDate(new Date("2027-09-16T00:00:00Z")),
+            })
+        );
+
+        expect(dto).not.toHaveProperty("expiresAt");
+    });
 });
 
 describe("auditEventMapper.toPersistence", () => {
@@ -117,5 +144,11 @@ describe("auditEventMapper.toPersistence", () => {
             actorUserId: "p1",
             involvedUserIds: ["p1", "p2"],
         });
+    });
+
+    it("writes the level", () => {
+        expect(
+            auditEventMapper.toPersistence({ level: AuditLevel.INFO })
+        ).toEqual({ level: AuditLevel.INFO });
     });
 });

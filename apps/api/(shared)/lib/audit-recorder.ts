@@ -1,6 +1,7 @@
 import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { resolveUserAuditLabel } from "@/(shared)/lib/audit-label";
+import { auditExpiresAtFor, auditLevelOf } from "@/(shared)/lib/audit-level";
 import { auditEventRepository } from "@/(shared)/repositories/audit-event.repository";
 
 /**
@@ -82,6 +83,38 @@ function statusOf(error: unknown): number | undefined {
     return typeof code === "number" ? code : undefined;
 }
 
+function buildAuditEvent(input: AuditEventInput) {
+    return {
+        action: input.action,
+        level: auditLevelOf(input.action),
+        actorUserId: input.actorUserId,
+        actorUid: input.actorUid,
+        actorLabel: input.actorLabel,
+        onBehalfOfUserId: input.onBehalfOfUserId ?? null,
+        targetType: input.targetType,
+        targetUserId: input.targetUserId,
+        targetLabel: input.targetLabel,
+        changedFields: input.changedFields ?? [],
+        involvedUserIds: involvedUserIdsOf([
+            input.actorUserId,
+            input.targetUserId,
+            input.onBehalfOfUserId,
+        ]),
+        requestId: input.requestId,
+        windowEndsAt: null,
+    };
+}
+
+function logWriteFailure(input: AuditEventInput, error: unknown): void {
+    logEvent("audit", "write-failed", {
+        action: input.action,
+        actorUserId: input.actorUserId,
+        requestId: input.requestId,
+        reason: reasonOf(error),
+        status: statusOf(error),
+    });
+}
+
 /**
  * Never throws. Every audited action has already taken effect by the time the trail is
  * written, and half of them wrote to Firebase Auth, which cannot be rolled back with a
@@ -89,34 +122,69 @@ function statusOf(error: unknown): number | undefined {
  * A refused write falls back to the structured log, correlated by `requestId`.
  */
 export async function recordAuditEvent(input: AuditEventInput): Promise<void> {
+    const event = buildAuditEvent(input);
     try {
-        await auditEventRepository.append({
-            action: input.action,
-            actorUserId: input.actorUserId,
-            actorUid: input.actorUid,
-            actorLabel: input.actorLabel,
-            onBehalfOfUserId: input.onBehalfOfUserId ?? null,
-            targetType: input.targetType,
-            targetUserId: input.targetUserId,
-            targetLabel: input.targetLabel,
-            changedFields: input.changedFields ?? [],
-            involvedUserIds: involvedUserIdsOf([
-                input.actorUserId,
-                input.targetUserId,
-                input.onBehalfOfUserId,
-            ]),
-            requestId: input.requestId,
-            windowEndsAt: null,
+        await auditEventRepository.append(event, {
+            expiresAt: auditExpiresAtFor(event.level, new Date()),
         });
     } catch (error) {
-        logEvent("audit", "write-failed", {
-            action: input.action,
-            actorUserId: input.actorUserId,
-            requestId: input.requestId,
-            reason: reasonOf(error),
-            status: statusOf(error),
-        });
+        logWriteFailure(input, error);
     }
+}
+
+/**
+ * Same as `recordAuditEvent`, under a caller-chosen id: a producer that may run twice for
+ * one occurrence (a redelivered webhook) still leaves a single document. Never throws.
+ */
+export async function recordAuditEventOnce(
+    key: string,
+    input: AuditEventInput
+): Promise<void> {
+    const event = buildAuditEvent(input);
+    try {
+        await auditEventRepository.appendOnce(key, event, {
+            expiresAt: auditExpiresAtFor(event.level, new Date()),
+        });
+    } catch (error) {
+        logWriteFailure(input, error);
+    }
+}
+
+export type AccountLifecycleEventInput = {
+    action: AuditAction;
+    profileId: string;
+    uid: string;
+    /** Looked up in Firebase Auth when the caller does not have it at hand. */
+    label?: string | null;
+    requestId: string | null;
+    onceKey?: string;
+};
+
+/** The account holder acting on their own account. Never throws. */
+export async function recordAccountLifecycleEvent(
+    input: AccountLifecycleEventInput
+): Promise<void> {
+    const label =
+        input.label === undefined
+            ? await resolveUserAuditLabel(input.uid)
+            : input.label;
+
+    const event: AuditEventInput = {
+        action: input.action,
+        actorUserId: input.profileId,
+        actorUid: input.uid,
+        actorLabel: label,
+        targetType: AuditTargetType.ACCOUNT,
+        targetUserId: input.profileId,
+        targetLabel: label,
+        requestId: input.requestId,
+    };
+
+    if (input.onceKey) {
+        await recordAuditEventOnce(input.onceKey, event);
+        return;
+    }
+    await recordAuditEvent(event);
 }
 
 export async function recordImpersonationSession(
@@ -141,6 +209,7 @@ export async function recordImpersonationSession(
 
         await auditEventRepository.appendOnce(key, {
             action: AuditAction.IMPERSONATION_SESSION,
+            level: auditLevelOf(AuditAction.IMPERSONATION_SESSION),
             actorUserId: input.actorUserId,
             actorUid: input.actorUid,
             actorLabel: input.actorLabel,

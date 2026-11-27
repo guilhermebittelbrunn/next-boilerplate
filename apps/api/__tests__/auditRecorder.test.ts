@@ -1,4 +1,4 @@
-import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
+import { AuditAction, AuditLevel, AuditTargetType } from "@repo/sdk/src/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { appendMock, appendOnceMock, resolveLabelMock } = vi.hoisted(() => ({
@@ -20,6 +20,8 @@ vi.mock("@/(shared)/lib/audit-label", () => ({
 
 const {
     recordAuditEvent,
+    recordAuditEventOnce,
+    recordAccountLifecycleEvent,
     recordImpersonationSession,
     impersonationWindowKey,
     resetImpersonationDedupeCache,
@@ -200,6 +202,139 @@ describe("recordAuditEvent", () => {
     });
 });
 
+describe("recordAuditEvent levels", () => {
+    const NOW = new Date("2026-11-26T12:00:00.000Z");
+    const ONE_YEAR_LATER = new Date("2027-11-26T12:00:00.000Z");
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(NOW);
+    });
+
+    it("writes a sensitive action without an expiry", async () => {
+        await recordAuditEvent(deleteInput());
+
+        const [written, options] = appendMock.mock.calls[0] ?? [];
+        expect(written.level).toBe(AuditLevel.SENSITIVE);
+        expect(options).toEqual({ expiresAt: null });
+    });
+
+    it("writes an info action with an expiry one year out", async () => {
+        await recordAuditEvent(
+            deleteInput({ action: AuditAction.ACCOUNT_SIGN_UP })
+        );
+
+        const [written, options] = appendMock.mock.calls[0] ?? [];
+        expect(written.level).toBe(AuditLevel.INFO);
+        expect(options).toEqual({ expiresAt: ONE_YEAR_LATER });
+    });
+
+    it("ignores a level smuggled in by the caller", async () => {
+        await recordAuditEvent(
+            deleteInput({ level: AuditLevel.INFO }) as never
+        );
+
+        expect(appendMock.mock.calls[0]?.[0].level).toBe(AuditLevel.SENSITIVE);
+    });
+});
+
+describe("recordAuditEventOnce", () => {
+    it("writes under the given key with the derived level", async () => {
+        await recordAuditEventOnce(
+            "stripe_evt_1_subscription.activate",
+            deleteInput({ action: AuditAction.SUBSCRIPTION_ACTIVATE })
+        );
+
+        expect(appendMock).not.toHaveBeenCalled();
+        const [key, written, options] = appendOnceMock.mock.calls[0] ?? [];
+        expect(key).toBe("stripe_evt_1_subscription.activate");
+        expect(written.level).toBe(AuditLevel.INFO);
+        expect(options.expiresAt).toBeInstanceOf(Date);
+    });
+
+    it("swallows a refused write and logs it", async () => {
+        appendOnceMock.mockRejectedValue(new Error("unavailable"));
+
+        await expect(
+            recordAuditEventOnce(
+                "k",
+                deleteInput({ action: AuditAction.SUBSCRIPTION_END })
+            )
+        ).resolves.toBeUndefined();
+        expect(warned[0]).toContain("[audit] write-failed");
+        expect(warned[0]).toContain("action=subscription.end");
+    });
+});
+
+describe("recordAccountLifecycleEvent", () => {
+    it("records the holder as both actor and target of their own account", async () => {
+        await recordAccountLifecycleEvent({
+            action: AuditAction.ACCOUNT_SIGN_UP,
+            profileId: "p7",
+            uid: "auth-7",
+            requestId: "req-7",
+        });
+
+        const written = appendMock.mock.calls[0]?.[0];
+        expect(written).toMatchObject({
+            action: AuditAction.ACCOUNT_SIGN_UP,
+            level: AuditLevel.INFO,
+            actorUserId: "p7",
+            actorUid: "auth-7",
+            actorLabel: "subject@example.com",
+            targetType: AuditTargetType.ACCOUNT,
+            targetUserId: "p7",
+            targetLabel: "subject@example.com",
+            involvedUserIds: ["p7"],
+            requestId: "req-7",
+        });
+        expect(resolveLabelMock).toHaveBeenCalledWith("auth-7");
+    });
+
+    it("skips the Auth lookup when the caller already has the label", async () => {
+        await recordAccountLifecycleEvent({
+            action: AuditAction.ACCOUNT_ONBOARDING_COMPLETE,
+            profileId: "p7",
+            uid: "auth-7",
+            label: "holder@example.com",
+            requestId: null,
+        });
+
+        expect(resolveLabelMock).not.toHaveBeenCalled();
+        expect(appendMock.mock.calls[0]?.[0].actorLabel).toBe(
+            "holder@example.com"
+        );
+    });
+
+    it("goes through appendOnce when given a key", async () => {
+        await recordAccountLifecycleEvent({
+            action: AuditAction.SUBSCRIPTION_PLAN_CHANGE,
+            profileId: "p7",
+            uid: "auth-7",
+            requestId: null,
+            onceKey: "stripe_evt_9_subscription.plan.change",
+        });
+
+        expect(appendMock).not.toHaveBeenCalled();
+        expect(appendOnceMock.mock.calls[0]?.[0]).toBe(
+            "stripe_evt_9_subscription.plan.change"
+        );
+    });
+
+    it("never throws when the write is refused", async () => {
+        appendMock.mockRejectedValue(new Error("unavailable"));
+
+        await expect(
+            recordAccountLifecycleEvent({
+                action: AuditAction.ACCOUNT_SIGN_UP,
+                profileId: "p7",
+                uid: "auth-7",
+                requestId: null,
+            })
+        ).resolves.toBeUndefined();
+    });
+});
+
 describe("impersonationWindowKey", () => {
     const WINDOW_START = Date.parse("2026-09-16T14:00:00.000Z");
     const ONE_SECOND_IN = 1000;
@@ -275,6 +410,7 @@ describe("recordImpersonationSession", () => {
 
         const written = appendOnceMock.mock.calls[0]?.[1];
         expect(written.action).toBe(AuditAction.IMPERSONATION_SESSION);
+        expect(written.level).toBe(AuditLevel.SENSITIVE);
         expect(written.onBehalfOfUserId).toBe("p2");
         expect(written.targetUserId).toBe("p2");
         expect(written.targetLabel).toBe("subject@example.com");
