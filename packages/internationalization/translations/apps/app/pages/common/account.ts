@@ -263,6 +263,8 @@ export const commonAccountPageTranslations = {
             signInMethodLinked: "Conta Google vinculada.",
             signInMethodUnlinked: "Método de login removido.",
             passwordUnlinked: "Senha removida. Entre de novo para continuar.",
+            passwordUnlinkedSessionsNotRevoked:
+                'Senha removida, mas não conseguimos encerrar as outras sessões desta conta. Use "Sair de todos os dispositivos" nesta página para encerrá-las.',
         },
     },
     en: {
@@ -532,6 +534,8 @@ export const commonAccountPageTranslations = {
             signInMethodLinked: "Google account linked.",
             signInMethodUnlinked: "Sign-in method removed.",
             passwordUnlinked: "Password removed. Sign in again to continue.",
+            passwordUnlinkedSessionsNotRevoked:
+                'Password removed, but we could not end the other sessions of this account. Use "Sign out everywhere" on this page to end them.',
         },
     },
     es: {
@@ -808,6 +812,8 @@ export const commonAccountPageTranslations = {
             signInMethodUnlinked: "Método de inicio de sesión quitado.",
             passwordUnlinked:
                 "Contraseña quitada. Vuelve a entrar para continuar.",
+            passwordUnlinkedSessionsNotRevoked:
+                'Contraseña quitada, pero no pudimos cerrar las otras sesiones de esta cuenta. Usa "Cerrar sesión en todos los dispositivos" en esta página para cerrarlas.',
         },
     },
 };
