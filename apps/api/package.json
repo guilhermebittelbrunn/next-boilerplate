@@ -6,7 +6,7 @@
     "dev:with-stripe": "concurrently \"npm:next\" \"npm:stripe\"",
     "next": "next dev -p 3002",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3002}",
     "analyze": "ANALYZE=true npm run build",
     "test": "NODE_ENV=test vitest run",
     "test:emulator": "NODE_ENV=test node scripts/emulator-tests.mjs",
