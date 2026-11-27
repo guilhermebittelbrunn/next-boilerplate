@@ -163,7 +163,7 @@ Caminhos encurtados: `account/` é `apps/app/app/[locale]/(authenticated)/(commo
   resolvido como tarefa direta.
 - **Configurações da conta para o admin.** Hoje "Minha conta" leva o admin a `/account`, que o layout comum
   devolve para `/admin` (`ui/ProfileDropdown.tsx:65`, `(common)/layout.tsx:47-52`). É funcionalidade nova,
-  com guard e rota, e tem spec própria: [`admin-own-account`](../../../specs/features/admin-own-account.md).
+  com guard e rota, e tem spec própria: [`admin-own-account`](../admin-own-account/spec.md).
 
 ## Impacto por camada
 
@@ -226,7 +226,7 @@ Tomadas por você na triagem de 2026-11-10, quando a spec passou a `approved`.
     item ativo do menu lateral.
 - **O admin entra no corte só com o padrão de página**: home, usuários, criar e editar usuário, auditoria.
   Nenhuma funcionalidade nova do admin entra.
-- **Área de conta para o admin fica fora** e virou a spec [`admin-own-account`](../../../specs/features/admin-own-account.md),
+- **Área de conta para o admin fica fora** e virou a spec [`admin-own-account`](../admin-own-account/spec.md),
   `proposed`.
 - **Prioridade: #1 do backlog.** Roda antes da fatia 3 de `account-security-mfa` e nunca em paralelo com
   ela, porque as duas alteram a seção Segurança.

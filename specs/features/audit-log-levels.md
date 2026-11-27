@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [firestore.indexes.json, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/(shared)/lib/user-merge.ts]
 feature: -
-updated: 2026-11-24
+updated: 2026-11-26
 ---
 
 # Níveis na trilha de auditoria (sensível e informativo)
@@ -19,7 +19,7 @@ updated: 2026-11-24
 > - **O quê:** cada evento da trilha ganha um nível. As 18 ações que já existem viram `sensitive`, e a trilha passa a gravar também eventos `info` de ciclo de vida da conta (cadastro, assinatura criada, troca de plano, cancelamento, onboarding concluído, e-mail confirmado), com coluna e filtro por nível na listagem do admin.
 > - **Por quê:** hoje o admin só vê operações sensíveis e não tem onde consultar, por usuário e por período, quando alguém se cadastrou, assinou ou cancelou. O GA mostra o funil anônimo, não a história de uma conta.
 > - **Status:** `approved` · valor médio · esforço M · produto
-> - **Próximo passo:** `/analyze audit-log-levels`, depois de responder as perguntas em aberto 2, 3 e 4
+> - **Próximo passo:** `/analyze audit-log-levels`, depois de responder as perguntas em aberto 2, 3 e 4. É a #1 da fila desde 2026-11-26 e a única `approved`; sem resposta, o `/cycle` adota as recomendações da própria spec
 
 ## Problema
 
@@ -41,7 +41,7 @@ um nível que os distinga das operações sensíveis, filtrável na tela.
   hoje todo evento tem um ator humano autenticado.
 - `apps/api/(shared)/repositories/audit-event.repository.ts:203-224`: `listPage` filtra por
   `involvedUserIds array-contains` e por intervalo de `createdAt`, ordenando por `createdAt` desc e id
-  (`base.repository.ts:97-103`). `:226-240`: `update`, `updateBulk`, `delete` e `deleteBulk` lançam
+  (`base.repository.ts:99-105`, remedida em 2026-11-26 depois da PR #76; era `:97-103`). `:226-240`: `update`, `updateBulk`, `delete` e `deleteBulk` lançam
   `AuditEventImmutableError`. `:149-201`: a única escrita aceita depois da criação é a anonimização.
 - `apps/api/(shared)/mappers/audit-event.mapper.ts:24-51`: normaliza o documento; é onde um registro antigo
   sem nível receberia um valor padrão na leitura.
