@@ -14,6 +14,10 @@ function isLocalePrefixed(path: string): boolean {
  * Open-redirect guard: only same-origin, locale-prefixed paths pass. Anything else —
  * absolute URLs, protocol-relative `//host`, paths without a locale segment — falls back
  * to the caller's default.
+ *
+ * Expects the value already decoded once, as `URLSearchParams.get` returns it. Decoding it
+ * again would turn an encoded `%26` or `%25` inside the destination's own query into `&`
+ * or `%`, corrupting the destination or throwing on a stray `%`.
  */
 export function postAuthRedirectTarget(
     rawRedirect: string | null,
@@ -22,12 +26,7 @@ export function postAuthRedirectTarget(
     if (!rawRedirect) {
         return fallback;
     }
-    let path: string;
-    try {
-        path = decodeURIComponent(rawRedirect.trim());
-    } catch {
-        return fallback;
-    }
+    const path = rawRedirect.trim();
     if (!(path.startsWith("/") && !path.startsWith("//"))) {
         return fallback;
     }
@@ -37,8 +36,11 @@ export function postAuthRedirectTarget(
     if (!isLocalePrefixed(path)) {
         return fallback;
     }
-    // The URL parser reads `\` as `/` and resolves `..`, so `/pt-br/../\evil.com` passes the
-    // checks above and still parses to `//evil.com`, which leaves the host once made relative.
+    // The URL parser reads `\` as `/`, drops tab and newline characters and resolves `..`, so
+    // `/pt-br/../\evil.com` or `/pt-br/\t/evil.com` pass the checks above and still parse to a
+    // path with `//`, which turns into a host as soon as anything collapses the locale segment.
     const resolvedPath = new URL(path, PLACEHOLDER_ORIGIN).pathname;
-    return isLocalePrefixed(resolvedPath) ? path : fallback;
+    return isLocalePrefixed(resolvedPath) && !resolvedPath.includes("//")
+        ? path
+        : fallback;
 }

@@ -1,5 +1,5 @@
-import { postAuthRedirectTarget } from "@repo/auth/redirect";
 import { describe, expect, it } from "vitest";
+import { postAuthRedirectTarget } from "../redirect";
 
 const FALLBACK = "/pt-br";
 
@@ -18,9 +18,40 @@ describe("postAuthRedirectTarget", () => {
         expect(postAuthRedirectTarget("/es", FALLBACK)).toBe("/es");
     });
 
-    it("accepts a percent-encoded path", () => {
+    it("rejects a value still percent-encoded, since callers pass it already decoded", () => {
         expect(postAuthRedirectTarget("%2Fpt-br%2Fentities", FALLBACK)).toBe(
-            "/pt-br/entities"
+            FALLBACK
+        );
+        expect(postAuthRedirectTarget("%2F%2Fevil.com", FALLBACK)).toBe(
+            FALLBACK
+        );
+    });
+
+    it("keeps an encoded slash, backslash or tab inside the path on the same origin", () => {
+        const origin = "https://app.example.com";
+        for (const target of [
+            "/pt-br/%2F%2Fevil.com",
+            "/pt-br/%5C%5Cevil.com",
+            "/pt-br/%09/evil.com",
+            "/pt-br/..%2F..%2F%2F%2Fevil.com",
+        ]) {
+            const accepted = postAuthRedirectTarget(target, FALLBACK);
+            expect(accepted).toBe(target);
+            const destination = new URL(accepted, origin);
+            expect(destination.origin).toBe(origin);
+            expect(destination.pathname).toBe(target);
+        }
+    });
+
+    it("keeps encoded characters inside the destination's query intact", () => {
+        expect(postAuthRedirectTarget("/pt-br/search?q=a%26b", FALLBACK)).toBe(
+            "/pt-br/search?q=a%26b"
+        );
+        expect(postAuthRedirectTarget("/pt-br/report?v=100%25", FALLBACK)).toBe(
+            "/pt-br/report?v=100%25"
+        );
+        expect(postAuthRedirectTarget("/pt-br/report?v=100%", FALLBACK)).toBe(
+            "/pt-br/report?v=100%"
         );
     });
 
@@ -33,8 +64,22 @@ describe("postAuthRedirectTarget", () => {
         );
     });
 
+    it("rejects a script URL", () => {
+        expect(postAuthRedirectTarget("javascript:alert(1)", FALLBACK)).toBe(
+            FALLBACK
+        );
+        expect(
+            postAuthRedirectTarget(
+                "/pt-br/x/../../javascript:alert(1)",
+                FALLBACK
+            )
+        ).toBe(FALLBACK);
+    });
+
     it("rejects a protocol-relative URL", () => {
         expect(postAuthRedirectTarget("//evil.com", FALLBACK)).toBe(FALLBACK);
+        expect(postAuthRedirectTarget("/\\evil.com", FALLBACK)).toBe(FALLBACK);
+        expect(postAuthRedirectTarget("  //evil.com", FALLBACK)).toBe(FALLBACK);
         expect(postAuthRedirectTarget("//evil.com/pt-br", FALLBACK)).toBe(
             FALLBACK
         );
@@ -44,6 +89,33 @@ describe("postAuthRedirectTarget", () => {
         expect(postAuthRedirectTarget("/pt-br//evil.com", FALLBACK)).toBe(
             FALLBACK
         );
+    });
+
+    it("rejects a path the URL parser resolves to a double slash", () => {
+        for (const target of [
+            "/pt-br/\t/evil.com",
+            "/pt-br/\n/evil.com",
+            "/pt-br/\r/evil.com",
+            "/pt-br/\\evil.com",
+            "/pt-br/\\/evil.com",
+            "/pt-br/x/\\y",
+        ]) {
+            expect(postAuthRedirectTarget(target, FALLBACK)).toBe(FALLBACK);
+        }
+    });
+
+    it("accepts a path that resolves without a double slash", () => {
+        expect(postAuthRedirectTarget("/pt-br/", FALLBACK)).toBe("/pt-br/");
+        expect(postAuthRedirectTarget("/pt-br/x\t/y", FALLBACK)).toBe(
+            "/pt-br/x\t/y"
+        );
+    });
+
+    it("falls back when the query or hash carries a double slash", () => {
+        expect(
+            postAuthRedirectTarget("/pt-br/search?next=https://x.com", FALLBACK)
+        ).toBe(FALLBACK);
+        expect(postAuthRedirectTarget("/pt-br/a#//x", FALLBACK)).toBe(FALLBACK);
     });
 
     it("rejects a path without a known locale prefix", () => {
@@ -88,7 +160,7 @@ describe("postAuthRedirectTarget", () => {
     it("keeps the query of an accepted deep link", () => {
         expect(
             postAuthRedirectTarget(
-                "%2Fpt-br%2Faccount%3Ftab%3Dbilling%26plan%3Dprice_1",
+                "/pt-br/account?tab=billing&plan=price_1",
                 FALLBACK
             )
         ).toBe("/pt-br/account?tab=billing&plan=price_1");
