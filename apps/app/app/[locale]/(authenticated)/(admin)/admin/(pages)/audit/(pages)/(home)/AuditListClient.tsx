@@ -10,6 +10,7 @@ import {
 } from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
+import { ShieldAlertIcon } from "lucide-react";
 import { useState } from "react";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
@@ -44,17 +45,27 @@ export function AuditListClient() {
         ? handleClientError(new FormattedError(listError, locale))
         : null;
 
+    const emptyCell = (
+        <span className="text-muted-foreground">
+            {auditTrailList.emptyValue}
+        </span>
+    );
+
     const columns = [
         {
             title: auditTrailList.columns.createdAt,
             dataIndex: "createdAt",
-            render: (value: string) => formatDateTime(value),
+            render: (value: string) => (
+                <span className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTime(value)}
+                </span>
+            ),
         },
         {
             title: auditTrailList.columns.action,
             dataIndex: "action",
             render: (value: AuditAction) => (
-                <span className="font-medium">
+                <span className="block min-w-40 font-medium">
                     {auditTrailList.actionLabels[value]}
                 </span>
             ),
@@ -62,33 +73,56 @@ export function AuditListClient() {
         {
             title: auditTrailList.columns.level,
             dataIndex: "level",
-            render: (value: AuditLevel) => (
-                <Badge
-                    variant={
-                        value === AuditLevel.INFO ? "secondary" : "destructive"
-                    }
-                >
-                    {auditTrailList.levelLabels[value]}
-                </Badge>
-            ),
+            render: (value: AuditLevel) =>
+                value === AuditLevel.INFO ? (
+                    <Badge variant="secondary">
+                        {auditTrailList.levelLabels[value]}
+                    </Badge>
+                ) : (
+                    <Badge variant="warning">
+                        <ShieldAlertIcon aria-hidden="true" />
+                        {auditTrailList.levelLabels[value]}
+                    </Badge>
+                ),
         },
         {
             title: auditTrailList.columns.actor,
             dataIndex: "actorLabel",
             render: (value: string | null) =>
-                value ?? auditTrailList.emptyValue,
+                value ? (
+                    <span className="block min-w-40 max-w-xs [overflow-wrap:anywhere]">
+                        {value}
+                    </span>
+                ) : (
+                    emptyCell
+                ),
         },
         {
             title: auditTrailList.columns.target,
             dataIndex: "targetLabel",
             render: (value: string | null) =>
-                value ?? auditTrailList.emptyValue,
+                value ? (
+                    <span className="block min-w-40 max-w-xs [overflow-wrap:anywhere]">
+                        {value}
+                    </span>
+                ) : (
+                    emptyCell
+                ),
         },
         {
             title: auditTrailList.columns.changedFields,
             dataIndex: "changedFields",
             render: (value: string[]) =>
-                value.length > 0 ? value.join(", ") : auditTrailList.emptyValue,
+                value.length > 0 ? (
+                    <span
+                        className="block min-w-40 max-w-sm font-mono text-muted-foreground text-xs [overflow-wrap:anywhere]"
+                        translate="no"
+                    >
+                        {value.join(", ")}
+                    </span>
+                ) : (
+                    emptyCell
+                ),
         },
     ];
 
@@ -104,10 +138,14 @@ export function AuditListClient() {
                 starts each query, and unmounting the form would drop the chosen values
                 and leave no way back from a combination the server refuses. */}
             <Container header={<PageHeader title={routes.audit.list.label} />}>
-                <div className="mx-auto flex w-full flex-col gap-6">
+                <div className="flex w-full flex-col gap-6">
                     <AuditFilters onApply={setFilters} />
                     {listLoadError ? (
-                        <LoadErrorState message={listLoadError} />
+                        <LoadErrorState
+                            message={listLoadError}
+                            onRetry={() => refetch()}
+                            retrying={isFetching}
+                        />
                     ) : (
                         <Table<AuditEventDTO>
                             columns={columns}

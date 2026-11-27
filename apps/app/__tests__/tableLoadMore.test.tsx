@@ -2,7 +2,7 @@ import { Table } from "@repo/design-system/components/ui/table";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// jsdom ships without matchMedia, and the antd table subscribes to it on mount.
+// jsdom ships without matchMedia, which the responsive hooks of the panel read on mount.
 window.matchMedia = ((query: string) => ({
     matches: false,
     media: query,

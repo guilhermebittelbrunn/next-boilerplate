@@ -86,7 +86,7 @@ export function AuditFilters({ onApply }: AuditFiltersProps) {
     return (
         <Form {...form}>
             <form
-                className="flex w-full flex-col gap-4 rounded-xl border border-border bg-muted/50 p-4"
+                className="flex w-full flex-col gap-4 rounded-xl bg-card p-4 text-card-foreground shadow-card sm:p-5"
                 onSubmit={form.handleSubmit((values) =>
                     onApply(toQueryFilters(values))
                 )}
@@ -122,7 +122,7 @@ export function AuditFilters({ onApply }: AuditFiltersProps) {
                             onApply({});
                         }}
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                     >
                         {auditFilters.clear}
                     </Button>
