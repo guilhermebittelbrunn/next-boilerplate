@@ -5,7 +5,7 @@ task: -
 spec: none (pedido direto)
 branch: feat/design-system-refresh
 epic: -
-updated: 2026-11-27 18:36
+updated: 2026-11-27 20:05
 ---
 
 # Pipeline: refactor de interface
@@ -15,7 +15,7 @@ updated: 2026-11-27 18:36
 | analyze | skipped     | -                | -                  | Pedido direto, sem plano: a direção ficou registrada em `docs/DESIGN.md` |
 | develop | done        | 2026-11-27 18:11 | develop/handoff.md | Seis fontes de skills de design em `.claude/skills/`; antd e react-toastify removidos; tokens, primitivos, shell do painel, telas do app e landing refeitos; `docs/DESIGN.md` novo e docs de fork atualizadas; `turbo run lint typecheck test` 29/29 |
 | review  | done        | 2026-11-27 18:36 | review/review.md   | Sem bloqueante; 6 pontos de atenção (nomes inventados no hero, onboarding vs `apps/app/CLAUDE.md`, cor dos e-mails, backlog do antd, índice com 4 remoções, typecheck no commit 26); 2 correções; branch renomeada para `feat/design-system-refresh`; 38 commits propostos; 39 commits em `feat/design-system-refresh`, enviados ao remoto |
-| test    | pending     | -                | -                  | - |
+| test    | done        | 2026-11-27 20:05 | test/report.md     | D1-D3 corrigidos e medidos (toast acima da barra, descrição livre da barra, `Badge` claro ≥ 4,99:1); `pnpm e2e` 45/45 e `pnpm test` raiz verdes; sessões em 1440 px corrigidas; 6 lacunas fechadas; LCP da landing (mediana 4,0 s) pendente sem linha de base |
 | observe | pending     | -                | -                  | - (opcional) |
 
 ## Notas
