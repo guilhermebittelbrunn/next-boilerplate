@@ -98,7 +98,7 @@ export function buildBrowserAppOptions(
                     ...developmentScriptSources(),
                     ...(input.scriptSrc ?? []),
                 ]),
-                // antd's CSS-in-JS, the theme provider and the toast library all write
+                // The theme provider, Radix positioning and the toast library all write
                 // inline style attributes; there is no nonce-free way around it.
                 styleSrc: [SELF, UNSAFE_INLINE],
                 connectSrc: toSources([SELF, ...(input.connectSrc ?? [])]),
