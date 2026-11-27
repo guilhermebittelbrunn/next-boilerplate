@@ -21,6 +21,7 @@ export const signInTranslations = {
         googleSignIn: "Continuar com Google",
         signUp: "Cadastrar",
         noAccount: "Não tem uma conta? ",
+        forgotPassword: "Esqueci minha senha",
     },
     en: {
         meta: {
@@ -44,6 +45,7 @@ export const signInTranslations = {
         googleSignIn: "Continue with Google",
         signUp: "Sign Up",
         noAccount: "Don't have an account? ",
+        forgotPassword: "Forgot your password?",
     },
     es: {
         meta: {
@@ -67,5 +69,6 @@ export const signInTranslations = {
         googleSignIn: "Continuar con Google",
         signUp: "Registrarse",
         noAccount: "¿No tienes una cuenta? ",
+        forgotPassword: "¿Olvidaste tu contraseña?",
     },
 };
