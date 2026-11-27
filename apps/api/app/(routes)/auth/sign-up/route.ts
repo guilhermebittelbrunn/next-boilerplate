@@ -52,7 +52,9 @@ export async function POST(req: Request) {
     }
 
     try {
-        await createDefaultUserProfile(uid);
+        await createDefaultUserProfile(uid, undefined, {
+            requestId: requestIdFrom(req),
+        });
     } catch {
         const requestId = requestIdFrom(req);
         logEvent("auth", "profile-create-failed", { requestId });

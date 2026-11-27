@@ -1,4 +1,4 @@
-import { UserType } from "@repo/sdk/src/types";
+import { AuditAction, UserType } from "@repo/sdk/src/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -10,7 +10,9 @@ const {
     hasArchivedProfileMock,
     createMock,
     logEventMock,
+    recordLifecycleMock,
 } = vi.hoisted(() => ({
+    recordLifecycleMock: vi.fn(),
     getUserMock: vi.fn(),
     getCurrentUserMock: vi.fn(),
     updateUserMock: vi.fn(),
@@ -25,6 +27,11 @@ const {
 // this file is about.
 vi.mock("@/(shared)/lib/organization-membership", () => ({
     ensureOrganizationMembershipQuietly: vi.fn(),
+}));
+
+vi.mock("@/(shared)/lib/audit-recorder", () => ({
+    recordAccountLifecycleEvent: (...args: unknown[]) =>
+        recordLifecycleMock(...args),
 }));
 
 vi.mock("@/(shared)/lib/notifications", () => ({
@@ -97,6 +104,7 @@ beforeEach(() => {
         hasArchivedProfileMock,
         createMock,
         logEventMock,
+        recordLifecycleMock,
     ]) {
         mock.mockReset();
     }
@@ -130,6 +138,7 @@ describe("getMergedUserByUid never recreates an archived profile", () => {
         expect(createMock).not.toHaveBeenCalled();
         expect(updateUserMock).toHaveBeenCalledWith(UID, { disabled: true });
         expect(revokeUserSessionsMock).toHaveBeenCalledWith(UID);
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
     });
 
     it("still creates the COMMON profile on an account's first sign-in", async () => {
@@ -144,6 +153,12 @@ describe("getMergedUserByUid never recreates an archived profile", () => {
             })
         );
         expect(updateUserMock).not.toHaveBeenCalled();
+        expect(recordLifecycleMock).toHaveBeenCalledWith({
+            action: AuditAction.ACCOUNT_SIGN_UP,
+            profileId: "profile-1",
+            uid: UID,
+            requestId: null,
+        });
     });
 
     it("returns null without throwing when disabling the archived account fails", async () => {

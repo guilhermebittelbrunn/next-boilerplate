@@ -1,4 +1,4 @@
-import { UserType } from "@repo/sdk/src/types";
+import { AuditAction, UserType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import {
     PASSWORD_MAX_LENGTH,
@@ -12,7 +12,9 @@ const {
     deleteUserMock,
     emitNotificationMock,
     ensureMembershipMock,
+    recordLifecycleMock,
 } = vi.hoisted(() => ({
+    recordLifecycleMock: vi.fn(),
     createUserMock: vi.fn(),
     createMock: vi.fn(),
     deleteUserMock: vi.fn(),
@@ -23,6 +25,11 @@ const {
 vi.mock("@/(shared)/lib/organization-membership", () => ({
     ensureOrganizationMembershipQuietly: (...args: unknown[]) =>
         ensureMembershipMock(...args),
+}));
+
+vi.mock("@/(shared)/lib/audit-recorder", () => ({
+    recordAccountLifecycleEvent: (...args: unknown[]) =>
+        recordLifecycleMock(...args),
 }));
 
 vi.mock("@/(shared)/lib/notifications", () => ({
@@ -56,7 +63,10 @@ function signUpRequest(
 ) {
     return new Request("http://localhost:3002/auth/sign-up", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+            "content-type": "application/json",
+            "x-request-id": "req-sign-up",
+        },
         body: typeof body === "string" ? body : JSON.stringify(body),
     });
 }
@@ -106,6 +116,30 @@ describe("POST /auth/sign-up", () => {
             params: {},
             dedupeKey: "profile-1",
         });
+    });
+
+    it("records the sign-up as the holder's own info event, with the request id", async () => {
+        await POST(signUpRequest());
+
+        expect(recordLifecycleMock).toHaveBeenCalledTimes(1);
+        expect(recordLifecycleMock).toHaveBeenCalledWith({
+            action: AuditAction.ACCOUNT_SIGN_UP,
+            profileId: "profile-1",
+            uid: UID,
+            requestId: "req-sign-up",
+        });
+    });
+
+    it("records no sign-up when the profile cannot be created", async () => {
+        createMock.mockRejectedValue(new Error("firestore unavailable"));
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+            // silence the expected log line
+        });
+
+        await POST(signUpRequest());
+
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+        warnSpy.mockRestore();
     });
 
     it("gives the new profile its own organization", async () => {
