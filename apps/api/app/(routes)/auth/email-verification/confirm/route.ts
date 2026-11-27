@@ -1,14 +1,20 @@
+import { AuditAction } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { logEvent } from "@repo/shared/utils/helpers/log";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { recordAccountLifecycleEvent } from "@/(shared)/lib/audit-recorder";
 import {
     IdentityToolkitError,
     identityApplyOobCode,
     identityCheckOobCode,
+    type ToolkitApplyOob,
 } from "@/(shared)/lib/firebase-identity-toolkit";
 import { parseRequestJson } from "@/(shared)/lib/parse-request-json";
 import {
     mapOobActionMessageToCode,
     statusForAuthErrorCode,
 } from "@/(shared)/lib/toolkit-error-codes";
+import { userRepository } from "@/(shared)/repositories/user.repository";
 import { parseEmailVerificationConfirm } from "@/(shared)/validation/auth.schema";
 
 const EMAIL_VERIFICATION_REQUEST_TYPE = "VERIFY_EMAIL";
@@ -24,6 +30,38 @@ function toolkitFailure(error: IdentityToolkitError): Response {
     );
 }
 
+/**
+ * The route is public, so the holder comes from the account the provider just verified,
+ * never from the request. A holder without a profile is logged and the confirmation
+ * still succeeds.
+ */
+async function recordEmailVerified(
+    applied: ToolkitApplyOob,
+    requestId: string | null
+): Promise<void> {
+    const profile = applied.localId
+        ? await userRepository
+              .findByReferenceId(applied.localId)
+              .catch(() => null)
+        : null;
+
+    if (!profile) {
+        logEvent("audit", "subject-not-found", {
+            action: AuditAction.ACCOUNT_EMAIL_VERIFY,
+            requestId,
+        });
+        return;
+    }
+
+    await recordAccountLifecycleEvent({
+        action: AuditAction.ACCOUNT_EMAIL_VERIFY,
+        profileId: profile.id,
+        uid: applied.localId,
+        label: applied.email || null,
+        requestId,
+    });
+}
+
 export async function POST(req: Request) {
     const parsedBody = await parseRequestJson(req);
     if (!parsedBody.ok) {
@@ -36,6 +74,7 @@ export async function POST(req: Request) {
     }
 
     const { oobCode } = parsed.value;
+    let applied: ToolkitApplyOob;
     try {
         const checked = await identityCheckOobCode(oobCode);
         // Applying an email-change code here would move the address without revoking
@@ -46,13 +85,15 @@ export async function POST(req: Request) {
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
-        await identityApplyOobCode(oobCode);
+        applied = await identityApplyOobCode(oobCode);
     } catch (error) {
         if (error instanceof IdentityToolkitError) {
             return toolkitFailure(error);
         }
         throw error;
     }
+
+    await recordEmailVerified(applied, requestIdFrom(req));
 
     return Response.json({ data: { confirmed: true } });
 }

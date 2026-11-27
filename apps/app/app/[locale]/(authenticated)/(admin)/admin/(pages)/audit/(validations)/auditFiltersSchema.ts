@@ -5,17 +5,20 @@ type Dictionary = (typeof globalTranslations)[keyof typeof globalTranslations];
 
 /** Sentinel for "no user filter": the select needs a value, and empty is not one. */
 export const auditUserAll = "__all__" as const;
+export const auditLevelAll = "__all__" as const;
 
 export type AuditFiltersFormValues = {
     userId: string;
     from: string;
     to: string;
+    level: string;
 };
 
 export const auditFiltersDefaults: AuditFiltersFormValues = {
     userId: auditUserAll,
     from: "",
     to: "",
+    level: auditLevelAll,
 };
 
 export function buildAuditFiltersSchema(dictionary: Dictionary) {
@@ -27,6 +30,7 @@ export function buildAuditFiltersSchema(dictionary: Dictionary) {
             userId: z.string(),
             from: z.string(),
             to: z.string(),
+            level: z.string(),
         })
         .refine(
             (value) => !(value.from && value.to) || value.from <= value.to,

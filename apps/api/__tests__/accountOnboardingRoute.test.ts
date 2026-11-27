@@ -1,17 +1,24 @@
 import { UserRoleLevel } from "@repo/auth/types";
-import { UserType } from "@repo/sdk/src/types";
+import { AuditAction, UserType } from "@repo/sdk/src/types";
 import { AUTH_REQUEST_HEADER } from "@repo/shared/utils/helpers/auth-request-headers";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { OnboardingTransition } from "@/(shared)/lib/onboarding";
 
-const { resolveApiActorMock, findByReferenceIdMock, updateMock } = vi.hoisted(
-    () => ({
-        resolveApiActorMock: vi.fn(),
-        findByReferenceIdMock: vi.fn(),
-        updateMock: vi.fn(),
-    })
-);
+const {
+    resolveApiActorMock,
+    findByReferenceIdMock,
+    updateMock,
+    advanceOnboardingMock,
+    recordLifecycleMock,
+} = vi.hoisted(() => ({
+    resolveApiActorMock: vi.fn(),
+    findByReferenceIdMock: vi.fn(),
+    updateMock: vi.fn(),
+    advanceOnboardingMock: vi.fn(),
+    recordLifecycleMock: vi.fn(),
+}));
 
 vi.mock("@/(shared)/lib/resolve-api-actor", () => ({
     resolveApiActor: (...args: unknown[]) => resolveApiActorMock(...args),
@@ -22,13 +29,18 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
         findByReferenceId: (...args: unknown[]) =>
             findByReferenceIdMock(...args),
         touchLastAccess: vi.fn(),
-        update: (...args: unknown[]) => updateMock(...args),
+        advanceOnboarding: (
+            id: string,
+            decide: (stored: unknown) => OnboardingTransition
+        ) => advanceOnboardingMock(id, decide),
     },
 }));
 
 vi.mock("@/(shared)/lib/audit-recorder", () => ({
     recordAuditEvent: vi.fn(),
     recordImpersonationSession: vi.fn(),
+    recordAccountLifecycleEvent: (...args: unknown[]) =>
+        recordLifecycleMock(...args),
 }));
 
 const { POST } = await import("@/app/(routes)/account/onboarding/route");
@@ -65,7 +77,27 @@ function request(body?: unknown, headers = OWNER_HEADERS): NextRequest {
     } as unknown as NextRequest;
 }
 
+let storedOnboarding: unknown;
+
+/**
+ * Stands in for the Firestore transaction: `decide` sees the stored value, and an advance
+ * goes through `updateMock` so a failed write still rejects like the real one.
+ */
+async function fakeAdvanceOnboarding(
+    id: string,
+    decide: (stored: unknown) => OnboardingTransition
+) {
+    const stored = storedOnboarding;
+    const transition = decide(stored);
+    if (transition.kind === "advanced") {
+        await updateMock({ id, onboarding: transition.state });
+        storedOnboarding = transition.state;
+    }
+    return { stored, transition };
+}
+
 function withOnboarding(onboarding: unknown) {
+    storedOnboarding = onboarding;
     findByReferenceIdMock.mockImplementation((uid: string) =>
         Promise.resolve(
             uid === ADMIN_UID ? ADMIN_PROFILE : { ...OWNER_PROFILE, onboarding }
@@ -83,11 +115,14 @@ beforeEach(() => {
         resolveApiActorMock,
         findByReferenceIdMock,
         updateMock,
+        advanceOnboardingMock,
+        recordLifecycleMock,
     ]) {
         mock.mockReset();
     }
     resolveApiActorMock.mockResolvedValue({ uid: OWNER_UID });
     updateMock.mockResolvedValue(OWNER_PROFILE.id);
+    advanceOnboardingMock.mockImplementation(fakeAdvanceOnboarding);
     withOnboarding({ step: "profile", completedAt: null });
 });
 
@@ -273,5 +308,110 @@ describe("POST /account/onboarding", () => {
         expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
         expect(await codeOf(response)).toBe("AUTH_INVALID_TOKEN");
         expect(updateMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("POST /account/onboarding leaves a trail only on completion", () => {
+    beforeEach(() => {
+        resolveApiActorMock.mockResolvedValue({
+            uid: OWNER_UID,
+            email: "owner@example.com",
+        });
+    });
+
+    it("records the completion once, as the holder's own info event", async () => {
+        withOnboarding({ step: "preferences", completedAt: null });
+
+        await POST(request({ step: "preferences", outcome: "completed" }));
+
+        expect(recordLifecycleMock).toHaveBeenCalledTimes(1);
+        expect(recordLifecycleMock).toHaveBeenCalledWith({
+            action: AuditAction.ACCOUNT_ONBOARDING_COMPLETE,
+            profileId: OWNER_PROFILE.id,
+            uid: OWNER_UID,
+            label: "owner@example.com",
+            requestId: null,
+        });
+    });
+
+    it("records the completion when the last step is skipped", async () => {
+        withOnboarding({ step: "preferences", completedAt: null });
+
+        await POST(request({ step: "preferences", outcome: "skipped" }));
+
+        expect(recordLifecycleMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("records nothing for an intermediate step", async () => {
+        await POST(request({ step: "profile", outcome: "completed" }));
+
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+    });
+
+    it("records nothing for a repeat on a completed flow", async () => {
+        withOnboarding({
+            step: "preferences",
+            completedAt: new Date("2026-09-01T00:00:00.000Z"),
+        });
+
+        await POST(request({ step: "preferences", outcome: "completed" }));
+
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+    });
+
+    it("records nothing for a refused step", async () => {
+        await POST(request({ step: "profile", outcome: "skipped" }));
+        await POST(request({ step: "preferences", outcome: "completed" }));
+
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+    });
+
+    it("records nothing when the state cannot be saved", async () => {
+        withOnboarding({ step: "preferences", completedAt: null });
+        updateMock.mockRejectedValue(new Error("unavailable"));
+
+        await POST(request({ step: "preferences", outcome: "completed" }));
+
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+    });
+
+    it("records nothing when another tab completed the flow first", async () => {
+        withOnboarding({ step: "preferences", completedAt: null });
+        const completedElsewhere = new Date("2026-11-27T12:00:19.763Z");
+        advanceOnboardingMock.mockImplementation(
+            (id: string, decide: (stored: unknown) => OnboardingTransition) => {
+                storedOnboarding = {
+                    step: "preferences",
+                    completedAt: completedElsewhere,
+                };
+                return fakeAdvanceOnboarding(id, decide);
+            }
+        );
+
+        const response = await POST(
+            request({ step: "preferences", outcome: "completed" })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(await response.json()).toEqual({
+            data: {
+                step: "preferences",
+                completedAt: completedElsewhere.toISOString(),
+            },
+        });
+        expect(updateMock).not.toHaveBeenCalled();
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+    });
+
+    it("answers ONBOARDING_UPDATE_FAILED when the profile vanished mid-request", async () => {
+        advanceOnboardingMock.mockResolvedValue(null);
+
+        const response = await POST(
+            request({ step: "profile", outcome: "completed" })
+        );
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await codeOf(response)).toBe("ONBOARDING_UPDATE_FAILED");
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
     });
 });

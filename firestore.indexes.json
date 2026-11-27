@@ -60,6 +60,23 @@
       ]
     },
     {
+      "collectionGroup": "auditEvent",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "level", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "auditEvent",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "involvedUserIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "level", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "notification",
       "queryScope": "COLLECTION",
       "fields": [

@@ -1,12 +1,21 @@
 ---
 name: spec-audit
-description: Reconcilia o backlog de specs (specs/features/) com a realidade do código e do pipeline — confere no código se o corte de MVP de cada spec foi entregue, cruza com docs/features/*/STATE.md, corrige os status, detecta deriva, move as specs entregues para docs/features/<slug>/spec.md, regrava a fila em specs/BACKLOG.md e a evidência em specs/reference/AUDIT.md. Use no /spec --sync, ao fechar um ciclo de entrega, ou quando desconfiar que o backlog está mentindo.
+description: Reconcilia o backlog de specs (specs/features/) com a realidade do código e do pipeline — confere no código se o corte de MVP de cada spec foi entregue, cruza com docs/features/*/STATE.md, corrige os status, detecta deriva, move as specs entregues para docs/features/<slug>/spec.md, regrava a fila em specs/BACKLOG.md e a evidência em specs/reference/AUDIT.md. Também fecha uma única spec na branch da feature, depois do /test (§4.2). Use no /spec --sync, no /spec --close, ou quando desconfiar que o backlog está mentindo.
 ---
 
 # Auditoria do backlog de specs
 
 O `status` gravado numa spec é **uma afirmação, não um fato**. Esta skill verifica cada afirmação contra o
-código e fecha o loop `/spec → /analyze → /develop → /review → /test → /spec`.
+código e fecha o loop `/spec → /analyze → /develop → /review → /test → /spec --close`.
+
+Ela tem dois modos:
+
+| modo | onde roda | o que faz |
+|------|-----------|-----------|
+| `--close` | na branch da feature, depois do `/test` | confere e arquiva **só a spec daquela feature** (§4.2) |
+| `--sync` | a partir de `main` atualizada | audita o backlog inteiro (§1 a §8) e confirma o merge das specs já fechadas (§3.1) |
+
+No `--close`, siga só o §4.2; ele cita os trechos do §2, §4.1 e §5 que usa.
 
 Regra que governa tudo: **o código é a verdade.** Se o frontmatter diz `proposed` e a capacidade está
 implementada, o frontmatter está errado.
@@ -84,6 +93,22 @@ Para cada `docs/features/*/STATE.md`:
 - Feature sem `spec:` cujo escopo casa com uma spec → o vínculo faltou; proponha preenchê-lo nos dois
   lados.
 
+### 3.1 Specs fechadas na branch antes do merge
+
+O fechamento na branch (§4.2) arquiva a spec antes de a PR entrar em `main`. Cabe ao `--sync` confirmar o
+que ficou pendente. Para cada `docs/features/*/spec.md` cuja seção "Conferência da entrega" diz
+`PR: pendente de merge`, ou cuja linha em "Entregues" do `BACKLOG.md` está `(aguardando merge)`:
+
+- confirme que o commit está em `origin/main` e que o CI passou no SHA de merge (`gh pr view`,
+  `gh run list`);
+- se passou, troque o `pendente de merge` pelo número da PR e pelo SHA, tire o `(aguardando merge)` do
+  `BACKLOG.md` e escreva a linha detalhada em "Entregues" do `reference/AUDIT.md`;
+- se o merge saiu com CI vermelho, ou o código da entrega não está mais em `main`, é achado bloqueante
+  (§5, regressão). Não reabra a spec em silêncio.
+
+Spec que está em `specs/` como `in-progress` em `main`, com a feature ainda em branch aberta, não é
+regressão: o fechamento está na branch e chega junto com o merge.
+
 ## 4. Aplique as transições
 
 | Achado | Transição | Observação |
@@ -137,9 +162,53 @@ Uma spec `done` **sai de `specs/`** e passa a viver junto da feature que a imple
 **Nunca apague uma spec.** `done` é movida; `rejected` e `superseded` ficam em `specs/features/` como memória
 institucional — é o que impede o `/spec` de repropor a mesma coisa na rodada seguinte.
 
-> **Commit:** o arquivo movido pertence ao commit `docs(features): <slug>` daquela feature. Como o
-> `--sync` costuma rodar depois do `/review`, na prática ele gera um commit de fechamento à parte. Não
-> commite por conta própria — [`git-commits.md`](../../rules/git-commits.md) exige aprovação explícita.
+> **Commit:** o caminho normal é o fechamento na própria branch da feature (§4.2), que gera o commit
+> `docs(specs): close <id>`. Quando o `--sync` acha uma spec entregue que ninguém fechou, o arquivamento
+> vira um commit `docs(specs)` da rodada de auditoria. Nos dois casos, não commite por conta própria:
+> [`git-commits.md`](../../rules/git-commits.md) exige aprovação explícita.
+
+### 4.2 Fechar a spec na branch da feature (`/spec --close`)
+
+O arquivamento pertence à branch que entregou a feature. Se ele esperar o `--sync` da rodada seguinte, a
+próxima branch nasce de uma `main` em que a spec entregue ainda está em `specs/` como `in-progress`, e quem
+pega a próxima tarefa tem de reconstruir o que foi feito. Fechando na mesma branch, a spec, o `BACKLOG.md`
+e o código entram juntos na PR: depois do merge, a próxima tarefa já encontra o backlog atualizado.
+
+**Quando:** depois do `/test` com `test = done`, na branch da feature, para uma feature cujo `STATE.md` tem
+`spec: <id>`. Tarefa direta (sem spec) não tem o que fechar.
+
+**Escopo:** só a spec daquela feature. O fechamento não é auditoria: não reconfere as outras specs, não
+remede gate, não recalcula lote paralelo e não acrescenta conteúdo ao `reference/AUDIT.md`. É isso que
+permite cada branch fechar a própria spec sem brigar com as outras branches pelo mesmo arquivo. A única
+edição permitida fora da spec e do `BACKLOG.md` é trocar o alvo dos links que o movimento quebrou, em
+qualquer arquivo, inclusive no `AUDIT.md`: link morto não espera o `--sync`.
+
+1. **Pré-condições.** Pare e reporte se qualquer uma falhar:
+   - a branch atual não é protegida (`git rev-parse --abbrev-ref HEAD`);
+   - o `STATE.md` da feature tem `spec: <id>` e `test = done`;
+   - `specs/features/<id>.md` existe e `docs/features/<slug>/spec.md` não existe (colisão: §4.1, passo 3).
+2. **Confira o corte no código do working tree**, com as mesmas regras do §2: cada item com evidência
+   `arquivo:linha`. Use também o `test/report.md` da feature, mas como pista, não como prova. Item que
+   depende de infra externa conta como entregue quando o código e o modo degradado existem e a pendência
+   está no `docs/PRE-PRODUCTION.md`.
+   - Corte incompleto: **não feche**. A spec continua `in-progress`; liste o que falta e pare.
+   - Deriva: aplique o §5 só a esta spec.
+3. **Registre a conferência no próprio arquivo da spec**, numa seção final `## Conferência da entrega`:
+   os itens do corte com `arquivo:linha`, o placar do `/test` (aprovados, não verificados), a deriva, as
+   pendências de infra e a branch. Escreva `PR: pendente de merge`. É essa seção que a próxima tarefa lê
+   para entender o que foi entregue sem reabrir o diff.
+4. **Arquive** pelos passos 4, 5, 7 e 8 do §4.1: frontmatter (`status: done`, `feature: <slug>`,
+   `updated`), `git mv` para `docs/features/<slug>/spec.md` e links corrigidos.
+5. **Edite o `BACKLOG.md` só nas linhas desta spec**, sem regravar o arquivo:
+   - tire a linha da "Ordem recomendada" (renumere as que sobram) ou de "Em andamento";
+   - nas specs cujo `depends_on` cita este `id`, atualize a observação de bloqueio, que deixou de valer;
+   - acrescente a linha em "Entregues" com a data e o link novo, marcada `(aguardando merge)`;
+   - ajuste os contadores por `status`.
+6. **Relate** ao orquestrador: o que foi conferido, para onde a spec foi, as linhas do `BACKLOG.md` que
+   mudaram e o commit proposto, `docs(specs): close <id>`, que entra antes do `docs(features): <slug>`.
+
+Se a PR não for mergeada, nada vaza: a `main` continua com a spec em `specs/` e o fechamento fica na branch
+abandonada. Quem confirma o merge e o CI verde é o `--sync` seguinte (§3.1).
 
 ## 5. Detecte deriva
 
@@ -250,6 +319,8 @@ nesta rodada tem o Resumo atualizado junto. Spec sem Resumo ganha um.
 
 - **Escreve em `specs/`** (`BACKLOG.md`, `features/`, `reference/AUDIT.md`) e, **só para arquivar a spec entregue**, cria `docs/features/<slug>/spec.md` e
   acrescenta o campo `spec:` ao `STATE.md` daquela feature. Nada além disso em `docs/features/**`.
+- **No `--close`, o raio é uma spec só**: o arquivo dela, as linhas dela no `BACKLOG.md` e os links que o
+  movimento quebrou, onde quer que estejam. No `reference/AUDIT.md`, só a troca do alvo desses links.
 - **Nunca toque em `apps/**` ou `packages/**`.**
 - **Nunca aplique `rejected`** por conta própria — proponha.
 - **Nunca apague uma spec.** Entregue é **movida**; `superseded` e `rejected` ficam em `specs/`.

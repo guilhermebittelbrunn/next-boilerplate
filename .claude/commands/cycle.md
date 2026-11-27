@@ -1,5 +1,5 @@
 ---
-description: Roda o ciclo inteiro sem parar — /spec --sync, escolhe a próxima spec do backlog e leva ela por /analyze → /develop → /review → /test, acumulando as perguntas para o fim. Adota a recomendação quando precisa decidir, registra as pendências de infra em docs/PRE-PRODUCTION.md e nunca commita sozinho.
+description: Roda o ciclo inteiro sem parar — /spec --sync, escolhe a próxima spec do backlog e leva ela por /analyze → /develop → /review → /test → /spec --close, acumulando as perguntas para o fim. Adota a recomendação quando precisa decidir, registra as pendências de infra em docs/PRE-PRODUCTION.md e nunca commita sozinho.
 argument-hint: "[id da spec | --audit-only | --no-audit (exige id) | --max-rounds N]"
 allowed-tools: Agent, AskUserQuestion, Read, Write, Edit, Grep, Glob, Bash, Skill
 ---
@@ -17,7 +17,7 @@ parariam para perguntar, você **decide, registra e segue**. O preço disso é q
 ser honesto o bastante para o usuário conseguir desfazer qualquer decisão que não goste.
 
 > **Este comando não substitui os individuais.** Quem está acompanhando de perto deve rodar
-> `/spec --sync`, `/analyze`, `/develop`, `/review`, `/test` um a um — o feedback chega mais cedo e sai
+> `/spec --sync`, `/analyze`, `/develop`, `/review`, `/test`, `/spec --close` um a um — o feedback chega mais cedo e sai
 > mais barato. O `/cycle` é para a rodada autônoma.
 
 ## Regras de escrita (`humanizer` + `caveman`)
@@ -73,6 +73,10 @@ O princípio, que você repete no prompt: **verificar o código, não o `status`
 de MVP é reconferido no código-fonte com evidência `arquivo.ts:linha`. Spec só vira `done` com o corte
 inteiro confirmado — e o critério de "entregue" inclui **PR mergeada em `main` e CI verde no SHA de
 merge**, não apenas código no disco.
+
+Normalmente a spec entregue já chega arquivada: a rodada que a implementou fechou-a na própria branch
+(Passo 5.1). Aqui o agente confirma o merge e o CI dessas specs (§3.1 da skill) e só arquiva o que ninguém
+fechou.
 
 Peça também: corrigir a **deriva** de referências nas specs (elas apodrecem a cada entrega), reconferir os
 **achados** e as **pendências sem dono** um a um, remedir os **gates**, recalcular os **lotes paralelos** a
@@ -161,8 +165,9 @@ Duas instruções que só existem no modo loop:
   que na verdade **derrubava a página inteira** — o que pegou não foi o print, foi ninguém ter aceitado a
   afirmação de terceiro. A desconfiança continua; só quem mede mudou.
 - **Separe os assuntos no plano de commits.** O working tree quase sempre carrega mais de um: o código da
-  feature, a auditoria do backlog (`docs(specs)`), correções de documentação (`docs`), e os artefatos da
-  feature (`docs(features)`, sempre o **último**). Um commit por app/pacote, na ordem de dependência.
+  feature, a auditoria do backlog (`docs(specs)`), correções de documentação (`docs`), o fechamento da spec
+  (`docs(specs): close <id>`, do Passo 5.1, logo antes dos artefatos) e os artefatos da feature
+  (`docs(features)`, sempre o **último**). Um commit por app/pacote, na ordem de dependência.
 
 ## Passo 5 — `/test`, e o vai-e-volta que fecha o loop
 
@@ -212,6 +217,27 @@ defeito só existia em `next dev`, e deixar só um teste fixando o contrato.
 Ao atingir `--max-rounds` (padrão 2) sem convergir, **pare** e leve o defeito ao usuário no relatório final,
 com o repro e o que já foi tentado.
 
+## Passo 5.1 — `/spec --close`: fechar a spec na mesma branch
+
+Com `test = done` e a feature vinda de uma spec (`spec: <id>` no `STATE.md`), acione o
+**`estrategista-produto`** instruindo-o a seguir **só o §4.2 da skill
+[`spec-audit`](../skills/spec-audit/SKILL.md)**: conferir o corte daquela spec no código, gravar a seção
+"Conferência da entrega", mover o arquivo para `docs/features/<slug>/spec.md` e editar só as linhas dela no
+`BACKLOG.md`. Nada de reauditar as outras specs; no `reference/AUDIT.md`, só a troca do alvo dos links que o movimento
+quebrou.
+
+O motivo de fazer isso aqui, e não no Passo 1 da rodada seguinte: a spec sai de `specs/` na mesma PR do
+código. Depois do merge, a próxima branch já parte de um backlog que mostra a próxima tarefa, e a conferência
+do que foi entregue está ao lado do plano, do handoff e dos testes.
+
+- Corte incompleto ou teto de rodadas atingido sem convergir: **não feche**. A spec continua `in-progress`
+  e o motivo entra no relatório final.
+- Tarefa direta, sem spec: pule este passo.
+- Vale também com `--no-audit`: o fechamento edita só as linhas da própria spec, então workspaces em
+  paralelo podem fechar cada um a sua.
+
+O resultado entra no plano de commits como `docs(specs): close <id>`, logo antes do `docs(features): <slug>`.
+
 ## Passo 6 — Registrar as pendências de infra
 
 Tudo que **exige ação externa** (console de provedor, DNS, cartão de crédito, variável em produção, IAM,
@@ -238,8 +264,8 @@ Este é o **entregável** do comando. O usuário leu zero mensagens até aqui.
 
 Estruture em seis blocos:
 
-1. **O que rodou** — tabela etapa × resultado. Inclua os **gates medidos** (não copiados) e as transições
-   de status do backlog.
+1. **O que rodou** — tabela etapa × resultado. Inclua os **gates medidos** (não copiados), as transições
+   de status do backlog e o fechamento da spec (Passo 5.1): fechada, ou por que não.
 2. **O que foi entregue** — a feature, o que ficou de fora do corte, e o estado real (entregue /
    entregue-em-modo-degradado / bloqueada).
 3. **Decisões adotadas sem perguntar** — cada uma com a alternativa que **não** foi escolhida e o porquê.
@@ -262,7 +288,8 @@ relatório é o usuário saber **onde olhar com desconfiança**.
 ## Passo 8 — Fechar
 
 Sugira o próximo passo concreto: aprovar os commits, depois `git push`, PR, e **`/cycle` de novo** depois do
-merge — a spec entregue sai do backlog e a cadeia de dependências se move.
+merge. A spec entregue já saiu do backlog nesta branch, então a próxima rodada parte da tarefa seguinte e só
+confirma o merge desta.
 
 ## Se a sessão cair no meio
 
@@ -279,7 +306,7 @@ tempo de recarregar.
 - **Não commite, não pushe, não abra PR, não crie branch.** Branch é do `revisor-codigo`; commit é do
   usuário.
 - **Não escreva em `docs/features/`** fora dos artefatos das etapas; não escreva em `specs/` fora do que a
-  auditoria manda.
+  auditoria (Passo 1) e o fechamento (Passo 5.1) mandam.
 - **Nunca persista credencial** em arquivo versionado. Dados de QA criados → liste no relatório para
   limpeza.
 - **Não desative teste** para fazer a suíte passar.

@@ -18,11 +18,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
+import { env } from "@/env";
 import { apiClient } from "@/shared/lib/client";
 import {
     buildSignInSchema,
     type SignInFormValues,
 } from "../validations/signInSchema";
+
+const TRAILING_SLASHES = /\/+$/;
 
 export const SignInFormClient = () => {
     const router = useRouter();
@@ -32,6 +35,9 @@ export const SignInFormClient = () => {
     const trackEvent = useAnalyticsEvent();
 
     const isLoading = signIn.isPending || signInWithGoogle.isPending;
+    const forgotPasswordUrl = env.NEXT_PUBLIC_APP_URL
+        ? `${env.NEXT_PUBLIC_APP_URL.replace(TRAILING_SLASHES, "")}/${locale}/forgot-password`
+        : null;
 
     const schema = useMemo(() => buildSignInSchema(dictionary), [dictionary]);
 
@@ -159,16 +165,31 @@ export const SignInFormClient = () => {
                     {dictionary.apps.web.pages.signIn.googleSignIn}
                 </Button>
 
-                <div className="text-center text-sm">
-                    <span className="text-muted-foreground">
-                        {dictionary.apps.web.pages.signIn.noAccount}
-                    </span>
-                    <Link
-                        className="text-primary hover:underline"
-                        href={`/${locale}/sign-up`}
-                    >
-                        {dictionary.apps.web.pages.signIn.signUp}
-                    </Link>
+                <div className="space-y-2 text-center text-sm">
+                    {forgotPasswordUrl ? (
+                        <p>
+                            <a
+                                className="text-primary hover:underline"
+                                href={forgotPasswordUrl}
+                            >
+                                {
+                                    dictionary.apps.web.pages.signIn
+                                        .forgotPassword
+                                }
+                            </a>
+                        </p>
+                    ) : null}
+                    <p>
+                        <span className="text-muted-foreground">
+                            {dictionary.apps.web.pages.signIn.noAccount}
+                        </span>
+                        <Link
+                            className="text-primary hover:underline"
+                            href={`/${locale}/sign-up`}
+                        >
+                            {dictionary.apps.web.pages.signIn.signUp}
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>

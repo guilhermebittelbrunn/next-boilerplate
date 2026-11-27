@@ -62,7 +62,7 @@ Valem para você tanto quanto para o subagent — a regra é
    `STATE.md`.
 5. Ao final, marque a spec como `status: in-progress`, `feature: <slug>` e `updated` de hoje, e atualize o bloco
    **Resumo** dela (linhas **Status** e **Próximo passo**: `/develop`).
-   **Não mova o arquivo** — arquivar é do `/spec --sync` (ciclo de vida em
+   **Não mova o arquivo** — arquivar é do `/spec --close`, no fim da feature (ciclo de vida em
    [`specs/README.md`](../../specs/README.md)).
 
 > **Épico?** Se a tarefa tiver **subtarefas**, é um épico. Pergunte (`AskUserQuestion`) se deve
@@ -124,7 +124,7 @@ mencione que **`/spec <ideia>`** teria confrontado a ideia com o que já existe 
 plano — útil na próxima.
 
 Se veio de uma spec, confirme que ela ficou `in-progress` com `feature: <slug>` apontando para a feature
-criada, e lembre o ciclo completo: `/develop → /review → /test → /spec --sync`.
+criada, e lembre o ciclo completo: `/develop → /review → /test → /spec --close`.
 
 ## Estado do pipeline (`STATE.md`)
 

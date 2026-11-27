@@ -1,3 +1,4 @@
+import { AuditLevel } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { z } from "zod";
 import { parseListQuery } from "./pagination.schema";
@@ -29,6 +30,7 @@ const auditFiltersSchema = z
         userId: z.string().trim().min(1).max(USER_ID_MAX).optional(),
         from: calendarDaySchema.optional(),
         to: calendarDaySchema.optional(),
+        level: z.enum(AuditLevel).optional(),
     })
     .refine(
         (value) => !(value.from && value.to) || value.from <= value.to,
@@ -41,6 +43,7 @@ export type AuditListQuery = {
     userId?: string;
     from?: Date;
     to?: Date;
+    level?: AuditLevel;
 };
 
 export function parseAuditListQuery(
@@ -56,6 +59,7 @@ export function parseAuditListQuery(
         userId: params.get("userId") || undefined,
         from: params.get("from") || undefined,
         to: params.get("to") || undefined,
+        level: params.get("level") || undefined,
     });
 
     if (!parsed.success) {
@@ -81,6 +85,7 @@ export function parseAuditListQuery(
             ...(parsed.data.to
                 ? { to: new Date(`${parsed.data.to}${LAST_MS_OF_DAY}`) }
                 : {}),
+            ...(parsed.data.level ? { level: parsed.data.level } : {}),
         },
     };
 }

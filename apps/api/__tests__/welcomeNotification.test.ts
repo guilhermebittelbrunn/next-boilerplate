@@ -14,6 +14,10 @@ vi.mock("@/(shared)/lib/organization-membership", () => ({
         ensureMembershipMock(...args),
 }));
 
+vi.mock("@/(shared)/lib/audit-recorder", () => ({
+    recordAccountLifecycleEvent: vi.fn(),
+}));
+
 vi.mock("@repo/auth/server", () => ({
     getAuthInstance: vi.fn(),
     getCurrentUser: vi.fn(),

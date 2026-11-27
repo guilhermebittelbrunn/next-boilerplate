@@ -9,7 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
 import type { SelectOption } from "@repo/design-system/components/ui/select";
 import { getDictionary } from "@repo/internationalization/client";
-import { UserType } from "@repo/sdk/src/types";
+import { AuditLevel, UserType } from "@repo/sdk/src/types";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
@@ -18,6 +18,7 @@ import type { AuditEventFilters } from "../(hooks)/useListAuditEvents";
 import {
     type AuditFiltersFormValues,
     auditFiltersDefaults,
+    auditLevelAll,
     auditUserAll,
     buildAuditFiltersSchema,
 } from "../(validations)/auditFiltersSchema";
@@ -31,12 +32,16 @@ function toQueryFilters(values: AuditFiltersFormValues): AuditEventFilters {
         ...(values.userId === auditUserAll ? {} : { userId: values.userId }),
         ...(values.from ? { from: values.from } : {}),
         ...(values.to ? { to: values.to } : {}),
+        ...(values.level === auditLevelAll
+            ? {}
+            : { level: values.level as AuditLevel }),
     };
 }
 
 export function AuditFilters({ onApply }: AuditFiltersProps) {
     const { dictionary } = getDictionary();
-    const auditFilters = dictionary.apps.app.pages.admin.auditTrail.filters;
+    const auditTrail = dictionary.apps.app.pages.admin.auditTrail;
+    const auditFilters = auditTrail.filters;
     const { data: users } = useListUsers();
 
     const schema = useMemo(
@@ -63,6 +68,21 @@ export function AuditFilters({ onApply }: AuditFiltersProps) {
         [users, auditFilters.userAll]
     );
 
+    const levelOptions = useMemo<SelectOption[]>(
+        () => [
+            { value: auditLevelAll, label: auditFilters.levelAll },
+            {
+                value: AuditLevel.SENSITIVE,
+                label: auditTrail.list.levelLabels.sensitive,
+            },
+            {
+                value: AuditLevel.INFO,
+                label: auditTrail.list.levelLabels.info,
+            },
+        ],
+        [auditFilters.levelAll, auditTrail.list.levelLabels]
+    );
+
     return (
         <Form {...form}>
             <form
@@ -71,13 +91,18 @@ export function AuditFilters({ onApply }: AuditFiltersProps) {
                     onApply(toQueryFilters(values))
                 )}
             >
-                <FormContainer className="md:grid-cols-3">
+                <FormContainer className="md:grid-cols-2 lg:grid-cols-4">
                     <HookFormSelect
                         label={auditFilters.userLabel}
                         name="userId"
                         options={userOptions}
                         placeholder={auditFilters.userPlaceholder}
                         searchable
+                    />
+                    <HookFormSelect
+                        label={auditFilters.levelLabel}
+                        name="level"
+                        options={levelOptions}
                     />
                     <HookFormDateInput
                         label={auditFilters.fromLabel}

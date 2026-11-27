@@ -1,7 +1,7 @@
 ---
 id: admin-own-account
 title: Área de conta para o admin (perfil, senha e preferências)
-status: approved
+status: done
 value: médio
 effort: M
 audience: produto
@@ -9,8 +9,8 @@ area: [apps/api, apps/app, packages/internationalization]
 mode: ambos
 depends_on: [app-internal-ux-polish]
 contends_on: [apps/api/app/(guards)/common-panel.ts, apps/app/shared/components/ui/ProfileDropdown.tsx, "apps/app/app/[locale]/(authenticated)/(admin)/admin/routes.tsx"]
-feature: -
-updated: 2026-11-25
+feature: admin-own-account
+updated: 2026-11-26
 ---
 
 # Área de conta para o admin (perfil, senha e preferências)
@@ -18,8 +18,8 @@ updated: 2026-11-25
 > **Resumo**
 > - **O quê:** uma área de conta para o admin trocar senha, avatar, tema e idioma sem sair do painel.
 > - **Por quê:** hoje "Minha conta" manda o admin para `/account`, o painel comum o devolve para `/admin`, e ele só troca a senha pelo "esqueci a senha".
-> - **Status:** `approved` · valor médio · esforço M · produto
-> - **Próximo passo:** `/analyze admin-own-account`, depois de `app-form-layout-centered`: a área do admin reaproveita os formulários da conta que aquela spec ajusta
+> - **Status:** `done` · valor médio · esforço M · produto. Entregue pela PR #76 (`a13768c`, 2026-11-26) e arquivada aqui.
+> - **Próximo passo:** nenhum. Sessões ativas, métodos de login e troca de e-mail do admin ficaram fora do corte, para a fatia do segundo fator de `account-security-mfa`.
 
 ## Problema
 
@@ -47,7 +47,7 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
   `403 USERS_SELF_LOCKOUT_FORBIDDEN` (tarefa `admin-self-lockout-guard`).
 - Peças reaproveitáveis: os formulários de perfil, senha e preferências da conta comum
   (`apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/`), já no layout de
-  configurações que [`app-internal-ux-polish`](../../docs/features/app-internal-ux-polish/spec.md) entregou pela
+  configurações que [`app-internal-ux-polish`](../../features/app-internal-ux-polish/spec.md) entregou pela
   PR #62: navegação por seção derivada do `?tab=` (`AccountTabs.tsx`, `accountTabRouting.ts`), blocos em
   `apps/app/shared/components/ui/SettingsSection.tsx` e cabeçalho de página em `ui/PageHeader.tsx`. A lista de
   seções é fixa no módulo (`accountTabRouting.ts:3-9`), então a área do admin precisa de uma lista própria, sem
@@ -57,7 +57,7 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
 
 ## Evidência de mercado
 
-- Nota: [`research/settings-page-patterns.md`](../reference/research/settings-page-patterns.md). Ela cobre o formato das
+- Nota: [`research/settings-page-patterns.md`](../../../specs/reference/research/settings-page-patterns.md). Ela cobre o formato das
   páginas de configurações (navegação lateral em 4 de 10 referências) e não pesquisa a conta do operador em
   particular. Não houve pesquisa nova para esta spec.
 - Nas referências da nota, as configurações de conta são do usuário logado, sem separar quem administra.
@@ -67,13 +67,13 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
 
 ## Proposta — corte de MVP
 
-- [ ] **"Minha conta" leva o admin a uma área de conta dentro do painel admin**, no mesmo layout de
+- [x] **"Minha conta" leva o admin a uma área de conta dentro do painel admin**, no mesmo layout de
       configurações da conta comum, e o menu do admin ganha a entrada correspondente.
-- [ ] **O admin edita o próprio perfil** (nome de exibição, telefone, avatar), com as mesmas regras da conta
+- [x] **O admin edita o próprio perfil** (nome de exibição, telefone, avatar), com as mesmas regras da conta
       comum.
-- [ ] **O admin troca a própria senha** pedindo a senha atual, com a mesma política de senha da conta comum.
-- [ ] **O admin salva tema e idioma no perfil**, e as preferências valem no painel admin depois de recarregar.
-- [ ] **A API aceita o admin só sobre a própria conta.** Um admin não edita a conta de outro por essas rotas,
+- [x] **O admin troca a própria senha** pedindo a senha atual, com a mesma política de senha da conta comum.
+- [x] **O admin salva tema e idioma no perfil**, e as preferências valem no painel admin depois de recarregar.
+- [x] **A API aceita o admin só sobre a própria conta.** Um admin não edita a conta de outro por essas rotas,
       e personificar um usuário comum continua levando às rotas e à tela da conta comum.
 
 ### Fora do corte
@@ -126,3 +126,21 @@ conta. Um fork que não resolver isso à mão entrega um admin que só muda a se
   senha. O `/analyze` confirma se isso não amplia o acesso das rotas do painel comum.
 - **Sessões ativas entram no corte?** — **recomendação:** não; entram com a fatia 3 de
   `account-security-mfa`.
+
+## Conferência da entrega (auditoria de 2026-11-26)
+
+Conferida no código de `main` (`a13768c`), não no `status` gravado. A PR #76 foi mergeada em 2026-11-26 e a execução
+de merge do CI (`gh run 45862770863`) terminou com os seis jobs verdes.
+
+| item do corte | situação | evidência |
+|---------------|----------|-----------|
+| "Minha conta" leva o admin à área de conta no painel admin, com entrada no menu | implementado | `admin/layout.tsx:52` (`Navbar accountPath="/admin/account"`), `ProfileDropdown.tsx:27-31` e `:73`, `admin/routes.tsx:34-45`, página em `admin/(pages)/account/(pages)/(home)/`, título em `apps/app/shared/lib/panelTitles.ts:42` |
+| O admin edita o próprio perfil | implementado | `AdminAccountClient.tsx` monta `AccountTabs area="admin"`; seções em `accountTabRouting.ts` (`adminAccountTabValues`: perfil, segurança, preferências); `PUT /account` com `requireOwnAccountApi` (`apps/api/app/(routes)/account/route.ts:121`); o upload do avatar passa pelo mesmo guard (`apps/api/app/(routes)/files/route.ts:57`) |
+| O admin troca a senha com a senha atual | implementado | `apps/api/app/(routes)/account/password/route.ts:22` e `password/set/route.ts:20` com `requireOwnAccountApi` |
+| Tema e idioma salvos no perfil | implementado | aba de preferências na lista do admin; `GET`/`PUT /account` (`account/route.ts:111`, `:121`) |
+| A API aceita o admin só sobre a própria conta | implementado | `apps/api/app/(guards)/common-panel.ts:41-49` (sujeito comum, ou admin sem personificação com `reference_id` igual ao do ator) e `:156-160`; teste `apps/api/__tests__/ownAccountGuard.test.ts`; regra descrita em `docs/AUTH-PANEL.md:60` |
+
+**Deriva.** Duas, nenhuma contra o corte. (1) O guard cobriu também o upload pessoal de `POST /files` e
+`POST /account/password/set`, que a spec não citava: sem eles o avatar e a senha de quem entrou só com Google seriam
+recusados para o admin. A spec estava incompleta. (2) O SDK não mudou, como a spec admitia. O único critério 🔒 do
+`/test` foi o admin que só tem Google definindo uma senha, que depende de conta Google real.

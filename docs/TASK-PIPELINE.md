@@ -9,10 +9,10 @@ Tudo em português; código e mensagens de commit em inglês.
 ## O pipeline
 
 ```
-Descobrir → Planejar  → Desenvolver → Revisar → QA        (+ opcional)
-/spec     → /analyze  → /develop    → /review → /test      /observe · /mediate
-   ↑                                                  │
-   └────────────── /spec --sync fecha o ciclo ────────┘
+Descobrir → Planejar  → Desenvolver → Revisar → QA    → Fechar          (+ opcional)
+/spec     → /analyze  → /develop    → /review → /test → /spec --close    /observe · /mediate
+   ↑                                                          │
+   └──── merge em main · /spec --sync confirma e audita ──────┘
 
            /cycle = a linha inteira de uma vez, sem parar para perguntar
 ```
@@ -21,8 +21,10 @@ Cada papel é um **slash command** (interativo, roda no loop principal e **pergu
 apoiado por um **subagent** (o motor autônomo que faz o trabalho pesado).
 
 O ciclo é fechado de propósito. O `/spec` alimenta o pipeline a partir do backlog em
-[`specs/`](../specs/README.md); no fim, `/spec --sync` **audita o backlog contra o código** e recomeça com
-ele limpo. Sem esse retorno, o backlog vira lista de desejos — e uma lista de desejos que ninguém confere é
+[`specs/`](../specs/README.md). No fim da feature, ainda na branch dela, o `/spec --close` confere o corte
+daquela spec no código e a move para `docs/features/<slug>/spec.md`, então a PR leva o backlog atualizado
+junto com o código. Depois do merge, o `/spec --sync` **audita o backlog inteiro contra o código** a partir
+de `main` e confirma que as specs fechadas entraram com CI verde. Sem esse retorno, o backlog vira lista de desejos — e uma lista de desejos que ninguém confere é
 pior que nenhuma, porque parece confiável.
 
 > Por que comandos e não só agents? Subagents rodam de forma autônoma e **não pausam para perguntar**. Os
@@ -36,14 +38,14 @@ deixou, sem depender da conversa.
 
 | Comando | Papel | O que faz |
 |---------|-------|-----------|
-| `/spec [ideia \| --sync \| --next]` | Estrategista de Produto | Varre o repo, confronta com padrões de mercado (**com fontes**) e escreve/atualiza as specs em `specs/`. `--sync` reconcilia o backlog com o código **e arquiva as specs entregues**; `--next` recomenda a próxima. |
+| `/spec [ideia \| --close \| --sync \| --next]` | Estrategista de Produto | Varre o repo, confronta com padrões de mercado (**com fontes**) e escreve/atualiza as specs em `specs/`. `--close` fecha a spec da feature **na branch dela**, depois do `/test`: confere o corte no código, arquiva em `docs/features/<slug>/spec.md` e atualiza o `BACKLOG.md`. `--sync` reconcilia o backlog inteiro com o código a partir de `main`; `--next` recomenda a próxima. |
 | `/analyze <nome-da-spec>` | PO + Tech Lead | **O argumento padrão é o nome de uma spec** (`/analyze audit-log`). Também aceita descrição livre ou ID/link do ClickUp; vazio, oferece as specs aprovadas do backlog. Salva **o plano** em `analyze/plan.md` + inicializa o `STATE.md`. |
 | `/develop [slug? / --force]` | Desenvolvedor | Lê o plano e **implementa** o slice vertical (SDK → API → app/web → i18n); smoke local; escreve `develop/handoff.md` declarando o instrumento de cada afirmação. Não cria branch nem commita. |
 | `/review [foco? / --force]` | Revisor | Revisa o diff contra [`review-checklist.md`](review-checklist.md) **por leitura** + gates estáticos, aplica correções, deixa a lista "Verificar no `/test`", **resolve a branch**, escreve `review/review.md`, **pede aprovação antes de commitar** e, ao final, pergunta se deve dar **push**. |
 | `/test [foco? / manual / --force]` | QA | Gera os critérios de aceite (§9.1) **E** roda os testes Vitest dos workspaces afetados + `pnpm test` do root; cria os testes que faltam; dirige o app com `agent-browser`. **Única etapa que executa o produto.** |
 | `/observe [slug?]` | Observador *(opcional)* | Observação final de 2–3 parágrafos em linguagem de negócio, pronta para colar num card. Exige só o `/review`. |
 | `/mediate [PR?]` | Mediador de PR *(avulso)* | Triagem dos comentários de uma PR aberta → markdown de replies com status por item. **Independente** do pipeline. |
-| `/cycle [id? / --audit-only / --max-rounds N]` | Orquestrador do ciclo | Roda a linha inteira — `/spec --sync` → `/analyze` → `/develop` → `/review` → `/test` — **sem parar para perguntar**, acumulando as decisões para um relatório final. Para quando você **não vai acompanhar**. Detalhes em [`AI-WORKFLOW.md`](AI-WORKFLOW.md#cycle--o-ciclo-inteiro-numa-tacada). |
+| `/cycle [id? / --audit-only / --max-rounds N]` | Orquestrador do ciclo | Roda a linha inteira — `/spec --sync` → `/analyze` → `/develop` → `/review` → `/test` → `/spec --close` — **sem parar para perguntar**, acumulando as decisões para um relatório final. Para quando você **não vai acompanhar**. Detalhes em [`AI-WORKFLOW.md`](AI-WORKFLOW.md#cycle--o-ciclo-inteiro-numa-tacada). |
 | `/kickoff [--refine etapa \| --specs]` | Orquestrador do começo de um fork | Lê `docs/product/`, que o formulário visual do `pnpm kickoff` grava (produto, domínio, telas com o design anexado, marca e prompt para o Claude Design), completa as lacunas e gera as specs do MVP em `specs/features/` com `depends_on`. Não escreve código nem commita. |
 | `/deliver [partes?]` | Orquestrador da entrega | **Etapa de entrega** de um fork, obrigatória antes da entrega final: segurança, infra e hardening, qualidade do produto, documentação e políticas legais, conforme [`docs/delivery/`](delivery/README.md). Grava `docs/delivery/reports/<data>/report.md`; não corrige código nem commita. |
 
@@ -157,7 +159,7 @@ intenção de um momento e o ponteiro apodrece; comentário precisa ser autossuf
 - **Só o `revisor-codigo` define e cria branch** — e **valida o nome contra o padrão** (regex) antes de
   entregar o plano de commits. Nome fora do formato barra a entrega. Os demais param e sinalizam.
 - **Commit só com aprovação explícita** do usuário, bloco a bloco, no `/review`.
-- **Push** só no fim do `/review`, depois de todos os commits, e **com confirmação**.
+- **Push** só no fim do `/review` (depois de todos os commits) ou do `/spec --close` (depois do commit que fecha a spec), e **com confirmação**.
 - Ordem de commit: **`packages/sdk` → `apps/api` → `apps/app`/`apps/web` → `packages/internationalization`**.
 
 **ClickUp é somente leitura.** Nenhum agent ou comando escreve lá (sem `clickup_create_comment`,
@@ -169,7 +171,7 @@ colagem manual.
 ```
 docs/features/<slug>/          ← versionado: o histórico de como a feature foi construída
   STATE.md            ← índice + gate: status por etapa (pending/in-progress/done/blocked)
-  spec.md             ← a spec de origem, movida de specs/ na entrega   [/spec --sync]
+  spec.md             ← a spec de origem, movida de specs/ na entrega   [/spec --close]
   analyze/plan.md     ← blueprint (Etapa 1 + Etapa 2)              [/analyze]
   develop/handoff.md  ← blueprint→arquivos, desvios, pendências     [/develop]
   review/review.md    ← achados, correções, branch, commits         [/review]
@@ -248,10 +250,14 @@ Depois, **cada subtarefa roda o pipeline completo**: `/develop <subtask> → /re
      dirige o app e salva os prints em test/e2e/; test=done.
 5. /observe            (opcional)
    → observação de negócio pronta para colar no card.
-6. /spec --sync
-   → confere no código que o corte de MVP foi entregue; audit-log vira done e é MOVIDA
-     (git mv specs/features/audit-log.md docs/features/audit-log/spec.md);
-     o BACKLOG.md a registra em "Entregues" e specs/ volta a conter só o que falta.
+6. /spec --close                               ← ainda na branch app/feat/user-notifications
+   → confere no código que o corte de MVP foi entregue, grava a "Conferência da entrega" na spec,
+     audit-log vira done e é MOVIDA (git mv specs/features/audit-log.md docs/features/audit-log/spec.md);
+     o BACKLOG.md a registra em "Entregues" (aguardando merge); pede aprovação para commitar
+     docs(specs): close audit-log e para dar push.
+7. merge da PR, e então /spec --sync a partir de main
+   → confirma o merge e o CI verde de audit-log, tira o "(aguardando merge)" e audita o resto do backlog;
+     a próxima branch já começa pela próxima spec da fila.
 ```
 
 ## Skills usadas pelo pipeline

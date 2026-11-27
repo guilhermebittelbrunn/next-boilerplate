@@ -81,7 +81,11 @@ class NotificationRepository extends BaseRepository<NotificationDTO> {
         return at.toISOString();
     }
 
-    /** Re-runs the query after each batch, so no `orderBy` (and no extra index) is needed. */
+    /**
+     * Re-runs the query after each batch, so no `orderBy` (and no extra index) is needed.
+     * A batch is atomic: one document deleted between the read and the commit (TTL or account
+     * purge) rejects it whole with NOT_FOUND, and the next pass re-reads without that document.
+     */
     async markAllReadByUserId(
         userId: string,
         at: Date = new Date()
@@ -100,8 +104,14 @@ class NotificationRepository extends BaseRepository<NotificationDTO> {
             for (const docSnap of snapshot.docs) {
                 batch.update(docSnap.ref, { readAt: at, updatedAt: at });
             }
-            await batch.commit();
-            updated += snapshot.docs.length;
+            try {
+                await batch.commit();
+                updated += snapshot.docs.length;
+            } catch (error) {
+                if (!isNotFoundError(error)) {
+                    throw error;
+                }
+            }
         }
 
         return updated;

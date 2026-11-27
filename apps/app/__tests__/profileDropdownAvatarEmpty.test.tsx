@@ -14,6 +14,10 @@ const { useAuthMock, useMyAccountMock } = vi.hoisted(() => ({
     useMyAccountMock: vi.fn(),
 }));
 
+vi.mock("@/shared/providers/AuthRequestPanelContext", () => ({
+    useAuthRequestPanel: () => ({ isImpersonating: false }),
+}));
+
 vi.mock("@repo/auth/provider", () => ({ default: () => useAuthMock() }));
 
 vi.mock("@/shared/hooks/useMyAccount", () => ({

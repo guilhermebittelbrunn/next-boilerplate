@@ -21,6 +21,7 @@ import {
     decideEntitlementsWrite,
     decideSubscriptionWrite,
 } from "../lib/billing-state";
+import type { OnboardingTransition } from "../lib/onboarding";
 import {
     mergeAuthAndFirestore,
     serializeFirestoreData,
@@ -131,6 +132,35 @@ class UserRepository extends BaseRepository<UserDTO> {
                 updatedAt: new Date(),
             });
             return "applied";
+        });
+    }
+
+    /**
+     * Decides and writes inside one transaction: two tabs finishing the same step would
+     * otherwise both advance from the snapshot the guard read, and both record completion.
+     * `decide` may run more than once when Firestore retries the transaction.
+     */
+    advanceOnboarding(
+        id: string,
+        decide: (stored: unknown) => OnboardingTransition
+    ): Promise<{ stored: unknown; transition: OnboardingTransition } | null> {
+        const ref = this.db.collection(this.table).doc(id);
+
+        return this.db.runTransaction(async (transaction) => {
+            const snapshot = await transaction.get(ref);
+            if (!snapshot.exists) {
+                return null;
+            }
+
+            const stored = snapshot.data()?.onboarding;
+            const transition = decide(stored);
+            if (transition.kind === "advanced") {
+                transaction.update(ref, {
+                    onboarding: transition.state,
+                    updatedAt: new Date(),
+                });
+            }
+            return { stored, transition };
         });
     }
 

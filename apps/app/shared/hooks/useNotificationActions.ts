@@ -16,6 +16,7 @@ import {
     isNotificationsListStale,
     markNotificationsListStale,
 } from "@/shared/hooks/useListNotifications";
+import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 
@@ -39,6 +40,21 @@ function markItems(
                 items: page.items.map((item) =>
                     shouldMark(item) ? { ...item, readAt } : item
                 ),
+            })),
+        }
+    );
+}
+
+function withoutItem(
+    list: NotificationListPages | undefined,
+    id: string
+): NotificationListPages | undefined {
+    return (
+        list && {
+            ...list,
+            pages: list.pages.map((page) => ({
+                ...page,
+                items: page.items.filter((item) => item.id !== id),
             })),
         }
     );
@@ -140,7 +156,15 @@ export const useNotificationActions = () => {
                 )
             );
         },
-        onError: (error, _id, context) => restoreCache(error, context),
+        onError: (error, id, context) => {
+            // Deleted on the server (TTL or account purge): it no longer counts as unread
+            // there either, so the optimistic count discount stays.
+            if (apiErrorCodeOf(error) === "NOTIFICATION_NOT_FOUND") {
+                writeList((old) => withoutItem(old, id));
+                return;
+            }
+            restoreCache(error, context);
+        },
     });
 
     const markAllRead = useMutation({

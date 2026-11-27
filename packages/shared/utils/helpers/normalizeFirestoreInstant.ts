@@ -18,3 +18,21 @@ export function normalizeFirestoreInstant(value: unknown): string {
     }
     return new Date(0).toISOString();
 }
+
+/** A readable instant as a `Date`, or `null` when the value is absent or cannot be read as one. */
+export function readFirestoreInstant(value: unknown): Date | null {
+    let candidate: unknown = null;
+    if (value instanceof Date) {
+        candidate = value;
+    } else if (typeof value === "string") {
+        candidate = new Date(value);
+    } else if (
+        typeof (value as { toDate?: unknown } | null | undefined)?.toDate ===
+        "function"
+    ) {
+        candidate = (value as { toDate: () => unknown }).toDate();
+    }
+    return candidate instanceof Date && !Number.isNaN(candidate.getTime())
+        ? candidate
+        : null;
+}

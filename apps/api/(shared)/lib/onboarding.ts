@@ -5,6 +5,7 @@ import {
     type OnboardingStateDTO,
     type OnboardingStepId,
 } from "@repo/sdk/src/types";
+import { readFirestoreInstant } from "@repo/shared/utils";
 
 export type OnboardingTransition =
     | { kind: "unchanged" }
@@ -19,20 +20,6 @@ export function initialOnboardingState(): OnboardingState {
 function stepIndex(step: unknown): number {
     const index = ONBOARDING_STEPS.findIndex(({ id }) => id === step);
     return index === -1 ? 0 : index;
-}
-
-function toIsoInstant(value: unknown): string | null {
-    if (value instanceof Date) {
-        return Number.isNaN(value.getTime()) ? null : value.toISOString();
-    }
-    if (typeof value === "string") {
-        return Number.isNaN(Date.parse(value)) ? null : value;
-    }
-    const maybeTimestamp = value as { toDate?: () => Date } | null | undefined;
-    if (typeof maybeTimestamp?.toDate === "function") {
-        return maybeTimestamp.toDate().toISOString();
-    }
-    return null;
 }
 
 /**
@@ -56,7 +43,8 @@ export function toOnboardingStateDTO(raw: unknown): OnboardingStateDTO | null {
         return { step: normalizedStep, completedAt: null };
     }
 
-    const completedAtIso = toIsoInstant(completedAt);
+    const completedAtIso =
+        readFirestoreInstant(completedAt)?.toISOString() ?? null;
     if (!completedAtIso) {
         return null;
     }

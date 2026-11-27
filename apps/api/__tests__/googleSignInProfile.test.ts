@@ -1,4 +1,4 @@
-import { UserType } from "@repo/sdk/src/types";
+import { AuditAction, UserType } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,7 +9,9 @@ const {
     createMock,
     getUserMock,
     emitNotificationMock,
+    recordLifecycleMock,
 } = vi.hoisted(() => ({
+    recordLifecycleMock: vi.fn(),
     signInWithGoogleMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
     hasArchivedProfileMock: vi.fn(),
@@ -22,6 +24,11 @@ const {
 // this file is about.
 vi.mock("@/(shared)/lib/organization-membership", () => ({
     ensureOrganizationMembershipQuietly: vi.fn(),
+}));
+
+vi.mock("@/(shared)/lib/audit-recorder", () => ({
+    recordAccountLifecycleEvent: (...args: unknown[]) =>
+        recordLifecycleMock(...args),
 }));
 
 vi.mock("@/(shared)/lib/notifications", () => ({
@@ -109,6 +116,7 @@ describe("POST /auth/sign-in/google", () => {
 
         expect(response.status).toBe(HTTP_STATUS.OK);
         expect(createMock).not.toHaveBeenCalled();
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
         expect(emitNotificationMock).not.toHaveBeenCalled();
     });
 
@@ -133,6 +141,13 @@ describe("POST /auth/sign-in/google", () => {
         expect(emitNotificationMock).toHaveBeenCalledWith(
             expect.objectContaining({ userId: "profile-1", type: "welcome" })
         );
+        expect(recordLifecycleMock).toHaveBeenCalledTimes(1);
+        expect(recordLifecycleMock).toHaveBeenCalledWith({
+            action: AuditAction.ACCOUNT_SIGN_UP,
+            profileId: "profile-1",
+            uid: UID,
+            requestId: null,
+        });
     });
 
     it("creates the profile with the onboarding pending at the first step", async () => {

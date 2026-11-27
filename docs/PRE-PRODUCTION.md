@@ -107,9 +107,35 @@ do índice de `entity` — o emulador serve a consulta indexada ou não, então 
 A trilha só cresce: nenhuma rota edita ou apaga evento, por desenho. Cada documento é pequeno e nada
 quebra sem esta configuração, mas o armazenamento é herdado por todo fork.
 
-Os documentos não têm campo `expiresAt`, então a TTL policy nativa do Firestore não se aplica: o expurgo é
-manual ou por job do fork. Para contar o que já existe, use a contagem de documentos de `auditEvent` no
-console do Firestore.
+Os eventos sensíveis não têm campo `expiresAt`, então a TTL policy nativa do Firestore não os alcança: o
+expurgo deles é manual ou por job do fork, e o prazo continua sendo decisão sua. Para contar o que já
+existe, use a contagem de documentos de `auditEvent` no console do Firestore.
+
+**Eventos informativos têm prazo próprio.** Os eventos de nível `info` (cadastro, e-mail confirmado,
+onboarding concluído e os quatro de assinatura) nascem com `expiresAt` 365 dias depois de `createdAt`. O
+prazo está na constante `AUDIT_INFO_RETENTION_DAYS`, em `apps/api/(shared)/lib/audit-level.ts`, e o fork
+ajusta ali. Gravar o campo não apaga nada: quem apaga é a TTL policy, que não vem ligada.
+
+- [ ] TTL em `auditEvent.expiresAt` ligada (exige faturamento ativo, plano Blaze)
+
+```bash
+gcloud firestore fields ttls update expiresAt \
+  --collection-group=auditEvent --enable-ttl --project=<project-id>
+```
+
+Por que ligar: sem ela, o prazo de 12 meses declarado no [`ROPA.md`](ROPA.md) §7 não acontece, e os eventos
+informativos ficam até a exclusão da conta, como os sensíveis. Nada quebra e nenhuma tela muda; o que deixa
+de valer é a promessa de retenção. No plano Spark o comando é recusado, porque a remoção por TTL não tem uso
+gratuito, e o campo fica gravado sem efeito.
+
+A policy é por campo e ignora documento sem `expiresAt`. Com ela ligada, só os eventos informativos
+vencidos saem; os sensíveis continuam intocados. A remoção roda no servidor do Firestore, fora da API: a
+regra "nenhuma rota edita ou apaga evento" continua valendo, mas a trilha deixa de ser só crescente para
+os informativos.
+
+Para conferir: `gcloud firestore fields ttls list --project=<project-id>` mostra `expiresAt` ativo em
+`auditEvent`. Segundo a documentação do Firestore, a remoção costuma acontecer em até 24 horas depois do
+vencimento, então não dá para observá-la num teste curto.
 
 ⚠️ **Não existe prazo legal para trilha de auditoria de negócio no Brasil.** O Decreto 8.771/2016, art. 13
 §2º aponta no sentido oposto: reter a menor quantidade possível de dado pessoal e excluir assim que a
@@ -224,7 +250,8 @@ next-boilerplate-576d0`, contra as **7** entradas que
 [`firestore.indexes.json`](../firestore.indexes.json) declarava naquela data. Desde 2026-10-20 o arquivo
 declara **9**: as duas de `notification` (§1.9) entraram depois da medição e ninguém conferiu se estão
 publicadas. Em 2026-10-22 as três de `entity` trocaram `userId` por `organizationId` (§1.10); as novas também
-nunca foram medidas. Contam como pendentes até alguém rodar o comando de novo.
+nunca foram medidas. Em 2026-11-26 entraram as duas de `auditEvent` por `level` (§1.11), e o arquivo passou
+a declarar **11**. Contam como pendentes até alguém rodar o comando de novo.
 
 | coleção | campos | publicado no projeto de referência |
 |---------|--------|-----------------------------------|
@@ -235,15 +262,17 @@ nunca foram medidas. Contam como pendentes até alguém rodar o comando de novo.
 | `user` | `deletedAt` + `type` | não |
 | `user` | `deletedAt` + `lastAccessAt` | não |
 | `auditEvent` | `involvedUserIds` + `createdAt` | não |
+| `auditEvent` | `level` + `createdAt` | não medido (entrada posterior, §1.11) |
+| `auditEvent` | `involvedUserIds` + `level` + `createdAt` | não medido (entrada posterior, §1.11) |
 | `notification` | `userId` + `createdAt` | não medido (entrada posterior) |
 | `notification` | `userId` + `readAt` | não medido (entrada posterior) |
 
 **Uma de sete.** As subseções acima marcam cada índice como pendente uma a uma, o que estava certo em
 substância e escondia que a de `reference_id` já tinha subido — provavelmente junto com a publicação das
-rules. Publicar as oito restantes é o mesmo comando único, e ele é idempotente para a que já existe.
+rules. Publicar as dez restantes é o mesmo comando único, e ele é idempotente para a que já existe.
 
 ⛔ **Não leia esta tabela como estado do seu fork.** Ela descreve o projeto de referência
-(`next-boilerplate-576d0`). Um fork roda em outro projeto Firebase, onde **nenhuma** das nove existe.
+(`next-boilerplate-576d0`). Um fork roda em outro projeto Firebase, onde **nenhuma** das onze existe.
 
 Uma consulta que esta entrega acrescentou **não** entrou nessa fila, de propósito: o expurgo da trilha
 ordena por `FieldPath.documentId()` sobre um `array-contains`, e todo índice de campo único termina em
@@ -329,6 +358,57 @@ nada quebra; o projeto só paga a gravação de entradas de índice que ninguém
 Para conferir: `npx -y firebase-tools@latest firestore:indexes` lista as três entradas de `entity` com
 `organizationId`. Na tela, a lista e a home de um usuário existente mostram os registros dele depois do primeiro
 acesso. O emulador serve as consultas com ou sem índice, então `pnpm emulators` não prova a publicação.
+
+#### 1.11 Índices do filtro por nível da trilha de auditoria
+
+- [ ] os dois índices de `auditEvent` por `level` publicados no projeto de referência
+- [ ] os dois índices de `auditEvent` por `level` publicados **no projeto do seu fork**
+
+A tela `/admin/audit` filtra por nível (sensível ou informativo), sozinho ou junto do usuário, sempre
+ordenando por `createdAt` decrescente. As duas combinações pedem índice composto. Estão declaradas em
+[`firestore.indexes.json`](../firestore.indexes.json) e cobertas por
+`apps/api/__tests__/firestoreIndexes.test.ts`.
+
+| coleção | campos | serve |
+|---------|--------|-------|
+| `auditEvent` | `level` + `createdAt` (desc) | filtro por nível, com ou sem período |
+| `auditEvent` | `involvedUserIds` (contains) + `level` + `createdAt` (desc) | filtro por usuário e nível juntos |
+
+```bash
+npx -y firebase-tools@latest deploy --only firestore:indexes
+```
+
+**Sem os índices, só o filtro por nível falha.** Escolher "Sensível" ou "Informativo" responde
+`503 PAGINATION_INDEX_MISSING`, e a tela mostra "A listagem está indisponível no momento. Tente de novo em
+instantes." nos três idiomas, com os filtros ainda visíveis para desfazer a escolha. "Todos os níveis", o
+filtro por usuário (§1.2) e o de período seguem funcionando. Nenhuma resposta é 500.
+
+Para conferir depois de publicar: `npx -y firebase-tools@latest firestore:indexes` lista as duas entradas
+de `auditEvent` com `level`; na tela, escolher um nível devolve a lista em vez do alerta. O emulador serve a
+consulta com ou sem índice, então nenhum gate local pega a falta.
+
+#### 1.12 Backfill de nível em trilha que já tem eventos
+
+- [ ] backfill de nível rodado, ou confirmado como desnecessário
+
+Só para quem já tem eventos gravados antes de a trilha ter níveis. Esses documentos não têm o campo
+`level`. Na listagem "Todos os níveis" eles aparecem como "Sensível", porque a API lê a ausência assim (todas
+as ações daquela época eram sensíveis). O filtro "Sensível", porém, não os encontra: o Firestore não casa
+igualdade contra campo ausente.
+
+```bash
+pnpm --filter api backfill-audit-levels           # dry-run: conta o que mudaria
+pnpm --filter api backfill-audit-levels --apply   # grava level: "sensitive" onde falta
+```
+
+O script percorre `auditEvent` em lotes de 400, grava só `level: "sensitive"` nos documentos sem nível e não
+mexe em `updatedAt` nem em `expiresAt`. Rodar duas vezes não muda nada na segunda. Ele escolhe o alvo como o
+`backfill-instants` (§1.4): com os hosts do emulador preenchidos vai no emulador sem credencial; com eles
+vazios exige o service account de `apps/api/.env` e anuncia no cabeçalho que o projeto é real. Confira essa
+linha antes de repetir com `--apply`.
+
+Sem o backfill, nada quebra: os eventos antigos só ficam de fora do filtro "Sensível". Para conferir, rode o
+dry-run de novo depois do `--apply`; a contagem de "would be updated" tem de sair `0`.
 
 ### 2. Service account do Firebase Admin
 

@@ -21,16 +21,16 @@ abaixo de forma resumida. O fluxo completo está em
 ## O pipeline
 
 ```
-/spec  →  /analyze  →  /develop  →  /review  →  /test     (+ /observe · /mediate)
-   ↑                                              │
-   └────────── /spec --sync fecha o ciclo ────────┘
+/spec  →  /analyze  →  /develop  →  /review  →  /test  →  /spec --close     (+ /observe · /mediate)
+   ↑                                                           │
+   └──────── merge · /spec --sync confirma e audita ───────────┘
 
 /cycle — a linha inteira numa tacada, sem parar para perguntar
 ```
 
 | Comando | Arquivo | Subagent | O que faz |
 |---------|---------|----------|-----------|
-| `/spec` | [`spec.md`](spec.md) | `estrategista-produto` | Descobre e especifica o que vale construir → `specs/features/<id>.md` + `BACKLOG.md`. `--sync` reconcilia o backlog **com o código** e arquiva as specs entregues; `--next` recomenda a próxima. |
+| `/spec` | [`spec.md`](spec.md) | `estrategista-produto` | Descobre e especifica o que vale construir → `specs/features/<id>.md` + `BACKLOG.md`. `--close` fecha a spec da feature na branch dela, depois do `/test` (arquiva e atualiza o `BACKLOG.md` na mesma PR); `--sync` reconcilia o backlog inteiro **com o código** a partir de `main`; `--next` recomenda a próxima. |
 | `/analyze` | [`analyze.md`](analyze.md) | `planejador-tarefa` | Transforma uma spec em **plano técnico** → `docs/features/<slug>/analyze/plan.md` + `STATE.md`. |
 | `/develop` | [`develop.md`](develop.md) | `desenvolvedor` | **Implementa** o slice vertical (SDK → API → app/web → i18n) → `develop/handoff.md`. Smoke local, sem evidência persistida. |
 | `/review` | [`review.md`](review.md) | `revisor-codigo` | Lê o diff, **corrige**, roda os gates estáticos, resolve a branch, propõe os commits → `review/review.md`. Não executa o produto. |
@@ -112,7 +112,7 @@ construída:
 
 ```
 STATE.md              ← o gate: até onde o pipeline chegou
-spec.md               ← a spec arquivada, quando a feature nasceu de uma  [/spec --sync]
+spec.md               ← a spec arquivada, quando a feature nasceu de uma  [/spec --close]
 analyze/plan.md       ← o blueprint técnico                               [/analyze]
 develop/handoff.md    ← o que foi implementado, desvios, validação        [/develop]
 review/review.md      ← achados, correções, plano de commits              [/review]

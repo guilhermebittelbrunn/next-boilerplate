@@ -154,6 +154,41 @@ describe("CommonHomeClient greeting", () => {
         );
     });
 
+    it("never greets the admin while impersonating an account without a name", () => {
+        panelMock.mockReturnValue({ isImpersonating: true });
+        accountMock.mockReturnValue({ data: { displayName: null } });
+        authMock.mockReturnValue({ user: { displayName: "Bruno Lima" } });
+
+        render(<CommonHomeClient />);
+
+        expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+            "Olá"
+        );
+    });
+
+    it("never greets the admin while the impersonated account loads", () => {
+        panelMock.mockReturnValue({ isImpersonating: true });
+        authMock.mockReturnValue({ user: { displayName: "Bruno Lima" } });
+
+        render(<CommonHomeClient />);
+
+        expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+            "Olá"
+        );
+    });
+
+    it("greets the impersonated account by its own name", () => {
+        panelMock.mockReturnValue({ isImpersonating: true });
+        accountMock.mockReturnValue({ data: { displayName: "Carla Alvo" } });
+        authMock.mockReturnValue({ user: { displayName: "Bruno Lima" } });
+
+        render(<CommonHomeClient />);
+
+        expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+            "Olá, Carla"
+        );
+    });
+
     it("drops the comma when no name is known", () => {
         render(<CommonHomeClient />);
 

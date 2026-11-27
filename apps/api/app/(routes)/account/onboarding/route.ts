@@ -1,4 +1,7 @@
+import { AuditAction } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
+import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { recordAccountLifecycleEvent } from "@/(shared)/lib/audit-recorder";
 import {
     advanceOnboardingState,
     toOnboardingStateDTO,
@@ -22,15 +25,22 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
         return parsed.response;
     }
 
-    const storedState = ctx.subjectProfile.onboarding;
-    const transition = advanceOnboardingState(
-        storedState,
-        parsed.value,
-        new Date()
-    );
+    const now = new Date();
+    const outcome = await userRepository
+        .advanceOnboarding(ctx.subjectProfile.id, (current) =>
+            advanceOnboardingState(current, parsed.value, now)
+        )
+        .catch(() => null);
+    if (!outcome) {
+        return errorResponse(
+            "ONBOARDING_UPDATE_FAILED",
+            HTTP_STATUS.INTERNAL_SERVER_ERROR
+        );
+    }
 
+    const { stored, transition } = outcome;
     if (transition.kind === "unchanged") {
-        return Response.json({ data: toOnboardingStateDTO(storedState) });
+        return Response.json({ data: toOnboardingStateDTO(stored) });
     }
     if (transition.kind === "out-of-order") {
         return errorResponse(
@@ -45,16 +55,14 @@ export const POST = requireCommonPanelApi(async (req, ctx) => {
         );
     }
 
-    try {
-        await userRepository.update({
-            id: ctx.subjectProfile.id,
-            onboarding: transition.state,
+    if (transition.state.completedAt !== null) {
+        await recordAccountLifecycleEvent({
+            action: AuditAction.ACCOUNT_ONBOARDING_COMPLETE,
+            profileId: ctx.subjectProfile.id,
+            uid: ctx.subjectProfile.reference_id,
+            label: ctx.user.email ?? ctx.user.displayName ?? null,
+            requestId: requestIdFrom(req),
         });
-    } catch {
-        return errorResponse(
-            "ONBOARDING_UPDATE_FAILED",
-            HTTP_STATUS.INTERNAL_SERVER_ERROR
-        );
     }
 
     return Response.json({ data: toOnboardingStateDTO(transition.state) });

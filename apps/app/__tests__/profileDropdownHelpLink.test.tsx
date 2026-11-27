@@ -7,6 +7,10 @@ const { envMock } = vi.hoisted(() => ({
 
 vi.mock("@/env", () => ({ env: envMock }));
 
+vi.mock("@/shared/providers/AuthRequestPanelContext", () => ({
+    useAuthRequestPanel: () => ({ isImpersonating: false }),
+}));
+
 vi.mock("@repo/auth/provider", () => ({
     default: () => ({
         user: { displayName: "Ana", email: "ana@example.com" },

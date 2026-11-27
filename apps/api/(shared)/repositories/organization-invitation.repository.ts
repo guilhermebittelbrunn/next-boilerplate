@@ -1,3 +1,4 @@
+import { readFirestoreInstant } from "@repo/shared/utils";
 import type {
     DocumentData,
     DocumentSnapshot,
@@ -56,23 +57,12 @@ export type AcceptInvitationOutcome =
     | { status: "already-member" }
     | { status: "owner-has-members" };
 
-function instantOf(value: unknown): Date | null {
-    if (value == null) {
-        return null;
-    }
-    if (value instanceof Date) {
-        return value;
-    }
-    const maybe = value as { toDate?: () => Date };
-    return typeof maybe.toDate === "function" ? maybe.toDate() : null;
-}
-
 /** Not accepted, not soft-deleted and still inside its validity window. */
 function isOpen(data: DocumentData | undefined, now: Date): boolean {
     if (!data || data.acceptedAt != null || data.deletedAt != null) {
         return false;
     }
-    const expiresAt = instantOf(data.expiresAt);
+    const expiresAt = readFirestoreInstant(data.expiresAt);
     return expiresAt !== null && expiresAt.getTime() > now.getTime();
 }
 
@@ -92,7 +82,7 @@ function refuseInvitation(
             : { status: "invalid" };
     }
 
-    const expiresAt = instantOf(invitation.get("expiresAt"));
+    const expiresAt = readFirestoreInstant(invitation.get("expiresAt"));
     if (!expiresAt || expiresAt.getTime() <= input.now.getTime()) {
         return { status: "expired" };
     }
@@ -135,7 +125,7 @@ class OrganizationInvitationRepository extends BaseRepository<OrganizationInvita
             ]);
 
             const currentData = current.data();
-            const lastSentAt = instantOf(currentData?.lastSentAt);
+            const lastSentAt = readFirestoreInstant(currentData?.lastSentAt);
             if (
                 isOpen(currentData, input.now) &&
                 lastSentAt &&

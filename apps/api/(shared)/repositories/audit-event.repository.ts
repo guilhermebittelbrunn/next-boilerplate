@@ -1,4 +1,4 @@
-import type { AuditEventDTO } from "@repo/sdk/src/types";
+import type { AuditEventDTO, AuditLevel } from "@repo/sdk/src/types";
 import {
     type DocumentData,
     FieldPath,
@@ -65,7 +65,23 @@ export type AuditEventFilters = {
     userId?: string;
     from?: Date;
     to?: Date;
+    level?: AuditLevel;
 };
+
+/** `expiresAt` is a persistence-only field read by the Firestore TTL policy, so it stays out of the DTO. */
+export type AuditAppendOptions = { expiresAt?: Date | null };
+
+function withExpiry(
+    data: CreateRequest<AuditEventDTO>,
+    options: AuditAppendOptions
+): CreateRequest<AuditEventDTO> {
+    return options.expiresAt
+        ? ({
+              ...data,
+              expiresAt: options.expiresAt,
+          } as CreateRequest<AuditEventDTO>)
+        : data;
+}
 
 /**
  * The collection is append-only, so nothing ever sets `deletedAt` and the listing does not
@@ -76,8 +92,11 @@ class AuditEventRepository extends BaseRepository<AuditEventDTO> {
         super(db, "auditEvent", auditEventMapper);
     }
 
-    append(data: CreateRequest<AuditEventDTO>): Promise<AuditEventDTO> {
-        return super.create(data);
+    append(
+        data: CreateRequest<AuditEventDTO>,
+        options: AuditAppendOptions = {}
+    ): Promise<AuditEventDTO> {
+        return super.create(withExpiry(data, options));
     }
 
     /**
@@ -87,16 +106,18 @@ class AuditEventRepository extends BaseRepository<AuditEventDTO> {
      */
     async appendOnce(
         id: string,
-        data: CreateRequest<AuditEventDTO>
+        data: CreateRequest<AuditEventDTO>,
+        options: AuditAppendOptions = {}
     ): Promise<boolean> {
         try {
+            const createdAt = new Date();
             await this.db
                 .collection(this.table)
                 .doc(id)
                 .create({
-                    ...data,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                    ...withExpiry(data, options),
+                    createdAt,
+                    updatedAt: createdAt,
                     deletedAt: null,
                 });
             return true;
@@ -218,6 +239,9 @@ class AuditEventRepository extends BaseRepository<AuditEventDTO> {
         }
         if (filters.to) {
             query = query.where("createdAt", "<=", filters.to);
+        }
+        if (filters.level) {
+            query = query.where("level", "==", filters.level);
         }
 
         return this.paginate(query, page);

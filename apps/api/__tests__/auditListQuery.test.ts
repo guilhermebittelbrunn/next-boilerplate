@@ -125,4 +125,27 @@ describe("parseAuditListQuery filters", () => {
     it("refuses a date that is not a calendar day at all", () => {
         expect(parse("?to=yesterday").ok).toBe(false);
     });
+
+    it("keeps a level from the enum", () => {
+        const parsed = parse("?level=info");
+
+        expect(parsed.ok && parsed.value.level).toBe("info");
+    });
+
+    it("refuses a level outside the enum", async () => {
+        const parsed = parse("?level=critical");
+
+        expect(parsed.ok).toBe(false);
+        if (!parsed.ok) {
+            expect(parsed.response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+            expect(await errorCode(parsed.response)).toBe("VALIDATION_FAILED");
+        }
+    });
+
+    it("reads an empty level as no level", () => {
+        const parsed = parse("?level=");
+
+        expect(parsed.ok).toBe(true);
+        expect(parsed.ok && parsed.value.level).toBeUndefined();
+    });
 });

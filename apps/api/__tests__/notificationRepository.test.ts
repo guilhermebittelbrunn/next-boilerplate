@@ -34,6 +34,8 @@ const { fakeDb } = vi.hoisted(() => {
     const store = new Map<string, Row>();
     const batchSizes: number[] = [];
     const countLimits: (number | null)[] = [];
+    const beforeCommit: (() => void)[] = [];
+    const commitFailures: unknown[] = [];
     let autoId = 0;
 
     type State = {
@@ -139,8 +141,10 @@ const { fakeDb } = vi.hoisted(() => {
         }),
         batch: () => {
             const ops: (() => void)[] = [];
+            const updatedIds: string[] = [];
             return {
                 update: (ref: { id: string }, patch: Row) => {
+                    updatedIds.push(ref.id);
                     ops.push(() =>
                         store.set(ref.id, { ...store.get(ref.id), ...patch })
                     );
@@ -149,6 +153,19 @@ const { fakeDb } = vi.hoisted(() => {
                     ops.push(() => store.delete(ref.id));
                 },
                 commit: () => {
+                    const pending = beforeCommit.shift();
+                    pending?.();
+                    const failure = commitFailures.shift();
+                    if (failure) {
+                        return Promise.reject(failure);
+                    }
+                    if (updatedIds.some((id) => !store.has(id))) {
+                        return Promise.reject(
+                            Object.assign(new Error("no entity to update"), {
+                                code: NOT_FOUND,
+                            })
+                        );
+                    }
                     for (const op of ops) {
                         op();
                     }
@@ -160,10 +177,14 @@ const { fakeDb } = vi.hoisted(() => {
         store,
         batchSizes,
         countLimits,
+        beforeCommit,
+        commitFailures,
         reset() {
             store.clear();
             batchSizes.length = 0;
             countLimits.length = 0;
+            beforeCommit.length = 0;
+            commitFailures.length = 0;
             autoId = 0;
         },
     };
@@ -368,6 +389,41 @@ describe("notificationRepository", () => {
         await expect(
             notificationRepository.countUnreadByUserId("other")
         ).resolves.toBe(2);
+    });
+
+    it("termina e marca o que sobrou quando uma notificação some entre a leitura e a escrita", async () => {
+        seedUnread("owner", OWNER_UNREAD);
+        fakeDb.beforeCommit.push(() => fakeDb.store.delete("owner-0"));
+
+        const updated = await notificationRepository.markAllReadByUserId(
+            "owner",
+            NOW
+        );
+
+        expect(updated).toBe(OWNER_UNREAD_AFTER_READ);
+        expect(fakeDb.store.has("owner-0")).toBe(false);
+        expect(fakeDb.batchSizes).toEqual([OWNER_UNREAD_AFTER_READ]);
+        expect(fakeDb.store.get("owner-1")).toMatchObject({ readAt: NOW });
+        expect(fakeDb.store.get("owner-2")).toMatchObject({ readAt: NOW });
+        await expect(
+            notificationRepository.countUnreadByUserId("owner")
+        ).resolves.toBe(0);
+    });
+
+    it("propaga uma falha do lote que não é documento ausente", async () => {
+        seedUnread("owner", OWNER_UNREAD);
+        fakeDb.commitFailures.push(
+            Object.assign(new Error("permission denied"), {
+                code: PERMISSION_DENIED,
+            })
+        );
+
+        await expect(
+            notificationRepository.markAllReadByUserId("owner", NOW)
+        ).rejects.toMatchObject({ code: PERMISSION_DENIED });
+        await expect(
+            notificationRepository.countUnreadByUserId("owner")
+        ).resolves.toBe(OWNER_UNREAD);
     });
 
     it("responde zero sem gravar nada quando não há não lidas", async () => {

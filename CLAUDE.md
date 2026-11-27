@@ -107,17 +107,20 @@ Hub do ferramental: [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md).
 ### Pipeline de tarefas — [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md)
 
 ```
-/spec  →  /analyze  →  /develop  →  /review  →  /test     (+ opcionais: /observe · /mediate)
-descobrir  planejar     implementar   revisar     QA
-   ↑                                                └── /spec --sync fecha o ciclo
+/spec  →  /analyze  →  /develop  →  /review  →  /test  →  /spec --close   (+ opcionais: /observe · /mediate)
+descobrir  planejar     implementar   revisar     QA        fecha a spec na mesma branch
+   ↑                                                              │
+   └────────── merge em main · /spec --sync confirma e audita ────┘
 
 /cycle — a linha inteira numa tacada, sem parar para perguntar (não commita)
 ```
 
 O ciclo começa no **backlog de funcionalidades** ([`specs/`](specs/README.md)): o `/spec` varre o repo,
 confronta com padrões de mercado e escreve as specs; você aprova uma e roda **`/analyze <nome-da-spec>`**
-(o nome da spec é o argumento padrão). No fim, `/spec --sync` audita o backlog contra o código — é isso que
-faz disso um **loop**, e não uma lista de desejos. Spec responde *o quê/por quê*; o plano do `/analyze`
+(o nome da spec é o argumento padrão). No fim, ainda na branch da feature, `/spec --close` confere o corte
+no código e move a spec para `docs/features/<slug>/spec.md`, então a PR já leva o backlog atualizado; depois
+do merge, `/spec --sync` audita o backlog inteiro contra o código — é isso que faz disso um **loop**, e não
+uma lista de desejos. Spec responde *o quê/por quê*; o plano do `/analyze`
 responde *como*. **`specs/` contém só o que não foi entregue**; o ciclo de vida completo está em
 [`specs/README.md`](specs/README.md).
 
@@ -155,7 +158,7 @@ os artefatos do fluxo no código) e
 ### Skills do projeto (digite `/` para invocar)
 
 - **`/market-research`** — pesquisa de mercado **com fontes** para decidir se uma feature merece entrar no core (prevalência entre starters, exigência de provedor/lei, custo herdado pelos forks); grava nota citável em `specs/reference/research/`.
-- **`/spec-audit`** — reconcilia o backlog `specs/` com a realidade do código (fecha o loop; é o motor do `/spec --sync`).
+- **`/spec-audit`** — reconcilia o backlog `specs/` com a realidade do código (fecha o loop; é o motor do `/spec --close` e do `/spec --sync`).
 - **`/new-crud`** — scaffold de um CRUD vertical completo (SDK → API → app → i18n), seguindo o padrão `entity`.
 - **`/new-api-route`** — cria rota na `apps/api` (validação, guard, repo+mapper, `error.code`).
 - **`/i18n-sync`** — adiciona/valida chaves nos 3 idiomas + `apiErrors` (com teste de paridade determinístico).

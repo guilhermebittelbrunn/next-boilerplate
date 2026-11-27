@@ -1,3 +1,4 @@
+import { AuditAction } from "@repo/sdk/src/types";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,7 +10,11 @@ const {
     sendEmailMock,
     identityCheckOobCodeMock,
     identityApplyOobCodeMock,
+    findByReferenceIdMock,
+    recordLifecycleMock,
 } = vi.hoisted(() => ({
+    findByReferenceIdMock: vi.fn(),
+    recordLifecycleMock: vi.fn(),
     resolveApiActorMock: vi.fn(),
     canSendAuthActionLinkMock: vi.fn(),
     buildAuthActionLinkMock: vi.fn(),
@@ -38,6 +43,18 @@ vi.mock("@repo/email/templates/action-link", () => ({
     actionLinkEmail: { id: "action-link" },
 }));
 
+vi.mock("@/(shared)/repositories/user.repository", () => ({
+    userRepository: {
+        findByReferenceId: (...args: unknown[]) =>
+            findByReferenceIdMock(...args),
+    },
+}));
+
+vi.mock("@/(shared)/lib/audit-recorder", () => ({
+    recordAccountLifecycleEvent: (...args: unknown[]) =>
+        recordLifecycleMock(...args),
+}));
+
 vi.mock("@/(shared)/lib/firebase-identity-toolkit", () => ({
     IdentityToolkitError: FakeToolkitError,
     identityCheckOobCode: (...args: unknown[]) =>
@@ -54,7 +71,10 @@ const OOB_CODE_PAST_THE_CEILING = LONGEST_ACCEPTED_OOB_CODE + 1;
 function requestFor(url: string, body: unknown) {
     return new Request(`http://localhost:3002${url}`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+            "content-type": "application/json",
+            "x-request-id": "req-confirm",
+        },
         body: JSON.stringify(body),
     }) as unknown as NextRequest;
 }
@@ -93,6 +113,7 @@ beforeEach(() => {
         email: ACTOR_EMAIL,
         emailVerified: true,
     });
+    findByReferenceIdMock.mockResolvedValue({ id: "profile-1" });
 });
 
 describe("POST /auth/email-verification/send", () => {
@@ -333,5 +354,73 @@ describe("POST /auth/email-verification/confirm", () => {
         const response = await postConfirm({ oobCode: "code" });
 
         expect(response.status).toBe(HTTP_STATUS.OK);
+    });
+});
+
+describe("POST /auth/email-verification/confirm leaves a trail", () => {
+    it("records the confirmation for the holder of the verified account", async () => {
+        await postConfirm({ oobCode: "code" });
+
+        expect(findByReferenceIdMock).toHaveBeenCalledWith("uid-1");
+        expect(recordLifecycleMock).toHaveBeenCalledTimes(1);
+        expect(recordLifecycleMock).toHaveBeenCalledWith({
+            action: AuditAction.ACCOUNT_EMAIL_VERIFY,
+            profileId: "profile-1",
+            uid: "uid-1",
+            label: ACTOR_EMAIL,
+            requestId: "req-confirm",
+        });
+    });
+
+    it("records nothing when the provider refuses the code", async () => {
+        identityApplyOobCodeMock.mockRejectedValue(
+            new FakeToolkitError("INVALID_OOB_CODE")
+        );
+
+        await postConfirm({ oobCode: "code" });
+
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+    });
+
+    it("records nothing for a code of another type", async () => {
+        identityCheckOobCodeMock.mockResolvedValue({
+            requestType: "PASSWORD_RESET",
+            email: ACTOR_EMAIL,
+        });
+
+        await postConfirm({ oobCode: "code" });
+
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+    });
+
+    it("still confirms and logs without personal data when the account has no profile", async () => {
+        findByReferenceIdMock.mockResolvedValue(null);
+        const warned: string[] = [];
+        const warnSpy = vi
+            .spyOn(console, "warn")
+            .mockImplementation((line: string) => {
+                warned.push(line);
+            });
+
+        const response = await postConfirm({ oobCode: "code" });
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+        expect(warned.join("\n")).toContain("[audit] subject-not-found");
+        expect(warned.join("\n")).not.toContain(ACTOR_EMAIL);
+        warnSpy.mockRestore();
+    });
+
+    it("still confirms when the profile lookup fails", async () => {
+        findByReferenceIdMock.mockRejectedValue(new Error("unavailable"));
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+            // silence the expected log line
+        });
+
+        const response = await postConfirm({ oobCode: "code" });
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(recordLifecycleMock).not.toHaveBeenCalled();
+        warnSpy.mockRestore();
     });
 });

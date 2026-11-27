@@ -1,4 +1,4 @@
-import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
+import { AuditAction, AuditLevel, AuditTargetType } from "@repo/sdk/src/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Row = Record<string, unknown>;
@@ -32,6 +32,9 @@ const { fakeDb } = vi.hoisted(() => {
             }
             if (op === "<=") {
                 return millis(actual) <= millis(value);
+            }
+            if (op === "==") {
+                return actual === value;
             }
             throw new Error(`Unsupported query operator: ${op}`);
         });
@@ -188,6 +191,7 @@ const { auditEventRepository, AuditEventImmutableError } = await import(
 function eventData(overrides: Record<string, unknown> = {}) {
     return {
         action: AuditAction.USER_DELETE,
+        level: AuditLevel.SENSITIVE,
         actorUserId: "p1",
         actorUid: "auth-1",
         actorLabel: "admin@example.com",
@@ -254,6 +258,26 @@ describe("AuditEventRepository.append", () => {
         expect(created.action).toBe(AuditAction.USER_DELETE);
         expect(Number.isNaN(Date.parse(created.createdAt))).toBe(false);
     });
+
+    it("persists expiresAt outside the DTO when one is given", async () => {
+        const expiresAt = new Date("2027-11-26T12:00:00.000Z");
+
+        const created = await auditEventRepository.append(
+            eventData({ level: AuditLevel.INFO }),
+            { expiresAt }
+        );
+
+        expect(fakeDb.read(created.id)?.expiresAt).toEqual(expiresAt);
+        expect(created).not.toHaveProperty("expiresAt");
+    });
+
+    it("writes no expiresAt field when there is none", async () => {
+        const created = await auditEventRepository.append(eventData(), {
+            expiresAt: null,
+        });
+
+        expect(fakeDb.read(created.id)).not.toHaveProperty("expiresAt");
+    });
 });
 
 describe("AuditEventRepository.appendOnce", () => {
@@ -267,6 +291,20 @@ describe("AuditEventRepository.appendOnce", () => {
 
         expect(written).toBe(true);
         expect(fakeDb.read(key)).toBeDefined();
+    });
+
+    it("persists expiresAt under the chosen id", async () => {
+        const expiresAt = new Date("2027-11-26T12:00:00.000Z");
+
+        await auditEventRepository.appendOnce(
+            "stripe_evt_1_subscription.activate",
+            eventData({ level: AuditLevel.INFO }),
+            { expiresAt }
+        );
+
+        expect(
+            fakeDb.read("stripe_evt_1_subscription.activate")?.expiresAt
+        ).toEqual(expiresAt);
     });
 
     it("reports the repeat instead of writing a second document", async () => {
@@ -406,6 +444,46 @@ describe("AuditEventRepository.listPage", () => {
         );
 
         expect(page.items.map((row) => row.id)).toEqual(["kept"]);
+    });
+
+    it("filters by level together with the user and the period", async () => {
+        const inPeriod = new Date("2026-09-10T00:00:00.000Z");
+        fakeDb.seed(
+            "kept",
+            storedRow({
+                level: AuditLevel.INFO,
+                involvedUserIds: ["p9"],
+                createdAt: inPeriod,
+            })
+        );
+        fakeDb.seed(
+            "sensitive",
+            storedRow({ involvedUserIds: ["p9"], createdAt: inPeriod })
+        );
+        fakeDb.seed(
+            "other-user",
+            storedRow({
+                level: AuditLevel.INFO,
+                involvedUserIds: ["p1"],
+                createdAt: inPeriod,
+            })
+        );
+
+        const page = await auditEventRepository.listPage(
+            {
+                userId: "p9",
+                level: AuditLevel.INFO,
+                from: new Date("2026-09-01T00:00:00.000Z"),
+            },
+            firstPage
+        );
+
+        expect(page.items.map((row) => row.id)).toEqual(["kept"]);
+        expect(fakeDb.queries.at(-1)?.clauses).toContainEqual([
+            "level",
+            "==",
+            AuditLevel.INFO,
+        ]);
     });
 
     it("hands back a cursor and walks each event exactly once", async () => {

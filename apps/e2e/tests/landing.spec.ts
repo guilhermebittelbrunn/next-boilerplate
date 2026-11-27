@@ -1,12 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { expectAccessible } from "../support/a11y";
 import { LOCALE, ptBr } from "../support/dictionary";
+import { escapeRegExp } from "../support/regExp";
 import { WEB_URL } from "../support/urls";
 
 const webPagesCopy = ptBr.apps.web.pages;
 const heroTitle = webPagesCopy.home.meta.title.split(" - ")[0];
 const NOT_FOUND = 404;
-const notFoundTitle = new RegExp(`^${webPagesCopy.notFound.title} \\| `);
+const notFoundTitle = new RegExp(
+    `^${escapeRegExp(webPagesCopy.notFound.title)} \\| `
+);
 
 test("the landing renders and its sign-up CTA opens the sign-up form", async ({
     page,

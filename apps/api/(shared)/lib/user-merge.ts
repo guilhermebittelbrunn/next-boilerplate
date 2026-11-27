@@ -1,10 +1,11 @@
 import { getAuthInstance, getCurrentUser } from "@repo/auth/server";
-import { type UserDTO, UserType } from "@repo/sdk/src/types";
+import { AuditAction, type UserDTO, UserType } from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import type { UserRecord } from "firebase-admin/auth";
 import { mergeAuthAndFirestore } from "../mappers/user.mapper";
 import { userRepository } from "../repositories/user.repository";
 import { revokeAccountAccess } from "./account-access";
+import { recordAccountLifecycleEvent } from "./audit-recorder";
 import { emitNotificationQuietly } from "./notifications";
 import { initialOnboardingState } from "./onboarding";
 import { ensureOrganizationMembershipQuietly } from "./organization-membership";
@@ -72,13 +73,14 @@ async function findOrCreateProfile(uid: string): Promise<UserDTO | null> {
 }
 
 /**
- * The organization and the welcome notice are quiet on purpose: sign-up deletes the
- * account when this function throws, and neither must undo an account that was created.
+ * The organization, the welcome notice and the audit event are quiet on purpose: sign-up deletes the
+ * account when this function throws, and none of them must undo an account that was created.
  * A missing organization is created by the first request to a scoped route.
  */
 export async function createDefaultUserProfile(
     uid: string,
-    dto?: Partial<UserDTO>
+    dto?: Partial<UserDTO>,
+    options: { requestId?: string | null } = {}
 ): Promise<UserDTO> {
     const defaultProps = {
         type: UserType.COMMON,
@@ -88,6 +90,13 @@ export async function createDefaultUserProfile(
     };
 
     const created = await userRepository.create({ ...defaultProps });
+
+    await recordAccountLifecycleEvent({
+        action: AuditAction.ACCOUNT_SIGN_UP,
+        profileId: created.id,
+        uid,
+        requestId: options.requestId ?? null,
+    });
 
     if (created.type === UserType.COMMON) {
         await ensureOrganizationMembershipQuietly(created.id);

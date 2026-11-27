@@ -1,7 +1,7 @@
 ---
 id: audit-log-levels
 title: Níveis na trilha de auditoria (sensível e informativo)
-status: approved
+status: done
 value: médio
 effort: M
 audience: produto
@@ -9,8 +9,8 @@ area: [packages/sdk, apps/api, apps/app, packages/internationalization]
 mode: ambos
 depends_on: []
 contends_on: [firestore.indexes.json, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/(shared)/lib/user-merge.ts]
-feature: -
-updated: 2026-11-24
+feature: audit-log-levels
+updated: 2026-11-27
 ---
 
 # Níveis na trilha de auditoria (sensível e informativo)
@@ -18,8 +18,8 @@ updated: 2026-11-24
 > **Resumo**
 > - **O quê:** cada evento da trilha ganha um nível. As 18 ações que já existem viram `sensitive`, e a trilha passa a gravar também eventos `info` de ciclo de vida da conta (cadastro, assinatura criada, troca de plano, cancelamento, onboarding concluído, e-mail confirmado), com coluna e filtro por nível na listagem do admin.
 > - **Por quê:** hoje o admin só vê operações sensíveis e não tem onde consultar, por usuário e por período, quando alguém se cadastrou, assinou ou cancelou. O GA mostra o funil anônimo, não a história de uma conta.
-> - **Status:** `approved` · valor médio · esforço M · produto
-> - **Próximo passo:** `/analyze audit-log-levels`, depois de responder as perguntas em aberto 2, 3 e 4
+> - **Status:** `done` · valor médio · esforço M · produto. Entregue na branch `feat/audit-log-levels`, com a PR ainda por mergear
+> - **Próximo passo:** publicar os dois índices novos, rodar o backfill de nível e, no Blaze, ligar a TTL em `auditEvent.expiresAt` (`docs/PRE-PRODUCTION.md` §1.3, §1.11 e §1.12). O que foi conferido está em [Conferência da entrega](#conferência-da-entrega)
 
 ## Problema
 
@@ -41,7 +41,7 @@ um nível que os distinga das operações sensíveis, filtrável na tela.
   hoje todo evento tem um ator humano autenticado.
 - `apps/api/(shared)/repositories/audit-event.repository.ts:203-224`: `listPage` filtra por
   `involvedUserIds array-contains` e por intervalo de `createdAt`, ordenando por `createdAt` desc e id
-  (`base.repository.ts:97-103`). `:226-240`: `update`, `updateBulk`, `delete` e `deleteBulk` lançam
+  (`base.repository.ts:99-105`, remedida em 2026-11-26 depois da PR #76; era `:97-103`). `:226-240`: `update`, `updateBulk`, `delete` e `deleteBulk` lançam
   `AuditEventImmutableError`. `:149-201`: a única escrita aceita depois da criação é a anonimização.
 - `apps/api/(shared)/mappers/audit-event.mapper.ts:24-51`: normaliza o documento; é onde um registro antigo
   sem nível receberia um valor padrão na leitura.
@@ -67,7 +67,7 @@ um nível que os distinga das operações sensíveis, filtrável na tela.
   - E-mail confirmado: `POST /auth/email-verification/confirm`
     (`apps/api/app/(routes)/auth/email-verification/confirm/route.ts:27-58`). A rota não é autenticada (usa o
     `oobCode`), então o ator sai do e-mail que o código confirma. Se a spec
-    [`signup-email-verification`](signup-email-verification.md) entrar antes, a confirmação por código vira
+    [`signup-email-verification`](../../../specs/features/signup-email-verification.md) entrar antes, a confirmação por código vira
     um segundo ponto para o mesmo evento.
 - LGPD: a exclusão de conta já anonimiza a trilha inteira do titular, qualquer que seja a ação
   (`apps/api/(shared)/lib/account-erasure.ts:227`), e a exportação do titular já inclui os eventos dele, com
@@ -95,7 +95,7 @@ atribuível (assinatura ativada) entra na trilha. Os dois coexistem: o `sign_up`
 
 ## Evidência de mercado
 
-- Nota: [`reference/research/audit-log-levels.md`](../reference/research/audit-log-levels.md)
+- Nota: [`reference/research/audit-log-levels.md`](../../../specs/reference/research/audit-log-levels.md)
 - Prevalência: 0 de 2 produtos de trilha para SaaS consultados (WorkOS, Supabase) têm nível no evento; 2 de 2
   provedores de nuvem (Google Cloud, AWS) separam por categoria, com a de alto volume opcional ou com retenção
   menor; o OWASP recomenda o atributo "Severity of event" e uma classificação documentada. O nível proposto
@@ -111,19 +111,19 @@ atribuível (assinatura ativada) entra na trilha. Os dois coexistem: o `sign_up`
 
 ## Proposta — corte de MVP
 
-- [ ] Todo evento da trilha tem nível, `sensitive` ou `info`, definido pela ação e nunca pelo chamador. As 18
+- [x] Todo evento da trilha tem nível, `sensitive` ou `info`, definido pela ação e nunca pelo chamador. As 18
       ações atuais são `sensitive`.
-- [ ] Registros gravados antes desta entrega aparecem como `sensitive` na tela **e** no filtro (ver pergunta 2
+- [x] Registros gravados antes desta entrega aparecem como `sensitive` na tela **e** no filtro (ver pergunta 2
       sobre como).
-- [ ] A criação de usuário pelo admin passa a gerar evento `sensitive`.
-- [ ] Eventos `info` gravados nos pontos únicos do servidor: cadastro (senha, Google ou link, num lugar só),
+- [x] A criação de usuário pelo admin passa a gerar evento `sensitive`.
+- [x] Eventos `info` gravados nos pontos únicos do servidor: cadastro (senha, Google ou link, num lugar só),
       e-mail confirmado, onboarding concluído, assinatura ativada, troca de plano, cancelamento agendado e
       assinatura encerrada. Os de assinatura não se repetem quando a Stripe reentrega o mesmo evento.
-- [ ] A listagem do admin ganha a coluna de nível e um filtro por nível (todos, sensível, informativo), que
+- [x] A listagem do admin ganha a coluna de nível e um filtro por nível (todos, sensível, informativo), que
       combina com os filtros de usuário e período.
-- [ ] Os eventos `info` carregam um instante de vencimento, conforme o prazo decidido na pergunta 3, e os
+- [x] Os eventos `info` carregam um instante de vencimento, conforme o prazo decidido na pergunta 3, e os
       `sensitive` não; o `docs/PRE-PRODUCTION.md` explica a política de TTL e o que muda no plano Spark.
-- [ ] Rótulos de nível e das ações novas nos 3 idiomas.
+- [x] Rótulos de nível e das ações novas nos 3 idiomas.
 
 ### Fora do corte
 
@@ -200,3 +200,45 @@ atribuível (assinatura ativada) entra na trilha. Os dois coexistem: o `sign_up`
 6. Na exclusão de conta, eventos `info` do titular são anonimizados (como os sensíveis) ou apagados? —
    **recomendação:** anonimizados, como hoje. Mantêm a contagem agregada e não precisam de um segundo caminho
    de escrita numa coleção somente-adição.
+
+## Conferência da entrega
+
+Conferida em 2026-11-27 no código da branch `feat/audit-log-levels`, item a item contra o corte de MVP. O
+`test/report.md` da feature serviu de pista; as âncoras abaixo foram lidas no código.
+
+| item do corte | situação | evidência |
+|---------------|----------|-----------|
+| Nível definido pela ação, nunca pelo chamador; as 18 ações antigas são `sensitive` | entregue | `packages/sdk/src/types/audit/audit.ts:31-34` (enum `AuditLevel`), `:48` (campo no DTO); `apps/api/(shared)/lib/audit-level.ts:12-39` (mapa tipado sobre o enum inteiro, então ação nova sem nível quebra o typecheck); `apps/api/(shared)/lib/audit-recorder.ts:89` (o gravador deriva o nível) |
+| Registro antigo aparece como `sensitive` na tela e no filtro | entregue, com passo manual | leitura: `apps/api/(shared)/mappers/audit-event.mapper.ts:31-35`; filtro: backfill em `apps/api/scripts/backfill-audit-levels.mjs`, exposto como `pnpm --filter api backfill-audit-levels` (`apps/api/package.json:15`); passo em `docs/PRE-PRODUCTION.md` §1.12 |
+| Criação de usuário pelo admin gera evento `sensitive` | entregue | `apps/api/app/(routes)/users/route.ts:96-105` (`user.create`, gravado só depois de a criação dar certo) |
+| Eventos `info` nos pontos únicos do servidor, sem repetir na reentrega da Stripe | entregue | cadastro: `apps/api/(shared)/lib/user-merge.ts:94-99`, dentro de `createDefaultUserProfile`, que atende o cadastro com senha (`apps/api/app/(routes)/auth/sign-up/route.ts:55`) e o primeiro contato Google ou link (`user-merge.ts:72`); e-mail confirmado: `apps/api/app/(routes)/auth/email-verification/confirm/route.ts:40-62`; onboarding concluído: `apps/api/app/(routes)/account/onboarding/route.ts:58-66`, com a decisão numa transação (`apps/api/(shared)/repositories/user.repository.ts:143`); assinatura: as quatro transições em `apps/api/(shared)/lib/subscription-audit.ts:25-53`, gravadas pelo webhook com chave `stripe_<event.id>_<ação>` (`apps/api/app/(routes)/webhooks/payments/route.ts:123-137`) por `recordAuditEventOnce` (`audit-recorder.ts:138-150`) |
+| Coluna e filtro por nível na listagem do admin, combinando com usuário e período | entregue, com índices pendentes | API: `apps/api/(shared)/validation/audit.schema.ts:33`, `apps/api/(shared)/repositories/audit-event.repository.ts:243-245`, `apps/api/app/(routes)/audit-events/route.ts:16-20`; 503 `PAGINATION_INDEX_MISSING` sem índice: `route.ts:39-43`; tela: coluna em `.../admin/(pages)/audit/(pages)/(home)/AuditListClient.tsx:63-71`, filtro em `.../audit/(components)/AuditFilters.tsx:71-104`; índices em `firestore.indexes.json:62-77`; publicação em `docs/PRE-PRODUCTION.md` §1.11 |
+| Vencimento só nos `info`; TTL e plano Spark documentados | entregue, com TTL pendente | `apps/api/(shared)/lib/audit-level.ts:3` (365 dias, constante do fork), `:49-54`; gravação em `audit-recorder.ts:126-129` e `:144-147`; política, comando e limite do Spark em `docs/PRE-PRODUCTION.md` §1.3 |
+| Rótulos de nível e das ações novas nos 3 idiomas | entregue | `packages/internationalization/translations/apps/app/pages/admin/auditTrail.ts:17`, `:43-47` (pt-br), `:81`, `:105-109` (en), `:143`, `:171` (es) |
+
+**Placar do `/test`:** 16 critérios, 14 aprovados e 2 não verificados por falta de infra externa (eventos de
+assinatura no navegador sem Stripe em modo teste; o 503 sem projeto Firebase real). Os dois têm cobertura
+unitária em `subscriptionAudit.test.ts`, `paymentsWebhookRoute.test.ts` e `auditEventsRoute.test.ts`. A
+corrida de duas abas no onboarding, achada na rodada 1, foi corrigida com transação e remedida na rodada 2:
+5 rodadas concorrentes, um evento e o mesmo `completedAt` em cada. `pnpm test` 15/15.
+
+**Deriva.** Três diferenças em relação ao texto da spec. Em todas, a spec é que estava imprecisa, e a
+implementação fica como está:
+
+- o titular da confirmação de e-mail sai do `localId` que o Identity Toolkit devolve, e não de uma busca
+  pelo e-mail confirmado, como dizia a recomendação da pergunta 4. Evita uma leitura no Auth e não depende
+  de o e-mail continuar único. Sem titular, a rota registra `audit/subject-not-found` e não grava o evento;
+- uma assinatura que volta de `past_due` ou `unpaid` para ativa não conta como `subscription.activate`. A spec
+  não tratava esse caso, e gravar ali repetiria a ativação a cada atraso de pagamento;
+- o onboarding passou a avançar dentro de uma transação do Firestore, fora do que a spec pedia, para que duas
+  abas concluindo ao mesmo tempo gravem um evento só.
+
+As perguntas 2, 3 e 4 não tiveram resposta antes do `/analyze`, e o `/cycle` adotou a recomendação da spec
+em cada uma: nível gravado com leitura padrão `sensitive` e backfill, 12 meses de retenção só nos `info`,
+titular como ator. A retenção dos eventos sensíveis continua sem prazo e segue como decisão do usuário.
+
+**Pendências de infra no fork** (não reprovam a entrega): publicar os dois índices de `auditEvent` por
+`level` (§1.11), rodar o backfill de nível em base que já tem eventos (§1.12) e, no plano Blaze, ligar a
+TTL em `auditEvent.expiresAt` (§1.3), todas em `docs/PRE-PRODUCTION.md`.
+
+**Branch:** `feat/audit-log-levels`. **PR:** pendente de merge.

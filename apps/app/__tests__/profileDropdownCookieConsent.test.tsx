@@ -9,6 +9,10 @@ const { useAuthMock, useMyAccountMock, useCookieConsentMock, openPreferences } =
         openPreferences: vi.fn(),
     }));
 
+vi.mock("@/shared/providers/AuthRequestPanelContext", () => ({
+    useAuthRequestPanel: () => ({ isImpersonating: false }),
+}));
+
 vi.mock("@repo/auth/provider", () => ({ default: () => useAuthMock() }));
 
 vi.mock("@/shared/hooks/useMyAccount", () => ({
