@@ -4,19 +4,23 @@ import type {
     SubscriptionStatus,
 } from "@repo/sdk/src/types";
 
-const PAYMENT_PENDING: readonly string[] = [
+export const PAYMENT_PENDING: readonly string[] = [
     "past_due",
     "unpaid",
 ] satisfies SubscriptionStatus[];
-const ACTIVE: readonly string[] = [
+export const ACTIVE: readonly string[] = [
     "active",
     "trialing",
 ] satisfies SubscriptionStatus[];
 
-type PreviousSubscription = { status: string; cancelAtPeriodEnd: boolean };
+type PreviousSubscription = {
+    status: string;
+    cancelAtPeriodEnd: boolean;
+    priceId: string | null;
+};
 
 /** A snapshot of another subscription says nothing about this one, so it reads as absent. */
-function readPrevious(
+export function readPrevious(
     stored: unknown,
     subscriptionId: string
 ): PreviousSubscription | null {
@@ -30,6 +34,7 @@ function readPrevious(
     return {
         status: typeof raw.status === "string" ? raw.status : "",
         cancelAtPeriodEnd: raw.cancelAtPeriodEnd === true,
+        priceId: typeof raw.priceId === "string" ? raw.priceId : null,
     };
 }
 

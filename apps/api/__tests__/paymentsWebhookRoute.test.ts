@@ -26,8 +26,10 @@ const {
     applyEntitlementsStateMock,
     listActiveEntitlementKeysMock,
     emitOnceMock,
+    auditAppendOnceMock,
 } = vi.hoisted(() => ({
     emitOnceMock: vi.fn(),
+    auditAppendOnceMock: vi.fn(),
     applyEntitlementsStateMock: vi.fn(),
     listActiveEntitlementKeysMock: vi.fn(),
     recordPaidInvoiceMock: vi.fn(),
@@ -132,6 +134,21 @@ vi.mock("@/(shared)/repositories/notification.repository", () => ({
     },
 }));
 
+// The repository, not the recorder: the recorder's fail-open is what keeps the webhook
+// answering 200 when the trail cannot be written.
+vi.mock("@/(shared)/repositories/audit-event.repository", () => ({
+    auditEventRepository: {
+        appendOnce: (...args: unknown[]) => {
+            calls.push("auditAppendOnce");
+            return auditAppendOnceMock(...args);
+        },
+    },
+}));
+
+vi.mock("@/(shared)/lib/audit-label", () => ({
+    resolveUserAuditLabel: () => Promise.resolve("dono@example.com"),
+}));
+
 const { POST } = await import("@/app/(routes)/webhooks/payments/route");
 
 const SIGNED_BODY = '{"id":"evt_qa"}';
@@ -197,7 +214,11 @@ function subscriptionEvent(
     };
 }
 
-const PROFILE = { id: "profile-1", stripeCustomerId: "cus_qa" };
+const PROFILE = {
+    id: "profile-1",
+    reference_id: "uid-owner",
+    stripeCustomerId: "cus_qa",
+};
 
 let warn: MockInstance<typeof console.warn>;
 let error: MockInstance<typeof console.error>;
@@ -220,6 +241,7 @@ beforeEach(() => {
     applyEntitlementsStateMock.mockResolvedValue("applied");
     listActiveEntitlementKeysMock.mockResolvedValue([]);
     emitOnceMock.mockResolvedValue("created");
+    auditAppendOnceMock.mockResolvedValue(true);
     warn = vi.spyOn(console, "warn").mockImplementation(() => {
         return;
     });
@@ -448,6 +470,7 @@ describe("POST /webhooks/payments — idempotência", () => {
 
         expect(calls).toEqual([
             "applySubscriptionState",
+            "auditAppendOnce",
             "ensurePlanLabel",
             "markProcessed",
         ]);
@@ -751,6 +774,160 @@ describe("POST /webhooks/payments — notificação da mudança de assinatura", 
     });
 });
 
+describe("POST /webhooks/payments — trilha de auditoria da assinatura", () => {
+    const storedSubscription = (overrides: Record<string, unknown> = {}) => ({
+        subscriptionId: "sub_qa",
+        status: "active",
+        priceId: "price_pro",
+        cancelAtPeriodEnd: false,
+        ...overrides,
+    });
+
+    function ownerWith(subscription: unknown) {
+        findByStripeCustomerIdMock.mockResolvedValue({
+            ...PROFILE,
+            subscription,
+        });
+    }
+
+    function auditedKeys(): string[] {
+        return auditAppendOnceMock.mock.calls.map((call) => call[0] as string);
+    }
+
+    it("grava a ativação com id determinístico e o dono como ator e alvo", async () => {
+        ownerWith(undefined);
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.created")
+        );
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(auditedKeys()).toEqual(["stripe_evt_sub_subscription.activate"]);
+        const [, written, options] = auditAppendOnceMock.mock.calls[0] ?? [];
+        expect(written).toMatchObject({
+            action: "subscription.activate",
+            level: "info",
+            actorUserId: "profile-1",
+            actorUid: "uid-owner",
+            actorLabel: "dono@example.com",
+            targetType: "account",
+            targetUserId: "profile-1",
+            involvedUserIds: ["profile-1"],
+        });
+        expect(options.expiresAt).toBeInstanceOf(Date);
+        expect(calls.indexOf("auditAppendOnce")).toBeGreaterThan(
+            calls.indexOf("applySubscriptionState")
+        );
+    });
+
+    it("grava a troca de plano quando o preço muda", async () => {
+        ownerWith(storedSubscription({ priceId: "price_basic" }));
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated")
+        );
+
+        await POST(request());
+
+        expect(auditedKeys()).toEqual([
+            "stripe_evt_sub_subscription.plan.change",
+        ]);
+    });
+
+    it("grava o cancelamento agendado", async () => {
+        ownerWith(storedSubscription());
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated", {
+                cancel_at_period_end: true,
+            })
+        );
+
+        await POST(request());
+
+        expect(auditedKeys()).toEqual([
+            "stripe_evt_sub_subscription.cancellation.schedule",
+        ]);
+    });
+
+    it("grava o encerramento", async () => {
+        ownerWith(storedSubscription());
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.deleted", {
+                status: "canceled",
+            })
+        );
+
+        await POST(request());
+
+        expect(auditedKeys()).toEqual(["stripe_evt_sub_subscription.end"]);
+    });
+
+    it("não grava nada numa renovação sem mudança de preço nem de status", async () => {
+        ownerWith(storedSubscription());
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.updated")
+        );
+
+        await POST(request());
+
+        expect(auditAppendOnceMock).not.toHaveBeenCalled();
+    });
+
+    it("não grava nada quando o evento foi ignorado", async () => {
+        ownerWith(undefined);
+        applySubscriptionStateMock.mockResolvedValue("skipped");
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.created")
+        );
+
+        await POST(request());
+
+        expect(auditAppendOnceMock).not.toHaveBeenCalled();
+    });
+
+    it("não grava nada quando nenhum perfil corresponde", async () => {
+        findByStripeCustomerIdMock.mockResolvedValue(null);
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.created")
+        );
+
+        await POST(request());
+
+        expect(auditAppendOnceMock).not.toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringContaining("[payments] webhook-profile-not-found")
+        );
+    });
+
+    it("reentrega duplicada não roda handler nem grava de novo", async () => {
+        wasProcessedMock.mockResolvedValue(true);
+        ownerWith(undefined);
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.created")
+        );
+
+        await POST(request());
+
+        expect(auditAppendOnceMock).not.toHaveBeenCalled();
+    });
+
+    it("segue respondendo 200 e marca o evento quando a trilha não grava", async () => {
+        ownerWith(undefined);
+        auditAppendOnceMock.mockRejectedValue(new TypeError("firestore down"));
+        constructEventMock.mockReturnValue(
+            subscriptionEvent("customer.subscription.created")
+        );
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(markProcessedMock).toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringContaining("[audit] write-failed")
+        );
+    });
+});
+
 const PAID_AT = 1_780_000_100;
 
 function invoiceObject(overrides: Record<string, unknown> = {}) {
@@ -950,6 +1127,7 @@ describe("POST /webhooks/payments — nome do plano nos eventos de assinatura", 
         );
         expect(calls).toEqual([
             "applySubscriptionState",
+            "auditAppendOnce",
             "ensurePlanLabel",
             "markProcessed",
         ]);

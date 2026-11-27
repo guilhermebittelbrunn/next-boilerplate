@@ -6,6 +6,7 @@ import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { recordAccountLifecycleEvent } from "@/(shared)/lib/audit-recorder";
 import { listActiveEntitlementKeys } from "@/(shared)/lib/billing";
 import {
     toEntitlementsState,
@@ -14,6 +15,7 @@ import {
 } from "@/(shared)/lib/billing-state";
 import { emitNotificationQuietly } from "@/(shared)/lib/notifications";
 import { ensurePlanLabel } from "@/(shared)/lib/plan-label";
+import { subscriptionAuditActionsFor } from "@/(shared)/lib/subscription-audit";
 import { subscriptionNotificationFor } from "@/(shared)/lib/subscription-notifications";
 import { paidInvoiceRepository } from "@/(shared)/repositories/paid-invoice.repository";
 import { paymentEventRepository } from "@/(shared)/repositories/payment-event.repository";
@@ -115,6 +117,22 @@ async function reconcileSubscription(
                 type: notificationType,
                 params: {},
                 dedupeKey: event.id,
+            });
+        }
+
+        // Keyed by the event: a concurrent redelivery that also reads "applied" still
+        // leaves one document per fact.
+        const auditActions =
+            result === "applied"
+                ? subscriptionAuditActionsFor(profile.subscription, state)
+                : [];
+        for (const action of auditActions) {
+            await recordAccountLifecycleEvent({
+                action,
+                profileId: profile.id,
+                uid: profile.reference_id,
+                requestId,
+                onceKey: `stripe_${event.id}_${action}`,
             });
         }
     } else {
