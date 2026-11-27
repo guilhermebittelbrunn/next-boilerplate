@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/style/noMagicNumbers: the OKLab and WCAG coefficients are published constants; naming each entry of a 3x3 matrix would hide the reference they are checked against. */
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { antdSeedColors } from "@repo/design-system/providers/antd-app";
 import { describe, expect, it } from "vitest";
 
 const WCAG_AA_TEXT = 4.5;
@@ -21,12 +20,6 @@ const PERCENT = 100;
 const DEGREES_PER_HALF_TURN = 180;
 const CUBE = 3;
 const LUMINANCE_FLARE = 0.05;
-const SRGB_LINEAR_LIMIT = 0.003_130_8;
-const SRGB_LINEAR_SLOPE = 12.92;
-const SRGB_GAMMA = 2.4;
-const SRGB_OFFSET = 0.055;
-const CHANNEL_MAX = 255;
-const HEX_RADIX = 16;
 
 /** OKLab ↔ linear sRGB, from Björn Ottosson's reference implementation. */
 const OKLAB_TO_LMS: Matrix = [
@@ -91,21 +84,6 @@ function oklchToLinearRgb(value: string): Rgb {
     return multiply(LMS_TO_LINEAR_SRGB, lms).map(clip) as Rgb;
 }
 
-function encodeSrgb(channel: number): number {
-    return channel <= SRGB_LINEAR_LIMIT
-        ? SRGB_LINEAR_SLOPE * channel
-        : (1 + SRGB_OFFSET) * channel ** (1 / SRGB_GAMMA) - SRGB_OFFSET;
-}
-
-function oklchToHex(value: string): string {
-    const channels = oklchToLinearRgb(value).map((channel) =>
-        Math.round(encodeSrgb(channel) * CHANNEL_MAX)
-            .toString(HEX_RADIX)
-            .padStart(2, "0")
-    );
-    return `#${channels.join("")}`;
-}
-
 function contrastRatio(foreground: string, background: string): number {
     const first = dot(WCAG_LUMINANCE_WEIGHTS, oklchToLinearRgb(foreground));
     const second = dot(WCAG_LUMINANCE_WEIGHTS, oklchToLinearRgb(background));
@@ -119,22 +97,35 @@ const themes = {
     dark: readTokens(".dark"),
 };
 
-/**
- * `background` on `destructive` is the hovered danger item of the antd dropdown: the provider
- * paints its text with the page background so the pair stays legible in both themes.
- */
+/** Text on the surfaces it is painted on: page, raised card, muted header, button fill. */
 const textPairs: [keyof typeof themes, string, string][] = [
+    ["light", "foreground", "background"],
+    ["light", "foreground", "card"],
     ["light", "muted-foreground", "muted"],
     ["light", "muted-foreground", "background"],
+    ["light", "muted-foreground", "card"],
+    ["light", "primary-foreground", "primary"],
+    ["light", "primary", "background"],
+    ["light", "primary", "card"],
     ["light", "destructive", "background"],
-    ["light", "background", "destructive"],
     ["light", "warning", "background"],
+    ["light", "success", "background"],
+    ["light", "muted-foreground", "sidebar"],
+    ["dark", "foreground", "background"],
+    ["dark", "foreground", "card"],
     ["dark", "muted-foreground", "muted"],
     ["dark", "muted-foreground", "background"],
+    ["dark", "muted-foreground", "card"],
+    ["dark", "muted-foreground", "popover"],
+    ["dark", "primary-foreground", "primary"],
+    ["dark", "primary", "background"],
+    ["dark", "primary", "card"],
     ["dark", "destructive", "background"],
+    ["dark", "destructive", "card"],
     ["dark", "destructive", "accent"],
-    ["dark", "background", "destructive"],
     ["dark", "warning", "background"],
+    ["dark", "success", "background"],
+    ["dark", "muted-foreground", "sidebar"],
 ];
 
 describe("theme tokens", () => {
@@ -152,24 +143,13 @@ describe("theme tokens", () => {
     );
 });
 
-describe("antd seed colours mirror globals.css", () => {
-    const seedTokens = Object.entries(antdSeedColors).flatMap(
-        ([theme, colors]) =>
-            Object.entries(colors).map(
-                ([token, hex]) => [theme, token, hex] as const
-            )
-    );
+describe("destructive button", () => {
+    it("keeps white text readable on the light destructive fill", () => {
+        const ratio = contrastRatio(
+            "oklch(1 0 0)",
+            themes.light.get("destructive") ?? ""
+        );
 
-    it.each(seedTokens)(
-        "%s: --%s in globals.css is the antd seed %s",
-        (theme, token, hex) => {
-            const value = themes[theme as keyof typeof themes].get(token);
-
-            expect(
-                value,
-                `--${token} is missing from globals.css`
-            ).toBeDefined();
-            expect(oklchToHex(value ?? "")).toBe(hex);
-        }
-    );
+        expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+    });
 });

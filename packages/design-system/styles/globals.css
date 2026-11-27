@@ -6,81 +6,117 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Neutros frios de croma baixo (matiz 264) e um acento só, o --primary. Ao trocar a marca de um
+ * fork, mude --primary, --ring, --sidebar-primary e --chart-1 nos dois temas e rode o teste de
+ * contraste do pacote.
+ */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    --background: oklch(0.985 0.002 264);
+    --foreground: oklch(0.21 0.014 264);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.21 0.014 264);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.54 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.577 0.245 27.325);
-    --success: oklch(50.8% 0.118 165.612);
-    --warning: oklch(0.555 0.163 48.998);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --popover-foreground: oklch(0.21 0.014 264);
+    --primary: oklch(0.49 0.17 262);
+    --primary-foreground: oklch(0.985 0.003 264);
+    --secondary: oklch(0.955 0.005 264);
+    --secondary-foreground: oklch(0.25 0.014 264);
+    --muted: oklch(0.955 0.005 264);
+    --muted-foreground: oklch(0.5 0.014 264);
+    --accent: oklch(0.945 0.008 264);
+    --accent-foreground: oklch(0.21 0.014 264);
+    --destructive: oklch(0.55 0.2 25);
+    --destructive-foreground: oklch(0.55 0.2 25);
+    --success: oklch(0.52 0.12 155);
+    --warning: oklch(0.55 0.14 55);
+    --border: oklch(0.915 0.006 264);
+    --input: oklch(0.88 0.008 264);
+    --ring: oklch(0.49 0.17 262);
+    --chart-1: oklch(0.49 0.17 262);
+    --chart-2: oklch(0.62 0.1 195);
+    --chart-3: oklch(0.76 0.14 75);
+    --chart-4: oklch(0.55 0.02 264);
+    --chart-5: oklch(0.63 0.16 15);
+    --radius: 0.75rem;
+    --sidebar: oklch(0.97 0.004 264);
+    --sidebar-foreground: oklch(0.21 0.014 264);
+    --sidebar-primary: oklch(0.49 0.17 262);
+    --sidebar-primary-foreground: oklch(0.985 0.003 264);
+    --sidebar-accent: oklch(0.93 0.008 264);
+    --sidebar-accent-foreground: oklch(0.21 0.014 264);
+    --sidebar-border: oklch(0.915 0.006 264);
+    --sidebar-ring: oklch(0.49 0.17 262);
+
+    --elevation-card:
+        0 0 0 1px oklch(0.21 0.014 264 / 0.06), 0 1px 2px
+        oklch(0.21 0.014 264 / 0.04), 0 4px 16px -6px
+        oklch(0.21 0.014 264 / 0.06);
+    --elevation-popover:
+        0 0 0 1px oklch(0.21 0.014 264 / 0.08), 0 4px 8px -2px
+        oklch(0.21 0.014 264 / 0.06), 0 16px 32px -12px
+        oklch(0.21 0.014 264 / 0.14);
+    --elevation-overlay:
+        0 0 0 1px oklch(0.21 0.014 264 / 0.08), 0 24px 64px -16px
+        oklch(0.21 0.014 264 / 0.24);
+
+    --duration-press: 140ms;
+    --duration-fast: 180ms;
+    --duration-base: 240ms;
 
     --font-weight-bold: 700;
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --success: oklch(50.8% 0.118 165.612);
-    --warning: oklch(0.828 0.189 84.429);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    --background: oklch(0.165 0.009 264);
+    --foreground: oklch(0.965 0.004 264);
+    --card: oklch(0.2 0.01 264);
+    --card-foreground: oklch(0.965 0.004 264);
+    --popover: oklch(0.225 0.011 264);
+    --popover-foreground: oklch(0.965 0.004 264);
+    --primary: oklch(0.72 0.13 258);
+    --primary-foreground: oklch(0.18 0.03 264);
+    --secondary: oklch(0.25 0.011 264);
+    --secondary-foreground: oklch(0.965 0.004 264);
+    --muted: oklch(0.25 0.011 264);
+    --muted-foreground: oklch(0.72 0.012 264);
+    --accent: oklch(0.27 0.013 264);
+    --accent-foreground: oklch(0.965 0.004 264);
+    --destructive: oklch(0.7 0.17 22);
+    --destructive-foreground: oklch(0.7 0.17 22);
+    --success: oklch(0.74 0.13 158);
+    --warning: oklch(0.8 0.13 75);
+    --border: oklch(0.28 0.012 264);
+    --input: oklch(0.32 0.014 264);
+    --ring: oklch(0.72 0.13 258);
+    --chart-1: oklch(0.72 0.13 258);
+    --chart-2: oklch(0.72 0.1 195);
+    --chart-3: oklch(0.8 0.13 75);
+    --chart-4: oklch(0.62 0.02 264);
+    --chart-5: oklch(0.7 0.15 15);
+    --sidebar: oklch(0.145 0.008 264);
+    --sidebar-foreground: oklch(0.965 0.004 264);
+    --sidebar-primary: oklch(0.72 0.13 258);
+    --sidebar-primary-foreground: oklch(0.18 0.03 264);
+    --sidebar-accent: oklch(0.24 0.012 264);
+    --sidebar-accent-foreground: oklch(0.965 0.004 264);
+    --sidebar-border: oklch(0.25 0.011 264);
+    --sidebar-ring: oklch(0.72 0.13 258);
+
+    --elevation-card:
+        0 0 0 1px oklch(1 0 0 / 0.07), 0 1px 2px oklch(0 0 0 / 0.3);
+    --elevation-popover:
+        0 0 0 1px oklch(1 0 0 / 0.08), 0 16px 32px -12px oklch(0 0 0 / 0.6);
+    --elevation-overlay:
+        0 0 0 1px oklch(1 0 0 / 0.08), 0 24px 64px -16px oklch(0 0 0 / 0.7);
+}
+
+@theme {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --default-transition-duration: 160ms;
+    --default-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @theme inline {
@@ -123,8 +159,12 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
-    --animate-accordion-down: accordion-down 0.2s ease-out;
-    --animate-accordion-up: accordion-up 0.2s ease-out;
+    --radius-2xl: calc(var(--radius) + 8px);
+    --shadow-card: var(--elevation-card);
+    --shadow-popover: var(--elevation-popover);
+    --shadow-overlay: var(--elevation-overlay);
+    --animate-accordion-down: accordion-down 0.2s var(--ease-out);
+    --animate-accordion-up: accordion-up 0.2s var(--ease-out);
 
     @keyframes accordion-down {
         from {
@@ -145,18 +185,25 @@
     }
 }
 
-/* This layer is added by shadcn/ui */
+/*
+ * Retorno de toque: encolhe a 97 % no :active. Só transform, então não mexe em layout; sob
+ * prefers-reduced-motion a escala some e fica a troca de cor.
+ */
+@utility pressable {
+    transition-property:
+        transform, color, background-color, border-color, box-shadow, opacity;
+    transition-duration: var(--duration-press);
+    transition-timing-function: var(--ease-out);
+
+    &:active:not(:disabled, [aria-disabled="true"]) {
+        transform: scale(0.97);
+    }
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;
     }
-    body {
-        @apply bg-background text-foreground;
-    }
-}
-
-/* This layer is by next-forge */
-@layer base {
     ::after,
     ::before,
     ::backdrop,
@@ -168,9 +215,27 @@
     }
     html {
         text-rendering: optimizelegibility;
+        -webkit-tap-highlight-color: transparent;
+        color-scheme: light;
+    }
+    html.dark {
+        color-scheme: dark;
     }
     body {
-        @apply min-h-[100dvh];
+        @apply min-h-[100dvh] bg-background text-foreground;
+        font-feature-settings: "cv11", "ss01";
+    }
+    h1,
+    h2,
+    h3,
+    h4 {
+        text-wrap: balance;
+    }
+    p {
+        text-wrap: pretty;
+    }
+    ::selection {
+        @apply bg-primary/20 text-foreground;
     }
     input::placeholder,
     textarea::placeholder {
@@ -179,6 +244,34 @@
     button:not(:disabled),
     [role="button"]:not(:disabled) {
         @apply cursor-pointer;
+    }
+    button,
+    a,
+    [role="button"] {
+        touch-action: manipulation;
+    }
+}
+
+/*
+ * Movimento reduzido: tira deslocamento e escala das entradas (tw-animate-css) e do press, e
+ * mantém só a opacidade, que ajuda a ler a troca de estado sem causar enjoo.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        --tw-enter-scale: 1 !important;
+        --tw-exit-scale: 1 !important;
+        --tw-enter-translate-x: 0 !important;
+        --tw-enter-translate-y: 0 !important;
+        --tw-exit-translate-x: 0 !important;
+        --tw-exit-translate-y: 0 !important;
+        --tw-enter-rotate: 0 !important;
+        --tw-exit-rotate: 0 !important;
+        scroll-behavior: auto !important;
+    }
+    .pressable:active {
+        transform: none !important;
     }
 }
 
@@ -216,134 +309,4 @@
     --tw-prose-invert-pre-bg: var(--color-background);
     --tw-prose-invert-th-borders: var(--color-border);
     --tw-prose-invert-td-borders: var(--color-border);
-}
-
-/*
- * Ant Design deriva colorText em rgba no CSS-in-JS após a hidratação, o que
- * sobrescreve o primeiro paint que vinha das variáveis do tema. Prefixo
- * `html` aumenta a especificidade face às classes com hash do cssinjs.
- */
-html .ant-dropdown .ant-dropdown-menu,
-html .ant-dropdown-menu-submenu .ant-dropdown-menu {
-    color: var(--color-foreground);
-}
-
-html .ant-dropdown .ant-dropdown-menu-item,
-html .ant-dropdown .ant-dropdown-menu-submenu-title {
-    color: var(--color-foreground);
-}
-
-html .ant-dropdown .ant-dropdown-menu-item .ant-dropdown-menu-title-content {
-    color: inherit;
-}
-
-html .ant-dropdown .ant-dropdown-menu-item-danger {
-    color: var(--color-destructive);
-}
-
-/*
- * No hover o fundo do item danger vira --destructive e o texto vira --background.
- * Os filhos herdam do item; uma cor própria aqui some contra o fundo.
- */
-html .ant-dropdown
-    .ant-dropdown-menu-item-danger
-    .ant-dropdown-menu-title-content,
-html .ant-dropdown .ant-dropdown-menu-item-danger .anticon {
-    color: inherit;
-}
-
-html
-    .ant-dropdown
-    .ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger)
-    .anticon {
-    color: var(--color-foreground);
-}
-
-html .ant-pagination,
-html .ant-pagination .ant-pagination-total-text,
-html .ant-pagination-options,
-html .ant-pagination-simple-pager {
-    color: var(--color-foreground);
-}
-
-html .ant-pagination .ant-pagination-item a,
-html .ant-pagination .ant-pagination-item button,
-html .ant-pagination-prev .ant-pagination-item-link,
-html .ant-pagination-next .ant-pagination-item-link,
-html .ant-pagination-jump-prev .ant-pagination-item-container,
-html .ant-pagination-jump-next .ant-pagination-item-container {
-    color: var(--color-foreground);
-}
-
-html .ant-pagination .ant-pagination-item-active a {
-    color: var(--color-primary);
-}
-
-html .ant-table,
-html .ant-table-thead > tr > th,
-html .ant-table-tbody > tr > td,
-html .ant-table tfoot > tr > th,
-html .ant-table tfoot > tr > td {
-    color: var(--color-foreground);
-}
-
-/*
- * Fundo das células segue o tema. O Ant calcula o hover em CSS-in-JS e, sem um
- * ConfigProvider sincronizado com o next-themes, a linha fica escura no light
- * mode. Forçamos os tokens (que trocam via classe `.dark`).
- */
-html .ant-table,
-html .ant-table-tbody > tr > td,
-html .ant-table-tbody > tr.ant-table-placeholder > td {
-    background: transparent !important;
-}
-
-html .ant-table-thead > tr > th {
-    background: var(--color-muted) !important;
-}
-
-/* `!important` beats Ant's `.ant-table-wrapper`-prefixed CSS-in-JS hover rule. */
-html .ant-table-tbody > tr.ant-table-row:hover > td,
-html .ant-table-tbody > tr > td.ant-table-cell-row-hover {
-    background: var(--color-accent) !important;
-}
-
-html .ant-popconfirm .ant-popover-inner,
-html .ant-popconfirm .ant-popover-message-title,
-html .ant-popconfirm .ant-popover-inner-content {
-    color: var(--color-foreground);
-}
-
-html .ant-modal .ant-modal-title,
-html .ant-modal .ant-modal-body,
-html .ant-modal .ant-modal-confirm-title,
-html .ant-modal .ant-modal-confirm-content {
-    color: var(--color-foreground);
-}
-
-/* Sidebar (shadcn): evita que regras globais do Ant em controles vazem cor */
-html [data-slot="sidebar-menu-sub-button"],
-html [data-slot="sidebar-menu-button"] {
-    color: var(--color-sidebar-foreground);
-}
-
-/* Breadcrumb: reforça tokens após estilos do Ant (links herdavam cor errada) */
-html [data-slot="breadcrumb"] [data-slot="breadcrumb-link"] {
-    color: var(--color-muted-foreground);
-}
-
-html [data-slot="breadcrumb"] [data-slot="breadcrumb-link"]:hover {
-    color: var(--color-foreground);
-}
-
-html [data-slot="breadcrumb"] [data-slot="breadcrumb-page"] {
-    color: var(--color-foreground);
-}
-
-html [data-slot="breadcrumb"] [data-slot="breadcrumb-separator"] {
-    color: var(--color-muted-foreground);
-}
-
-html [data-slot="breadcrumb"] [data-slot="breadcrumb-separator"] svg {
-    color: inherit;
 }
