@@ -1,5 +1,5 @@
 import { UserRoleLevel } from "@repo/auth/types";
-import { UserType } from "@repo/sdk/src/types";
+import { AuditAction, AuditTargetType, UserType } from "@repo/sdk/src/types";
 import { AUTH_REQUEST_HEADER } from "@repo/shared/utils/helpers/auth-request-headers";
 import { HTTP_STATUS } from "@repo/shared/utils/helpers/httpStatus";
 import {
@@ -14,8 +14,14 @@ const {
     listMock,
     getAuthMock,
     identitySignUpMock,
+    createMock,
+    recordAuditEventMock,
+    getMergedUserMock,
     FakeIdentityToolkitError,
 } = vi.hoisted(() => ({
+    createMock: vi.fn(),
+    recordAuditEventMock: vi.fn(),
+    getMergedUserMock: vi.fn(),
     resolveApiActorMock: vi.fn(),
     findByReferenceIdMock: vi.fn(),
     listMock: vi.fn(),
@@ -40,7 +46,17 @@ vi.mock("@/(shared)/repositories/user.repository", () => ({
             findByReferenceIdMock(...args),
         touchLastAccess: vi.fn(),
         list: (...args: unknown[]) => listMock(...args),
+        create: (...args: unknown[]) => createMock(...args),
     },
+}));
+
+vi.mock("@/(shared)/lib/audit-recorder", () => ({
+    recordAuditEvent: (...args: unknown[]) => recordAuditEventMock(...args),
+}));
+
+vi.mock("@/(shared)/lib/user-merge", () => ({
+    getMergedUserByFirestoreDocId: (...args: unknown[]) =>
+        getMergedUserMock(...args),
 }));
 
 vi.mock("@/(shared)/lib/notifications", () => ({
@@ -119,6 +135,10 @@ beforeEach(() => {
         Promise.resolve(uid === ACTOR_UID ? ADMIN_PROFILE : TARGET_PROFILE)
     );
     listMock.mockResolvedValue([COMMON_USER]);
+    createMock.mockReset();
+    recordAuditEventMock.mockReset();
+    getMergedUserMock.mockReset();
+    getAuthMock.mockReset();
 });
 
 describe("GET /users scope", () => {
@@ -278,5 +298,70 @@ describe("POST /users email ceiling", () => {
             email,
             expect.any(String)
         );
+    });
+});
+
+describe("POST /users leaves a trail", () => {
+    const NEW_UID = "new-uid-3";
+    const body = {
+        email: "qa-audit-levels-created@example.com",
+        password: "a".repeat(PASSWORD_MIN_LENGTH),
+        type: UserType.COMMON,
+    };
+    const deleteUserMock = vi.fn();
+
+    beforeEach(() => {
+        resolveApiActorMock.mockResolvedValue({
+            uid: ACTOR_UID,
+            email: "admin@example.com",
+        });
+        identitySignUpMock.mockResolvedValue({ localId: NEW_UID });
+        createMock.mockResolvedValue({
+            id: "p3",
+            reference_id: NEW_UID,
+            type: UserType.COMMON,
+        });
+        getMergedUserMock.mockResolvedValue({ id: "p3" });
+        deleteUserMock.mockReset();
+        deleteUserMock.mockResolvedValue(undefined);
+        getAuthMock.mockReturnValue({ deleteUser: deleteUserMock });
+    });
+
+    it("records user.create with the admin as actor and the new profile as target", async () => {
+        const response = await POST(createRequest(body));
+
+        expect(response.status).toBe(HTTP_STATUS.CREATED);
+        expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+        expect(recordAuditEventMock.mock.calls[0]?.[0]).toMatchObject({
+            action: AuditAction.USER_CREATE,
+            actorUserId: "p1",
+            actorUid: ACTOR_UID,
+            actorLabel: "admin@example.com",
+            targetType: AuditTargetType.USER,
+            targetUserId: "p3",
+            targetLabel: "qa-audit-levels-created@example.com",
+        });
+    });
+
+    it("records nothing when the profile cannot be created", async () => {
+        createMock.mockRejectedValue(new Error("unavailable"));
+
+        const response = await POST(createRequest(body));
+
+        expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+        expect(await response.json()).toEqual({
+            error: { code: "USERS_PROFILE_CREATE_FAILED" },
+        });
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
+    });
+
+    it("records nothing when the provider refuses the account", async () => {
+        identitySignUpMock.mockRejectedValue(
+            new FakeIdentityToolkitError("EMAIL_EXISTS")
+        );
+
+        await POST(createRequest(body));
+
+        expect(recordAuditEventMock).not.toHaveBeenCalled();
     });
 });

@@ -1,8 +1,14 @@
 import { getAuthInstance } from "@repo/auth/server";
 import { UserRoleLevel } from "@repo/auth/types";
-import { UserType } from "@repo/sdk/src/types";
+import {
+    AuditAction,
+    AuditTargetType,
+    type UserDTO,
+    UserType,
+} from "@repo/sdk/src/types";
 import { logEvent } from "@repo/shared/utils/helpers/log";
 import { requestIdFrom } from "@repo/shared/utils/helpers/request-id";
+import { recordAuditEvent } from "@/(shared)/lib/audit-recorder";
 import {
     IdentityToolkitError,
     identitySignUp,
@@ -37,7 +43,7 @@ export const GET = requireAdminApi(async (req, ctx) => {
     return Response.json({ data: users });
 });
 
-export const POST = requireAdminApi(async (req, _ctx) => {
+export const POST = requireAdminApi(async (req, ctx) => {
     const parsedBody = await parseRequestJson(req);
     if (!parsedBody.ok) {
         return parsedBody.response;
@@ -70,8 +76,9 @@ export const POST = requireAdminApi(async (req, _ctx) => {
         throw e;
     }
 
+    let profile: UserDTO;
     try {
-        await userRepository.create({
+        profile = await userRepository.create({
             reference_id: localId,
             type: input.type,
         });
@@ -85,6 +92,17 @@ export const POST = requireAdminApi(async (req, _ctx) => {
             { status: 500 }
         );
     }
+
+    await recordAuditEvent({
+        action: AuditAction.USER_CREATE,
+        actorUserId: ctx.actorProfile.id,
+        actorUid: ctx.user.uid,
+        actorLabel: ctx.user.email ?? ctx.user.displayName ?? null,
+        targetType: AuditTargetType.USER,
+        targetUserId: profile.id,
+        targetLabel: input.email,
+        requestId: requestIdFrom(req),
+    });
 
     const displayName = input.displayName?.trim();
     if (displayName) {
