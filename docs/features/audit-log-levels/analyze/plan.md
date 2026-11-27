@@ -1,6 +1,6 @@
 # Plano — Níveis na trilha de auditoria (sensível e informativo)
 
-- **Spec de origem:** [`specs/features/audit-log-levels.md`](../../../../specs/features/audit-log-levels.md) (status `approved`, revisada em 2026-11-26)
+- **Spec de origem:** [`spec.md`](../spec.md) (status `approved`, revisada em 2026-11-26)
 - **Rodada:** `/cycle` autônomo, sem acompanhamento do usuário. As perguntas 2, 3 e 4 da spec não tinham
   resposta; o plano adota a recomendação da própria spec em cada uma (ver "Decisões adotadas").
 - **Escopo:** `packages/sdk` → `apps/api` → `apps/app` → `packages/internationalization`, mais

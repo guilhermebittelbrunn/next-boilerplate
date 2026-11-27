@@ -142,7 +142,7 @@ Corte para a variante recomendada na pergunta 1 (só no cadastro).
 - **Ataque de adivinhação.** 6 dígitos são 1 milhão de combinações; 5 tentativas por código e o teto de
   reenvio por hora mantêm a chance de acerto às cegas baixa. Sem esse limite próprio, um fork sem Arcjet
   ficaria exposto.
-- **Interação com a trilha de auditoria.** A spec [`audit-log-levels`](audit-log-levels.md) propõe registrar
+- **Interação com a trilha de auditoria.** A spec [`audit-log-levels`](../../docs/features/audit-log-levels/spec.md) propõe registrar
   "e-mail confirmado" na rota do link. Se esta spec entrar antes ou junto, o evento precisa sair também da
   confirmação por código.
 - **Custo herdado.** Zero para fork sem e-mail. Com e-mail, um envio por cadastro e por reenvio no plano do

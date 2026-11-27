@@ -278,7 +278,7 @@ esforço baixo primeiro. Sobrou uma `approved`.
 
 | # | id | valor · esforço | situação |
 |---|----|-----------------|----------|
-| 1 | [`audit-log-levels`](../features/audit-log-levels.md) | médio · M | `approved` em 2026-11-24; sem dependência. O Resumo da spec pede resposta às perguntas 2, 3 e 4 antes do `/analyze`; os índices novos só provam num projeto real |
+| 1 | [`audit-log-levels`](../../docs/features/audit-log-levels/spec.md) | médio · M | `approved` em 2026-11-24; sem dependência. O Resumo da spec pede resposta às perguntas 2, 3 e 4 antes do `/analyze`; os índices novos só provam num projeto real |
 | — | [`signup-email-verification`](../features/signup-email-verification.md) | médio · M | `proposed`; espera a escolha da variante (pergunta 1 da spec) |
 | — | [`international-billing`](../features/international-billing.md) | médio · G | `proposed`; espera a ordem das fatias e a decisão sobre a de impostos |
 | — | [`account-security-mfa`](../features/account-security-mfa.md), **fatia 3** (segundo fator) | médio · M | `in-progress`, 4 de 6 itens (PRs #29 e #39). Fora do conjunto elegível enquanto o status não mudar (E12) |
@@ -287,7 +287,7 @@ esforço baixo primeiro. Sobrou uma `approved`.
 
 ### A próxima: `audit-log-levels`
 
-**Recomendação: [`audit-log-levels`](../features/audit-log-levels.md)**, com `/analyze audit-log-levels`.
+**Recomendação: [`audit-log-levels`](../../docs/features/audit-log-levels/spec.md)**, com `/analyze audit-log-levels`.
 
 1. **Valor × esforço.** É a única `approved`. Valor médio, esforço M: um campo de nível no evento, seis eventos
    `info` novos, coluna e filtro na listagem do admin.
@@ -527,7 +527,7 @@ movida). A skill ganhou o passo 8, "Conserte os links que o movimento quebrou", 
 
 | spec | `depends_on` | situação em 2026-11-26, pós-PR #76 |
 |------|--------------|------------------------------------|
-| [`audit-log-levels`](../features/audit-log-levels.md) | — | ✅ sem dependência. `approved` |
+| [`audit-log-levels`](../../docs/features/audit-log-levels/spec.md) | — | ✅ sem dependência. `approved` |
 | [`signup-email-verification`](../features/signup-email-verification.md) | — | ✅ sem dependência. `proposed` |
 | [`international-billing`](../features/international-billing.md) | — | ✅ sem dependência. `proposed` |
 | [`social-sign-in-providers`](../features/social-sign-in-providers.md) | `linked-sign-in-methods` | ✅ satisfeita (PR #48, `44b2b04`). A spec segue `deferred` |
@@ -541,7 +541,7 @@ Nenhuma spec viva depende de `app-form-layout-centered` nem de `admin-own-accoun
 
 | id | título | audiência | valor | esforço | status | depende de |
 |----|--------|-----------|-------|---------|--------|------------|
-| [`audit-log-levels`](../features/audit-log-levels.md) | Níveis na trilha de auditoria (sensível e informativo) | produto | médio | M | `approved` | — |
+| [`audit-log-levels`](../../docs/features/audit-log-levels/spec.md) | Níveis na trilha de auditoria (sensível e informativo) | produto | médio | M | `approved` | — |
 | [`signup-email-verification`](../features/signup-email-verification.md) | Confirmação do e-mail por código no cadastro | confianca | médio | M | `proposed` | — |
 | [`international-billing`](../features/international-billing.md) | Cobrança internacional opcional (imposto, moeda por região e formas de pagamento) | produto | médio | G | `proposed` | — |
 | [`social-sign-in-providers`](../features/social-sign-in-providers.md) | Login com GitHub e Microsoft, ligados por configuração | produto | médio | M | `deferred` | ✅ `linked-sign-in-methods` |

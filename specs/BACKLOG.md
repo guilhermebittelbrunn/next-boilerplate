@@ -5,17 +5,13 @@ abre com um bloco **Resumo** (o quê, por quê, status e próximo passo). Como a
 A evidência por trás desta fila (conferência de entregas, gates, achados, deriva) está no
 [registro de auditoria](reference/AUDIT.md).
 
-**Situação em 2026-11-26:** 1 `approved` · 2 `proposed` · 2 `in-progress` · 2 `deferred` · 39 entregues.
+**Situação em 2026-11-27:** 0 `approved` · 2 `proposed` · 2 `in-progress` · 2 `deferred` · 40 entregues (1 aguardando merge).
 Última auditoria: 2026-11-26, sobre `a13768c` (PR #76).
 
 ## Ordem recomendada
 
-Sobrou uma spec aprovada. As outras duas da fila anterior, `app-form-layout-centered` e `admin-own-account`, entraram
-em `main` pela PR #76 e estão em [Entregues](#entregues).
-
-| # | spec | o quê | valor · esforço | para começar |
-|---|------|-------|-----------------|--------------|
-| 1 | [`audit-log-levels`](features/audit-log-levels.md) | Nível na trilha de auditoria (sensível × informativo), eventos informativos (cadastro, assinatura, cancelamento) e filtro por nível | médio · M | responder as perguntas 2, 3 e 4 da spec (ou deixar o `/cycle` adotar as recomendações dela); depois `/analyze audit-log-levels` |
+A fila está vazia. A última spec aprovada, `audit-log-levels`, foi fechada na branch `feat/audit-log-levels` e está em
+[Entregues](#entregues), aguardando o merge. A próxima sai da triagem abaixo.
 
 ## Aguardando triagem
 
@@ -74,7 +70,7 @@ As demais decisões estacionadas estão em [Decisões estacionadas](reference/AU
 ## Entregues
 
 <details>
-<summary>39 specs entregues e arquivadas junto da feature que as implementou</summary>
+<summary>40 specs entregues e arquivadas junto da feature que as implementou</summary>
 
 | id | entregue em | spec arquivada |
 |----|-------------|----------------|
@@ -117,6 +113,7 @@ As demais decisões estacionadas estão em [Decisões estacionadas](reference/AU
 | `delivery-security-review` | 2026-11-24 | [spec](../docs/features/delivery-security-review/spec.md) |
 | `app-form-layout-centered` | 2026-11-26 | [spec](../docs/features/app-form-layout-centered/spec.md) |
 | `admin-own-account` | 2026-11-26 | [spec](../docs/features/admin-own-account/spec.md) |
+| `audit-log-levels` | 2026-11-27 | [spec](../docs/features/audit-log-levels/spec.md) (aguardando merge) |
 
 O detalhe de cada entrega (itens do corte, PRs, resultado do `/test`, derivas e passos manuais por fork) está em
 [Entregues no registro de auditoria](reference/AUDIT.md#entregues).
