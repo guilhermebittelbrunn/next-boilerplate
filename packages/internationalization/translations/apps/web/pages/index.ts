@@ -2,15 +2,12 @@ import { contactTranslations } from "./contact/contact";
 import { ctaTranslations } from "./cta";
 import { errorTranslations } from "./error";
 import { faqTranslations } from "./faq";
-import { featuresTranslations } from "./features";
-import { heroTranslations } from "./hero";
 import { homeTranslations } from "./home/home";
 import { legalTranslations } from "./legal";
 import { notFoundTranslations } from "./notFound";
 import { pricingTranslations } from "./pricing";
 import { signInTranslations } from "./signIn";
 import { signUpTranslations } from "./signUp";
-import { statsTranslations } from "./stats";
 
 export const pagesTranslations = {
     "pt-br": {
@@ -20,9 +17,6 @@ export const pagesTranslations = {
         signUp: signUpTranslations["pt-br"],
         cta: ctaTranslations["pt-br"],
         faq: faqTranslations["pt-br"],
-        features: featuresTranslations["pt-br"],
-        hero: heroTranslations["pt-br"],
-        stats: statsTranslations["pt-br"],
         pricing: pricingTranslations["pt-br"],
         legal: legalTranslations["pt-br"],
         error: errorTranslations["pt-br"],
@@ -35,9 +29,6 @@ export const pagesTranslations = {
         signUp: signUpTranslations.en,
         cta: ctaTranslations.en,
         faq: faqTranslations.en,
-        features: featuresTranslations.en,
-        hero: heroTranslations.en,
-        stats: statsTranslations.en,
         pricing: pricingTranslations.en,
         legal: legalTranslations.en,
         error: errorTranslations.en,
@@ -50,9 +41,6 @@ export const pagesTranslations = {
         signUp: signUpTranslations.es,
         cta: ctaTranslations.es,
         faq: faqTranslations.es,
-        features: featuresTranslations.es,
-        hero: heroTranslations.es,
-        stats: statsTranslations.es,
         pricing: pricingTranslations.es,
         legal: legalTranslations.es,
         error: errorTranslations.es,
