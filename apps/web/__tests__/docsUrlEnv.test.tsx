@@ -147,6 +147,7 @@ describe("NEXT_PUBLIC_DOCS_URL no env tipado da web", () => {
         expect(env.NEXT_PUBLIC_DOCS_URL).toBeUndefined();
         expect(header).not.toContain(DOCS_HREF);
         expect(footer).not.toContain(DOCS_HREF);
-        expect(header).toContain("lg:grid-cols-[1fr_minmax(0,auto)_1fr]");
+        expect(header).toContain("lg:hidden");
+        expect(header).not.toContain("xl:hidden");
     });
 });

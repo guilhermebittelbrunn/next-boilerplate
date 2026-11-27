@@ -7,7 +7,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
 import type { ReactNode } from "react";
-import { ToastContainer } from "react-toastify";
 import { ensureSupportedLocale } from "@/shared/lib/localeSegment";
 import { QueryProvider } from "../../../app/shared/providers/QueryProvider";
 import ClientLayout from "./clientLayout";
@@ -42,9 +41,12 @@ const RootLayout = async ({ children, params }: RootLayoutProperties) => {
                                 locale={locale}
                                 privacyPolicyHref={`/${locale}/legal/privacy`}
                             >
-                                <ToastContainer />
                                 <Header />
-                                <main>
+                                <main
+                                    className="outline-none"
+                                    id="main-content"
+                                    tabIndex={-1}
+                                >
                                     <ClientLayout> {children} </ClientLayout>
                                 </main>
                                 <Footer />

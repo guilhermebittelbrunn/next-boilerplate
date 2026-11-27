@@ -34,8 +34,6 @@ vi.mock("@repo/internationalization/client", () => ({
 
 vi.mock("@repo/design-system/lib/fonts", () => ({ fonts: "" }));
 
-vi.mock("react-toastify", () => ({ ToastContainer: () => null }));
-
 vi.mock("../app/shared/providers/QueryProvider", () => ({
     QueryProvider: ({ children }: { children: ReactNode }) => children,
 }));
