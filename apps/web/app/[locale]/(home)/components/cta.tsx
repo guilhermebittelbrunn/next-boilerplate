@@ -1,52 +1,51 @@
 import { buttonVariants } from "@repo/design-system/components/ui/button";
-import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
-import { MoveRight, PhoneCall } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { env } from "@/env";
+import { pageContainer } from "@/shared/lib/layout";
 
 export const CTA = async () => {
     const { dictionary, locale } = await getDictionary();
+    const ctaCopy = dictionary.apps.web.pages.cta;
 
     return (
-        <div className="w-full py-20 lg:py-40">
-            <div className="container mx-auto">
-                <div className="flex flex-col items-center gap-8 rounded-md bg-muted p-4 text-center lg:p-14">
-                    <div className="flex flex-col gap-2">
-                        <h3 className="max-w-xl font-regular text-3xl tracking-tighter md:text-5xl">
-                            {dictionary.apps.web.pages.cta.title}
-                        </h3>
-                        <p className="max-w-xl text-lg text-muted-foreground leading-relaxed tracking-tight">
-                            {dictionary.apps.web.pages.cta.description}
+        <section aria-labelledby="cta-title" className="pb-20 lg:pb-28">
+            <div className={pageContainer}>
+                <div className="flex flex-col gap-8 rounded-2xl bg-card p-8 shadow-card sm:p-12 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+                    <div className="flex flex-col gap-3">
+                        <h2
+                            className="max-w-[24ch] font-semibold text-3xl tracking-tight md:text-4xl"
+                            id="cta-title"
+                        >
+                            {ctaCopy.title}
+                        </h2>
+                        <p className="max-w-[52ch] text-muted-foreground leading-relaxed">
+                            {ctaCopy.description}
                         </p>
                     </div>
-                    <div className="flex flex-row gap-4">
+                    <div className="flex shrink-0 flex-wrap items-center gap-3">
                         <Link
-                            className={cn(
-                                buttonVariants({ variant: "outline" }),
-                                "gap-4"
-                            )}
-                            href={`/${locale}/contact`}
-                        >
-                            <span className="flex items-center gap-2">
-                                <PhoneCall />
-                                {dictionary.apps.web.pages.cta.primaryCta}
-                            </span>
-                        </Link>
-                        <Link
-                            className={cn(buttonVariants(), "gap-4")}
+                            className={buttonVariants({ size: "lg" })}
                             href={
                                 env.NEXT_PUBLIC_APP_URL || `/${locale}/sign-up`
                             }
                         >
-                            <span className="flex items-center gap-2">
-                                <MoveRight />
-                                {dictionary.apps.web.pages.cta.secondaryCta}
-                            </span>
+                            {ctaCopy.secondaryCta}
+                            <ArrowRight aria-hidden="true" />
+                        </Link>
+                        <Link
+                            className={buttonVariants({
+                                size: "lg",
+                                variant: "ghost",
+                            })}
+                            href={`/${locale}/contact`}
+                        >
+                            {ctaCopy.primaryCta}
                         </Link>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     );
 };

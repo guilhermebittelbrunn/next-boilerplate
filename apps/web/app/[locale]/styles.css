@@ -36,3 +36,40 @@
     content: attr(title);
     @apply inline-block text-muted-foreground text-right mb-6 text-sm;
 }
+
+/*
+ * Starts at 0.01, not 0: Chrome skips fully transparent elements as LCP candidates, so an
+ * entrance from 0 would push the hero's LCP to the end of the animation.
+ */
+@keyframes hero-rise {
+    from {
+        opacity: 0.01;
+        transform: translateY(var(--hero-rise, 10px));
+    }
+}
+
+@keyframes hero-fade {
+    from {
+        opacity: 0.01;
+    }
+}
+
+.hero-enter {
+    animation: hero-rise 560ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1))
+        both;
+}
+
+.hero-enter-late {
+    --hero-rise: 6px;
+    animation-delay: 120ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-enter {
+        animation: hero-fade 200ms ease-out both;
+    }
+}
+
+html {
+    scroll-padding-top: 5rem;
+}

@@ -1,62 +1,65 @@
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/server";
-import { MoveRight, PhoneCall } from "lucide-react";
+import { ArrowRight, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { env } from "@/env";
+import { pageContainer } from "@/shared/lib/layout";
+import { ProductPreview } from "./product-preview";
 
 export const Hero = async () => {
     const { dictionary, locale } = await getDictionary();
+    const homeCopy = dictionary.apps.web.pages.home;
+    const ctaCopy = dictionary.apps.web.pages.cta;
 
     return (
-        <div className="w-full">
-            <div className="container mx-auto">
-                <div className="flex flex-col items-center justify-center gap-8 py-20 lg:py-40">
-                    <div className="flex flex-col gap-4">
-                        <h1 className="max-w-2xl text-center font-regular text-5xl tracking-tighter md:text-7xl">
-                            {
-                                dictionary.apps.web.pages.home.meta.title.split(
-                                    " - "
-                                )[0]
-                            }
-                        </h1>
-                        <p className="max-w-2xl text-center text-lg text-muted-foreground leading-relaxed tracking-tight md:text-xl">
-                            {dictionary.apps.web.pages.home.meta.description}
-                        </p>
-                    </div>
-                    <div className="flex flex-row gap-3">
+        <section aria-labelledby="hero-title" className="overflow-x-clip">
+            <div
+                className={cn(
+                    pageContainer,
+                    "grid items-center gap-14 py-16 md:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-28"
+                )}
+            >
+                <div className="hero-enter flex flex-col items-start gap-6">
+                    <h1
+                        className="max-w-[18ch] font-semibold text-4xl leading-[1.05] tracking-tight md:text-5xl lg:text-[3.375rem]"
+                        id="hero-title"
+                    >
+                        {homeCopy.meta.title}
+                    </h1>
+                    <p className="max-w-[52ch] text-lg text-muted-foreground leading-relaxed">
+                        {homeCopy.hero.description}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
                         <Link
-                            className={cn(
-                                buttonVariants({
-                                    size: "lg",
-                                    variant: "outline",
-                                }),
-                                "gap-4"
-                            )}
-                            href={`/${locale}/contact`}
-                        >
-                            <span className="flex items-center gap-2">
-                                <PhoneCall />
-                                {dictionary.apps.web.pages.cta.primaryCta}
-                            </span>
-                        </Link>
-                        <Link
-                            className={cn(
-                                buttonVariants({ size: "lg" }),
-                                "gap-4"
-                            )}
+                            className={buttonVariants({ size: "lg" })}
                             href={
                                 env.NEXT_PUBLIC_APP_URL || `/${locale}/sign-up`
                             }
                         >
-                            <span className="flex items-center gap-2">
-                                <MoveRight />
-                                {dictionary.apps.web.pages.cta.secondaryCta}
-                            </span>
+                            {ctaCopy.secondaryCta}
+                            <ArrowRight aria-hidden="true" />
+                        </Link>
+                        <Link
+                            className={buttonVariants({
+                                size: "lg",
+                                variant: "ghost",
+                            })}
+                            href={`/${locale}/contact`}
+                        >
+                            {ctaCopy.primaryCta}
                         </Link>
                     </div>
+                    <p className="flex max-w-[52ch] items-start gap-2 text-muted-foreground text-sm">
+                        <WifiOff
+                            aria-hidden="true"
+                            className="mt-0.5 size-4 shrink-0 text-primary"
+                        />
+                        {homeCopy.hero.fact}
+                    </p>
                 </div>
+                <ProductPreview />
             </div>
-        </div>
+        </section>
     );
 };
