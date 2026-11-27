@@ -1,6 +1,6 @@
 import type { AuthMePayload } from "@repo/sdk/src/actions/auth/action";
 import { type UserDTO, UserType } from "@repo/sdk/src/types";
-import type { AllOptional } from "@repo/shared/utils";
+import { type AllOptional, readFirestoreInstant } from "@repo/shared/utils";
 import type { UserRecord } from "firebase-admin/auth";
 import { type DocumentData, Timestamp } from "firebase-admin/firestore";
 import type { FirestoreDocumentRow } from "../repositories/base.repository";
@@ -93,18 +93,7 @@ export function toSessionUser(merged: Record<string, unknown>): AuthMePayload {
 
 /** A value that is not a readable instant is handed back as stored rather than turned into an invalid Date. */
 function toDate(value: unknown): unknown {
-    if (value instanceof Date) {
-        return value;
-    }
-    if (typeof value === "string") {
-        const parsed = new Date(value);
-        return Number.isNaN(parsed.getTime()) ? value : parsed;
-    }
-    const maybeTimestamp = value as { toDate?: () => Date } | null | undefined;
-    if (typeof maybeTimestamp?.toDate === "function") {
-        return maybeTimestamp.toDate();
-    }
-    return value;
+    return readFirestoreInstant(value) ?? value;
 }
 
 /** Rewrites only the listed keys the object carries, so an absent field stays absent. */

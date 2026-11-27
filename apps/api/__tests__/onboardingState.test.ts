@@ -169,6 +169,24 @@ describe("toOnboardingStateDTO", () => {
         }
     });
 
+    it("serializes a date-only string as a full ISO instant", () => {
+        expect(
+            toOnboardingStateDTO({ step: "profile", completedAt: "2026-01-02" })
+        ).toEqual({ step: "profile", completedAt: "2026-01-02T00:00:00.000Z" });
+    });
+
+    it("returns null for an unreadable instant instead of throwing", () => {
+        for (const completedAt of [
+            new Date(Number.NaN),
+            "not-a-date",
+            { toDate: () => new Date(Number.NaN) },
+        ]) {
+            expect(
+                toOnboardingStateDTO({ step: "profile", completedAt })
+            ).toBeNull();
+        }
+    });
+
     it("normalizes an unknown stored step to the first one", () => {
         expect(
             toOnboardingStateDTO({ step: "workspace", completedAt: null })
