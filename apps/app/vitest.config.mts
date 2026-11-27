@@ -6,6 +6,7 @@ export default defineConfig({
     plugins: [react()],
     test: {
         environment: "jsdom",
+        setupFiles: ["./vitest.setup.ts"],
         // The 5s default is a wall-clock budget, and this suite mounts dozens of
         // environments in parallel: a test doing ~300ms of real work has been observed
         // taking 7s purely waiting to be scheduled. Loose enough not to produce a false
