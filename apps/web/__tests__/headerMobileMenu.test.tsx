@@ -173,6 +173,36 @@ describe("menu mobile do header da web", () => {
     });
 });
 
+describe("menu mobile do header da web pelo teclado", () => {
+    it("fecha no Esc e devolve o foco ao botão do menu", () => {
+        const menuButton = renderHeader();
+        fireEvent.click(menuButton);
+        const contactLink = within(menuArea(menuButton)).getByRole("link", {
+            name: headerCopy.contact,
+        });
+        contactLink.focus();
+
+        fireEvent.keyDown(document, { key: "Escape" });
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+        expect(document.activeElement).toBe(menuButton);
+        expect(
+            within(menuArea(menuButton)).queryByRole("link", {
+                name: headerCopy.contact,
+            })
+        ).toBeNull();
+    });
+
+    it("ignora outras teclas com o menu aberto", () => {
+        const menuButton = renderHeader();
+        fireEvent.click(menuButton);
+
+        fireEvent.keyDown(document, { key: "Enter" });
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+    });
+});
+
 describe("barra cheia do header da web", () => {
     it("sem o link de documentação, aparece a partir de lg como antes", () => {
         const area = menuArea(renderHeader());
