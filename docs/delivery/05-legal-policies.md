@@ -259,8 +259,11 @@ telas. O que o axe não julga fica para este item.
 número de clientes que não existe, selo que o produto não tem e "garantia" que os termos não sustentam
 entram aqui.
 
-**O core já faz.** A landing do core traz textos e números de exemplo (depoimentos na home, estatísticas e FAQ
-em `packages/internationalization/translations/apps/web/pages/`). Eles existem para o fork trocar.
+**O core já faz.** A landing do core descreve o próprio boilerplate e não traz depoimento, logo de cliente
+nem número de uso; o recorte do painel no hero tem dados marcados como ilustrativos. Os textos ficam em
+`packages/internationalization/translations/apps/web/pages/` e existem para o fork trocar. Seção de prova
+social só entra quando o fork tiver depoimento ou número real, com a origem escrita (regra também em
+[`DESIGN.md`](../DESIGN.md)).
 
 **Como medir.** Leia a landing inteira, nos três idiomas, e para cada afirmação verificável escreva no
 relatório de onde ela vem:

@@ -177,7 +177,7 @@ Três defaults do nosecone são **deliberadamente afrouxados** nos front-ends, p
 - `Cross-Origin-Embedder-Policy` fica **desligado** — `require-corp` exigiria CORP no avatar servido pelo Google.
 - `frame-src` lista `https://<NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN>` — o resolver do popup monta um iframe oculto ali.
 
-⚠️ **`script-src` ainda usa `'unsafe-inline'`.** O script anti-flash do `next-themes`, o bootstrap de hidratação do App Router e o `gtag` são inline **sem nonce**, e fiar nonce nos três é tarefa própria. O valor desta política vem das demais diretivas (`frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'none'`, `form-action 'self'` e as allowlists de `connect-src`/`img-src`/`frame-src`); o bloqueio de XSS por `script-src` é parcial até lá. `style-src 'unsafe-inline'` é irremovível nesta stack (antd CSS-in-JS, `next-themes`, `sonner`).
+⚠️ **`script-src` ainda usa `'unsafe-inline'`.** O script anti-flash do `next-themes`, o bootstrap de hidratação do App Router e o `gtag` são inline **sem nonce**, e fiar nonce nos três é tarefa própria. O valor desta política vem das demais diretivas (`frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'none'`, `form-action 'self'` e as allowlists de `connect-src`/`img-src`/`frame-src`); o bloqueio de XSS por `script-src` é parcial até lá. `style-src 'unsafe-inline'` é irremovível nesta stack (`next-themes`, o posicionamento dos menus do Radix e o `sonner` escrevem `style` inline).
 
 > **Ao introduzir um terceiro, acrescente-o à CSP do app** — é o custo herdado. Ex.: levar o checkout da Stripe ao browser exige `script-src https://js.stripe.com`, `frame-src https://js.stripe.com https://hooks.stripe.com` e `connect-src https://api.stripe.com`.
 

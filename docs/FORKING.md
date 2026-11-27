@@ -188,7 +188,7 @@ Metadados de autoria, opcionais e declarados em `packages/next-config/keys.ts`: 
 | `apps/web/app/[locale]/icon.png`, `apple-icon.png` | Ícones da landing. |
 | `apps/web/app/[locale]/opengraph-image.tsx` | Imagem de compartilhamento da landing (1200 × 630, uma por idioma). É gerada no build a partir de `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO_URL` e da frase `apps.web.pages.home.meta.description` de cada idioma; sem logo, ou com o logo fora do ar, sai a inicial da marca num quadrado. O fork troca a marca e a frase, não a imagem. Depois de publicar com a marca nova, peça nova coleta nos validadores de Open Graph, porque a URL da imagem não muda. |
 | `packages/email/brand.ts` | Paleta dos e-mails, em hex literal, porque cliente de e-mail não entende `oklch()` nem `var()`. |
-| `packages/design-system/styles/globals.css` | Tokens do tema (light e dark). A cor principal é `--primary`. |
+| `packages/design-system/styles/globals.css` | Tokens do tema (light e dark). A cor principal é `--primary`; troque também `--ring`, `--sidebar-primary` e `--chart-1`, mantenha os neutros na matiz do primário e rode `pnpm --filter @repo/design-system test` (contraste). O passo a passo e o que não muda estão na seção 6 de [`DESIGN.md`](DESIGN.md#6-trocar-a-marca-num-fork). |
 
 ### 3.3 Textos
 
@@ -197,7 +197,7 @@ Um fork reescreve principalmente:
 
 | Pasta | Conteúdo |
 |-------|----------|
-| `apps/web/pages/hero`, `features`, `stats`, `faq`, `cta`, `home` | Seções da landing |
+| `apps/web/pages/home`, `faq`, `cta`, `pricing` | Seções da landing (hero, passos, o que o fork herda, qualidade, FAQ, chamada final) |
 | `apps/web/pages/pricing` | Página de preços da landing. Os planos vêm do catálogo da Stripe ([seção 7.2](#72-stripe-assinaturas)); o dicionário guarda só a cópia da página, o estado vazio e o card fixo de contato ("Enterprise") |
 | `apps/web/pages/contact` | Página de contato |
 | `apps/web/pages/legal` | Política de privacidade e termos de uso. São modelos e dizem isso no próprio corpo. Reescreva com o tratamento real de dados do produto antes do lançamento ([`PRE-PRODUCTION.md`](PRE-PRODUCTION.md), item 7) |

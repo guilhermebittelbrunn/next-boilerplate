@@ -50,6 +50,12 @@ estragam o print.
 tabelas rolam dentro do próprio contêiner. Gravidade: 🔴 se um fluxo principal (cadastro, login, ação
 central do produto) não completa no celular; 🟡 nos demais casos.
 
+Na mesma passada, confira as telas principais contra o gate da seção 5 de
+[`docs/DESIGN.md`](../DESIGN.md): cada tela tem um elemento que vence, os estados vazio, carregando e erro
+aparecem com conteúdo do produto (não "John Doe" nem número redondo inventado), e nenhuma seção da
+landing exibe depoimento, logo de cliente ou métrica que o produto não tem. Gravidade: 🟡, ou 🔴 quando o
+conteúdo inventado está na landing pública, porque isso vira promessa falsa para o visitante.
+
 ## 3.2 Testar os formulários
 
 **Por quê.** Formulário é onde o usuário escreve no produto, e é onde aparecem os erros que ele vê:
