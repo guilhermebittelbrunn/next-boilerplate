@@ -58,7 +58,10 @@ export function CommonHomeClient() {
         ? handleClientError(new FormattedError(error, locale))
         : null;
 
-    const displayName = account?.displayName ?? user?.displayName ?? null;
+    // While impersonating, the Firebase client user is the admin, never the account on screen.
+    const fallbackUser = isImpersonating ? null : user;
+    const displayName =
+        account?.displayName ?? fallbackUser?.displayName ?? null;
     const firstName = displayName?.trim().split(" ")[0] ?? null;
     const greeting = firstName
         ? `${homePage.greeting}, ${firstName}`
