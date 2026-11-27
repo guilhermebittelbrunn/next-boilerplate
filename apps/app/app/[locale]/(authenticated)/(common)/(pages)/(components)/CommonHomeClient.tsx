@@ -1,14 +1,10 @@
 "use client";
 
 import useAuth from "@repo/auth/provider";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@repo/design-system/components/ui/card";
+    Button,
+    buttonVariants,
+} from "@repo/design-system/components/ui/button";
 import {
     Empty,
     EmptyContent,
@@ -21,31 +17,42 @@ import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
-import { LayersIcon, PowerIcon } from "lucide-react";
+import { ArrowRightIcon, LayersIcon } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
-import { MetricCard } from "@/shared/components/ui/MetricCard";
+import { MetricStrip } from "@/shared/components/ui/MetricStrip";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useMyAccount } from "@/shared/hooks/useMyAccount";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../paths";
 import { useEntitySummary } from "../(hooks)/useEntitySummary";
 
-// Deferred so the cards paint without waiting for recharts, which does not tree-shake
+const CHART_HEIGHT_CLASS = "h-60";
+
+// Deferred so the counts paint without waiting for recharts, which does not tree-shake
 // and would otherwise land whole in the chunk of the most visited screen of the panel.
 const EntityTypeChart = dynamic(
     () => import("./EntityTypeChart").then((mod) => mod.EntityTypeChart),
     {
         ssr: false,
-        loading: () => <Skeleton className="h-64 w-full rounded-xl" />,
+        loading: () => (
+            <Skeleton className={`${CHART_HEIGHT_CLASS} w-full rounded-lg`} />
+        ),
     }
 );
 
 export function CommonHomeClient() {
-    const { data: summary, isLoading, error } = useEntitySummary();
+    const {
+        data: summary,
+        isLoading,
+        error,
+        refetch,
+        isFetching,
+    } = useEntitySummary();
     const { user } = useAuth();
     const { data: account } = useMyAccount();
     const { isImpersonating } = useAuthRequestPanel();
@@ -74,40 +81,60 @@ export function CommonHomeClient() {
     const hasTypedEntities = summary
         ? Object.values(summary.byType).some((count) => count > 0)
         : false;
+    const loading = isLoading || !summary;
+
+    const metrics = [
+        {
+            key: "total",
+            label: homePage.metrics.total.label,
+            hint: homePage.metrics.total.hint,
+            value: summary?.total ?? 0,
+        },
+        {
+            key: "enabled",
+            label: homePage.metrics.enabled.label,
+            hint: homePage.metrics.enabled.hint,
+            value: summary?.enabled ?? 0,
+        },
+    ];
+
+    const renderChart = () => {
+        if (loading) {
+            return (
+                <Skeleton
+                    className={`${CHART_HEIGHT_CLASS} w-full rounded-lg`}
+                />
+            );
+        }
+        if (hasTypedEntities) {
+            return <EntityTypeChart byType={summary.byType} />;
+        }
+        return (
+            <p
+                className={`flex ${CHART_HEIGHT_CLASS} items-center justify-center text-pretty text-center text-muted-foreground text-sm`}
+            >
+                {homePage.chart.empty}
+            </p>
+        );
+    };
 
     const renderContent = () => {
         if (summaryLoadError) {
-            return <LoadErrorState message={summaryLoadError} />;
-        }
-
-        if (isLoading || !summary) {
             return (
-                <>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <MetricCard
-                            hint={homePage.metrics.total.hint}
-                            label={homePage.metrics.total.label}
-                            loading
-                            value={0}
-                        />
-                        <MetricCard
-                            hint={homePage.metrics.enabled.hint}
-                            label={homePage.metrics.enabled.label}
-                            loading
-                            value={0}
-                        />
-                    </div>
-                    <Skeleton className="h-64 w-full rounded-xl" />
-                </>
+                <LoadErrorState
+                    message={summaryLoadError}
+                    onRetry={() => refetch()}
+                    retrying={isFetching}
+                />
             );
         }
 
         if (hasNoEntities) {
             return (
-                <Empty className="border">
+                <Empty className="rounded-xl border">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
-                            <LayersIcon />
+                            <LayersIcon aria-hidden="true" />
                         </EmptyMedia>
                         <EmptyTitle>{homePage.empty.title}</EmptyTitle>
                         <EmptyDescription>
@@ -130,39 +157,43 @@ export function CommonHomeClient() {
         }
 
         return (
-            <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <MetricCard
-                        hint={homePage.metrics.total.hint}
-                        icon={<LayersIcon className="size-4" />}
-                        label={homePage.metrics.total.label}
-                        value={summary.total}
-                    />
-                    <MetricCard
-                        hint={homePage.metrics.enabled.hint}
-                        icon={<PowerIcon className="size-4" />}
-                        label={homePage.metrics.enabled.label}
-                        value={summary.enabled}
-                    />
-                </div>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{homePage.chart.title}</CardTitle>
-                        <CardDescription>
-                            {homePage.chart.description}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {hasTypedEntities ? (
-                            <EntityTypeChart byType={summary.byType} />
-                        ) : (
-                            <p className="py-8 text-center text-muted-foreground text-sm">
-                                {homePage.chart.empty}
+            <section
+                aria-labelledby="common-home-chart-title"
+                className="overflow-hidden rounded-xl bg-card text-card-foreground shadow-card"
+            >
+                <MetricStrip
+                    items={metrics}
+                    loading={loading}
+                    locale={locale}
+                />
+                <div className="flex flex-col gap-4 border-border border-t px-5 py-5">
+                    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                        <div className="flex min-w-0 flex-col gap-1">
+                            <h2
+                                className="font-semibold text-base tracking-tight"
+                                id="common-home-chart-title"
+                            >
+                                {homePage.chart.title}
+                            </h2>
+                            <p className="text-pretty text-muted-foreground text-sm">
+                                {homePage.chart.description}
                             </p>
-                        )}
-                    </CardContent>
-                </Card>
-            </>
+                        </div>
+                        <Link
+                            className={buttonVariants({
+                                size: "sm",
+                                variant: "ghost",
+                                className: "shrink-0 text-muted-foreground",
+                            })}
+                            href={routes.entities.list.url}
+                        >
+                            {homePage.chart.viewAll}
+                            <ArrowRightIcon aria-hidden="true" />
+                        </Link>
+                    </div>
+                    {renderChart()}
+                </div>
+            </section>
         );
     };
 
@@ -177,7 +208,7 @@ export function CommonHomeClient() {
                     />
                 }
             >
-                <div className="mx-auto flex w-full flex-col gap-6">
+                <div className="flex w-full flex-col gap-6">
                     {renderContent()}
                 </div>
             </Container>

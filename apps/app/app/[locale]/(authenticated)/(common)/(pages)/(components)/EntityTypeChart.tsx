@@ -38,7 +38,7 @@ export function EntityTypeChart({ byType }: EntityTypeChartProps) {
 
     return (
         <CategoryBarChart
-            className="aspect-auto h-64 w-full"
+            className="aspect-auto h-60 w-full"
             config={config}
             data={data}
             label={homeChart.title}
