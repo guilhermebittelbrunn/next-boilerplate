@@ -63,9 +63,9 @@ export function CategoryBarChart({
           content={<ChartTooltipContent hideLabel nameKey="category" />}
           cursor={false}
         />
-        <Bar dataKey="value" radius={6}>
+        <Bar dataKey="value" isAnimationActive={false} radius={6}>
           <LabelList
-            className="fill-foreground"
+            className="fill-foreground tabular-nums"
             fontSize={12}
             offset={8}
             position="top"
