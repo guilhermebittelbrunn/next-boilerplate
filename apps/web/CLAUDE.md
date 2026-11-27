@@ -20,7 +20,9 @@ Regras de escopo para a landing/CTA pública — marketing, SEO, performance e c
 
 ## UI
 
-- Preferir componentes de `@repo/design-system` antes de duplicar primitives. Para copy de marketing, use a skill `copywriting`; para direção visual, `frontend-design` / `web-design-guidelines`.
+- Preferir componentes de `@repo/design-system` antes de duplicar primitives. O contrato visual é [`docs/DESIGN.md`](../../docs/DESIGN.md) (mostradores da landing: variação 6, movimento 4, densidade 3).
+- Ordem das skills numa landing: `founder-brand`/`founder-marketing` (posicionamento, promessa, voz) → `copywriting` (h1, CTA, fatos) → `anti-ui-slop` (roteiro `new-work`) → `design-taste-frontend-v1` (corrigir o viés genérico) → `emil-design-eng`/`choreograph` (uma entrada do hero, nada no scroll) → `web-design-guidelines` e `seo-audit` na revisão.
+- Nada inventado com cara de real: depoimento, logo de cliente, número de uso. Se o fork ainda não tem, a seção sai da home até ter.
 
 ## Testes
 

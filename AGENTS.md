@@ -52,11 +52,32 @@ Para **inputs compostos, `Switch`, `DateInput` e `HookForm*`**, use a secção *
 - **Datas na UI**: `formatDisplayDateTime` em `apps/app/shared/lib/formatDisplayDateTime.ts` — locale vem de `getDictionary()`; o instante continua no fuso do navegador.
 - **Hooks de dados**: no mesmo ficheiro, exporte uma função que chama o SDK (ex.: `findEntityById`, `fetchEntitiesList`) com validação de parâmetros (`undefined` quando faltam inputs) e o hook `useQuery` com `enabled` coerente com esses parâmetros.
 - **Mutations de toggle de estado**: em CRUDs com coluna `enabled`, exponha `toggleEntityStatusMutation` que faz `PUT` só com `enabled`, **sem** `invalidateQueries`; quando a API devolver só `{ id }`, atualize o cache com `queryClient.setQueryData` (merge de `enabled` na lista e na query por id).
+- **Contrato visual**: telas seguem [`docs/DESIGN.md`](docs/DESIGN.md). O `Container` não desenha painel de fundo; quem precisa de superfície usa `Card`, `SettingsSection` ou `bg-card shadow-card rounded-xl`.
 - **Listagens com foto**: use `ResponsiveImage` de `@repo/design-system/components/ui/responsive-image` para miniaturas em tabelas.
 - **Coluna `enabled` em listas**: renderize um `Switch` controlado que dispara a mutation de toggle (não só texto Sim/Não).
 - **Impersonação admin**: ao mudar o utilizador visualizado em `PanelNavbarControls`, após `setImpersonatedUser` faça `window.location.reload()` para garantir que todos os dados e pedidos em curso usam o novo contexto.
 - **Pós-login (admin vs comum)**: `AppDesignProvider` passa `resolveDefaultPostLoginPath` ao design system; Google/sign-up usam `resolveAppPostLoginPath` para alinhar com a mesma regra (ex.: admin → `/{locale}/admin` quando não há query `redirect`).
 - **Campos de formulário complexos**: ver a secção **Design system — inputs e formulários (RHF)** mais abaixo neste ficheiro.
+
+## Design system — visual e movimento
+
+O contrato visual (tokens, elevação, curvas, regras de componente, estados obrigatórios e o gate antes
+de "pronto") está em [`docs/DESIGN.md`](docs/DESIGN.md). O essencial para quem mexe no pacote:
+
+- **Tokens, nunca valor.** Cor, raio, sombra e curva vêm de `styles/globals.css`: `shadow-card`,
+  `shadow-popover`, `shadow-overlay`, `ease-out`, `ease-in-out`, `ease-drawer`, `--duration-press`,
+  `--duration-fast`, `--duration-base`. O teste `__tests__/themeContrast.test.ts` reprova par de texto
+  abaixo de 4,5:1 nos dois temas.
+- **`pressable`** é o utilitário de press (escala 0,97 no `:active`, some com reduced motion). Todo
+  componente clicável novo usa.
+- **Superfície flutuante** (menu, popover, select, tooltip) nasce do gatilho
+  (`origin-(--radix-…-transform-origin)`), entra com `ease-out` e usa `shadow-popover`. Diálogo e sheet
+  usam `shadow-overlay`. Nada de `transition-all`.
+- **Sem antd e sem react-toastify.** `Table` é HTML semântico com busca, atualizar, paginação no
+  cliente, esqueleto e estado vazio próprios; `ActionsMenu` é `DropdownMenu` + `AlertDialog` do Radix;
+  toast só por `useAlert()`, que chama o Sonner. Lib nova passa antes pela skill `pick-ui-library`.
+- **`Badge`** tem variantes tonais `default`, `secondary`, `destructive`, `success`, `warning`,
+  `outline`. Status sempre com texto, nunca só cor.
 
 ## Design system — inputs e formulários (RHF)
 
