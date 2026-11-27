@@ -88,8 +88,9 @@ export function AccountProfileForm({
                         onSubmit={form.handleSubmit(onSubmit)}
                     >
                         <FormContainer>
-                            <div className="col-span-1 md:col-span-2">
+                            <div className="col-span-1">
                                 <HookFormInput
+                                    autoComplete="name"
                                     label={accountProfile.displayName}
                                     name="displayName"
                                     placeholder={
@@ -100,8 +101,9 @@ export function AccountProfileForm({
                                 />
                             </div>
 
-                            <div className="col-span-1 md:col-span-2">
+                            <div className="col-span-1">
                                 <HookFormInput
+                                    autoComplete="tel"
                                     label={accountProfile.phone}
                                     name="phone"
                                     placeholder={
@@ -124,7 +126,7 @@ export function AccountProfileForm({
                                         upload={uploadFile}
                                     />
                                 ) : (
-                                    <>
+                                    <div className="flex flex-col gap-2">
                                         <HookFormInput
                                             label={accountProfile.avatar}
                                             name="avatar"
@@ -133,10 +135,10 @@ export function AccountProfileForm({
                                             }
                                             type="url"
                                         />
-                                        <p className="mt-1 text-muted-foreground text-xs">
+                                        <p className="text-muted-foreground text-xs">
                                             {accountProfile.avatarHint}
                                         </p>
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         </FormContainer>
@@ -155,29 +157,32 @@ export function AccountProfileForm({
                 title={accountProfile.email}
             >
                 <div className="flex flex-col gap-2">
-                    <Label htmlFor="account-email">
+                    <Label className="sr-only" htmlFor="account-email">
                         {accountProfile.email}
                     </Label>
-                    <Input
-                        disabled
-                        id="account-email"
-                        readOnly
-                        value={account?.email ?? ""}
-                    />
-                    {allowEmailChange && canChangeEmail ? (
-                        <Button
-                            className="self-start"
-                            disabled={isImpersonating || !account}
-                            onClick={() => setEmailChangeOpen(true)}
-                            ref={emailChangeTriggerRef}
-                            type="button"
-                            variant="outline"
-                        >
-                            {accountProfile.emailChange.action}
-                        </Button>
-                    ) : null}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <Input
+                            className="sm:flex-1"
+                            disabled
+                            id="account-email"
+                            readOnly
+                            value={account?.email ?? ""}
+                        />
+                        {allowEmailChange && canChangeEmail ? (
+                            <Button
+                                className="self-start sm:self-auto"
+                                disabled={isImpersonating || !account}
+                                onClick={() => setEmailChangeOpen(true)}
+                                ref={emailChangeTriggerRef}
+                                type="button"
+                                variant="outline"
+                            >
+                                {accountProfile.emailChange.action}
+                            </Button>
+                        ) : null}
+                    </div>
                     {allowEmailChange && !canChangeEmail ? (
-                        <p className="text-muted-foreground text-xs">
+                        <p className="text-pretty text-muted-foreground text-xs">
                             {accountProfile.emailChange.unsupported}
                         </p>
                     ) : null}

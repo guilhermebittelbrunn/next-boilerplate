@@ -80,32 +80,13 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
 
     return (
         <div className="flex w-full flex-col gap-6">
-            <SettingsSection
-                description={privacyCopy.export.description}
-                title={privacyCopy.export.title}
-            >
-                <Button
-                    className="self-start"
-                    disabled={isImpersonating || exportDataMutation.isPending}
-                    loading={exportDataMutation.isPending}
-                    onClick={() => exportDataMutation.mutate()}
-                    type="button"
-                    variant="outline"
-                >
-                    {privacyCopy.export.action}
-                </Button>
-                <p className="text-muted-foreground text-xs">
-                    {privacyCopy.export.filenameHint}
-                </p>
-            </SettingsSection>
-
-            <p className="text-muted-foreground text-sm">
+            <p className="max-w-prose text-pretty text-muted-foreground text-sm">
                 {privacyCopy.deadline}
                 {policyHref ? (
                     <>
                         {" "}
                         <a
-                            className="underline underline-offset-4"
+                            className="rounded-sm font-medium text-foreground underline underline-offset-4 outline-none hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/40"
                             href={policyHref}
                             rel="noreferrer"
                             target="_blank"
@@ -115,6 +96,29 @@ export function AccountPrivacyPanel({ account }: AccountPrivacyPanelProps) {
                     </>
                 ) : null}
             </p>
+
+            <SettingsSection
+                description={privacyCopy.export.description}
+                title={privacyCopy.export.title}
+            >
+                <div className="flex flex-col gap-2">
+                    <Button
+                        className="self-start"
+                        disabled={
+                            isImpersonating || exportDataMutation.isPending
+                        }
+                        loading={exportDataMutation.isPending}
+                        onClick={() => exportDataMutation.mutate()}
+                        type="button"
+                        variant="outline"
+                    >
+                        {privacyCopy.export.action}
+                    </Button>
+                    <p className="text-muted-foreground text-xs">
+                        {privacyCopy.export.filenameHint}
+                    </p>
+                </div>
+            </SettingsSection>
 
             {askPrivacyChannel ? (
                 <SettingsSection

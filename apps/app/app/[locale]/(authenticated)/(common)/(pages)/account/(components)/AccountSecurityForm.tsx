@@ -97,18 +97,21 @@ export function AccountSecurityForm({
                             <FormContainer>
                                 <div className="col-span-1 md:col-span-2">
                                     <HookFormInputPassword
+                                        autoComplete="current-password"
                                         label={accountSecurity.currentPassword}
                                         name="currentPassword"
                                     />
                                 </div>
                                 <div className="col-span-1">
                                     <HookFormInputPassword
+                                        autoComplete="new-password"
                                         label={accountSecurity.newPassword}
                                         name="password"
                                     />
                                 </div>
                                 <div className="col-span-1">
                                     <HookFormInputPassword
+                                        autoComplete="new-password"
                                         label={accountSecurity.confirmPassword}
                                         name="confirmPassword"
                                     />

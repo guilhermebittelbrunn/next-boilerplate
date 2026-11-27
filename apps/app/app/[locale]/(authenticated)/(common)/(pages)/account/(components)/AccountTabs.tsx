@@ -43,8 +43,12 @@ function AccountSectionHeading({
 }) {
     return (
         <div className="flex flex-col gap-1">
-            <h2 className="font-semibold text-lg tracking-tight">{title}</h2>
-            <p className="text-muted-foreground text-sm">{description}</p>
+            <h2 className="text-balance font-semibold text-lg tracking-tight">
+                {title}
+            </h2>
+            <p className="max-w-prose text-pretty text-muted-foreground text-sm">
+                {description}
+            </p>
         </div>
     );
 }
@@ -138,12 +142,12 @@ export function AccountTabs({ account, area = "common" }: AccountTabsProps) {
 
             <TabsList
                 aria-label={accountCopy.sectionNav.label}
-                className="hidden w-48 shrink-0 items-stretch lg:flex"
+                className="hidden w-48 shrink-0 items-stretch gap-0.5 p-0 lg:flex"
                 variant="line"
             >
                 {tabValues.map((value) => (
                     <TabsTrigger
-                        className="justify-start whitespace-normal px-3 py-2 text-left"
+                        className="h-auto min-h-9 justify-start whitespace-normal px-3 py-2 text-left font-normal text-muted-foreground after:hidden hover:bg-accent/60 hover:text-foreground data-[state=active]:font-medium data-[state=active]:text-foreground group-data-[variant=line]/tabs-list:data-[state=active]:bg-accent dark:group-data-[variant=line]/tabs-list:data-[state=active]:bg-accent"
                         key={value}
                         value={value}
                     >

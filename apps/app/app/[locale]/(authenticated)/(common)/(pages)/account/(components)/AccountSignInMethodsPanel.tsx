@@ -117,14 +117,14 @@ export function AccountSignInMethodsPanel({
                     );
                     return (
                         <li
-                            className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
                             key={row.providerId}
                         >
                             <div className="flex min-w-0 flex-col gap-1">
                                 <span className="flex flex-wrap items-center gap-2 font-medium text-sm">
                                     {row.label}
                                     {row.linked ? (
-                                        <Badge variant="secondary">
+                                        <Badge variant="success">
                                             {methodsCopy.linked}
                                         </Badge>
                                     ) : (
