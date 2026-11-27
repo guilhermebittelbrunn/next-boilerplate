@@ -4,11 +4,11 @@
  * tokens are `oklch()` behind `var()`, and email clients resolve neither.
  */
 export const emailBrand = {
-    primaryColor: "#18181b",
+    primaryColor: "#2559bf",
     primaryTextColor: "#ffffff",
-    backgroundColor: "#fafafa",
+    backgroundColor: "#f9fafb",
     surfaceColor: "#ffffff",
-    borderColor: "#e4e4e7",
-    textColor: "#18181b",
-    mutedTextColor: "#71717a",
+    borderColor: "#e1e3e7",
+    textColor: "#15181f",
+    mutedTextColor: "#5f636c",
 } as const;
