@@ -27,6 +27,7 @@ export default class AuditActions {
                 ...(query?.userId ? { userId: query.userId } : {}),
                 ...(query?.from ? { from: query.from } : {}),
                 ...(query?.to ? { to: query.to } : {}),
+                ...(query?.level ? { level: query.level } : {}),
             },
         });
 

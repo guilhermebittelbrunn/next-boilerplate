@@ -18,6 +18,20 @@ export enum AuditAction {
     ORGANIZATION_INVITATION_ACCEPT = "organization.invitation.accept",
     ORGANIZATION_MEMBER_REMOVE = "organization.member.remove",
     ORGANIZATION_MEMBER_LEAVE = "organization.member.leave",
+    USER_CREATE = "user.create",
+    ACCOUNT_SIGN_UP = "account.signUp",
+    ACCOUNT_EMAIL_VERIFY = "account.email.verify",
+    ACCOUNT_ONBOARDING_COMPLETE = "account.onboarding.complete",
+    SUBSCRIPTION_ACTIVATE = "subscription.activate",
+    SUBSCRIPTION_PLAN_CHANGE = "subscription.plan.change",
+    SUBSCRIPTION_CANCELLATION_SCHEDULE = "subscription.cancellation.schedule",
+    SUBSCRIPTION_END = "subscription.end",
+}
+
+/** `sensitive` changes access or data; `info` records an account lifecycle fact. */
+export enum AuditLevel {
+    SENSITIVE = "sensitive",
+    INFO = "info",
 }
 
 export enum AuditTargetType {
@@ -30,6 +44,8 @@ export enum AuditTargetType {
 export type AuditEventDTO = {
     id: string;
     action: AuditAction;
+    /** Derived from the action on the server. Events recorded before levels existed read as `sensitive`. */
+    level: AuditLevel;
     /** Firestore document id of the profile that acted. */
     actorUserId: string;
     actorUid: string;
@@ -59,4 +75,5 @@ export type AuditEventListQuery = {
     from?: string;
     /** `YYYY-MM-DD`, inclusive through the end of the day, read as UTC. */
     to?: string;
+    level?: AuditLevel;
 };
