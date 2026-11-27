@@ -282,3 +282,49 @@ Título sugerido para a PR: `feat: design system refresh without antd`.
   pacote passou (209 testes). O preview fica para o `/test`.
 - Commits 26 e 27 separados, com o 26 sem typecheck verde sozinho; o commit que remove antd e react-toastify junta
   os três `package.json` e o lockfile.
+
+## Commits realizados
+
+Branch `feat/design-system-refresh`, criada a partir de `main` (`6943ce9`). Cada commit foi conferido com `git show` contra a lista de arquivos do plano antes do seguinte; os 308 arquivos alterados entraram, cada um em um bloco só.
+
+1. `1a1505f` feat(internationalization): add table, retry and panel copy keys
+2. `eabbf02` feat(internationalization): rewrite landing page copy and add the skip link label
+3. `2ae4663` feat(design-system): retune color, elevation and motion tokens
+4. `9028ddd` feat(email): mirror the cobalt primary in the email palette
+5. `91dd0cf` feat(design-system): restyle buttons, fields and status primitives
+6. `55719b5` feat(design-system): give menus, popovers and dialogs the new elevation and easing
+7. `ef1b689` feat(design-system): restyle sidebar and charts
+8. `c7283d5` refactor(design-system): rebuild Table as semantic HTML without antd
+9. `a0fceed` refactor(design-system): rebuild ActionsMenu on Radix menu and alert dialog
+10. `e52da41` refactor(design-system): move toasts to Sonner and drop the antd provider
+11. `b04823e` chore(security): drop antd from the style-src comment
+12. `a0a8ae5` refactor(app): remove the react-toastify container
+13. `2f7e83b` feat(app): refresh the panel shell and shared page pieces
+14. `b0168ed` feat(app): restyle the notifications popover
+15. `03f5462` feat(app): split auth layout with brand panel for sign-in and sign-up
+16. `888db6b` feat(app): restyle email link, password reset, email verification and invite screens
+17. `6a17d0a` feat(app): restyle onboarding with step progress
+18. `17c0a6a` feat(app): use MetricStrip and retry on the common home
+19. `1d58c75` feat(app): use MetricStrip and retry on the admin home
+20. `a5a6435` feat(app): restyle entity, user and audit lists
+21. `6eb441e` feat(app): put entity and user forms on a form surface
+22. `7677370` feat(app): group the team page into settings sections
+23. `faf091f` feat(app): restyle account settings panels
+24. `67cd1dd` feat(app): rebuild the component playground on the new primitives
+25. `76dc340` feat(web): rebuild the header with skip link and full mobile menu
+26. `f9d3e07` feat(web): restyle the footer
+27. `4b74d5c` feat(internationalization): replace landing home copy
+28. `6cd4ee5` feat(web): rebuild the landing home without invented proof
+29. `c3503fc` feat(web): restyle pricing without a recommended plan
+30. `308947e` feat(web): restyle contact, legal, auth forms and 404
+31. `8283704` chore: drop antd and react-toastify dependencies
+32. `8be3e3e` refactor(internationalization): drop the member email column label
+33. `627784a` chore(claude): vendor design skills from six sources
+34. `8e12697` docs: add the interface design contract
+35. `48aedd5` docs: point agent guides and the review checklist at the design contract
+36. `07a1e4a` docs: update fork, delivery and security docs for the new UI stack
+37. `4544b6f` chore(claude): wire the design contract into agents and the kickoff command
+38. `4a43625` feat: carry the design contract into the kickoff design prompt
+39. `122c756` docs(features): design-system-refresh
+
+Os commits foram enviados ao remoto com `git push -u origin feat/design-system-refresh`. Nenhuma PR foi aberta.
