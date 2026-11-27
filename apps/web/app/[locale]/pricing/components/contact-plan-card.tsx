@@ -8,7 +8,7 @@ import {
     CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { cn } from "@repo/design-system/lib/utils";
-import { PhoneCall } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 type ContactPlanCardProps = {
@@ -26,25 +26,27 @@ export function ContactPlanCard({ copy, href }: ContactPlanCardProps) {
         <Card className="h-full">
             <CardHeader>
                 <CardTitle>
-                    <h2 className="text-xl">{copy.title}</h2>
+                    <h2 className="font-semibold text-lg tracking-tight">
+                        {copy.title}
+                    </h2>
                 </CardTitle>
                 <CardDescription>{copy.description}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col">
-                <p className="font-semibold text-2xl tracking-tight">
+                <p className="font-semibold text-3xl tracking-tight">
                     {copy.price}
                 </p>
             </CardContent>
             <CardFooter>
                 <Link
                     className={cn(
-                        buttonVariants({ variant: "outline" }),
-                        "w-full gap-2"
+                        buttonVariants({ size: "lg", variant: "outline" }),
+                        "w-full"
                     )}
                     href={href}
                 >
-                    <PhoneCall aria-hidden />
                     {copy.linkButton}
+                    <ArrowRight aria-hidden />
                 </Link>
             </CardFooter>
         </Card>
