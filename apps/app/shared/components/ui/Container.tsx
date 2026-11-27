@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import { useRouter } from "next/navigation";
@@ -32,8 +32,13 @@ type StickyParts = {
 
 function LoadingPanel() {
     return (
-        <div className="flex min-h-[50vh] w-full flex-1 items-center justify-center rounded-xl bg-muted/50 p-4">
-            <Spinner className="size-10" />
+        <div
+            aria-busy="true"
+            className="flex w-full flex-1 flex-col gap-4"
+            data-slot="container-loading"
+        >
+            <Skeleton className="h-10 w-full max-w-sm" />
+            <Skeleton className="h-64 w-full rounded-xl" />
         </div>
     );
 }
@@ -65,9 +70,7 @@ function defaultLayout(
     const { body, footer, showGoBack, stickyBar, backButton } = props;
     return (
         <>
-            <div className="flex min-h-[50vh] w-full flex-1 flex-col overflow-auto rounded-xl bg-muted/50 p-4 md:min-h-min">
-                {body}
-            </div>
+            <div className="flex w-full flex-1 flex-col">{body}</div>
             {(footer || showGoBack) &&
                 stickyBar(
                     <>
@@ -96,7 +99,7 @@ export const Container = ({
 
     const stickyBar = (inner: React.ReactNode) => (
         <div
-            className="sticky bottom-0 z-10 mt-4 flex w-full flex-wrap items-center justify-end gap-3 border-border border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/80"
+            className="sticky bottom-0 z-10 mt-6 flex w-full flex-wrap items-center justify-end gap-3 border-border border-t bg-background/90 py-4 backdrop-blur-md supports-backdrop-filter:bg-background/75"
             data-sticky-action-bar=""
         >
             {inner}

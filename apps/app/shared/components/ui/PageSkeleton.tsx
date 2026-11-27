@@ -24,7 +24,7 @@ export function PageSkeleton({
 }: PageSkeletonProps) {
     return (
         <>
-            <div className="flex h-16 shrink-0 items-center px-4">
+            <div className="flex h-14 shrink-0 items-center px-4 md:px-8">
                 <Skeleton className="h-4 w-40" />
             </div>
             <div
@@ -35,12 +35,12 @@ export function PageSkeleton({
             >
                 <div
                     className={cn(
-                        "flex items-start justify-between gap-4",
+                        "flex items-end justify-between gap-4",
                         PAGE_HEADER_SPACING_CLASS
                     )}
                 >
-                    <div className="flex flex-col gap-1">
-                        <Skeleton className="h-8 w-56" />
+                    <div className="flex flex-col gap-1.5">
+                        <Skeleton className="h-8 w-56 md:h-9" />
                         {description ? (
                             <Skeleton className="h-5 w-72 max-w-full" />
                         ) : null}

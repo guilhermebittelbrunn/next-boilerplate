@@ -14,16 +14,17 @@ type NavbarProps = {
 
 export default function Navbar({ notifications, accountPath }: NavbarProps) {
     const iconButtonProps = {
-        className: "h-9 w-9 rounded-full bg-sidebar-border p-0",
+        className:
+            "pressable size-9 rounded-md border-0 bg-transparent p-0 text-muted-foreground shadow-none hover:bg-accent hover:text-foreground dark:bg-transparent",
     };
 
     return (
         <nav
-            className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-2 border-border border-b bg-sidebar/95 px-3 backdrop-blur supports-backdrop-filter:bg-sidebar/80 sm:px-4"
+            className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-border border-b bg-background/90 px-3 backdrop-blur-md supports-backdrop-filter:bg-background/75 sm:px-4 md:rounded-t-xl md:px-6"
             data-panel-navbar=""
         >
             <div className="flex min-w-0 flex-1 items-center gap-2">
-                <SidebarTrigger className="m-0 shrink-0 bg-sidebar-border p-0" />
+                <SidebarTrigger className="pressable m-0 size-9 shrink-0 text-muted-foreground hover:text-foreground" />
                 <PanelNavbarControls />
             </div>
             <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">

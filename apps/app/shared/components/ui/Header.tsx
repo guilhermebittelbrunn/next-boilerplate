@@ -21,7 +21,7 @@ export const Header = ({
     children,
     sideElement,
 }: HeaderProps) => (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between gap-2 px-4 md:px-8">
         <div className="flex items-center gap-2">
             <Breadcrumb>
                 <BreadcrumbList>
