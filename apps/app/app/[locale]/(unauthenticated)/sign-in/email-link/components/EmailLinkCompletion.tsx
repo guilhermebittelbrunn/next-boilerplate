@@ -8,16 +8,19 @@ import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
+import { CircleAlertIcon, ClockIcon, Link2OffIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import {
     emailLinkFailureOf,
     forgetRememberedEmail,
     readRememberedEmail,
 } from "@/shared/lib/emailLinkSignIn";
+import { AuthActionLink } from "../../../components/AuthActionLink";
 import { AuthCard } from "../../../components/AuthCard";
+import { AuthPending } from "../../../components/AuthPending";
+import { authTextLinkClassName } from "../../../components/authLink";
 import {
     buildEmailLinkSchema,
     type EmailLinkFormValues,
@@ -100,24 +103,20 @@ export function EmailLinkCompletion({ oobCode }: EmailLinkCompletionProps) {
         attemptSignIn(remembered.email);
     }, [remembered, attemptSignIn]);
 
-    const requestAnother = (
-        <div className="text-center text-sm">
-            <Link
-                className="text-primary hover:underline"
-                href={`/${locale}/sign-in/email-link`}
-            >
-                {emailLinkCopy.requestAnother}
-            </Link>
-        </div>
-    );
+    const requestAnotherHref = `/${locale}/sign-in/email-link`;
+    const backToSignInHref = `/${locale}/sign-in`;
 
     if (!oobCode) {
         return (
             <AuthCard
                 description={completeCopy.invalid.description}
+                icon={Link2OffIcon}
                 title={completeCopy.invalid.title}
+                tone="warning"
             >
-                {requestAnother}
+                <AuthActionLink href={requestAnotherHref}>
+                    {emailLinkCopy.requestAnother}
+                </AuthActionLink>
             </AuthCard>
         );
     }
@@ -131,22 +130,21 @@ export function EmailLinkCompletion({ oobCode }: EmailLinkCompletionProps) {
         return (
             <AuthCard
                 description={failureCopy.description}
+                icon={failure === "expired" ? ClockIcon : Link2OffIcon}
                 title={failureCopy.title}
+                tone="warning"
             >
-                {requestAnother}
+                <AuthActionLink href={requestAnotherHref}>
+                    {emailLinkCopy.requestAnother}
+                </AuthActionLink>
             </AuthCard>
         );
     }
 
     const backToSignIn = (
-        <div className="text-center text-sm">
-            <Link
-                className="text-primary hover:underline"
-                href={`/${locale}/sign-in`}
-            >
-                {emailLinkCopy.backToSignIn}
-            </Link>
-        </div>
+        <Link className={authTextLinkClassName} href={backToSignInHref}>
+            {emailLinkCopy.backToSignIn}
+        </Link>
     );
 
     if (failure === "other") {
@@ -155,9 +153,13 @@ export function EmailLinkCompletion({ oobCode }: EmailLinkCompletionProps) {
                 description={handleClientError(
                     new FormattedError(signInWithEmailLink.error, locale)
                 )}
+                icon={CircleAlertIcon}
                 title={completeCopy.failed.title}
+                tone="destructive"
             >
-                {backToSignIn}
+                <AuthActionLink href={backToSignInHref}>
+                    {emailLinkCopy.backToSignIn}
+                </AuthActionLink>
             </AuthCard>
         );
     }
@@ -167,13 +169,9 @@ export function EmailLinkCompletion({ oobCode }: EmailLinkCompletionProps) {
     // out, so going back to sign-in is the way out.
     if (signInWithEmailLink.isSuccess) {
         return (
-            <div className="space-y-4">
-                <FullScreenLoader />
-                <p className="text-center text-muted-foreground text-sm">
-                    {completeCopy.signingIn}
-                </p>
-                {backToSignIn}
-            </div>
+            <AuthPending message={completeCopy.signingIn}>
+                <p className="text-sm">{backToSignIn}</p>
+            </AuthPending>
         );
     }
 
@@ -182,50 +180,52 @@ export function EmailLinkCompletion({ oobCode }: EmailLinkCompletionProps) {
         (failure === "mismatch" || !remembered.email);
 
     if (!asksForEmail) {
-        return (
-            <div className="space-y-4">
-                <FullScreenLoader />
-                <p className="text-center text-muted-foreground text-sm">
-                    {completeCopy.signingIn}
-                </p>
-            </div>
-        );
+        return <AuthPending message={completeCopy.signingIn} />;
     }
 
     return (
         <AuthCard
             description={completeCopy.confirm.description}
+            footer={
+                <Link
+                    className={authTextLinkClassName}
+                    href={requestAnotherHref}
+                >
+                    {emailLinkCopy.requestAnother}
+                </Link>
+            }
             title={completeCopy.confirm.title}
         >
             <Form {...form}>
                 <form
-                    className="space-y-4"
+                    className="flex flex-col gap-4"
                     noValidate
                     onSubmit={form.handleSubmit((values) =>
                         attemptSignIn(values.email)
                     )}
                 >
                     <HookFormInput
+                        autoComplete="email"
                         label={emailLinkCopy.request.form.email}
                         name="email"
                         placeholder={
                             emailLinkCopy.request.form.emailPlaceholder
                         }
+                        spellCheck={false}
                         type="email"
                     />
 
                     <Button
-                        className="w-full"
+                        className="mt-2 w-full"
                         disabled={signInWithEmailLink.isPending}
                         loading={signInWithEmailLink.isPending}
+                        size="lg"
                         type="submit"
                     >
                         {completeCopy.confirm.submit}
                     </Button>
                 </form>
             </Form>
-
-            {requestAnother}
         </AuthCard>
     );
 }

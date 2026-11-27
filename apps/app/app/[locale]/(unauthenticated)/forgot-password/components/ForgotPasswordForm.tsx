@@ -9,11 +9,14 @@ import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation } from "@tanstack/react-query";
+import { MailCheckIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { apiClient } from "@/shared/lib/client";
+import { AuthActionLink } from "../../components/AuthActionLink";
 import { AuthCard } from "../../components/AuthCard";
+import { authTextLinkClassName } from "../../components/authLink";
 import {
     buildForgotPasswordSchema,
     type ForgotPasswordFormValues,
@@ -44,16 +47,7 @@ export function ForgotPasswordForm() {
             errorAlert(handleClientError(new FormattedError(error, locale))),
     });
 
-    const backToSignIn = (
-        <div className="text-center text-sm">
-            <Link
-                className="text-primary hover:underline"
-                href={`/${locale}/sign-in`}
-            >
-                {forgotPasswordCopy.backToSignIn}
-            </Link>
-        </div>
-    );
+    const backToSignInHref = `/${locale}/sign-in`;
 
     // The same panel answers a known and an unknown address: whether the account
     // exists must not be observable from this screen.
@@ -61,9 +55,12 @@ export function ForgotPasswordForm() {
         return (
             <AuthCard
                 description={forgotPasswordCopy.sent.description}
+                icon={MailCheckIcon}
                 title={forgotPasswordCopy.sent.title}
             >
-                {backToSignIn}
+                <AuthActionLink href={backToSignInHref} variant="outline">
+                    {forgotPasswordCopy.backToSignIn}
+                </AuthActionLink>
             </AuthCard>
         );
     }
@@ -71,35 +68,41 @@ export function ForgotPasswordForm() {
     return (
         <AuthCard
             description={forgotPasswordCopy.description}
+            footer={
+                <Link className={authTextLinkClassName} href={backToSignInHref}>
+                    {forgotPasswordCopy.backToSignIn}
+                </Link>
+            }
             title={forgotPasswordCopy.title}
         >
             <Form {...form}>
                 <form
-                    className="space-y-4"
+                    className="flex flex-col gap-4"
                     noValidate
                     onSubmit={form.handleSubmit((values) =>
                         requestReset.mutate(values)
                     )}
                 >
                     <HookFormInput
+                        autoComplete="email"
                         label={forgotPasswordCopy.form.email}
                         name="email"
                         placeholder={forgotPasswordCopy.form.emailPlaceholder}
+                        spellCheck={false}
                         type="email"
                     />
 
                     <Button
-                        className="w-full"
+                        className="mt-2 w-full"
                         disabled={requestReset.isPending}
                         loading={requestReset.isPending}
+                        size="lg"
                         type="submit"
                     >
                         {forgotPasswordCopy.form.submit}
                     </Button>
                 </form>
             </Form>
-
-            {backToSignIn}
         </AuthCard>
     );
 }
