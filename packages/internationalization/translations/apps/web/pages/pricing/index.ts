@@ -1,7 +1,8 @@
 export const pricingTranslations = {
     "pt-br": {
         title: "Preços",
-        description: "Veja os preços do nosso boilerplate",
+        description:
+            "Assine pelo painel. Pagamento, troca de plano e cancelamento passam pelo portal da Stripe.",
         choosePlan: "Escolher plano",
         pricePerInterval: "{price} / {interval}",
         pricePerIntervals: "{price} a cada {count} {interval}",
@@ -15,16 +16,17 @@ export const pricingTranslations = {
         emptyDescription:
             "Os planos aparecem aqui assim que estiverem disponíveis.",
         enterprise: {
-            title: "Enterprise",
+            title: "Sob medida",
             description:
-                "Nosso objetivo é simplificar o comércio de pequenas e médias empresas, tornando-o mais fácil e rápido do que nunca para todos e em todos os lugares.",
+                "Para volume maior, integração própria ou contrato anual, combinamos o plano por e-mail.",
             price: "Sob consulta",
-            linkButton: "Fale conosco",
+            linkButton: "Falar com a equipe",
         },
     },
     en: {
         title: "Pricing",
-        description: "See the prices of our boilerplate",
+        description:
+            "Subscribe from the panel. Payment, plan changes and cancellation go through the Stripe portal.",
         choosePlan: "Choose plan",
         pricePerInterval: "{price} / {interval}",
         pricePerIntervals: "{price} every {count} {interval}",
@@ -38,16 +40,17 @@ export const pricingTranslations = {
         emptyDescription:
             "Plans will show up here as soon as they are available.",
         enterprise: {
-            title: "Enterprise",
+            title: "Custom",
             description:
-                "Our goal is to streamline SMB trade, making it easier and faster than ever for everyone and everywhere.",
+                "For higher volume, a custom integration or an annual contract, we agree on the plan by email.",
             price: "Custom pricing",
-            linkButton: "Contact us",
+            linkButton: "Talk to the team",
         },
     },
     es: {
         title: "Precios",
-        description: "Consulta los precios de nuestro boilerplate",
+        description:
+            "Suscríbete desde el panel. El pago, el cambio de plan y la cancelación pasan por el portal de Stripe.",
         choosePlan: "Elegir plan",
         pricePerInterval: "{price} / {interval}",
         pricePerIntervals: "{price} cada {count} {interval}",
@@ -61,11 +64,11 @@ export const pricingTranslations = {
         emptyDescription:
             "Los planes aparecerán aquí en cuanto estén disponibles.",
         enterprise: {
-            title: "Enterprise",
+            title: "A medida",
             description:
-                "Nuestro objetivo es simplificar el comercio de pequeñas y medianas empresas, lo que lo hace más fácil y rápido que nunca para todos y en todos los lugares.",
+                "Para mayor volumen, una integración propia o un contrato anual, acordamos el plan por correo.",
             price: "Precio a medida",
-            linkButton: "Contáctanos",
+            linkButton: "Hablar con el equipo",
         },
     },
 };
