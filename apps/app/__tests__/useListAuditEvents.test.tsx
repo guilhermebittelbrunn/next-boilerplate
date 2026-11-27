@@ -1,5 +1,5 @@
 import { UserRoleLevel } from "@repo/auth/types";
-import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
+import { AuditAction, AuditLevel, AuditTargetType } from "@repo/sdk/src/types";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -182,6 +182,26 @@ describe("useListAuditEvents filters", () => {
             userId: "p2",
             from: "2026-09-01",
             to: "2026-09-16",
+        });
+    });
+
+    it("sends the level to the API and keys the cache on it", async () => {
+        const { result, rerender } = renderHook(
+            ({ level }: { level?: AuditLevel }) =>
+                useListAuditEvents(level ? { level } : undefined),
+            { wrapper, initialProps: {} as { level?: AuditLevel } }
+        );
+
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+        expect(listMock).toHaveBeenCalledTimes(1);
+
+        rerender({ level: AuditLevel.INFO });
+
+        await waitFor(() => expect(listMock).toHaveBeenCalledTimes(2));
+        expect(listMock).toHaveBeenLastCalledWith({
+            limit: AUDIT_EVENTS_PAGE_SIZE,
+            cursor: null,
+            level: AuditLevel.INFO,
         });
     });
 
