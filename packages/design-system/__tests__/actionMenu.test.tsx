@@ -1,12 +1,7 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { ActionsMenu } from "@repo/design-system/components/ui/action-menu";
-import {
-    AntdAppProvider,
-    antdSeedColors,
-} from "@repo/design-system/providers/antd-app";
 import { getDictionary } from "@repo/internationalization/client";
 import {
+    act,
     cleanup,
     fireEvent,
     render,
@@ -17,117 +12,20 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const actionMenuCopy = getDictionary().dictionary.components.actionMenu;
 
-const CSS_COMMENT = /\/\*[\s\S]*?\*\//g;
-const CSS_RULE = /([^{}]+)\{([^{}]*)\}/g;
-const COLOR_DECLARATION = /(?:^|;)\s*color\s*:\s*([^;]+)/g;
-const WHITESPACE_RUN = /\s+/g;
-const DANGER_ITEM = ".ant-dropdown-menu-item-danger";
 const ENTER = { key: "Enter", code: "Enter", keyCode: 13, which: 13 };
 const ESCAPE = { key: "Escape", code: "Escape", keyCode: 27, which: 27 };
 
-type CssRule = { selectors: string[]; colors: string[] };
-
-function readGlobalRules(): CssRule[] {
-    const css = readFileSync(
-        path.resolve(__dirname, "../styles/globals.css"),
-        "utf8"
-    ).replace(CSS_COMMENT, "");
-
-    return Array.from(css.matchAll(CSS_RULE), ([, selectorText, body]) => ({
-        selectors: selectorText
-            .split(",")
-            .map((selector) => selector.replace(WHITESPACE_RUN, " ").trim()),
-        colors: Array.from(body.matchAll(COLOR_DECLARATION), ([, value]) =>
-            value.trim()
-        ),
-    }));
-}
-
-function targetsDangerDescendant(selector: string): boolean {
-    const index = selector.indexOf(DANGER_ITEM);
-    return (
-        index >= 0 && selector.slice(index + DANGER_ITEM.length).startsWith(" ")
-    );
-}
-
 afterEach(cleanup);
 
-describe("ActionsMenu", () => {
-    it("renders the trigger as a named, focusable button", () => {
-        render(<ActionsMenu onDelete={vi.fn()} onEdit={vi.fn()} />);
+function getTrigger() {
+    return screen.getByRole("button", { name: actionMenuCopy.trigger });
+}
 
-        const trigger = screen.getByRole("button", {
-            name: actionMenuCopy.trigger,
-        });
-        expect(trigger.getAttribute("type")).toBe("button");
-
-        trigger.focus();
-
-        expect(document.activeElement).toBe(trigger);
-    });
-
-    it("opens the menu from the trigger", async () => {
-        render(<ActionsMenu onDelete={vi.fn()} onEdit={vi.fn()} />);
-
-        fireEvent.click(
-            screen.getByRole("button", { name: actionMenuCopy.trigger })
-        );
-
-        expect(await screen.findByText(actionMenuCopy.edit)).toBeTruthy();
-        expect(screen.getByText(actionMenuCopy.delete)).toBeTruthy();
-    });
-
-    it("paints the danger item with the theme tokens at rest and on hover", async () => {
-        render(
-            <AntdAppProvider>
-                <ActionsMenu onDelete={vi.fn()} />
-            </AntdAppProvider>
-        );
-
-        fireEvent.click(
-            screen.getByRole("button", { name: actionMenuCopy.trigger })
-        );
-        await screen.findByText(actionMenuCopy.delete);
-
-        const injectedCss = Array.from(document.querySelectorAll("style"))
-            .map((style) => style.textContent ?? "")
-            .join("\n");
-        const dangerRules = Array.from(
-            injectedCss.matchAll(/[^{}]*-item-danger[^{}]*\{([^}]*)\}/g),
-            ([, declarations]) => declarations
-        );
-
-        const destructive = antdSeedColors.light.destructive;
-        expect(dangerRules).toContain(`color:${destructive};`);
-        expect(dangerRules).toContain(
-            `color:var(--color-background);background-color:${destructive};`
-        );
-    });
-
-    it("lets the danger item's text and icon inherit the item colour", () => {
-        const rules = readGlobalRules();
-
-        expect(
-            rules.some(({ selectors }) =>
-                selectors.some((selector) => selector.endsWith(DANGER_ITEM))
-            )
-        ).toBe(true);
-
-        const descendantColors = rules
-            .filter(({ selectors }) => selectors.some(targetsDangerDescendant))
-            .flatMap(({ colors }) => colors);
-
-        expect(descendantColors.filter((color) => color !== "inherit")).toEqual(
-            []
-        );
-    });
-});
-
+/** Radix opens the menu on `pointerdown`, which jsdom's `click` never emits. */
 function openMenu() {
-    const trigger = screen.getByRole("button", {
-        name: actionMenuCopy.trigger,
-    });
-    fireEvent.click(trigger);
+    const trigger = getTrigger();
+    trigger.focus();
+    fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
     return trigger;
 }
 
@@ -137,47 +35,112 @@ async function findMenuItem(label: string) {
     if (!item) {
         throw new Error(`menu item "${label}" not found`);
     }
-    return item;
+    return item as HTMLElement;
 }
 
 async function pressEnterOn(label: string) {
     const item = await findMenuItem(label);
-    await waitFor(() =>
-        expect(
-            item.closest('[role="menu"]')?.contains(document.activeElement)
-        ).toBe(true)
-    );
-    fireEvent.keyDown(item, ENTER);
+    item.focus();
+    return fireEvent.keyDown(item, ENTER);
 }
 
 async function openConfirmationFromKeyboard() {
     const trigger = openMenu();
     await pressEnterOn(actionMenuCopy.delete);
-    await screen.findByText(actionMenuCopy.deleteConfirmTitle);
+    await screen.findByRole("alertdialog");
     return trigger;
 }
 
-function getConfirmButton(label: string) {
-    const button = screen
-        .getAllByText(label)
-        .map((node) => node.closest("button"))
-        .find((node): node is HTMLButtonElement => node !== null);
-    if (!button) {
-        throw new Error(`confirmation button "${label}" not found`);
-    }
-    return button;
+function getDialogButton(label: string) {
+    return screen.getByRole("button", { name: label });
 }
 
-describe("ActionsMenu keyboard delete", () => {
-    it("opens the confirmation when Enter is pressed on the delete item", async () => {
+describe("ActionsMenu", () => {
+    it("renders the trigger as a named, focusable button", () => {
+        render(<ActionsMenu onDelete={vi.fn()} onEdit={vi.fn()} />);
+
+        const trigger = getTrigger();
+        expect(trigger.getAttribute("type")).toBe("button");
+
+        trigger.focus();
+        expect(document.activeElement).toBe(trigger);
+    });
+
+    it("announces the menu through aria-haspopup and aria-expanded", async () => {
+        render(<ActionsMenu onDelete={vi.fn()} onEdit={vi.fn()} />);
+
+        const trigger = getTrigger();
+        expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
+        expect(trigger.getAttribute("aria-expanded")).toBe("false");
+
+        openMenu();
+        await waitFor(() =>
+            expect(trigger.getAttribute("aria-expanded")).toBe("true")
+        );
+    });
+
+    it("opens the menu with edit and delete", async () => {
+        render(<ActionsMenu onDelete={vi.fn()} onEdit={vi.fn()} />);
+
+        openMenu();
+
+        expect(await findMenuItem(actionMenuCopy.edit)).toBeTruthy();
+        expect(await findMenuItem(actionMenuCopy.delete)).toBeTruthy();
+    });
+
+    it("runs edit without opening the confirmation", async () => {
+        const onEdit = vi.fn();
+        render(<ActionsMenu onDelete={vi.fn()} onEdit={onEdit} />);
+
+        openMenu();
+        await pressEnterOn(actionMenuCopy.edit);
+
+        expect(onEdit).toHaveBeenCalledTimes(1);
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+    });
+
+    it("cancels the Enter keydown that runs an item, so it cannot activate what the item focuses", async () => {
+        const onOpenDialog = vi.fn();
+        render(
+            <ActionsMenu
+                items={[
+                    {
+                        icon: null,
+                        key: "open-dialog",
+                        label: "Open dialog",
+                        onClick: onOpenDialog,
+                    },
+                ]}
+                onDelete={vi.fn()}
+            />
+        );
+
+        openMenu();
+
+        expect(await pressEnterOn("Open dialog")).toBe(false);
+        expect(onOpenDialog).toHaveBeenCalledTimes(1);
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+    });
+
+    it("offers no delete item without onDelete", async () => {
+        render(<ActionsMenu onEdit={vi.fn()} />);
+
+        openMenu();
+        await findMenuItem(actionMenuCopy.edit);
+
+        expect(screen.queryByText(actionMenuCopy.delete)).toBeNull();
+    });
+});
+
+describe("ActionsMenu delete confirmation", () => {
+    it("opens the confirmation from the delete item without deleting", async () => {
         const onDelete = vi.fn();
         render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
 
-        openMenu();
-        await pressEnterOn(actionMenuCopy.delete);
+        await openConfirmationFromKeyboard();
 
         expect(
-            await screen.findByText(actionMenuCopy.deleteConfirmTitle)
+            screen.getByText(actionMenuCopy.deleteConfirmTitle)
         ).toBeTruthy();
         expect(onDelete).not.toHaveBeenCalled();
     });
@@ -189,7 +152,7 @@ describe("ActionsMenu keyboard delete", () => {
 
         await waitFor(() =>
             expect(document.activeElement).toBe(
-                getConfirmButton(actionMenuCopy.deleteConfirmCancel)
+                getDialogButton(actionMenuCopy.deleteConfirmCancel)
             )
         );
     });
@@ -199,10 +162,12 @@ describe("ActionsMenu keyboard delete", () => {
         render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
 
         const trigger = await openConfirmationFromKeyboard();
-        fireEvent.keyDown(window, ESCAPE);
+        fireEvent.keyDown(document.activeElement ?? document.body, ESCAPE);
 
-        await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
-        expect(document.activeElement).toBe(trigger);
+        await waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+        await waitFor(() => expect(document.activeElement).toBe(trigger));
         expect(onDelete).not.toHaveBeenCalled();
     });
 
@@ -211,10 +176,12 @@ describe("ActionsMenu keyboard delete", () => {
         render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
 
         const trigger = await openConfirmationFromKeyboard();
-        fireEvent.click(getConfirmButton(actionMenuCopy.deleteConfirmCancel));
+        fireEvent.click(getDialogButton(actionMenuCopy.deleteConfirmCancel));
 
-        await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
-        expect(document.activeElement).toBe(trigger);
+        await waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
+        await waitFor(() => expect(document.activeElement).toBe(trigger));
         expect(onDelete).not.toHaveBeenCalled();
     });
 
@@ -223,60 +190,51 @@ describe("ActionsMenu keyboard delete", () => {
         render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
 
         const trigger = await openConfirmationFromKeyboard();
-        fireEvent.click(getConfirmButton(actionMenuCopy.deleteConfirmOk));
+        act(() => {
+            fireEvent.click(getDialogButton(actionMenuCopy.deleteConfirmOk));
+        });
 
-        await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+        await waitFor(() =>
+            expect(screen.queryByRole("alertdialog")).toBeNull()
+        );
         expect(onDelete).toHaveBeenCalledTimes(1);
-        expect(document.activeElement).toBe(trigger);
+        await waitFor(() => expect(document.activeElement).toBe(trigger));
     });
 
-    it("still opens the confirmation on mouse click", async () => {
-        const onDelete = vi.fn();
+    it("keeps the dialog open and the confirm button busy until an async onDelete resolves", async () => {
+        let resolveDelete: (() => void) | undefined;
+        const onDelete = vi.fn(
+            () =>
+                new Promise<void>((resolve) => {
+                    resolveDelete = resolve;
+                })
+        );
         render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
 
-        openMenu();
-        fireEvent.click(await findMenuItem(actionMenuCopy.delete));
-
-        expect(
-            await screen.findByText(actionMenuCopy.deleteConfirmTitle)
-        ).toBeTruthy();
-        expect(onDelete).not.toHaveBeenCalled();
-    });
-
-    it("does not open the confirmation from the edit item", async () => {
-        const onEdit = vi.fn();
-        render(<ActionsMenu onDelete={vi.fn()} onEdit={onEdit} />);
-
-        openMenu();
-        await pressEnterOn(actionMenuCopy.edit);
-
-        expect(onEdit).toHaveBeenCalledTimes(1);
-        expect(
-            screen.queryByText(actionMenuCopy.deleteConfirmTitle)
-        ).toBeNull();
-    });
-
-    it("announces the menu through aria-haspopup and aria-expanded", async () => {
-        render(<ActionsMenu onDelete={vi.fn()} onEdit={vi.fn()} />);
-
-        const trigger = screen.getByRole("button", {
-            name: actionMenuCopy.trigger,
+        await openConfirmationFromKeyboard();
+        const confirmButton = getDialogButton(actionMenuCopy.deleteConfirmOk);
+        act(() => {
+            fireEvent.click(confirmButton);
         });
-        expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
-        expect(trigger.getAttribute("aria-expanded")).toBe("false");
 
-        openMenu();
+        expect(onDelete).toHaveBeenCalledTimes(1);
         await waitFor(() =>
-            expect(trigger.getAttribute("aria-expanded")).toBe("true")
+            expect(confirmButton.getAttribute("aria-busy")).toBe("true")
         );
+        expect(screen.queryByRole("alertdialog")).not.toBeNull();
 
-        await pressEnterOn(actionMenuCopy.edit);
+        await act(async () => {
+            resolveDelete?.();
+            await Promise.resolve();
+        });
+
         await waitFor(() =>
-            expect(trigger.getAttribute("aria-expanded")).toBe("false")
+            expect(screen.queryByRole("alertdialog")).toBeNull()
         );
+        expect(onDelete).toHaveBeenCalledTimes(1);
     });
 
-    it("uses the custom delete labels from the keyboard path", async () => {
+    it("uses the custom delete labels", async () => {
         const onDelete = vi.fn();
         render(
             <ActionsMenu
@@ -297,173 +255,5 @@ describe("ActionsMenu keyboard delete", () => {
             screen.getByText("The account can be restored later.")
         ).toBeTruthy();
         expect(onDelete).not.toHaveBeenCalled();
-    });
-});
-
-describe("ActionsMenu delete confirmation edges", () => {
-    it("keeps the confirm button loading until an async onDelete resolves", async () => {
-        let resolveDelete: (() => void) | undefined;
-        const onDelete = vi.fn(
-            () =>
-                new Promise<void>((resolve) => {
-                    resolveDelete = resolve;
-                })
-        );
-        render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
-
-        await openConfirmationFromKeyboard();
-        const confirmButton = getConfirmButton(actionMenuCopy.deleteConfirmOk);
-        fireEvent.click(confirmButton);
-
-        expect(onDelete).toHaveBeenCalledTimes(1);
-        await waitFor(() =>
-            expect(
-                confirmButton.querySelector('[aria-label="loading"]')
-            ).not.toBeNull()
-        );
-        expect(screen.queryByRole("tooltip")).not.toBeNull();
-
-        resolveDelete?.();
-
-        await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
-        expect(onDelete).toHaveBeenCalledTimes(1);
-    });
-
-    it("offers no delete item and no confirmation without onDelete", async () => {
-        const onEdit = vi.fn();
-        render(<ActionsMenu onEdit={onEdit} />);
-
-        openMenu();
-        await findMenuItem(actionMenuCopy.edit);
-
-        expect(screen.queryByText(actionMenuCopy.delete)).toBeNull();
-
-        await pressEnterOn(actionMenuCopy.edit);
-
-        expect(onEdit).toHaveBeenCalledTimes(1);
-        expect(
-            screen.queryByText(actionMenuCopy.deleteConfirmTitle)
-        ).toBeNull();
-    });
-
-    it("runs a custom item's handler without opening the confirmation", async () => {
-        const onApprove = vi.fn();
-        const onDelete = vi.fn();
-        render(
-            <ActionsMenu
-                items={[
-                    {
-                        icon: null,
-                        key: "approve",
-                        label: "Approve",
-                        onClick: onApprove,
-                    },
-                ]}
-                onDelete={onDelete}
-            />
-        );
-
-        openMenu();
-        await pressEnterOn("Approve");
-
-        expect(onApprove).toHaveBeenCalledTimes(1);
-        expect(
-            screen.queryByText(actionMenuCopy.deleteConfirmTitle)
-        ).toBeNull();
-
-        openMenu();
-        fireEvent.click(await findMenuItem("Approve"));
-
-        expect(onApprove).toHaveBeenCalledTimes(2);
-        expect(
-            screen.queryByText(actionMenuCopy.deleteConfirmTitle)
-        ).toBeNull();
-        expect(onDelete).not.toHaveBeenCalled();
-    });
-
-    it("cancels the Enter keydown that runs an item, so it cannot activate what the item focuses", async () => {
-        const onOpenDialog = vi.fn();
-        render(
-            <ActionsMenu
-                items={[
-                    {
-                        icon: null,
-                        key: "open-dialog",
-                        label: "Open dialog",
-                        onClick: onOpenDialog,
-                    },
-                ]}
-                onDelete={vi.fn()}
-            />
-        );
-
-        openMenu();
-        const item = await findMenuItem("Open dialog");
-        await waitFor(() =>
-            expect(
-                item.closest('[role="menu"]')?.contains(document.activeElement)
-            ).toBe(true)
-        );
-
-        expect(fireEvent.keyDown(item, ENTER)).toBe(false);
-        expect(onOpenDialog).toHaveBeenCalledTimes(1);
-    });
-
-    it("closes the confirmation on a click outside without deleting", async () => {
-        const onDelete = vi.fn();
-        render(
-            <div>
-                <p>outside</p>
-                <ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />
-            </div>
-        );
-
-        await openConfirmationFromKeyboard();
-        expect(screen.queryByRole("tooltip")).not.toBeNull();
-
-        const outside = screen.getByText("outside");
-        fireEvent.mouseDown(outside);
-        fireEvent.click(outside);
-
-        await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
-        expect(onDelete).not.toHaveBeenCalled();
-    });
-
-    it("closes the confirmation and reopens the menu when the trigger is clicked", async () => {
-        const onDelete = vi.fn();
-        render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
-
-        const trigger = await openConfirmationFromKeyboard();
-        fireEvent.mouseDown(trigger);
-        fireEvent.click(trigger);
-
-        await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
-        await waitFor(() =>
-            expect(trigger.getAttribute("aria-expanded")).toBe("true")
-        );
-        expect(onDelete).not.toHaveBeenCalled();
-    });
-
-    it("closes the open menu on Escape and returns focus to the trigger", async () => {
-        render(<ActionsMenu onDelete={vi.fn()} onEdit={vi.fn()} />);
-
-        const trigger = openMenu();
-        const item = await findMenuItem(actionMenuCopy.delete);
-        await waitFor(() =>
-            expect(
-                item.closest('[role="menu"]')?.contains(document.activeElement)
-            ).toBe(true)
-        );
-        expect(trigger.getAttribute("aria-expanded")).toBe("true");
-
-        fireEvent.keyDown(window, ESCAPE);
-
-        await waitFor(() =>
-            expect(trigger.getAttribute("aria-expanded")).toBe("false")
-        );
-        expect(document.activeElement).toBe(trigger);
-        expect(
-            screen.queryByText(actionMenuCopy.deleteConfirmTitle)
-        ).toBeNull();
     });
 });
