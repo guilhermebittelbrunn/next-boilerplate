@@ -4,7 +4,7 @@ import * as React from "react";
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.ComponentProps<"textarea">
->(function Textarea({ className, ...props }, ref) {
+>(function Textarea({ className, onFocus, ...props }, ref) {
   return (
     <textarea
       className={cn(
@@ -12,6 +12,12 @@ const Textarea = React.forwardRef<
         className
       )}
       data-slot="textarea"
+      // A tall field that is only partly hidden behind a sticky action bar gets no focus scroll
+      // from the browser; "nearest" honours the document scroll-padding reserved for those bars.
+      onFocus={(event) => {
+        event.currentTarget.scrollIntoView?.({ block: "nearest" });
+        onFocus?.(event);
+      }}
       ref={ref}
       {...props}
     />
