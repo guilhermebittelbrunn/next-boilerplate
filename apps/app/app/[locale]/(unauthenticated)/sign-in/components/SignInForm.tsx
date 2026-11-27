@@ -11,11 +11,13 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
 import useAlert from "@repo/design-system/hooks/useAlert";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation } from "@tanstack/react-query";
 import type { UserCredential } from "firebase/auth";
+import { MailIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
@@ -27,6 +29,10 @@ import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { apiClient } from "@/shared/lib/client";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
 import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
+import { AuthActionLink } from "../../components/AuthActionLink";
+import { AuthCard } from "../../components/AuthCard";
+import { AuthDivider } from "../../components/AuthDivider";
+import { authTextLinkClassName } from "../../components/authLink";
 import {
     buildSignInSchema,
     type SignInFormValues,
@@ -38,6 +44,7 @@ type SignInFormProps = {
 
 export const SignInForm = ({ redirect = null }: SignInFormProps) => {
     const { dictionary, locale } = getDictionary();
+    const signInCopy = dictionary.apps.app.pages.signIn;
     const { errorAlert, successAlert } = useAlert();
     const { signIn, user, loading: authLoading } = useAuth();
     const emailLinkAvailability = useEmailLinkAvailability();
@@ -89,118 +96,96 @@ export const SignInForm = ({ redirect = null }: SignInFormProps) => {
     }
 
     return (
-        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center px-4 py-20 sm:px-0">
-            <div className="w-full max-w-md space-y-8 rounded-xl border bg-card p-8 shadow-sm">
-                <div className="space-y-2 text-center">
-                    <h1 className="font-bold text-3xl">
-                        {dictionary.apps.app.pages.signIn.meta.title}
-                    </h1>
-                    <p className="text-muted-foreground text-sm">
-                        {dictionary.apps.app.pages.signIn.enterWithYourAccount}
-                    </p>
-                </div>
-
-                <Form {...form}>
-                    <form
-                        className="space-y-4"
-                        noValidate
-                        onSubmit={form.handleSubmit((data) =>
-                            signIn.mutate(
-                                { ...data },
-                                { onSuccess: handleSuccessSignIn }
-                            )
-                        )}
+        <AuthCard
+            description={signInCopy.enterWithYourAccount}
+            footer={
+                <p>
+                    {signInCopy.noAccount}
+                    <Link
+                        className={authTextLinkClassName}
+                        href={withRedirectQuery(`/${locale}/sign-up`, redirect)}
                     >
-                        <HookFormInput
-                            label={dictionary.apps.app.pages.signIn.form.email}
-                            name="email"
-                            placeholder={
-                                dictionary.apps.app.pages.signIn.form
-                                    .emailPlaceholder
-                            }
-                            type="email"
-                        />
+                        {signInCopy.signUp}
+                    </Link>
+                </p>
+            }
+            title={signInCopy.meta.title}
+        >
+            <Form {...form}>
+                <form
+                    className="flex flex-col gap-4"
+                    noValidate
+                    onSubmit={form.handleSubmit((data) =>
+                        signIn.mutate(
+                            { ...data },
+                            { onSuccess: handleSuccessSignIn }
+                        )
+                    )}
+                >
+                    <HookFormInput
+                        autoComplete="email"
+                        label={signInCopy.form.email}
+                        name="email"
+                        placeholder={signInCopy.form.emailPlaceholder}
+                        spellCheck={false}
+                        type="email"
+                    />
 
+                    <div className="flex flex-col gap-2">
                         <HookFormInputPassword
-                            label={
-                                dictionary.apps.app.pages.signIn.form.password
-                            }
+                            autoComplete="current-password"
+                            label={signInCopy.form.password}
                             name="password"
-                            placeholder={
-                                dictionary.apps.app.pages.signIn.form
-                                    .passwordPlaceholder
-                            }
+                            placeholder={signInCopy.form.passwordPlaceholder}
                         />
-
-                        <Button
-                            className="w-full"
-                            disabled={isLoading}
-                            loading={isLoading}
-                            type="submit"
+                        <Link
+                            className={cn(
+                                authTextLinkClassName,
+                                "self-end text-sm"
+                            )}
+                            href={`/${locale}/forgot-password`}
                         >
-                            {dictionary.apps.app.pages.signIn.form.submit}
-                        </Button>
-                    </form>
-                </Form>
-
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
+                            {signInCopy.forgotPassword}
+                        </Link>
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                            {dictionary.apps.app.pages.signIn.orContinueWith}
-                        </span>
-                    </div>
-                </div>
 
+                    <Button
+                        className="mt-2 w-full"
+                        disabled={isLoading}
+                        loading={isLoading}
+                        size="lg"
+                        type="submit"
+                    >
+                        {signInCopy.form.submit}
+                    </Button>
+                </form>
+            </Form>
+
+            <AuthDivider label={signInCopy.orContinueWith} />
+
+            <div className="flex flex-col gap-2">
                 <Button
                     className="w-full"
                     disabled={isLoading}
                     loading={googleSignIn.isPending}
                     onClick={() => googleSignIn.mutate()}
+                    size="lg"
                     type="button"
                     variant="outline"
                 >
-                    <FcGoogle />
-                    {dictionary.apps.app.pages.signIn.googleSignIn}
+                    <FcGoogle aria-hidden className="size-5" />
+                    {signInCopy.googleSignIn}
                 </Button>
-
-                <div className="space-y-2 text-center text-sm">
-                    <p>
-                        <Link
-                            className="text-primary hover:underline"
-                            href={`/${locale}/forgot-password`}
-                        >
-                            {dictionary.apps.app.pages.signIn.forgotPassword}
-                        </Link>
-                    </p>
-                    {emailLinkAvailability.data?.enabled ? (
-                        <p>
-                            <Link
-                                className="text-primary hover:underline"
-                                href={`/${locale}/sign-in/email-link`}
-                            >
-                                {dictionary.apps.app.pages.signIn.emailLink}
-                            </Link>
-                        </p>
-                    ) : null}
-                    <p>
-                        <span className="text-muted-foreground">
-                            {dictionary.apps.app.pages.signIn.noAccount}
-                        </span>
-                        <Link
-                            className="text-primary hover:underline"
-                            href={withRedirectQuery(
-                                `/${locale}/sign-up`,
-                                redirect
-                            )}
-                        >
-                            {dictionary.apps.app.pages.signIn.signUp}
-                        </Link>
-                    </p>
-                </div>
+                {emailLinkAvailability.data?.enabled ? (
+                    <AuthActionLink
+                        href={`/${locale}/sign-in/email-link`}
+                        variant="outline"
+                    >
+                        <MailIcon aria-hidden className="size-4" />
+                        {signInCopy.emailLink}
+                    </AuthActionLink>
+                ) : null}
             </div>
-        </div>
+        </AuthCard>
     );
 };
