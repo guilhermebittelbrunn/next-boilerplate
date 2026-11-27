@@ -107,9 +107,9 @@ export const SignUpFormClient = () => {
 
     return (
         <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center px-4 py-20 md:px-2">
-            <div className="w-full max-w-md space-y-8 rounded-lg border p-8">
-                <div className="space-y-2 text-center">
-                    <h1 className="font-bold text-3xl">
+            <div className="w-full max-w-md space-y-7 rounded-xl bg-card p-6 shadow-card sm:p-8">
+                <div className="space-y-2">
+                    <h1 className="font-semibold text-2xl tracking-tight">
                         {dictionary.apps.web.pages.signUp.meta.title}
                     </h1>
                     <p className="text-muted-foreground text-sm">
@@ -173,7 +173,7 @@ export const SignUpFormClient = () => {
                         <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
+                        <span className="bg-card px-2 text-muted-foreground">
                             {dictionary.apps.web.pages.signUp.orContinueWith}
                         </span>
                     </div>
