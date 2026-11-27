@@ -1,12 +1,6 @@
 "use client";
 
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { Card } from "@repo/design-system/components/ui/card";
 import { Progress } from "@repo/design-system/components/ui/progress";
 import { getDictionary } from "@repo/internationalization/client";
 import {
@@ -147,51 +141,49 @@ export function OnboardingClient({
     };
 
     return (
-        <main className="flex min-h-dvh w-full items-center justify-center p-4">
-            <div className="flex w-full max-w-[400px] flex-col gap-6">
-                <header className="flex flex-col gap-1 text-center">
-                    <h1 className="font-semibold text-2xl tracking-tight">
+        <main className="flex min-h-dvh w-full items-center justify-center bg-background px-4 py-10 sm:px-8">
+            <div className="flex w-full max-w-[440px] flex-col gap-6">
+                <header className="flex flex-col gap-1">
+                    <h1 className="text-balance font-semibold text-base tracking-tight">
                         {onboardingCopy.title}
                     </h1>
                     <p className="text-muted-foreground text-sm">
                         {onboardingCopy.subtitle}
                     </p>
                 </header>
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col gap-2 pb-2">
-                            <span
-                                className="text-muted-foreground text-xs"
-                                id="onboarding-progress-label"
-                            >
-                                {progressLabel}
-                            </span>
-                            <Progress
-                                aria-labelledby="onboarding-progress-label"
-                                value={
-                                    ((stepIndex + 1) / totalSteps) *
-                                    FULL_PROGRESS
-                                }
-                            />
-                        </div>
-                        <CardTitle className="text-lg">
+                <Card className="gap-6 p-6 sm:p-8">
+                    <div className="flex flex-col gap-2">
+                        <span
+                            className="font-medium text-muted-foreground text-xs tabular-nums"
+                            id="onboarding-progress-label"
+                        >
+                            {progressLabel}
+                        </span>
+                        <Progress
+                            aria-labelledby="onboarding-progress-label"
+                            className="h-1.5"
+                            value={
+                                ((stepIndex + 1) / totalSteps) * FULL_PROGRESS
+                            }
+                        />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <h2 className="text-balance font-semibold text-xl tracking-tight">
                             {stepCopy.title}
-                        </CardTitle>
-                        <CardDescription>
+                        </h2>
+                        <p className="text-pretty text-muted-foreground text-sm">
                             {stepCopy.description}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {isError ? (
-                            <Container
-                                className="p-0"
-                                contentOnly
-                                loadError={onboardingCopy.loadError}
-                            />
-                        ) : (
-                            renderStep()
-                        )}
-                    </CardContent>
+                        </p>
+                    </div>
+                    {isError ? (
+                        <Container
+                            className="p-0"
+                            contentOnly
+                            loadError={onboardingCopy.loadError}
+                        />
+                    ) : (
+                        renderStep()
+                    )}
                 </Card>
             </div>
         </main>

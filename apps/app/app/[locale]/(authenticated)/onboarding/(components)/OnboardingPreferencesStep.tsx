@@ -69,6 +69,7 @@ export function OnboardingPreferencesStep({
                     confirmLabel={confirmLabel}
                     isLoading={isPending}
                     onBack={onSkip}
+                    sticky={false}
                 />
             </form>
         </Form>
