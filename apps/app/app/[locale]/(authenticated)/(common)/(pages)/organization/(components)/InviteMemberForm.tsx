@@ -8,6 +8,7 @@ import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useOrganizationActions } from "../(hooks)/useOrganizationActions";
 import {
@@ -39,26 +40,28 @@ export function InviteMemberForm() {
     };
 
     return (
-        <section className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-                <h2 className="font-semibold text-lg">{inviteCopy.title}</h2>
-                <p className="text-muted-foreground text-sm">
-                    {inviteCopy.description}
-                </p>
-            </div>
+        <SettingsSection
+            description={inviteCopy.description}
+            headingLevel={2}
+            title={inviteCopy.title}
+        >
             <Form {...form}>
                 <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
-                    <FormContainer>
-                        <HookFormInput
-                            autoComplete="off"
-                            label={inviteCopy.emailLabel}
-                            name="email"
-                            placeholder={inviteCopy.emailPlaceholder}
-                            required
-                            type="email"
-                        />
+                    <FormContainer className="md:grid-cols-1">
+                        <div className="w-full max-w-md">
+                            <HookFormInput
+                                autoComplete="off"
+                                label={inviteCopy.emailLabel}
+                                name="email"
+                                placeholder={inviteCopy.emailPlaceholder}
+                                required
+                                spellCheck={false}
+                                type="email"
+                            />
+                        </div>
                     </FormContainer>
                     <Footer
+                        className="mt-5"
                         confirmLabel={inviteCopy.submit}
                         disabled={isImpersonating || inviteMutation.isPending}
                         isLoading={inviteMutation.isPending}
@@ -67,6 +70,6 @@ export function InviteMemberForm() {
                     />
                 </form>
             </Form>
-        </section>
+        </SettingsSection>
     );
 }
