@@ -1,7 +1,7 @@
 ---
 id: app-form-layout-centered
 title: Telas de formulário do painel centralizadas e com altura do conteúdo
-status: approved
+status: done
 value: médio
 effort: P
 audience: produto
@@ -9,8 +9,8 @@ area: [apps/app]
 mode: ambos
 depends_on: []
 contends_on: [apps/app/shared/components/ui/pageLayout.ts, apps/app/shared/components/ui/Container.tsx, apps/app/shared/components/ui/PageSkeleton.tsx, "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountProfileForm.tsx", "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountPreferencesForm.tsx", "apps/app/app/[locale]/(authenticated)/(common)/(pages)/account/(components)/AccountSecurityForm.tsx"]
-feature: -
-updated: 2026-11-25
+feature: app-form-layout-centered
+updated: 2026-11-26
 ---
 
 # Telas de formulário do painel centralizadas e com altura do conteúdo
@@ -18,8 +18,8 @@ updated: 2026-11-25
 > **Resumo**
 > - **O quê:** as telas de formulário do `apps/app` (criar e editar usuário no admin, criar e editar entidade, conta) passam a ficar centralizadas na área de conteúdo, com o painel do formulário na altura dos campos e a barra de ações logo abaixo dele.
 > - **Por quê:** hoje o formulário fica colado à esquerda e o painel cinza estica até o rodapé, deixando um bloco vazio grande em telas largas. Parece página quebrada, e a primeira impressão de todo fork é essa.
-> - **Status:** `approved` · valor médio · esforço P · produto
-> - **Próximo passo:** `/analyze app-form-layout-centered` (é a primeira da fila desde 2026-11-25)
+> - **Status:** `done` · valor médio · esforço P · produto. Entregue pela PR #76 (`a13768c`, 2026-11-26) e arquivada aqui.
+> - **Próximo passo:** nenhum. O CSS do antd que só chega depois da hidratação ficou fora do corte e segue como tarefa direta (D24).
 
 ## Problema
 
@@ -68,7 +68,7 @@ são centralizadas e do tamanho do conteúdo, então a diferença aparece logo d
 
 É ajuste de consistência visual, sem pesquisa nova. A referência usada é o exemplo de configurações do
 shadcn/ui, já registrado na nota
-[`reference/research/settings-page-patterns.md`](../reference/research/settings-page-patterns.md): a área de
+[`reference/research/settings-page-patterns.md`](../../../specs/reference/research/settings-page-patterns.md): a área de
 conteúdo tem largura máxima (`flex-1 lg:max-w-2xl`) e altura do conteúdo, sem painel que estique até o fim da
 página. O shadcn não centraliza porque tem navegação lateral à esquerda; a centralização aqui segue o padrão
 interno das telas de autenticação e de onboarding.
@@ -78,17 +78,17 @@ interno das telas de autenticação e de onboarding.
 
 ## Proposta — corte de MVP
 
-- [ ] Toda tela com `width="narrow"` fica centralizada horizontalmente na área de conteúdo, com o título da
+- [x] Toda tela com `width="narrow"` fica centralizada horizontalmente na área de conteúdo, com o título da
       página alinhado à mesma coluna.
-- [ ] Nas telas de criar/editar usuário e criar/editar entidade, o painel do formulário tem a altura dos
+- [x] Nas telas de criar/editar usuário e criar/editar entidade, o painel do formulário tem a altura dos
       campos, e a barra de ações fica logo abaixo dele, na mesma largura.
-- [ ] Na conta, os blocos de cada aba deixam de esticar até o fim da janela.
-- [ ] A barra fixa continua fixa quando o formulário é maior que a janela, e continua publicando
+- [x] Na conta, os blocos de cada aba deixam de esticar até o fim da janela.
+- [x] A barra fixa continua fixa quando o formulário é maior que a janela, e continua publicando
       `data-sticky-action-bar` (os testes de foco não podem regredir).
-- [ ] O esqueleto de carregamento de cada tela coberta tem a mesma largura e posição da tela carregada, sem
+- [x] O esqueleto de carregamento de cada tela coberta tem a mesma largura e posição da tela carregada, sem
       salto quando o conteúdo chega.
-- [ ] Listas e dashboards (largura cheia) não mudam.
-- [ ] Conferido no `/test` em light, dark e mobile, nas telas da tabela acima.
+- [x] Listas e dashboards (largura cheia) não mudam.
+- [x] Conferido no `/test` em light, dark e mobile, nas telas da tabela acima.
 
 ### Fora do corte
 
@@ -138,3 +138,23 @@ interno das telas de autenticação e de onboarding.
   sim; está dentro da mesma tela `narrow` e separá-la criaria uma exceção sem ganho.
 - Criar `loading.tsx` estreito para criar/editar usuário e criar entidade, que hoje não têm? —
   **recomendação:** sim, dentro do corte. Sem ele, o salto de layout continua na navegação para essas telas.
+
+## Conferência da entrega (auditoria de 2026-11-26)
+
+Conferida no código de `main` (`a13768c`), não no `status` gravado. A PR #76 foi mergeada em 2026-11-26 e a execução
+de merge do CI (`gh run 45862770863`) terminou com os seis jobs verdes, `e2e` incluído.
+
+| item do corte | situação | evidência |
+|---------------|----------|-----------|
+| Telas `narrow` centralizadas, com o título na mesma coluna | implementado | `apps/app/shared/components/ui/pageLayout.ts:3` (`mx-auto w-full max-w-4xl`) |
+| Painel com a altura dos campos e barra logo abaixo, nas quatro telas de criar/editar | implementado | o `<form>` passou a `flex w-full flex-col`, sem `flex-1` nem `min-h-[50vh]`: `users/(pages)/create/page.tsx:71`, `users/(pages)/edit/[id]/page.tsx:96`, `entities/(pages)/create/page.tsx:70`, `EditEntityClient.tsx:114` |
+| Blocos da conta sem esticar | implementado | nenhum `flex-1` nos blocos de `AccountProfileForm`, `AccountPreferencesForm`, `AccountSecurityForm`, `AccountPrivacyPanel` e `AccountBillingPanel` |
+| Barra fixa preservada, com `data-sticky-action-bar` | implementado | `Footer.tsx:55`, `Container.tsx:100`, `PageFormFooter.tsx:33`; E2E `focusNotObscured` verde no CI de merge |
+| Esqueleto na mesma largura e posição | implementado | `loading.tsx` estreito novo em criar e editar usuário e em criar entidade; teste `apps/app/__tests__/formLoadingSkeletons.test.tsx` |
+| Listas e dashboards sem mudança | implementado | `Container.tsx` e `PageSkeleton.tsx` não mudaram na PR |
+| Conferido no `/test` em claro, escuro e celular | implementado | `test/report.md` desta pasta: 10 de 10 critérios medidos em build de produção |
+
+**Deriva.** A spec previa mexer no `Container` e no `PageSkeleton` e os declarava em `contends_on`. O `/analyze`
+resolveu tudo com a classe `PAGE_NARROW_CLASS` e com o `<form>` de cada tela, e os dois componentes não mudaram. A spec
+errou para mais, o que não causa dano. Os três formulários da conta mudaram aqui e em `admin-own-account`, como o
+`contends_on` corrigido em 2026-11-25 previa.
