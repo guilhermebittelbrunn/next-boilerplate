@@ -78,36 +78,38 @@ export function NotificationItem({
             data-unread={unread || undefined}
             size="sm"
         >
-            <ItemMedia>
+            <ItemMedia className="mt-0.5">
                 <LevelIcon
                     aria-hidden="true"
                     className={cn("size-4", LEVEL_ICON_CLASSES[level])}
                 />
             </ItemMedia>
             <ItemContent className="min-w-0">
-                <ItemTitle className="w-full">
+                <ItemTitle className="w-full items-start">
                     {unread && (
-                        <span className="size-2 shrink-0 rounded-full bg-primary">
+                        <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary">
                             <span className="sr-only">{copy.unread}</span>
                         </span>
                     )}
                     {href ? (
                         <Link
-                            className="truncate underline-offset-4 hover:underline"
+                            className="min-w-0 underline-offset-4 [overflow-wrap:anywhere] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
                             href={href}
                             onClick={followLink}
                         >
                             {title}
                         </Link>
                     ) : (
-                        <span className="truncate">{title}</span>
+                        <span className="min-w-0 [overflow-wrap:anywhere]">
+                            {title}
+                        </span>
                     )}
                 </ItemTitle>
                 <ItemDescription className="line-clamp-3 text-pretty">
                     {body}
                 </ItemDescription>
                 <time
-                    className="text-muted-foreground text-xs"
+                    className="text-muted-foreground text-xs tabular-nums"
                     dateTime={notification.createdAt}
                 >
                     {formatDateTime(notification.createdAt)}
