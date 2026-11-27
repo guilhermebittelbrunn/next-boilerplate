@@ -19,7 +19,7 @@ export const onboardingTranslations = {
                 description:
                     "Esse nome aparece no painel e pode ser alterado depois na sua conta.",
                 displayName: "Nome de exibição",
-                displayNamePlaceholder: "Seu nome",
+                displayNamePlaceholder: "Seu nome…",
                 validation: {
                     displayNameRequired: "Informe um nome de exibição.",
                     displayNameMax:
@@ -54,7 +54,7 @@ export const onboardingTranslations = {
                 description:
                     "This name shows up in the panel, and you can change it later in your account.",
                 displayName: "Display name",
-                displayNamePlaceholder: "Your name",
+                displayNamePlaceholder: "Your name…",
                 validation: {
                     displayNameRequired: "Enter a display name.",
                     displayNameMax:
@@ -89,7 +89,7 @@ export const onboardingTranslations = {
                 description:
                     "Este nombre aparece en el panel y puedes cambiarlo después en tu cuenta.",
                 displayName: "Nombre visible",
-                displayNamePlaceholder: "Tu nombre",
+                displayNamePlaceholder: "Tu nombre…",
                 validation: {
                     displayNameRequired: "Indica un nombre visible.",
                     displayNameMax:

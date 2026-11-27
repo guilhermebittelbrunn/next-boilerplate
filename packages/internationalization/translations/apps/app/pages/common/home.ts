@@ -16,6 +16,7 @@ export const commonHomePageTranslations = {
             title: "Entidades por tipo",
             description: "Como os seus registros se distribuem.",
             empty: "Ainda não há dados para o gráfico.",
+            viewAll: "Ver entidades",
         },
         empty: {
             title: "Nada por aqui ainda",
@@ -41,6 +42,7 @@ export const commonHomePageTranslations = {
             title: "Entities by type",
             description: "How your records are distributed.",
             empty: "No data to chart yet.",
+            viewAll: "View entities",
         },
         empty: {
             title: "Nothing here yet",
@@ -66,6 +68,7 @@ export const commonHomePageTranslations = {
             title: "Entidades por tipo",
             description: "Cómo se distribuyen tus registros.",
             empty: "Todavía no hay datos para el gráfico.",
+            viewAll: "Ver entidades",
         },
         empty: {
             title: "Aquí no hay nada todavía",

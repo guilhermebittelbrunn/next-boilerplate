@@ -43,6 +43,8 @@ export const adminHomePageTranslations = {
             },
             neverNotice:
                 "{count} perfis ainda não têm registro de acesso. O registro de cada pessoa começa no próximo acesso dela.",
+            neverNoticeOne:
+                "1 perfil ainda não tem registro de acesso. O registro começa no próximo acesso dessa pessoa.",
         },
         billing: {
             title: "Cobrança",
@@ -138,6 +140,8 @@ export const adminHomePageTranslations = {
             },
             neverNotice:
                 "{count} profiles have no sign-in record yet. Each person's record starts on their next sign-in.",
+            neverNoticeOne:
+                "1 profile has no sign-in record yet. The record starts on that person's next sign-in.",
         },
         billing: {
             title: "Billing",
@@ -233,6 +237,8 @@ export const adminHomePageTranslations = {
             },
             neverNotice:
                 "{count} perfiles todavía no tienen registro de acceso. El registro de cada persona empieza en su próximo acceso.",
+            neverNoticeOne:
+                "1 perfil todavía no tiene registro de acceso. El registro empieza en el próximo acceso de esa persona.",
         },
         billing: {
             title: "Cobros",
