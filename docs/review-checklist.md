@@ -159,7 +159,9 @@ responsabilidade da revisão e do deploy da Vercel.
 
 - [ ] Lógica nova tem teste: schema (com o dicionário real), mapper, helper puro, hook, rota.
 - [ ] Localização `apps/<app>/__tests__/<assunto>.test.ts(x)`; imports explícitos de `vitest`
-      (`globals` não está ligado); sem `toBeInTheDocument` (não há jest-dom no setup).
+      (`globals` não está ligado); sem `toBeInTheDocument` (não há jest-dom no setup). Na `app`, o
+      `cleanup` do Testing Library roda depois de cada teste pelo `vitest.setup.ts`: não repita
+      `afterEach(cleanup)` em arquivo novo.
 - [ ] Mock nas **bordas**: `@/shared/lib/client`, `@repo/auth/server`, `firebase/*`,
       `@repo/design-system/hooks/useAlert`, `@repo/internationalization/client` — com
       `vi.hoisted` + `vi.mock` **antes** do `await import(...)`.
