@@ -116,7 +116,7 @@ describe("resolveOnboardingDestination", () => {
         expect(
             resolveOnboardingDestination("/pt-br/entities/create", "pt-br")
         ).toBe("/pt-br/entities/create");
-        expect(resolveOnboardingDestination("%2Fen%2Faccount", "pt-br")).toBe(
+        expect(resolveOnboardingDestination("/en/account", "pt-br")).toBe(
             "/en/account"
         );
     });
@@ -129,6 +129,7 @@ describe("resolveOnboardingDestination", () => {
             "https://example.org",
             "//example.org",
             "/entities",
+            "%2Fes%2Fentities",
         ]) {
             expect(resolveOnboardingDestination(unsafe, "es")).toBe("/es");
         }
@@ -139,7 +140,6 @@ describe("resolveOnboardingDestination", () => {
             "/pt-br/onboarding",
             "/en/onboarding",
             "/pt-br/onboarding/anything",
-            "%2Fpt-br%2Fonboarding",
         ]) {
             expect(resolveOnboardingDestination(loop, "pt-br")).toBe("/pt-br");
         }
@@ -151,7 +151,6 @@ describe("resolveOnboardingDestination", () => {
     it("recognises the onboarding even when the destination carries a query or a hash", () => {
         for (const loop of [
             "/pt-br/onboarding?x=1",
-            "%2Fpt-br%2Fonboarding%3Fx%3D1",
             "/en/onboarding#step",
             "/pt-br/onboarding/?redirect=%2Fpt-br",
         ]) {
