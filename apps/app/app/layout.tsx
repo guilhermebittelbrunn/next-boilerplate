@@ -8,7 +8,6 @@ import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
-import { ToastContainer } from "react-toastify";
 import { getAppSessionUser } from "@/lib/server/authSession";
 import { resolvePreferredTimeZone } from "@/lib/server/displayTimeZone";
 import { resolvePanelSnapshot } from "@/lib/server/panelSnapshot";
@@ -86,7 +85,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                             privacyPolicyHref={privacyPolicyHref}
                         >
                             <AppDesignProvider defaultTheme={preferredTheme}>
-                                <ToastContainer />
                                 <DisplayTimeZoneProvider
                                     initialTimeZone={preferredTimeZone}
                                 >
