@@ -78,6 +78,10 @@ Grave as respostas **no `kickoff.json`** (nunca só nos `.md`, que são regenera
 
 ## Passo 2 — Design
 
+0. Antes do prompt de design, a marca precisa de posicionamento. Se `PRODUCT.md` não deixa claro para quem
+   é, o que promete e contra quem compete, sugira rodar as skills `founder-board`, `founder-competitors` e
+   `founder-brand` (nessa ordem; elas gravam em `founder/`) e trazer a promessa, a voz e o brief de cor e
+   tipo para o `kickoff.json`. Só sugere: quem decide rodar é a pessoa.
 1. Se alguma tela não tem design anexado, mostre o caminho do `docs/product/DESIGN-PROMPT.md` e explique o
    ciclo: copiar o prompt (botão "Copiar prompt de design" na etapa Revisar), colar no Claude Design,
    exportar cada tela e arrastar para o quadro dela na etapa Telas. O formulário salva o arquivo e atualiza
@@ -92,7 +96,11 @@ Grave as respostas **no `kickoff.json`** (nunca só nos `.md`, que são regenera
    estados que aparecem. Isso vai para a spec correspondente no Passo 4.
 5. Se o Claude Design devolveu tokens de cor, ofereça aplicá-los em
    `packages/design-system/styles/globals.css` (claro e escuro) e a paleta dos e-mails em
-   `packages/email/brand.ts`. É mudança de código do fork: aplique só com o "sim" e rode `pnpm check`.
+   `packages/email/brand.ts`, seguindo a seção 6 de [`docs/DESIGN.md`](../../docs/DESIGN.md) (o que troca
+   com a marca e o que fica). É mudança de código do fork: aplique só com o "sim" e rode `pnpm check` e
+   `pnpm --filter @repo/design-system test` (contraste).
+6. Ao anotar cada tela, confira o design contra o gate da seção 5 do `docs/DESIGN.md` (específico, estados,
+   conteúdo real, um elemento vence). O que falhar vira nota na spec, não motivo para travar.
 
 ## Passo 3 — Identidade e configuração
 
