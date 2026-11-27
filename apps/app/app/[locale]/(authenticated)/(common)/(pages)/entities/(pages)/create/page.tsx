@@ -11,6 +11,7 @@ import { Container } from "@/shared/components/ui/Container";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { FormSkeleton } from "@/shared/components/ui/FormSkeleton";
+import { FormSurface } from "@/shared/components/ui/FormSurface";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
@@ -67,19 +68,20 @@ export default function CreateEntityPage() {
     const createForm = (
         <Form {...form}>
             <form
-                className="flex w-full flex-col"
+                className="flex w-full flex-col gap-4"
                 onSubmit={form.handleSubmit(onSubmit)}
             >
-                <Container className="flex flex-col gap-4 p-0">
-                    <ImpersonationReadOnlyNotice />
+                <ImpersonationReadOnlyNotice />
+                <FormSurface>
                     <FormContainer>
                         <EntityFormFields
                             mode="create"
                             uploadPhoto={uploadFile}
                         />
                     </FormContainer>
-                </Container>
+                </FormSurface>
                 <Footer
+                    className="mt-2"
                     confirmLabel={entitiesForm.save}
                     disabled={isImpersonating || isUploading}
                     isLoading={createEntityMutation.isPending}
