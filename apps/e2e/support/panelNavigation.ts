@@ -29,5 +29,5 @@ export async function expectPanelNavLink(
             await expect(sheet).toBeVisible({ timeout: SHEET_RETRY_TIMEOUT });
         }).toPass({ timeout: SHEET_OPEN_TIMEOUT });
     }
-    await expect(page.getByRole("link", { name })).toBeVisible();
+    await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
 }
