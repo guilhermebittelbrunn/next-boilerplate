@@ -4,6 +4,7 @@ import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { apiClient } from "@/shared/lib/client";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import {
@@ -68,8 +69,15 @@ export const useSignInMethodMutations = () => {
             await refreshAccount();
             successAlert(accountMessages.signInMethodUnlinked);
         },
-        onError: async (error) => {
+        onError: async (error, providerId) => {
             await refreshAccount();
+            if (
+                providerId === PASSWORD_PROVIDER_ID &&
+                apiErrorCodeOf(error) === "AUTH_SESSIONS_NOT_REVOKED"
+            ) {
+                errorAlert(accountMessages.passwordUnlinkedSessionsNotRevoked);
+                return;
+            }
             alertUnlessDismissed(error);
         },
     });
