@@ -437,6 +437,49 @@ describe("useNotificationActions · markRead", () => {
         expect(errorAlertMock).toHaveBeenCalledTimes(1);
     });
 
+    it("tira da lista, sem aviso, a notificação que o servidor já apagou", async () => {
+        seedCache();
+        markReadMock.mockRejectedValue({
+            response: {
+                data: { error: { code: "NOTIFICATION_NOT_FOUND" } },
+            },
+        });
+        const { result } = renderHook(() => useNotificationActions(), {
+            wrapper,
+        });
+
+        act(() => result.current.markRead.mutate("n3"));
+
+        await waitFor(() => expect(result.current.markRead.isError).toBe(true));
+        expect(rowInCache("n3")).toBeUndefined();
+        expect(rowInCache("n1")?.readAt).toBeNull();
+        expect(rowInCache("n2")).toBeDefined();
+        expect(countInCache()).toBe(CACHED_COUNT - 1);
+        expect(errorAlertMock).not.toHaveBeenCalled();
+    });
+
+    it("mantém a lista marcada como velha quando a notificação apagada sai do cache", async () => {
+        seedCache();
+        queryClient.invalidateQueries({
+            queryKey: queryKeys.notifications.list(),
+            refetchType: "none",
+        });
+        markReadMock.mockRejectedValue({
+            response: {
+                data: { error: { code: "NOTIFICATION_NOT_FOUND" } },
+            },
+        });
+        const { result } = renderHook(() => useNotificationActions(), {
+            wrapper,
+        });
+
+        act(() => result.current.markRead.mutate("n1"));
+
+        await waitFor(() => expect(result.current.markRead.isError).toBe(true));
+        expect(rowInCache("n1")).toBeUndefined();
+        expect(listIsInvalidated()).toBe(true);
+    });
+
     it("mantém a lista marcada como velha quando a pessoa marca uma como lida", async () => {
         seedCache();
         queryClient.invalidateQueries({
