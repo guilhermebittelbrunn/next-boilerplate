@@ -2,6 +2,7 @@ import { globalTranslations } from "@repo/internationalization/translations/glob
 import { describe, expect, it } from "vitest";
 import {
     auditFiltersDefaults,
+    auditLevelAll,
     auditUserAll,
     buildAuditFiltersSchema,
 } from "@/app/[locale]/(authenticated)/(admin)/admin/(pages)/audit/(validations)/auditFiltersSchema";
@@ -17,6 +18,16 @@ describe("buildAuditFiltersSchema", () => {
 
     it("defaults the user field to the sentinel the select needs", () => {
         expect(auditFiltersDefaults.userId).toBe(auditUserAll);
+    });
+
+    it("defaults the level to all levels", () => {
+        expect(auditFiltersDefaults.level).toBe(auditLevelAll);
+    });
+
+    it("accepts a chosen level", () => {
+        expect(
+            schema.safeParse({ ...auditFiltersDefaults, level: "info" }).success
+        ).toBe(true);
     });
 
     it("accepts a period whose ends are in order", () => {

@@ -1,8 +1,13 @@
 "use client";
 
 import { Table } from "@repo/design-system/components/ui";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { getDictionary } from "@repo/internationalization/client";
-import type { AuditAction, AuditEventDTO } from "@repo/sdk/src/types";
+import {
+    type AuditAction,
+    type AuditEventDTO,
+    AuditLevel,
+} from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useState } from "react";
@@ -52,6 +57,19 @@ export function AuditListClient() {
                 <span className="font-medium">
                     {auditTrailList.actionLabels[value]}
                 </span>
+            ),
+        },
+        {
+            title: auditTrailList.columns.level,
+            dataIndex: "level",
+            render: (value: AuditLevel) => (
+                <Badge
+                    variant={
+                        value === AuditLevel.INFO ? "secondary" : "destructive"
+                    }
+                >
+                    {auditTrailList.levelLabels[value]}
+                </Badge>
             ),
         },
         {

@@ -1,10 +1,17 @@
 import { globalTranslations } from "@repo/internationalization/translations/global";
-import { AuditAction, AuditTargetType } from "@repo/sdk/src/types";
+import { AuditAction, AuditLevel, AuditTargetType } from "@repo/sdk/src/types";
 import { cleanup, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { listAuditEventsMock } = vi.hoisted(() => ({
+type ColumnProbe = {
+    dataIndex: string;
+    title: string;
+    render?: (value: unknown) => unknown;
+};
+
+const { listAuditEventsMock, tableProps } = vi.hoisted(() => ({
     listAuditEventsMock: vi.fn(),
+    tableProps: { columns: [] as ColumnProbe[] },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -25,7 +32,10 @@ vi.mock(
 );
 
 vi.mock("@repo/design-system/components/ui", () => ({
-    Table: () => <div data-testid="audit-table">table</div>,
+    Table: ({ columns }: { columns: ColumnProbe[] }) => {
+        tableProps.columns = columns;
+        return <div data-testid="audit-table">table</div>;
+    },
 }));
 
 const { AuditListClient } = await import(
@@ -35,6 +45,7 @@ const { AuditListClient } = await import(
 const AUDIT_EVENT = {
     id: "evt-1",
     action: AuditAction.USER_DELETE,
+    level: AuditLevel.SENSITIVE,
     actorUserId: "p1",
     actorUid: "auth-admin",
     actorLabel: "admin@example.com",
@@ -131,4 +142,49 @@ describe("AuditListClient keeps the filters reachable", () => {
         );
         expect(document.body.textContent).not.toContain("FAILED_PRECONDITION");
     });
+});
+
+describe("AuditListClient level column", () => {
+    const listCopy =
+        globalTranslations["pt-br"].apps.app.pages.admin.auditTrail.list;
+
+    function levelColumn(): ColumnProbe {
+        render(<AuditListClient />);
+        const column = tableProps.columns.find(
+            (candidate) => candidate.dataIndex === "level"
+        );
+        if (!column?.render) {
+            throw new Error("level column missing");
+        }
+        return column;
+    }
+
+    it("titles the column from the dictionary", () => {
+        expect(levelColumn().title).toBe(listCopy.columns.level);
+    });
+
+    it.each([
+        [AuditLevel.SENSITIVE, listCopy.levelLabels.sensitive],
+        [AuditLevel.INFO, listCopy.levelLabels.info],
+    ])("labels %s with translated copy", (level, label) => {
+        const column = levelColumn();
+        cleanup();
+
+        render(<div>{column.render?.(level) as React.ReactNode}</div>);
+
+        expect(document.body.textContent).toBe(label);
+    });
+
+    it.each(["pt-br", "en", "es"] as const)(
+        "has a %s label for every action, so none shows as a raw key",
+        (locale) => {
+            const actionLabels =
+                globalTranslations[locale].apps.app.pages.admin.auditTrail.list
+                    .actionLabels;
+
+            for (const action of Object.values(AuditAction)) {
+                expect(actionLabels[action]).toBeTruthy();
+            }
+        }
+    );
 });

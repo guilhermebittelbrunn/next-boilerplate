@@ -31,7 +31,11 @@ vi.mock("@repo/design-system/components/ui/select", () => ({
         options: { value: string; label: string }[];
     }) => (
         <select
-            data-testid="user-select"
+            data-testid={
+                options.some((option) => option.value === "sensitive")
+                    ? "level-select"
+                    : "user-select"
+            }
             onChange={(event) => onValueChange?.(event.target.value)}
             value={value ?? ""}
         >
@@ -68,6 +72,9 @@ const { AuditFilters } = await import(
 
 const filtersCopy =
     globalTranslations["pt-br"].apps.app.pages.admin.auditTrail.filters;
+const levelLabels =
+    globalTranslations["pt-br"].apps.app.pages.admin.auditTrail.list
+        .levelLabels;
 
 const USERS = [
     {
@@ -95,6 +102,12 @@ function renderFilters() {
 function chooseUser(id: string) {
     fireEvent.change(screen.getByTestId("user-select"), {
         target: { value: id },
+    });
+}
+
+function chooseLevel(level: string) {
+    fireEvent.change(screen.getByTestId("level-select"), {
+        target: { value: level },
     });
 }
 
@@ -157,6 +170,30 @@ describe("AuditFilters user options", () => {
     });
 });
 
+describe("AuditFilters level options", () => {
+    it("offers every level, leading with all of them", () => {
+        renderFilters();
+
+        const labels = Array.from(
+            screen.getByTestId("level-select").querySelectorAll("option")
+        ).map((option) => option.textContent);
+
+        expect(labels).toEqual([
+            filtersCopy.levelAll,
+            levelLabels.sensitive,
+            levelLabels.info,
+        ]);
+    });
+
+    it("starts on all levels", () => {
+        renderFilters();
+
+        expect(
+            (screen.getByTestId("level-select") as HTMLSelectElement).value
+        ).toBe("__all__");
+    });
+});
+
 describe("AuditFilters applying", () => {
     it("asks for no user filter while the leading option is selected", async () => {
         const onApply = renderFilters();
@@ -191,6 +228,34 @@ describe("AuditFilters applying", () => {
                 to: "2026-09-16",
             })
         );
+    });
+
+    it("sends the level together with the user and the period", async () => {
+        const onApply = renderFilters();
+
+        chooseUser("p2");
+        chooseLevel("info");
+        typePeriod("2026-09-01", "2026-09-16");
+        apply();
+
+        await waitFor(() =>
+            expect(onApply).toHaveBeenCalledWith({
+                userId: "p2",
+                from: "2026-09-01",
+                to: "2026-09-16",
+                level: "info",
+            })
+        );
+    });
+
+    it("leaves the level out while all levels are selected", async () => {
+        const onApply = renderFilters();
+
+        chooseLevel("sensitive");
+        chooseLevel("__all__");
+        apply();
+
+        await waitFor(() => expect(onApply).toHaveBeenCalledWith({}));
     });
 
     it("leaves an empty date out of the query instead of sending a blank", async () => {
@@ -232,6 +297,21 @@ describe("AuditFilters clearing", () => {
         );
 
         expect(onApply).toHaveBeenLastCalledWith({});
+    });
+
+    it("puts the level back to all levels", async () => {
+        renderFilters();
+        chooseLevel("info");
+
+        fireEvent.click(
+            screen.getByRole("button", { name: filtersCopy.clear })
+        );
+
+        await waitFor(() =>
+            expect(
+                (screen.getByTestId("level-select") as HTMLSelectElement).value
+            ).toBe("__all__")
+        );
     });
 
     it("puts the form back to the leading option and empty dates", async () => {
