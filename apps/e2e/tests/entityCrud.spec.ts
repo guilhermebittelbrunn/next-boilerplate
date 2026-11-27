@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { expectAccessible } from "../support/a11y";
 import { LOCALE, ptBr } from "../support/dictionary";
 import { AUTH_STATE } from "../support/paths";
+import { escapeRegExp } from "../support/regExp";
 import { SEEDED_ENTITY_NAME } from "../support/seedAccounts";
 import { APP_URL } from "../support/urls";
 
@@ -12,7 +13,8 @@ const actionMenuCopy = ptBr.components.actionMenu;
 const entityRoutesCopy = ptBr.apps.app.pages.common.routes.platform.entities;
 const listPath = `/${LOCALE}/entities`;
 
-const screenTitled = (label: string) => new RegExp(`^${label} \\| .+`);
+const screenTitled = (label: string) =>
+    new RegExp(`^${escapeRegExp(label)} \\| .+`);
 
 const rowNamed = (page: Page, name: string) =>
     page.getByRole("row").filter({ hasText: name });

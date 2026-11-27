@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { expectAccessible } from "../support/a11y";
 import { LOCALE, ptBr } from "../support/dictionary";
 import { expectPanelNavLink } from "../support/panelNavigation";
+import { escapeRegExp } from "../support/regExp";
 import { SEED_ACCOUNTS } from "../support/seedAccounts";
 import {
     fillSignInForm,
@@ -12,9 +13,6 @@ import { APP_URL } from "../support/urls";
 
 const firebaseErrors = ptBr.packages.auth.provider.firebase.error;
 const commonRoutesCopy = ptBr.apps.app.pages.common.routes;
-
-const escapeRegExp = (text: string) =>
-    text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // The Auth emulator answers a wrong password with INVALID_PASSWORD, while a project with
 // email enumeration protection answers INVALID_LOGIN_CREDENTIALS; the SDK maps them to
@@ -47,7 +45,9 @@ test("an admin signs in and lands on the admin home", async ({ page }) => {
     await expect(
         page.getByRole("heading", {
             level: 1,
-            name: new RegExp(`^${ptBr.apps.app.pages.admin.home.greeting}`),
+            name: new RegExp(
+                `^${escapeRegExp(ptBr.apps.app.pages.admin.home.greeting)}`
+            ),
         })
     ).toBeVisible();
 });

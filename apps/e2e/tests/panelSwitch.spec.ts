@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { expectAccessible } from "../support/a11y";
 import { LOCALE, ptBr } from "../support/dictionary";
 import { AUTH_STATE } from "../support/paths";
+import { escapeRegExp } from "../support/regExp";
 import { APP_URL } from "../support/urls";
 
 const navbarCopy = ptBr.apps.app.pages.navbar;
@@ -17,7 +18,9 @@ test.describe("as an admin", () => {
         await expect(
             page.getByRole("heading", {
                 level: 1,
-                name: new RegExp(`^${ptBr.apps.app.pages.admin.home.greeting}`),
+                name: new RegExp(
+                    `^${escapeRegExp(ptBr.apps.app.pages.admin.home.greeting)}`
+                ),
             })
         ).toBeVisible();
         await expectAccessible(page, testInfo, { route: adminPath });
