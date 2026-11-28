@@ -268,6 +268,79 @@ describe("ActionsMenu delete confirmation", () => {
         );
     });
 
+    it("absorbs a rejected onDelete, leaves the busy state, closes and returns focus to the trigger", async () => {
+        const unhandled = vi.fn();
+        process.on("unhandledRejection", unhandled);
+        let rejectDelete: ((reason: Error) => void) | undefined;
+        const onDelete = vi.fn(
+            () =>
+                new Promise<void>((_, reject) => {
+                    rejectDelete = reject;
+                })
+        );
+        try {
+            render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
+
+            const trigger = await openConfirmationFromKeyboard();
+            const confirmButton = getDialogButton(
+                actionMenuCopy.deleteConfirmOk
+            );
+            act(() => {
+                fireEvent.click(confirmButton);
+            });
+            await waitFor(() =>
+                expect(confirmButton.getAttribute("aria-busy")).toBe("true")
+            );
+
+            await act(async () => {
+                rejectDelete?.(new Error("delete failed"));
+                await Promise.resolve();
+            });
+
+            await waitFor(() =>
+                expect(screen.queryByRole("alertdialog")).toBeNull()
+            );
+            expect(confirmButton.getAttribute("aria-busy")).not.toBe("true");
+            await waitFor(() => expect(document.activeElement).toBe(trigger));
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(unhandled).not.toHaveBeenCalled();
+            expect(onDelete).toHaveBeenCalledTimes(1);
+        } finally {
+            process.off("unhandledRejection", unhandled);
+        }
+    });
+
+    it("absorbs an onDelete that throws synchronously, closes and returns focus to the trigger", async () => {
+        const unhandled = vi.fn();
+        process.on("unhandledRejection", unhandled);
+        const onDelete = vi.fn(() => {
+            throw new Error("delete failed");
+        });
+        try {
+            render(<ActionsMenu onDelete={onDelete} onEdit={vi.fn()} />);
+
+            const trigger = await openConfirmationFromKeyboard();
+            const confirmButton = getDialogButton(
+                actionMenuCopy.deleteConfirmOk
+            );
+            await act(async () => {
+                fireEvent.click(confirmButton);
+                await Promise.resolve();
+            });
+
+            await waitFor(() =>
+                expect(screen.queryByRole("alertdialog")).toBeNull()
+            );
+            expect(confirmButton.getAttribute("aria-busy")).not.toBe("true");
+            await waitFor(() => expect(document.activeElement).toBe(trigger));
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(unhandled).not.toHaveBeenCalled();
+            expect(onDelete).toHaveBeenCalledTimes(1);
+        } finally {
+            process.off("unhandledRejection", unhandled);
+        }
+    });
+
     it("uses the custom delete labels", async () => {
         const onDelete = vi.fn();
         render(

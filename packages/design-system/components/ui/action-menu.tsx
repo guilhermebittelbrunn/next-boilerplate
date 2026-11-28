@@ -78,6 +78,8 @@ export function ActionsMenu({
         setDeleting(true);
         try {
             await onDelete?.();
+        } catch {
+            // Reporting the failure is the caller's job; the menu only has to leave the busy state.
         } finally {
             setDeleting(false);
             setConfirmOpen(false);
