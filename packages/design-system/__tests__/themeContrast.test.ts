@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/noMagicNumbers: the OKLab and WCAG coefficients are published constants; naming each entry of a 3x3 matrix would hide the reference they are checked against. */
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { themeColor } from "@repo/design-system/lib/themeColor";
 import { describe, expect, it } from "vitest";
 
 const WCAG_AA_TEXT = 4.5;
@@ -215,6 +216,36 @@ describe("tonal badges", () => {
             expect(
                 (lighter + LUMINANCE_FLARE) / (darker + LUMINANCE_FLARE)
             ).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+        }
+    );
+});
+
+const CHANNEL_MAX = 255;
+const HEX_RADIX = 16;
+
+function toHex(linear: Rgb): string {
+    return `#${linear
+        .map((channel) =>
+            Math.round(encodeSrgb(channel) * CHANNEL_MAX)
+                .toString(HEX_RADIX)
+                .padStart(2, "0")
+        )
+        .join("")}`;
+}
+
+describe("theme-color", () => {
+    it.each([
+        ["light", "(prefers-color-scheme: light)"],
+        ["dark", "(prefers-color-scheme: dark)"],
+    ] as const)(
+        "%s: the hex published as theme-color is --background",
+        (theme, media) => {
+            const published = themeColor.find((entry) => entry.media === media);
+            const background = toHex(
+                oklchToLinearRgb(themes[theme].get("background") ?? "")
+            );
+
+            expect(published?.color).toBe(background);
         }
     );
 });
