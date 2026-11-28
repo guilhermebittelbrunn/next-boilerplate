@@ -210,7 +210,9 @@ O contrato não muda; a marca sim. Em ordem:
 4. Fonte própria só com licença. Troque em `packages/design-system/lib/fonts.ts`; o resto do sistema
    lê `--font-sans` e `--font-mono`.
 5. Rode `pnpm --filter @repo/design-system test` (contraste) e espelhe as cores em
-   `packages/email/brand.ts`, que precisa de hex.
+   `packages/email/brand.ts`, que precisa de hex. Se mexer em `--background`, atualize também o hex dos
+   dois temas em `packages/design-system/lib/themeColor.ts` (a cor da barra do navegador móvel); o mesmo
+   teste falha enquanto os dois não baterem.
 
 O passo a passo completo do fork, com ícones e variáveis de ambiente, está em
 [`FORKING.md`](FORKING.md#3-identidade-do-produto).
