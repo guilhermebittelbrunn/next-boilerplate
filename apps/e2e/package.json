@@ -12,8 +12,8 @@
     "clean": "git clean -xdf .turbo node_modules playwright-report test-results blob-report .auth showcase-results lighthouse-results"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.13.0",
-    "@playwright/test": "1.63.0",
+    "@axe-core/playwright": "4.14.1",
+    "@playwright/test": "1.65.1",
     "@repo/internationalization": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^24.9.1",
