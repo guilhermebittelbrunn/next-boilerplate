@@ -11,8 +11,10 @@ import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Sonner only styles "light" and "dark"; the resolved theme is never the literal "system".
-  const { resolvedTheme } = useTheme();
+  // next-themes keeps the stored preference in resolvedTheme even when a page forces a theme,
+  // and Sonner only styles "light" and "dark".
+  const { forcedTheme, resolvedTheme } = useTheme();
+  const activeTheme = forcedTheme ?? resolvedTheme;
 
   return (
     <Sonner
@@ -34,7 +36,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }
-      theme={resolvedTheme === "dark" ? "dark" : "light"}
+      theme={activeTheme === "dark" ? "dark" : "light"}
       toastOptions={{
         classNames: {
           toast: "!shadow-popover !gap-2.5 font-sans",
