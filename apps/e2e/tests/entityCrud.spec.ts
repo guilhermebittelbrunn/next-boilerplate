@@ -73,6 +73,10 @@ test("creates, edits and deletes an entity", async ({ page }, testInfo) => {
     const editedRow = rowNamed(page, editedName);
     await expect(editedRow).toBeVisible();
 
+    const editedRowIndex = await editedRow.evaluate((row) =>
+        Array.from(row.parentElement?.children ?? []).indexOf(row)
+    );
+
     await openRowActions(editedRow);
     await page.getByRole("menuitem", { name: actionMenuCopy.delete }).click();
     await page
@@ -81,4 +85,15 @@ test("creates, edits and deletes an entity", async ({ page }, testInfo) => {
 
     await expect(editedRow).toHaveCount(0);
     await expect(rowNamed(page, SEEDED_ENTITY_NAME)).toBeVisible();
+
+    const remainingRows = page.locator("tbody > tr");
+    const neighbourIndex = Math.min(
+        editedRowIndex,
+        (await remainingRows.count()) - 1
+    );
+    await expect(
+        remainingRows
+            .nth(neighbourIndex)
+            .getByRole("button", { name: actionMenuCopy.trigger })
+    ).toBeFocused();
 });
