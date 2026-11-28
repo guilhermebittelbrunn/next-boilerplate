@@ -17,6 +17,8 @@ const ROWS_ON_LAST_PAGE = 5;
 const SKELETON_ROWS = 5;
 const FEW_ROWS = 4;
 const ROWS_ALREADY_LOADED = 3;
+const ROWS_UNDER_LARGER_SIZE = 15;
+const ROWS_UNDER_SMALLEST_SIZE = 8;
 
 function buildRows(count: number): Row[] {
     return Array.from({ length: count }, (_, index) => ({
@@ -209,6 +211,51 @@ describe("paginação da Table", () => {
         expect(
             screen.queryByRole("button", { name: tableCopy.nextPage })
         ).toBeNull();
+    });
+
+    it("mantém o seletor quando o tamanho escolhido põe tudo numa página e um tamanho menor ainda pagina", () => {
+        renderTable({
+            dataSource: buildRows(ROWS_UNDER_LARGER_SIZE),
+            pagination: { hideOnSinglePage: true, showSizeChanger: true },
+        });
+        expect(screen.getByText(pageStatus(1, 2))).toBeTruthy();
+
+        fireEvent.change(screen.getByRole("combobox"), {
+            target: { value: String(LARGER_PAGE_SIZE) },
+        });
+
+        expect(bodyRows()).toHaveLength(ROWS_UNDER_LARGER_SIZE);
+        expect(screen.getByText(pageStatus(1, 1))).toBeTruthy();
+        const sizeSelect = screen.getByRole("combobox") as HTMLSelectElement;
+        expect(sizeSelect.value).toBe(String(LARGER_PAGE_SIZE));
+
+        fireEvent.change(sizeSelect, {
+            target: { value: String(DEFAULT_PAGE_SIZE) },
+        });
+
+        expect(bodyRows()).toHaveLength(DEFAULT_PAGE_SIZE);
+        expect(screen.getByText(pageStatus(1, 2))).toBeTruthy();
+    });
+
+    it("esconde o paginador com seletor quando tudo cabe no menor tamanho oferecido", () => {
+        renderTable({
+            dataSource: buildRows(ROWS_UNDER_SMALLEST_SIZE),
+            pagination: { hideOnSinglePage: true, showSizeChanger: true },
+        });
+
+        expect(bodyRows()).toHaveLength(ROWS_UNDER_SMALLEST_SIZE);
+        expect(screen.queryByRole("combobox")).toBeNull();
+        expect(screen.queryByText(pageStatus(1, 1))).toBeNull();
+    });
+
+    it("esconde o paginador sem seletor quando o pageSize configurado põe tudo numa página", () => {
+        renderTable({
+            dataSource: buildRows(ROWS_UNDER_LARGER_SIZE),
+            pagination: { hideOnSinglePage: true, pageSize: LARGER_PAGE_SIZE },
+        });
+
+        expect(bodyRows()).toHaveLength(ROWS_UNDER_LARGER_SIZE);
+        expect(screen.queryByText(pageStatus(1, 1))).toBeNull();
     });
 
     it("mantém o paginador de página única sem hideOnSinglePage", () => {

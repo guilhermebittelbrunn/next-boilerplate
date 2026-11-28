@@ -182,14 +182,22 @@ export function Table<T extends Record<string, unknown>>({
     ? tableCopy.searchPendingPages
     : locale?.emptyText;
 
+  const pageSizeOptions =
+    pageConfig?.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
+  const singlePageLimit = pageConfig?.showSizeChanger
+    ? Math.min(configuredPageSize, ...pageSizeOptions)
+    : pageSize;
   const showPager =
     pageConfig !== null &&
     filteredRows.length > 0 &&
-    !(pageConfig.hideOnSinglePage && pageCount === 1);
+    !(pageConfig.hideOnSinglePage && filteredRows.length <= singlePageLimit);
   const showSkeleton = Boolean(loading) && filteredRows.length === 0;
 
   return (
-    <div className={cn("flex w-full flex-col gap-3", className)}>
+    <div
+      className={cn("flex w-full flex-col gap-3", className)}
+      data-slot="table-root"
+    >
       {showToolbar ? (
         <div
           className={cn(
@@ -349,13 +357,11 @@ export function Table<T extends Record<string, unknown>>({
                 size="sm"
                 value={pageSize}
               >
-                {(pageConfig.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS).map(
-                  (option) => (
-                    <NativeSelectOption key={option} value={option}>
-                      {option}
-                    </NativeSelectOption>
-                  )
-                )}
+                {pageSizeOptions.map((option) => (
+                  <NativeSelectOption key={option} value={option}>
+                    {option}
+                  </NativeSelectOption>
+                ))}
               </NativeSelect>
             </label>
           ) : (
