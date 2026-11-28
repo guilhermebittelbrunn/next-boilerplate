@@ -3,9 +3,11 @@ import "./styles.css";
 import { AnalyticsProvider } from "@repo/analytics/provider";
 import { resolveConsentBootstrap } from "@repo/analytics/server";
 import { fonts } from "@repo/design-system/lib/fonts";
+import { themeColor } from "@repo/design-system/lib/themeColor";
 import { cn } from "@repo/design-system/lib/utils";
 import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
+import type { Viewport } from "next";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { getAppSessionUser } from "@/lib/server/authSession";
@@ -20,6 +22,8 @@ import ClientLayout from "./[locale]/clientLayout";
 type RootLayoutProps = {
     readonly children: ReactNode;
 };
+
+export const viewport: Viewport = { themeColor };
 
 const THEME_COOKIE = "x-theme";
 const themeClassNames = ["light", "dark"];
