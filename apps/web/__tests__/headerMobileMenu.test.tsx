@@ -5,16 +5,22 @@ import {
     fireEvent,
     render,
     screen,
+    waitFor,
     within,
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { envMock } = vi.hoisted(() => ({
+const { envMock, setThemeMock } = vi.hoisted(() => ({
     envMock: {
         NEXT_PUBLIC_APP_URL: undefined as string | undefined,
         NEXT_PUBLIC_DOCS_URL: undefined as string | undefined,
     },
+    setThemeMock: vi.fn(),
+}));
+
+vi.mock("next-themes", () => ({
+    useTheme: () => ({ setTheme: setThemeMock }),
 }));
 
 vi.mock("@repo/auth/provider", () => ({
@@ -59,6 +65,9 @@ const { LocaleProvider } = await import("@repo/internationalization/client");
 const { Header } = await import("@/app/[locale]/components/header");
 
 const headerCopy = globalTranslations["pt-br"].components.header;
+const languageSwitcherCopy =
+    globalTranslations["pt-br"].components.languageSwitcher;
+const modeToggleCopy = globalTranslations["pt-br"].components.modeToggle;
 const DOCS_URL = "https://docs.example.com";
 
 function renderHeader() {
@@ -84,6 +93,7 @@ function preventNavigation(event: Event) {
 
 beforeEach(() => {
     envMock.NEXT_PUBLIC_DOCS_URL = undefined;
+    setThemeMock.mockClear();
     document.addEventListener("click", preventNavigation);
     globalThis.ResizeObserver ??= class {
         observe() {
@@ -170,6 +180,138 @@ describe("menu mobile do header da web", () => {
                 name: headerCopy.contact,
             })
         ).toBeNull();
+    });
+});
+
+/** A real tap sends `pointerdown` before the `click` that toggles the panel. */
+function tapMenuButton(menuButton: HTMLElement) {
+    fireEvent.pointerDown(menuButton, { button: 0 });
+    fireEvent.click(menuButton);
+    return menuButton.getAttribute("aria-expanded");
+}
+
+describe("menu mobile do header da web com clique fora", () => {
+    it("fecha ao tocar fora do painel, mesmo com o toque que abriu o menu vindo antes", () => {
+        const menuButton = renderHeader();
+        expect(tapMenuButton(menuButton)).toBe("true");
+
+        fireEvent.pointerDown(document.body, { button: 0 });
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+        expect(
+            within(menuArea(menuButton)).queryByRole("link", {
+                name: headerCopy.contact,
+            })
+        ).toBeNull();
+    });
+
+    it("continua aberto ao tocar num link do painel", () => {
+        const menuButton = renderHeader();
+        expect(tapMenuButton(menuButton)).toBe("true");
+
+        fireEvent.pointerDown(
+            within(menuArea(menuButton)).getByRole("link", {
+                name: headerCopy.contact,
+            }),
+            { button: 0 }
+        );
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("continua aberto ao tocar num idioma do seletor, que é renderizado num portal", async () => {
+        const menuButton = renderHeader();
+        expect(tapMenuButton(menuButton)).toBe("true");
+
+        const languageTrigger = within(menuArea(menuButton)).getByRole(
+            "button",
+            { name: languageSwitcherCopy.trigger }
+        );
+        fireEvent.pointerDown(languageTrigger, { button: 0, ctrlKey: false });
+        const englishItem = (await screen.findByText("English")).closest(
+            '[role="menuitem"]'
+        );
+        if (!englishItem) {
+            throw new Error("language option rendered without a menu item");
+        }
+        expect(menuArea(menuButton).contains(englishItem)).toBe(false);
+
+        fireEvent.pointerDown(englishItem, { button: 0 });
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("fecha ao tocar fora depois de fechar e reabrir pelo botão", () => {
+        const menuButton = renderHeader();
+        expect(tapMenuButton(menuButton)).toBe("true");
+        expect(tapMenuButton(menuButton)).toBe("false");
+
+        expect(tapMenuButton(menuButton)).toBe("true");
+        fireEvent.pointerDown(document.body, { button: 0 });
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+    });
+});
+
+async function openPanelPicker(menuButton: HTMLElement, triggerName: string) {
+    fireEvent.pointerDown(
+        within(menuArea(menuButton)).getByRole("button", {
+            name: triggerName,
+        }),
+        { button: 0, ctrlKey: false }
+    );
+    return await screen.findByRole("menu");
+}
+
+async function findPickerItem(label: string) {
+    const item = (await screen.findByText(label)).closest('[role="menuitem"]');
+    if (!item) {
+        throw new Error(
+            `picker option "${label}" rendered without a menu item`
+        );
+    }
+    return item as HTMLElement;
+}
+
+describe("menu mobile do header da web com toque e seletores", () => {
+    it("fecha no primeiro contato de um toque fora, sem esperar o click", () => {
+        const menuButton = renderHeader();
+        expect(tapMenuButton(menuButton)).toBe("true");
+
+        fireEvent.pointerDown(document.body, {
+            button: 0,
+            pointerType: "touch",
+        });
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+    });
+
+    it("continua aberto ao escolher um tema no seletor do painel, que é renderizado num portal", async () => {
+        const menuButton = renderHeader();
+        expect(tapMenuButton(menuButton)).toBe("true");
+
+        await openPanelPicker(menuButton, modeToggleCopy.trigger);
+        const darkItem = await findPickerItem(modeToggleCopy.dark);
+        expect(menuArea(menuButton).contains(darkItem)).toBe(false);
+
+        fireEvent.pointerDown(darkItem, { button: 0 });
+        expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+
+        fireEvent.click(darkItem);
+        expect(setThemeMock).toHaveBeenCalledWith("dark");
+        expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("fecha o painel e o seletor de idioma juntos ao tocar fora com o seletor aberto", async () => {
+        const menuButton = renderHeader();
+        expect(tapMenuButton(menuButton)).toBe("true");
+        await openPanelPicker(menuButton, languageSwitcherCopy.trigger);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        fireEvent.pointerDown(document.body, { button: 0 });
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+        await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
     });
 });
 

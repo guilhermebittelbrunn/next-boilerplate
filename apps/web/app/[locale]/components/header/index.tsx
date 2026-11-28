@@ -53,6 +53,7 @@ export const Header = () => {
     const { user, signOut, loading } = useAuth();
     const mobileMenuId = useId();
     const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const pointerStartedInsideMenu = useRef(false);
 
     // Cross-app link: in subscription mode an authenticated user can jump to the
     // app panel (the shared session keeps them logged in there). Full-page nav so
@@ -82,14 +83,28 @@ export const Header = () => {
         if (!isOpen) {
             return;
         }
+        pointerStartedInsideMenu.current = false;
         const closeOnEscape = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 setOpen(false);
                 menuButtonRef.current?.focus();
             }
         };
+        // The language and theme pickers render their options in a portal outside this
+        // wrapper, so "inside" follows the React tree (capture handler below), not the DOM.
+        const closeOnPointerOutside = () => {
+            if (pointerStartedInsideMenu.current) {
+                pointerStartedInsideMenu.current = false;
+                return;
+            }
+            setOpen(false);
+        };
         document.addEventListener("keydown", closeOnEscape);
-        return () => document.removeEventListener("keydown", closeOnEscape);
+        document.addEventListener("pointerdown", closeOnPointerOutside);
+        return () => {
+            document.removeEventListener("keydown", closeOnEscape);
+            document.removeEventListener("pointerdown", closeOnPointerOutside);
+        };
     }, [isOpen]);
 
     const signOutOfLanding = () =>
@@ -226,7 +241,12 @@ export const Header = () => {
                     )}
                 </div>
 
-                <div className={cn("flex shrink-0", fullBar.menu)}>
+                <div
+                    className={cn("flex shrink-0", fullBar.menu)}
+                    onPointerDownCapture={() => {
+                        pointerStartedInsideMenu.current = true;
+                    }}
+                >
                     <Button
                         aria-controls={mobileMenuId}
                         aria-expanded={isOpen}
