@@ -5,7 +5,7 @@ import {
     AddButton,
     Table,
 } from "@repo/design-system/components/ui";
-import ResponsiveImage from "@repo/design-system/components/ui/responsive-image";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { getDictionary } from "@repo/internationalization/client";
 import { type EntityDTO, EntityType } from "@repo/sdk/src/types";
@@ -16,6 +16,7 @@ import { Container } from "@/shared/components/ui/Container";
 import { Header } from "@/shared/components/ui/Header";
 import { ImpersonationReadOnlyNotice } from "@/shared/components/ui/ImpersonationReadOnlyNotice";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { RecordAvatar } from "@/shared/components/ui/RecordAvatar";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { COMMON_ROUTES } from "../../../../paths";
@@ -58,38 +59,49 @@ export function EntitiesListClient() {
 
     const columns = [
         {
-            title: entitiesList.columns.photo,
+            title: (
+                <span className="sr-only">{entitiesList.columns.photo}</span>
+            ),
             dataIndex: "photoUrl",
-            render: (value: string | null | undefined, record: EntityDTO) =>
-                value ? (
-                    <ResponsiveImage
-                        alt={record.name}
-                        className="rounded-full"
-                        height={44}
-                        src={value}
-                        unoptimized
-                        width={44}
-                    />
-                ) : (
-                    <span className="text-muted-foreground">—</span>
-                ),
+            className: "w-14 pr-0",
+            render: (value: string | null | undefined, record: EntityDTO) => (
+                <RecordAvatar name={record.name} src={value} unoptimized />
+            ),
         },
         {
             title: entitiesList.columns.name,
             dataIndex: "name",
-            render: (value: string) => (
-                <span className="font-medium">{value}</span>
+            render: (value: string, record: EntityDTO) => (
+                <div className="flex min-w-48 max-w-md flex-col">
+                    <span className="font-medium [overflow-wrap:anywhere]">
+                        {value}
+                    </span>
+                    {record.description ? (
+                        <span
+                            className="truncate text-muted-foreground text-xs"
+                            title={record.description}
+                        >
+                            {record.description}
+                        </span>
+                    ) : null}
+                </div>
             ),
         },
         {
             title: entitiesList.columns.type,
             dataIndex: "type",
-            render: (value: EntityType) => typeLabel(value),
+            render: (value: EntityType) => (
+                <Badge variant="secondary">{typeLabel(value)}</Badge>
+            ),
         },
         {
             title: entitiesList.columns.createdAt,
             dataIndex: "createdAt",
-            render: (value: string) => formatDateTime(value),
+            render: (value: string) => (
+                <span className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTime(value)}
+                </span>
+            ),
         },
         {
             title: entitiesList.columns.enabled,
@@ -123,9 +135,12 @@ export function EntitiesListClient() {
             ),
         },
         {
-            title: entitiesList.columns.actions,
+            title: (
+                <span className="sr-only">{entitiesList.columns.actions}</span>
+            ),
             dataIndex: "actions",
-            align: "center" as const,
+            align: "right" as const,
+            className: "w-16",
             render: (_: unknown, record: EntityDTO) => (
                 <ActionsMenu
                     onDelete={
@@ -166,7 +181,7 @@ export function EntitiesListClient() {
                 loadError={listLoadError}
                 loading={isLoading}
             >
-                <div className="mx-auto flex w-full flex-col gap-6">
+                <div className="flex w-full flex-col gap-6">
                     <ImpersonationReadOnlyNotice />
                     <Table<EntityDTO>
                         columns={columns}

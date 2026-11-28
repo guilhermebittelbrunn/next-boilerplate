@@ -1,8 +1,14 @@
 import { Table } from "@repo/design-system/components/ui/table";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// jsdom ships without matchMedia, and the antd table subscribes to it on mount.
+// jsdom ships without matchMedia, which the responsive hooks of the panel read on mount.
 window.matchMedia = ((query: string) => ({
     matches: false,
     media: query,
@@ -24,6 +30,7 @@ const ROWS: Row[] = [
 const CALLER_EMPTY_TEXT = "Nenhuma entidade cadastrada.";
 const PENDING_PAGES_TEXT =
     "Nada encontrado no que já foi carregado. Carregue mais para continuar a busca.";
+const CLEAR_SEARCH_LABEL = "Limpar busca";
 
 function renderTable(props: Partial<Parameters<typeof Table<Row>>[0]> = {}) {
     return render(
@@ -43,6 +50,12 @@ function typeInSearch(value: string) {
     fireEvent.change(field, { target: { value } });
 }
 
+function emptyStateClearButton() {
+    return within(screen.getByRole("table")).queryByRole("button", {
+        name: CLEAR_SEARCH_LABEL,
+    });
+}
+
 function loadMoreButton() {
     return screen.queryByRole("button", { name: "Carregar mais" });
 }
@@ -57,15 +70,21 @@ describe("Table com paginação por cursor", () => {
 
         expect(screen.getByText(PENDING_PAGES_TEXT)).toBeTruthy();
         expect(screen.queryByText(CALLER_EMPTY_TEXT)).toBeNull();
+        expect(emptyStateClearButton()).toBeTruthy();
+        expect(loadMoreButton()).toBeTruthy();
     });
 
-    it("mantém o texto de vazio do chamador quando não há mais páginas para carregar", () => {
+    it("diz que a busca não achou o termo quando não há mais páginas para carregar", () => {
         renderTable({ hasMore: false, onLoadMore: vi.fn() });
 
         typeInSearch("registro inexistente");
 
-        expect(screen.getByText(CALLER_EMPTY_TEXT)).toBeTruthy();
+        expect(
+            screen.getByText("Nenhum resultado para “registro inexistente”.")
+        ).toBeTruthy();
+        expect(screen.queryByText(CALLER_EMPTY_TEXT)).toBeNull();
         expect(screen.queryByText(PENDING_PAGES_TEXT)).toBeNull();
+        expect(emptyStateClearButton()).toBeTruthy();
     });
 
     it("mantém o texto de vazio do chamador quando a lista está vazia sem busca ativa", () => {

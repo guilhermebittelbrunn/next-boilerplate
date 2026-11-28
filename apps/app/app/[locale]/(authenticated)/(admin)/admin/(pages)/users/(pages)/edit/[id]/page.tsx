@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { Container } from "@/shared/components/ui/Container";
 import { Footer } from "@/shared/components/ui/Footer";
 import { FormContainer } from "@/shared/components/ui/FormContainer";
+import { FormSurface } from "@/shared/components/ui/FormSurface";
 import { Header } from "@/shared/components/ui/Header";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ADMIN_ROUTES } from "../../../../../paths";
@@ -93,18 +94,19 @@ export default function EditUserPage() {
                 {user ? (
                     <Form {...form}>
                         <form
-                            className="flex w-full flex-col"
+                            className="flex w-full flex-col gap-4"
                             onSubmit={form.handleSubmit(onSubmit)}
                         >
-                            <Container className="p-0">
+                            <FormSurface>
                                 <FormContainer>
                                     <UserFormFields
                                         lockType={isOwnAccount}
                                         mode="update"
                                     />
                                 </FormContainer>
-                            </Container>
+                            </FormSurface>
                             <Footer
+                                className="mt-2"
                                 confirmLabel={adminUsersForm.save}
                                 disabled={updateUserMutation.isPending || !user}
                                 isLoading={updateUserMutation.isPending}

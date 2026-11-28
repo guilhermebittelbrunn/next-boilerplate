@@ -63,6 +63,7 @@ test.describe("as a common user", () => {
             ready: (page) =>
                 page.getByRole("link", {
                     name: appCopy.common.routes.platform.entities.list,
+                    exact: true,
                 }),
         },
         {

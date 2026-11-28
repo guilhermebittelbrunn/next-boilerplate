@@ -42,8 +42,9 @@ export function OrganizationClient() {
                 }
                 loadError={loadError}
                 loading={isLoading}
+                width="narrow"
             >
-                <div className="mx-auto flex w-full flex-col gap-6">
+                <div className="flex w-full flex-col gap-6">
                     <ImpersonationReadOnlyNotice />
                     {isOwner ? <InviteMemberForm /> : null}
                     <OrganizationMembersTable isOwner={isOwner} />

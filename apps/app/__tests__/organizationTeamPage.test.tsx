@@ -82,7 +82,7 @@ vi.mock(
 );
 
 /**
- * Stand-ins for the antd-backed primitives: `Table` runs the column renderers per row and
+ * Stand-ins for the design-system primitives: `Table` runs the column renderers per row and
  * shows `emptyText` when there is none, and `ActionsMenu` exposes each action as a button,
  * only when its handler was provided, as the shared component does.
  */

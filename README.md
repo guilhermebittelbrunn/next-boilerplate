@@ -121,7 +121,7 @@ eles.
 
 ### 🌐 `apps/web` · landing e captação
 
-- Home com hero, números, funcionalidades, cases, depoimentos, FAQ e chamada para ação
+- Home com hero dividido (texto e recorte do painel), passos de uso, o que cada fork herda, os gates de qualidade, FAQ e chamada para ação. Sem números, logos de cliente nem depoimentos inventados: o fork acrescenta quando tiver os reais
 - Página de preços montada a partir do catálogo da Stripe 🔌
 - Formulário de contato que entrega na caixa de suporte da marca, pela API
 - Login e cadastro na própria landing
@@ -226,7 +226,7 @@ durante o desenvolvimento.
 |--------|---------|
 | 📦 Monorepo | Turborepo + pnpm `10.19.0`, Node `22.12.0` (`.nvmrc`) |
 | ⚛️ Front e API | Next.js 16 (App Router), React 19, Server Components por padrão |
-| 🎨 UI | Tailwind CSS 4, shadcn/ui, tema por tokens CSS |
+| 🎨 UI | Tailwind CSS 4, shadcn/ui sobre Radix, Sonner, tema por tokens CSS; contrato em [`docs/DESIGN.md`](docs/DESIGN.md) |
 | 📝 Formulários e dados | react-hook-form + Zod, TanStack Query, axios (dentro do `@repo/sdk`) |
 | 🔐 Autenticação | Firebase Auth, session cookie compartilhado entre `web` e `app` |
 | 🗄️ Banco | Firestore, acessado só pela API via Admin SDK |
@@ -478,7 +478,9 @@ Cada etapa tem um subagent e deixa um artefato em `docs/features/<slug>/`. O `/c
 sem parar para perguntar, mas nunca commita. O `/kickoff` começa um fork a partir do que o
 [`pnpm kickoff`](#-kickoff-de-um-fork) salvou. O `/deliver` roda a [etapa de entrega](docs/delivery/README.md)
 e a skill `brag-slim` (baixada de [latent-spaces/brag](https://github.com/latent-spaces/brag), licença MIT)
-gera o vídeo de demonstração. Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e
+gera o vídeo de demonstração. As telas seguem o contrato de [`docs/DESIGN.md`](docs/DESIGN.md), montado a
+partir de seis skills de design versionadas no repo (ThinkUI, Uizze, Taste Skill, Emil Kowalski, Web
+Interface Guidelines da Vercel e Founder Skill). Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e
 [`docs/TASK-PIPELINE.md`](docs/TASK-PIPELINE.md). O que ainda falta no core está em
 [`specs/BACKLOG.md`](specs/BACKLOG.md).
 
@@ -489,6 +491,7 @@ gera o vídeo de demonstração. Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORK
 | | Documento | Assunto |
 |---|-----------|---------|
 | 🚀 | [`docs/FORKING.md`](docs/FORKING.md) | Criar um produto a partir do boilerplate e publicar em produção |
+| 🎨 | [`docs/DESIGN.md`](docs/DESIGN.md) | Contrato de interface: skills de design, tokens, movimento, estados e o gate de cada tela |
 | 🚚 | [`docs/delivery/README.md`](docs/delivery/README.md) | Etapa de entrega: as quatro especificações, o relatório e o prompt do Cowork |
 | 📝 | [`docs/templates/README.template.md`](docs/templates/README.template.md) | Modelo de README que todo fork segue |
 | ✅ | [`docs/PRE-PRODUCTION.md`](docs/PRE-PRODUCTION.md) | Checklist dos passos de console, DNS e painel que nenhum teste cobra |

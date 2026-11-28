@@ -5,6 +5,7 @@ import { HookFormInput } from "@repo/design-system/components/form/hookform";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Form } from "@repo/design-system/components/ui/form";
 import { getDictionary } from "@repo/internationalization/client";
+import { MailCheckIcon, MailXIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
@@ -13,7 +14,9 @@ import {
     useEmailLinkAvailability,
     useEmailLinkRequest,
 } from "@/shared/hooks/useEmailLinkSignIn";
+import { AuthActionLink } from "../../../components/AuthActionLink";
 import { AuthCard } from "../../../components/AuthCard";
+import { authTextLinkClassName } from "../../../components/authLink";
 import {
     buildEmailLinkSchema,
     type EmailLinkFormValues,
@@ -51,16 +54,7 @@ export function EmailLinkRequestForm() {
         });
     };
 
-    const backToSignIn = (
-        <div className="text-center text-sm">
-            <Link
-                className="text-primary hover:underline"
-                href={`/${locale}/sign-in`}
-            >
-                {emailLinkCopy.backToSignIn}
-            </Link>
-        </div>
-    );
+    const backToSignInHref = `/${locale}/sign-in`;
 
     if (availability.isPending) {
         return <FullScreenLoader />;
@@ -70,9 +64,13 @@ export function EmailLinkRequestForm() {
         return (
             <AuthCard
                 description={requestCopy.unavailable.description}
+                icon={MailXIcon}
                 title={requestCopy.unavailable.title}
+                tone="warning"
             >
-                {backToSignIn}
+                <AuthActionLink href={backToSignInHref}>
+                    {emailLinkCopy.backToSignIn}
+                </AuthActionLink>
             </AuthCard>
         );
     }
@@ -83,9 +81,12 @@ export function EmailLinkRequestForm() {
         return (
             <AuthCard
                 description={requestCopy.sent.description}
+                icon={MailCheckIcon}
                 title={requestCopy.sent.title}
             >
-                {backToSignIn}
+                <AuthActionLink href={backToSignInHref} variant="outline">
+                    {emailLinkCopy.backToSignIn}
+                </AuthActionLink>
             </AuthCard>
         );
     }
@@ -93,33 +94,39 @@ export function EmailLinkRequestForm() {
     return (
         <AuthCard
             description={requestCopy.description}
+            footer={
+                <Link className={authTextLinkClassName} href={backToSignInHref}>
+                    {emailLinkCopy.backToSignIn}
+                </Link>
+            }
             title={requestCopy.title}
         >
             <Form {...form}>
                 <form
-                    className="space-y-4"
+                    className="flex flex-col gap-4"
                     noValidate
                     onSubmit={form.handleSubmit(submitRequest)}
                 >
                     <HookFormInput
+                        autoComplete="email"
                         label={requestCopy.form.email}
                         name="email"
                         placeholder={requestCopy.form.emailPlaceholder}
+                        spellCheck={false}
                         type="email"
                     />
 
                     <Button
-                        className="w-full"
+                        className="mt-2 w-full"
                         disabled={requestLink.isPending}
                         loading={requestLink.isPending}
+                        size="lg"
                         type="submit"
                     >
                         {requestCopy.form.submit}
                     </Button>
                 </form>
             </Form>
-
-            {backToSignIn}
         </AuthCard>
     );
 }

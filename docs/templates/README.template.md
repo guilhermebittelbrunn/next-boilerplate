@@ -143,6 +143,7 @@ packages/
 |--------|---------|
 | 📦 Monorepo | Turborepo + pnpm `10.19.0`, Node `22.12.0` |
 | ⚛️ Front e API | Next.js 16 (App Router), React 19 |
+| 🎨 Interface | Tailwind v4, shadcn/ui sobre Radix, Sonner, recharts; contrato visual em [`docs/DESIGN.md`](docs/DESIGN.md) |
 | 🔐 Autenticação | Firebase Auth, sessão compartilhada entre `web` e `app` |
 | 🗄️ Banco | Firestore, acessado só pela API |
 | {{Emoji}} {{Camada que o produto acrescentou}} | {{Escolha e por quê, em poucas palavras}} |
@@ -229,7 +230,9 @@ O produto passou pela [etapa de entrega](docs/delivery/README.md) antes de ir pa
 As regras do core valem para o produto: [`AGENTS.md`](AGENTS.md), os `CLAUDE.md` de cada pasta e o
 [checklist de revisão](docs/review-checklist.md). Em resumo: o front só fala com a API pelo `@repo/sdk`,
 nenhum texto de UI fica fora do dicionário, erro de API é um código, autorização sempre na API e
-validação com Zod na borda.
+validação com Zod na borda. A interface segue o contrato de [`docs/DESIGN.md`](docs/DESIGN.md): um acento
+só, tokens em vez de valor solto, estados vazio/carregando/erro em toda tela com dados e o gate de 6
+perguntas antes de dar uma tela como pronta.
 
 <!-- Acrescente as regras específicas do produto, se houver (por exemplo, um domínio com regra fiscal). -->
 
@@ -263,6 +266,7 @@ Comece por [`docs/AI-WORKFLOW.md`](docs/AI-WORKFLOW.md) e [`docs/TASK-PIPELINE.m
 |---|-----------|---------|
 | ✅ | [`docs/delivery/README.md`](docs/delivery/README.md) | Etapa de entrega e relatórios |
 | 🚀 | [`docs/FORKING.md`](docs/FORKING.md) | Como o produto foi criado a partir do boilerplate |
+| 🎨 | [`docs/DESIGN.md`](docs/DESIGN.md) | Contrato de interface: tokens, movimento, estados e o gate de cada tela |
 | 🧯 | [`docs/PRE-PRODUCTION.md`](docs/PRE-PRODUCTION.md) | Passos de console, DNS e painel |
 | 🔒 | [`docs/SECURITY.md`](docs/SECURITY.md) | Modelo de segurança |
 | {{Emoji}} | {{Documento próprio do produto}} | {{Assunto}} |

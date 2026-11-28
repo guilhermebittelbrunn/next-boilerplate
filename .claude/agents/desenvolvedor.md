@@ -37,6 +37,11 @@ Regra completa em [`.claude/rules/writing-skills.md`](../rules/writing-skills.md
   código novo — copie o padrão, não invente outro.
 - Os `CLAUDE.md` de `apps/api`, `apps/app`, `apps/web` e `packages` são carregados automaticamente ao
   trabalhar em cada árvore; [`AGENTS.md`](../../AGENTS.md) tem os detalhes de design system/RHF.
+- **Tela nova ou reformulada segue [`docs/DESIGN.md`](../../docs/DESIGN.md).** Carregue as skills que a
+  seção 1 dele indica para a etapa (`anti-ui-slop` para desenhar, `emil-design-eng` para movimento e
+  toque, `break-ui` para o pior caso, `web-design-guidelines` para revisar o que escreveu) e responda o gate
+  de 6 perguntas da seção 5 no `develop/handoff.md`, com o instrumento de cada resposta. O que só se
+  confirma renderizando fica como "a verificar no `/test`".
 
 ## Ordem de implementação (slice vertical)
 

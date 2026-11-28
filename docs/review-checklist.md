@@ -155,6 +155,30 @@ responsabilidade da revisão e do deploy da Vercel.
 - [ ] Variável do dicionário com nome descritivo (`entitiesList`, `entityMessages`) — **nunca** `t`/`d`.
 - [ ] Locale via `getDictionary()` ou `getDictionaryForLocale(locale)` quando a rota já dá o `[locale]`.
 
+## 5.1 Interface e movimento
+
+Vale para diff em `apps/app`, `apps/web` e `packages/design-system`. A fonte é
+[`DESIGN.md`](DESIGN.md); rode a skill `web-design-guidelines` nos arquivos de UI tocados e traga os
+achados para cá.
+
+- [ ] Cor, raio, sombra e curva por token (`bg-card`, `shadow-card`, `ease-out`, `--duration-*`). Valor
+      solto (`#2563eb`, `rounded-[13px]`, `shadow-[0_2px…]` fora do design system) só com motivo escrito.
+- [ ] Um acento só: nada de violeta, gradiente em texto, brilho neon, segunda cor de marca.
+- [ ] Clicável novo com `pressable` (ou um primitivo que já o tem). Nenhum `transition-all`. Nada
+      anima em ação de teclado nem aparece por scroll.
+- [ ] Superfície flutuante com origem no gatilho e `shadow-popover`; diálogo e sheet com
+      `shadow-overlay`. Sem `scale(0)`.
+- [ ] Foco visível em todo controle (`focus-visible:ring-*`); `outline-none` só com substituto.
+- [ ] Tela com dados cobre carregando (esqueleto com o formato do conteúdo), vazio (o que fazer em
+      seguida), erro (`LoadErrorState`) e excesso (`truncate`/`min-w-0` em nome longo).
+- [ ] Status com texto, não só cor (`Badge` tonal). Números comparáveis com `tabular-nums`.
+- [ ] Toast só por `useAlert()`. Nenhuma lib de UI nova sem passar pela `pick-ui-library`; antd e
+      react-toastify não voltam.
+- [ ] Nada inventado com cara de real: nome de exemplo, número redondo falso, depoimento, logo de
+      cliente.
+- [ ] O handoff responde o gate de 6 perguntas da seção 5 do contrato. Resposta ausente vira 🟡; a
+      parte visual que só se confirma renderizando vai para "Verificar no `/test`".
+
 ## 6. Testes
 
 - [ ] Lógica nova tem teste: schema (com o dicionário real), mapper, helper puro, hook, rota.

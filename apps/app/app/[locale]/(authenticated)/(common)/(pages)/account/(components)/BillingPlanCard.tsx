@@ -17,9 +17,11 @@ import type { PlanDTO } from "@repo/sdk/src/types";
 import { describePlanPrice } from "@repo/shared/utils/helpers/formatPlanPrice";
 import { CheckIcon } from "lucide-react";
 
+export type PlanEmphasis = "chosen" | "muted" | "neutral";
+
 type BillingPlanCardProps = {
     plan: PlanDTO;
-    highlighted?: boolean;
+    emphasis?: PlanEmphasis;
     disabled: boolean;
     loading: boolean;
     onSubscribe: (priceId: string) => void;
@@ -27,7 +29,7 @@ type BillingPlanCardProps = {
 
 export function BillingPlanCard({
     plan,
-    highlighted = false,
+    emphasis = "neutral",
     disabled,
     loading,
     onSubscribe,
@@ -35,13 +37,12 @@ export function BillingPlanCard({
     const { dictionary, locale } = getDictionary();
     const billingCopy = dictionary.apps.app.pages.common.account.billing;
     const priceLabel = describePlanPrice(billingCopy, plan, locale);
+    const highlighted = emphasis === "chosen";
 
     return (
         <Card
-            className={cn(
-                "h-full",
-                highlighted && "border-primary ring-2 ring-primary"
-            )}
+            className={cn("h-full", highlighted && "ring-2 ring-primary")}
+            data-emphasis={emphasis}
         >
             <CardHeader>
                 <CardTitle>{plan.name}</CardTitle>
@@ -54,12 +55,14 @@ export function BillingPlanCard({
                     <CardDescription>{plan.description}</CardDescription>
                 ) : null}
             </CardHeader>
-            <CardContent className="flex flex-1 flex-col gap-3">
+            <CardContent className="flex flex-1 flex-col gap-4">
                 {priceLabel ? (
-                    <p className="font-semibold text-lg">{priceLabel}</p>
+                    <p className="font-semibold text-2xl tabular-nums tracking-tight">
+                        {priceLabel}
+                    </p>
                 ) : null}
                 {plan.features.length > 0 ? (
-                    <ul className="flex flex-col gap-1 text-muted-foreground text-sm">
+                    <ul className="flex flex-col gap-2 text-muted-foreground text-sm">
                         {plan.features.map((feature) => (
                             <li
                                 className="flex items-start gap-2"
@@ -82,6 +85,7 @@ export function BillingPlanCard({
                     loading={loading}
                     onClick={() => onSubscribe(plan.priceId)}
                     type="button"
+                    variant={emphasis === "muted" ? "outline" : "default"}
                 >
                     {billingCopy.subscribe}
                 </Button>

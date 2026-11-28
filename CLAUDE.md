@@ -76,6 +76,7 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 9. **Nomes de arquivo (apps/app)**: módulos de feature em camelCase (`userFormFields.tsx`); componente React exportado em PascalCase. Variáveis de dictionary com nome descritivo (nunca `t`/`d`).
 10. **Mudanças mínimas + Server Components por padrão.** `"use client"` só com estado/eventos/browser API. Não refatore arquivos fora da tarefa. Rode `pnpm check` antes de concluir.
 11. **Quem executa o produto é o QA.** Fluxo que toca UI/layout (`apps/app`, `apps/web`, `packages/design-system`) não está pronto sem ser percorrido com a skill **`agent-browser`** (light + dark + mobile, 3 idiomas) — mas isso acontece **uma vez**, no `/test`, pelo `analista-qa`. O `/develop` faz smoke para se desbloquear; o `/review` lê código e roda os gates estáticos. Nenhum dos dois sobe app, dirige browser ou tira screenshot. O que a revisão não confirma lendo código vira a lista **"Verificar no `/test`"**, e afirmação herdada sem medição própria não conta como aprovada. Divisão e evidência na §7 de [`docs/review-checklist.md`](docs/review-checklist.md). A suíte E2E (`pnpm e2e`, Playwright) roda no CI como rede de regressão dos fluxos críticos e não substitui essa passada: ela confere que o fluxo funciona, não julga tema, responsivo nem layout.
+12. **Interface segue o contrato de [`docs/DESIGN.md`](docs/DESIGN.md).** Um acento só (`--primary`), tokens em vez de valor solto, `pressable` em todo clicável, nada de `transition-all` nem animação em ação de teclado, estados vazio/carregando/erro em toda tela com dados, e o gate de 6 perguntas antes de dizer "pronto". Toast só por `useAlert()` (Sonner); antd não faz mais parte do stack.
 
 **Referência viva**: o CRUD de exemplo `entity` cobre o slice inteiro de ponta a ponta — use como template:
 - API: `apps/api/app/(routes)/entities/`, `apps/api/(shared)/repositories/entity.repository.ts`, `.../mappers/entity.mapper.ts`, `.../validation/entity.schema.ts`
@@ -93,6 +94,7 @@ Node `22.12.0` (ver `.nvmrc`), pnpm `10.19.0`. A API roda webhooks da Stripe loc
 | `apps/web` (landing, SEO) | [`apps/web/CLAUDE.md`](apps/web/CLAUDE.md) |
 | `apps/api` (rotas, guards, repos) | [`apps/api/CLAUDE.md`](apps/api/CLAUDE.md) |
 | `packages/*` | [`packages/CLAUDE.md`](packages/CLAUDE.md) |
+| Layout, visual, movimento de qualquer tela | [`docs/DESIGN.md`](docs/DESIGN.md) (contrato de design: tokens, regras de componente, gate antes de "pronto") |
 | Design system / formulários RHF | seção "Design system — inputs e formulários" em [`AGENTS.md`](AGENTS.md) |
 | Revisar um diff | [`docs/review-checklist.md`](docs/review-checklist.md) (fonte única das invariantes) |
 | Planejar/analisar uma tarefa | [`docs/feature-analysis-guide.md`](docs/feature-analysis-guide.md) |
@@ -168,11 +170,17 @@ os artefatos do fluxo no código) e
 - **`agent-browser`** — automação de browser para **validar layouts e fluxos** (QA/dogfooding). Dono exclusivo é o `analista-qa`, no `/test` (ver regra de ouro 11).
 - **`brag-slim`** — vídeo de demonstração do produto (20 s, trilha própria, `ffmpeg`), baixado de [latent-spaces/brag](https://github.com/latent-spaces/brag) (MIT). Usado na parte 4 do `/deliver`, a partir das telas de `pnpm --filter e2e showcase` (só emulador). Saída em `brag-output/` (ignorado); entregáveis em `apps/web/public/showcase/`.
 - **`vercel-react-best-practices`** — guia de performance React/Next (auto-aciona ao escrever/refatorar componentes, data fetching, bundle).
-- **`frontend-design`** — direção de design visual ao criar/reformular UI (útil principalmente na `apps/web`).
-- **`web-design-guidelines`** — revisão de UI contra guidelines de interface/acessibilidade.
+- **Skills de design** — o mapa de qual usar em cada etapa está na seção 1 de [`docs/DESIGN.md`](docs/DESIGN.md):
+  - `anti-ui-slop` (Uizze) — roteiro para desenhar/redesenhar uma tela: propósito, contrato curto, estados, renderizar e olhar.
+  - `thinkui` + `thinkui-anti-slop` — evidência de telas reais por MCP (pago, opcional) e o gate final de 6 perguntas.
+  - `design-taste-frontend-v1` (Taste Skill) — mostradores de variação/movimento/densidade e a lista de "tells" de IA proibidos. Só por nome (`/design-taste-frontend-v1`).
+  - `emil-design-eng`, `animate`, `choreograph`, `review-animations`, `improve-animations`, `find-animation-opportunities`, `remove-animations`, `animation-performance`, `animation-vocabulary`, `break-ui`, `mobile-native`, `ask-sonner`, `pick-ui-library` (Emil Kowalski) — movimento, toque, polimento, pior caso, escolha de lib.
+  - `web-design-guidelines` (Vercel) — revisão de código de UI contra as Web Interface Guidelines, com as regras versionadas em `references/command.md`.
+  - `founder-*` (11 skills do Founder Skill) — testar a ideia antes de construir: board, concorrentes, painel de compradores, preço, oferta, CFO, marketing, marca, operação, lançamento e plano. Úteis no começo de um fork, junto do `/kickoff`.
+- **`frontend-design`** — direção de design visual ao criar/reformular UI. Onde divergir de `docs/DESIGN.md`, o contrato vence.
 - **`copywriting`** — copy de marketing (landing/CTA da `apps/web`).
 - **`brainstorming`** — explora intenção/requisitos e gera o design **antes** de implementar (gate de aprovação para features/componentes novos).
-- **`ui-ux-pro-max`** — base de design UI/UX (estilos, paletas, tipografia, guidelines) ao criar/refatorar telas.
+- **`ui-ux-pro-max`** — base de design UI/UX (estilos, paletas, tipografia, guidelines) para consulta. Onde divergir de `docs/DESIGN.md`, o contrato vence.
 - **`seo-audit`** — auditoria de SEO técnico/on-page (útil na `apps/web`).
 - **`ai-seo`** — otimização de conteúdo para AI search / citação por LLMs (AEO/GEO), na `apps/web`.
 - Agente **`code-reviewer`** — revisão **read-only** avulsa, afinada às convenções deste repo (peça "revise o diff"). Aplica o mesmo checklist do `revisor-codigo`, mas não edita arquivos, não toca na branch e não executa o produto.

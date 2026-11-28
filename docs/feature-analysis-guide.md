@@ -267,7 +267,7 @@ Regra de ouro 11: front-end não está pronto sem ser percorrido com `agent-brow
 - [ ] Estados que precisam existir para o fluxo ser observável: normal, vazio, erro, formulário inválido,
       submit em andamento — e **como produzir cada um** (seed, dado de QA, requisição forçada).
 - [ ] Combinações que o diff torna arriscadas: **light + dark + mobile**, os 3 idiomas, comum × admin ×
-      admin personificando (o `Table` é antd: cheque que respeita o tema).
+      admin personificando, e o gate de 6 perguntas de [`DESIGN.md`](DESIGN.md#5-o-gate-antes-de-dizer-pronto).
 - [ ] O que **não** dá para observar sem infra externa — já marcado, para virar 🔒 em vez de reprovar.
 
 ---

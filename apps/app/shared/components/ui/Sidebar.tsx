@@ -34,9 +34,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { isNavUrlActive } from "@/shared/lib/navActive";
 
-/** Evident "you are here" treatment: primary left bar + bold + accent bg. */
+/** "You are here": raised accent surface, medium weight and the icon in the brand colour. */
 const ACTIVE_ITEM_CLASS =
-    "relative data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:before:absolute data-[active=true]:before:inset-y-1.5 data-[active=true]:before:left-0 data-[active=true]:before:w-[3px] data-[active=true]:before:rounded-full data-[active=true]:before:bg-primary";
+    "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-primary";
 
 type GlobalSidebarProperties = {
     readonly children: ReactNode;
@@ -144,24 +144,26 @@ export const GlobalSidebar = ({
     return (
         <>
             <Sidebar collapsible="icon" variant="inset">
-                <SidebarHeader className="mt-0">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-8 w-8">
+                <SidebarHeader className="mt-0 h-14 justify-center">
+                    <div className="flex items-center gap-2.5 px-1">
+                        <Avatar className="size-7 rounded-lg shadow-card">
                             <AvatarImage
                                 alt=""
+                                className="rounded-lg"
                                 src={brand.logoUrl ?? undefined}
                             />
-                            <AvatarFallback>
+                            <AvatarFallback className="rounded-lg bg-primary font-semibold text-primary-foreground text-xs">
                                 {brand.name.charAt(0).toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
                         {sidebar.open && (
-                            <span className="text-sm">{brand.name}</span>
+                            <span className="truncate font-semibold text-sm tracking-tight">
+                                {brand.name}
+                            </span>
                         )}
                     </div>
-                    <div />
                 </SidebarHeader>
-                <SidebarContent className="mt-8">
+                <SidebarContent className="mt-2">
                     <SidebarGroup>
                         <SidebarGroupLabel>
                             {

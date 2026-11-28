@@ -59,13 +59,13 @@ export function AccountSessionsPanel() {
             title: sessionsCopy.columns.device,
             dataIndex: "browser",
             render: (_value: string | null, session: AccountSessionDTO) => (
-                <div className="flex flex-col gap-1">
+                <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="flex flex-wrap items-center gap-2 font-medium">
-                        {deviceLabel(session)}
+                        <span className="break-words">
+                            {deviceLabel(session)}
+                        </span>
                         {session.current ? (
-                            <Badge variant="secondary">
-                                {sessionsCopy.current}
-                            </Badge>
+                            <Badge>{sessionsCopy.current}</Badge>
                         ) : null}
                     </span>
                     {session.deviceType ? (
@@ -79,16 +79,27 @@ export function AccountSessionsPanel() {
         {
             title: sessionsCopy.columns.signedInAt,
             dataIndex: "signedInAt",
-            render: (value: string) => formatDateTime(value),
+            render: (value: string) => (
+                <span className="text-muted-foreground">
+                    {formatDateTime(value)}
+                </span>
+            ),
         },
         {
             title: sessionsCopy.columns.lastSeenAt,
             dataIndex: "lastSeenAt",
-            render: (value: string) => formatDateTime(value),
+            render: (value: string) => (
+                <span className="text-muted-foreground">
+                    {formatDateTime(value)}
+                </span>
+            ),
         },
         {
-            title: sessionsCopy.columns.actions,
+            title: (
+                <span className="sr-only">{sessionsCopy.columns.actions}</span>
+            ),
             dataIndex: "id",
+            align: "right" as const,
             render: (id: string, session: AccountSessionDTO) =>
                 session.current ? null : (
                     <Button
@@ -126,15 +137,16 @@ export function AccountSessionsPanel() {
                 pagination={false}
                 refreshLoading={isFetching}
                 rowKey={(row) => row.id}
+                variant="flush"
             />
-            <div className="flex flex-col gap-2">
-                <p className="text-muted-foreground text-sm">
+            <div className="flex flex-col gap-3 border-border border-t pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                <p className="max-w-prose text-pretty text-muted-foreground text-sm">
                     {sessionsCopy.revokeOthersDescription}
                 </p>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button
-                            className="self-start"
+                            className="shrink-0 self-start sm:self-auto"
                             disabled={
                                 isImpersonating ||
                                 isMutating ||

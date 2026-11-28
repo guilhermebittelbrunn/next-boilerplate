@@ -24,7 +24,7 @@ const BillingPlansChart = dynamic(
     () => import("./BillingPlansChart").then((mod) => mod.BillingPlansChart),
     {
         ssr: false,
-        loading: () => <Skeleton className="h-64 w-full rounded-xl" />,
+        loading: () => <Skeleton className="h-60 w-full rounded-lg" />,
     }
 );
 
@@ -81,12 +81,12 @@ export function BillingPlansCard({
                             entries={entries}
                             label={copy.title}
                         />
-                        <ul className="flex flex-col gap-2">
+                        <ul className="flex flex-col divide-y divide-border">
                             {entries.map((entry) => {
                                 const details = entryDetails(entry, copy);
                                 return (
                                     <li
-                                        className="flex items-center gap-3 text-sm"
+                                        className="flex items-center gap-3 py-2 text-sm first:pt-0 last:pb-0"
                                         key={entry.key}
                                     >
                                         <span
@@ -97,11 +97,11 @@ export function BillingPlansCard({
                                             }}
                                         />
                                         <div className="flex min-w-0 flex-1 flex-col">
-                                            <span className="break-words font-medium">
+                                            <span className="font-medium [overflow-wrap:anywhere]">
                                                 {entry.name}
                                             </span>
                                             {details && (
-                                                <span className="break-all text-muted-foreground text-xs">
+                                                <span className="text-muted-foreground text-xs [overflow-wrap:anywhere]">
                                                     {details}
                                                 </span>
                                             )}

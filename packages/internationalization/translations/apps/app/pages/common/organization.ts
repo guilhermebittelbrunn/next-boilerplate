@@ -7,7 +7,6 @@ export const commonOrganizationPageTranslations = {
             title: "Membros",
             columns: {
                 name: "Nome",
-                email: "E-mail",
                 role: "Papel",
                 joinedAt: "Entrou em",
                 actions: "Ações",
@@ -90,7 +89,6 @@ export const commonOrganizationPageTranslations = {
             title: "Members",
             columns: {
                 name: "Name",
-                email: "Email",
                 role: "Role",
                 joinedAt: "Joined",
                 actions: "Actions",
@@ -173,7 +171,6 @@ export const commonOrganizationPageTranslations = {
             title: "Miembros",
             columns: {
                 name: "Nombre",
-                email: "Correo",
                 role: "Rol",
                 joinedAt: "Se unió",
                 actions: "Acciones",

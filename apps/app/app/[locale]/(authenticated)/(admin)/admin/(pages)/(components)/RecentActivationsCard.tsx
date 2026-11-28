@@ -46,7 +46,7 @@ export function RecentActivationsCard({
                         {copy.empty}
                     </p>
                 ) : (
-                    <ul className="flex flex-col divide-y">
+                    <ul className="flex flex-col divide-y divide-border">
                         {activations.map((activation) => {
                             const subscriber = activation.subscriber;
                             const who =
@@ -66,24 +66,24 @@ export function RecentActivationsCard({
 
                             return (
                                 <li
-                                    className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2 text-sm first:pt-0 last:pb-0"
+                                    className="flex items-start justify-between gap-4 py-2.5 text-sm first:pt-0 last:pb-0"
                                     key={activation.subscriptionId}
                                 >
                                     <div className="flex min-w-0 flex-col">
                                         <span
                                             className={
                                                 subscriber
-                                                    ? "break-words font-medium"
-                                                    : "break-words font-medium text-muted-foreground"
+                                                    ? "font-medium [overflow-wrap:anywhere]"
+                                                    : "font-medium text-muted-foreground [overflow-wrap:anywhere]"
                                             }
                                         >
                                             {who}
                                         </span>
-                                        <span className="break-words text-muted-foreground text-xs">
+                                        <span className="text-muted-foreground text-xs [overflow-wrap:anywhere]">
                                             {plan}
                                         </span>
                                     </div>
-                                    <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+                                    <span className="shrink-0 whitespace-nowrap pt-0.5 text-muted-foreground text-xs tabular-nums">
                                         {formatUtcDate(
                                             activation.activatedAt,
                                             locale

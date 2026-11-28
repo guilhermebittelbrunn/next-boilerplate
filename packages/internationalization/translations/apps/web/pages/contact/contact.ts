@@ -1,22 +1,25 @@
 export const contactTranslations = {
     "pt-br": {
         meta: {
-            title: "Contato - Next Boilerplate",
-            description: "Entre em contato conosco",
+            title: "Fale com a equipe",
+            description:
+                "Dúvida sobre plano, integração ou um fork? A mensagem chega na caixa de suporte e a resposta vai para o e-mail que você informar.",
         },
         hero: {
             benefits: [
                 {
-                    title: "Resposta rápida",
-                    description: "Nossa equipe responde em até 24 horas",
+                    title: "Resposta no seu e-mail",
+                    description:
+                        "Respondemos no endereço que você informar no formulário.",
                 },
                 {
-                    title: "Suporte dedicado",
-                    description: "Ajuda especializada para seu projeto",
+                    title: "Planos sob medida",
+                    description:
+                        "Use o mesmo formulário para combinar volume, integração ou contrato.",
                 },
             ],
             form: {
-                title: "Fale com a gente",
+                title: "Escreva sua mensagem",
                 name: "Nome",
                 namePlaceholder: "Como podemos te chamar?",
                 email: "E-mail",
@@ -46,22 +49,25 @@ export const contactTranslations = {
     },
     en: {
         meta: {
-            title: "Contact - Next Boilerplate",
-            description: "Get in touch with us",
+            title: "Talk to the team",
+            description:
+                "Question about a plan, an integration or a fork? Your message lands in the support inbox and the reply goes to the email you provide.",
         },
         hero: {
             benefits: [
                 {
-                    title: "Quick response",
-                    description: "Our team responds within 24 hours",
+                    title: "Reply to your email",
+                    description:
+                        "We answer at the address you enter in the form.",
                 },
                 {
-                    title: "Dedicated support",
-                    description: "Specialized help for your project",
+                    title: "Custom plans",
+                    description:
+                        "Use the same form to agree on volume, an integration or a contract.",
                 },
             ],
             form: {
-                title: "Get in touch",
+                title: "Write your message",
                 name: "Name",
                 namePlaceholder: "What should we call you?",
                 email: "Email",
@@ -91,22 +97,25 @@ export const contactTranslations = {
     },
     es: {
         meta: {
-            title: "Contacto - Next Boilerplate",
-            description: "Contáctanos",
+            title: "Habla con el equipo",
+            description:
+                "¿Dudas sobre un plan, una integración o un fork? Tu mensaje llega a la bandeja de soporte y la respuesta va al correo que indiques.",
         },
         hero: {
             benefits: [
                 {
-                    title: "Respuesta rápida",
-                    description: "Nuestro equipo responde en 24 horas",
+                    title: "Respuesta en tu correo",
+                    description:
+                        "Respondemos en la dirección que indiques en el formulario.",
                 },
                 {
-                    title: "Soporte dedicado",
-                    description: "Ayuda especializada para tu proyecto",
+                    title: "Planes a medida",
+                    description:
+                        "Usa el mismo formulario para acordar volumen, integración o contrato.",
                 },
             ],
             form: {
-                title: "Escríbenos",
+                title: "Escribe tu mensaje",
                 name: "Nombre",
                 namePlaceholder: "¿Cómo te llamamos?",
                 email: "Correo electrónico",

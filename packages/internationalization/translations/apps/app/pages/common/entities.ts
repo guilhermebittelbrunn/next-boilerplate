@@ -35,6 +35,11 @@ export const commonEntitiesPageTranslations = {
             birthdate: "Data de nascimento",
             enabled: "Ativo",
             createdAt: "Criado em",
+            sections: {
+                identity: "Identificação",
+                profile: "Dados pessoais",
+                status: "Situação",
+            },
             save: "Salvar",
             genreOptions: {
                 male: "Masculino",
@@ -112,6 +117,11 @@ export const commonEntitiesPageTranslations = {
             birthdate: "Birth date",
             enabled: "Active",
             createdAt: "Created at",
+            sections: {
+                identity: "Basics",
+                profile: "Personal details",
+                status: "Status",
+            },
             save: "Save",
             genreOptions: {
                 male: "Male",
@@ -189,6 +199,11 @@ export const commonEntitiesPageTranslations = {
             birthdate: "Fecha de nacimiento",
             enabled: "Activo",
             createdAt: "Creado el",
+            sections: {
+                identity: "Identificación",
+                profile: "Datos personales",
+                status: "Estado",
+            },
             save: "Guardar",
             genreOptions: {
                 male: "Masculino",

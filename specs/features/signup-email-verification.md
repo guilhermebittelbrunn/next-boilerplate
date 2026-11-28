@@ -10,7 +10,7 @@ mode: ambos
 depends_on: []
 contends_on: [apps/api/app/(guards)/common-panel.ts, apps/api/proxy.ts, "apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx", "apps/app/app/[locale]/(authenticated)/(common)/layout.tsx"]
 feature: -
-updated: 2026-11-25
+updated: 2026-11-27
 ---
 
 # Confirmação do e-mail por código no cadastro
@@ -37,9 +37,9 @@ de confirmação de endereço. O segundo fator no login é TOTP, coberto pela sp
 
 ## O que já existe no repo
 
-- Cadastro no app: `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:98-107`
-  cria a conta, faz login e só então pede o e-mail de verificação (`:88-96`), engolindo a falha. O comentário
-  em `:81-87` registra que conta Google chega com o endereço já confirmado pelo provedor.
+- Cadastro no app: `apps/app/app/[locale]/(unauthenticated)/sign-up/components/SignUpFormClient.tsx:102-111`
+  cria a conta, faz login e só então pede o e-mail de verificação (`:92-100`), engolindo a falha. O comentário
+  em `:85-91` registra que conta Google chega com o endereço já confirmado pelo provedor.
 - Cadastro na landing: `apps/web/app/[locale]/sign-up/components/sign-up-form-client.tsx:41-62`, o mesmo
   fluxo, também sem bloquear.
 - API: `POST /auth/sign-up` cria a conta pelo Admin SDK (`apps/api/app/(routes)/auth/sign-up/route.ts:30-35`).
@@ -65,7 +65,7 @@ de confirmação de endereço. O segundo fator no login é TOTP, coberto pela sp
   `packages/security/index.ts:53`). Sem a chave, nenhum limite de borda.
 - UI de código: `InputOTP` já existe no design system e não é usado em lugar nenhum
   (`packages/design-system/components/ui/input-otp.tsx:11`).
-- Usuário criado pelo admin: `apps/api/app/(routes)/users/route.ts:63` cria a conta com senha, sem
+- Usuário criado pelo admin: `apps/api/app/(routes)/users/route.ts:69` (era `:63` até a PR #78) cria a conta com senha, sem
   confirmação de e-mail.
 - Decisão anterior: a spec entregue `auth-recovery-verification` deixou o bloqueio fora do corte porque
   "Bloquear por padrão quebraria forks de cadastro aberto"
@@ -142,9 +142,10 @@ Corte para a variante recomendada na pergunta 1 (só no cadastro).
 - **Ataque de adivinhação.** 6 dígitos são 1 milhão de combinações; 5 tentativas por código e o teto de
   reenvio por hora mantêm a chance de acerto às cegas baixa. Sem esse limite próprio, um fork sem Arcjet
   ficaria exposto.
-- **Interação com a trilha de auditoria.** A spec [`audit-log-levels`](../../docs/features/audit-log-levels/spec.md) propõe registrar
-  "e-mail confirmado" na rota do link. Se esta spec entrar antes ou junto, o evento precisa sair também da
-  confirmação por código.
+- **Interação com a trilha de auditoria.** A spec [`audit-log-levels`](../../docs/features/audit-log-levels/spec.md), entregue pela PR #78,
+  grava o evento `info` `account.email.verify` na rota do link
+  (`apps/api/app/(routes)/auth/email-verification/confirm/route.ts:56-62`). A confirmação por código precisa gravar o
+  mesmo evento, uma vez por conta, senão a trilha deixa de registrar quem confirmou pelo código.
 - **Custo herdado.** Zero para fork sem e-mail. Com e-mail, um envio por cadastro e por reenvio no plano do
   Resend.
 

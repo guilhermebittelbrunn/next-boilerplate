@@ -3,11 +3,13 @@ import { AnalyticsProvider } from "@repo/analytics/provider";
 import { resolveConsentBootstrap } from "@repo/analytics/server";
 import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
+import { themeColor } from "@repo/design-system/lib/themeColor";
 import { cn } from "@repo/design-system/lib/utils";
 import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
+import type { Viewport } from "next";
 import type { ReactNode } from "react";
-import { ToastContainer } from "react-toastify";
+import { MAIN_CONTENT_ID } from "@/shared/lib/layout";
 import { ensureSupportedLocale } from "@/shared/lib/localeSegment";
 import { QueryProvider } from "../../../app/shared/providers/QueryProvider";
 import ClientLayout from "./clientLayout";
@@ -18,6 +20,8 @@ type RootLayoutProperties = {
     readonly children: ReactNode;
     readonly params: Promise<{ locale: string }>;
 };
+
+export const viewport: Viewport = { themeColor };
 
 const RootLayout = async ({ children, params }: RootLayoutProperties) => {
     ensureSupportedLocale((await params).locale);
@@ -42,9 +46,12 @@ const RootLayout = async ({ children, params }: RootLayoutProperties) => {
                                 locale={locale}
                                 privacyPolicyHref={`/${locale}/legal/privacy`}
                             >
-                                <ToastContainer />
                                 <Header />
-                                <main>
+                                <main
+                                    className="outline-none"
+                                    id={MAIN_CONTENT_ID}
+                                    tabIndex={-1}
+                                >
                                     <ClientLayout> {children} </ClientLayout>
                                 </main>
                                 <Footer />

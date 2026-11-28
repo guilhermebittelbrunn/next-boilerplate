@@ -16,6 +16,8 @@ Regras de escopo para os pacotes compartilhados `@repo/*`. O Claude carrega este
 ## `@repo/design-system`
 
 - Componentes presentacionais; variantes via props e tokens CSS existentes. **Sem fetch, sem session** — quem compõe dados é o app.
+- Visual e movimento seguem [`docs/DESIGN.md`](../docs/DESIGN.md): tokens de `styles/globals.css` (cor, `shadow-card`/`shadow-popover`/`shadow-overlay`, `ease-out`/`ease-drawer`, `--duration-*`), utilitário `pressable` em todo clicável, superfície flutuante com origem no gatilho, nunca `transition-all`. Mexeu em cor, rode o teste de contraste (`pnpm --filter @repo/design-system test`).
+- Bibliotecas fixas: toast é Sonner (via `useAlert()`), menus/diálogos são Radix/Base UI, drawer é Vaul, paleta de comandos é cmdk, gráfico é recharts. antd e react-toastify saíram do stack; não volte com eles. Lib nova passa pela skill `pick-ui-library`.
 
 ### Inputs compostos (`components/ui/`)
 

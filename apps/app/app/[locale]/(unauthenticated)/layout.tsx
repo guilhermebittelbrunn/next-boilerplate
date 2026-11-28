@@ -7,6 +7,7 @@ import { ModeToggle } from "@repo/design-system/components/ui/mode-toggle";
 import { getBrand } from "@repo/next-config/brand";
 import { CommandIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { AuthBrandPanel } from "./components/AuthBrandPanel";
 
 type AuthLayoutProps = {
     readonly children: ReactNode;
@@ -16,27 +17,30 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
     const brand = getBrand();
 
     return (
-        <div className="container relative grid min-h-dvh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-                <div className="absolute inset-0 bg-muted" />
-                <div className="relative z-20 flex items-center gap-2 font-medium text-lg text-primary">
-                    <Avatar className="size-6 rounded-md">
-                        <AvatarImage alt="" src={brand.logoUrl ?? undefined} />
-                        <AvatarFallback className="rounded-md bg-transparent text-primary">
-                            <CommandIcon aria-hidden className="size-6" />
-                        </AvatarFallback>
-                    </Avatar>
-                    {brand.name}
-                </div>
-                <div className="absolute top-4 right-4">
+        <div className="grid min-h-dvh bg-background lg:grid-cols-2">
+            <div className="flex min-w-0 flex-col px-4 py-4 sm:px-8 lg:px-12 [body:has([data-cookie-banner])_&]:pb-96">
+                <header className="flex h-10 items-center justify-between gap-4">
+                    <div className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight">
+                        <Avatar className="size-7 rounded-md">
+                            <AvatarImage
+                                alt=""
+                                src={brand.logoUrl ?? undefined}
+                            />
+                            <AvatarFallback className="rounded-md bg-primary text-primary-foreground">
+                                <CommandIcon aria-hidden className="size-4" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <span className="truncate" translate="no">
+                            {brand.name}
+                        </span>
+                    </div>
                     <ModeToggle />
-                </div>
+                </header>
+                <main className="flex flex-1 items-center justify-center py-10 sm:py-16">
+                    <div className="w-full max-w-[420px]">{children}</div>
+                </main>
             </div>
-            <div className="lg:p-8 [body:has([data-cookie-banner])_&]:pb-96">
-                <div className="mx-auto flex w-full max-w-[400px] flex-col justify-center space-y-6">
-                    {children}
-                </div>
-            </div>
+            <AuthBrandPanel />
         </div>
     );
 };

@@ -207,7 +207,7 @@ bundle resolve, **não** que o fluxo funciona. A ferramenta padrão deste repo �
 2. `agent-browser skills get core` (e `agent-browser skills get dogfood` para QA exploratório/bug hunt).
 3. **Dirija o app de fato**: navegue, preencha campos, submeta, dispare as ações e **observe o resultado**.
    Capture evidência do estado final e **leia-a** — confirme o comportamento, não só o boot.
-4. Confira **light + dark + mobile** (o `Table` é antd: valide que respeita o tema).
+4. Confira **light + dark + mobile** e o contrato de [`docs/DESIGN.md`](../../docs/DESIGN.md): estados vazio/carregando/erro com conteúdo real, foco visível ao navegar por Tab, press e hover respondendo, nada se mexendo com o scroll, `prefers-reduced-motion` respeitado. Escreva no `report.md` qual elemento vence cada tela (pergunta 5 do gate).
 5. **Screenshot é instrumento, não entregável.** Salve em `docs/features/<slug>/test/e2e/` com nomes
    ordenados (`01-login.png`, `02-lista-vazia.png`, `03-form-invalido.png`, `05-dark-mobile.png`) — mas
    saiba que o `.gitignore` descarta essa pasta (`docs/features/**/test/e2e/`). Eles servem para **você

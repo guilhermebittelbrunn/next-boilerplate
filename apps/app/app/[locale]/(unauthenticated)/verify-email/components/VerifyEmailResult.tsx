@@ -1,11 +1,12 @@
 "use client";
 
 import { getDictionary } from "@repo/internationalization/client";
-import Link from "next/link";
+import { CircleAlertIcon, CircleCheckIcon, Link2OffIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import { useEmailVerification } from "@/shared/hooks/useEmailVerification";
+import { AuthActionLink } from "../../components/AuthActionLink";
 import { AuthCard } from "../../components/AuthCard";
+import { AuthPending } from "../../components/AuthPending";
 
 type VerifyEmailResultProps = {
     readonly oobCode: string | null;
@@ -29,18 +30,18 @@ export function VerifyEmailResult({ oobCode }: VerifyEmailResultProps) {
     }, [oobCode, mutate]);
 
     const panelLink = (
-        <div className="text-center text-sm">
-            <Link className="text-primary hover:underline" href={`/${locale}`}>
-                {emailVerificationCopy.goToPanel}
-            </Link>
-        </div>
+        <AuthActionLink href={`/${locale}`}>
+            {emailVerificationCopy.goToPanel}
+        </AuthActionLink>
     );
 
     if (!oobCode) {
         return (
             <AuthCard
                 description={emailVerificationCopy.invalidLink.description}
+                icon={Link2OffIcon}
                 title={emailVerificationCopy.invalidLink.title}
+                tone="warning"
             >
                 {panelLink}
             </AuthCard>
@@ -51,7 +52,9 @@ export function VerifyEmailResult({ oobCode }: VerifyEmailResultProps) {
         return (
             <AuthCard
                 description={emailVerificationCopy.error.description}
+                icon={CircleAlertIcon}
                 title={emailVerificationCopy.error.title}
+                tone="destructive"
             >
                 {panelLink}
             </AuthCard>
@@ -62,19 +65,14 @@ export function VerifyEmailResult({ oobCode }: VerifyEmailResultProps) {
         return (
             <AuthCard
                 description={emailVerificationCopy.success.description}
+                icon={CircleCheckIcon}
                 title={emailVerificationCopy.success.title}
+                tone="success"
             >
                 {panelLink}
             </AuthCard>
         );
     }
 
-    return (
-        <div className="space-y-4">
-            <FullScreenLoader />
-            <p className="text-center text-muted-foreground text-sm">
-                {emailVerificationCopy.confirming}
-            </p>
-        </div>
-    );
+    return <AuthPending message={emailVerificationCopy.confirming} />;
 }

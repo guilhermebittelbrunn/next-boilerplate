@@ -22,29 +22,33 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 
 ## Tabelas e listas
 
-- Busca em memória sobre `dataSource` + botão de atualizar: use o **`Table`** do design system com `searchFields`, `onRefresh` e `refreshLoading` em vez de duplicar toolbar + `useMemo` filter em cada página.
+- Busca em memória sobre `dataSource` + botão de atualizar: use o **`Table`** do design system com `searchFields`, `onRefresh` e `refreshLoading` em vez de duplicar toolbar + `useMemo` filter em cada página. Ele é HTML semântico (sem antd): `columns` com `title`/`dataIndex`/`render(value, record, index)`/`align`/`width`, `rowKey`, `loading` (esqueleto quando ainda não há linhas), `locale.emptyText` (estado vazio com ícone) e `pagination` (`false` ou `{ pageSize, showSizeChanger, hideOnSinglePage }`).
+- Tabela dentro de um cartão (`SettingsSection`, `Card`): `variant="flush"`, que troca a superfície por um anel de 1 px.
+- Ações por linha: **`ActionsMenu`** (`onEdit`, `onDelete` com confirmação em `AlertDialog`, `items` extras). No jsdom o menu do Radix abre com `fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false })`, não com `click`.
+- Status em célula: `Badge` tonal (`success`, `warning`, `destructive`, `secondary`) com texto; nome em `font-medium`, dado secundário em `text-muted-foreground`.
 - Para refresh isolado fora do `Table`, use **`TableRefreshButton`** (mesmo pacote que exporta `Table`).
 - Listagens com foto: miniaturas via `ResponsiveImage` (`@repo/design-system/components/ui/responsive-image`).
 - Coluna `enabled` em listas: renderize um `Switch` controlado que dispara a mutation de toggle (não só texto Sim/Não).
 
 ## Páginas
 
-- Toda tela interna tem `Header` (barra de 64 px com o breadcrumb) e, logo abaixo, o cabeçalho da página passado ao `Container` pela prop **`header`**: `<Container header={<PageHeader title=… description=… actions=… />}>`. O `PageHeader` (`shared/components/ui/PageHeader.tsx`) renderiza o único `h1` da tela, a descrição opcional e as ações à direita. O `Container` mantém esse cabeçalho visível durante `loading` e `loadError`.
+- Toda tela interna tem `Header` (barra de 56 px com o breadcrumb) e, logo abaixo, o cabeçalho da página passado ao `Container` pela prop **`header`**: `<Container header={<PageHeader title=… description=… actions=… />}>`. O `PageHeader` (`shared/components/ui/PageHeader.tsx`) renderiza o único `h1` da tela, a descrição opcional e as ações à direita. O `Container` mantém esse cabeçalho visível durante `loading` e `loadError`.
 - A ação primária da tela (ex.: `AddButton`) vai em `actions` do `PageHeader`, não no `sideElement` do `Header`.
 - Formulários e configurações usam `width="narrow"` no `Container` externo (coluna centralizada com largura máxima em `shared/components/ui/pageLayout.ts`); listas e dashboards ficam com a largura cheia. `Container` aninhado com `className="p-0"` não recebe `header` nem `width`. O `<form>` de página inteira não leva `flex-1` nem `min-h-*`: o painel e a barra de ações acompanham a altura dos campos.
 - Pilhas dentro da página usam `gap-6`.
 - `loading.tsx` usa **`PageSkeleton`** (`shared/components/ui/PageSkeleton.tsx`) com as mesmas flags da tela (`description`, `actions`, `width`) e o corpo como filho (`TableSkeleton`, `FormSkeleton`…), para o título e o breadcrumb não pularem quando o conteúdo chega.
 - **Título da aba**: tela nova do painel registra o rótulo em `PANEL_PAGE_TITLES` (`shared/lib/panelTitles.ts`), com chave que já existe no dicionário, e exporta `generateMetadata = panelPageMetadata("<rota>")` (`lib/server/panelMetadata.ts`). Página com `"use client"` não pode exportar metadata: o export vai num `layout.tsx` irmão que só devolve `children`. O layout da área compõe `"<tela> | <marca>"` com `title.template`, e `__tests__/panelTitles.test.ts` reprova tela sem registro.
-- Blocos de configuração usam **`SettingsSection`** (`shared/components/ui/SettingsSection.tsx`): região nomeada pelo `h3` do título, descrição opcional e `tone="destructive"` para ações irreversíveis, que ficam por último na seção.
+- Indicadores no topo de um painel usam **`MetricStrip`** (uma faixa com células separadas por linha, número formatado com `Intl` e `tabular-nums`), não um cartão por número. Avatar de registro sem foto: **`RecordAvatar`** (iniciais).
+- Blocos de configuração usam **`SettingsSection`** (`shared/components/ui/SettingsSection.tsx`): região nomeada pelo `h3` do título, descrição opcional e `tone="destructive"` para ações irreversíveis, que ficam por último na seção. Quando a seção é região de primeiro nível da página, use `headingLevel={2}`; `surface={false}` mantém título e espaçamento sem o cartão; `titleRef` deixa a página mover o foco para o título.
 
 ## Formulários com ações no rodapé
 
 - Evite `form="…"` em botões fora do `<form>`. Use **`Footer`** (`shared/components/ui/Footer.tsx`) **dentro** do `<form>`: `showBack` (padrão `true`, `router.back()`), `onBack`/`backLabel` opcionais; primário é `type="submit"` se `onConfirm` ausente, senão `type="button"`. Props genéricas: `isLoading`, `disabled`.
-- Por padrão o `Footer` é uma barra fixa no rodapé (`sticky`), para formulários de página inteira com uma ação só (criar/editar entidade e usuário, onboarding). Com **`sticky={false}`** ele vira uma linha de ações dentro do bloco: use em formulários que convivem com outros na mesma tela (blocos da conta, convite da equipe).
+- Por padrão o `Footer` é uma barra fixa no rodapé (`sticky`), para formulários de página inteira com uma ação só (criar/editar entidade e usuário). Com **`sticky={false}`** ele vira uma linha de ações dentro do bloco: use em formulários que convivem com outros na mesma tela (blocos da conta, convite da equipe) e em formulário dentro de um cartão estreito, como o do onboarding, onde a barra fixa desenharia uma faixa no meio do cartão.
 - Barra fixa publica **`data-sticky-action-bar`** (o `Footer` fixo, a barra do `Container` e o `PageFormFooter` já publicam), e o `Navbar` publica `data-panel-navbar`. O `<html>` do root layout reserva 80 px no `scroll-padding` do documento enquanto cada uma existir, para o campo focado por teclado não ficar atrás delas (WCAG 2.4.11). Barra fixa nova sem o atributo, ou mais alta que 80 px, volta a esconder o foco; `__tests__/focusNotObscuredScrollPadding.test.tsx` e o E2E `focusNotObscured.spec.ts` acusam.
 - Em diálogo (`AlertDialog`) com formulário, não use `Footer`: use `AlertDialogFooter` com dois `Button`, cancelar `type="button" variant="outline"` e confirmar `type="submit"`. O `type="button"` do cancelar é obrigatório, senão ele envia o formulário. Confirmação de ação destrutiva usa `variant="destructive"` (no `AlertDialogAction` ou no `Button` de confirmar).
 - Layout de campos em grelha: **`FormContainer`** — 1 coluna no mobile, 2 no `md+`; filhos com `display: contents` para cada campo ocupar uma célula.
-- Páginas de formulário: `Container` com **`contentOnly`** + painel `bg-muted/50`. Erro de carga: prop **`loadError`** (string) para renderizar **`LoadErrorState`** em vez do conteúdo principal.
+- Páginas de formulário: `Container` com **`contentOnly`** + **`FormSurface`** (`shared/components/ui/FormSurface.tsx`), que é o cartão do formulário; o `Container` não desenha painel de fundo. O `loading.tsx` da tela usa o mesmo `FormSurface` em volta do `FormSkeleton` (`columns={1}` quando o formulário é de uma coluna). Erro de carga: prop **`loadError`** (string) para renderizar **`LoadErrorState`** em vez do conteúdo principal. Fora do `Container`, passe `onRetry={() => refetch()}` e `retrying={isFetching}` ao `LoadErrorState` para oferecer "Tentar de novo".
 
 ## Campos compostos (design system + RHF)
 
@@ -93,6 +97,11 @@ Regras de escopo para a aplicação do usuário (dashboard, cadastro, **admin** 
 ## 404
 
 - UI de rota não encontrada: **`NotFoundPage`** (RSC) + `app/not-found.tsx` (não há `not-found` sob `[locale]`); textos em `apps.app.pages.common.notFound`; botão "início" com `href` resolvido no servidor (`resolveNotFoundHomePath`: comum → `/{locale}`, admin → `/{locale}/admin`).
+
+## Visual e movimento
+
+- Toda tela segue [`docs/DESIGN.md`](../../docs/DESIGN.md). Para desenhar ou redesenhar uma, comece pela skill `anti-ui-slop` (roteiro `operate` para painel); para movimento e toque, `emil-design-eng`; para o pior caso de dados, `break-ui`; para revisar, `web-design-guidelines`. Feche com o gate de 6 perguntas da seção 5 do contrato.
+- Toast só por `useAlert()` (Sonner, montado no `DesignSystemProvider`). Não monte outro `Toaster`.
 
 ## Validação visual
 

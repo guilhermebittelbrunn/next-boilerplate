@@ -123,6 +123,7 @@ export function AccountEmailChangeDialog({
                                     emailChangeCopy.newEmailPlaceholder
                                 }
                                 required
+                                spellCheck={false}
                                 type="email"
                             />
                             <HookFormInputPassword

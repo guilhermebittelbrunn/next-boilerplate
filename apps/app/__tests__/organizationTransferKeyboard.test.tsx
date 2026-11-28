@@ -74,9 +74,9 @@ vi.mock(
 );
 
 /**
- * The real `ActionsMenu` (antd `Dropdown` + rc-menu) and the real Radix dialog: the defect
- * lives in how the two hand the same Enter press to each other. Only the antd `Table` is
- * replaced, by a renderer that runs each column per row.
+ * The real `ActionsMenu` (Radix menu) and the real Radix dialog: the defect lives in how the
+ * two hand the same Enter press to each other. Only the `Table` is replaced, by a renderer
+ * that runs each column per row.
  */
 vi.mock("@repo/design-system/components/ui", async () => {
     const { ActionsMenu } = await vi.importActual<
@@ -155,7 +155,8 @@ async function focusTransferItem() {
         throw new Error("no actions trigger on the member row");
     }
     trigger.focus();
-    fireEvent.click(trigger);
+    // Radix opens the menu on `pointerdown`, which jsdom's `click` never emits.
+    fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
 
     const label = await screen.findByText(organizationCopy.transfer.action);
     const item = label.closest('[role="menuitem"]');

@@ -31,41 +31,57 @@ export function UserFormFields({
         },
     ];
 
+    const isCreate = mode === "create";
+
     return (
         <div className="contents">
             <div className="col-span-1 md:col-span-2">
                 <HookFormInput
-                    disabled={mode === "update"}
+                    autoComplete="off"
+                    disabled={!isCreate}
                     label={adminUsers.form.email}
                     name="email"
                     placeholder={adminUsers.form.email}
-                    required={mode === "create"}
+                    required={isCreate}
+                    spellCheck={false}
                     type="email"
-                />
-                <HookFormInputPassword
-                    hidden={mode === "update"}
-                    label={adminUsers.form.password}
-                    name="password"
-                    required
-                    type="password"
-                />
-                <HookFormInputPassword
-                    hidden={mode === "update"}
-                    label={adminUsers.form.confirmPassword}
-                    name="confirmPassword"
-                    required
-                    type="password"
-                />
-                <HookFormInput
-                    hidden={mode === "create"}
-                    label={adminUsers.form.displayName}
-                    name="displayName"
-                    placeholder={adminUsers.form.displayName}
-                    type="text"
                 />
             </div>
 
-            <div className="col-span-1 md:col-span-2">
+            {isCreate ? (
+                <>
+                    <div className="col-span-1">
+                        <HookFormInputPassword
+                            autoComplete="new-password"
+                            label={adminUsers.form.password}
+                            name="password"
+                            required
+                            type="password"
+                        />
+                    </div>
+                    <div className="col-span-1">
+                        <HookFormInputPassword
+                            autoComplete="new-password"
+                            label={adminUsers.form.confirmPassword}
+                            name="confirmPassword"
+                            required
+                            type="password"
+                        />
+                    </div>
+                </>
+            ) : (
+                <div className="col-span-1">
+                    <HookFormInput
+                        autoComplete="off"
+                        label={adminUsers.form.displayName}
+                        name="displayName"
+                        placeholder={adminUsers.form.displayName}
+                        type="text"
+                    />
+                </div>
+            )}
+
+            <div className="col-span-1">
                 <HookFormSelect
                     description={
                         lockType ? adminUsers.form.typeSelfLocked : undefined

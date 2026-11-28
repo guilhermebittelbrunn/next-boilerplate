@@ -1,3 +1,4 @@
+import { themeColor } from "@repo/design-system/lib/themeColor";
 import type { ReactElement, ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -34,8 +35,6 @@ vi.mock("@repo/internationalization/client", () => ({
 
 vi.mock("@repo/design-system/lib/fonts", () => ({ fonts: "" }));
 
-vi.mock("react-toastify", () => ({ ToastContainer: () => null }));
-
 vi.mock("../app/shared/providers/QueryProvider", () => ({
     QueryProvider: ({ children }: { children: ReactNode }) => children,
 }));
@@ -52,7 +51,7 @@ vi.mock("../app/[locale]/components/footer", () => ({
     Footer: () => null,
 }));
 
-const { default: RootLayout } = await import("@/app/[locale]/layout");
+const { default: RootLayout, viewport } = await import("@/app/[locale]/layout");
 
 type ElementWithChildren = ReactElement<{ children?: ReactNode }>;
 
@@ -69,5 +68,9 @@ describe("landing root layout", () => {
 
         expect(markup).toContain("landing page");
         expect(authProviderMounts.count).toBe(1);
+    });
+
+    it("publishes the design system theme-color for light and dark", () => {
+        expect(viewport).toEqual({ themeColor });
     });
 });

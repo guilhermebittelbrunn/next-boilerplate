@@ -8,6 +8,7 @@ import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { CrownIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useListOrganizationMembers } from "../(hooks)/useListOrganizationMembers";
@@ -52,21 +53,16 @@ export function OrganizationMembersTable({
         {
             title: membersCopy.columns.name,
             dataIndex: "displayName",
-            render: (value: string | null) => (
-                <span className="font-medium">
-                    {value ?? membersCopy.unnamed}
-                </span>
-            ),
-        },
-        {
-            title: membersCopy.columns.email,
-            dataIndex: "email",
-            render: (value: string | null) =>
-                value ?? (
-                    <span className="text-muted-foreground">
-                        {membersCopy.noEmail}
+            render: (value: string | null, record: OrganizationMemberDTO) => (
+                <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="break-words font-medium">
+                        {value ?? membersCopy.unnamed}
                     </span>
-                ),
+                    <span className="break-all text-muted-foreground text-xs">
+                        {record.email ?? membersCopy.noEmail}
+                    </span>
+                </div>
+            ),
         },
         {
             title: membersCopy.columns.role,
@@ -80,14 +76,18 @@ export function OrganizationMembersTable({
         {
             title: membersCopy.columns.joinedAt,
             dataIndex: "joinedAt",
-            render: (value: string) => formatDateTime(value),
+            render: (value: string) => (
+                <span className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTime(value)}
+                </span>
+            ),
         },
         ...(isOwner
             ? [
                   {
                       title: membersCopy.columns.actions,
                       dataIndex: "actions",
-                      align: "center" as const,
+                      align: "right" as const,
                       render: (_: unknown, record: OrganizationMemberDTO) =>
                           record.role === "owner" || !canManage ? null : (
                               <ActionsMenu
@@ -132,14 +132,12 @@ export function OrganizationMembersTable({
     ];
 
     return (
-        <section className="flex flex-col gap-3">
-            <h2
-                className="font-semibold text-lg outline-none"
-                ref={titleRef}
-                tabIndex={-1}
-            >
-                {membersCopy.title}
-            </h2>
+        <SettingsSection
+            headingLevel={2}
+            surface={false}
+            title={membersCopy.title}
+            titleRef={titleRef}
+        >
             <Table<OrganizationMemberDTO>
                 columns={columns}
                 dataSource={loadError ? [] : members}
@@ -159,6 +157,6 @@ export function OrganizationMembersTable({
                 open={isTransferOpen}
                 returnFocusRef={titleRef}
             />
-        </section>
+        </SettingsSection>
     );
 }

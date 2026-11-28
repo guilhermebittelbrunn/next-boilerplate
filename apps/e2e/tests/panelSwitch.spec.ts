@@ -46,6 +46,7 @@ test.describe("as an admin", () => {
         await page
             .getByRole("link", {
                 name: ptBr.apps.app.pages.common.routes.platform.entities.list,
+                exact: true,
             })
             .click();
         await expect(page).toHaveURL(`${APP_URL}${entitiesPath}`);

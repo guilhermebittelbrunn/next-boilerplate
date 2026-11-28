@@ -67,6 +67,7 @@ export function OnboardingProfileStep({
                     confirmLabel={confirmLabel}
                     isLoading={isPending}
                     showBack={false}
+                    sticky={false}
                 />
             </form>
         </Form>

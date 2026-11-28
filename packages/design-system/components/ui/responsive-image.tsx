@@ -42,7 +42,7 @@ export default function ResponsiveImage({
             style={{ width, height }}
         >
             {isLoading && (
-                <div className="absolute inset-0 animate-pulse bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700" />
+                <div className="absolute inset-0 animate-pulse bg-muted motion-reduce:animate-none" />
             )}
 
             {hasError && (

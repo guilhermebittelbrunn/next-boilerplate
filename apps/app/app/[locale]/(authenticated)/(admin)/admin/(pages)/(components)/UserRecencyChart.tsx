@@ -47,7 +47,7 @@ export function UserRecencyChart({ byRecency }: UserRecencyChartProps) {
 
     return (
         <CategoryBarChart
-            className="aspect-auto h-64 w-full"
+            className="aspect-auto h-60 w-full"
             config={config}
             data={data}
             label={activity.chart.title}

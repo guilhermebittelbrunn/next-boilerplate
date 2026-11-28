@@ -10,7 +10,7 @@ mode: ambos
 depends_on: [account-settings]
 contends_on: [packages/auth/server.ts, packages/auth/session.ts, packages/auth/session-routes.ts, apps/api/(shared)/lib/resolve-api-actor.ts]
 feature: account-active-sessions
-updated: 2026-11-26
+updated: 2026-11-27
 ---
 
 # MFA, sessões ativas e política de senha
@@ -37,7 +37,7 @@ eficácia.
 - `packages/auth/server.ts:354-365` (era `:331-342` até a PR #74 e `:330` até a PR #64): `revokeUserSessionsOrThrow` revoga todas as sessões da
   conta no Firebase e deixa a falha subir; `revokeUserSessions` é a variante que registra e engole o erro. Desde a
   PR #39 a revogação é chamada só por "Sair de todos os dispositivos" (`apps/api/app/(routes)/account/sessions/revoke/route.ts:9-20`, era `:8` até a PR #64,
-  acionado pela aba Segurança em `AccountSecurityForm.tsx:165`, remedida em 2026-11-26 depois da PR #76; era `:154` desde a PR #62; era `:140` até a PR #48), pela troca de senha e pela desativação pelo
+  acionado pela aba Segurança em `AccountSecurityForm.tsx:168`, remedida em 2026-11-27 na branch `feat/design-system-refresh`, ainda não mergeada; era `:165` desde a PR #76; era `:154` desde a PR #62; era `:140` até a PR #48), pela troca de senha e pela desativação pelo
   admin. Desde a PR #64, a troca de senha, a definição, a redefinição, a troca de e-mail e "Sair de todos" usam a
   variante que falha e respondem `500` com `error.code` quando a revogação não acontece; a desativação pelo admin segue
   na que engole. O botão "Sair" deixou de ser um "sair de todos": `sessionDELETE`
@@ -85,8 +85,8 @@ eficácia.
   `PASSWORD_MIN_LENGTH` em `:2`.)*
 - Busca por palavra inteira (`grep -riw`) por `multiFactor`, `MFA`, `TOTP`, `2FA` e `passkey` em `apps/` e
   `packages/`: **zero ocorrências**. ⚠️ Sem `-w` a busca devolve 8 falsos positivos: 7 do `InputOTP`
-  (`TOTP` casa dentro de `InpuTOTP`) e 1 em `apps/app/__tests__/onboardingState.test.ts:119`, onde `%2Faccount`
-  casa com `2FA` (recontado em 2026-09-27). Não existe segundo fator nem tela de sessões/dispositivos. Em compensação,
+  (`TOTP` casa dentro de `InpuTOTP`) e 10 em testes da `app` e da `web` cuja URL codificada traz `%2Faccount`, que
+  casa com `2FA` (recontado em 2026-11-27; em 2026-09-27 era 1, em `onboardingState.test.ts`). Não existe segundo fator nem tela de sessões/dispositivos. Em compensação,
   `packages/design-system/components/ui/input-otp.tsx:11` já traz o primitivo de código de uso único, **não
   usado em lugar nenhum** — peça reaproveitável para o desafio e para os códigos de recuperação.
 - **Lacuna:** sem MFA, sem visibilidade de sessões e sem revogação seletiva. *(A política de senha saiu da
@@ -217,7 +217,7 @@ eficácia.
       `GET /account/sessions` (`apps/api/app/(routes)/account/sessions/route.ts:11-27`) devolve as sessões
       vivas do titular, com a atual marcada e as encerradas ou anteriores à revogação geral fora da lista
       (`selectActiveSessions`, `apps/api/(shared)/lib/session-tracker.ts:156`). O painel "Sessões ativas" fica
-      na aba Segurança (`AccountSecurityForm.tsx:131`, remedida em 2026-11-26 depois da PR #76; era `:123` até ela, `:119` até a PR #62 e `:105` até a PR #48, e `AccountSessionsPanel.tsx`), com navegador e sistema,
+      na aba Segurança (`AccountSecurityForm.tsx:134`, remedida em 2026-11-27 na branch `feat/design-system-refresh`, ainda não mergeada; era `:131` desde a PR #76; era `:123` até ela, `:119` até a PR #62 e `:105` até a PR #48, e `AccountSessionsPanel.tsx`), com navegador e sistema,
       instante do login e último uso. SDK: `listSessions`, `revokeSession` e `revokeOtherSessions`
       (`packages/sdk/src/actions/account/action.ts:163`, `:174`, `:182`; eram `:127`, `:138` e `:146` até a PR #48).
       **Deriva de letra, a spec estava imprecisa:** "origem" virou navegador, sistema e tipo de aparelho,
@@ -251,13 +251,13 @@ eficácia.
       da API, `apps/api/(shared)/validation/password.schema.ts:10-18` define `newPasswordSchema` e
       `existingPasswordSchema`, e `:29-33` responde `400 AUTH_PASSWORD_TOO_SHORT`; o código é usado no cadastro
       e na redefinição (`auth.schema.ts:32`, `:37`, `:109-110`, remedidas em 2026-10-22 depois da PR #56, que acrescentou o schema do pedido de link por e-mail; eram `:27`, `:32` e `:101-102` desde a PR #51 e `:24`, `:29` e `:89-90` antes), na troca (`account.schema.ts:49-50`, `:154-155`, âncoras remedidas em 2026-10-19 depois da PR #48), na definição da primeira senha numa conta só Google (`account.schema.ts:58`, `:169-170`, PR #48)
-      e na criação pelo admin (`user-admin.schema.ts:10`, `users/route.ts:48-49`), traduzido nos 3 idiomas
+      e na criação pelo admin (`user-admin.schema.ts:10`, `users/route.ts:54-55`, era `:48-49` até a PR #78), traduzido nos 3 idiomas
       (`translations/packages/shared/utils.ts:107`, `:294`, `:483`, remedidas em 2026-11-26 depois da PR #76, que acrescentou dois códigos por idioma; eram `:105`, `:290` e `:477` antes dela, remedidas em 2026-11-23 depois da PR #64, que acrescentou dois códigos por idioma; eram `:103`, `:285` e `:469`, remedidas em 2026-10-28 depois da PR #59, que acrescentou três linhas ao bloco pt-br e três ao en, acima das duas últimas, quando eram `:282` e `:463`; antes da PR #58, que acrescentou dois códigos por idioma, eram `:101`, `:276` e `:453` desde a PR #57, que acrescentou os códigos de organização e convite nos três idiomas; eram `:98`, `:249` e `:401` desde a PR #56, que acrescentou `AUTH_EMAIL_LINK_DISABLED`, `:248` e `:399` desde a PR #52, `:245` e `:393` antes dela, e antes da PR #50, `:96`, `:241` e `:387`). As 11 cópias de `MIN_PASSWORD_LENGTH = 6`
       sumiram (`git grep "MIN_PASSWORD_LENGTH ="` em `apps/` e `packages/`: **0**): os oito schemas de
       formulário (seis na `apps/app`, dois na `apps/web`) importam as constantes, e os três da API passam por
       `password.schema.ts`. O cadastro das duas front-ends passou pela API
-      (`apiClient.authApi.signUp`, `SignUpFormClient.tsx:100` e `sign-up-form-client.tsx:56`, remedidas em 2026-11-24 depois da PR #74 (a da app era `:129`) e em 2026-11-23 depois da PR #73, que acrescentou o evento de cadastro; eram `:121`, desde a PR #47, e `:52`, desde a PR #55, que acrescentou o pedido de verificação; era `:36`, rota
-      `auth/sign-up/route.ts:19-77` com Admin SDK); `git grep createUserWithEmailAndPassword` em `apps/` e
+      (`apiClient.authApi.signUp`, `SignUpFormClient.tsx:104` e `sign-up-form-client.tsx:56`, remedidas em 2026-11-27 na branch `feat/design-system-refresh`, ainda não mergeada (a da app era `:100`), em 2026-11-24 depois da PR #74 (a da app era `:129`) e em 2026-11-23 depois da PR #73, que acrescentou o evento de cadastro; eram `:121`, desde a PR #47, e `:52`, desde a PR #55, que acrescentou o pedido de verificação; era `:36`, rota
+      `auth/sign-up/route.ts:19-79` com Admin SDK, era `:19-77` até a PR #78); `git grep createUserWithEmailAndPassword` em `apps/` e
       `packages/`: **0**. O `/test` confirmou colar nos campos de senha (item 10 do relatório). CI de merge
       verde (`gh run 36257926749`: `verify`, `changes`, `e2e`, `coverage`).
       **O que a fatia não alcança, por decisão registrada no plano:** checagem contra as senhas mais comuns
@@ -321,7 +321,7 @@ e **não** é arquivada.
 mesmo `onAuthSuccess` (`packages/auth/provider.tsx:377-393`, era `:353-365` até a PR #74 e `:353-370` até a PR #60), e a página do link conclui no cliente
 (`apps/app/app/[locale]/(unauthenticated)/sign-in/email-link/components/EmailLinkCompletion.tsx`). Com o segundo
 fator ligado, essa página precisa tratar `auth/multi-factor-auth-required`, que hoje cai no cartão de falha
-genérico (`EmailLinkCompletion.tsx:152-163`); o link não pode dispensar o segundo fator.
+genérico (`EmailLinkCompletion.tsx:150-165`, remedida em 2026-11-27 na branch `feat/design-system-refresh`, ainda não mergeada; era `:152-163`); o link não pode dispensar o segundo fator.
 
 A spec passou a `in-progress` com `feature: account-security-mfa` e **não** foi arquivada depois da fatia 1.
 *(Auditoria de 2026-10-04: com a fatia 2 entregue, seguem abertos só os itens 5 e 6. O `feature:` do

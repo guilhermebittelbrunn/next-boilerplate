@@ -3,12 +3,18 @@
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
-import Link from "next/link";
+import {
+    CircleAlertIcon,
+    CircleCheckIcon,
+    Link2OffIcon,
+    TriangleAlertIcon,
+} from "lucide-react";
 import { useEffect, useRef } from "react";
-import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import { useEmailVerification } from "@/shared/hooks/useEmailVerification";
 import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
+import { AuthActionLink } from "../../components/AuthActionLink";
 import { AuthCard } from "../../components/AuthCard";
+import { AuthPending } from "../../components/AuthPending";
 
 type ConfirmEmailChangeResultProps = {
     readonly oobCode: string | null;
@@ -35,29 +41,24 @@ export function ConfirmEmailChangeResult({
     }, [oobCode, mutate]);
 
     const panelLink = (
-        <div className="text-center text-sm">
-            <Link className="text-primary hover:underline" href={`/${locale}`}>
-                {emailVerificationCopy.goToPanel}
-            </Link>
-        </div>
+        <AuthActionLink href={`/${locale}`}>
+            {emailVerificationCopy.goToPanel}
+        </AuthActionLink>
     );
 
     const signInLink = (
-        <div className="text-center text-sm">
-            <Link
-                className="text-primary hover:underline"
-                href={`/${locale}/sign-in`}
-            >
-                {changeEmailCopy.signIn}
-            </Link>
-        </div>
+        <AuthActionLink href={`/${locale}/sign-in`}>
+            {changeEmailCopy.signIn}
+        </AuthActionLink>
     );
 
     if (!oobCode) {
         return (
             <AuthCard
                 description={emailVerificationCopy.invalidLink.description}
+                icon={Link2OffIcon}
                 title={emailVerificationCopy.invalidLink.title}
+                tone="warning"
             >
                 {panelLink}
             </AuthCard>
@@ -78,7 +79,9 @@ export function ConfirmEmailChangeResult({
                             locale
                         )
                     )}
+                    icon={TriangleAlertIcon}
                     title={changeEmailCopy.success.title}
+                    tone="warning"
                 >
                     {signInLink}
                 </AuthCard>
@@ -88,7 +91,9 @@ export function ConfirmEmailChangeResult({
         return (
             <AuthCard
                 description={changeEmailCopy.error.description}
+                icon={CircleAlertIcon}
                 title={changeEmailCopy.error.title}
+                tone="destructive"
             >
                 {panelLink}
             </AuthCard>
@@ -99,19 +104,14 @@ export function ConfirmEmailChangeResult({
         return (
             <AuthCard
                 description={changeEmailCopy.success.description}
+                icon={CircleCheckIcon}
                 title={changeEmailCopy.success.title}
+                tone="success"
             >
                 {signInLink}
             </AuthCard>
         );
     }
 
-    return (
-        <div className="space-y-4">
-            <FullScreenLoader />
-            <p className="text-center text-muted-foreground text-sm">
-                {changeEmailCopy.confirming}
-            </p>
-        </div>
-    );
+    return <AuthPending message={changeEmailCopy.confirming} />;
 }

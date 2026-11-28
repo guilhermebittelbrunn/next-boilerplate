@@ -7,6 +7,7 @@ import type { OrganizationInvitationDTO } from "@repo/sdk/src/types";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { SendIcon } from "lucide-react";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useListOrganizationInvitations } from "../(hooks)/useListOrganizationInvitations";
@@ -37,30 +38,34 @@ export function OrganizationInvitationsTable() {
             title: invitationsCopy.columns.email,
             dataIndex: "email",
             render: (value: string) => (
-                <span className="font-medium">{value}</span>
+                <span className="break-all font-medium">{value}</span>
             ),
         },
         {
             title: invitationsCopy.columns.lastSentAt,
             dataIndex: "lastSentAt",
-            render: (value: string) => formatDateTime(value),
+            render: (value: string) => (
+                <span className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTime(value)}
+                </span>
+            ),
         },
         {
             title: invitationsCopy.columns.expiresAt,
             dataIndex: "expiresAt",
             render: (value: string, record: OrganizationInvitationDTO) =>
                 record.status === "expired" ? (
-                    <Badge variant="destructive">
-                        {invitationsCopy.expired}
-                    </Badge>
+                    <Badge variant="warning">{invitationsCopy.expired}</Badge>
                 ) : (
-                    formatDateTime(value)
+                    <span className="whitespace-nowrap text-muted-foreground">
+                        {formatDateTime(value)}
+                    </span>
                 ),
         },
         {
             title: invitationsCopy.columns.actions,
             dataIndex: "actions",
-            align: "center" as const,
+            align: "right" as const,
             render: (_: unknown, record: OrganizationInvitationDTO) =>
                 isImpersonating ? null : (
                     <ActionsMenu
@@ -93,8 +98,11 @@ export function OrganizationInvitationsTable() {
     ];
 
     return (
-        <section className="flex flex-col gap-3">
-            <h2 className="font-semibold text-lg">{invitationsCopy.title}</h2>
+        <SettingsSection
+            headingLevel={2}
+            surface={false}
+            title={invitationsCopy.title}
+        >
             <Table<OrganizationInvitationDTO>
                 columns={columns}
                 dataSource={loadError ? [] : invitations}
@@ -107,6 +115,6 @@ export function OrganizationInvitationsTable() {
                 searchFields={["email"]}
                 searchPlaceholder={invitationsCopy.searchPlaceholder}
             />
-        </section>
+        </SettingsSection>
     );
 }

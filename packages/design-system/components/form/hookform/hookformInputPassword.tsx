@@ -96,7 +96,7 @@ export function HookFormInputPassword<T extends FieldValues>(
                                         ? passwordToggleCopy.hide
                                         : passwordToggleCopy.show
                                 }
-                                className="-translate-y-1/2 absolute top-1/2 right-2"
+                                className="pressable -translate-y-1/2 absolute top-1/2 right-1.5 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40"
                                 onClick={toggleShowPassword}
                             >
                                 {showPassword ? (

@@ -18,7 +18,7 @@ updated: 2026-11-27
 > **Resumo**
 > - **O quê:** cada evento da trilha ganha um nível. As 18 ações que já existem viram `sensitive`, e a trilha passa a gravar também eventos `info` de ciclo de vida da conta (cadastro, assinatura criada, troca de plano, cancelamento, onboarding concluído, e-mail confirmado), com coluna e filtro por nível na listagem do admin.
 > - **Por quê:** hoje o admin só vê operações sensíveis e não tem onde consultar, por usuário e por período, quando alguém se cadastrou, assinou ou cancelou. O GA mostra o funil anônimo, não a história de uma conta.
-> - **Status:** `done` · valor médio · esforço M · produto. Entregue na branch `feat/audit-log-levels`, com a PR ainda por mergear
+> - **Status:** `done` · valor médio · esforço M · produto. Entregue pela PR #78, mergeada em `main` em 2026-11-27 (`6943ce9`), com o CI de merge verde
 > - **Próximo passo:** publicar os dois índices novos, rodar o backfill de nível e, no Blaze, ligar a TTL em `auditEvent.expiresAt` (`docs/PRE-PRODUCTION.md` §1.3, §1.11 e §1.12). O que foi conferido está em [Conferência da entrega](#conferência-da-entrega)
 
 ## Problema
@@ -241,4 +241,6 @@ titular como ator. A retenção dos eventos sensíveis continua sem prazo e segu
 `level` (§1.11), rodar o backfill de nível em base que já tem eventos (§1.12) e, no plano Blaze, ligar a
 TTL em `auditEvent.expiresAt` (§1.3), todas em `docs/PRE-PRODUCTION.md`.
 
-**Branch:** `feat/audit-log-levels`. **PR:** pendente de merge.
+**Branch:** `feat/audit-log-levels`. **PR:** #78, mergeada em 2026-11-27 às 19:36 UTC, merge `6943ce9`. A execução de
+merge (`gh run 46057935539`) passou nos seis jobs (`verify`, `audit`, `secrets`, `changes`, `coverage` e `e2e`),
+conferida na auditoria de 2026-11-27.

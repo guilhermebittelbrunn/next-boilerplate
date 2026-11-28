@@ -13,7 +13,7 @@ export function FormContainer({ children, className }: FormContainerProps) {
     return (
         <div
             className={cn(
-                "grid w-full grid-cols-1 gap-4 md:grid-cols-2",
+                "grid w-full grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2",
                 className
             )}
         >

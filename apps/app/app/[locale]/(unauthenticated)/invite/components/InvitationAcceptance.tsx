@@ -1,26 +1,29 @@
 "use client";
 
 import useAuth from "@repo/auth/provider";
-import {
-    Button,
-    buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import useAlert from "@repo/design-system/hooks/useAlert";
-import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import {
+    ClockIcon,
+    InfoIcon,
+    Link2OffIcon,
+    UserRoundXIcon,
+    UsersIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
-import { FullScreenLoader } from "@/shared/components/ui/FullScreenLoader";
 import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { queryKeys } from "@/shared/lib/queryKeys";
 import { usePanelState } from "@/shared/stores/panelStore";
+import { AuthActionLink } from "../../components/AuthActionLink";
 import { AuthCard } from "../../components/AuthCard";
+import { AuthPending } from "../../components/AuthPending";
 import {
     useAcceptInvitation,
     useInvitationPreview,
@@ -57,21 +60,18 @@ export function InvitationAcceptance({
     const signUpHref = withRedirectQuery(`/${locale}/sign-up`, invitePath);
 
     const goToSignIn = (
-        <div className="text-center text-sm">
-            <Link
-                className="text-primary hover:underline"
-                href={`/${locale}/sign-in`}
-            >
-                {invitationCopy.goToSignIn}
-            </Link>
-        </div>
+        <AuthActionLink href={`/${locale}/sign-in`}>
+            {invitationCopy.goToSignIn}
+        </AuthActionLink>
     );
 
     if (!token) {
         return (
             <AuthCard
                 description={invitationCopy.invalidBody}
+                icon={Link2OffIcon}
                 title={invitationCopy.invalidTitle}
+                tone="warning"
             >
                 {goToSignIn}
             </AuthCard>
@@ -79,14 +79,7 @@ export function InvitationAcceptance({
     }
 
     if (preview.isLoading) {
-        return (
-            <div className="space-y-4">
-                <FullScreenLoader />
-                <p className="text-center text-muted-foreground text-sm">
-                    {invitationCopy.loading}
-                </p>
-            </div>
-        );
+        return <AuthPending message={invitationCopy.loading} />;
     }
 
     if (preview.error || !preview.data) {
@@ -95,7 +88,9 @@ export function InvitationAcceptance({
             return (
                 <AuthCard
                     description={invitationCopy.expiredBody}
+                    icon={ClockIcon}
                     title={invitationCopy.expiredTitle}
+                    tone="warning"
                 >
                     {goToSignIn}
                 </AuthCard>
@@ -113,7 +108,9 @@ export function InvitationAcceptance({
                               new FormattedError(preview.error, locale)
                           )
                 }
+                icon={Link2OffIcon}
                 title={invitationCopy.invalidTitle}
+                tone="warning"
             >
                 {goToSignIn}
             </AuthCard>
@@ -133,34 +130,27 @@ export function InvitationAcceptance({
 
     if (!signedInEmail) {
         return (
-            <AuthCard description={description} title={invitationCopy.title}>
-                <div className="space-y-4">
-                    <p className="text-center text-muted-foreground text-sm">
-                        {validity}
-                    </p>
-                    <p className="text-center text-sm">
+            <AuthCard
+                description={description}
+                icon={UsersIcon}
+                title={invitationCopy.title}
+            >
+                <div className="flex flex-col gap-1 text-sm">
+                    <p className="text-pretty">
                         {invitationCopy.signInPrompt.replace(
                             "{email}",
                             invitation.email
                         )}
                     </p>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                        <Link
-                            className={cn(buttonVariants(), "flex-1")}
-                            href={signInHref}
-                        >
-                            {invitationCopy.signIn}
-                        </Link>
-                        <Link
-                            className={cn(
-                                buttonVariants({ variant: "outline" }),
-                                "flex-1"
-                            )}
-                            href={signUpHref}
-                        >
-                            {invitationCopy.signUp}
-                        </Link>
-                    </div>
+                    <p className="text-muted-foreground">{validity}</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <AuthActionLink href={signInHref}>
+                        {invitationCopy.signIn}
+                    </AuthActionLink>
+                    <AuthActionLink href={signUpHref} variant="outline">
+                        {invitationCopy.signUp}
+                    </AuthActionLink>
                 </div>
             </AuthCard>
         );
@@ -173,29 +163,36 @@ export function InvitationAcceptance({
 
     if (normalizeEmail(signedInEmail) !== normalizeEmail(invitation.email)) {
         return (
-            <AuthCard description={description} title={invitationCopy.title}>
-                <div className="space-y-4 text-center text-sm">
-                    <p>{signedInAs}</p>
-                    <p className="text-destructive">
+            <AuthCard
+                description={description}
+                icon={UserRoundXIcon}
+                title={invitationCopy.title}
+                tone="destructive"
+            >
+                <div className="flex flex-col gap-1 text-sm">
+                    <p className="break-words text-muted-foreground">
+                        {signedInAs}
+                    </p>
+                    <p className="text-pretty text-destructive">
                         {invitationCopy.emailMismatch.replace(
                             "{email}",
                             invitation.email
                         )}
                     </p>
-                    <Button
-                        className="w-full"
-                        loading={signOut.isPending}
-                        onClick={() =>
-                            signOut.mutate(undefined, {
-                                onSuccess: () => router.push(signInHref),
-                            })
-                        }
-                        type="button"
-                        variant="outline"
-                    >
-                        {invitationCopy.switchAccount}
-                    </Button>
                 </div>
+                <Button
+                    className="w-full"
+                    loading={signOut.isPending}
+                    onClick={() =>
+                        signOut.mutate(undefined, {
+                            onSuccess: () => router.push(signInHref),
+                        })
+                    }
+                    size="lg"
+                    type="button"
+                >
+                    {invitationCopy.switchAccount}
+                </Button>
             </AuthCard>
         );
     }
@@ -228,23 +225,31 @@ export function InvitationAcceptance({
     };
 
     return (
-        <AuthCard description={description} title={invitationCopy.title}>
-            <div className="space-y-4 text-sm">
-                <p className="text-center">{signedInAs}</p>
-                <p className="text-center text-muted-foreground">{validity}</p>
-                <p className="rounded-md border border-border bg-muted/50 p-3 text-muted-foreground">
+        <AuthCard
+            description={description}
+            icon={UsersIcon}
+            title={invitationCopy.title}
+        >
+            <div className="flex flex-col gap-1 text-sm">
+                <p className="break-words">{signedInAs}</p>
+                <p className="text-muted-foreground">{validity}</p>
+            </div>
+            <div className="flex gap-3 rounded-lg bg-muted/60 p-4 text-muted-foreground text-sm">
+                <InfoIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+                <p className="text-pretty">
                     {invitationCopy.previousOrganizationNotice}
                 </p>
-                <Button
-                    className="w-full"
-                    disabled={!sdkAuthorized || acceptMutation.isPending}
-                    loading={acceptMutation.isPending}
-                    onClick={accept}
-                    type="button"
-                >
-                    {invitationCopy.accept}
-                </Button>
             </div>
+            <Button
+                className="w-full"
+                disabled={!sdkAuthorized || acceptMutation.isPending}
+                loading={acceptMutation.isPending}
+                onClick={accept}
+                size="lg"
+                type="button"
+            >
+                {invitationCopy.accept}
+            </Button>
         </AuthCard>
     );
 }

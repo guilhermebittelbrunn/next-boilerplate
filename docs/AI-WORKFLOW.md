@@ -89,7 +89,9 @@ auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude
 - **`frontend-design`** — direção de design visual (paleta, tipografia, layout) para UI distintiva,
   não-templated. Mais útil na `apps/web` e em telas novas.
 - **`web-design-guidelines`** — revisão de código de UI contra Web Interface Guidelines (acessibilidade,
-  UX). Use em "revise minha UI / cheque acessibilidade".
+  UX). Use em "revise minha UI / cheque acessibilidade". Atualizada para a v1.1.0, que traz as regras
+  versionadas em `references/command.md` em vez de buscá-las na rede (procedência na seção de design
+  abaixo).
 - **`copywriting`** — escrita/melhoria de copy de marketing (hero, headline, CTA, pricing) — `apps/web`.
 - **`brainstorming`** — transforma uma ideia em design/spec via diálogo, **antes** de codar. Tem um
   `HARD-GATE`: não implementa nada até apresentar o design e você aprovar. Use ao iniciar features/
@@ -112,6 +114,44 @@ auto-acioná-las (a pasta `.agents/skills/` original não é varrida pelo Claude
   `/brag` completo (Hyperframes e 16 MB de música) fica fora do repositório e pode ser instalado por pessoa
   com `/plugin marketplace add latent-spaces/brag`. Usada na parte 4 da etapa de entrega (`/deliver`), a
   partir das telas de `pnpm --filter e2e showcase`.
+
+### Baixadas da comunidade (design)
+
+Seis fontes, copiadas para `.claude/skills/` com a licença ao lado. Como elas se encaixam numa tela,
+em que ordem e o que já foi decidido a partir delas está em [`DESIGN.md`](DESIGN.md); aqui fica só a
+procedência. Todas foram lidas antes de entrar no repositório; os scripts Python do Founder Skill só
+leem e gravam arquivos locais, sem rede.
+
+| Skill(s) | Origem | Versão copiada | Licença |
+|----------|--------|----------------|---------|
+| `thinkui`, `thinkui-anti-slop` | [thinkui.xyz](https://thinkui.xyz/.well-known/skills/index.json) (índice de skills do próprio site, conferido pelo SHA-256 publicado) | v1.0.0, baixada em 2026-11-27 | MIT |
+| `anti-ui-slop` | [uizze/uizze](https://github.com/uizze/uizze) `skills/anti-ui-slop` | commit `fc401e9` (2026-10-31), v1.3.1 | Apache-2.0 (com `NOTICE` e `MODIFICATIONS.md`) |
+| `design-taste-frontend-v1` | [Leonxlnx/taste-skill-classics](https://github.com/Leonxlnx/taste-skill-classics) `skills/taste-skill-v1` | commit `5e08c93` (2026-10-19) | MIT |
+| `emil-design-eng`, `animate`, `choreograph`, `review-animations`, `improve-animations`, `find-animation-opportunities`, `remove-animations`, `animation-performance`, `animation-vocabulary`, `break-ui`, `mobile-native`, `ask-sonner`, `pick-ui-library` | [emilkowalski/skills](https://github.com/emilkowalski/skills) | commit `64eb3de` (2026-11-15) | MIT |
+| `web-design-guidelines` | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) `skills/web-design-guidelines` | commit `5a37a63` (2026-11-20), v1.1.0, regras em `references/command.md` | MIT |
+| `founder-board`, `founder-competitors`, `founder-consumer`, `founder-pricing`, `founder-offer`, `founder-cfo`, `founder-marketing`, `founder-brand`, `founder-ops`, `founder-launch`, `founder-plan` | [Jakeschincariol/founder-skill](https://github.com/Jakeschincariol/founder-skill) | commit `fd9385b` (2026-10-06) | MIT |
+
+O que ficou de fora, e por quê:
+
+- **Taste Skill 2.5** (`Leonxlnx/taste-skill`): o kit tem 39 MB de fotos, scripts e um gate em Chrome
+  pensado para landing feita do zero. Quem for montar uma landing nova instala por pessoa com
+  `/plugin marketplace add Leonxlnx/taste-skill`.
+- **Sete skills do Emil**: `animate-expo` e `write-swift` são para React Native e Swift, e o boilerplate
+  é web. `ask-emil` é um roteador que aponta para o pacote inteiro. `prototype`, `learn-taste`,
+  `gestures` e `apple-design` não têm uso nas telas de hoje; quem precisar instala por pessoa com
+  `npx skills add emilkowalski/skills`.
+- **`ui-design`, `uizze-ui`, `image-to-ui`, `ui-radar`** do Uizze: repetem o roteiro da `anti-ui-slop`
+  ou dependem do MCP pago.
+
+`thinkui` e a parte de referências da `anti-ui-slop` consultam MCPs pagos. Sem chave, as duas continuam
+valendo pelo roteiro e pelo gate. A conexão é por pessoa (`claude mcp add --scope user …`, ver
+[`DESIGN.md`](DESIGN.md#1-as-skills-e-quando-usar-cada-uma)); nenhuma chave entra no repositório.
+
+O Founder Skill grava o que produz numa pasta `founder/` na raiz do projeto. Num fork, esse material é
+decisão de produto e pode ser versionado junto de `docs/product/`; no boilerplate ele não existe.
+
+Para atualizar uma delas, baixe a versão nova num diretório temporário, leia o diff (principalmente
+scripts e hooks), copie por cima da pasta em `.claude/skills/` e atualize a linha da tabela.
 
 > Para baixar mais skills da comunidade: rode `npx skills add <repo> --skill <nome>` e **mova a pasta
 > resultante de `.agents/skills/<nome>` para `.claude/skills/<nome>`** (é lá que o Claude Code descobre

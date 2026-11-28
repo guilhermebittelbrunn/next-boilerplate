@@ -112,7 +112,7 @@ describe("PageSkeleton", () => {
     it("reserva a barra do breadcrumb com a mesma altura do Header", () => {
         const { container } = render(<PageSkeleton />);
 
-        expect(container.firstElementChild?.className).toContain("h-16");
+        expect(container.firstElementChild?.className).toContain("h-14");
     });
 
     it("usa a mesma classe de corpo e de largura que o Container", () => {

@@ -28,6 +28,9 @@ import { withRedirectQuery } from "@/shared/lib/authRedirectLink";
 import { apiClient } from "@/shared/lib/client";
 import { signInWithGoogleViaApi } from "@/shared/lib/googleSignInApi";
 import { resolveAppPostLoginPath } from "@/shared/lib/postLoginNavigation";
+import { AuthCard } from "../../components/AuthCard";
+import { AuthDivider } from "../../components/AuthDivider";
+import { authTextLinkClassName } from "../../components/authLink";
 import {
     buildSignUpSchema,
     type SignUpFormValues,
@@ -41,6 +44,7 @@ export default function SignUpFormClient({
     redirect = null,
 }: SignUpFormClientProps) {
     const { dictionary, locale } = getDictionary();
+    const signUpCopy = dictionary.apps.app.pages.signUp;
     const { errorAlert, successAlert } = useAlert();
     const { signIn, loading: authLoading, user } = useAuth();
 
@@ -120,103 +124,78 @@ export default function SignUpFormClient({
     }
 
     return (
-        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center px-4 py-20 sm:px-0">
-            <div className="w-full max-w-md space-y-8 rounded-xl border bg-card p-8 shadow-sm">
-                <div className="space-y-2 text-center">
-                    <h1 className="font-bold text-3xl">
-                        {dictionary.apps.app.pages.signUp.meta.title}
-                    </h1>
-                    <p className="text-muted-foreground text-sm">
-                        {dictionary.apps.app.pages.signUp.createYourAccount}
-                    </p>
-                </div>
-
-                <Form {...form}>
-                    <form
-                        className="space-y-4"
-                        noValidate
-                        onSubmit={form.handleSubmit(onSubmit)}
-                    >
-                        <HookFormInput
-                            label={dictionary.apps.app.pages.signUp.form.email}
-                            name="email"
-                            placeholder={
-                                dictionary.apps.app.pages.signUp.form
-                                    .emailPlaceholder
-                            }
-                            type="email"
-                        />
-
-                        <HookFormInputPassword
-                            label={
-                                dictionary.apps.app.pages.signUp.form.password
-                            }
-                            name="password"
-                            placeholder={
-                                dictionary.apps.app.pages.signUp.form
-                                    .passwordPlaceholder
-                            }
-                            type="password"
-                        />
-
-                        <HookFormInputPassword
-                            label={
-                                dictionary.apps.app.pages.signUp.form
-                                    .confirmPassword
-                            }
-                            name="confirmPassword"
-                            placeholder={
-                                dictionary.apps.app.pages.signUp.form
-                                    .passwordPlaceholder
-                            }
-                            type="password"
-                        />
-
-                        <Button
-                            className="w-full"
-                            disabled={isSubmitting}
-                            type="submit"
-                        >
-                            {dictionary.apps.app.pages.signUp.form.submit}
-                        </Button>
-                    </form>
-                </Form>
-
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                            {dictionary.apps.app.pages.signUp.orContinueWith}
-                        </span>
-                    </div>
-                </div>
-
-                <Button
-                    className="w-full"
-                    disabled={isSubmitting}
-                    loading={googleSignIn.isPending}
-                    onClick={() => googleSignIn.mutate()}
-                    type="button"
-                    variant="outline"
-                >
-                    <FcGoogle />
-                    {dictionary.apps.app.pages.signUp.googleSignIn}
-                </Button>
-
-                <div className="text-center text-sm">
-                    <span className="text-muted-foreground">
-                        {dictionary.apps.app.pages.signUp.alreadyHaveAccount}
-                    </span>
+        <AuthCard
+            description={signUpCopy.createYourAccount}
+            footer={
+                <p>
+                    {signUpCopy.alreadyHaveAccount}
                     <Link
-                        className="text-primary hover:underline"
+                        className={authTextLinkClassName}
                         href={withRedirectQuery(`/${locale}/sign-in`, redirect)}
                     >
-                        {dictionary.apps.app.pages.signUp.signIn}
+                        {signUpCopy.signIn}
                     </Link>
-                </div>
-            </div>
-        </div>
+                </p>
+            }
+            title={signUpCopy.meta.title}
+        >
+            <Form {...form}>
+                <form
+                    className="flex flex-col gap-4"
+                    noValidate
+                    onSubmit={form.handleSubmit(onSubmit)}
+                >
+                    <HookFormInput
+                        autoComplete="email"
+                        label={signUpCopy.form.email}
+                        name="email"
+                        placeholder={signUpCopy.form.emailPlaceholder}
+                        spellCheck={false}
+                        type="email"
+                    />
+
+                    <HookFormInputPassword
+                        autoComplete="new-password"
+                        label={signUpCopy.form.password}
+                        name="password"
+                        placeholder={signUpCopy.form.passwordPlaceholder}
+                        type="password"
+                    />
+
+                    <HookFormInputPassword
+                        autoComplete="new-password"
+                        label={signUpCopy.form.confirmPassword}
+                        name="confirmPassword"
+                        placeholder={signUpCopy.form.passwordPlaceholder}
+                        type="password"
+                    />
+
+                    <Button
+                        className="mt-2 w-full"
+                        disabled={isSubmitting}
+                        loading={createAccount.isPending || signIn.isPending}
+                        size="lg"
+                        type="submit"
+                    >
+                        {signUpCopy.form.submit}
+                    </Button>
+                </form>
+            </Form>
+
+            <AuthDivider label={signUpCopy.orContinueWith} />
+
+            <Button
+                className="w-full"
+                disabled={isSubmitting}
+                loading={googleSignIn.isPending}
+                onClick={() => googleSignIn.mutate()}
+                size="lg"
+                type="button"
+                variant="outline"
+            >
+                <FcGoogle aria-hidden className="size-5" />
+                {signUpCopy.googleSignIn}
+            </Button>
+        </AuthCard>
     );
 }

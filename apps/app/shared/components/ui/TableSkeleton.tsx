@@ -11,13 +11,23 @@ export function TableSkeleton({ rows = 8 }: TableSkeletonProps) {
     return (
         <div className="flex w-full flex-col gap-4">
             <div className="flex items-center justify-between gap-2">
-                <Skeleton className="h-10 w-full max-w-xs" />
-                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-9 w-full max-w-sm" />
+                <Skeleton className="h-9 w-28" />
             </div>
-            <div className="flex flex-col gap-2">
-                {rowKeys.map((key) => (
-                    <Skeleton className="h-12 w-full" key={key} />
-                ))}
+            <div className="overflow-hidden rounded-xl bg-card shadow-card">
+                <Skeleton className="h-10 w-full rounded-none bg-muted/60" />
+                <div className="divide-y divide-border">
+                    {rowKeys.map((key) => (
+                        <div
+                            className="flex h-12 items-center gap-6 px-4"
+                            key={key}
+                        >
+                            <Skeleton className="h-4 w-1/4" />
+                            <Skeleton className="h-4 w-1/3" />
+                            <Skeleton className="ml-auto h-4 w-16" />
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

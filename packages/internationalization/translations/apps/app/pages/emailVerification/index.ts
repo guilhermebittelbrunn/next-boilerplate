@@ -13,7 +13,7 @@ export const emailVerificationTranslations = {
             title: "Confirmar e-mail",
             description: "Confirmação do seu endereço de e-mail",
         },
-        confirming: "Confirmando seu e-mail...",
+        confirming: "Confirmando seu e-mail…",
         success: {
             title: "E-mail confirmado",
             description: "Seu endereço de e-mail foi confirmado com sucesso.",
@@ -30,7 +30,7 @@ export const emailVerificationTranslations = {
         },
         goToPanel: "Ir para o painel",
         changeEmail: {
-            confirming: "Confirmando o novo e-mail...",
+            confirming: "Confirmando o novo e-mail…",
             success: {
                 title: "E-mail alterado",
                 description:
@@ -58,7 +58,7 @@ export const emailVerificationTranslations = {
             title: "Confirm email",
             description: "Confirmation of your email address",
         },
-        confirming: "Confirming your email...",
+        confirming: "Confirming your email…",
         success: {
             title: "Email confirmed",
             description: "Your email address was confirmed successfully.",
@@ -75,7 +75,7 @@ export const emailVerificationTranslations = {
         },
         goToPanel: "Go to the panel",
         changeEmail: {
-            confirming: "Confirming the new email...",
+            confirming: "Confirming the new email…",
             success: {
                 title: "Email changed",
                 description:
@@ -103,7 +103,7 @@ export const emailVerificationTranslations = {
             title: "Confirmar correo",
             description: "Confirmación de tu dirección de correo",
         },
-        confirming: "Confirmando tu correo...",
+        confirming: "Confirmando tu correo…",
         success: {
             title: "Correo confirmado",
             description: "Tu dirección de correo fue confirmada con éxito.",
@@ -120,7 +120,7 @@ export const emailVerificationTranslations = {
         },
         goToPanel: "Ir al panel",
         changeEmail: {
-            confirming: "Confirmando el nuevo correo...",
+            confirming: "Confirmando el nuevo correo…",
             success: {
                 title: "Correo cambiado",
                 description:

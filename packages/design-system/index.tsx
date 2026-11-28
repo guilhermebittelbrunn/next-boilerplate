@@ -7,7 +7,6 @@ import type { ComponentProps, ReactNode } from "react";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { useAlert } from "./hooks/useAlert";
-import { AntdAppProvider } from "./providers/antd-app";
 import { ThemeProvider } from "./providers/theme";
 
 type DesignSystemProviderProperties = ComponentProps<typeof ThemeProvider> & {
@@ -45,14 +44,14 @@ export const DesignSystemProvider = ({
     ...properties
 }: DesignSystemProviderProperties) => (
     <ThemeProvider {...properties}>
-        <AntdAppProvider>
-            <AuthProviderWithAlerts
-                postLoginNavigation={postLoginNavigation}
-                resolveDefaultPostLoginPath={resolveDefaultPostLoginPath}
-            >
-                <TooltipProvider>{children}</TooltipProvider>
-                <Toaster />
-            </AuthProviderWithAlerts>
-        </AntdAppProvider>
+        <AuthProviderWithAlerts
+            postLoginNavigation={postLoginNavigation}
+            resolveDefaultPostLoginPath={resolveDefaultPostLoginPath}
+        >
+            <TooltipProvider delayDuration={400} skipDelayDuration={300}>
+                {children}
+            </TooltipProvider>
+            <Toaster />
+        </AuthProviderWithAlerts>
     </ThemeProvider>
 );

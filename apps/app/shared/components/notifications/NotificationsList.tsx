@@ -16,7 +16,7 @@ import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
-import { BellOffIcon } from "lucide-react";
+import { BellOffIcon, CircleAlertIcon } from "lucide-react";
 import { Fragment } from "react";
 import { useListNotifications } from "@/shared/hooks/useListNotifications";
 import { useNotificationActions } from "@/shared/hooks/useNotificationActions";
@@ -48,9 +48,16 @@ export function NotificationsList({
     const renderBody = () => {
         if (list.isLoading) {
             return (
-                <div className="flex flex-col gap-3 p-4">
+                <div aria-busy="true" className="flex flex-col divide-y">
                     {SKELETON_ROWS.map((row) => (
-                        <Skeleton className="h-14 w-full" key={row} />
+                        <div className="flex gap-3 px-4 py-3" key={row}>
+                            <Skeleton className="size-4 shrink-0 rounded-sm" />
+                            <div className="flex flex-1 flex-col gap-2">
+                                <Skeleton className="h-4 w-3/5" />
+                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-3 w-24" />
+                            </div>
+                        </div>
                     ))}
                 </div>
             );
@@ -59,7 +66,16 @@ export function NotificationsList({
         if (list.error) {
             return (
                 <div className="flex flex-col items-center gap-3 p-6 text-center">
-                    <p className="text-muted-foreground text-sm" role="alert">
+                    <span className="flex size-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                        <CircleAlertIcon
+                            aria-hidden="true"
+                            className="size-5"
+                        />
+                    </span>
+                    <p
+                        className="max-w-xs text-pretty text-muted-foreground text-sm"
+                        role="alert"
+                    >
                         {handleClientError(
                             new FormattedError(list.error, locale)
                         )}
@@ -126,8 +142,8 @@ export function NotificationsList({
 
     return (
         <div className="flex flex-col">
-            <div className="flex items-center justify-between gap-2 border-b px-4 py-3">
-                <h2 className="font-medium text-sm">
+            <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5">
+                <h2 className="font-semibold text-sm tracking-tight">
                     {notificationsCopy.title}
                 </h2>
                 <Button
@@ -141,7 +157,7 @@ export function NotificationsList({
                 </Button>
             </div>
             {isImpersonating && (
-                <p className="border-b px-4 py-2 text-muted-foreground text-xs">
+                <p className="text-pretty border-b bg-muted/40 px-4 py-2 text-muted-foreground text-xs">
                     {notificationsCopy.readOnlyHint}
                 </p>
             )}

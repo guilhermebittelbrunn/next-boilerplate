@@ -67,12 +67,14 @@ export function AccountPasswordSetForm() {
                     <FormContainer>
                         <div className="col-span-1">
                             <HookFormInputPassword
+                                autoComplete="new-password"
                                 label={setPasswordCopy.newPassword}
                                 name="password"
                             />
                         </div>
                         <div className="col-span-1">
                             <HookFormInputPassword
+                                autoComplete="new-password"
                                 label={setPasswordCopy.confirmPassword}
                                 name="confirmPassword"
                             />

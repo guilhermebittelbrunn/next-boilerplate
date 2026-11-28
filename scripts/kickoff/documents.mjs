@@ -495,13 +495,28 @@ Você vai desenhar as telas do MVP de "${text(product.name, "produto sem nome")}
 - Acessibilidade WCAG 2.2 AA: contraste de 4,5:1 no texto, foco visível, nada que dependa só de cor.
 - Os textos existem em três idiomas; deixe folga de 30% na largura para inglês e espanhol.
 
+## Contrato de design do repositório (docs/DESIGN.md, obrigatório)
+- Um acento só: a cor principal é o --primary; neutros de croma baixo na mesma matiz. Sem violeta,
+  sem gradiente em texto, sem brilho neon, sem preto puro.
+- Profundidade por sombra fina e anel translúcido de 1 px, não por borda grossa nem caixa dentro de
+  caixa (no máximo dois níveis). No escuro, a superfície elevada é mais clara que o fundo.
+- Painel: grade previsível, alinhado à esquerda, densidade média; números em fonte tabular. Landing:
+  hero dividido (texto à esquerda, a interface real do produto à direita), uma ideia por bloco, nada
+  de três cartões iguais lado a lado.
+- Toda tela com dados mostra os estados carregando (esqueleto), vazio (o que fazer em seguida), erro
+  (com tentar de novo) e excesso (nome longo, número grande).
+- Movimento: só para feedback e troca de estado, entrada com ease-out abaixo de 300 ms; nada aparece
+  com o scroll; botão encolhe levemente ao ser pressionado.
+- Nada inventado com cara de real: depoimento, logo de cliente, "John Doe", "Acme", número redondo falso.
+- Um elemento vence em cada tela (título, número principal ou ação primária); diga qual é.
+
 ## Telas
 ${screenLines || "(nenhuma tela cadastrada ainda)"}
 
 ## Entregáveis
 1. Os tokens dos dois temas, prontos para colar num arquivo CSS.
 2. Um quadro por tela, em 1440 px e 390 px, tema claro e escuro, incluindo os estados listados.
-3. Para cada tela, a lista dos componentes usados.
+3. Para cada tela, a lista dos componentes usados e qual elemento vence a tela.
 \`\`\`
 `;
 };

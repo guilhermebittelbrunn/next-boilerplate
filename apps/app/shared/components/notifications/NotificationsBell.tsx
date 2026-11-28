@@ -41,7 +41,7 @@ export default function NotificationsBell() {
             <PopoverTrigger asChild>
                 <Button
                     aria-label={triggerLabel}
-                    className="relative h-9 w-9 shrink-0 rounded-full bg-sidebar-border p-0 text-foreground"
+                    className="pressable relative size-9 shrink-0 rounded-md p-0 text-muted-foreground hover:bg-accent hover:text-foreground"
                     size="icon"
                     variant="ghost"
                 >
@@ -52,7 +52,7 @@ export default function NotificationsBell() {
                     {count > 0 && (
                         <Badge
                             aria-hidden="true"
-                            className="-top-1 -right-1 absolute h-5 min-w-5 px-1 tabular-nums"
+                            className="-top-0.5 -right-0.5 absolute h-4 min-w-4 bg-primary px-1 text-[0.625rem] text-primary-foreground leading-none ring-2 ring-background dark:bg-primary"
                             data-testid="notifications-badge"
                         >
                             {formatUnreadBadge(count)}

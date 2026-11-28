@@ -37,7 +37,7 @@ vi.mock(
 );
 
 /**
- * Stand-ins for the antd-backed primitives: `Table` runs the column renderers so the real
+ * Stand-ins for the design-system primitives: `Table` runs the column renderers so the real
  * `Switch` and the real handlers are exercised, and `ActionsMenu` mirrors the contract of
  * the shared component — an item only exists when its handler was provided.
  */

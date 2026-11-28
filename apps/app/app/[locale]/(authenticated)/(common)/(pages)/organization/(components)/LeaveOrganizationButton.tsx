@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/ui/alert-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { getDictionary } from "@repo/internationalization/client";
+import { SettingsSection } from "@/shared/components/ui/SettingsSection";
 import { useAuthRequestPanel } from "@/shared/providers/AuthRequestPanelContext";
 import { useOrganizationActions } from "../(hooks)/useOrganizationActions";
 
@@ -23,11 +24,12 @@ export function LeaveOrganizationButton() {
     const leaveCopy = dictionary.apps.app.pages.common.organization.leave;
 
     return (
-        <section className="flex flex-col gap-2 rounded-lg border border-border p-4">
-            <h2 className="font-semibold text-lg">{leaveCopy.title}</h2>
-            <p className="text-muted-foreground text-sm">
-                {leaveCopy.description}
-            </p>
+        <SettingsSection
+            description={leaveCopy.description}
+            headingLevel={2}
+            title={leaveCopy.title}
+            tone="destructive"
+        >
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button
@@ -55,12 +57,13 @@ export function LeaveOrganizationButton() {
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => leaveMutation.mutate()}
+                            variant="destructive"
                         >
                             {leaveCopy.confirm}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </section>
+        </SettingsSection>
     );
 }

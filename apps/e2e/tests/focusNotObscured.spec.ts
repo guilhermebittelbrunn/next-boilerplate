@@ -22,6 +22,7 @@ const LONG_DESCRIPTION = Array.from(
     (_, line) => `${line + 1}`
 ).join("\n");
 const NAVBAR_OVERLAP = 24;
+const ACTION_BAR_GAP = 4;
 
 /**
  * Describes how the focused control overlaps the sticky bars, or "" when it is fully
@@ -155,21 +156,21 @@ test("Shift+Tab brings a field out from under the navbar", async ({ page }) => {
     await expectFormWithStickyBars(page);
 
     // The description grows with its content, which gives the page room to scroll the
-    // name field up under the navbar.
+    // type field, the one right before it, up under the navbar.
     const descriptionInput = page.getByLabel(entitiesForm.description);
     await descriptionInput.fill(LONG_DESCRIPTION);
     await descriptionInput.focus();
 
-    const nameInput = page.getByLabel(entitiesForm.name);
-    await nameInput.evaluate(
-        (name, { panelNavbar, overlap }) => {
+    const typeTrigger = page.getByRole("combobox", { name: entitiesForm.type });
+    await typeTrigger.evaluate(
+        (field, { panelNavbar, overlap }) => {
             const nav = document
                 .querySelector(panelNavbar)
                 ?.getBoundingClientRect();
             if (nav) {
                 window.scrollBy({
                     top:
-                        name.getBoundingClientRect().top -
+                        field.getBoundingClientRect().top -
                         (nav.bottom - overlap),
                     behavior: "instant",
                 });
@@ -181,24 +182,25 @@ test("Shift+Tab brings a field out from under the navbar", async ({ page }) => {
     const navbarBottom = await page
         .locator(PANEL_NAVBAR)
         .evaluate((el) => el.getBoundingClientRect().bottom);
-    const nameTop = await nameInput.evaluate(
+    const typeTop = await typeTrigger.evaluate(
         (el) => el.getBoundingClientRect().top
     );
     expect(
-        nameTop,
-        "the name field must stay on screen"
+        typeTop,
+        "the type field must stay on screen"
     ).toBeGreaterThanOrEqual(0);
-    expect(nameTop, "the name field must start under the navbar").toBeLessThan(
+    expect(typeTop, "the type field must start under the navbar").toBeLessThan(
         navbarBottom
     );
 
     await page.keyboard.press("Shift+Tab");
-    await expect(nameInput).toBeFocused();
+    await expect(typeTrigger).toBeFocused();
     await expectFocusUnobscured(page);
 });
 
-// The edit form is the longer one: its enabled switch pushes the genre group down far
-// enough that, with the page at the top, the last options start under the action bar.
+// A long description pushes the genre group of the edit form below the fold; the page is
+// then scrolled so the checked option sits just above the action bar and the options
+// after it start under the bar.
 test("arrow keys keep the focused genre option clear of the action bar", async ({
     page,
 }) => {
@@ -221,6 +223,7 @@ test("arrow keys keep the focused genre option clear of the action bar", async (
         SEEDED_ENTITY_NAME
     );
     await expectFormWithStickyBars(page);
+    await page.getByLabel(entitiesForm.description).fill(LONG_DESCRIPTION);
 
     const genreGroup = page.getByRole("radiogroup", {
         name: entitiesForm.genre,
@@ -229,7 +232,22 @@ test("arrow keys keep the focused genre option clear of the action bar", async (
     const optionCount = await options.count();
     expect(optionCount).toBeGreaterThan(1);
 
-    await genreGroup.getByRole("radio", { checked: true }).focus();
+    const checkedOption = genreGroup.getByRole("radio", { checked: true });
+    await checkedOption.evaluate(
+        (radio, { actionBar, gap }) => {
+            const bar = document
+                .querySelector(actionBar)
+                ?.getBoundingClientRect();
+            if (bar) {
+                window.scrollBy({
+                    top: radio.getBoundingClientRect().bottom - (bar.top - gap),
+                    behavior: "instant",
+                });
+            }
+        },
+        { actionBar: ACTION_BAR, gap: ACTION_BAR_GAP }
+    );
+    await checkedOption.focus();
     await expectFocusUnobscured(page);
 
     const lastOptionTop = await options

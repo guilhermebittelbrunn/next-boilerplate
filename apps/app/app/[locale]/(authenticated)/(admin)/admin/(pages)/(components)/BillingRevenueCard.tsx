@@ -39,14 +39,16 @@ export function BillingRevenueCard({
                 <CardTitle>{copy.title.replace("{month}", month)}</CardTitle>
                 <CardDescription>{copy.criteria}</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+            <CardContent className="mt-auto flex flex-col gap-2">
                 {revenue.byCurrency.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">{copy.none}</p>
+                    <p className="text-pretty text-muted-foreground text-sm">
+                        {copy.none}
+                    </p>
                 ) : (
                     <ul className="flex flex-col gap-1">
                         {revenue.byCurrency.map((row) => (
                             <li
-                                className="break-words font-semibold text-2xl tabular-nums tracking-tight"
+                                className="font-semibold text-3xl tabular-nums tracking-tight [overflow-wrap:anywhere]"
                                 key={row.currency}
                             >
                                 {formatPlanPrice(
@@ -60,7 +62,7 @@ export function BillingRevenueCard({
                     </ul>
                 )}
                 {revenue.byCurrency.length > 1 && (
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-pretty text-muted-foreground text-xs">
                         {copy.multiCurrency}
                     </p>
                 )}

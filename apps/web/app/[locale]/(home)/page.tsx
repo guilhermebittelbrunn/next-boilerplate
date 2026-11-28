@@ -4,13 +4,12 @@ import { JsonLd } from "@repo/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@repo/seo/schema";
 import type { Metadata } from "next";
 import { buildLocaleMetadata, getWebBaseUrl } from "@/shared/lib/seo";
-import { Cases } from "./components/cases";
 import { CTA } from "./components/cta";
 import { FAQ } from "./components/faq";
-import { Features } from "./components/features";
 import { Hero } from "./components/hero";
-import { Stats } from "./components/stats";
-import { Testimonials } from "./components/testimonials";
+import { Inherits } from "./components/inherits";
+import { Quality } from "./components/quality";
+import { Steps } from "./components/steps";
 
 export const generateMetadata = async (): Promise<Metadata> => {
     const { dictionary, locale } = await getDictionary();
@@ -44,10 +43,9 @@ export default async function Home() {
                 })}
             />
             <Hero />
-            <Cases />
-            <Features />
-            <Stats />
-            <Testimonials />
+            <Steps />
+            <Inherits />
+            <Quality />
             <FAQ />
             <CTA />
         </>

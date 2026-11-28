@@ -10,7 +10,7 @@ mode: subscription
 depends_on: []
 contends_on: [apps/api/(shared)/lib/billing.ts, apps/api/(shared)/lib/billing-state.ts, apps/api/app/(routes)/webhooks/payments/route.ts, apps/api/env.ts]
 feature: -
-updated: 2026-11-25
+updated: 2026-11-27
 ---
 
 # Cobrança internacional opcional (imposto, moeda por região e formas de pagamento)
@@ -57,8 +57,8 @@ no ponto mais sensível da cobrança.
   quando ele é cobrado por fora do preço.
 - `apps/api/(shared)/lib/billing-summary.ts:36-58` — a receita do admin já soma por moeda, sem converter. A fatia 2
   não precisa mexer aqui.
-- `apps/api/app/(routes)/webhooks/payments/route.ts:206-251` — o webhook trata `checkout.session.completed` só para
-  ligar o cliente ao perfil (`:212-215`), os três eventos de assinatura, `invoice.paid` e o resumo de recursos.
+- `apps/api/app/(routes)/webhooks/payments/route.ts:224-269` (era `:206-251` até a PR #78) — o webhook trata `checkout.session.completed` só para
+  ligar o cliente ao perfil (`:230-233`), os três eventos de assinatura, `invoice.paid` e o resumo de recursos.
   `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
   `invoice.payment_failed` e `mandate.updated` caem no `default` e só viram log (`:245-249`).
 - `apps/api/app/(routes)/payments/checkout/route.ts:39-46` — o checkout recusa só quem tem assinatura viva, e
@@ -78,7 +78,7 @@ no ponto mais sensível da cobrança.
   e ID fiscal não existem no perfil hoje.
 - `apps/api/env.ts:30` e `:46` — o padrão de recurso opcional ligado por variável já existe
   (`EMAIL_LINK_SIGN_IN_ENABLED`, `NEXT_PUBLIC_ORGANIZATION_MEMBERS_ENABLED`).
-- `docs/PRE-PRODUCTION.md:586-603` — o risco aceito de assinatura duplicada assume uma janela de segundos (duas
+- `docs/PRE-PRODUCTION.md:666-683` (era `:586-603` até a PR #78) — o risco aceito de assinatura duplicada assume uma janela de segundos (duas
   abas antes do webhook). Com boleto, a janela passa a ser de dias.
 - **Lacuna:** não há imposto, ID fiscal nem endereço no checkout; não há preço em outra moeda; e o fluxo não
   conhece pagamento pendente.

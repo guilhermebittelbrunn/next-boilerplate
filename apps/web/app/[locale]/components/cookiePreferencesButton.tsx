@@ -19,7 +19,7 @@ export function CookiePreferencesButton({
 
     return (
         <button
-            className="text-left text-foreground/75 hover:text-foreground"
+            className="w-fit text-left text-muted-foreground text-sm transition-colors hover:text-foreground"
             onClick={openPreferences}
             type="button"
         >

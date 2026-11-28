@@ -96,7 +96,9 @@ A descrição e os comentários quase sempre apontam para o material que **é a 
    configuração/upload que ainda não existe? Nunca conclua "é só refatorar" sem checar a infraestrutura
    de suporte.
 8. **Se a tarefa envolve UI nova ou reformulada**, considere acionar a skill `brainstorming` (design antes
-   de implementar) e registre a direção visual no plano. O fluxo a percorrer com `agent-browser` é
+   de implementar) e registre a direção visual no plano seguindo [`docs/DESIGN.md`](../../docs/DESIGN.md):
+   o propósito da superfície (operar, persuadir, ler), o elemento que vence a tela, os estados obrigatórios
+   e, quando houver chave do ThinkUI ou do Uizze, a referência real que resolveu a decisão (skill `thinkui`). O fluxo a percorrer com `agent-browser` é
    **encomendado** aqui (§8 do guia) e executado pelo `analista-qa` no `/test`; preveja nos critérios.
 
 ## Épicos (tarefas com subtarefas)

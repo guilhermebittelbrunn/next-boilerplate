@@ -9,12 +9,15 @@ import { getDictionary } from "@repo/internationalization/client";
 import FormattedError from "@repo/shared/utils/helpers/formattedError";
 import { handleClientError } from "@repo/shared/utils/helpers/handleClientError";
 import { useMutation } from "@tanstack/react-query";
+import { CircleCheckIcon, Link2OffIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { apiErrorCodeOf } from "@/shared/lib/apiErrorCode";
 import { apiClient } from "@/shared/lib/client";
+import { AuthActionLink } from "../../components/AuthActionLink";
 import { AuthCard } from "../../components/AuthCard";
+import { authTextLinkClassName } from "../../components/authLink";
 import {
     buildResetPasswordSchema,
     type ResetPasswordFormValues,
@@ -56,30 +59,22 @@ export function ResetPasswordForm({ oobCode }: ResetPasswordFormProps) {
     });
 
     const signInLink = (
-        <div className="text-center text-sm">
-            <Link
-                className="text-primary hover:underline"
-                href={`/${locale}/sign-in`}
-            >
-                {resetPasswordCopy.goToSignIn}
-            </Link>
-        </div>
+        <AuthActionLink href={`/${locale}/sign-in`}>
+            {resetPasswordCopy.goToSignIn}
+        </AuthActionLink>
     );
 
     if (!oobCode) {
         return (
             <AuthCard
                 description={resetPasswordCopy.invalidLink.description}
+                icon={Link2OffIcon}
                 title={resetPasswordCopy.invalidLink.title}
+                tone="warning"
             >
-                <div className="text-center text-sm">
-                    <Link
-                        className="text-primary hover:underline"
-                        href={`/${locale}/forgot-password`}
-                    >
-                        {dictionary.apps.app.pages.signIn.forgotPassword}
-                    </Link>
-                </div>
+                <AuthActionLink href={`/${locale}/forgot-password`}>
+                    {dictionary.apps.app.pages.signIn.forgotPassword}
+                </AuthActionLink>
             </AuthCard>
         );
     }
@@ -95,7 +90,9 @@ export function ResetPasswordForm({ oobCode }: ResetPasswordFormProps) {
                 description={handleClientError(
                     new FormattedError(confirmReset.error, locale)
                 )}
+                icon={TriangleAlertIcon}
                 title={resetPasswordCopy.success.title}
+                tone="warning"
             >
                 {signInLink}
             </AuthCard>
@@ -106,7 +103,9 @@ export function ResetPasswordForm({ oobCode }: ResetPasswordFormProps) {
         return (
             <AuthCard
                 description={resetPasswordCopy.success.description}
+                icon={CircleCheckIcon}
                 title={resetPasswordCopy.success.title}
+                tone="success"
             >
                 {signInLink}
             </AuthCard>
@@ -116,40 +115,49 @@ export function ResetPasswordForm({ oobCode }: ResetPasswordFormProps) {
     return (
         <AuthCard
             description={resetPasswordCopy.description}
+            footer={
+                <Link
+                    className={authTextLinkClassName}
+                    href={`/${locale}/sign-in`}
+                >
+                    {resetPasswordCopy.goToSignIn}
+                </Link>
+            }
             title={resetPasswordCopy.title}
         >
             <Form {...form}>
                 <form
-                    className="space-y-4"
+                    className="flex flex-col gap-4"
                     noValidate
                     onSubmit={form.handleSubmit((values) =>
                         confirmReset.mutate(values)
                     )}
                 >
                     <HookFormInputPassword
+                        autoComplete="new-password"
                         label={resetPasswordCopy.form.password}
                         name="password"
                         placeholder={resetPasswordCopy.form.passwordPlaceholder}
                     />
 
                     <HookFormInputPassword
+                        autoComplete="new-password"
                         label={resetPasswordCopy.form.confirmPassword}
                         name="confirmPassword"
                         placeholder={resetPasswordCopy.form.passwordPlaceholder}
                     />
 
                     <Button
-                        className="w-full"
+                        className="mt-2 w-full"
                         disabled={confirmReset.isPending}
                         loading={confirmReset.isPending}
+                        size="lg"
                         type="submit"
                     >
                         {resetPasswordCopy.form.submit}
                     </Button>
                 </form>
             </Form>
-
-            {signInLink}
         </AuthCard>
     );
 }

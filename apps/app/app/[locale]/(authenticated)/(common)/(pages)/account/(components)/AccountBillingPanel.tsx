@@ -34,7 +34,7 @@ import { useCheckoutConfirmation } from "../(hooks)/useCheckoutConfirmation";
 import { useListPlans } from "../(hooks)/useListPlans";
 import { usePaymentsMutations } from "../(hooks)/usePaymentsMutations";
 import { AccountBillingPlaceholder } from "./AccountBillingPlaceholder";
-import { BillingPlanCard } from "./BillingPlanCard";
+import { BillingPlanCard, type PlanEmphasis } from "./BillingPlanCard";
 
 const PAYMENT_ISSUE_STATUSES: readonly SubscriptionStatus[] = [
     "past_due",
@@ -52,7 +52,7 @@ const badgeVariantFor = (status: SubscriptionStatus) => {
         return "destructive" as const;
     }
     return status === "active" || status === "trialing"
-        ? ("default" as const)
+        ? ("success" as const)
         : ("secondary" as const);
 };
 
@@ -138,10 +138,12 @@ function CurrentPlanCard({
             </CardHeader>
             <CardContent className="flex flex-col gap-2 text-sm">
                 {priceLabel ? (
-                    <p className="font-medium">{priceLabel}</p>
+                    <p className="font-semibold text-2xl tabular-nums tracking-tight">
+                        {priceLabel}
+                    </p>
                 ) : null}
                 {periodEnd ? (
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground tabular-nums">
                         {periodTemplate.replace("{date}", periodEnd)}
                     </p>
                 ) : null}
@@ -151,7 +153,7 @@ function CurrentPlanCard({
                     </p>
                 ) : null}
             </CardContent>
-            <CardFooter>
+            <CardFooter className="border-border border-t pt-6">
                 <Button
                     disabled={disabled}
                     loading={loading}
@@ -186,6 +188,16 @@ function PlanList({
     const { dictionary } = getDictionary();
     const billingCopy = dictionary.apps.app.pages.common.account.billing;
 
+    const hasHighlight = plans.some(
+        (plan) => plan.priceId === highlightedPriceId
+    );
+    const planEmphasis = (priceId: string): PlanEmphasis => {
+        if (!hasHighlight) {
+            return "neutral";
+        }
+        return priceId === highlightedPriceId ? "chosen" : "muted";
+    };
+
     let emptyMessage: string | null = null;
     if (loadFailed) {
         emptyMessage = billingCopy.loadError;
@@ -194,8 +206,10 @@ function PlanList({
     }
 
     return (
-        <section className="flex flex-col gap-3">
-            <h3 className="font-medium text-sm">{billingCopy.plansTitle}</h3>
+        <section className="flex flex-col gap-4">
+            <h3 className="font-semibold tracking-tight">
+                {billingCopy.plansTitle}
+            </h3>
             {emptyMessage ? (
                 <p className="text-muted-foreground text-sm">{emptyMessage}</p>
             ) : (
@@ -203,7 +217,7 @@ function PlanList({
                     {plans.map((plan) => (
                         <BillingPlanCard
                             disabled={disabled}
-                            highlighted={plan.priceId === highlightedPriceId}
+                            emphasis={planEmphasis(plan.priceId)}
                             key={plan.priceId}
                             loading={redirectingPriceId === plan.priceId}
                             onSubscribe={onSubscribe}
@@ -219,10 +233,10 @@ function PlanList({
 function BillingSkeleton() {
     return (
         <div className="flex w-full flex-col gap-4">
-            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-5 w-40" />
             <div className="grid gap-4 md:grid-cols-2">
-                <Skeleton className="h-56 w-full" />
-                <Skeleton className="h-56 w-full" />
+                <Skeleton className="h-64 w-full rounded-xl" />
+                <Skeleton className="h-64 w-full rounded-xl" />
             </div>
         </div>
     );

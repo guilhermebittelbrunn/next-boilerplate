@@ -13,49 +13,51 @@ import {
 import { ModeToggle } from "@repo/design-system/components/ui/mode-toggle";
 import {
     NavigationMenu,
-    NavigationMenuContent,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-    NavigationMenuTrigger,
 } from "@repo/design-system/components/ui/navigation-menu";
 import { useIsLargeDesktop } from "@repo/design-system/hooks/useMediaQuery";
 import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import { getBrand } from "@repo/next-config/brand";
 import { isSubscriptionMode } from "@repo/next-config/product-mode";
-import { Menu, MoveRight, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { type MouseEvent, useEffect, useId, useRef, useState } from "react";
 import { env } from "@/env";
 import { apiClient } from "@/shared/lib/client";
+import { MAIN_CONTENT_ID, pageContainer } from "@/shared/lib/layout";
 import { WEB_PATHS } from "../../paths";
 import { LanguageSwitcher } from "./language-switcher";
 
-// A fourth link on the left does not fit beside a centred brand at 1024 px, so with
-// the docs link configured the full bar only starts at 1280 px.
+// The docs link adds a fourth item to the bar; with the session buttons and the
+// longest translations it only fits from 1280 px.
 const FULL_BAR_FROM = {
-    lg: {
-        row: "lg:grid lg:grid-cols-[1fr_minmax(0,auto)_1fr]",
-        nav: "lg:flex",
-        brand: "lg:justify-center",
-        menu: "lg:hidden",
-    },
-    xl: {
-        row: "xl:grid xl:grid-cols-[1fr_minmax(0,auto)_1fr]",
-        nav: "xl:flex",
-        brand: "xl:justify-center",
-        menu: "xl:hidden",
-    },
+    lg: { nav: "lg:flex", menu: "lg:hidden" },
+    xl: { nav: "xl:flex", menu: "xl:hidden" },
 } as const;
 
 const isExternal = (href: string) => href.startsWith("http");
 
+const externalLinkProps = (href: string) =>
+    isExternal(href)
+        ? { rel: "noopener noreferrer", target: "_blank" }
+        : { rel: undefined, target: undefined };
+
+const opensInPlace = (event: MouseEvent<HTMLAnchorElement>) =>
+    event.button === 0 &&
+    !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+
 export const Header = () => {
     const { dictionary, locale } = getDictionary();
+    const headerCopy = dictionary.components.header;
     const brand = getBrand();
     const isLargeDesktop = useIsLargeDesktop();
     const { user, signOut, loading } = useAuth();
+    const mobileMenuId = useId();
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const pointerStartedInsideMenu = useRef(false);
 
     // Cross-app link: in subscription mode an authenticated user can jump to the
     // app panel (the shared session keeps them logged in there). Full-page nav so
@@ -65,151 +67,89 @@ export const Header = () => {
         : null;
     const showPanelLink = isSubscriptionMode() && panelUrl;
 
-    const navigationItems = [
-        {
-            title: dictionary.components.header.home,
-            href: `/${locale}${WEB_PATHS.home}`,
-            description: "",
-        },
-        {
-            title: dictionary.components.header.product.title,
-            description: dictionary.components.header.product.description,
-            items: [
-                {
-                    title: dictionary.components.header.product.pricing,
-                    href: `/${locale}${WEB_PATHS.pricing}`,
-                },
-            ],
-        },
-        {
-            title: dictionary.components.header.contact,
-            href: `/${locale}${WEB_PATHS.contact}`,
-            description: "",
-        },
-    ];
-
     const docsUrl = env.NEXT_PUBLIC_DOCS_URL;
     const fullBar = FULL_BAR_FROM[docsUrl ? "xl" : "lg"];
 
-    if (docsUrl) {
-        navigationItems.push({
-            title: dictionary.components.header.docs,
-            href: docsUrl,
-            description: "",
-        });
-    }
+    const navigationItems = [
+        { title: headerCopy.home, href: `/${locale}` },
+        {
+            title: headerCopy.product.pricing,
+            href: `/${locale}${WEB_PATHS.pricing}`,
+        },
+        { title: headerCopy.contact, href: `/${locale}${WEB_PATHS.contact}` },
+        ...(docsUrl ? [{ title: headerCopy.docs, href: docsUrl }] : []),
+    ];
 
     const [isOpen, setOpen] = useState(false);
     const closeMenu = () => setOpen(false);
+    const returnFocusToMenuButton = () => menuButtonRef.current?.focus();
+
+    // The panel unmounts with the link that had focus, and the App Router does not move
+    // focus on navigation, so without this the keyboard user restarts from <body>.
+    const followPanelLink =
+        (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+            closeMenu();
+            if (opensInPlace(event) && !isExternal(href)) {
+                document
+                    .getElementById(MAIN_CONTENT_ID)
+                    ?.focus({ preventScroll: true });
+                return;
+            }
+            returnFocusToMenuButton();
+        };
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+        pointerStartedInsideMenu.current = false;
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setOpen(false);
+                menuButtonRef.current?.focus();
+            }
+        };
+        // The language and theme pickers render their options in a portal outside this
+        // wrapper, so "inside" follows the React tree (capture handler below), not the DOM.
+        const closeOnPointerOutside = () => {
+            if (pointerStartedInsideMenu.current) {
+                pointerStartedInsideMenu.current = false;
+                return;
+            }
+            setOpen(false);
+        };
+        document.addEventListener("keydown", closeOnEscape);
+        document.addEventListener("pointerdown", closeOnPointerOutside);
+        return () => {
+            document.removeEventListener("keydown", closeOnEscape);
+            document.removeEventListener("pointerdown", closeOnPointerOutside);
+        };
+    }, [isOpen]);
+
+    const signOutOfLanding = () =>
+        signOut.mutate(undefined, {
+            onSuccess: () => apiClient.removeHeader("Authorization"),
+        });
 
     return (
-        <header className="sticky top-0 left-0 z-40 w-full border-b bg-background px-4 md:px-2">
+        <header className="sticky top-0 left-0 z-40 w-full border-border/70 border-b bg-background/80 backdrop-blur-md">
+            <a
+                className="-translate-y-full absolute top-2 left-4 z-50 rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground text-sm opacity-0 focus-visible:translate-y-0 focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/40"
+                href={`#${MAIN_CONTENT_ID}`}
+            >
+                {dictionary.apps.web.layout.skipToContent}
+            </a>
             <div
                 className={cn(
-                    "container relative mx-auto flex min-h-20 flex-row items-center gap-4",
-                    fullBar.row
+                    pageContainer,
+                    "relative flex min-h-16 flex-row items-center gap-6"
                 )}
             >
-                <div
-                    className={cn(
-                        "hidden flex-row items-center justify-start gap-4",
-                        fullBar.nav
-                    )}
+                <Link
+                    className="flex shrink-0 items-center gap-2 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+                    href={`/${locale}`}
+                    translate="no"
                 >
-                    <NavigationMenu className="flex items-start justify-start">
-                        <NavigationMenuList className="flex flex-row justify-start gap-4">
-                            {navigationItems.map((item) => (
-                                <NavigationMenuItem key={item.title}>
-                                    {item.href ? (
-                                        <NavigationMenuLink
-                                            asChild
-                                            className={buttonVariants({
-                                                variant: "ghost",
-                                            })}
-                                        >
-                                            <Link
-                                                href={item.href}
-                                                rel={
-                                                    isExternal(item.href)
-                                                        ? "noopener noreferrer"
-                                                        : undefined
-                                                }
-                                                target={
-                                                    isExternal(item.href)
-                                                        ? "_blank"
-                                                        : undefined
-                                                }
-                                            >
-                                                {item.title}
-                                            </Link>
-                                        </NavigationMenuLink>
-                                    ) : (
-                                        <>
-                                            <NavigationMenuTrigger className="font-medium text-sm">
-                                                {item.title}
-                                            </NavigationMenuTrigger>
-                                            <NavigationMenuContent className="w-[450px]! p-4">
-                                                <div className="flex grid-cols-2 flex-col gap-4 lg:grid">
-                                                    <div className="flex h-full flex-col justify-between">
-                                                        <div className="flex flex-col">
-                                                            <p className="text-base">
-                                                                {item.title}
-                                                            </p>
-                                                            <p className="text-muted-foreground text-sm">
-                                                                {
-                                                                    item.description
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                        <Link
-                                                            className={cn(
-                                                                buttonVariants({
-                                                                    size: "sm",
-                                                                }),
-                                                                "mt-10"
-                                                            )}
-                                                            href={`/${locale}/contact`}
-                                                        >
-                                                            {
-                                                                dictionary
-                                                                    .components
-                                                                    .header
-                                                                    .contact
-                                                            }
-                                                        </Link>
-                                                    </div>
-                                                    <div className="flex h-full flex-col justify-end text-sm">
-                                                        {item.items?.map(
-                                                            (subItem) => (
-                                                                <NavigationMenuLink
-                                                                    className="flex flex-row items-center justify-between rounded px-4 py-2 hover:bg-muted"
-                                                                    href={
-                                                                        subItem.href
-                                                                    }
-                                                                    key={
-                                                                        subItem.title
-                                                                    }
-                                                                >
-                                                                    <span>
-                                                                        {
-                                                                            subItem.title
-                                                                        }
-                                                                    </span>
-                                                                    <MoveRight className="h-4 w-4 text-muted-foreground" />
-                                                                </NavigationMenuLink>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </NavigationMenuContent>
-                                        </>
-                                    )}
-                                </NavigationMenuItem>
-                            ))}
-                        </NavigationMenuList>
-                    </NavigationMenu>
-                </div>
-                <div className={cn("flex items-center gap-2", fullBar.brand)}>
                     <Avatar className="size-[18px] rounded-none">
                         <AvatarImage alt="" src={brand.logoUrl ?? undefined} />
                         <AvatarFallback className="rounded-none bg-transparent text-current">
@@ -231,50 +171,65 @@ export const Header = () => {
                     <p className="whitespace-nowrap font-semibold">
                         {brand.name}
                     </p>
-                </div>
+                </Link>
 
-                <div className="flex w-full justify-end gap-4">
-                    <div className="hidden border-r md:inline" />
-                    <div className="hidden md:inline">
+                <NavigationMenu
+                    className={cn("hidden flex-none", fullBar.nav)}
+                    viewport={false}
+                >
+                    <NavigationMenuList className="gap-1">
+                        {navigationItems.map((item) => (
+                            <NavigationMenuItem key={item.href}>
+                                <NavigationMenuLink
+                                    asChild
+                                    className={cn(
+                                        buttonVariants({
+                                            variant: "ghost",
+                                            size: "sm",
+                                        }),
+                                        "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <Link
+                                        href={item.href}
+                                        {...externalLinkProps(item.href)}
+                                    >
+                                        {item.title}
+                                    </Link>
+                                </NavigationMenuLink>
+                            </NavigationMenuItem>
+                        ))}
+                    </NavigationMenuList>
+                </NavigationMenu>
+
+                <div className="ml-auto flex items-center gap-2">
+                    <div className="hidden items-center gap-1 md:flex">
                         <LanguageSwitcher showLabel={isLargeDesktop} />
-                    </div>
-                    <div className="hidden border-r md:inline" />
-                    <div className="hidden md:inline">
                         <ModeToggle />
                     </div>
-                    <div className="hidden border-r md:inline" />
                     {!loading && (
-                        <div className="flex flex-row gap-2">
+                        <div className="flex flex-row items-center gap-2">
                             {user ? (
                                 <>
                                     {showPanelLink && (
                                         <a
                                             className={cn(
-                                                buttonVariants(),
+                                                buttonVariants({ size: "sm" }),
                                                 "hidden md:inline-flex"
                                             )}
                                             href={panelUrl}
                                             rel="noopener noreferrer"
                                         >
-                                            {
-                                                dictionary.components.header
-                                                    .goToPanel
-                                            }
+                                            {headerCopy.goToPanel}
                                         </a>
                                     )}
                                     <Button
-                                        className="hidden md:inline"
-                                        onClick={() =>
-                                            signOut.mutate(undefined, {
-                                                onSuccess: () =>
-                                                    apiClient.removeHeader(
-                                                        "Authorization"
-                                                    ),
-                                            })
-                                        }
+                                        className="hidden md:inline-flex"
+                                        onClick={signOutOfLanding}
+                                        size="sm"
                                         variant="outline"
                                     >
-                                        {dictionary.components.header.signOut}
+                                        {headerCopy.signOut}
                                     </Button>
                                 </>
                             ) : (
@@ -282,19 +237,22 @@ export const Header = () => {
                                     <Link
                                         className={cn(
                                             buttonVariants({
-                                                variant: "outline",
+                                                variant: "ghost",
+                                                size: "sm",
                                             }),
                                             "hidden md:inline-flex"
                                         )}
                                         href={`/${locale}/sign-in`}
                                     >
-                                        {dictionary.components.header.signIn}
+                                        {headerCopy.signIn}
                                     </Link>
                                     <Link
-                                        className={buttonVariants()}
+                                        className={buttonVariants({
+                                            size: "sm",
+                                        })}
                                         href={`/${locale}/sign-up`}
                                     >
-                                        {dictionary.components.header.signUp}
+                                        {headerCopy.signUp}
                                     </Link>
                                 </>
                             )}
@@ -303,70 +261,92 @@ export const Header = () => {
                 </div>
 
                 <div
-                    className={cn(
-                        "flex w-12 shrink items-end justify-end",
-                        fullBar.menu
-                    )}
+                    className={cn("flex shrink-0", fullBar.menu)}
+                    onPointerDownCapture={() => {
+                        pointerStartedInsideMenu.current = true;
+                    }}
                 >
                     <Button
+                        aria-controls={mobileMenuId}
                         aria-expanded={isOpen}
-                        aria-label={dictionary.components.header.menu}
+                        aria-label={headerCopy.menu}
                         onClick={() => setOpen(!isOpen)}
+                        ref={menuButtonRef}
+                        size="icon"
                         variant="ghost"
                     >
                         {isOpen ? (
-                            <X className="h-5 w-5" />
+                            <X aria-hidden="true" className="size-5" />
                         ) : (
-                            <Menu className="h-5 w-5" />
+                            <Menu aria-hidden="true" className="size-5" />
                         )}
                     </Button>
                     {isOpen && (
-                        <div className="container absolute top-20 right-0 flex w-full flex-col gap-8 border-t bg-background py-4 shadow-lg">
-                            {navigationItems.map((item) => (
-                                <div key={item.title}>
-                                    <div className="flex flex-col gap-2">
-                                        {item.href ? (
-                                            <Link
-                                                className="flex items-center justify-between"
-                                                href={item.href}
-                                                onClick={closeMenu}
-                                                rel={
-                                                    isExternal(item.href)
-                                                        ? "noopener noreferrer"
-                                                        : undefined
-                                                }
-                                                target={
-                                                    isExternal(item.href)
-                                                        ? "_blank"
-                                                        : undefined
-                                                }
+                        <div
+                            className="fade-in-0 slide-in-from-top-1 absolute inset-x-0 top-full animate-in border-b bg-background shadow-popover duration-200"
+                            id={mobileMenuId}
+                        >
+                            <nav
+                                aria-label={headerCopy.menu}
+                                className={cn(
+                                    pageContainer,
+                                    "flex flex-col py-3"
+                                )}
+                            >
+                                {navigationItems.map((item) => (
+                                    <Link
+                                        className="flex min-h-11 items-center border-b text-base last:border-b-0"
+                                        href={item.href}
+                                        key={item.href}
+                                        onClick={followPanelLink(item.href)}
+                                        {...externalLinkProps(item.href)}
+                                    >
+                                        {item.title}
+                                    </Link>
+                                ))}
+                                {user ? (
+                                    <div className="mt-3 flex flex-col gap-2 md:hidden">
+                                        {showPanelLink && (
+                                            <a
+                                                className={buttonVariants()}
+                                                href={panelUrl}
+                                                rel="noopener noreferrer"
                                             >
-                                                <span className="text-lg">
-                                                    {item.title}
-                                                </span>
-                                                <MoveRight className="h-4 w-4 stroke-1 text-muted-foreground" />
-                                            </Link>
-                                        ) : (
-                                            <p className="text-lg">
-                                                {item.title}
-                                            </p>
+                                                {headerCopy.goToPanel}
+                                            </a>
                                         )}
-                                        {item.items?.map((subItem) => (
-                                            <Link
-                                                className="flex items-center justify-between"
-                                                href={subItem.href}
-                                                key={subItem.title}
-                                                onClick={closeMenu}
-                                            >
-                                                <span className="text-muted-foreground">
-                                                    {subItem.title}
-                                                </span>
-                                                <MoveRight className="h-4 w-4 stroke-1" />
-                                            </Link>
-                                        ))}
+                                        <Button
+                                            onClick={() => {
+                                                closeMenu();
+                                                returnFocusToMenuButton();
+                                                signOutOfLanding();
+                                            }}
+                                            variant="outline"
+                                        >
+                                            {headerCopy.signOut}
+                                        </Button>
                                     </div>
+                                ) : (
+                                    <Link
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: "outline",
+                                            }),
+                                            "mt-3 md:hidden"
+                                        )}
+                                        href={`/${locale}/sign-in`}
+                                        onClick={followPanelLink(
+                                            `/${locale}/sign-in`
+                                        )}
+                                    >
+                                        {headerCopy.signIn}
+                                    </Link>
+                                )}
+                                <div className="mt-3 flex items-center gap-1 md:hidden">
+                                    <LanguageSwitcher />
+                                    <ModeToggle />
                                 </div>
-                            ))}
+                            </nav>
                         </div>
                     )}
                 </div>

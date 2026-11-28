@@ -84,8 +84,13 @@ exemplos de `entity`).
   primitivos ao React Hook Form. A prop de erro é **`error`**, nunca `errorMessage`.
 - **`Container` / `FormContainer` / `Footer`** — o casco de página/formulário. ⚠️ Ficam em
   **`apps/app/shared/components/ui/`**, não no design system.
-- **`Table`** — o wrapper de tabela do design system (antd por baixo), com `searchFields` (busca em
-  memória), `onRefresh` e `refreshLoading`. Por ser antd, **valide o tema light/dark** ao mexer nele.
+- **`Table`** — a tabela do design system, em HTML semântico, com `searchFields` (busca em memória),
+  `onRefresh`, `refreshLoading`, paginação no cliente, esqueleto e estado vazio próprios.
+- **Contrato de design** — [`docs/DESIGN.md`](DESIGN.md): tokens, regras de componente, estados
+  obrigatórios e o **gate** de 6 perguntas (específico, evidência, estados, conteúdo, hierarquia,
+  limites) que uma tela responde antes de ser dada como pronta.
+- **`pressable`** — utilitário CSS do design system que encolhe o elemento a 97 % no `:active`. Todo
+  clicável usa; some sob `prefers-reduced-motion`.
 - **Folha de dicionário** — arquivo de tradução com as **3 chaves de idioma** (`pt-br`, `en`, `es`) e a
   mesma estrutura em cada, que sobe por `index.ts` até `translations/global.ts`. O teste de paridade
   garante que nenhuma chave falte.

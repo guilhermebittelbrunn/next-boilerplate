@@ -10,9 +10,10 @@ import {
     HookFormTextarea,
 } from "@repo/design-system/components/form/hookform";
 import type { RadioOption } from "@repo/design-system/components/ui/radio-group-input";
+import { cn } from "@repo/design-system/lib/utils";
 import { getDictionary } from "@repo/internationalization/client";
 import { EntityType } from "@repo/sdk/src/types";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { useFormatDisplayDateTime } from "@/shared/lib/formatDisplayDateTime";
 import { isStorageEnabled } from "@/shared/lib/storageEnabled";
 import {
@@ -33,6 +34,25 @@ type EntityFormFieldsProps = {
     photoPreviewUrl?: string | null;
     uploadPhoto?: UploadPhotoHandler;
 };
+
+function FieldGroupTitle({
+    children,
+    first = false,
+}: {
+    children: ReactNode;
+    first?: boolean;
+}) {
+    return (
+        <h2
+            className={cn(
+                "col-span-1 font-semibold text-sm tracking-tight md:col-span-2",
+                !first && "mt-1 border-border border-t pt-6"
+            )}
+        >
+            {children}
+        </h2>
+    );
+}
 
 export function EntityFormFields({
     mode,
@@ -79,18 +99,18 @@ export function EntityFormFields({
     return (
         <div className="contents">
             {mode === "update" && createdAtValue && createdAtLabel ? (
-                <div className="col-span-1 md:col-span-2">
-                    <p className="text-muted-foreground text-sm">
-                        <span className="font-medium text-foreground">
-                            {createdAtLabel}:{" "}
-                        </span>
-                        {formatDateTime(createdAtValue)}
-                    </p>
-                </div>
+                <p className="col-span-1 text-muted-foreground text-sm tabular-nums md:col-span-2">
+                    {createdAtLabel}: {formatDateTime(createdAtValue)}
+                </p>
             ) : null}
 
-            <div className="col-span-1 md:col-span-2">
+            <FieldGroupTitle first>
+                {entitiesForm.sections.identity}
+            </FieldGroupTitle>
+
+            <div className="col-span-1">
                 <HookFormInput
+                    autoComplete="off"
                     label={entitiesForm.name}
                     name="name"
                     placeholder={entitiesForm.name}
@@ -99,15 +119,7 @@ export function EntityFormFields({
                 />
             </div>
 
-            <div className="col-span-1 md:col-span-2">
-                <HookFormTextarea
-                    label={entitiesForm.description}
-                    name="description"
-                    rows={4}
-                />
-            </div>
-
-            <div className="col-span-1 md:col-span-2">
+            <div className="col-span-1">
                 <HookFormSelect
                     label={entitiesForm.type}
                     name="type"
@@ -115,6 +127,14 @@ export function EntityFormFields({
                     placeholder={entitiesForm.type}
                     required
                     searchable={false}
+                />
+            </div>
+
+            <div className="col-span-1 md:col-span-2">
+                <HookFormTextarea
+                    label={entitiesForm.description}
+                    name="description"
+                    rows={4}
                 />
             </div>
 
@@ -128,21 +148,23 @@ export function EntityFormFields({
                         upload={uploadPhoto}
                     />
                 ) : (
-                    <>
+                    <div className="flex flex-col gap-2">
                         <HookFormInput
                             label={entitiesForm.photo}
                             name="photo"
                             placeholder={entitiesForm.photoPlaceholder}
                             type="url"
                         />
-                        <p className="mt-1 text-muted-foreground text-xs">
+                        <p className="text-muted-foreground text-xs">
                             {entitiesForm.photoHint}
                         </p>
-                    </>
+                    </div>
                 )}
             </div>
 
-            <div className="col-span-1 md:col-span-2">
+            <FieldGroupTitle>{entitiesForm.sections.profile}</FieldGroupTitle>
+
+            <div className="col-span-1">
                 <HookFormRadioGroup
                     label={entitiesForm.genre}
                     name="genre"
@@ -150,7 +172,7 @@ export function EntityFormFields({
                 />
             </div>
 
-            <div className="col-span-1 md:col-span-2">
+            <div className="col-span-1">
                 <HookFormDateInput
                     captionLayout="dropdown"
                     label={entitiesForm.birthdate}
@@ -159,13 +181,18 @@ export function EntityFormFields({
             </div>
 
             {mode === "update" ? (
-                <div className="col-span-1 md:col-span-2">
-                    <HookFormSwitch
-                        description={entitiesForm.enabled}
-                        label={entitiesForm.enabled}
-                        name="enabled"
-                    />
-                </div>
+                <>
+                    <FieldGroupTitle>
+                        {entitiesForm.sections.status}
+                    </FieldGroupTitle>
+                    <div className="col-span-1 md:col-span-2">
+                        <HookFormSwitch
+                            description={entitiesForm.enabled}
+                            label={entitiesForm.enabled}
+                            name="enabled"
+                        />
+                    </div>
+                </>
             ) : null}
         </div>
     );
