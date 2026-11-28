@@ -11,17 +11,17 @@
     "@react-email/components": "0.5.7",
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
-    "@t3-oss/env-nextjs": "^0.13.8",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "resend": "^6.2.2",
+    "@t3-oss/env-nextjs": "^0.13.11",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "resend": "^6.39.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "24.9.1",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
+    "@types/react": "19.3.2",
+    "@types/react-dom": "19.3.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.3"
   }
