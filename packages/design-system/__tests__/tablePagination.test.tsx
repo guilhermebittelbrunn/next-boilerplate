@@ -1,7 +1,14 @@
 import { Table } from "@repo/design-system/components/ui/table";
 import { getDictionary } from "@repo/internationalization/client";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+    act,
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    within,
+} from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 type Row = Record<string, unknown> & { id: string; name: string };
 
@@ -19,6 +26,8 @@ const FEW_ROWS = 4;
 const ROWS_ALREADY_LOADED = 3;
 const ROWS_UNDER_LARGER_SIZE = 15;
 const ROWS_UNDER_SMALLEST_SIZE = 8;
+const SEARCH_ANNOUNCE_DELAY_MS = 500;
+const KEYSTROKE_GAP_MS = 200;
 
 function buildRows(count: number): Row[] {
     return Array.from({ length: count }, (_, index) => ({
@@ -61,7 +70,48 @@ function previousButton() {
     return screen.getByRole("button", { name: tableCopy.previousPage });
 }
 
-afterEach(cleanup);
+function searchField() {
+    return screen.getByRole("searchbox", { name: tableCopy.searchLabel });
+}
+
+function typeInSearch(value: string) {
+    fireEvent.change(searchField(), { target: { value } });
+}
+
+function noResultsText(term: string) {
+    return tableCopy.searchNoResults.replace("{term}", term);
+}
+
+function fieldClearButton() {
+    const fieldWrapper = searchField().parentElement;
+    if (!fieldWrapper) {
+        throw new Error("search field rendered without a wrapper");
+    }
+    return within(fieldWrapper).queryByRole("button", {
+        name: tableCopy.clearSearch,
+    });
+}
+
+function emptyStateClearButton() {
+    return within(screen.getByRole("table")).queryByRole("button", {
+        name: tableCopy.clearSearch,
+    });
+}
+
+function resultsAnnouncement() {
+    const region = screen
+        .getAllByRole("status")
+        .find((candidate) => candidate.getAttribute("aria-atomic") === "true");
+    if (!region) {
+        throw new Error("search results region is not mounted");
+    }
+    return region.textContent;
+}
+
+afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+});
 
 describe("paginação da Table", () => {
     it("mostra dez linhas por página por padrão e avança para a página seguinte", () => {
@@ -309,15 +359,279 @@ describe("estados da Table", () => {
         ).toBeNull();
     });
 
-    it("mostra o texto de vazio quando a busca não encontra nada", () => {
+    it("diz que a busca não achou o termo em vez de dizer que a lista está vazia", () => {
         renderTable({ searchFields: ["name"] });
 
-        fireEvent.change(
-            screen.getByRole("searchbox", { name: tableCopy.searchLabel }),
-            { target: { value: "inexistente" } }
-        );
+        typeInSearch("  inexistente  ");
+
+        expect(screen.getByText(noResultsText("inexistente"))).toBeTruthy();
+        expect(screen.queryByText(EMPTY_TEXT)).toBeNull();
+        expect(emptyStateClearButton()).toBeTruthy();
+        expect(bodyRows()).toHaveLength(1);
+    });
+
+    it("mantém o texto de vazio do chamador quando não há registro, mesmo com termo digitado", () => {
+        renderTable({ dataSource: [], searchFields: ["name"] });
+
+        typeInSearch("inexistente");
 
         expect(screen.getByText(EMPTY_TEXT)).toBeTruthy();
-        expect(bodyRows()).toHaveLength(1);
+        expect(screen.queryByText(noResultsText("inexistente"))).toBeNull();
+        expect(emptyStateClearButton()).toBeNull();
+    });
+
+    it("não trata termo só com espaços como busca", () => {
+        renderTable({ dataSource: [], searchFields: ["name"] });
+
+        typeInSearch("   ");
+
+        expect(screen.getByText(EMPTY_TEXT)).toBeTruthy();
+        expect(emptyStateClearButton()).toBeNull();
+    });
+});
+
+describe("limpar a busca da Table", () => {
+    it("o botão do vazio devolve as linhas, esvazia o campo e foca o campo", () => {
+        renderTable({ searchFields: ["name"] });
+        typeInSearch("inexistente");
+
+        const clearButton = emptyStateClearButton();
+        if (!clearButton) {
+            throw new Error("empty state rendered without the clear action");
+        }
+        fireEvent.click(clearButton);
+
+        expect(bodyRows()).toHaveLength(DEFAULT_PAGE_SIZE);
+        expect((searchField() as HTMLInputElement).value).toBe("");
+        expect(document.activeElement).toBe(searchField());
+    });
+
+    it("o botão do campo só existe com texto, limpa e foca o campo", () => {
+        renderTable({ searchFields: ["name"] });
+        expect(fieldClearButton()).toBeNull();
+
+        typeInSearch("registro 1");
+        const clearButton = fieldClearButton();
+        if (!clearButton) {
+            throw new Error("search field rendered without the clear button");
+        }
+        expect(bodyRows()).toHaveLength(DEFAULT_PAGE_SIZE);
+        fireEvent.click(clearButton);
+
+        expect((searchField() as HTMLInputElement).value).toBe("");
+        expect(document.activeElement).toBe(searchField());
+        expect(fieldClearButton()).toBeNull();
+        expect(
+            screen.getByText(pageStatus(1, PAGES_AT_DEFAULT_SIZE))
+        ).toBeTruthy();
+    });
+
+    it("põe o botão do campo entre o campo e o Atualizar na ordem de Tab", () => {
+        const { container } = renderTable({
+            searchFields: ["name"],
+            onRefresh: vi.fn(),
+        });
+        typeInSearch("registro");
+
+        const toolbarControls = [
+            searchField(),
+            fieldClearButton(),
+            screen.getByRole("button", { name: tableCopy.refresh }),
+        ];
+        const tabOrder = Array.from(
+            container.querySelectorAll("input, button")
+        ).slice(0, toolbarControls.length);
+
+        expect(tabOrder).toEqual(toolbarControls);
+    });
+});
+
+describe("anúncio do resultado da busca da Table", () => {
+    it("fica em silêncio enquanto a pessoa digita e anuncia a contagem de todas as linhas filtradas depois da pausa", () => {
+        vi.useFakeTimers();
+        renderTable({ searchFields: ["name"] });
+        expect(resultsAnnouncement()).toBe("");
+
+        typeInSearch("registro");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS - 1);
+        });
+        expect(resultsAnnouncement()).toBe("");
+
+        act(() => {
+            vi.advanceTimersByTime(1);
+        });
+        expect(resultsAnnouncement()).toBe(
+            tableCopy.searchResults.replace("{count}", String(TOTAL_ROWS))
+        );
+    });
+
+    it("anuncia uma vez só, o termo final, quando as teclas chegam em sequência", () => {
+        vi.useFakeTimers();
+        renderTable({ searchFields: ["name"] });
+
+        typeInSearch("registro");
+        act(() => {
+            vi.advanceTimersByTime(KEYSTROKE_GAP_MS);
+        });
+        typeInSearch("registro 2");
+        act(() => {
+            vi.advanceTimersByTime(KEYSTROKE_GAP_MS);
+        });
+        expect(resultsAnnouncement()).toBe("");
+
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+        expect(resultsAnnouncement()).toBe(
+            tableCopy.searchResults.replace("{count}", "6")
+        );
+    });
+
+    it("volta a esperar a pausa quando a pessoa retorna a um termo já anunciado", () => {
+        vi.useFakeTimers();
+        renderTable({ searchFields: ["name"] });
+
+        typeInSearch("registro 2");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+        typeInSearch("registro 25");
+        typeInSearch("registro 2");
+
+        expect(resultsAnnouncement()).toBe("");
+    });
+
+    it("usa o singular para um resultado e o texto de nenhum resultado para zero", () => {
+        vi.useFakeTimers();
+        renderTable({ searchFields: ["name"] });
+
+        typeInSearch("registro 25");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+        expect(resultsAnnouncement()).toBe(tableCopy.searchResultsOne);
+
+        typeInSearch("inexistente");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+        expect(resultsAnnouncement()).toBe(noResultsText("inexistente"));
+    });
+
+    it("anuncia a contagem nova quando mais linhas chegam com o termo parado", () => {
+        vi.useFakeTimers();
+        const { rerender } = renderTable({
+            dataSource: buildRows(FEW_ROWS),
+            searchFields: ["name"],
+        });
+        typeInSearch("registro");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+        expect(resultsAnnouncement()).toBe(
+            tableCopy.searchResults.replace("{count}", String(FEW_ROWS))
+        );
+
+        rerender(
+            <Table<Row>
+                columns={[{ dataIndex: "name", title: "Nome" }]}
+                dataSource={buildRows(TOTAL_ROWS)}
+                locale={{ emptyText: EMPTY_TEXT }}
+                rowKey="id"
+                searchFields={["name"]}
+            />
+        );
+
+        expect(resultsAnnouncement()).toBe(
+            tableCopy.searchResults.replace("{count}", String(TOTAL_ROWS))
+        );
+    });
+
+    it("fica em silêncio enquanto o esqueleto aparece e anuncia a contagem quando as linhas chegam", () => {
+        vi.useFakeTimers();
+        const { rerender } = renderTable({
+            dataSource: [],
+            loading: true,
+            searchFields: ["name"],
+        });
+        typeInSearch("registro");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+
+        expect(resultsAnnouncement()).toBe("");
+
+        rerender(
+            <Table<Row>
+                columns={[{ dataIndex: "name", title: "Nome" }]}
+                dataSource={buildRows(TOTAL_ROWS)}
+                locale={{ emptyText: EMPTY_TEXT }}
+                rowKey="id"
+                searchFields={["name"]}
+            />
+        );
+
+        expect(resultsAnnouncement()).toBe(
+            tableCopy.searchResults.replace("{count}", String(TOTAL_ROWS))
+        );
+    });
+
+    it("não diz que a busca não achou nada enquanto um refresh sem linhas filtradas carrega", () => {
+        vi.useFakeTimers();
+        const { rerender } = renderTable({
+            loading: true,
+            searchFields: ["name"],
+        });
+        typeInSearch("inexistente");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+
+        expect(resultsAnnouncement()).toBe("");
+
+        rerender(
+            <Table<Row>
+                columns={[{ dataIndex: "name", title: "Nome" }]}
+                dataSource={buildRows(TOTAL_ROWS)}
+                locale={{ emptyText: EMPTY_TEXT }}
+                rowKey="id"
+                searchFields={["name"]}
+            />
+        );
+
+        expect(resultsAnnouncement()).toBe(noResultsText("inexistente"));
+    });
+
+    it("não anuncia nada depois de limpar a busca", () => {
+        vi.useFakeTimers();
+        renderTable({ searchFields: ["name"] });
+        typeInSearch("registro 25");
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+
+        fireEvent.click(fieldClearButton() as HTMLElement);
+        act(() => {
+            vi.advanceTimersByTime(SEARCH_ANNOUNCE_DELAY_MS);
+        });
+
+        expect(resultsAnnouncement()).toBe("");
+    });
+
+    it("cancela o anúncio pendente quando a tabela desmonta", () => {
+        vi.useFakeTimers();
+        const { unmount } = renderTable({ searchFields: ["name"] });
+        typeInSearch("registro");
+
+        unmount();
+
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it("não monta a região de anúncio numa tabela sem busca", () => {
+        renderTable();
+
+        expect(screen.queryByRole("status")).toBeNull();
     });
 });

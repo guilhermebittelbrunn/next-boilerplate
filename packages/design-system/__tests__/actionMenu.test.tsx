@@ -519,6 +519,30 @@ describe("ActionsMenu focus after its table row is deleted", () => {
         );
     });
 
+    it("moves focus to the table search and names the term when the only filtered row is deleted", async () => {
+        render(
+            <TableWithRowActions
+                initialRows={buildHarnessRows(["Alfa", "Bravo"])}
+                searchable
+            />
+        );
+        const search = screen.getByRole("searchbox", {
+            name: tableCopy.searchLabel,
+        });
+        fireEvent.change(search, { target: { value: "Alfa" } });
+
+        await confirmDeleteFromKeyboard("Alfa");
+        await flushDialogFocusReturn();
+
+        expect(document.activeElement).toBe(search);
+        expect(
+            within(screen.getByRole("table")).getByText(
+                tableCopy.searchNoResults.replace("{term}", "Alfa")
+            )
+        ).toBeTruthy();
+        expect(screen.queryByText("Bravo")).toBeNull();
+    });
+
     it("leaves focus alone when the only row is deleted and the table has no search", async () => {
         render(
             <TableWithRowActions initialRows={buildHarnessRows(["Alfa"])} />

@@ -14,8 +14,18 @@ import {
   InboxIcon,
   RotateCwIcon,
   SearchIcon,
+  SearchXIcon,
+  XIcon,
 } from "lucide-react";
-import { type Key, type ReactNode, useId, useMemo, useState } from "react";
+import {
+  type Key,
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 export type TableAlign = "left" | "center" | "right";
 
@@ -66,6 +76,7 @@ export interface TableProps<T extends object = Record<string, unknown>> {
 const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50];
 const SKELETON_ROWS = 5;
+const SEARCH_ANNOUNCE_DELAY_MS = 500;
 
 const alignClass: Record<TableAlign, string> = {
   left: "text-left",
@@ -136,7 +147,9 @@ export function Table<T extends Record<string, unknown>>({
   const { dictionary } = getDictionary();
   const tableCopy = dictionary.components.table;
   const searchId = useId();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
+  const [settledSearch, setSettledSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageConfig = pagination === false ? null : (pagination ?? {});
   const configuredPageSize = pageConfig?.pageSize ?? DEFAULT_PAGE_SIZE;
@@ -163,6 +176,29 @@ export function Table<T extends Record<string, unknown>>({
     );
   }, [dataSource, search, searchFields]);
 
+  const hasSearchField = Boolean(searchFields?.length);
+  useEffect(() => {
+    if (!hasSearchField) {
+      return;
+    }
+    const timer = setTimeout(
+      () => setSettledSearch(search),
+      SEARCH_ANNOUNCE_DELAY_MS
+    );
+    return () => clearTimeout(timer);
+  }, [hasSearchField, search]);
+
+  const updateSearch = (value: string) => {
+    setSearch(value);
+    setSettledSearch("");
+    setPage(1);
+  };
+
+  const clearSearch = () => {
+    updateSearch("");
+    searchInputRef.current?.focus();
+  };
+
   const pageCount = pageConfig
     ? Math.max(1, Math.ceil(filteredRows.length / pageSize))
     : 1;
@@ -171,16 +207,45 @@ export function Table<T extends Record<string, unknown>>({
     ? filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
     : filteredRows;
 
-  const showToolbar = Boolean(searchFields?.length || onRefresh);
+  const showToolbar = Boolean(hasSearchField || onRefresh);
+  const searchTerm = search.trim();
+  const isSearching = hasSearchField && searchTerm !== "";
   // The search only sees the rows already fetched, so an empty result while pages are
   // still pending does not mean the record is absent — saying "nothing here" would be
   // false.
-  const searchMissesPendingPages = Boolean(
-    searchFields?.length && search.trim() && hasMore
-  );
-  const emptyText = searchMissesPendingPages
-    ? tableCopy.searchPendingPages
-    : locale?.emptyText;
+  const searchMissesPendingPages = isSearching && Boolean(hasMore);
+  const searchFoundNothing =
+    isSearching &&
+    filteredRows.length === 0 &&
+    (dataSource?.length ?? 0) > 0;
+  const noResultsText = tableCopy.searchNoResults.replace("{term}", searchTerm);
+
+  let searchEmptyText: string | null = null;
+  if (searchMissesPendingPages) {
+    searchEmptyText = tableCopy.searchPendingPages;
+  } else if (searchFoundNothing) {
+    searchEmptyText = noResultsText;
+  }
+
+  const showSkeleton = Boolean(loading) && filteredRows.length === 0;
+
+  const resultAnnouncement = () => {
+    if (!isSearching || settledSearch !== search || showSkeleton) {
+      return "";
+    }
+    if (filteredRows.length === 0) {
+      return searchMissesPendingPages
+        ? tableCopy.searchPendingPages
+        : noResultsText;
+    }
+    if (filteredRows.length === 1) {
+      return tableCopy.searchResultsOne;
+    }
+    return tableCopy.searchResults.replace(
+      "{count}",
+      String(filteredRows.length)
+    );
+  };
 
   const pageSizeOptions =
     pageConfig?.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
@@ -191,7 +256,6 @@ export function Table<T extends Record<string, unknown>>({
     pageConfig !== null &&
     filteredRows.length > 0 &&
     !(pageConfig.hideOnSinglePage && filteredRows.length <= singlePageLimit);
-  const showSkeleton = Boolean(loading) && filteredRows.length === 0;
 
   return (
     <div
@@ -205,7 +269,7 @@ export function Table<T extends Record<string, unknown>>({
             searchFields?.length ? "sm:justify-between" : "sm:justify-end"
           )}
         >
-          {searchFields?.length ? (
+          {hasSearchField ? (
             <div className="relative w-full sm:max-w-sm">
               <label className="sr-only" htmlFor={searchId}>
                 {tableCopy.searchLabel}
@@ -216,18 +280,28 @@ export function Table<T extends Record<string, unknown>>({
               />
               <input
                 autoComplete="off"
-                className="h-9 w-full rounded-md border border-input bg-card pr-3 pl-9 text-sm shadow-xs outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30"
+                className="h-9 w-full rounded-md border border-input bg-card pr-9 pl-9 text-sm shadow-xs outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:appearance-none"
                 data-slot="table-search"
                 id={searchId}
-                onChange={(event) => {
-                  setSearch(event.target.value);
-                  setPage(1);
-                }}
+                onChange={(event) => updateSearch(event.target.value)}
                 placeholder={searchPlaceholder ?? tableCopy.searchPlaceholder}
+                ref={searchInputRef}
                 spellCheck={false}
                 type="search"
                 value={search}
               />
+              {search ? (
+                <Button
+                  aria-label={tableCopy.clearSearch}
+                  className="absolute top-1.5 right-1.5 text-muted-foreground"
+                  onClick={clearSearch}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                >
+                  <XIcon aria-hidden="true" />
+                </Button>
+              ) : null}
             </div>
           ) : null}
           {onRefresh ? (
@@ -296,11 +370,25 @@ export function Table<T extends Record<string, unknown>>({
                   <td className="px-4 py-12" colSpan={columns.length}>
                     <div className="flex flex-col items-center gap-3 text-center">
                       <span className="flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                        <InboxIcon aria-hidden="true" className="size-5" />
+                        {searchEmptyText ? (
+                          <SearchXIcon aria-hidden="true" className="size-5" />
+                        ) : (
+                          <InboxIcon aria-hidden="true" className="size-5" />
+                        )}
                       </span>
-                      <p className="max-w-sm text-muted-foreground text-sm">
-                        {emptyText}
+                      <p className="max-w-sm text-muted-foreground text-sm wrap-anywhere">
+                        {searchEmptyText ?? locale?.emptyText}
                       </p>
+                      {searchEmptyText ? (
+                        <Button
+                          onClick={clearSearch}
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                        >
+                          {tableCopy.clearSearch}
+                        </Button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -343,6 +431,11 @@ export function Table<T extends Record<string, unknown>>({
           </span>
         ) : null}
       </div>
+      {hasSearchField ? (
+        <p aria-atomic="true" className="sr-only" role="status">
+          {resultAnnouncement()}
+        </p>
+      ) : null}
 
       {showPager ? (
         <div className="flex flex-wrap items-center justify-between gap-3 text-muted-foreground text-sm">
