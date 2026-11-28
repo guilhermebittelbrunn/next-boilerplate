@@ -103,6 +103,7 @@ import { FormContainer } from "@/shared/components/ui/FormContainer";
 import { Header } from "@/shared/components/ui/Header";
 import { LanguageSwitcher } from "@/shared/components/ui/LanguageSwitcher";
 import { LoadErrorState } from "@/shared/components/ui/LoadErrorState";
+import { MetricStrip } from "@/shared/components/ui/MetricStrip";
 import Navbar from "@/shared/components/ui/Navbar";
 import PageBreadcrumb from "@/shared/components/ui/PageBreadcrumb";
 import { PageFormFooter } from "@/shared/components/ui/PageFormFooter";
@@ -135,6 +136,7 @@ const sectionGroups = [
             { id: "scroll-to-top", label: "ScrollToTopButton" },
             { id: "form-container", label: "FormContainer" },
             { id: "load-error-state", label: "LoadErrorState" },
+            { id: "metric-strip", label: "MetricStrip" },
             { id: "footer", label: "Footer" },
             { id: "page-form-footer", label: "PageFormFooter" },
             { id: "container", label: "Container" },
@@ -218,6 +220,18 @@ const designSystemComponents = [
     "toggle-group",
     "tooltip",
 ] as const;
+
+const sampleMetrics = [
+    { key: "metric-1", label: "Métrica 1", value: 1284 },
+    { key: "metric-2", label: "Métrica 2", value: 37 },
+    {
+        key: "metric-3",
+        label: "Métrica 3",
+        value: 123_456_789,
+        hint: "Valor longo para testar a largura da célula",
+    },
+    { key: "metric-4", label: "Métrica 4", value: 0 },
+];
 
 const colorTokens = [
     { name: "background", className: "bg-background" },
@@ -795,6 +809,18 @@ export default function CommonPlaygroundClient() {
                         title="LoadErrorState"
                     >
                         <LoadErrorState message="Não foi possível carregar os dados. Tente novamente em instantes." />
+                    </PlaygroundSection>
+
+                    <PlaygroundSection
+                        description="Quatro ou mais indicadores: 2 colunas no celular, 4 a partir de lg."
+                        id="metric-strip"
+                        title="MetricStrip"
+                    >
+                        <MetricStrip
+                            className="overflow-hidden rounded-xl shadow-[inset_0_0_0_1px_var(--border)]"
+                            items={sampleMetrics}
+                            locale={locale}
+                        />
                     </PlaygroundSection>
 
                     <PlaygroundSection

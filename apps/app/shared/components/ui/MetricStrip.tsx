@@ -21,6 +21,17 @@ const LAYOUT_BY_COUNT: Record<number, string> = {
     3: "grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0",
 };
 
+// divide-* borders the first cell of every wrapped row, so a grid that wraps draws
+// each separator from the cell position instead.
+const WRAPPING_LAYOUT =
+    "grid-cols-2 [&>:nth-child(2n)]:border-l max-lg:[&>:nth-child(n+3)]:border-t lg:grid-cols-4 lg:[&>:nth-child(4n+3)]:border-l lg:[&>:nth-child(n+5)]:border-t";
+
+const VALUE_TYPE = "text-2xl [overflow-wrap:anywhere] sm:text-3xl";
+
+// With four or more cells a phone, or a desktop beside the sidebar, leaves about 120 px
+// per value, and a split number reads as two numbers: keep it on one line, smaller.
+const WRAPPING_VALUE_TYPE = "whitespace-nowrap text-xl xl:text-2xl";
+
 export function MetricStrip({
     items,
     locale,
@@ -28,25 +39,34 @@ export function MetricStrip({
     className,
 }: MetricStripProps) {
     const numberFormat = new Intl.NumberFormat(locale);
+    const layout = LAYOUT_BY_COUNT[items.length];
 
     return (
         <dl
             aria-busy={loading || undefined}
             className={cn(
                 "grid divide-border",
-                LAYOUT_BY_COUNT[items.length] ?? LAYOUT_BY_COUNT[3],
+                layout ?? WRAPPING_LAYOUT,
                 className
             )}
         >
             {items.map((item) => (
                 <div
-                    className="flex min-w-0 flex-col gap-1 px-5 py-4"
+                    className={cn(
+                        "flex min-w-0 flex-col gap-1 py-4",
+                        layout ? "px-5" : "px-4"
+                    )}
                     key={item.key}
                 >
                     <dt className="font-medium text-muted-foreground text-sm">
                         {item.label}
                     </dt>
-                    <dd className="flex min-h-9 items-center font-semibold text-2xl tabular-nums tracking-tight [overflow-wrap:anywhere] sm:text-3xl">
+                    <dd
+                        className={cn(
+                            "flex min-h-9 items-center font-semibold tabular-nums tracking-tight",
+                            layout ? VALUE_TYPE : WRAPPING_VALUE_TYPE
+                        )}
+                    >
                         {loading ? (
                             <Skeleton className="h-8 w-16" />
                         ) : (
