@@ -139,9 +139,14 @@ export function Table<T extends Record<string, unknown>>({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageConfig = pagination === false ? null : (pagination ?? {});
-  const [pageSize, setPageSize] = useState(
-    pageConfig?.pageSize ?? DEFAULT_PAGE_SIZE
-  );
+  const configuredPageSize = pageConfig?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const [pageSize, setPageSize] = useState(configuredPageSize);
+  const [appliedPageSize, setAppliedPageSize] = useState(configuredPageSize);
+  if (configuredPageSize !== appliedPageSize) {
+    setAppliedPageSize(configuredPageSize);
+    setPageSize(configuredPageSize);
+    setPage(1);
+  }
 
   const filteredRows = useMemo(() => {
     const rows = [...(dataSource ?? [])];

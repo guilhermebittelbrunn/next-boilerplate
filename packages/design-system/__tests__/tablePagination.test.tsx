@@ -10,6 +10,8 @@ const EMPTY_TEXT = "Nenhum registro.";
 const TOTAL_ROWS = 25;
 const DEFAULT_PAGE_SIZE = 10;
 const LARGER_PAGE_SIZE = 20;
+const SMALLER_PAGE_SIZE = 5;
+const PAGES_AT_SMALLER_SIZE = 5;
 const PAGES_AT_DEFAULT_SIZE = 3;
 const ROWS_ON_LAST_PAGE = 5;
 const SKELETON_ROWS = 5;
@@ -115,6 +117,59 @@ describe("paginação da Table", () => {
 
         expect(screen.getByText(pageStatus(1, 2))).toBeTruthy();
         expect(bodyRows()).toHaveLength(LARGER_PAGE_SIZE);
+    });
+
+    it("aplica um pageSize novo vindo da prop e volta para a primeira página", () => {
+        const { rerender } = renderTable({
+            pagination: { pageSize: DEFAULT_PAGE_SIZE },
+        });
+        fireEvent.click(nextButton());
+        expect(
+            screen.getByText(pageStatus(2, PAGES_AT_DEFAULT_SIZE))
+        ).toBeTruthy();
+
+        rerender(
+            <Table<Row>
+                columns={[{ dataIndex: "name", title: "Nome" }]}
+                dataSource={buildRows(TOTAL_ROWS)}
+                locale={{ emptyText: EMPTY_TEXT }}
+                pagination={{ pageSize: SMALLER_PAGE_SIZE }}
+                rowKey="id"
+            />
+        );
+
+        expect(bodyRows()).toHaveLength(SMALLER_PAGE_SIZE);
+        expect(
+            screen.getByText(pageStatus(1, PAGES_AT_SMALLER_SIZE))
+        ).toBeTruthy();
+        expect(rowNames()[0]).toBe("Registro 01");
+    });
+
+    it("mantém o tamanho escolhido no seletor quando a tabela re-renderiza com a mesma prop", () => {
+        const pagination = {
+            pageSize: DEFAULT_PAGE_SIZE,
+            showSizeChanger: true,
+        };
+        const { rerender } = renderTable({ pagination });
+        fireEvent.change(screen.getByRole("combobox"), {
+            target: { value: String(LARGER_PAGE_SIZE) },
+        });
+        expect(bodyRows()).toHaveLength(LARGER_PAGE_SIZE);
+
+        rerender(
+            <Table<Row>
+                columns={[{ dataIndex: "name", title: "Nome" }]}
+                dataSource={buildRows(TOTAL_ROWS)}
+                locale={{ emptyText: EMPTY_TEXT }}
+                pagination={{ ...pagination }}
+                rowKey="id"
+            />
+        );
+
+        expect(bodyRows()).toHaveLength(LARGER_PAGE_SIZE);
+        expect((screen.getByRole("combobox") as HTMLSelectElement).value).toBe(
+            String(LARGER_PAGE_SIZE)
+        );
     });
 
     it("não oferece seletor de tamanho sem showSizeChanger", () => {
