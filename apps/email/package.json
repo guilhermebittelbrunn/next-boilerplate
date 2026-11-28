@@ -19,7 +19,7 @@
     "@types/node": "24.9.1",
     "@types/react": "19.2.2",
     "next": "16.4.6",
-    "react-email": "4.3.2",
+    "react-email": "6.11.16",
     "typescript": "^5.9.3"
   }
 }
