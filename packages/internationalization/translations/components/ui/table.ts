@@ -5,6 +5,10 @@ export const tableTranslations = {
         loadMore: "Carregar mais",
         searchPendingPages:
             "Nada encontrado no que já foi carregado. Carregue mais para continuar a busca.",
+        searchNoResults: "Nenhum resultado para “{term}”.",
+        clearSearch: "Limpar busca",
+        searchResults: "{count} resultados",
+        searchResultsOne: "1 resultado",
         searchLabel: "Buscar na lista",
         loading: "Carregando…",
         rowsPerPage: "Linhas por página",
@@ -18,6 +22,10 @@ export const tableTranslations = {
         loadMore: "Load more",
         searchPendingPages:
             "No match in what has been loaded so far. Load more to keep searching.",
+        searchNoResults: "No results for “{term}”.",
+        clearSearch: "Clear search",
+        searchResults: "{count} results",
+        searchResultsOne: "1 result",
         searchLabel: "Search the list",
         loading: "Loading…",
         rowsPerPage: "Rows per page",
@@ -31,6 +39,10 @@ export const tableTranslations = {
         loadMore: "Cargar más",
         searchPendingPages:
             "Sin resultados en lo que ya se cargó. Carga más para seguir buscando.",
+        searchNoResults: "Sin resultados para “{term}”.",
+        clearSearch: "Limpiar búsqueda",
+        searchResults: "{count} resultados",
+        searchResultsOne: "1 resultado",
         searchLabel: "Buscar en la lista",
         loading: "Cargando…",
         rowsPerPage: "Filas por página",
