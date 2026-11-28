@@ -24,10 +24,10 @@ import { getBrand } from "@repo/next-config/brand";
 import { isSubscriptionMode } from "@repo/next-config/product-mode";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { type MouseEvent, useEffect, useId, useRef, useState } from "react";
 import { env } from "@/env";
 import { apiClient } from "@/shared/lib/client";
-import { pageContainer } from "@/shared/lib/layout";
+import { MAIN_CONTENT_ID, pageContainer } from "@/shared/lib/layout";
 import { WEB_PATHS } from "../../paths";
 import { LanguageSwitcher } from "./language-switcher";
 
@@ -44,6 +44,10 @@ const externalLinkProps = (href: string) =>
     isExternal(href)
         ? { rel: "noopener noreferrer", target: "_blank" }
         : { rel: undefined, target: undefined };
+
+const opensInPlace = (event: MouseEvent<HTMLAnchorElement>) =>
+    event.button === 0 &&
+    !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
 
 export const Header = () => {
     const { dictionary, locale } = getDictionary();
@@ -78,6 +82,21 @@ export const Header = () => {
 
     const [isOpen, setOpen] = useState(false);
     const closeMenu = () => setOpen(false);
+    const returnFocusToMenuButton = () => menuButtonRef.current?.focus();
+
+    // The panel unmounts with the link that had focus, and the App Router does not move
+    // focus on navigation, so without this the keyboard user restarts from <body>.
+    const followPanelLink =
+        (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+            closeMenu();
+            if (opensInPlace(event) && !isExternal(href)) {
+                document
+                    .getElementById(MAIN_CONTENT_ID)
+                    ?.focus({ preventScroll: true });
+                return;
+            }
+            returnFocusToMenuButton();
+        };
 
     useEffect(() => {
         if (!isOpen) {
@@ -116,7 +135,7 @@ export const Header = () => {
         <header className="sticky top-0 left-0 z-40 w-full border-border/70 border-b bg-background/80 backdrop-blur-md">
             <a
                 className="-translate-y-full absolute top-2 left-4 z-50 rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground text-sm opacity-0 focus-visible:translate-y-0 focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/40"
-                href="#main-content"
+                href={`#${MAIN_CONTENT_ID}`}
             >
                 {dictionary.apps.web.layout.skipToContent}
             </a>
@@ -279,7 +298,7 @@ export const Header = () => {
                                         className="flex min-h-11 items-center border-b text-base last:border-b-0"
                                         href={item.href}
                                         key={item.href}
-                                        onClick={closeMenu}
+                                        onClick={followPanelLink(item.href)}
                                         {...externalLinkProps(item.href)}
                                     >
                                         {item.title}
@@ -299,6 +318,7 @@ export const Header = () => {
                                         <Button
                                             onClick={() => {
                                                 closeMenu();
+                                                returnFocusToMenuButton();
                                                 signOutOfLanding();
                                             }}
                                             variant="outline"
@@ -315,7 +335,9 @@ export const Header = () => {
                                             "mt-3 md:hidden"
                                         )}
                                         href={`/${locale}/sign-in`}
-                                        onClick={closeMenu}
+                                        onClick={followPanelLink(
+                                            `/${locale}/sign-in`
+                                        )}
                                     >
                                         {headerCopy.signIn}
                                     </Link>

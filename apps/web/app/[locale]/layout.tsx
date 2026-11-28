@@ -9,6 +9,7 @@ import { LocaleProvider } from "@repo/internationalization/client";
 import { getDictionary } from "@repo/internationalization/server";
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
+import { MAIN_CONTENT_ID } from "@/shared/lib/layout";
 import { ensureSupportedLocale } from "@/shared/lib/localeSegment";
 import { QueryProvider } from "../../../app/shared/providers/QueryProvider";
 import ClientLayout from "./clientLayout";
@@ -48,7 +49,7 @@ const RootLayout = async ({ children, params }: RootLayoutProperties) => {
                                 <Header />
                                 <main
                                     className="outline-none"
-                                    id="main-content"
+                                    id={MAIN_CONTENT_ID}
                                     tabIndex={-1}
                                 >
                                     <ClientLayout> {children} </ClientLayout>

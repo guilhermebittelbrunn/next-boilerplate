@@ -11,7 +11,12 @@ import {
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { envMock, setThemeMock } = vi.hoisted(() => ({
+const { authMock, envMock, setThemeMock } = vi.hoisted(() => ({
+    authMock: {
+        user: null as { uid: string } | null,
+        loading: false,
+        signOut: { mutate: vi.fn() },
+    },
     envMock: {
         NEXT_PUBLIC_APP_URL: undefined as string | undefined,
         NEXT_PUBLIC_DOCS_URL: undefined as string | undefined,
@@ -24,11 +29,7 @@ vi.mock("next-themes", () => ({
 }));
 
 vi.mock("@repo/auth/provider", () => ({
-    default: () => ({
-        user: null,
-        loading: false,
-        signOut: { mutate: vi.fn() },
-    }),
+    default: () => authMock,
 }));
 
 vi.mock("@/env", () => ({ env: envMock }));
@@ -63,6 +64,7 @@ vi.mock("next/link", () => ({
 
 const { LocaleProvider } = await import("@repo/internationalization/client");
 const { Header } = await import("@/app/[locale]/components/header");
+const { MAIN_CONTENT_ID } = await import("@/shared/lib/layout");
 
 const headerCopy = globalTranslations["pt-br"].components.header;
 const languageSwitcherCopy =
@@ -74,6 +76,7 @@ function renderHeader() {
     render(
         <LocaleProvider>
             <Header />
+            <main id={MAIN_CONTENT_ID} tabIndex={-1} />
         </LocaleProvider>
     );
     return screen.getByRole("button", { name: headerCopy.menu });
@@ -93,6 +96,7 @@ function preventNavigation(event: Event) {
 
 beforeEach(() => {
     envMock.NEXT_PUBLIC_DOCS_URL = undefined;
+    authMock.user = null;
     setThemeMock.mockClear();
     document.addEventListener("click", preventNavigation);
     globalThis.ResizeObserver ??= class {
@@ -342,6 +346,71 @@ describe("menu mobile do header da web pelo teclado", () => {
         fireEvent.keyDown(document, { key: "Enter" });
 
         expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+    });
+});
+
+function mainContent() {
+    return document.getElementById(MAIN_CONTENT_ID);
+}
+
+function followPanelLink(
+    menuButton: HTMLElement,
+    name: string,
+    init?: MouseEventInit
+) {
+    fireEvent.click(menuButton);
+    const link = within(menuArea(menuButton)).getByRole("link", { name });
+    link.focus();
+    fireEvent.click(link, init);
+}
+
+describe("foco depois de seguir um link do menu mobile", () => {
+    it.each([
+        ["Contato", headerCopy.contact],
+        ["Início", headerCopy.home],
+        ["Preços", headerCopy.product.pricing],
+        ["Entrar", headerCopy.signIn],
+    ])("leva o foco ao conteúdo principal ao seguir %s", (_label, name) => {
+        const menuButton = renderHeader();
+
+        followPanelLink(menuButton, name);
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+        expect(document.activeElement).toBe(mainContent());
+    });
+
+    it("devolve o foco ao botão do menu ao abrir a documentação em aba nova", () => {
+        envMock.NEXT_PUBLIC_DOCS_URL = DOCS_URL;
+        const menuButton = renderHeader();
+
+        followPanelLink(menuButton, headerCopy.docs);
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+        expect(document.activeElement).toBe(menuButton);
+    });
+
+    it("devolve o foco ao botão do menu num Ctrl+clique, que abre outra aba", () => {
+        const menuButton = renderHeader();
+
+        followPanelLink(menuButton, headerCopy.contact, { ctrlKey: true });
+
+        expect(document.activeElement).toBe(menuButton);
+        expect(document.activeElement).not.toBe(mainContent());
+    });
+
+    it("devolve o foco ao botão do menu ao sair pelo painel", () => {
+        authMock.user = { uid: "landing-user" };
+        const menuButton = renderHeader();
+        fireEvent.click(menuButton);
+        const signOutButton = within(menuArea(menuButton)).getByRole("button", {
+            name: headerCopy.signOut,
+        });
+        signOutButton.focus();
+
+        fireEvent.click(signOutButton);
+
+        expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+        expect(document.activeElement).toBe(menuButton);
     });
 });
 
